@@ -40,9 +40,47 @@ const ProductsPage = () => {
   const { brand } = useParams<{ brand: string }>();
   const { isDealer, user, dealerAccount } = useAuth();
   const { addItem } = useCart();
+  const queryClient = useQueryClient();
   const config = brand ? brandConfig[brand] : null;
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const DAILY_LIMIT = 20;
+
+  // Track viewed product IDs today (for dealers)
+  const { data: viewedProductIds = [] } = useQuery({
+    queryKey: ["dealer_views_today", user?.id],
+    queryFn: async () => {
+      const today = new Date().toISOString().split("T")[0];
+      const { data, error } = await supabase
+        .from("dealer_price_views")
+        .select("product_id")
+        .eq("user_id", user!.id)
+        .eq("view_date", today);
+      if (error) throw error;
+      return data.map((v) => v.product_id);
+    },
+    enabled: !!isDealer && !!user,
+  });
+
+  const dailyViewCount = viewedProductIds.length;
+  const limitReached = dailyViewCount >= DAILY_LIMIT;
+
+  const recordView = useCallback(async (productId: string) => {
+    if (!user || !isDealer) return;
+    if (viewedProductIds.includes(productId)) return; // already viewed
+    if (limitReached) return;
+
+    await supabase.from("dealer_price_views").upsert(
+      { user_id: user.id, product_id: productId, view_date: new Date().toISOString().split("T")[0] },
+      { onConflict: "user_id,product_id,view_date" }
+    );
+    queryClient.invalidateQueries({ queryKey: ["dealer_views_today", user.id] });
+  }, [user, isDealer, viewedProductIds, limitReached, queryClient]);
+
+  const canSeePrice = (productId: string) => {
+    if (!isDealer) return true; // visitors always see retail
+    return viewedProductIds.includes(productId) || !limitReached;
+  };
 
   // Fetch tier prices for dealers
   const { data: tierPrices } = useQuery({
