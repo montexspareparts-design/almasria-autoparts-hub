@@ -359,14 +359,23 @@ const ProductsPage = () => {
                   )}
 
                   {/* Price */}
-                  <div className="text-primary font-black text-lg">
-                    {getProductPrice(product).toLocaleString("ar-EG")} ج.م
-                  </div>
-                  {!isDealer && (
-                    <p className="text-[11px] text-muted-foreground">سعر قطاعي</p>
-                  )}
-                  {isDealer && (
-                    <p className="text-[11px] text-green-600 font-semibold">سعر الجملة الخاص بك</p>
+                  {canSeePrice(product.id) ? (
+                    <>
+                      <div className="text-primary font-black text-lg">
+                        {getProductPrice(product).toLocaleString("ar-EG")} ج.م
+                      </div>
+                      {!isDealer && (
+                        <p className="text-[11px] text-muted-foreground">سعر قطاعي</p>
+                      )}
+                      {isDealer && (
+                        <p className="text-[11px] text-green-600 font-semibold">سعر الجملة الخاص بك</p>
+                      )}
+                    </>
+                  ) : (
+                    <div className="flex items-center gap-2 text-muted-foreground text-xs py-1">
+                      <Lock className="w-3.5 h-3.5" />
+                      <span>استنفدت الحد اليومي (20 صنف)</span>
+                    </div>
                   )}
 
                   {/* Min Order */}
@@ -377,11 +386,14 @@ const ProductsPage = () => {
                   )}
 
                   {/* Add to Cart */}
-                  {product.stock_quantity > 0 && (
+                  {product.stock_quantity > 0 && canSeePrice(product.id) && (
                     <Button
                       size="sm"
                       className="w-full mt-3 gap-2"
-                      onClick={() => handleAddToCart(product)}
+                      onClick={() => {
+                        recordView(product.id);
+                        handleAddToCart(product);
+                      }}
                     >
                       <ShoppingCart className="w-3.5 h-3.5" />
                       أضف للسلة
