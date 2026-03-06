@@ -54,11 +54,26 @@ const AdminDashboard = () => {
     setLoading(false);
   };
 
+  const sendNotification = async (app: DealerApplication, status: "approved" | "rejected") => {
+    try {
+      await supabase.functions.invoke("send-dealer-notification", {
+        body: {
+          dealerUserId: app.user_id,
+          dealerEmail: app.email,
+          status,
+          businessName: app.business_name,
+          reviewNotes,
+        },
+      });
+    } catch (err) {
+      console.error("Notification error:", err);
+    }
+  };
+
   const handleApprove = async (app: DealerApplication) => {
     if (!assignedTier) { toast({ title: "يرجى تحديد فئة التاجر", variant: "destructive" }); return; }
     setProcessing(true);
 
-    // Update application
     await supabase
       .from("dealer_applications")
       .update({
@@ -70,14 +85,15 @@ const AdminDashboard = () => {
       })
       .eq("id", app.id);
 
-    // Create dealer account
     await supabase.from("dealer_accounts").insert({
       user_id: app.user_id,
       application_id: app.id,
       tier: assignedTier as CustomerTier,
     });
 
-    toast({ title: "تمت الموافقة على الطلب" });
+    await sendNotification(app, "approved");
+
+    toast({ title: "تمت الموافقة على الطلب وتم إرسال إشعار للتاجر" });
     setSelectedApp(null);
     setAssignedTier("");
     setReviewNotes("");
@@ -97,7 +113,9 @@ const AdminDashboard = () => {
       })
       .eq("id", app.id);
 
-    toast({ title: "تم رفض الطلب" });
+    await sendNotification(app, "rejected");
+
+    toast({ title: "تم رفض الطلب وتم إرسال إشعار للتاجر" });
     setSelectedApp(null);
     setReviewNotes("");
     fetchApplications();
