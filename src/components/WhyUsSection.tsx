@@ -2,12 +2,12 @@ import { motion } from "framer-motion";
 import { ShieldCheck, Package, Truck, Globe, Award, Handshake } from "lucide-react";
 
 const features = [
-  { icon: ShieldCheck, title: "موزع معتمد", desc: "موزع رسمي معتمد لقطع غيار وزيوت تويوتا الأصلية في مصر" },
+  { icon: ShieldCheck, title: "موزع معتمد رسمي", desc: "موزع رسمي معتمد لقطع غيار وزيوت تويوتا الأصلية في مصر" },
   { icon: Award, title: "منتجات أصلية مضمونة", desc: "جميع منتجاتنا أصلية 100% بضمان الجودة والمصدر" },
   { icon: Package, title: "مخزون ضخم وجاهزية فورية", desc: "أكثر من 5000 صنف متوفر بشكل دائم للتسليم الفوري" },
-  { icon: Truck, title: "شبكة توزيع فعالة", desc: "تغطية شاملة من القاهرة إلى جميع المحافظات" },
-  { icon: Globe, title: "خبرة في الاستيراد المباشر", desc: "استيراد مباشر من اليابان بأفضل الأسعار والجودة" },
-  { icon: Handshake, title: "علاقات استراتيجية", desc: "شراكات طويلة الأمد مع كبار الموردين اليابانيين" },
+  { icon: Truck, title: "توزيع لجميع المحافظات", desc: "شبكة توزيع تغطي مصر بالكامل من القاهرة والجيزة والأقصر" },
+  { icon: Globe, title: "توسع إقليمي – دبي", desc: "فرع في دبي كمركز إقليمي لدعم التوسع الخليجي" },
+  { icon: Handshake, title: "MTX – علامتنا الخاصة", desc: "علامة تجارية مسجلة لقطع غيار Aftermarket مستوردة بأعلى جودة" },
 ];
 
 const WhyUsSection = () => {

@@ -32,10 +32,24 @@ const ProductsSection = () => {
             <span className="text-gradient-red">منتجاتنا</span>
           </h2>
           <p className="text-dark-section-foreground/60 text-lg max-w-2xl mx-auto">
-            قطع غيار تويوتا الأصلية • قطع Aftermarket عالية الجودة • زيوت أصلية
+            قطع غيار تويوتا الأصلية • زيوت تويوتا الأصلية • MTX Aftermarket
           </p>
           <div className="w-20 h-1 bg-primary mx-auto mt-4" />
         </motion.div>
+
+        {/* Brand Labels */}
+        <div className="flex justify-center gap-4 mb-10 flex-wrap">
+          {[
+            { label: "تويوتا أصلي", sub: "قطع غيار" },
+            { label: "تويوتا أصلي", sub: "زيوت" },
+            { label: "MTX", sub: "Aftermarket" },
+          ].map((b) => (
+            <div key={b.label + b.sub} className="bg-secondary border border-primary/30 rounded-lg px-6 py-3 text-center">
+              <div className="font-bold text-secondary-foreground">{b.label}</div>
+              <div className="text-xs text-primary">{b.sub}</div>
+            </div>
+          ))}
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {categories.map((cat, i) => (

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { MapPin, Target, TrendingUp } from "lucide-react";
+import { MapPin, Target, TrendingUp, Building2 } from "lucide-react";
 
 const AboutSection = () => {
   return (
@@ -29,11 +29,29 @@ const AboutSection = () => {
               المصرية جروب – Al Masria Group
             </h3>
             <p className="text-muted-foreground leading-relaxed">
-              شركة مصرية رائدة متخصصة في توزيع قطع غيار السيارات، تأسست بخبرة تمتد لأكثر من 15 عامًا في السوق المصري. نحن موزع معتمد لقطع غيار وزيوت تويوتا الأصلية في مصر.
+              شركة مصرية رائدة بخبرة تمتد لأكثر من 25 عامًا في سوق قطع غيار السيارات. نحن موزع معتمد رسمي لقطع غيار تويوتا الأصلية وزيوت تويوتا الأصلية في مصر، بالإضافة إلى علامتنا التجارية الخاصة MTX لقطع غيار Aftermarket المستوردة.
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              نتميز بخبرتنا العميقة في إدارة سلسلة الإمداد والتوريد المحلي والدولي، مع علاقات مباشرة مع موردين دوليين خاصة من اليابان. نعمل على بناء شراكات استراتيجية طويلة الأمد لضمان توفير أفضل المنتجات بأعلى جودة.
+              نخدم شريحة واسعة من عملاء الجملة، الشركات والهيئات الحكومية، ومراكز الصيانة، مع تواجد قوي في القاهرة والجيزة والأقصر، وتوسع إقليمي مدروس عبر فرعنا في دبي.
             </p>
+
+            {/* Divisions */}
+            <div className="space-y-3">
+              <h4 className="font-bold text-foreground text-lg flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-primary" />
+                أقسام الشركة
+              </h4>
+              {[
+                { name: "المصرية – قطع غيار", desc: "موزع معتمد رسمي لقطع غيار تويوتا الأصلية" },
+                { name: "المصرية – زيوت", desc: "موزع معتمد رسمي لجميع أنواع زيوت تويوتا الأصلية" },
+                { name: "MTX", desc: "علامة تجارية مسجلة – استيراد جميع فئات قطع غيار تويوتا Aftermarket" },
+              ].map((div) => (
+                <div key={div.name} className="bg-muted rounded-lg p-4 border-r-4 border-primary">
+                  <div className="font-bold text-foreground">{div.name}</div>
+                  <div className="text-sm text-muted-foreground">{div.desc}</div>
+                </div>
+              ))}
+            </div>
 
             {/* Vision */}
             <div className="bg-muted rounded-lg p-6 border-r-4 border-primary">
@@ -42,7 +60,7 @@ const AboutSection = () => {
                 <h4 className="font-bold text-foreground text-lg">رؤيتنا</h4>
               </div>
               <p className="text-muted-foreground">
-                أن نكون حلقة الوصل الأقوى بين الموردين الدوليين والسوق المصري، ومركز التوزيع الأكثر موثوقية في منطقة الشرق الأوسط وشمال أفريقيا.
+                أن نكون المؤسسة الأقوى والأكثر موثوقية في توزيع قطع غيار السيارات في مصر والمنطقة، مع بناء شراكات استراتيجية تدعم التوسع الإقليمي المدروس.
               </p>
             </div>
           </motion.div>
@@ -60,15 +78,22 @@ const AboutSection = () => {
                 <MapPin className="w-6 h-6 text-primary" />
                 <h4 className="font-bold text-lg">فروعنا</h4>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-secondary-foreground/10 rounded-md p-4 text-center">
-                  <div className="text-xl font-bold">القاهرة</div>
-                  <div className="text-sm text-secondary-foreground/70">التوفيقية</div>
-                </div>
-                <div className="bg-secondary-foreground/10 rounded-md p-4 text-center">
-                  <div className="text-xl font-bold">الأقصر</div>
-                  <div className="text-sm text-secondary-foreground/70">صعيد مصر</div>
-                </div>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { city: "القاهرة", area: "التوفيقية" },
+                  { city: "الجيزة", area: "أوسيم" },
+                  { city: "الأقصر", area: "صعيد مصر" },
+                  { city: "دبي", area: "الإمارات 🇦🇪" },
+                ].map((b) => (
+                  <div key={b.city} className="bg-secondary-foreground/10 rounded-md p-4 text-center">
+                    <div className="text-xl font-bold">{b.city}</div>
+                    <div className="text-sm text-secondary-foreground/70">{b.area}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 bg-secondary-foreground/10 rounded-md p-4 text-center">
+                <div className="text-lg font-bold">المكتب الإداري</div>
+                <div className="text-sm text-secondary-foreground/70">اللبيني – الهرم – الجيزة</div>
               </div>
             </div>
 
@@ -81,10 +106,11 @@ const AboutSection = () => {
               <ul className="space-y-2 text-muted-foreground">
                 {[
                   "توزيع قطع غيار تويوتا الأصلية",
-                  "إدارة سلسلة الإمداد والمخزون",
-                  "الاستيراد المباشر من اليابان",
-                  "التوريد لتجار الجملة والموزعين",
-                  "خدمة مراكز الصيانة وشركات الأساطيل",
+                  "توزيع زيوت تويوتا الأصلية",
+                  "MTX – قطع غيار Aftermarket مستوردة",
+                  "خدمة عملاء الجملة والشركات",
+                  "التوريد للهيئات الحكومية",
+                  "التوسع الإقليمي عبر دبي",
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />

@@ -12,7 +12,7 @@ const PartnershipsSection = () => {
           className="text-center mb-16"
         >
           <h2 className="text-3xl md:text-5xl font-black text-dark-section-foreground mb-4">
-            الشراكات <span className="text-gradient-red">الدولية</span>
+            قوة <span className="text-gradient-red">الاستيراد</span> والتوزيع
           </h2>
           <div className="w-20 h-1 bg-primary mx-auto" />
         </motion.div>
@@ -27,20 +27,21 @@ const PartnershipsSection = () => {
             <div className="flex items-center gap-3 mb-4">
               <Globe className="w-8 h-8 text-primary" />
               <h3 className="text-2xl font-bold text-dark-section-foreground">
-                بوابتك إلى السوق المصري
+                شبكة استيراد وتوزيع قوية
               </h3>
             </div>
             <p className="text-dark-section-foreground/70 leading-relaxed">
-              نعمل كحلقة وصل موثوقة بين الموردين الدوليين والسوق المصري المتنامي. بفضل خبرتنا الطويلة في عمليات الاستيراد والتعامل مع الموردين من اليابان والصين، نوفر لشركائنا الدوليين دخولاً سلساً إلى واحد من أكبر أسواق قطع الغيار في المنطقة.
+              تتميز المصرية جروب بخبرة عميقة في عمليات الاستيراد المباشر وإدارة سلسلة الإمداد، مع قدرات لوجستية متقدمة تضمن توفير أفضل المنتجات بأعلى جودة وأسرع وقت. تدعم شبكتنا الدولية توفير قطع الغيار الأصلية والمستوردة لعملائنا في مصر والمنطقة.
             </p>
 
             <ul className="space-y-3">
               {[
-                "إدارة متكاملة لعمليات الشراء والاستيراد من اليابان",
-                "خبرة عميقة في التعامل مع الموردين الدوليين",
-                "التزام تام بمعايير الجودة اليابانية",
-                "شبكة توزيع قوية تغطي السوق المصري بالكامل",
-                "قدرات تخزين وإدارة مخزون متقدمة",
+                "إدارة متكاملة لعمليات الاستيراد المباشر",
+                "خبرة طويلة في التعامل مع الموردين الدوليين",
+                "التزام تام بمعايير الجودة العالمية",
+                "شبكة توزيع تغطي جميع محافظات مصر",
+                "توسع إقليمي مدروس عبر فرع دبي",
+                "وكلاء حصريون لعلامات تجارية مختارة",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-3 text-dark-section-foreground/80">
                   <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
@@ -61,10 +62,10 @@ const PartnershipsSection = () => {
             </h4>
             <div className="grid grid-cols-2 gap-6">
               {[
-                { num: "+15", label: "عام من الخبرة" },
+                { num: "+25", label: "عام من الخبرة" },
                 { num: "+5000", label: "صنف في المخزون" },
-                { num: "2", label: "فرع رئيسي" },
-                { num: "+500", label: "عميل نشط" },
+                { num: "5", label: "فروع في مصر ودبي" },
+                { num: "+1000", label: "عميل نشط" },
               ].map((s) => (
                 <div key={s.label} className="text-center p-4 bg-secondary/30 rounded-lg">
                   <div className="text-3xl font-black text-primary">{s.num}</div>
