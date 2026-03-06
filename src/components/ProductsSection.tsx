@@ -11,6 +11,9 @@ import catFilters from "@/assets/cat-filters.jpg";
 import catOils from "@/assets/cat-oils.jpg";
 import catElectrical from "@/assets/cat-electrical.jpg";
 import catCooling from "@/assets/cat-cooling.jpg";
+import brandGenuineParts from "@/assets/brand-genuine-parts.png";
+import brandToyotaOil from "@/assets/brand-toyota-oil.png";
+import brandMtx from "@/assets/brand-mtx.jpg";
 
 const categories = [
   { name: "قطع المحرك", image: catEngine, count: "+800 صنف" },
@@ -71,17 +74,16 @@ const ProductsSection = () => {
         {/* Brand Labels */}
         <div className="flex justify-center gap-4 mb-10 flex-wrap">
           {[
-            { label: "تويوتا أصلي", sub: "قطع غيار", to: "/products/toyota-genuine" },
-            { label: "تويوتا أصلي", sub: "زيوت", to: "/products/toyota-oils" },
-            { label: "MTX", sub: "Aftermarket", to: "/products/mtx-aftermarket" },
+            { label: "قطع غيار تويوتا الأصلية", image: brandGenuineParts, to: "/products/toyota-genuine" },
+            { label: "زيوت تويوتا الأصلية", image: brandToyotaOil, to: "/products/toyota-oils" },
+            { label: "MTX Aftermarket", image: brandMtx, to: "/products/mtx-aftermarket" },
           ].map((b) => (
             <Link
               key={b.to}
               to={b.to}
-              className="bg-secondary border border-primary/30 rounded-lg px-6 py-3 text-center card-hover block"
+              className="bg-secondary border border-primary/30 rounded-lg p-4 text-center card-hover block"
             >
-              <div className="font-bold text-secondary-foreground">{b.label}</div>
-              <div className="text-xs text-primary">{b.sub}</div>
+              <img src={b.image} alt={b.label} className="h-16 md:h-20 object-contain mx-auto" />
             </Link>
           ))}
         </div>

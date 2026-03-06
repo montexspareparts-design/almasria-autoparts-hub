@@ -11,14 +11,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import brandGenuineParts from "@/assets/brand-genuine-parts.png";
+import brandToyotaOil from "@/assets/brand-toyota-oil.png";
+import brandMtx from "@/assets/brand-mtx.jpg";
 
-const brandConfig: Record<string, { title: string; subtitle: string; description: string; badge: string; brandKey: string }> = {
+const brandConfig: Record<string, { title: string; subtitle: string; description: string; badge: string; brandKey: string; logo: string }> = {
   "toyota-genuine": {
     title: "قطع غيار تويوتا الأصلية",
     subtitle: "Toyota Genuine Parts",
     description: "قطع غيار أصلية 100% من تويوتا اليابان. نحن موزع معتمد رسمي لجميع أنواع قطع غيار تويوتا الأصلية في مصر.",
     badge: "موزع معتمد رسمي",
     brandKey: "toyota_genuine",
+    logo: brandGenuineParts,
   },
   "toyota-oils": {
     title: "زيوت تويوتا الأصلية",
@@ -26,6 +30,7 @@ const brandConfig: Record<string, { title: string; subtitle: string; description
     description: "زيوت تويوتا الأصلية بجميع درجات اللزوجة. زيوت المحرك، زيوت الفتيس، سوائل الفرامل، وجميع سوائل تويوتا الأصلية.",
     badge: "موزع معتمد رسمي",
     brandKey: "toyota_oils",
+    logo: brandToyotaOil,
   },
   "mtx-aftermarket": {
     title: "MTX Aftermarket",
@@ -33,6 +38,7 @@ const brandConfig: Record<string, { title: string; subtitle: string; description
     description: "MTX هي علامتنا التجارية المسجلة لقطع الغيار المستوردة عالية الجودة بأفضل الأسعار.",
     badge: "علامة تجارية مسجلة",
     brandKey: "mtx_aftermarket",
+    logo: brandMtx,
   },
 };
 
@@ -188,6 +194,7 @@ const ProductsPage = () => {
             العودة للمنتجات
           </Link>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl">
+            <img src={config.logo} alt={config.title} className="h-20 md:h-28 object-contain mb-6" />
             <div className="inline-flex items-center gap-2 bg-primary/15 border border-primary/30 rounded-full px-4 py-1.5 mb-4">
               <ShieldCheck className="w-4 h-4 text-primary" />
               <span className="text-sm font-semibold text-primary">{config.badge}</span>
