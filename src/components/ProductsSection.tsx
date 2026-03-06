@@ -86,20 +86,19 @@ const ProductsSection = () => {
               transition={{ delay: i * 0.15, duration: 0.5, type: "spring", stiffness: 120 }}
               whileHover={{ scale: 1.05, y: -8 }}
               whileTap={{ scale: 0.97 }}
+              className="flex flex-col items-center gap-3"
             >
               <Link
                 to={b.to}
-                className="bg-white rounded-xl p-3 text-center block aspect-square flex flex-col items-center justify-center gap-2 group shadow-lg hover:shadow-2xl transition-shadow duration-300 border border-gray-100"
+                className="bg-white rounded-xl p-4 block aspect-square w-full flex items-center justify-center group shadow-lg hover:shadow-2xl transition-shadow duration-300 border border-gray-100"
               >
-                <div className="flex-1 w-full flex items-center justify-center overflow-hidden p-2">
-                  <img
-                    src={b.image}
-                    alt={b.label}
-                    className="max-h-full max-w-full object-contain scale-110 transition-transform duration-500 group-hover:scale-125"
-                  />
-                </div>
-                <p className="text-xs md:text-sm font-bold text-gray-800 group-hover:text-primary transition-colors duration-300">{b.label}</p>
+                <img
+                  src={b.image}
+                  alt={b.label}
+                  className="max-h-full max-w-full object-contain scale-110 transition-transform duration-500 group-hover:scale-125"
+                />
               </Link>
+              <p className="text-xs md:text-sm font-bold text-secondary-foreground text-center">{b.label}</p>
             </motion.div>
           ))}
         </div>
