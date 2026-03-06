@@ -106,22 +106,6 @@ const DealerApply = () => {
             </div>
           </div>
 
-          {/* Tiers */}
-          <div className="max-w-3xl mx-auto mt-16">
-            <h3 className="text-xl font-bold text-foreground mb-6 text-center">فئات التجار المعتمدين</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { label: "تاجر جملة\nدرجة أولى", color: "bg-primary" },
-                { label: "تاجر جملة\nدرجة ثانية", color: "bg-primary/80" },
-                { label: "شركة\nأو هيئة", color: "bg-primary/60" },
-                { label: "عميل\nقطاعي", color: "bg-primary/40" },
-              ].map((t, i) => (
-                <div key={i} className={`${t.color} rounded-lg p-4 text-center`}>
-                  <span className="text-primary-foreground font-bold text-sm whitespace-pre-line">{t.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
 
           {/* CTA */}
           <div className="text-center mt-12">

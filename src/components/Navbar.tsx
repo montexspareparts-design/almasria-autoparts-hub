@@ -117,7 +117,7 @@ const Navbar = () => {
                   تسجيل الدخول
                 </Button>
                 <Button variant="default" size="sm" className="w-full mt-2 gap-2" onClick={() => { navigate("/dealer-apply"); setIsOpen(false); }}>
-                  <Phone className="w-4 h-4" /> حساب تاجر
+                  <UserPlus className="w-4 h-4" /> حساب تاجر
                 </Button>
               </>
             )}
