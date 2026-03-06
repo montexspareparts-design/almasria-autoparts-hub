@@ -16,8 +16,8 @@ import brandToyotaOil from "@/assets/brand-toyota-oil.png";
 import brandMtx from "@/assets/brand-mtx.jpg";
 
 const categories = [
-  { name: "قطع المحرك", image: catEngine, count: "+800 صنف" },
-  { name: "العفشة والتعليق", image: catSuspension, count: "+600 صنف" },
+  { name: "أجزاء المحرك", image: catEngine, count: "+800 صنف" },
+  { name: "أجزاء العفشة", image: catSuspension, count: "+600 صنف" },
   { name: "الفلاتر", image: catFilters, count: "+400 صنف" },
   { name: "زيوت تويوتا الأصلية", image: catOils, count: "+50 صنف" },
   { name: "الكهرباء", image: catElectrical, count: "+500 صنف" },
