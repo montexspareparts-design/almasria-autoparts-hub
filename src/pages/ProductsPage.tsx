@@ -212,8 +212,25 @@ const ProductsPage = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: Math.min(i * 0.02, 0.5) }}
-                  className="bg-card border border-border rounded-lg p-4 hover:border-primary/40 hover:shadow-md transition-all duration-200 group"
+                  className="bg-card border border-border rounded-lg overflow-hidden hover:border-primary/40 hover:shadow-md transition-all duration-200 group"
                 >
+                  {/* Product Image */}
+                  <div className="aspect-square bg-muted relative overflow-hidden">
+                    {product.image_url ? (
+                      <img
+                        src={product.image_url}
+                        alt={product.name_ar}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Package className="w-12 h-12 text-muted-foreground/20" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="p-4">
                   {/* SKU Badge */}
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-[11px] font-mono bg-muted text-muted-foreground px-2 py-0.5 rounded">
@@ -256,6 +273,7 @@ const ProductsPage = () => {
                       الحد الأدنى: {product.min_order_qty} قطعة
                     </p>
                   )}
+                  </div>
                 </motion.div>
               ))}
             </div>
