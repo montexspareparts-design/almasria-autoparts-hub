@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Menu, X, UserPlus, User, LogOut, ShoppingCart } from "lucide-react";
+import { Menu, X, Briefcase, User, LogOut, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
@@ -78,7 +78,7 @@ const Navbar = () => {
                   تسجيل الدخول
                 </Button>
                 <Button variant="default" size="sm" className="gap-2" onClick={() => navigate("/dealer-apply")}>
-                  <UserPlus className="w-4 h-4" />
+                  <Briefcase className="w-4 h-4" />
                   التسجيل كـ تاجر
                 </Button>
               </>
@@ -117,7 +117,7 @@ const Navbar = () => {
                   تسجيل الدخول
                 </Button>
                 <Button variant="default" size="sm" className="w-full mt-2 gap-2" onClick={() => { navigate("/dealer-apply"); setIsOpen(false); }}>
-                  <UserPlus className="w-4 h-4" /> التسجيل كـ تاجر
+                  <Briefcase className="w-4 h-4" /> التسجيل كـ تاجر
                 </Button>
               </>
             )}
