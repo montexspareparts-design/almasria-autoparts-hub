@@ -48,8 +48,14 @@ const ProductsPage = () => {
   const { addItem } = useCart();
   const queryClient = useQueryClient();
   const config = brand ? brandConfig[brand] : null;
-  const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [filters, setFilters] = useState<ProductFilters>({
+    search: "",
+    model: null,
+    year: null,
+    chassisNumber: "",
+    partNumber: "",
+    categoryId: null,
+  });
   const DAILY_LIMIT = 20;
 
   // Track viewed product IDs today (for dealers)
