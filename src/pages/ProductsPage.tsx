@@ -59,7 +59,6 @@ const ProductsPage = () => {
     addItem(cartItem);
     toast({ title: "تمت الإضافة للسلة ✅", description: product.name_ar });
   };
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const { data: categories } = useQuery({
     queryKey: ["product_categories"],
