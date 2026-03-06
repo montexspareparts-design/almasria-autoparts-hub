@@ -52,7 +52,7 @@ const ProductsPage = () => {
       const { data, error } = await supabase
         .from("product_tier_prices")
         .select("product_id, price")
-        .eq("tier", dealerAccount.tier);
+        .eq("tier", dealerAccount.tier as any);
       if (error) throw error;
       const map: Record<string, number> = {};
       data.forEach((tp) => { map[tp.product_id] = tp.price; });
