@@ -72,20 +72,35 @@ const ProductsSection = () => {
         )}
 
         {/* Brand Labels */}
-        <div className="flex justify-center gap-6 mb-10 flex-wrap">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10 max-w-4xl mx-auto">
           {[
             { label: "قطع غيار تويوتا الأصلية", image: brandGenuineParts, to: "/products/toyota-genuine" },
             { label: "زيوت تويوتا الأصلية", image: brandToyotaOil, to: "/products/toyota-oils" },
             { label: "MTX Aftermarket", image: brandMtx, to: "/products/mtx-aftermarket" },
-          ].map((b) => (
-            <Link
+          ].map((b, i) => (
+            <motion.div
               key={b.to}
-              to={b.to}
-              className="bg-secondary border border-primary/30 rounded-lg p-6 text-center card-hover block min-w-[200px]"
+              initial={{ opacity: 0, y: 30, scale: 0.9 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.15, duration: 0.5, type: "spring", stiffness: 120 }}
+              whileHover={{ scale: 1.05, y: -8 }}
+              whileTap={{ scale: 0.97 }}
             >
-              <img src={b.image} alt={b.label} className="h-32 md:h-40 object-contain mx-auto" />
-              <p className="mt-3 text-sm md:text-base font-bold text-secondary-foreground">{b.label}</p>
-            </Link>
+              <Link
+                to={b.to}
+                className="bg-secondary border border-primary/30 rounded-xl p-6 text-center card-hover block h-full flex flex-col items-center justify-center gap-4 group"
+              >
+                <div className="h-36 w-full flex items-center justify-center overflow-hidden">
+                  <img
+                    src={b.image}
+                    alt={b.label}
+                    className="max-h-full max-w-full object-contain transition-transform duration-500 group-hover:scale-110"
+                  />
+                </div>
+                <p className="text-sm md:text-base font-bold text-secondary-foreground group-hover:text-primary transition-colors duration-300">{b.label}</p>
+              </Link>
+            </motion.div>
           ))}
         </div>
 
