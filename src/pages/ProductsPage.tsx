@@ -410,6 +410,21 @@ const ProductsPage = () => {
         </div>
       </section>
 
+      {/* Special Offers */}
+      <SpecialOffers brandKey={config.brandKey} />
+
+      {/* Related Products */}
+      <RelatedProducts
+        allProducts={products || []}
+        currentCategoryId={filters.categoryId}
+        onAddToCart={handleAddToCart}
+        getPrice={getProductPrice}
+        isDealer={isDealer}
+      />
+
+      {/* Maintenance Bundles */}
+      <MaintenanceBundles />
+
       <Footer />
     </div>
   );
