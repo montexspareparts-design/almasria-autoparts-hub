@@ -89,7 +89,7 @@ const ProductsSection = () => {
             >
               <Link
                 to={b.to}
-                className="bg-secondary border border-primary/30 rounded-xl p-6 text-center card-hover block h-full flex flex-col items-center justify-center gap-4 group"
+                className="bg-white rounded-xl p-6 text-center block h-full flex flex-col items-center justify-center gap-4 group shadow-lg hover:shadow-2xl transition-shadow duration-300 border border-gray-100"
               >
                 <div className="h-36 w-full flex items-center justify-center overflow-hidden">
                   <img
@@ -98,7 +98,7 @@ const ProductsSection = () => {
                     className="max-h-full max-w-full object-contain transition-transform duration-500 group-hover:scale-110"
                   />
                 </div>
-                <p className="text-sm md:text-base font-bold text-secondary-foreground group-hover:text-primary transition-colors duration-300">{b.label}</p>
+                <p className="text-sm md:text-base font-bold text-gray-800 group-hover:text-primary transition-colors duration-300">{b.label}</p>
               </Link>
             </motion.div>
           ))}
@@ -112,21 +112,25 @@ const ProductsSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="group relative rounded-lg overflow-hidden card-hover cursor-pointer"
             >
-              <div className="aspect-[4/3] relative">
-                <img
-                  src={cat.image}
-                  alt={cat.name}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-secondary via-secondary/40 to-transparent" />
-                <div className="absolute bottom-0 right-0 left-0 p-6">
-                  <h3 className="text-xl font-bold text-secondary-foreground mb-1">{cat.name}</h3>
-                  <p className="text-sm text-primary font-semibold">{cat.count}</p>
+              <Link
+                to="/products/toyota-genuine"
+                className="group relative rounded-lg overflow-hidden card-hover cursor-pointer block"
+              >
+                <div className="aspect-[4/3] relative">
+                  <img
+                    src={cat.image}
+                    alt={cat.name}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-secondary via-secondary/40 to-transparent" />
+                  <div className="absolute bottom-0 right-0 left-0 p-6">
+                    <h3 className="text-xl font-bold text-secondary-foreground mb-1">{cat.name}</h3>
+                    <p className="text-sm text-primary font-semibold">{cat.count}</p>
+                  </div>
                 </div>
-              </div>
+              </Link>
             </motion.div>
           ))}
         </div>
