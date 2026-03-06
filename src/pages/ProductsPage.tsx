@@ -179,7 +179,10 @@ const ProductsPage = () => {
         !filters.year || p.name_ar.includes(filters.year);
       const matchesPartNumber =
         !filters.partNumber || p.sku.toLowerCase().includes(filters.partNumber.toLowerCase());
-      return matchesSearch && matchesCategory && matchesModel && matchesYear && matchesPartNumber;
+      const price = p.base_price;
+      const matchesPriceMin = !filters.priceMin || price >= Number(filters.priceMin);
+      const matchesPriceMax = !filters.priceMax || price <= Number(filters.priceMax);
+      return matchesSearch && matchesCategory && matchesModel && matchesYear && matchesPartNumber && matchesPriceMin && matchesPriceMax;
     });
   }, [products, filters]);
 
