@@ -53,7 +53,7 @@ const Auth = () => {
         email: syntheticEmail,
         password,
         options: {
-          data: { full_name: fullName, phone },
+          data: { full_name: fullName, phone, company_name: companyName, address },
         },
       });
       if (error) {
