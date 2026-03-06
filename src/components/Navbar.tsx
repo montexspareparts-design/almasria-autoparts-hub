@@ -54,6 +54,9 @@ const Navbar = () => {
               )}
             </button>
 
+            {/* Notifications */}
+            <NotificationBell />
+
             {user ? (
               <>
                 {isAdmin && (
