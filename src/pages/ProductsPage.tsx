@@ -140,18 +140,18 @@ const ProductsPage = () => {
       {/* Search & Filter */}
       <section className="py-6 bg-background border-b border-border sticky top-16 z-30">
         <div className="container mx-auto px-4">
-          {/* Price notice */}
+          {/* Dealer promotion banner */}
           {!isDealer && (
             <div className="bg-muted border border-primary/20 rounded-lg p-3 mb-4 flex items-center justify-between flex-wrap gap-3">
               <div className="flex items-center gap-2">
-                <Lock className="w-4 h-4 text-primary shrink-0" />
+                <ShieldCheck className="w-4 h-4 text-primary shrink-0" />
                 <p className="text-foreground text-sm">
-                  <strong>الأسعار متاحة للتجار المعتمدين فقط.</strong>
+                  <strong>تاجر معتمد؟</strong> سجل دخولك للحصول على أسعار الجملة الخاصة.
                 </p>
               </div>
               <Button size="sm" className="shrink-0" asChild>
-                <Link to={user ? "/dealer" : "/dealer-register"}>
-                  {user ? "لوحة التحكم" : "سجل كتاجر"}
+                <Link to="/dealer-login">
+                  دخول التجار
                 </Link>
               </Button>
             </div>
