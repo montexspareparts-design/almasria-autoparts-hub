@@ -1,4 +1,5 @@
 import { useState } from "react";
+import logo from "@/assets/logo.png";
 import { Menu, X, Briefcase, User, LogOut, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,9 +27,7 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 md:h-20">
           <a href="/" className="flex items-center gap-2">
-            <span className="text-xl md:text-2xl font-bold text-secondary-foreground">
-              المصرية <span className="text-gradient-red">جروب</span>
-            </span>
+            <img src={logo} alt="المصرية جروب" className="h-10 md:h-12" />
           </a>
 
           <div className="hidden md:flex items-center gap-6">

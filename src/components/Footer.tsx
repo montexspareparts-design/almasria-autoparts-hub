@@ -1,4 +1,5 @@
 import { Phone } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 const Footer = () => {
   return (
@@ -6,9 +7,7 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-4 gap-8 mb-8">
           <div>
-            <h3 className="text-xl font-bold mb-3">
-              المصرية <span className="text-gradient-red">جروب</span>
-            </h3>
+            <img src={logo} alt="المصرية جروب" className="h-16 mb-3" />
             <p className="text-secondary-foreground/60 text-sm leading-relaxed">
               موزع معتمد رسمي لقطع غيار وزيوت تويوتا الأصلية في مصر. خبرة أكثر من 25 عامًا في سوق قطع غيار السيارات.
             </p>
