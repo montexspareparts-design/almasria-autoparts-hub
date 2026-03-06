@@ -194,7 +194,7 @@ const ProductsPage = () => {
             العودة للمنتجات
           </Link>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl">
-            <img src={config.logo} alt={config.title} className="h-20 md:h-28 object-contain mb-6" />
+            <img src={config.logo} alt={config.title} className="h-28 md:h-36 object-contain mb-6" />
             <div className="inline-flex items-center gap-2 bg-primary/15 border border-primary/30 rounded-full px-4 py-1.5 mb-4">
               <ShieldCheck className="w-4 h-4 text-primary" />
               <span className="text-sm font-semibold text-primary">{config.badge}</span>

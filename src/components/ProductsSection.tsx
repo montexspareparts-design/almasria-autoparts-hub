@@ -83,7 +83,7 @@ const ProductsSection = () => {
               to={b.to}
               className="bg-secondary border border-primary/30 rounded-lg p-4 text-center card-hover block"
             >
-              <img src={b.image} alt={b.label} className="h-16 md:h-20 object-contain mx-auto" />
+              <img src={b.image} alt={b.label} className="h-24 md:h-28 object-contain mx-auto" />
             </Link>
           ))}
         </div>
