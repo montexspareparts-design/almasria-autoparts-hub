@@ -72,7 +72,7 @@ const RelatedProducts = ({ currentProduct, allProducts, currentCategoryId, onAdd
                 )}
               </div>
               <div className="p-3">
-                <p className="text-[10px] font-mono text-muted-foreground mb-1">{product.sku}</p>
+                <p className="text-[10px] font-mono text-muted-foreground mb-1">Part No: {product.sku}</p>
                 <h4 className="text-xs font-bold text-card-foreground leading-relaxed mb-2 line-clamp-2 group-hover:text-primary transition-colors">
                   {product.name_ar}
                 </h4>

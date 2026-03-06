@@ -180,7 +180,7 @@ const AdvancedProductFilter = ({ filters, onFiltersChange, categories, showCateg
                   )}
                 </div>
 
-                {/* Part Number (SKU / OEM) */}
+                {/* Part Number (OEM) */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-muted-foreground">رقم القطعة (OEM Part Number)</label>
                   <Input
@@ -289,7 +289,7 @@ const AdvancedProductFilter = ({ filters, onFiltersChange, categories, showCateg
             )}
             {filters.partNumber && (
               <span className="inline-flex items-center gap-1 bg-primary/10 text-primary text-[11px] px-2 py-0.5 rounded-full font-semibold">
-                SKU: {filters.partNumber}
+                Part Number: {filters.partNumber}
                 <button onClick={() => updateFilter("partNumber", "")}><X className="w-3 h-3" /></button>
               </span>
             )}
