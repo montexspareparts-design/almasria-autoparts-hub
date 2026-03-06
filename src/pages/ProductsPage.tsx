@@ -11,6 +11,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import brandGenuineParts from "@/assets/brand-genuine-parts.png";
+import brandToyotaOil from "@/assets/brand-toyota-oil.png";
+import brandMtx from "@/assets/brand-mtx.jpg";
 
 const brandConfig: Record<string, { title: string; subtitle: string; description: string; badge: string; brandKey: string }> = {
   "toyota-genuine": {
