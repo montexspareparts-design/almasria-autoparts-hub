@@ -218,7 +218,6 @@ const ProductsPage = () => {
         </div>
       </section>
 
-      {/* Search & Filter */}
       <section className="py-6 bg-background border-b border-border sticky top-16 z-30">
         <div className="container mx-auto px-4">
           {/* Dealer promotion banner */}
@@ -260,50 +259,14 @@ const ProductsPage = () => {
             </div>
           )}
 
-          <div className="flex flex-col sm:flex-row gap-3">
-            {/* Search */}
-            <div className="relative flex-1">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="ابحث بالاسم أو رقم الصنف (SKU)..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pr-10 bg-card"
-              />
-              {search && (
-                <button onClick={() => setSearch("")} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-
-            {/* Category filter */}
-            {categories && categories.length > 0 && config.brandKey !== "toyota_oils" && (
-              <div className="flex gap-2 flex-wrap">
-                <Button
-                  variant={selectedCategory === null ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedCategory(null)}
-                >
-                  الكل
-                </Button>
-                {categories.map((cat) => (
-                  <Button
-                    key={cat.id}
-                    variant={selectedCategory === cat.id ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedCategory(selectedCategory === cat.id ? null : cat.id)}
-                  >
-                    {cat.name_ar}
-                  </Button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="mt-3 text-sm text-muted-foreground">
-            {isLoading ? "جاري التحميل..." : `${filteredProducts.length} منتج`}
-          </div>
+          <AdvancedProductFilter
+            filters={filters}
+            onFiltersChange={setFilters}
+            categories={categories}
+            showCategories={config.brandKey !== "toyota_oils"}
+            totalResults={filteredProducts.length}
+            isLoading={isLoading}
+          />
         </div>
       </section>
 
