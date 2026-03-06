@@ -292,6 +292,18 @@ const ProductsPage = () => {
                       الحد الأدنى: {product.min_order_qty} قطعة
                     </p>
                   )}
+
+                  {/* Add to Cart */}
+                  {isDealer && product.stock_quantity > 0 && (
+                    <Button
+                      size="sm"
+                      className="w-full mt-3 gap-2"
+                      onClick={() => handleAddToCart(product)}
+                    >
+                      <ShoppingCart className="w-3.5 h-3.5" />
+                      أضف للسلة
+                    </Button>
+                  )}
                   </div>
                 </motion.div>
               ))}
