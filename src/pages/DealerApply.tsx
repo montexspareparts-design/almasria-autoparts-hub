@@ -53,7 +53,7 @@ const DealerApply = () => {
       {/* Benefits */}
       <section className="py-16 bg-dark-section">
         <div className="container mx-auto px-4">
-          <h2 className="text-2xl md:text-3xl font-bold text-dark-section-foreground text-center mb-12">مميزات الانضمام  المصرية جروب
+          <h2 className="text-2xl md:text-3xl font-bold text-dark-section-foreground text-center mb-12">مميزات الانضمام  المصرية جروب المصرية جروب
             <span className="text-gradient-red">المصرية جروب</span>
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
