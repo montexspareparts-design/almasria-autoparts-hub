@@ -40,9 +40,11 @@ const ProductsSection = () => {
           <h2 className="text-3xl md:text-5xl font-black text-dark-section-foreground mb-4">
             <span className="text-gradient-red">منتجاتنا</span>
           </h2>
-          <p className="text-dark-section-foreground/60 text-lg max-w-2xl mx-auto">
-            قطع غيار وزيوت تويوتا أصلي وبديل الأصلي MTX Aftermarket
-          </p>
+          <div className="flex flex-wrap justify-center gap-3 max-w-2xl mx-auto">
+            <span className="bg-white/10 backdrop-blur-sm border border-white/20 text-dark-section-foreground/90 text-sm md:text-base px-5 py-2 rounded-full">قطع غيار تويوتا أصلي</span>
+            <span className="bg-white/10 backdrop-blur-sm border border-white/20 text-dark-section-foreground/90 text-sm md:text-base px-5 py-2 rounded-full">زيوت تويوتا أصلي</span>
+            <span className="bg-white/10 backdrop-blur-sm border border-white/20 text-dark-section-foreground/90 text-sm md:text-base px-5 py-2 rounded-full">MTX Aftermarket</span>
+          </div>
           <div className="w-20 h-1 bg-primary mx-auto mt-4" />
         </motion.div>
 
