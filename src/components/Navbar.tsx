@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { useNavigate } from "react-router-dom";
+import NotificationBell from "@/components/NotificationBell";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
