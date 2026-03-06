@@ -72,7 +72,7 @@ const ProductsSection = () => {
         )}
 
         {/* Brand Labels */}
-        <div className="flex justify-center gap-4 mb-10 flex-wrap">
+        <div className="flex justify-center gap-6 mb-10 flex-wrap">
           {[
             { label: "قطع غيار تويوتا الأصلية", image: brandGenuineParts, to: "/products/toyota-genuine" },
             { label: "زيوت تويوتا الأصلية", image: brandToyotaOil, to: "/products/toyota-oils" },
@@ -81,9 +81,10 @@ const ProductsSection = () => {
             <Link
               key={b.to}
               to={b.to}
-              className="bg-secondary border border-primary/30 rounded-lg p-4 text-center card-hover block"
+              className="bg-secondary border border-primary/30 rounded-lg p-6 text-center card-hover block min-w-[200px]"
             >
-              <img src={b.image} alt={b.label} className="h-24 md:h-28 object-contain mx-auto" />
+              <img src={b.image} alt={b.label} className="h-32 md:h-40 object-contain mx-auto" />
+              <p className="mt-3 text-sm md:text-base font-bold text-secondary-foreground">{b.label}</p>
             </Link>
           ))}
         </div>
