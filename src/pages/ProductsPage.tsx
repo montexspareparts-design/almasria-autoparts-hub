@@ -300,7 +300,7 @@ const ProductsPage = () => {
 
                   {/* Price */}
                   <div className="text-primary font-black text-lg">
-                    {product.base_price.toLocaleString("ar-EG")} ج.م
+                    {getProductPrice(product).toLocaleString("ar-EG")} ج.م
                   </div>
                   {!isDealer && (
                     <p className="text-[11px] text-muted-foreground">سعر قطاعي</p>
