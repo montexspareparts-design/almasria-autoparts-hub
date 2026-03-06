@@ -72,7 +72,7 @@ const ProductsSection = () => {
         )}
 
         {/* Brand Labels */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10 max-w-4xl mx-auto">
+        <div className="grid grid-cols-3 gap-4 mb-10 max-w-3xl mx-auto">
           {[
             { label: "قطع غيار تويوتا الأصلية", image: brandGenuineParts, to: "/products/toyota-genuine" },
             { label: "زيوت تويوتا الأصلية", image: brandToyotaOil, to: "/products/toyota-oils" },
@@ -89,16 +89,16 @@ const ProductsSection = () => {
             >
               <Link
                 to={b.to}
-                className="bg-white rounded-xl p-6 text-center block h-full flex flex-col items-center justify-center gap-4 group shadow-lg hover:shadow-2xl transition-shadow duration-300 border border-gray-100"
+                className="bg-white rounded-xl p-3 text-center block aspect-square flex flex-col items-center justify-center gap-2 group shadow-lg hover:shadow-2xl transition-shadow duration-300 border border-gray-100"
               >
-                <div className="h-48 md:h-56 w-full flex items-center justify-center overflow-hidden">
+                <div className="flex-1 w-full flex items-center justify-center overflow-hidden p-2">
                   <img
                     src={b.image}
                     alt={b.label}
-                    className="max-h-full max-w-full object-contain transition-transform duration-500 group-hover:scale-110"
+                    className="max-h-full max-w-full object-contain scale-110 transition-transform duration-500 group-hover:scale-125"
                   />
                 </div>
-                <p className="text-sm md:text-base font-bold text-gray-800 group-hover:text-primary transition-colors duration-300">{b.label}</p>
+                <p className="text-xs md:text-sm font-bold text-gray-800 group-hover:text-primary transition-colors duration-300">{b.label}</p>
               </Link>
             </motion.div>
           ))}
