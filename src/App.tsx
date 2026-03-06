@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import DealerApply from "./pages/DealerApply";
 import DealerRegister from "./pages/DealerRegister";
+import ClientRegister from "./pages/ClientRegister";
 import DealerDashboard from "./pages/DealerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import ProductsPage from "./pages/ProductsPage";
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/dealer-apply" element={<DealerApply />} />
             <Route path="/dealer-register" element={<DealerRegister />} />
             <Route path="/dealer" element={<DealerDashboard />} />
+            <Route path="/client-register" element={<ClientRegister />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/products/:brand" element={<ProductsPage />} />
             <Route path="*" element={<NotFound />} />
