@@ -29,6 +29,7 @@ const App = () => (
             <Route path="/dealer-register" element={<DealerRegister />} />
             <Route path="/dealer" element={<DealerDashboard />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/products/:brand" element={<ProductsPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
