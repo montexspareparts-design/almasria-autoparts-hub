@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle, XCircle, Clock, Eye, LogOut } from "lucide-react";
+import AdminProductImages from "@/components/AdminProductImages";
 import type { Database } from "@/integrations/supabase/types";
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
