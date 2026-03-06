@@ -1,12 +1,12 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, Lock, ShieldCheck, Search, Package, X, ShoppingCart } from "lucide-react";
+import { ArrowRight, Lock, ShieldCheck, Search, Package, X, ShoppingCart, Eye, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart, CartItem } from "@/contexts/CartContext";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
@@ -40,9 +40,47 @@ const ProductsPage = () => {
   const { brand } = useParams<{ brand: string }>();
   const { isDealer, user, dealerAccount } = useAuth();
   const { addItem } = useCart();
+  const queryClient = useQueryClient();
   const config = brand ? brandConfig[brand] : null;
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const DAILY_LIMIT = 20;
+
+  // Track viewed product IDs today (for dealers)
+  const { data: viewedProductIds = [] } = useQuery({
+    queryKey: ["dealer_views_today", user?.id],
+    queryFn: async () => {
+      const today = new Date().toISOString().split("T")[0];
+      const { data, error } = await supabase
+        .from("dealer_price_views")
+        .select("product_id")
+        .eq("user_id", user!.id)
+        .eq("view_date", today);
+      if (error) throw error;
+      return data.map((v) => v.product_id);
+    },
+    enabled: !!isDealer && !!user,
+  });
+
+  const dailyViewCount = viewedProductIds.length;
+  const limitReached = dailyViewCount >= DAILY_LIMIT;
+
+  const recordView = useCallback(async (productId: string) => {
+    if (!user || !isDealer) return;
+    if (viewedProductIds.includes(productId)) return; // already viewed
+    if (limitReached) return;
+
+    await supabase.from("dealer_price_views").upsert(
+      { user_id: user.id, product_id: productId, view_date: new Date().toISOString().split("T")[0] },
+      { onConflict: "user_id,product_id,view_date" }
+    );
+    queryClient.invalidateQueries({ queryKey: ["dealer_views_today", user.id] });
+  }, [user, isDealer, viewedProductIds, limitReached, queryClient]);
+
+  const canSeePrice = (productId: string) => {
+    if (!isDealer) return true; // visitors always see retail
+    return viewedProductIds.includes(productId) || !limitReached;
+  };
 
   // Fetch tier prices for dealers
   const { data: tierPrices } = useQuery({
@@ -174,10 +212,32 @@ const ProductsPage = () => {
                 </p>
               </div>
               <Button size="sm" className="shrink-0" asChild>
-                <Link to="/dealer-login">
-                  دخول التجار
-                </Link>
+                <Link to="/dealer-login">دخول التجار</Link>
               </Button>
+            </div>
+          )}
+
+          {/* Dealer daily limit banner */}
+          {isDealer && (
+            <div className={`rounded-lg p-3 mb-4 flex items-center justify-between flex-wrap gap-3 border ${
+              limitReached ? "bg-destructive/10 border-destructive/30" : "bg-muted border-primary/20"
+            }`}>
+              <div className="flex items-center gap-2">
+                <Eye className="w-4 h-4 text-primary shrink-0" />
+                <p className="text-foreground text-sm">
+                  {limitReached ? (
+                    <><strong>استنفدت الحد اليومي.</strong> يمكنك مشاهدة أسعار جديدة غداً.</>
+                  ) : (
+                    <>شاهدت <strong>{dailyViewCount}</strong> من <strong>{DAILY_LIMIT}</strong> صنف اليوم</>
+                  )}
+                </p>
+              </div>
+              {limitReached && (
+                <div className="flex items-center gap-1 text-destructive text-xs font-semibold">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  <span>الحد الأقصى</span>
+                </div>
+              )}
             </div>
           )}
 
@@ -299,14 +359,39 @@ const ProductsPage = () => {
                   )}
 
                   {/* Price */}
-                  <div className="text-primary font-black text-lg">
-                    {getProductPrice(product).toLocaleString("ar-EG")} ج.م
-                  </div>
-                  {!isDealer && (
-                    <p className="text-[11px] text-muted-foreground">سعر قطاعي</p>
-                  )}
-                  {isDealer && (
-                    <p className="text-[11px] text-green-600 font-semibold">سعر الجملة الخاص بك</p>
+                  {!isDealer ? (
+                    /* Visitor - always show retail price */
+                    <>
+                      <div className="text-primary font-black text-lg">
+                        {product.base_price.toLocaleString("ar-EG")} ج.م
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">سعر قطاعي</p>
+                    </>
+                  ) : viewedProductIds.includes(product.id) ? (
+                    /* Dealer - already viewed today */
+                    <>
+                      <div className="text-primary font-black text-lg">
+                        {getProductPrice(product).toLocaleString("ar-EG")} ج.م
+                      </div>
+                      <p className="text-[11px] text-green-600 font-semibold">سعر الجملة الخاص بك</p>
+                    </>
+                  ) : !limitReached ? (
+                    /* Dealer - not viewed, can still view */
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full mt-1 gap-2"
+                      onClick={() => recordView(product.id)}
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      اعرض السعر ({DAILY_LIMIT - dailyViewCount} متبقي)
+                    </Button>
+                  ) : (
+                    /* Dealer - limit reached */
+                    <div className="flex items-center gap-2 text-muted-foreground text-xs py-1">
+                      <Lock className="w-3.5 h-3.5" />
+                      <span>استنفدت الحد اليومي (20 صنف)</span>
+                    </div>
                   )}
 
                   {/* Min Order */}
@@ -316,8 +401,8 @@ const ProductsPage = () => {
                     </p>
                   )}
 
-                  {/* Add to Cart */}
-                  {product.stock_quantity > 0 && (
+                  {/* Add to Cart - visitors always, dealers only if viewed */}
+                  {product.stock_quantity > 0 && (!isDealer || viewedProductIds.includes(product.id)) && (
                     <Button
                       size="sm"
                       className="w-full mt-3 gap-2"

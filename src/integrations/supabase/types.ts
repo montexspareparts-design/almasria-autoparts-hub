@@ -163,6 +163,38 @@ export type Database = {
         }
         Relationships: []
       }
+      dealer_price_views: {
+        Row: {
+          id: string
+          product_id: string
+          user_id: string
+          view_date: string
+          viewed_at: string
+        }
+        Insert: {
+          id?: string
+          product_id: string
+          user_id: string
+          view_date?: string
+          viewed_at?: string
+        }
+        Update: {
+          id?: string
+          product_id?: string
+          user_id?: string
+          view_date?: string
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dealer_price_views_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           id: string
@@ -433,6 +465,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_daily_view_count: { Args: { _user_id: string }; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
