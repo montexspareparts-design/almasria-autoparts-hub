@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 import catEngine from "@/assets/cat-engine.jpg";
 import catSuspension from "@/assets/cat-suspension.jpg";
@@ -19,6 +21,9 @@ const categories = [
 ];
 
 const ProductsSection = () => {
+  const { isDealer, user } = useAuth();
+  const navigate = useNavigate();
+
   return (
     <section id="products" className="py-20 md:py-28 bg-dark-section">
       <div className="container mx-auto px-4">
@@ -36,6 +41,31 @@ const ProductsSection = () => {
           </p>
           <div className="w-20 h-1 bg-primary mx-auto mt-4" />
         </motion.div>
+
+        {/* Price Notice */}
+        {!isDealer && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="bg-secondary/60 border border-primary/30 rounded-lg p-4 mb-8 flex items-center justify-between flex-wrap gap-4"
+          >
+            <div className="flex items-center gap-3">
+              <Lock className="w-5 h-5 text-primary shrink-0" />
+              <p className="text-secondary-foreground text-sm">
+                <strong>الأسعار متاحة للتجار المعتمدين فقط.</strong>{" "}
+                سجل كتاجر معتمد للاطلاع على الأسعار وطلب المنتجات.
+              </p>
+            </div>
+            <Button
+              size="sm"
+              className="shrink-0"
+              onClick={() => navigate(user ? "/dealer" : "/dealer-apply")}
+            >
+              {user ? "لوحة التحكم" : "طلب فتح حساب تاجر"}
+            </Button>
+          </motion.div>
+        )}
 
         {/* Brand Labels */}
         <div className="flex justify-center gap-4 mb-10 flex-wrap">
