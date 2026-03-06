@@ -1,386 +1,354 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ArrowRight, Upload, CheckCircle, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { z } from "zod";
+import { Lock, UserPlus, CheckCircle2, Building2, Users, ShoppingBag, Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const governorates = [
-  "القاهرة", "الجيزة", "الإسكندرية", "الدقهلية", "الشرقية", "المنوفية",
-  "الغربية", "كفر الشيخ", "البحيرة", "المنيا", "أسيوط", "سوهاج",
-  "قنا", "الأقصر", "أسوان", "الفيوم", "بني سويف", "الإسماعيلية",
-  "السويس", "بورسعيد", "دمياط", "شمال سيناء", "جنوب سيناء",
-  "البحر الأحمر", "الوادي الجديد", "مطروح",
+  "القاهرة", "الجيزة", "الإسكندرية", "الشرقية", "الدقهلية", "البحيرة",
+  "المنوفية", "الغربية", "كفر الشيخ", "القليوبية", "الفيوم", "بني سويف",
+  "المنيا", "أسيوط", "سوهاج", "قنا", "الأقصر", "أسوان", "البحر الأحمر",
+  "الوادي الجديد", "مطروح", "شمال سيناء", "جنوب سيناء", "بورسعيد",
+  "الإسماعيلية", "السويس", "دمياط",
 ];
 
+const clientTypes = [
+  { value: "wholesale", label: "عميل جملة", icon: ShoppingBag, desc: "تجار الجملة وموزعي قطع الغيار" },
+  { value: "company", label: "شركة / هيئة حكومية", icon: Building2, desc: "شركات خاصة أو جهات حكومية" },
+  { value: "distributor", label: "عميل قطاعي", icon: Users, desc: "ورش صيانة ومراكز خدمة" },
+] as const;
+
+const formSchema = z.object({
+  fullName: z.string().trim().min(3, "الاسم يجب أن يكون 3 أحرف على الأقل").max(100),
+  phone: z.string().trim().min(8, "رقم الهاتف غير صحيح").max(20),
+  businessName: z.string().trim().min(2, "اسم الشركة مطلوب").max(200),
+  governorate: z.string().min(1, "يرجى اختيار المحافظة"),
+  email: z.string().trim().email("بريد إلكتروني غير صحيح").max(255).optional().or(z.literal("")),
+  clientType: z.enum(["wholesale", "company", "distributor"], { required_error: "يرجى اختيار نوع العميل" }),
+});
+
+type FormData = z.infer<typeof formSchema>;
+
 const DealerRegister = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [step, setStep] = useState(1);
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [form, setForm] = useState<FormData>({
+    fullName: "",
+    phone: "",
+    businessName: "",
+    governorate: "",
+    email: user?.email || "",
+    clientType: "" as any,
+  });
 
-  // Step 1 - Basic
-  const [businessName, setBusinessName] = useState("");
-  const [legalName, setLegalName] = useState("");
-  const [commercialRegNo, setCommercialRegNo] = useState("");
-  const [taxCardNo, setTaxCardNo] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState(user?.email || "");
-  const [governorate, setGovernorate] = useState("");
-  const [address, setAddress] = useState("");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  // Step 2 - Business
-  const [clientType, setClientType] = useState<string>("");
-  const [yearsInBusiness, setYearsInBusiness] = useState("");
-  const [avgMonthly, setAvgMonthly] = useState("");
-  const [hasBranches, setHasBranches] = useState(false);
-  const [coverageAreas, setCoverageAreas] = useState("");
-
-  // Step 3 - Documents
-  const [commercialDoc, setCommercialDoc] = useState<File | null>(null);
-  const [taxDoc, setTaxDoc] = useState<File | null>(null);
-  const [nationalIdDoc, setNationalIdDoc] = useState<File | null>(null);
-  const [additionalDocs, setAdditionalDocs] = useState<File[]>([]);
-
-  // Agreements
-  const [agreedPricing, setAgreedPricing] = useState(false);
-  const [agreedMarket, setAgreedMarket] = useState(false);
-  const [agreedReturn, setAgreedReturn] = useState(false);
-  const [agreedTerms, setAgreedTerms] = useState(false);
-
-  // Auth for non-logged in users
-  const [authEmail, setAuthEmail] = useState("");
-  const [authPassword, setAuthPassword] = useState("");
-  const [authName, setAuthName] = useState("");
-
-  const uploadFile = async (file: File, folder: string): Promise<string | null> => {
-    const userId = user?.id || "temp";
-    const path = `${userId}/${folder}/${Date.now()}-${file.name}`;
-    const { error } = await supabase.storage.from("dealer-documents").upload(path, file);
-    if (error) {
-      console.error("Upload error:", error);
-      return null;
-    }
-    return path;
-  };
-
-  const handleSubmit = async () => {
-    if (!agreedPricing || !agreedMarket || !agreedReturn || !agreedTerms) {
-      toast({ title: "يرجى الموافقة على جميع السياسات", variant: "destructive" });
+    const result = formSchema.safeParse(form);
+    if (!result.success) {
+      toast.error(result.error.issues[0].message);
       return;
     }
 
     setLoading(true);
 
-    let currentUser = user;
+    try {
+      let userId = user?.id;
 
-    // If not logged in, create account first
-    if (!currentUser) {
-      const { data, error } = await supabase.auth.signUp({
-        email: authEmail || email,
-        password: authPassword,
-        options: { data: { full_name: authName || businessName } },
-      });
-      if (error || !data.user) {
-        toast({ title: "خطأ في إنشاء الحساب", description: error?.message, variant: "destructive" });
+      if (!userId) {
+        const emailForAuth = form.email || `${form.phone.replace(/\D/g, "")}@client.almasria.local`;
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: emailForAuth,
+          password: form.phone.replace(/\D/g, "").slice(-8).padStart(8, "0"),
+          options: { data: { full_name: form.fullName } },
+        });
+        if (authError) {
+          if (authError.message.includes("already registered")) {
+            toast.error("هذا البريد أو الرقم مسجل بالفعل. يرجى تسجيل الدخول.");
+          } else {
+            toast.error("حدث خطأ أثناء إنشاء الحساب: " + authError.message);
+          }
+          setLoading(false);
+          return;
+        }
+        userId = authData.user?.id;
+      }
+
+      if (!userId) {
+        toast.error("حدث خطأ. يرجى المحاولة مرة أخرى.");
         setLoading(false);
         return;
       }
-      currentUser = data.user;
-    }
 
-    // Upload documents
-    const commercialPath = commercialDoc ? await uploadFile(commercialDoc, "commercial") : null;
-    const taxPath = taxDoc ? await uploadFile(taxDoc, "tax") : null;
-    const nationalIdPath = nationalIdDoc ? await uploadFile(nationalIdDoc, "national-id") : null;
-    const additionalPaths: string[] = [];
-    for (const doc of additionalDocs) {
-      const p = await uploadFile(doc, "additional");
-      if (p) additionalPaths.push(p);
-    }
+      const { error: appError } = await supabase.from("dealer_applications").insert({
+        user_id: userId,
+        business_name: form.businessName,
+        legal_name: form.fullName,
+        commercial_register_no: "pending",
+        tax_card_no: "pending",
+        phone: form.phone,
+        email: form.email || "",
+        governorate: form.governorate,
+        detailed_address: form.governorate,
+        client_type: form.clientType as any,
+        agreed_terms: true,
+        agreed_pricing_policy: true,
+        agreed_market_protection: true,
+        agreed_return_policy: true,
+      });
 
-    // Submit application
-    const { error } = await supabase.from("dealer_applications").insert({
-      user_id: currentUser.id,
-      business_name: businessName,
-      legal_name: legalName,
-      commercial_register_no: commercialRegNo,
-      tax_card_no: taxCardNo,
-      phone,
-      email: email || authEmail,
-      governorate,
-      detailed_address: address,
-      client_type: clientType as "wholesale" | "company" | "workshop" | "distributor",
-      years_in_business: parseInt(yearsInBusiness) || 0,
-      avg_monthly_purchase: avgMonthly,
-      has_branches: hasBranches,
-      coverage_areas: coverageAreas,
-      commercial_register_doc: commercialPath,
-      tax_card_doc: taxPath,
-      national_id_doc: nationalIdPath,
-      additional_docs: additionalPaths.length > 0 ? additionalPaths : null,
-      agreed_pricing_policy: agreedPricing,
-      agreed_market_protection: agreedMarket,
-      agreed_return_policy: agreedReturn,
-      agreed_terms: agreedTerms,
-    });
+      if (appError) {
+        if (appError.message.includes("row-level security")) {
+          toast.error("يرجى تسجيل الدخول أولاً أو المحاولة مرة أخرى.");
+        } else {
+          toast.error("حدث خطأ أثناء إرسال الطلب.");
+        }
+        setLoading(false);
+        return;
+      }
 
-    if (error) {
-      toast({ title: "خطأ في تقديم الطلب", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "تم تقديم طلبك بنجاح!", description: "سيتم مراجعة طلبك والرد خلال 48 ساعة" });
-      navigate("/dealer");
+      setSubmitted(true);
+    } catch {
+      toast.error("حدث خطأ غير متوقع. يرجى المحاولة لاحقاً.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  const canProceedStep1 = businessName && legalName && commercialRegNo && taxCardNo && phone && (email || authEmail) && governorate && address;
-  const canProceedStep2 = clientType && yearsInBusiness;
+  if (submitted) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="pt-28 pb-20">
+          <div className="container mx-auto px-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="max-w-lg mx-auto text-center bg-card border border-border rounded-xl p-10 shadow-lg"
+            >
+              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <CheckCircle2 className="w-10 h-10 text-primary" />
+              </div>
+              <h2 className="text-2xl font-bold text-card-foreground mb-3">تم استلام طلبك بنجاح!</h2>
+              <p className="text-muted-foreground leading-relaxed mb-6">
+                سيتم التواصل معك خلال وقت قصير لتفعيل الحساب.
+                <br />
+                شكراً لاختيارك المصرية جروب.
+              </p>
+              <div className="bg-muted rounded-lg p-4 text-sm text-muted-foreground mb-6">
+                <strong className="text-foreground">حالة الطلب:</strong> قيد المراجعة
+              </div>
+              <Button onClick={() => navigate("/")} variant="outline" className="gap-2">
+                العودة للرئيسية
+              </Button>
+            </motion.div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="pt-24 pb-16">
-        <div className="container mx-auto px-4 max-w-2xl">
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground text-center mb-2">
-            تسجيل <span className="text-gradient-red">تاجر معتمد</span>
-          </h1>
-          <p className="text-center text-muted-foreground mb-8">أكمل البيانات المطلوبة لفتح حسابك</p>
 
-          {/* Progress */}
-          <div className="flex items-center justify-center gap-2 mb-10">
-            {[1, 2, 3].map((s) => (
-              <div key={s} className="flex items-center gap-2">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
-                  step >= s ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                }`}>
-                  {step > s ? <CheckCircle className="w-5 h-5" /> : s}
-                </div>
-                {s < 3 && <div className={`w-12 h-0.5 ${step > s ? "bg-primary" : "bg-muted"}`} />}
+      {/* Hero */}
+      <section className="pt-28 pb-12 bg-dark-section">
+        <div className="container mx-auto px-4 text-center">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <div className="inline-flex items-center gap-2 bg-primary/15 border border-primary/30 rounded-full px-4 py-1.5 mb-4">
+              <UserPlus className="w-4 h-4 text-primary" />
+              <span className="text-sm font-semibold text-primary">تسجيل عميل جديد</span>
+            </div>
+            <h1 className="text-3xl md:text-5xl font-black text-dark-section-foreground mb-3">
+              فتح حساب <span className="text-gradient-red">عميل معتمد</span>
+            </h1>
+            <p className="text-dark-section-foreground/60 text-lg max-w-xl mx-auto">
+              المصرية جروب – خبرة 25 عامًا في سوق قطع غيار تويوتا في مصر
+            </p>
+            <div className="w-20 h-1 bg-primary mx-auto mt-4" />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Form */}
+      <section className="py-12">
+        <div className="container mx-auto px-4">
+          <div className="max-w-2xl mx-auto">
+
+            {/* Price Notice */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="bg-muted border border-primary/20 rounded-lg p-4 mb-8 flex items-center gap-3"
+            >
+              <Lock className="w-5 h-5 text-primary shrink-0" />
+              <p className="text-foreground text-sm">
+                <strong>الأسعار متاحة للعملاء المعتمدين فقط</strong> بعد مراجعة البيانات وتفعيل الحساب.
+              </p>
+            </motion.div>
+
+            <motion.form
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              onSubmit={handleSubmit}
+              className="bg-card border border-border rounded-xl p-6 md:p-8 shadow-sm space-y-6"
+            >
+              <h2 className="text-xl font-bold text-card-foreground mb-2">البيانات الأساسية</h2>
+
+              {/* Full Name */}
+              <div className="space-y-2">
+                <Label htmlFor="fullName">الاسم الكامل <span className="text-primary">*</span></Label>
+                <Input
+                  id="fullName"
+                  value={form.fullName}
+                  onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+                  placeholder="أدخل اسمك الكامل"
+                  className="text-right"
+                  required
+                />
               </div>
-            ))}
-          </div>
 
-          <div className="bg-card border border-border rounded-lg p-6 md:p-8">
-            {/* Step 1: Basic Info */}
-            {step === 1 && (
-              <div className="space-y-4">
-                <h2 className="text-lg font-bold text-card-foreground mb-4">البيانات الأساسية</h2>
-
-                {!user && (
-                  <div className="bg-muted/50 rounded-lg p-4 mb-4 space-y-3">
-                    <p className="text-sm font-medium text-foreground">بيانات الحساب</p>
-                    <div className="space-y-2">
-                      <Label>الاسم الكامل</Label>
-                      <Input value={authName} onChange={(e) => setAuthName(e.target.value)} placeholder="اسمك الكامل" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>البريد الإلكتروني</Label>
-                      <Input type="email" value={authEmail} onChange={(e) => { setAuthEmail(e.target.value); setEmail(e.target.value); }} placeholder="example@email.com" dir="ltr" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>كلمة المرور</Label>
-                      <Input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} placeholder="6 أحرف على الأقل" dir="ltr" minLength={6} />
-                    </div>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>اسم النشاط التجاري *</Label>
-                    <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="مثال: مؤسسة الأمل لقطع الغيار" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>الاسم القانوني *</Label>
-                    <Input value={legalName} onChange={(e) => setLegalName(e.target.value)} placeholder="كما هو في السجل التجاري" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>رقم السجل التجاري *</Label>
-                    <Input value={commercialRegNo} onChange={(e) => setCommercialRegNo(e.target.value)} dir="ltr" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>رقم البطاقة الضريبية *</Label>
-                    <Input value={taxCardNo} onChange={(e) => setTaxCardNo(e.target.value)} dir="ltr" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>رقم الهاتف *</Label>
-                    <Input value={phone} onChange={(e) => setPhone(e.target.value)} dir="ltr" placeholder="01xxxxxxxxx" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>البريد الإلكتروني *</Label>
-                    <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} dir="ltr" disabled={!!user} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>المحافظة *</Label>
-                    <Select value={governorate} onValueChange={setGovernorate}>
-                      <SelectTrigger><SelectValue placeholder="اختر المحافظة" /></SelectTrigger>
-                      <SelectContent>
-                        {governorates.map((g) => (<SelectItem key={g} value={g}>{g}</SelectItem>))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>العنوان التفصيلي *</Label>
-                  <Textarea value={address} onChange={(e) => setAddress(e.target.value)} placeholder="الشارع - المنطقة - أقرب علامة مميزة" />
-                </div>
-
-                <div className="flex justify-start">
-                  <Button onClick={() => setStep(2)} disabled={!canProceedStep1} className="gap-2">
-                    التالي <ArrowLeft className="w-4 h-4" />
-                  </Button>
-                </div>
+              {/* Phone */}
+              <div className="space-y-2">
+                <Label htmlFor="phone">رقم الهاتف <span className="text-primary">*</span></Label>
+                <Input
+                  id="phone"
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  placeholder="01xxxxxxxxx"
+                  className="text-right"
+                  required
+                />
               </div>
-            )}
 
-            {/* Step 2: Business Details */}
-            {step === 2 && (
-              <div className="space-y-4">
-                <h2 className="text-lg font-bold text-card-foreground mb-4">بيانات النشاط</h2>
-
-                <div className="space-y-2">
-                  <Label>نوع العميل *</Label>
-                  <Select value={clientType} onValueChange={setClientType}>
-                    <SelectTrigger><SelectValue placeholder="اختر نوع النشاط" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="wholesale">تاجر جملة</SelectItem>
-                      <SelectItem value="company">شركة / هيئة</SelectItem>
-                      <SelectItem value="workshop">ورشة / مركز صيانة</SelectItem>
-                      <SelectItem value="distributor">موزع</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>عدد سنوات النشاط *</Label>
-                    <Input type="number" value={yearsInBusiness} onChange={(e) => setYearsInBusiness(e.target.value)} min="0" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>متوسط حجم الشراء الشهري</Label>
-                    <Select value={avgMonthly} onValueChange={setAvgMonthly}>
-                      <SelectTrigger><SelectValue placeholder="اختر" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="less_10k">أقل من 10,000 ج.م</SelectItem>
-                        <SelectItem value="10k_50k">10,000 - 50,000 ج.م</SelectItem>
-                        <SelectItem value="50k_100k">50,000 - 100,000 ج.م</SelectItem>
-                        <SelectItem value="100k_500k">100,000 - 500,000 ج.م</SelectItem>
-                        <SelectItem value="more_500k">أكثر من 500,000 ج.م</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Checkbox id="branches" checked={hasBranches} onCheckedChange={(c) => setHasBranches(!!c)} />
-                  <Label htmlFor="branches">لدي فروع أخرى</Label>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>المناطق التي تغطيها</Label>
-                  <Textarea value={coverageAreas} onChange={(e) => setCoverageAreas(e.target.value)} placeholder="مثال: القاهرة الكبرى - الدلتا" />
-                </div>
-
-                <div className="flex justify-between">
-                  <Button variant="outline" onClick={() => setStep(1)} className="gap-2">
-                    <ArrowRight className="w-4 h-4" /> السابق
-                  </Button>
-                  <Button onClick={() => setStep(3)} disabled={!canProceedStep2} className="gap-2">
-                    التالي <ArrowLeft className="w-4 h-4" />
-                  </Button>
-                </div>
+              {/* Business Name */}
+              <div className="space-y-2">
+                <Label htmlFor="businessName">اسم الشركة أو النشاط <span className="text-primary">*</span></Label>
+                <Input
+                  id="businessName"
+                  value={form.businessName}
+                  onChange={(e) => setForm({ ...form, businessName: e.target.value })}
+                  placeholder="اسم النشاط التجاري"
+                  className="text-right"
+                  required
+                />
               </div>
-            )}
 
-            {/* Step 3: Documents & Agreements */}
-            {step === 3 && (
-              <div className="space-y-6">
-                <h2 className="text-lg font-bold text-card-foreground mb-4">رفع المستندات والموافقات</h2>
+              {/* Governorate */}
+              <div className="space-y-2">
+                <Label>المحافظة <span className="text-primary">*</span></Label>
+                <Select
+                  value={form.governorate}
+                  onValueChange={(val) => setForm({ ...form, governorate: val })}
+                >
+                  <SelectTrigger className="text-right">
+                    <SelectValue placeholder="اختر المحافظة" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {governorates.map((gov) => (
+                      <SelectItem key={gov} value={gov}>{gov}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-                {/* File uploads */}
-                <div className="space-y-4">
-                  {[
-                    { label: "صورة السجل التجاري *", file: commercialDoc, setFile: setCommercialDoc },
-                    { label: "صورة البطاقة الضريبية *", file: taxDoc, setFile: setTaxDoc },
-                    { label: "صورة بطاقة الرقم القومي *", file: nationalIdDoc, setFile: setNationalIdDoc },
-                  ].map((item) => (
-                    <div key={item.label} className="space-y-2">
-                      <Label>{item.label}</Label>
-                      <div className="border-2 border-dashed border-border rounded-lg p-4 text-center">
-                        {item.file ? (
-                          <div className="flex items-center justify-center gap-2 text-sm text-primary">
-                            <CheckCircle className="w-4 h-4" />
-                            {item.file.name}
-                            <button onClick={() => item.setFile(null)} className="text-destructive text-xs hover:underline mr-2">حذف</button>
+              {/* Email */}
+              <div className="space-y-2">
+                <Label htmlFor="email">البريد الإلكتروني <span className="text-muted-foreground text-xs">(اختياري)</span></Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  placeholder="example@email.com"
+                  className="text-right"
+                />
+              </div>
+
+              {/* Client Type */}
+              <div className="space-y-3">
+                <Label>نوع العميل <span className="text-primary">*</span></Label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {clientTypes.map((type) => {
+                    const isSelected = form.clientType === type.value;
+                    return (
+                      <button
+                        key={type.value}
+                        type="button"
+                        onClick={() => setForm({ ...form, clientType: type.value })}
+                        className={`relative rounded-lg border-2 p-4 text-center transition-all duration-200 ${
+                          isSelected
+                            ? "border-primary bg-primary/5 shadow-sm"
+                            : "border-border bg-card hover:border-primary/40"
+                        }`}
+                      >
+                        {isSelected && (
+                          <div className="absolute top-2 left-2">
+                            <CheckCircle2 className="w-4 h-4 text-primary" />
                           </div>
-                        ) : (
-                          <label className="cursor-pointer">
-                            <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                            <span className="text-sm text-muted-foreground">اضغط لرفع الملف</span>
-                            <input type="file" className="hidden" accept="image/*,.pdf" onChange={(e) => item.setFile(e.target.files?.[0] || null)} />
-                          </label>
                         )}
-                      </div>
-                    </div>
-                  ))}
-
-                  <div className="space-y-2">
-                    <Label>مستندات إضافية (اختياري)</Label>
-                    <div className="border-2 border-dashed border-border rounded-lg p-4 text-center">
-                      <label className="cursor-pointer">
-                        <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                        <span className="text-sm text-muted-foreground">اضغط لرفع ملفات إضافية</span>
-                        <input type="file" className="hidden" accept="image/*,.pdf" multiple onChange={(e) => setAdditionalDocs(Array.from(e.target.files || []))} />
-                      </label>
-                      {additionalDocs.length > 0 && (
-                        <p className="text-sm text-primary mt-2">{additionalDocs.length} ملف مرفق</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Agreements */}
-                <div className="bg-muted/50 rounded-lg p-4 space-y-3">
-                  <h3 className="font-bold text-foreground">الموافقة على السياسات</h3>
-                  {[
-                    { id: "pricing", label: "أوافق على سياسة التسعير الخاصة بالمصرية جروب", checked: agreedPricing, set: setAgreedPricing },
-                    { id: "market", label: "أوافق على سياسة عدم كسر السوق والالتزام بالأسعار المحددة", checked: agreedMarket, set: setAgreedMarket },
-                    { id: "return", label: "أوافق على سياسة الاسترجاع والاستبدال", checked: agreedReturn, set: setAgreedReturn },
-                    { id: "terms", label: "أوافق على شروط استخدام المنصة", checked: agreedTerms, set: setAgreedTerms },
-                  ].map((a) => (
-                    <div key={a.id} className="flex items-start gap-2">
-                      <Checkbox id={a.id} checked={a.checked} onCheckedChange={(c) => a.set(!!c)} className="mt-1" />
-                      <Label htmlFor={a.id} className="text-sm text-foreground/80">{a.label}</Label>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex justify-between">
-                  <Button variant="outline" onClick={() => setStep(2)} className="gap-2">
-                    <ArrowRight className="w-4 h-4" /> السابق
-                  </Button>
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={loading || !agreedPricing || !agreedMarket || !agreedReturn || !agreedTerms}
-                    className="gap-2 red-glow"
-                  >
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                    {loading ? "جاري الإرسال..." : "تقديم الطلب"}
-                  </Button>
+                        <type.icon className={`w-8 h-8 mx-auto mb-2 ${isSelected ? "text-primary" : "text-muted-foreground"}`} />
+                        <div className={`font-bold text-sm ${isSelected ? "text-primary" : "text-card-foreground"}`}>{type.label}</div>
+                        <div className="text-xs text-muted-foreground mt-1">{type.desc}</div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
-            )}
+
+              {/* Submit */}
+              <Button
+                type="submit"
+                size="lg"
+                className="w-full gap-2 text-lg red-glow"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    جاري الإرسال...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-5 h-5" />
+                    إرسال طلب فتح الحساب
+                  </>
+                )}
+              </Button>
+
+              <p className="text-xs text-muted-foreground text-center">
+                بإرسال هذا الطلب، أنت توافق على سياسة التسعير وحماية السوق الخاصة بالمصرية جروب.
+              </p>
+            </motion.form>
+
+            {/* Already have account */}
+            <div className="text-center mt-6">
+              <p className="text-muted-foreground text-sm">
+                لديك حساب بالفعل؟{" "}
+                <button onClick={() => navigate("/auth")} className="text-primary font-semibold hover:underline">
+                  تسجيل الدخول
+                </button>
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      <Footer />
     </div>
   );
 };
