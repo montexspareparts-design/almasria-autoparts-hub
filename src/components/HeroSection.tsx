@@ -1,15 +1,18 @@
 import { motion } from "framer-motion";
-import { ArrowLeft, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ShieldCheck, UserPlus, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import heroBg from "@/assets/hero-bg.jpg";
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+
   return (
     <section id="hero" className="relative min-h-screen flex items-center overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0">
         <img src={heroBg} alt="مستودع قطع غيار تويوتا" className="w-full h-full object-cover" loading="eager" />
-        <div className="absolute inset-0 bg-gradient-to-l from-secondary/95 via-secondary/80 to-secondary/60" />
+        <div className="absolute inset-0 bg-gradient-to-l from-secondary/95 via-secondary/85 to-secondary/50" />
       </div>
 
       <div className="container mx-auto px-4 relative z-10 pt-20">
@@ -30,22 +33,18 @@ const HeroSection = () => {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="text-4xl md:text-6xl lg:text-7xl font-black text-secondary-foreground leading-tight mb-6"
           >
-            خبرة 25 عامًا في
+            25 عامًا من الثقة
             <br />
-            <span className="text-gradient-red">قطع غيار السيارات</span>
-            <br />
-            في مصر والمنطقة
+            <span className="text-gradient-red">في عالم قطع غيار تويوتا</span>
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="text-lg md:text-xl text-secondary-foreground/70 mb-8 max-w-xl leading-relaxed"
+            className="text-lg md:text-xl text-secondary-foreground/70 mb-10 max-w-xl leading-relaxed"
           >
             تويوتا أصلي • MTX Aftermarket • توزيع سريع لجميع المحافظات
-            <br />
-            من القاهرة والجيزة والأقصر إلى دبي
           </motion.p>
 
           <motion.div
@@ -54,14 +53,24 @@ const HeroSection = () => {
             transition={{ duration: 0.6, delay: 0.45 }}
             className="flex flex-col sm:flex-row gap-4"
           >
-            <Button size="lg" className="text-lg px-8 gap-2 red-glow" asChild>
-              <a href="#contact">
-                اطلب عرض سعر
-                <ArrowLeft className="w-5 h-5" />
-              </a>
+            <Button
+              size="lg"
+              className="text-lg px-8 gap-2 red-glow"
+              onClick={() => navigate("/dealer-register")}
+            >
+              <UserPlus className="w-5 h-5" />
+              تسجيل تاجر
             </Button>
-            <Button variant="outline" size="lg" className="text-lg px-8 border-secondary-foreground/30 text-secondary-foreground hover:bg-secondary-foreground/10" asChild>
-              <a href="#products">تصفح المنتجات</a>
+            <Button
+              variant="outline"
+              size="lg"
+              className="text-lg px-8 gap-2 border-secondary-foreground/30 text-secondary-foreground hover:bg-secondary-foreground/10"
+              asChild
+            >
+              <a href="#products">
+                <Package className="w-5 h-5" />
+                استعرض المنتجات
+              </a>
             </Button>
           </motion.div>
 
