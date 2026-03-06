@@ -121,16 +121,16 @@ const ProductsSection = () => {
         </div>
 
         <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="text-center mt-12"
         >
           <Button size="lg" className="gap-2 red-glow text-lg px-8" asChild>
-            <a href="#contact">
-              اطلب عرض سعر
+            <Link to="/products/toyota-genuine">
+              استعراض المنتجات
               <ArrowLeft className="w-5 h-5" />
-            </a>
+            </Link>
           </Button>
         </motion.div>
       </div>
