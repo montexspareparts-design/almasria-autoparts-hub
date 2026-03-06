@@ -2,3 +2,9 @@ project_id = "hcpfjhcfhfjqusbjnkfa"
 
 [functions.chat]
 verify_jwt = false
+
+[functions.search-part-image]
+verify_jwt = false
+
+[functions.save-image-from-url]
+verify_jwt = false
