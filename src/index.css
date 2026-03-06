@@ -72,7 +72,7 @@
 
 @layer utilities {
   .text-gradient-red {
-    background: linear-gradient(135deg, hsl(0 72% 51%), hsl(0 72% 65%));
+    background: linear-gradient(135deg, hsl(355 90% 48%), hsl(355 80% 58%));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
