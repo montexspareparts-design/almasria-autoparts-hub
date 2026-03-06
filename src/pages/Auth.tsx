@@ -161,19 +161,20 @@ const Auth = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName" className="text-card-foreground">
-                  اسم المستخدم
-                </Label>
-                <Input
-                  id="fullName"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="أدخل اسم المستخدم"
-                  required={!isLogin}
-                  className="bg-background"
-                />
-              </div>
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="fullName" className="text-card-foreground">الاسم</Label>
+                  <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="الاسم الكامل" required={!isLogin} className="bg-background" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="companyName" className="text-card-foreground">اسم الشركة</Label>
+                  <Input id="companyName" value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="اسم الشركة أو النشاط" required={!isLogin} className="bg-background" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="address" className="text-card-foreground">العنوان</Label>
+                  <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="العنوان التفصيلي" required={!isLogin} className="bg-background" />
+                </div>
+              </>
             )}
 
             <div className="space-y-2">
