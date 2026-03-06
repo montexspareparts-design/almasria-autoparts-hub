@@ -1,9 +1,8 @@
 import { useState, useMemo, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, Lock, ShieldCheck, Search, Package, X, ShoppingCart, Eye, AlertTriangle } from "lucide-react";
+import { ArrowRight, Lock, ShieldCheck, Package, ShoppingCart, Eye, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart, CartItem } from "@/contexts/CartContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -11,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import AdvancedProductFilter, { ProductFilters } from "@/components/AdvancedProductFilter";
 import brandGenuineParts from "@/assets/brand-genuine-parts.png";
 import brandToyotaOil from "@/assets/brand-toyota-oil.png";
 import brandMtx from "@/assets/brand-mtx.jpg";
