@@ -212,10 +212,32 @@ const ProductsPage = () => {
                 </p>
               </div>
               <Button size="sm" className="shrink-0" asChild>
-                <Link to="/dealer-login">
-                  دخول التجار
-                </Link>
+                <Link to="/dealer-login">دخول التجار</Link>
               </Button>
+            </div>
+          )}
+
+          {/* Dealer daily limit banner */}
+          {isDealer && (
+            <div className={`rounded-lg p-3 mb-4 flex items-center justify-between flex-wrap gap-3 border ${
+              limitReached ? "bg-destructive/10 border-destructive/30" : "bg-muted border-primary/20"
+            }`}>
+              <div className="flex items-center gap-2">
+                <Eye className="w-4 h-4 text-primary shrink-0" />
+                <p className="text-foreground text-sm">
+                  {limitReached ? (
+                    <><strong>استنفدت الحد اليومي.</strong> يمكنك مشاهدة أسعار جديدة غداً.</>
+                  ) : (
+                    <>شاهدت <strong>{dailyViewCount}</strong> من <strong>{DAILY_LIMIT}</strong> صنف اليوم</>
+                  )}
+                </p>
+              </div>
+              {limitReached && (
+                <div className="flex items-center gap-1 text-destructive text-xs font-semibold">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  <span>الحد الأقصى</span>
+                </div>
+              )}
             </div>
           )}
 
