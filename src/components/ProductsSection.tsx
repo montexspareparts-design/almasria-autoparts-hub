@@ -90,7 +90,7 @@ const ProductsSection = () => {
             >
               <Link
                 to={b.to}
-                className="relative bg-secondary rounded-2xl aspect-square w-full flex items-center justify-center group border-2 border-primary/20 hover:border-primary/60 transition-all duration-500 overflow-hidden"
+                className="relative bg-white rounded-2xl aspect-square w-full flex items-center justify-center group border-2 border-primary/20 hover:border-primary/60 transition-all duration-500 overflow-hidden shadow-[0_0_40px_rgba(255,255,255,0.15)]"
               >
                 {/* Glow effect on hover */}
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
