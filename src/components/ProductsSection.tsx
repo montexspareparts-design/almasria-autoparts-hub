@@ -40,11 +40,6 @@ const ProductsSection = () => {
           <h2 className="text-3xl md:text-5xl font-black text-dark-section-foreground mb-4">
             <span className="text-gradient-red">منتجاتنا</span>
           </h2>
-          <div className="flex flex-wrap justify-center gap-3 max-w-2xl mx-auto">
-            <span className="bg-white/10 backdrop-blur-sm border border-white/20 text-dark-section-foreground/90 text-sm md:text-base px-5 py-2 rounded-full">قطع غيار تويوتا أصلي</span>
-            <span className="bg-white/10 backdrop-blur-sm border border-white/20 text-dark-section-foreground/90 text-sm md:text-base px-5 py-2 rounded-full">زيوت تويوتا أصلي</span>
-            <span className="bg-white/10 backdrop-blur-sm border border-white/20 text-dark-section-foreground/90 text-sm md:text-base px-5 py-2 rounded-full">MTX Aftermarket</span>
-          </div>
           <div className="w-20 h-1 bg-primary mx-auto mt-4" />
         </motion.div>
 
@@ -65,11 +60,19 @@ const ProductsSection = () => {
               whileTap={{ scale: 0.95 }}
               className="flex flex-col items-center gap-3"
             >
+              <motion.p
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.2 }}
+                className="text-xs md:text-sm font-bold text-secondary-foreground text-center"
+              >
+                {b.label}
+              </motion.p>
               <Link
                 to={b.to}
                 className="relative bg-white rounded-2xl aspect-square w-full flex items-center justify-center group border-2 border-primary/20 hover:border-primary/60 transition-all duration-500 overflow-hidden shadow-[0_0_40px_rgba(255,255,255,0.15)]"
               >
-                {/* Glow effect on hover */}
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <div className="absolute inset-0 shadow-[inset_0_0_30px_rgba(235,10,30,0.05)] group-hover:shadow-[inset_0_0_40px_rgba(235,10,30,0.12)] transition-shadow duration-500 rounded-2xl" />
                 <img
@@ -78,15 +81,6 @@ const ProductsSection = () => {
                   className={`relative z-10 w-[95%] h-[95%] object-contain transition-transform duration-500 group-hover:scale-105 ${b.imgScale}`}
                 />
               </Link>
-              <motion.p
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.2 + 0.3 }}
-                className="text-xs md:text-sm font-bold text-secondary-foreground text-center"
-              >
-                {b.label}
-              </motion.p>
             </motion.div>
           ))}
         </div>
