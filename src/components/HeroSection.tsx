@@ -38,14 +38,16 @@ const HeroSection = () => {
             <span className="text-gradient-red">في عالم قطع غيار تويوتا</span>
           </motion.h1>
 
-          <motion.p
+          <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="text-lg md:text-xl text-secondary-foreground/70 mb-10 max-w-xl leading-relaxed"
+            className="flex flex-wrap items-center gap-3 mb-10"
           >
-            قطع غيار وزيوت تويوتا أصلي وبديل الأصلي MTX Aftermarket
-          </motion.p>
+            <span className="bg-primary/15 border border-primary/30 text-secondary-foreground/80 text-sm md:text-base px-4 py-1.5 rounded-full">قطع غيار تويوتا أصلي</span>
+            <span className="bg-primary/15 border border-primary/30 text-secondary-foreground/80 text-sm md:text-base px-4 py-1.5 rounded-full">زيوت تويوتا أصلي</span>
+            <span className="bg-primary/15 border border-primary/30 text-secondary-foreground/80 text-sm md:text-base px-4 py-1.5 rounded-full">بديل الأصلي MTX Aftermarket</span>
+          </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 30 }}
