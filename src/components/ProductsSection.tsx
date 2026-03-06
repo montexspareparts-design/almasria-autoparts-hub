@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { ArrowLeft, Lock } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
