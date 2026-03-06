@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Menu, X, Phone, User, LogOut, ShoppingCart } from "lucide-react";
+import { Menu, X, UserPlus, User, LogOut, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
