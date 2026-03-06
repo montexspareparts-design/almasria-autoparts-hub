@@ -139,7 +139,7 @@ const AdvancedProductFilter = ({ filters, onFiltersChange, categories, showCateg
                 )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {/* Model */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-muted-foreground">الموديل</label>
@@ -180,9 +180,9 @@ const AdvancedProductFilter = ({ filters, onFiltersChange, categories, showCateg
                   )}
                 </div>
 
-                {/* Part Number (SKU) */}
+                {/* Part Number (SKU / OEM) */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-muted-foreground">رقم الصنف (Part Number)</label>
+                  <label className="text-xs font-semibold text-muted-foreground">رقم القطعة (OEM Part Number)</label>
                   <Input
                     placeholder="مثال: TG-ENG-0001"
                     value={filters.partNumber}
@@ -191,16 +191,47 @@ const AdvancedProductFilter = ({ filters, onFiltersChange, categories, showCateg
                     dir="ltr"
                   />
                 </div>
+              </div>
 
-                {/* Chassis Number */}
+              {/* Second row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {/* Chassis Number (VIN) */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-muted-foreground">رقم الشاسيه <span className="text-muted-foreground/60">(اختياري)</span></label>
+                  <label className="text-xs font-semibold text-muted-foreground">رقم الشاسيه (VIN) <span className="text-muted-foreground/60">(اختياري)</span></label>
                   <Input
-                    placeholder="رقم الشاسيه"
+                    placeholder="أدخل رقم الشاسيه لضمان التوافق"
                     value={filters.chassisNumber}
                     onChange={(e) => updateFilter("chassisNumber", e.target.value)}
                     className="bg-background font-mono text-sm"
                     dir="ltr"
+                  />
+                </div>
+
+                {/* Price Min */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground">السعر من (ج.م)</label>
+                  <Input
+                    type="number"
+                    placeholder="0"
+                    value={filters.priceMin}
+                    onChange={(e) => updateFilter("priceMin", e.target.value)}
+                    className="bg-background text-sm"
+                    dir="ltr"
+                    min="0"
+                  />
+                </div>
+
+                {/* Price Max */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground">السعر إلى (ج.م)</label>
+                  <Input
+                    type="number"
+                    placeholder="∞"
+                    value={filters.priceMax}
+                    onChange={(e) => updateFilter("priceMax", e.target.value)}
+                    className="bg-background text-sm"
+                    dir="ltr"
+                    min="0"
                   />
                 </div>
               </div>
