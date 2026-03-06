@@ -38,11 +38,35 @@ const brandConfig: Record<string, { title: string; subtitle: string; description
 
 const ProductsPage = () => {
   const { brand } = useParams<{ brand: string }>();
-  const { isDealer, user } = useAuth();
+  const { isDealer, user, dealerAccount } = useAuth();
   const { addItem } = useCart();
   const config = brand ? brandConfig[brand] : null;
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  // Fetch tier prices for dealers
+  const { data: tierPrices } = useQuery({
+    queryKey: ["tier_prices", dealerAccount?.tier, config?.brandKey],
+    queryFn: async () => {
+      if (!dealerAccount) return {};
+      const { data, error } = await supabase
+        .from("product_tier_prices")
+        .select("product_id, price")
+        .eq("tier", dealerAccount.tier as any);
+      if (error) throw error;
+      const map: Record<string, number> = {};
+      data.forEach((tp) => { map[tp.product_id] = tp.price; });
+      return map;
+    },
+    enabled: !!dealerAccount,
+  });
+
+  const getProductPrice = (product: any) => {
+    if (isDealer && tierPrices && tierPrices[product.id]) {
+      return tierPrices[product.id];
+    }
+    return product.base_price;
+  };
 
   const handleAddToCart = (product: any) => {
     const cartItem: CartItem = {
@@ -50,7 +74,7 @@ const ProductsPage = () => {
       name_ar: product.name_ar,
       sku: product.sku,
       image_url: product.image_url,
-      unit_price: product.base_price,
+      unit_price: getProductPrice(product),
       quantity: product.min_order_qty || 1,
       stock_quantity: product.stock_quantity,
       min_order_qty: product.min_order_qty,
@@ -140,18 +164,18 @@ const ProductsPage = () => {
       {/* Search & Filter */}
       <section className="py-6 bg-background border-b border-border sticky top-16 z-30">
         <div className="container mx-auto px-4">
-          {/* Price notice */}
+          {/* Dealer promotion banner */}
           {!isDealer && (
             <div className="bg-muted border border-primary/20 rounded-lg p-3 mb-4 flex items-center justify-between flex-wrap gap-3">
               <div className="flex items-center gap-2">
-                <Lock className="w-4 h-4 text-primary shrink-0" />
+                <ShieldCheck className="w-4 h-4 text-primary shrink-0" />
                 <p className="text-foreground text-sm">
-                  <strong>الأسعار متاحة للتجار المعتمدين فقط.</strong>
+                  <strong>تاجر معتمد؟</strong> سجل دخولك للحصول على أسعار الجملة الخاصة.
                 </p>
               </div>
               <Button size="sm" className="shrink-0" asChild>
-                <Link to={user ? "/dealer" : "/dealer-register"}>
-                  {user ? "لوحة التحكم" : "سجل كتاجر"}
+                <Link to="/dealer-login">
+                  دخول التجار
                 </Link>
               </Button>
             </div>
@@ -275,15 +299,14 @@ const ProductsPage = () => {
                   )}
 
                   {/* Price */}
-                  {isDealer ? (
-                    <div className="text-primary font-black text-lg">
-                      {product.base_price.toLocaleString("ar-EG")} ج.م
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-muted-foreground text-xs">
-                      <Lock className="w-3 h-3" />
-                      <span>سجل كتاجر لرؤية السعر</span>
-                    </div>
+                  <div className="text-primary font-black text-lg">
+                    {getProductPrice(product).toLocaleString("ar-EG")} ج.م
+                  </div>
+                  {!isDealer && (
+                    <p className="text-[11px] text-muted-foreground">سعر قطاعي</p>
+                  )}
+                  {isDealer && (
+                    <p className="text-[11px] text-green-600 font-semibold">سعر الجملة الخاص بك</p>
                   )}
 
                   {/* Min Order */}
@@ -294,7 +317,7 @@ const ProductsPage = () => {
                   )}
 
                   {/* Add to Cart */}
-                  {isDealer && product.stock_quantity > 0 && (
+                  {product.stock_quantity > 0 && (
                     <Button
                       size="sm"
                       className="w-full mt-3 gap-2"

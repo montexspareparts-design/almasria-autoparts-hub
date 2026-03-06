@@ -12,6 +12,7 @@ import DealerRegister from "./pages/DealerRegister";
 import ClientRegister from "./pages/ClientRegister";
 import DealerDashboard from "./pages/DealerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import DealerLogin from "./pages/DealerLogin";
 import ProductsPage from "./pages/ProductsPage";
 import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
@@ -35,6 +36,7 @@ const App = () => (
               <Route path="/dealer" element={<DealerDashboard />} />
               <Route path="/client-register" element={<ClientRegister />} />
               <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/dealer-login" element={<DealerLogin />} />
               <Route path="/products/:brand" element={<ProductsPage />} />
               <Route path="/cart" element={<CartPage />} />
               <Route path="/checkout" element={<CheckoutPage />} />
