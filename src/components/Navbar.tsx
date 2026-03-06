@@ -1,9 +1,13 @@
 import { useState } from "react";
-import { Menu, X, Phone } from "lucide-react";
+import { Menu, X, Phone, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, isDealer, isAdmin, signOut } = useAuth();
+  const navigate = useNavigate();
 
   const links = [
     { label: "الرئيسية", href: "#hero" },
@@ -18,14 +22,12 @@ const Navbar = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-secondary/95 backdrop-blur-md border-b border-primary/20">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 md:h-20">
-          {/* Logo */}
-          <a href="#hero" className="flex items-center gap-2">
-            <span className="text-xl md:text-2xl font-bold text-primary-foreground">
+          <a href="/" className="flex items-center gap-2">
+            <span className="text-xl md:text-2xl font-bold text-secondary-foreground">
               المصرية <span className="text-gradient-red">جروب</span>
             </span>
           </a>
 
-          {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-6">
             {links.map((link) => (
               <a
@@ -38,26 +40,40 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* CTA */}
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="default" size="sm" className="gap-2" asChild>
-              <a href="#contact">
-                <Phone className="w-4 h-4" />
-                تواصل الآن
-              </a>
-            </Button>
+            {user ? (
+              <>
+                {isAdmin && (
+                  <Button variant="ghost" size="sm" onClick={() => navigate("/admin")} className="text-secondary-foreground/80">
+                    الإدارة
+                  </Button>
+                )}
+                <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate("/dealer")}>
+                  <User className="w-4 h-4" />
+                  حسابي
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => signOut()} className="text-secondary-foreground/60">
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/auth")} className="text-secondary-foreground/80">
+                  تسجيل الدخول
+                </Button>
+                <Button variant="default" size="sm" className="gap-2" onClick={() => navigate("/dealer-apply")}>
+                  <Phone className="w-4 h-4" />
+                  حساب تاجر
+                </Button>
+              </>
+            )}
           </div>
 
-          {/* Mobile Toggle */}
-          <button
-            className="md:hidden text-secondary-foreground"
-            onClick={() => setIsOpen(!isOpen)}
-          >
+          <button className="md:hidden text-secondary-foreground" onClick={() => setIsOpen(!isOpen)}>
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
 
-        {/* Mobile Menu */}
         {isOpen && (
           <div className="md:hidden pb-4 border-t border-primary/10">
             {links.map((link) => (
@@ -70,12 +86,25 @@ const Navbar = () => {
                 {link.label}
               </a>
             ))}
-            <Button variant="default" size="sm" className="w-full mt-2 gap-2" asChild>
-              <a href="#contact">
-                <Phone className="w-4 h-4" />
-                تواصل الآن
-              </a>
-            </Button>
+            {user ? (
+              <>
+                <Button variant="outline" size="sm" className="w-full mt-2 gap-2" onClick={() => { navigate("/dealer"); setIsOpen(false); }}>
+                  <User className="w-4 h-4" /> حسابي
+                </Button>
+                <Button variant="ghost" size="sm" className="w-full mt-2" onClick={() => { signOut(); setIsOpen(false); }}>
+                  تسجيل الخروج
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" className="w-full mt-2" onClick={() => { navigate("/auth"); setIsOpen(false); }}>
+                  تسجيل الدخول
+                </Button>
+                <Button variant="default" size="sm" className="w-full mt-2 gap-2" onClick={() => { navigate("/dealer-apply"); setIsOpen(false); }}>
+                  <Phone className="w-4 h-4" /> حساب تاجر
+                </Button>
+              </>
+            )}
           </div>
         )}
       </div>
