@@ -74,9 +74,9 @@ const ProductsSection = () => {
         {/* Brand Labels */}
         <div className="grid grid-cols-3 gap-5 md:gap-8 mb-12 max-w-3xl mx-auto">
           {[
-            { label: "قطع غيار تويوتا الأصلية", image: brandGenuineParts, to: "/products/toyota-genuine" },
-            { label: "زيوت تويوتا الأصلية", image: brandToyotaOil, to: "/products/toyota-oils" },
-            { label: "MTX Aftermarket", image: brandMtx, to: "/products/mtx-aftermarket" },
+            { label: "قطع غيار تويوتا الأصلية", image: brandGenuineParts, to: "/products/toyota-genuine", imgScale: "scale-100" },
+            { label: "زيوت تويوتا الأصلية", image: brandToyotaOil, to: "/products/toyota-oils", imgScale: "scale-150" },
+            { label: "MTX Aftermarket", image: brandMtx, to: "/products/mtx-aftermarket", imgScale: "scale-150" },
           ].map((b, i) => (
             <motion.div
               key={b.to}
@@ -98,7 +98,7 @@ const ProductsSection = () => {
                 <img
                   src={b.image}
                   alt={b.label}
-                  className="relative z-10 w-[95%] h-[95%] object-contain transition-transform duration-500 group-hover:scale-105"
+                  className={`relative z-10 w-[95%] h-[95%] object-contain transition-transform duration-500 group-hover:scale-105 ${b.imgScale}`}
                 />
               </Link>
               <motion.p
