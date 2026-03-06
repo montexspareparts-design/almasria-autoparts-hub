@@ -11,6 +11,9 @@ import { toast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AdvancedProductFilter, { ProductFilters } from "@/components/AdvancedProductFilter";
+import RelatedProducts from "@/components/RelatedProducts";
+import MaintenanceBundles from "@/components/MaintenanceBundles";
+import SpecialOffers from "@/components/SpecialOffers";
 import brandGenuineParts from "@/assets/brand-genuine-parts.png";
 import brandToyotaOil from "@/assets/brand-toyota-oil.png";
 import brandMtx from "@/assets/brand-mtx.jpg";
@@ -55,6 +58,8 @@ const ProductsPage = () => {
     chassisNumber: "",
     partNumber: "",
     categoryId: null,
+    priceMin: "",
+    priceMax: "",
   });
   const DAILY_LIMIT = 20;
 
@@ -177,7 +182,10 @@ const ProductsPage = () => {
         !filters.year || p.name_ar.includes(filters.year);
       const matchesPartNumber =
         !filters.partNumber || p.sku.toLowerCase().includes(filters.partNumber.toLowerCase());
-      return matchesSearch && matchesCategory && matchesModel && matchesYear && matchesPartNumber;
+      const price = p.base_price;
+      const matchesPriceMin = !filters.priceMin || price >= Number(filters.priceMin);
+      const matchesPriceMax = !filters.priceMax || price <= Number(filters.priceMax);
+      return matchesSearch && matchesCategory && matchesModel && matchesYear && matchesPartNumber && matchesPriceMin && matchesPriceMax;
     });
   }, [products, filters]);
 
@@ -401,6 +409,21 @@ const ProductsPage = () => {
           )}
         </div>
       </section>
+
+      {/* Special Offers */}
+      <SpecialOffers brandKey={config.brandKey} />
+
+      {/* Related Products */}
+      <RelatedProducts
+        allProducts={products || []}
+        currentCategoryId={filters.categoryId}
+        onAddToCart={handleAddToCart}
+        getPrice={getProductPrice}
+        isDealer={isDealer}
+      />
+
+      {/* Maintenance Bundles */}
+      <MaintenanceBundles />
 
       <Footer />
     </div>

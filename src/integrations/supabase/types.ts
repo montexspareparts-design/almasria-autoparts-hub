@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      bundle_items: {
+        Row: {
+          bundle_id: string
+          id: string
+          product_id: string
+          quantity: number
+        }
+        Insert: {
+          bundle_id: string
+          id?: string
+          product_id: string
+          quantity?: number
+        }
+        Update: {
+          bundle_id?: string
+          id?: string
+          product_id?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bundle_items_bundle_id_fkey"
+            columns: ["bundle_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_bundles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bundle_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dealer_accounts: {
         Row: {
           application_id: string | null
@@ -194,6 +230,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      maintenance_bundles: {
+        Row: {
+          bundle_price: number
+          created_at: string
+          description_ar: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name_ar: string
+          name_en: string | null
+          original_price: number
+          sort_order: number | null
+        }
+        Insert: {
+          bundle_price?: number
+          created_at?: string
+          description_ar?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name_ar: string
+          name_en?: string | null
+          original_price?: number
+          sort_order?: number | null
+        }
+        Update: {
+          bundle_price?: number
+          created_at?: string
+          description_ar?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string | null
+          original_price?: number
+          sort_order?: number | null
+        }
+        Relationships: []
       }
       notifications: {
         Row: {
@@ -388,9 +463,12 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean
+          is_featured: boolean
+          is_on_sale: boolean
           min_order_qty: number
           name_ar: string
           name_en: string | null
+          sale_price: number | null
           sku: string
           stock_quantity: number
           updated_at: string
@@ -405,9 +483,12 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean
+          is_featured?: boolean
+          is_on_sale?: boolean
           min_order_qty?: number
           name_ar: string
           name_en?: string | null
+          sale_price?: number | null
           sku: string
           stock_quantity?: number
           updated_at?: string
@@ -422,9 +503,12 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean
+          is_featured?: boolean
+          is_on_sale?: boolean
           min_order_qty?: number
           name_ar?: string
           name_en?: string | null
+          sale_price?: number | null
           sku?: string
           stock_quantity?: number
           updated_at?: string
