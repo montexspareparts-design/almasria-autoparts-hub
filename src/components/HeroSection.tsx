@@ -21,7 +21,7 @@ const HeroSection = () => {
             className="inline-flex items-center gap-2 bg-primary/20 border border-primary/30 rounded-full px-4 py-2 mb-6"
           >
             <ShieldCheck className="w-4 h-4 text-primary" />
-            <span className="text-sm font-semibold text-primary">موزع معتمد لقطع غيار وزيوت تويوتا الأصلية</span>
+            <span className="text-sm font-semibold text-primary">موزع معتمد رسمي لقطع غيار وزيوت تويوتا الأصلية</span>
           </motion.div>
 
           <motion.h1
@@ -30,11 +30,11 @@ const HeroSection = () => {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="text-4xl md:text-6xl lg:text-7xl font-black text-secondary-foreground leading-tight mb-6"
           >
-            شريكك الأول في
+            خبرة 25 عامًا في
             <br />
             <span className="text-gradient-red">قطع غيار السيارات</span>
             <br />
-            في مصر
+            في مصر والمنطقة
           </motion.h1>
 
           <motion.p
@@ -43,9 +43,9 @@ const HeroSection = () => {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="text-lg md:text-xl text-secondary-foreground/70 mb-8 max-w-xl leading-relaxed"
           >
-            مخزون ضخم • توزيع سريع • منتجات أصلية مضمونة
+            تويوتا أصلي • MTX Aftermarket • توزيع سريع لجميع المحافظات
             <br />
-            من القاهرة إلى جميع أنحاء الجمهورية
+            من القاهرة والجيزة والأقصر إلى دبي
           </motion.p>
 
           <motion.div
@@ -73,9 +73,10 @@ const HeroSection = () => {
             className="flex gap-8 mt-12 pt-8 border-t border-secondary-foreground/10"
           >
             {[
-              { num: "+15", label: "سنة خبرة" },
+              { num: "+25", label: "سنة خبرة" },
               { num: "+5000", label: "صنف في المخزون" },
-              { num: "+500", label: "عميل نشط" },
+              { num: "+1000", label: "عميل نشط" },
+              { num: "5", label: "فروع" },
             ].map((stat) => (
               <div key={stat.label}>
                 <div className="text-2xl md:text-3xl font-black text-primary">{stat.num}</div>

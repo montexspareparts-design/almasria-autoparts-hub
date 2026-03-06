@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Phone, Mail, MapPin, MessageCircle, Send } from "lucide-react";
+import { Phone, Mail, MapPin, MessageCircle, Send, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,6 +28,14 @@ const ContactSection = () => {
     toast.success("تم إرسال رسالتك بنجاح! سنتواصل معك قريبًا.");
     setForm({ name: "", company: "", phone: "", email: "", message: "" });
   };
+
+  const branches = [
+    { name: "القاهرة – التوفيقية", detail: "سوق التوفيقية لقطع غيار السيارات", phones: ["01032104861", "01151436999"] },
+    { name: "الجيزة – أوسيم", detail: "أوسيم – الجيزة", phones: ["01153961008"] },
+    { name: "الأقصر", detail: "صعيد مصر", phones: ["01016177204"] },
+    { name: "المكتب الإداري", detail: "اللبيني – الهرم – الجيزة", phones: ["01112365417"] },
+    { name: "دبي – الإمارات 🇦🇪", detail: "مركز إقليمي للتوسع الخليجي", phones: [] },
+  ];
 
   return (
     <section id="contact" className="py-20 md:py-28 bg-background">
@@ -115,43 +123,55 @@ const ContactSection = () => {
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="space-y-6"
+            className="space-y-4"
           >
             {[
-              { icon: Phone, label: "الهاتف", value: "+20 123 456 7890", href: "tel:+201234567890" },
-              { icon: MessageCircle, label: "واتساب بيزنس", value: "+20 123 456 7890", href: "https://wa.me/201234567890" },
-              { icon: Mail, label: "البريد الإلكتروني", value: "info@almasriagroup.com", href: "mailto:info@almasriagroup.com" },
-            ].map((c) => (
-              <a
-                key={c.label}
-                href={c.href}
-                className="flex items-center gap-4 bg-card border border-border rounded-lg p-5 card-hover block"
-              >
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <c.icon className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <div className="text-sm text-muted-foreground">{c.label}</div>
-                  <div className="font-bold text-card-foreground">{c.value}</div>
-                </div>
-              </a>
-            ))}
+              { icon: Mail, label: "البريد العام", value: "info@almasriaautoparts.com", href: "mailto:info@almasriaautoparts.com" },
+              { icon: Mail, label: "بريد المبيعات", value: "sales.team@almasriaautoparts.com", href: "mailto:sales.team@almasriaautoparts.com" },
+              { icon: MessageCircle, label: "واتساب بيزنس", value: "01032104861", href: "https://wa.me/201032104861" },
+              { icon: Clock, label: "مواعيد العمل", value: "من 9 صباحًا حتى 7 مساءً", href: undefined },
+            ].map((c) => {
+              const Wrapper = c.href ? 'a' : 'div';
+              return (
+                <Wrapper
+                  key={c.label}
+                  {...(c.href ? { href: c.href } : {})}
+                  className="flex items-center gap-4 bg-card border border-border rounded-lg p-4 card-hover block"
+                >
+                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <c.icon className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">{c.label}</div>
+                    <div className="font-bold text-card-foreground">{c.value}</div>
+                  </div>
+                </Wrapper>
+              );
+            })}
 
-            {/* Locations */}
+            {/* Branches */}
             <div className="bg-secondary text-secondary-foreground rounded-lg p-6">
               <div className="flex items-center gap-3 mb-4">
                 <MapPin className="w-6 h-6 text-primary" />
                 <h4 className="font-bold text-lg">فروعنا</h4>
               </div>
               <div className="space-y-3">
-                <div className="bg-secondary-foreground/10 rounded-md p-4">
-                  <div className="font-bold">القاهرة – التوفيقية</div>
-                  <div className="text-sm text-secondary-foreground/70">المقر الرئيسي</div>
-                </div>
-                <div className="bg-secondary-foreground/10 rounded-md p-4">
-                  <div className="font-bold">الأقصر</div>
-                  <div className="text-sm text-secondary-foreground/70">فرع صعيد مصر</div>
-                </div>
+                {branches.map((b) => (
+                  <div key={b.name} className="bg-secondary-foreground/10 rounded-md p-4">
+                    <div className="font-bold">{b.name}</div>
+                    <div className="text-sm text-secondary-foreground/70">{b.detail}</div>
+                    {b.phones.length > 0 && (
+                      <div className="flex gap-3 mt-1">
+                        {b.phones.map((p) => (
+                          <a key={p} href={`tel:${p}`} className="text-sm text-primary hover:underline flex items-center gap-1">
+                            <Phone className="w-3 h-3" />
+                            {p}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           </motion.div>
