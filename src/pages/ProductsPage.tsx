@@ -38,11 +38,35 @@ const brandConfig: Record<string, { title: string; subtitle: string; description
 
 const ProductsPage = () => {
   const { brand } = useParams<{ brand: string }>();
-  const { isDealer, user } = useAuth();
+  const { isDealer, user, dealerAccount } = useAuth();
   const { addItem } = useCart();
   const config = brand ? brandConfig[brand] : null;
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  // Fetch tier prices for dealers
+  const { data: tierPrices } = useQuery({
+    queryKey: ["tier_prices", dealerAccount?.tier, config?.brandKey],
+    queryFn: async () => {
+      if (!dealerAccount) return {};
+      const { data, error } = await supabase
+        .from("product_tier_prices")
+        .select("product_id, price")
+        .eq("tier", dealerAccount.tier);
+      if (error) throw error;
+      const map: Record<string, number> = {};
+      data.forEach((tp) => { map[tp.product_id] = tp.price; });
+      return map;
+    },
+    enabled: !!dealerAccount,
+  });
+
+  const getProductPrice = (product: any) => {
+    if (isDealer && tierPrices && tierPrices[product.id]) {
+      return tierPrices[product.id];
+    }
+    return product.base_price;
+  };
 
   const handleAddToCart = (product: any) => {
     const cartItem: CartItem = {
@@ -50,7 +74,7 @@ const ProductsPage = () => {
       name_ar: product.name_ar,
       sku: product.sku,
       image_url: product.image_url,
-      unit_price: product.base_price,
+      unit_price: getProductPrice(product),
       quantity: product.min_order_qty || 1,
       stock_quantity: product.stock_quantity,
       min_order_qty: product.min_order_qty,
