@@ -44,7 +44,7 @@ const HeroSection = () => {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="text-lg md:text-xl text-secondary-foreground/70 mb-10 max-w-xl leading-relaxed"
           >
-            تويوتا أصلي • MTX Aftermarket • توزيع سريع لجميع المحافظات
+            قطع غيار وزيوت تويوتا أصلي وبديل الأصلي MTX Aftermarket
           </motion.p>
 
           <motion.div
