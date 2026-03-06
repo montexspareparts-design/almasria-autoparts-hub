@@ -43,7 +43,6 @@ const DealerApply = () => {
               طلب فتح حساب <span className="text-gradient-red">تاجر معتمد</span>
             </h1>
             <p className="text-secondary-foreground/60 text-lg max-w-2xl mx-auto">انضم للمصرية جروب واستفد من أقوى أسعار الجملة لقطع غيار تويوتا الأصلية
-
             </p>
             <div className="w-20 h-1 bg-primary mx-auto mt-4" />
           </motion.div>
@@ -53,8 +52,8 @@ const DealerApply = () => {
       {/* Benefits */}
       <section className="py-16 bg-dark-section">
         <div className="container mx-auto px-4">
-          <h2 className="text-2xl md:text-3xl font-bold text-dark-section-foreground text-center mb-12">مميزات الانضمام  المصرية جروب المصرية جروب
-            <span className="text-gradient-red">المصرية جروب</span>
+          <h2 className="text-2xl md:text-3xl font-bold text-dark-section-foreground text-center mb-12">
+            مميزات الانضمام لـ<span className="text-gradient-red">المصرية جروب</span>
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {benefits.map((b, i) =>
