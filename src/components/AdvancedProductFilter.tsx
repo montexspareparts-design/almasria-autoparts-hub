@@ -180,7 +180,7 @@ const AdvancedProductFilter = ({ filters, onFiltersChange, categories, showCateg
                   )}
                 </div>
 
-                {/* Part Number (SKU / OEM) */}
+                {/* Part Number (OEM) */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-muted-foreground">رقم القطعة (OEM Part Number)</label>
                   <Input
