@@ -273,6 +273,7 @@ const ProductsPage = () => {
                       الحد الأدنى: {product.min_order_qty} قطعة
                     </p>
                   )}
+                  </div>
                 </motion.div>
               ))}
             </div>
