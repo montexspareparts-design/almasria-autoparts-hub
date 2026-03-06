@@ -137,18 +137,9 @@ const ProductsSection = () => {
               whileTap={{ scale: 0.95 }}
               className="flex flex-col items-center gap-3"
             >
-              <motion.p
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.2 }}
-                className="text-xs md:text-sm font-bold text-secondary-foreground text-center"
-              >
-                {b.label}
-              </motion.p>
               <Link
                 to={b.to}
-                className="relative bg-white rounded-2xl aspect-square w-full flex items-center justify-center group border-2 border-primary/20 hover:border-primary/60 transition-all duration-500 overflow-hidden shadow-[0_0_40px_rgba(255,255,255,0.15)]"
+                className="relative bg-white rounded-2xl aspect-[4/3] w-full flex items-center justify-center group border-2 border-primary/20 hover:border-primary/60 transition-all duration-500 overflow-hidden shadow-[0_0_40px_rgba(255,255,255,0.15)]"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <div className="absolute inset-0 shadow-[inset_0_0_30px_rgba(235,10,30,0.05)] group-hover:shadow-[inset_0_0_40px_rgba(235,10,30,0.12)] transition-shadow duration-500 rounded-2xl" />
