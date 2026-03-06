@@ -26,17 +26,21 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/dealer-apply" element={<DealerApply />} />
-            <Route path="/dealer-register" element={<DealerRegister />} />
-            <Route path="/dealer" element={<DealerDashboard />} />
-            <Route path="/client-register" element={<ClientRegister />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/products/:brand" element={<ProductsPage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <CartProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/dealer-apply" element={<DealerApply />} />
+              <Route path="/dealer-register" element={<DealerRegister />} />
+              <Route path="/dealer" element={<DealerDashboard />} />
+              <Route path="/client-register" element={<ClientRegister />} />
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/products/:brand" element={<ProductsPage />} />
+              <Route path="/cart" element={<CartPage />} />
+              <Route path="/checkout" element={<CheckoutPage />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </CartProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
