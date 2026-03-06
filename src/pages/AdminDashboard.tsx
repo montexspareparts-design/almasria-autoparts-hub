@@ -255,6 +255,11 @@ const AdminDashboard = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Product Images Management */}
+        <div className="mt-8">
+          <AdminProductImages />
+        </div>
       </div>
     </div>
   );
