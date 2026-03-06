@@ -11,6 +11,9 @@ import catFilters from "@/assets/cat-filters.jpg";
 import catOils from "@/assets/cat-oils.jpg";
 import catElectrical from "@/assets/cat-electrical.jpg";
 import catCooling from "@/assets/cat-cooling.jpg";
+import brandGenuineParts from "@/assets/brand-genuine-parts.png";
+import brandToyotaOil from "@/assets/brand-toyota-oil.png";
+import brandMtx from "@/assets/brand-mtx.jpg";
 
 const categories = [
   { name: "قطع المحرك", image: catEngine, count: "+800 صنف" },
