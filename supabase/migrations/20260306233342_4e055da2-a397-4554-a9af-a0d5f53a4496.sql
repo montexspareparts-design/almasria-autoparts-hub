@@ -1,0 +1,1 @@
+-- No schema change needed, just inserting a new category
