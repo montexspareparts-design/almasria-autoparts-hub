@@ -41,26 +41,10 @@ const ProductsSection = () => {
             <span className="text-gradient-red">منتجاتنا</span>
           </h2>
           <p className="text-dark-section-foreground/60 text-lg max-w-2xl mx-auto">
-            قطع غيار تويوتا الأصلية • زيوت تويوتا الأصلية • MTX Aftermarket
+            قطع غيار وزيوت تويوتا أصلي وبديل الأصلي MTX Aftermarket
           </p>
           <div className="w-20 h-1 bg-primary mx-auto mt-4" />
         </motion.div>
-
-        {/* Price Notice */}
-        {!isDealer && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="bg-white/10 backdrop-blur-sm border border-primary/40 rounded-lg p-4 mb-8 flex items-center justify-center gap-3"
-          >
-            <Lock className="w-5 h-5 text-primary shrink-0" />
-            <p className="text-secondary-foreground text-sm">
-              <strong>الأسعار متاحة للتجار المعتمدين فقط.</strong>{" "}
-              سجل كتاجر معتمد للاطلاع على الأسعار وطلب المنتجات.
-            </p>
-          </motion.div>
-        )}
 
         {/* Brand Labels */}
         <div className="grid grid-cols-3 gap-5 md:gap-8 mb-12 max-w-3xl mx-auto">
