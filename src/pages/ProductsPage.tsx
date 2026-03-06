@@ -166,14 +166,20 @@ const ProductsPage = () => {
     if (!products) return [];
     return products.filter((p) => {
       const matchesSearch =
-        !search ||
-        p.name_ar.toLowerCase().includes(search.toLowerCase()) ||
-        p.sku.toLowerCase().includes(search.toLowerCase());
+        !filters.search ||
+        p.name_ar.toLowerCase().includes(filters.search.toLowerCase()) ||
+        p.sku.toLowerCase().includes(filters.search.toLowerCase());
       const matchesCategory =
-        !selectedCategory || p.category_id === selectedCategory;
-      return matchesSearch && matchesCategory;
+        !filters.categoryId || p.category_id === filters.categoryId;
+      const matchesModel =
+        !filters.model || p.name_ar.includes(filters.model);
+      const matchesYear =
+        !filters.year || p.name_ar.includes(filters.year);
+      const matchesPartNumber =
+        !filters.partNumber || p.sku.toLowerCase().includes(filters.partNumber.toLowerCase());
+      return matchesSearch && matchesCategory && matchesModel && matchesYear && matchesPartNumber;
     });
-  }, [products, search, selectedCategory]);
+  }, [products, filters]);
 
   if (!config) {
     return (
