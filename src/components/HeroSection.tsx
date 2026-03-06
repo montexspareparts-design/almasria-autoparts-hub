@@ -55,21 +55,13 @@ const HeroSection = () => {
           >
             <Button
               size="lg"
-              className="text-lg px-8 gap-2 red-glow"
-              onClick={() => navigate("/dealer-register")}
-            >
-              <UserPlus className="w-5 h-5" />
-              تسجيل تاجر
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="text-lg px-8 gap-2 border-secondary-foreground/30 text-secondary-foreground hover:bg-secondary-foreground/10"
+              className="text-lg px-8 gap-2 border-secondary-foreground/30 text-secondary-foreground hover:bg-secondary-foreground/10 bg-transparent border"
               asChild
             >
               <a href="#products">
                 <Package className="w-5 h-5" />
                 استعرض المنتجات
+                <ArrowLeft className="w-5 h-5" />
               </a>
             </Button>
           </motion.div>
