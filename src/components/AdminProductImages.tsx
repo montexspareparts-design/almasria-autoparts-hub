@@ -23,6 +23,11 @@ const AdminProductImages = () => {
   const [savingImage, setSavingImage] = useState<string | null>(null);
   const [manualUrl, setManualUrl] = useState("");
 
+  // Bulk search state
+  const [bulkSearching, setBulkSearching] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, currentSku: "", found: 0, failed: 0 });
+  const bulkAbortRef = useRef(false);
+
   const { data: products, isLoading } = useQuery({
     queryKey: ["admin-products", search],
     queryFn: async () => {
