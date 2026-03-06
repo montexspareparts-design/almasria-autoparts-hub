@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowLeft, ShieldCheck, UserPlus, Package } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import heroBg from "@/assets/hero-bg.jpg";
@@ -44,7 +44,7 @@ const HeroSection = () => {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="text-lg md:text-xl text-secondary-foreground/70 mb-10 max-w-xl leading-relaxed"
           >
-            تويوتا أصلي • MTX Aftermarket • توزيع سريع لجميع المحافظات
+            قطع غيار وزيوت تويوتا أصلي وبديل الأصلي MTX Aftermarket
           </motion.p>
 
           <motion.div
@@ -55,21 +55,13 @@ const HeroSection = () => {
           >
             <Button
               size="lg"
-              className="text-lg px-8 gap-2 red-glow"
-              onClick={() => navigate("/dealer-register")}
-            >
-              <UserPlus className="w-5 h-5" />
-              تسجيل تاجر
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="text-lg px-8 gap-2 border-secondary-foreground/30 text-secondary-foreground hover:bg-secondary-foreground/10"
+              className="text-lg px-8 gap-2 border-secondary-foreground/30 text-secondary-foreground hover:bg-secondary-foreground/10 bg-transparent border"
               asChild
             >
               <a href="#products">
                 <Package className="w-5 h-5" />
                 استعرض المنتجات
+                <ArrowLeft className="w-5 h-5" />
               </a>
             </Button>
           </motion.div>
