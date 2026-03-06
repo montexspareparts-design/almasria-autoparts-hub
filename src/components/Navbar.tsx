@@ -78,9 +78,9 @@ const Navbar = () => {
                   تسجيل الدخول
                 </Button>
                 <Button variant="default" size="sm" className="gap-2" onClick={() => navigate("/dealer-apply")}>
-                  <Phone className="w-4 h-4" />
-                  حساب تاجر
-                </Button>
+82:                   <UserPlus className="w-4 h-4" />
+83:                   حساب تاجر
+84:                 </Button>
               </>
             )}
           </div>
