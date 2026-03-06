@@ -12,6 +12,8 @@ export interface ProductFilters {
   chassisNumber: string;
   partNumber: string;
   categoryId: string | null;
+  priceMin: string;
+  priceMax: string;
 }
 
 const TOYOTA_MODELS = [
