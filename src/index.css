@@ -6,51 +6,52 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 8%;
+    --background: 0 0% 98%;
+    --foreground: 210 11% 15%;
 
-    --card: 0 0% 98%;
-    --card-foreground: 0 0% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 210 11% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 8%;
+    --popover-foreground: 210 11% 15%;
 
-    --primary: 0 72% 51%;
+    --primary: 355 90% 48%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 10%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 210 11% 12%;
+    --secondary-foreground: 0 0% 96%;
 
-    --muted: 0 0% 94%;
-    --muted-foreground: 0 0% 40%;
+    --muted: 210 10% 94%;
+    --muted-foreground: 210 8% 45%;
 
-    --accent: 0 72% 51%;
+    --accent: 355 90% 48%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 0 72% 51%;
+    --border: 210 10% 88%;
+    --input: 210 10% 88%;
+    --ring: 355 90% 48%;
 
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 0 0% 20%;
-    --sidebar-primary: 0 72% 51%;
+    --sidebar-foreground: 210 11% 20%;
+    --sidebar-primary: 355 90% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 95%;
-    --sidebar-accent-foreground: 0 0% 10%;
-    --sidebar-border: 0 0% 90%;
-    --sidebar-ring: 0 72% 51%;
+    --sidebar-accent: 210 10% 95%;
+    --sidebar-accent-foreground: 210 11% 10%;
+    --sidebar-border: 210 10% 88%;
+    --sidebar-ring: 355 90% 48%;
 
     /* Custom tokens */
-    --hero-gradient: linear-gradient(135deg, hsl(0 0% 5%) 0%, hsl(0 0% 12%) 100%);
-    --section-dark: 0 0% 5%;
+    --hero-gradient: linear-gradient(135deg, hsl(210 11% 6%) 0%, hsl(210 11% 14%) 100%);
+    --section-dark: 210 11% 6%;
     --section-dark-foreground: 0 0% 95%;
-    --red-glow: 0 72% 51%;
+    --red-glow: 355 90% 48%;
     --gold-accent: 40 80% 55%;
+    --toyota-grey: 210 8% 35%;
   }
 }
 
@@ -71,7 +72,7 @@
 
 @layer utilities {
   .text-gradient-red {
-    background: linear-gradient(135deg, hsl(0 72% 51%), hsl(0 72% 65%));
+    background: linear-gradient(135deg, hsl(355 90% 48%), hsl(355 80% 58%));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

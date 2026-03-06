@@ -10,6 +10,7 @@ import DealerApply from "./pages/DealerApply";
 import DealerRegister from "./pages/DealerRegister";
 import DealerDashboard from "./pages/DealerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import ProductsPage from "./pages/ProductsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/dealer-register" element={<DealerRegister />} />
             <Route path="/dealer" element={<DealerDashboard />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/products/:brand" element={<ProductsPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

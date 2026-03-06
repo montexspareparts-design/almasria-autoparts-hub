@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { ArrowLeft, Lock } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -70,14 +71,18 @@ const ProductsSection = () => {
         {/* Brand Labels */}
         <div className="flex justify-center gap-4 mb-10 flex-wrap">
           {[
-            { label: "تويوتا أصلي", sub: "قطع غيار" },
-            { label: "تويوتا أصلي", sub: "زيوت" },
-            { label: "MTX", sub: "Aftermarket" },
+            { label: "تويوتا أصلي", sub: "قطع غيار", to: "/products/toyota-genuine" },
+            { label: "تويوتا أصلي", sub: "زيوت", to: "/products/toyota-oils" },
+            { label: "MTX", sub: "Aftermarket", to: "/products/mtx-aftermarket" },
           ].map((b) => (
-            <div key={b.label + b.sub} className="bg-secondary border border-primary/30 rounded-lg px-6 py-3 text-center">
+            <Link
+              key={b.to}
+              to={b.to}
+              className="bg-secondary border border-primary/30 rounded-lg px-6 py-3 text-center card-hover block"
+            >
               <div className="font-bold text-secondary-foreground">{b.label}</div>
               <div className="text-xs text-primary">{b.sub}</div>
-            </div>
+            </Link>
           ))}
         </div>
 
