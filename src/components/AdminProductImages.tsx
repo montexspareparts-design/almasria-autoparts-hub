@@ -291,6 +291,37 @@ const AdminProductImages = () => {
           />
         </div>
 
+        {/* Bulk Search Button */}
+        <div className="mb-4 flex items-center gap-3">
+          {bulkSearching ? (
+            <div className="flex items-center gap-3 w-full bg-muted/50 rounded-lg p-3">
+              <Loader2 className="w-4 h-4 animate-spin text-primary shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-muted-foreground">
+                    {bulkProgress.current}/{bulkProgress.total} — {bulkProgress.currentSku}
+                  </span>
+                  <span className="text-primary font-semibold">✅ {bulkProgress.found} | ❌ {bulkProgress.failed}</span>
+                </div>
+                <div className="w-full bg-border rounded-full h-1.5">
+                  <div
+                    className="bg-primary h-1.5 rounded-full transition-all"
+                    style={{ width: `${(bulkProgress.current / bulkProgress.total) * 100}%` }}
+                  />
+                </div>
+              </div>
+              <Button variant="destructive" size="sm" onClick={handleStopBulk} className="shrink-0 text-xs">
+                إيقاف
+              </Button>
+            </div>
+          ) : (
+            <Button variant="outline" className="gap-2" onClick={handleBulkSearch}>
+              <Wand2 className="w-4 h-4" />
+              بحث تلقائي مجمّع (كل المنتجات بدون صور)
+            </Button>
+          )}
+        </div>
+
         {isLoading ? (
           <div className="flex justify-center py-8">
             <Loader2 className="w-6 h-6 animate-spin text-primary" />
