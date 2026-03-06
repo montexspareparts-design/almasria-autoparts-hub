@@ -12,6 +12,7 @@ import DealerRegister from "./pages/DealerRegister";
 import ClientRegister from "./pages/ClientRegister";
 import DealerDashboard from "./pages/DealerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import DealerLogin from "./pages/DealerLogin";
 import ProductsPage from "./pages/ProductsPage";
 import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
