@@ -44,9 +44,9 @@ const HeroSection = () => {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="flex flex-wrap items-center gap-3 mb-10"
           >
-            <span className="bg-primary/15 border border-primary/30 text-secondary-foreground/80 text-sm md:text-base px-4 py-1.5 rounded-full">قطع غيار تويوتا أصلي</span>
-            <span className="bg-primary/15 border border-primary/30 text-secondary-foreground/80 text-sm md:text-base px-4 py-1.5 rounded-full">زيوت تويوتا أصلي</span>
-            <span className="bg-primary/15 border border-primary/30 text-secondary-foreground/80 text-sm md:text-base px-4 py-1.5 rounded-full">بديل الأصلي MTX Aftermarket</span>
+            <span className="bg-white/10 backdrop-blur-sm border border-white/20 text-secondary-foreground/90 text-sm md:text-base px-5 py-2 rounded-full">قطع غيار تويوتا أصلي</span>
+            <span className="bg-white/10 backdrop-blur-sm border border-white/20 text-secondary-foreground/90 text-sm md:text-base px-5 py-2 rounded-full">زيوت تويوتا أصلي</span>
+            <span className="bg-white/10 backdrop-blur-sm border border-white/20 text-secondary-foreground/90 text-sm md:text-base px-5 py-2 rounded-full">MTX Aftermarket</span>
           </motion.div>
 
           <motion.div
