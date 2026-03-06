@@ -1,9 +1,8 @@
 import { useState, useMemo, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, Lock, ShieldCheck, Search, Package, X, ShoppingCart, Eye, AlertTriangle } from "lucide-react";
+import { ArrowRight, Lock, ShieldCheck, Package, ShoppingCart, Eye, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart, CartItem } from "@/contexts/CartContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -11,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import AdvancedProductFilter, { ProductFilters } from "@/components/AdvancedProductFilter";
 import brandGenuineParts from "@/assets/brand-genuine-parts.png";
 import brandToyotaOil from "@/assets/brand-toyota-oil.png";
 import brandMtx from "@/assets/brand-mtx.jpg";
@@ -48,8 +48,14 @@ const ProductsPage = () => {
   const { addItem } = useCart();
   const queryClient = useQueryClient();
   const config = brand ? brandConfig[brand] : null;
-  const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [filters, setFilters] = useState<ProductFilters>({
+    search: "",
+    model: null,
+    year: null,
+    chassisNumber: "",
+    partNumber: "",
+    categoryId: null,
+  });
   const DAILY_LIMIT = 20;
 
   // Track viewed product IDs today (for dealers)
@@ -160,14 +166,20 @@ const ProductsPage = () => {
     if (!products) return [];
     return products.filter((p) => {
       const matchesSearch =
-        !search ||
-        p.name_ar.toLowerCase().includes(search.toLowerCase()) ||
-        p.sku.toLowerCase().includes(search.toLowerCase());
+        !filters.search ||
+        p.name_ar.toLowerCase().includes(filters.search.toLowerCase()) ||
+        p.sku.toLowerCase().includes(filters.search.toLowerCase());
       const matchesCategory =
-        !selectedCategory || p.category_id === selectedCategory;
-      return matchesSearch && matchesCategory;
+        !filters.categoryId || p.category_id === filters.categoryId;
+      const matchesModel =
+        !filters.model || p.name_ar.includes(filters.model);
+      const matchesYear =
+        !filters.year || p.name_ar.includes(filters.year);
+      const matchesPartNumber =
+        !filters.partNumber || p.sku.toLowerCase().includes(filters.partNumber.toLowerCase());
+      return matchesSearch && matchesCategory && matchesModel && matchesYear && matchesPartNumber;
     });
-  }, [products, search, selectedCategory]);
+  }, [products, filters]);
 
   if (!config) {
     return (
@@ -206,7 +218,6 @@ const ProductsPage = () => {
         </div>
       </section>
 
-      {/* Search & Filter */}
       <section className="py-6 bg-background border-b border-border sticky top-16 z-30">
         <div className="container mx-auto px-4">
           {/* Dealer promotion banner */}
@@ -248,50 +259,14 @@ const ProductsPage = () => {
             </div>
           )}
 
-          <div className="flex flex-col sm:flex-row gap-3">
-            {/* Search */}
-            <div className="relative flex-1">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="ابحث بالاسم أو رقم الصنف (SKU)..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pr-10 bg-card"
-              />
-              {search && (
-                <button onClick={() => setSearch("")} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-
-            {/* Category filter */}
-            {categories && categories.length > 0 && config.brandKey !== "toyota_oils" && (
-              <div className="flex gap-2 flex-wrap">
-                <Button
-                  variant={selectedCategory === null ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedCategory(null)}
-                >
-                  الكل
-                </Button>
-                {categories.map((cat) => (
-                  <Button
-                    key={cat.id}
-                    variant={selectedCategory === cat.id ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedCategory(selectedCategory === cat.id ? null : cat.id)}
-                  >
-                    {cat.name_ar}
-                  </Button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="mt-3 text-sm text-muted-foreground">
-            {isLoading ? "جاري التحميل..." : `${filteredProducts.length} منتج`}
-          </div>
+          <AdvancedProductFilter
+            filters={filters}
+            onFiltersChange={setFilters}
+            categories={categories}
+            showCategories={config.brandKey !== "toyota_oils"}
+            totalResults={filteredProducts.length}
+            isLoading={isLoading}
+          />
         </div>
       </section>
 
