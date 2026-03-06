@@ -91,7 +91,7 @@ const ProductsSection = () => {
                 to={b.to}
                 className="bg-white rounded-xl p-6 text-center block h-full flex flex-col items-center justify-center gap-4 group shadow-lg hover:shadow-2xl transition-shadow duration-300 border border-gray-100"
               >
-                <div className="h-36 w-full flex items-center justify-center overflow-hidden">
+                <div className="h-48 md:h-56 w-full flex items-center justify-center overflow-hidden">
                   <img
                     src={b.image}
                     alt={b.label}
