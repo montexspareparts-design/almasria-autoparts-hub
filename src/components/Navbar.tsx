@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { Menu, X, Phone, User, LogOut } from "lucide-react";
+import { Menu, X, Phone, User, LogOut, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCart } from "@/contexts/CartContext";
 import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, isDealer, isAdmin, signOut } = useAuth();
+  const { itemCount } = useCart();
   const navigate = useNavigate();
 
   const links = [
@@ -41,6 +43,16 @@ const Navbar = () => {
           </div>
 
           <div className="hidden md:flex items-center gap-3">
+            {/* Cart */}
+            <button onClick={() => navigate("/cart")} className="relative text-secondary-foreground/80 hover:text-primary transition-colors p-2">
+              <ShoppingCart className="w-5 h-5" />
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  {itemCount}
+                </span>
+              )}
+            </button>
+
             {user ? (
               <>
                 {isAdmin && (

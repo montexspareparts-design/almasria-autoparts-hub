@@ -1,0 +1,133 @@
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+
+export interface CartItem {
+  id: string;
+  name_ar: string;
+  sku: string;
+  image_url: string | null;
+  unit_price: number;
+  quantity: number;
+  stock_quantity: number;
+  min_order_qty: number;
+  brand: string;
+}
+
+interface CartContextType {
+  items: CartItem[];
+  addItem: (item: CartItem) => void;
+  removeItem: (id: string) => void;
+  updateQuantity: (id: string, quantity: number) => void;
+  clearCart: () => void;
+  itemCount: number;
+  subtotal: number;
+  vatRate: number;
+  vat: number;
+  shippingCost: number;
+  setShippingCost: (cost: number) => void;
+  discount: number;
+  setDiscount: (d: number) => void;
+  total: number;
+}
+
+const CartContext = createContext<CartContextType>({
+  items: [],
+  addItem: () => {},
+  removeItem: () => {},
+  updateQuantity: () => {},
+  clearCart: () => {},
+  itemCount: 0,
+  subtotal: 0,
+  vatRate: 0.14,
+  vat: 0,
+  shippingCost: 0,
+  setShippingCost: () => {},
+  discount: 0,
+  setDiscount: () => {},
+  total: 0,
+});
+
+export const useCart = () => useContext(CartContext);
+
+const CART_KEY = "masria_cart";
+
+export const CartProvider = ({ children }: { children: ReactNode }) => {
+  const [items, setItems] = useState<CartItem[]>(() => {
+    try {
+      const stored = localStorage.getItem(CART_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [shippingCost, setShippingCost] = useState(0);
+  const [discount, setDiscount] = useState(0);
+
+  useEffect(() => {
+    localStorage.setItem(CART_KEY, JSON.stringify(items));
+  }, [items]);
+
+  const addItem = useCallback((item: CartItem) => {
+    setItems((prev) => {
+      const existing = prev.find((i) => i.id === item.id);
+      if (existing) {
+        return prev.map((i) =>
+          i.id === item.id
+            ? { ...i, quantity: Math.min(i.quantity + item.quantity, i.stock_quantity) }
+            : i
+        );
+      }
+      return [...prev, item];
+    });
+  }, []);
+
+  const removeItem = useCallback((id: string) => {
+    setItems((prev) => prev.filter((i) => i.id !== id));
+  }, []);
+
+  const updateQuantity = useCallback((id: string, quantity: number) => {
+    if (quantity <= 0) {
+      setItems((prev) => prev.filter((i) => i.id !== id));
+      return;
+    }
+    setItems((prev) =>
+      prev.map((i) =>
+        i.id === id ? { ...i, quantity: Math.min(quantity, i.stock_quantity) } : i
+      )
+    );
+  }, []);
+
+  const clearCart = useCallback(() => {
+    setItems([]);
+    setDiscount(0);
+    setShippingCost(0);
+  }, []);
+
+  const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
+  const subtotal = items.reduce((sum, i) => sum + i.unit_price * i.quantity, 0);
+  const vatRate = 0.14;
+  const vat = (subtotal - discount) * vatRate;
+  const total = subtotal - discount + vat + shippingCost;
+
+  return (
+    <CartContext.Provider
+      value={{
+        items,
+        addItem,
+        removeItem,
+        updateQuantity,
+        clearCart,
+        itemCount,
+        subtotal,
+        vatRate,
+        vat,
+        shippingCost,
+        setShippingCost,
+        discount,
+        setDiscount,
+        total,
+      }}
+    >
+      {children}
+    </CartContext.Provider>
+  );
+};

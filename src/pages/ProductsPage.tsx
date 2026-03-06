@@ -1,12 +1,14 @@
 import { useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, Lock, ShieldCheck, Search, Package, X } from "lucide-react";
+import { ArrowRight, Lock, ShieldCheck, Search, Package, X, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCart, CartItem } from "@/contexts/CartContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -37,9 +39,26 @@ const brandConfig: Record<string, { title: string; subtitle: string; description
 const ProductsPage = () => {
   const { brand } = useParams<{ brand: string }>();
   const { isDealer, user } = useAuth();
+  const { addItem } = useCart();
   const config = brand ? brandConfig[brand] : null;
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  const handleAddToCart = (product: any) => {
+    const cartItem: CartItem = {
+      id: product.id,
+      name_ar: product.name_ar,
+      sku: product.sku,
+      image_url: product.image_url,
+      unit_price: product.base_price,
+      quantity: product.min_order_qty || 1,
+      stock_quantity: product.stock_quantity,
+      min_order_qty: product.min_order_qty,
+      brand: product.brand,
+    };
+    addItem(cartItem);
+    toast({ title: "تمت الإضافة للسلة ✅", description: product.name_ar });
+  };
 
   const { data: categories } = useQuery({
     queryKey: ["product_categories"],
@@ -272,6 +291,18 @@ const ProductsPage = () => {
                     <p className="text-[11px] text-muted-foreground mt-2">
                       الحد الأدنى: {product.min_order_qty} قطعة
                     </p>
+                  )}
+
+                  {/* Add to Cart */}
+                  {isDealer && product.stock_quantity > 0 && (
+                    <Button
+                      size="sm"
+                      className="w-full mt-3 gap-2"
+                      onClick={() => handleAddToCart(product)}
+                    >
+                      <ShoppingCart className="w-3.5 h-3.5" />
+                      أضف للسلة
+                    </Button>
                   )}
                   </div>
                 </motion.div>
