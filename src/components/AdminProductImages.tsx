@@ -180,6 +180,78 @@ const AdminProductImages = () => {
     handleSelectImage(manualUrl.trim());
   };
 
+  const handleBulkSearch = async () => {
+    // Get all products without images
+    const { data: noImageProducts, error } = await supabase
+      .from("products")
+      .select("id, name_ar, sku")
+      .is("image_url", null)
+      .eq("is_active", true)
+      .order("sku");
+
+    if (error || !noImageProducts || noImageProducts.length === 0) {
+      toast({ title: "لا توجد منتجات بدون صور", variant: "default" });
+      return;
+    }
+
+    setBulkSearching(true);
+    bulkAbortRef.current = false;
+    setBulkProgress({ current: 0, total: noImageProducts.length, currentSku: "", found: 0, failed: 0 });
+
+    let found = 0;
+    let failed = 0;
+
+    for (let i = 0; i < noImageProducts.length; i++) {
+      if (bulkAbortRef.current) break;
+
+      const product = noImageProducts[i];
+      setBulkProgress(prev => ({ ...prev, current: i + 1, currentSku: product.sku }));
+
+      try {
+        // Search for images
+        const { data, error: searchErr } = await supabase.functions.invoke("search-part-image", {
+          body: { partNumber: product.sku, productId: product.id },
+        });
+
+        if (searchErr || !data?.success || !data.images?.length) {
+          failed++;
+          setBulkProgress(prev => ({ ...prev, failed }));
+          continue;
+        }
+
+        // Auto-save the first found image
+        const { data: saveData, error: saveErr } = await supabase.functions.invoke("save-image-from-url", {
+          body: { imageUrl: data.images[0], productId: product.id },
+        });
+
+        if (saveErr || !saveData?.success) {
+          failed++;
+        } else {
+          found++;
+        }
+        setBulkProgress(prev => ({ ...prev, found, failed }));
+
+        // Delay to avoid rate limits
+        await new Promise(r => setTimeout(r, 1500));
+      } catch {
+        failed++;
+        setBulkProgress(prev => ({ ...prev, failed }));
+      }
+    }
+
+    setBulkSearching(false);
+    queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+    queryClient.invalidateQueries({ queryKey: ["products"] });
+    toast({
+      title: "اكتمل البحث المجمّع",
+      description: `تم العثور على ${found} صورة، فشل ${failed}`,
+    });
+  };
+
+  const handleStopBulk = () => {
+    bulkAbortRef.current = true;
+  };
+
   const openGoogleSearch = (sku: string) => {
     window.open(`https://www.google.com/search?q=${encodeURIComponent(sku + " toyota genuine part")}&tbm=isch`, "_blank");
   };
