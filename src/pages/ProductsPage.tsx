@@ -55,6 +55,8 @@ const ProductsPage = () => {
     chassisNumber: "",
     partNumber: "",
     categoryId: null,
+    priceMin: "",
+    priceMax: "",
   });
   const DAILY_LIMIT = 20;
 

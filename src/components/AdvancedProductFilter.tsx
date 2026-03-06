@@ -75,6 +75,8 @@ const AdvancedProductFilter = ({ filters, onFiltersChange, categories, showCateg
       chassisNumber: "",
       partNumber: "",
       categoryId: null,
+      priceMin: "",
+      priceMax: "",
     });
   };
 
