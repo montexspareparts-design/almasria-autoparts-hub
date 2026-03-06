@@ -52,22 +52,13 @@ const ProductsSection = () => {
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="bg-secondary/60 border border-primary/30 rounded-lg p-4 mb-8 flex items-center justify-between flex-wrap gap-4"
+            className="bg-white/10 backdrop-blur-sm border border-primary/40 rounded-lg p-4 mb-8 flex items-center justify-center gap-3"
           >
-            <div className="flex items-center gap-3">
-              <Lock className="w-5 h-5 text-primary shrink-0" />
-              <p className="text-secondary-foreground text-sm">
-                <strong>الأسعار متاحة للتجار المعتمدين فقط.</strong>{" "}
-                سجل كتاجر معتمد للاطلاع على الأسعار وطلب المنتجات.
-              </p>
-            </div>
-            <Button
-              size="sm"
-              className="shrink-0"
-              onClick={() => navigate(user ? "/dealer" : "/dealer-apply")}
-            >
-              {user ? "لوحة التحكم" : "طلب فتح حساب تاجر"}
-            </Button>
+            <Lock className="w-5 h-5 text-primary shrink-0" />
+            <p className="text-secondary-foreground text-sm">
+              <strong>الأسعار متاحة للتجار المعتمدين فقط.</strong>{" "}
+              سجل كتاجر معتمد للاطلاع على الأسعار وطلب المنتجات.
+            </p>
           </motion.div>
         )}
 
