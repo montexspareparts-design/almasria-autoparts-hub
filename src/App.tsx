@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import DealerApply from "./pages/DealerApply";
 import DealerRegister from "./pages/DealerRegister";
+import ClientRegister from "./pages/ClientRegister";
 import DealerDashboard from "./pages/DealerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import ProductsPage from "./pages/ProductsPage";
