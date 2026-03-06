@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useRef } from "react";
 
 import catEngine from "@/assets/cat-engine.jpg";
 import catSuspension from "@/assets/cat-suspension.jpg";
@@ -24,13 +25,89 @@ const categories = [
   { name: "التبريد", image: catCooling, count: "+300 صنف" },
 ];
 
+// Glowing particles component
+const GlowingParticles = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const resize = () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    const particles: { x: number; y: number; r: number; dx: number; dy: number; opacity: number; pulse: number }[] = [];
+    for (let i = 0; i < 60; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 2 + 0.5,
+        dx: (Math.random() - 0.5) * 0.3,
+        dy: (Math.random() - 0.5) * 0.3,
+        opacity: Math.random() * 0.6 + 0.2,
+        pulse: Math.random() * Math.PI * 2,
+      });
+    }
+
+    let animId: number;
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach((p) => {
+        p.x += p.dx;
+        p.y += p.dy;
+        p.pulse += 0.02;
+        const glow = Math.sin(p.pulse) * 0.3 + 0.7;
+
+        if (p.x < 0) p.x = canvas.width;
+        if (p.x > canvas.width) p.x = 0;
+        if (p.y < 0) p.y = canvas.height;
+        if (p.y > canvas.height) p.y = 0;
+
+        // Outer glow
+        const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 6);
+        gradient.addColorStop(0, `rgba(235, 10, 30, ${p.opacity * glow * 0.4})`);
+        gradient.addColorStop(0.5, `rgba(235, 10, 30, ${p.opacity * glow * 0.1})`);
+        gradient.addColorStop(1, "rgba(235, 10, 30, 0)");
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r * 6, 0, Math.PI * 2);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+
+        // Core
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity * glow})`;
+        ctx.fill();
+      });
+      animId = requestAnimationFrame(animate);
+    };
+    animate();
+
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />;
+};
+
 const ProductsSection = () => {
   const { isDealer, user } = useAuth();
   const navigate = useNavigate();
 
   return (
-    <section id="products" className="py-20 md:py-28 bg-dark-section">
-      <div className="container mx-auto px-4">
+    <section id="products" className="py-20 md:py-28 bg-dark-section relative overflow-hidden">
+      {/* Glowing particles background */}
+      <GlowingParticles />
+
+      <div className="container mx-auto px-4 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -81,6 +158,20 @@ const ProductsSection = () => {
                   className={`relative z-10 w-[95%] h-[95%] object-contain transition-transform duration-500 group-hover:scale-105 ${b.imgScale}`}
                 />
               </Link>
+              {/* Badge under logo */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.2 + 0.4, type: "spring", stiffness: 150 }}
+              >
+                <Link
+                  to={b.to}
+                  className="inline-block bg-secondary/80 backdrop-blur-sm border border-white/20 text-secondary-foreground/90 text-xs md:text-sm px-4 py-1.5 rounded-full hover:bg-primary hover:text-primary-foreground transition-all duration-300 hover:shadow-[0_0_20px_rgba(235,10,30,0.4)]"
+                >
+                  {b.label}
+                </Link>
+              </motion.div>
             </motion.div>
           ))}
         </div>
