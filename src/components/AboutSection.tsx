@@ -83,6 +83,7 @@ const AboutSection = () => {
                   { city: "القاهرة", area: "التوفيقية" },
                   { city: "الجيزة", area: "أوسيم" },
                   { city: "الأقصر", area: "صعيد مصر" },
+                  { city: "دبي 🇦🇪", area: "مركز إقليمي" },
                 ].map((b) => (
                   <div key={b.city} className="bg-secondary-foreground/10 rounded-md p-4 text-center">
                     <div className="text-xl font-bold">{b.city}</div>
