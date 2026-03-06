@@ -275,15 +275,14 @@ const ProductsPage = () => {
                   )}
 
                   {/* Price */}
-                  {isDealer ? (
-                    <div className="text-primary font-black text-lg">
-                      {product.base_price.toLocaleString("ar-EG")} ج.م
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-muted-foreground text-xs">
-                      <Lock className="w-3 h-3" />
-                      <span>سجل كتاجر لرؤية السعر</span>
-                    </div>
+                  <div className="text-primary font-black text-lg">
+                    {product.base_price.toLocaleString("ar-EG")} ج.م
+                  </div>
+                  {!isDealer && (
+                    <p className="text-[11px] text-muted-foreground">سعر قطاعي</p>
+                  )}
+                  {isDealer && (
+                    <p className="text-[11px] text-green-600 font-semibold">سعر الجملة الخاص بك</p>
                   )}
 
                   {/* Min Order */}
@@ -294,7 +293,7 @@ const ProductsPage = () => {
                   )}
 
                   {/* Add to Cart */}
-                  {isDealer && product.stock_quantity > 0 && (
+                  {product.stock_quantity > 0 && (
                     <Button
                       size="sm"
                       className="w-full mt-3 gap-2"
