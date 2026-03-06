@@ -10,6 +10,7 @@ import DealerApply from "./pages/DealerApply";
 import DealerRegister from "./pages/DealerRegister";
 import DealerDashboard from "./pages/DealerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import ProductsPage from "./pages/ProductsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
