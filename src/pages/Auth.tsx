@@ -214,6 +214,30 @@ const Auth = () => {
             </Button>
           </div>
 
+          {forgotMode ? (
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <p className="text-sm text-muted-foreground text-center mb-2">
+                أدخل {authMethod === "phone" ? "رقم هاتفك" : "بريدك الإلكتروني"} لإعادة تعيين كلمة المرور
+              </p>
+              {authMethod === "phone" ? (
+                <div className="space-y-2">
+                  <Label htmlFor="forgot-phone" className="text-card-foreground">رقم الهاتف</Label>
+                  <Input id="forgot-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="01xxxxxxxxx" required dir="ltr" className="bg-background" />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="forgot-email" className="text-card-foreground">البريد الإلكتروني</Label>
+                  <Input id="forgot-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="example@email.com" required dir="ltr" className="bg-background" />
+                </div>
+              )}
+              <Button type="submit" className="w-full red-glow" disabled={resetLoading}>
+                {resetLoading ? "جاري الإرسال..." : "إرسال رابط إعادة التعيين"}
+              </Button>
+              <button type="button" onClick={() => setForgotMode(false)} className="text-sm text-primary hover:underline w-full text-center">
+                العودة لتسجيل الدخول
+              </button>
+            </form>
+          ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div className="space-y-2">
