@@ -1,4 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 export interface CartItem {
   id: string;
