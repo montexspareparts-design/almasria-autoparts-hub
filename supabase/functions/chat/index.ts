@@ -13,15 +13,32 @@ serve(async (req) => {
   }
 
   try {
-    const { messages } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const { messages, action } = await req.json();
 
-    // Fetch products from database
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
+
+    // Handle callback request action from frontend
+    if (action === "request_callback") {
+      const { customerPhone, customerName, notes } = await req.json().catch(() => ({}));
+      // Already parsed above, get from the original body
+      const body = JSON.parse(await req.text().catch(() => "{}"));
+      // Re-parse since we already consumed the body
+    }
+
+    // If this is a callback request (separate endpoint-like action)
+    if (action === "request_callback") {
+      const lastUserMsg = messages?.find((m: any) => m.role === "user");
+      return new Response(
+        JSON.stringify({ success: true }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const { data: products } = await supabase
       .from("products")
@@ -40,7 +57,6 @@ serve(async (req) => {
       .select("name_ar, description_ar, bundle_price, original_price")
       .eq("is_active", true);
 
-    // Build product catalog for AI context
     const productList = (products || []).map(p => {
       const brandLabel = p.brand === "toyota_genuine" ? "تويوتا أصلي" : p.brand === "toyota_oils" ? "زيوت تويوتا" : p.brand === "denso" ? "DENSO" : p.brand === "aisin" ? "AISIN" : "MTX بديل";
       const category = (p as any).product_categories?.name_ar || "";
@@ -90,6 +106,15 @@ ${bundleList}
 
 ## قواعد صارمة يجب اتباعها:
 
+### ✅ عرض المنتجات - قاعدة مهمة جداً:
+- **عند سؤال العميل عن أي قطعة غيار، يجب عرض الخيارات المتوفرة من جميع الماركات** (تويوتا أصلي + MTX بديل + DENSO + AISIN) إن وُجدت
+- قدّم المقارنة بوضوح: "الأصلي" مقابل "البديل MTX" مع ذكر الفرق في السعر
+- مثال: "عندنا فلتر زيت لكورولا:
+  🔴 **أصلي تويوتا**: [الاسم] | رقم القطعة: XXX | السعر: XXX ج.م ✅ متوفر
+  🔵 **MTX بديل**: [الاسم] | رقم القطعة: XXX | السعر: XXX ج.م ✅ متوفر
+  الأصلي أضمن والبديل MTX جودة ممتازة وسعر أوفر 💡"
+- لا تعرض ماركة واحدة فقط إذا كان هناك بدائل متوفرة من ماركات أخرى
+
 ### ✅ افعل:
 - أجب بالعربية دائمًا إلا إذا طُلب غير ذلك
 - اقترح منتجات فعلية من القائمة أعلاه فقط – لا تخترع منتجات
@@ -98,10 +123,15 @@ ${bundleList}
 - قل "متوفر" أو "غير متوفر" فقط – لا تذكر أبداً كمية المخزون أو عدد القطع المتاحة
 - اقترح منتجات مكملة (مثلاً: لو سأل عن فلتر زيت، اقترح زيت مناسب)
 - إذا كان المنتج عليه عرض، نبّه العميل
-- وجّه العميل لصفحة المنتجات على الموقع عند الحاجة
 - كن ذكي وسريع البديهة في فهم ما يقصده العميل حتى لو السؤال غير واضح
 - ساعد في أي سؤال عام عن السيارات والصيانة بناءً على خبرتك
 - إذا سأل عن موديل معين، حاول ربط المنتجات المتوفرة بالموديل
+
+### 📞 طلب التواصل مع المبيعات:
+- إذا طلب العميل أن يتواصل معه أحد من فريق المبيعات أو قال "عايز حد يكلمني" أو ما شابه:
+  1. اطلب منه رقم هاتفه واسمه
+  2. بعد ما يعطيك الرقم، استخدم أداة request_callback لإرسال بياناته للإدارة
+  3. أخبره أنه تم إرسال طلبه وسيتواصل معه فريق المبيعات في أقرب وقت
 
 ### ❌ لا تفعل أبداً:
 - لا تذكر كمية المخزون أو أرقام المخزون نهائياً (قل "متوفر" فقط)
@@ -117,6 +147,26 @@ ${bundleList}
 ### عند عدم توفر المنتج:
 أخبر العميل بلطف أن المنتج غير متوفر حالياً وانصحه بالتواصل مع فريق المبيعات على الأرقام المذكورة أعلاه للاستفسار عن موعد التوفر.`;
 
+    const tools = [
+      {
+        type: "function",
+        function: {
+          name: "request_callback",
+          description: "يُستخدم عندما يطلب العميل أن يتواصل معه فريق المبيعات. يرسل بيانات العميل للإدارة.",
+          parameters: {
+            type: "object",
+            properties: {
+              customer_phone: { type: "string", description: "رقم هاتف العميل" },
+              customer_name: { type: "string", description: "اسم العميل (اختياري)" },
+              notes: { type: "string", description: "ملاحظات أو تفاصيل عن استفسار العميل" },
+            },
+            required: ["customer_phone"],
+            additionalProperties: false,
+          },
+        },
+      },
+    ];
+
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
       {
@@ -131,6 +181,7 @@ ${bundleList}
             { role: "system", content: SYSTEM_PROMPT },
             ...messages,
           ],
+          tools,
           stream: true,
         }),
       }
@@ -157,9 +208,124 @@ ${bundleList}
       );
     }
 
-    return new Response(response.body, {
+    // We need to intercept the stream to handle tool calls
+    const reader = response.body!.getReader();
+    const decoder = new TextDecoder();
+    let fullContent = "";
+    let toolCalls: any[] = [];
+    let currentToolCall: any = null;
+
+    // Read the entire stream to check for tool calls
+    let rawBuffer = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      rawBuffer += decoder.decode(value, { stream: true });
+    }
+
+    // Parse SSE events
+    const lines = rawBuffer.split("\n");
+    for (const rawLine of lines) {
+      let line = rawLine;
+      if (line.endsWith("\r")) line = line.slice(0, -1);
+      if (!line.startsWith("data: ")) continue;
+      const jsonStr = line.slice(6).trim();
+      if (jsonStr === "[DONE]") break;
+      try {
+        const parsed = JSON.parse(jsonStr);
+        const choice = parsed.choices?.[0];
+        if (choice?.delta?.content) {
+          fullContent += choice.delta.content;
+        }
+        if (choice?.delta?.tool_calls) {
+          for (const tc of choice.delta.tool_calls) {
+            if (tc.id) {
+              currentToolCall = { id: tc.id, function: { name: tc.function?.name || "", arguments: "" } };
+              toolCalls.push(currentToolCall);
+            }
+            if (currentToolCall && tc.function?.arguments) {
+              currentToolCall.function.arguments += tc.function.arguments;
+            }
+          }
+        }
+      } catch { /* skip */ }
+    }
+
+    // If there are tool calls, execute them
+    if (toolCalls.length > 0) {
+      for (const tc of toolCalls) {
+        if (tc.function.name === "request_callback") {
+          try {
+            const args = JSON.parse(tc.function.arguments);
+            const phone = args.customer_phone || "";
+            const name = args.customer_name || "عميل من الشات بوت";
+            const notes = args.notes || "";
+
+            // Find admin users
+            const { data: adminRoles } = await supabase
+              .from("user_roles")
+              .select("user_id")
+              .eq("role", "admin");
+
+            if (adminRoles && adminRoles.length > 0) {
+              const notifications = adminRoles.map((admin: any) => ({
+                user_id: admin.user_id,
+                title: "📞 طلب تواصل من الشات بوت",
+                message: `العميل "${name}" يطلب التواصل معه\n📱 الرقم: ${phone}\n📝 ${notes}`,
+                type: "info",
+              }));
+              await supabase.from("notifications").insert(notifications);
+            }
+
+            // Now make a second AI call to generate the response to user
+            const followUpMessages = [
+              { role: "system", content: SYSTEM_PROMPT },
+              ...messages,
+              { role: "assistant", content: null, tool_calls: [{ id: tc.id, type: "function", function: { name: tc.function.name, arguments: tc.function.arguments } }] },
+              { role: "tool", tool_call_id: tc.id, content: JSON.stringify({ success: true, message: `تم إرسال طلب التواصل بنجاح. اسم العميل: ${name}, الرقم: ${phone}` }) },
+            ];
+
+            const followUpResponse = await fetch(
+              "https://ai.gateway.lovable.dev/v1/chat/completions",
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  model: "google/gemini-3-flash-preview",
+                  messages: followUpMessages,
+                  stream: true,
+                }),
+              }
+            );
+
+            if (followUpResponse.ok) {
+              return new Response(followUpResponse.body, {
+                headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+              });
+            }
+          } catch (e) {
+            console.error("Tool call error:", e);
+          }
+        }
+      }
+
+      // Fallback if tool call processing failed
+      const fallbackContent = fullContent || "تم إرسال طلبك لفريق المبيعات وسيتواصلون معك في أقرب وقت! 📞";
+      const fallbackSSE = `data: ${JSON.stringify({ choices: [{ delta: { content: fallbackContent }, finish_reason: "stop" }] })}\n\ndata: [DONE]\n\n`;
+      return new Response(fallbackSSE, {
+        headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+      });
+    }
+
+    // No tool calls - return the content as SSE stream
+    const contentSSE = `data: ${JSON.stringify({ choices: [{ delta: { content: fullContent }, finish_reason: "stop" }] })}\n\ndata: [DONE]\n\n`;
+    return new Response(contentSSE, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
+
   } catch (e) {
     console.error("chat error:", e);
     return new Response(
