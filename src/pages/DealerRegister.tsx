@@ -127,6 +127,18 @@ const DealerRegister = () => {
         return;
       }
 
+      // Notify admin via in-app notification (real-time)
+      supabase.functions.invoke("notify-admin-new-application", {
+        body: {
+          fullName: form.fullName,
+          businessName: form.businessName,
+          phone: form.phone,
+          governorate: form.governorate,
+          clientType: form.clientType,
+        },
+      }).catch(console.error);
+
+      // Notify admin via WhatsApp
       notifyAdminWhatsApp(form);
       setSubmitted(true);
     } catch {
