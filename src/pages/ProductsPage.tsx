@@ -316,12 +316,12 @@ const ProductsPage = () => {
                   className="bg-card border border-border rounded-lg overflow-hidden hover:border-primary/40 hover:shadow-md transition-all duration-200 group"
                 >
                   {/* Product Image */}
-                  <div className="aspect-square bg-muted relative overflow-hidden">
+                  <div className="aspect-square bg-white relative overflow-hidden">
                     {product.image_url ? (
                       <img
                         src={product.image_url}
                         alt={product.name_ar}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-300"
                         loading="lazy"
                       />
                     ) : (
