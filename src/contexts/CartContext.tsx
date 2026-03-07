@@ -1,4 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 export interface CartItem {
   id: string;
@@ -51,6 +54,8 @@ export const useCart = () => useContext(CartContext);
 const CART_KEY = "masria_cart";
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
+  const { user } = useAuth();
+
   const [items, setItems] = useState<CartItem[]>(() => {
     try {
       const stored = localStorage.getItem(CART_KEY);
@@ -67,6 +72,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, [items]);
 
   const addItem = useCallback((item: CartItem) => {
+    if (!user) {
+      toast.error("يجب تسجيل الدخول أولاً لإضافة منتجات للسلة", {
+        action: {
+          label: "تسجيل الدخول",
+          onClick: () => window.location.href = "/auth",
+        },
+      });
+      return;
+    }
     setItems((prev) => {
       const existing = prev.find((i) => i.id === item.id);
       if (existing) {
@@ -78,7 +92,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       }
       return [...prev, item];
     });
-  }, []);
+  }, [user]);
 
   const removeItem = useCallback((id: string) => {
     setItems((prev) => prev.filter((i) => i.id !== id));
