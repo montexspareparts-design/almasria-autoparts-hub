@@ -57,7 +57,7 @@ const Auth = () => {
         });
       } else {
         toast({ title: "تم تسجيل الدخول بنجاح" });
-        navigate("/dealer");
+        navigate("/");
       }
     } else {
       const { error } = await supabase.auth.signUp({
