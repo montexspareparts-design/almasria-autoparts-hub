@@ -67,14 +67,14 @@ const brandConfig: Record<string, { title: string; subtitle: string; description
 const ProductsPage = () => {
   const { brand } = useParams<{ brand: string }>();
   const navigate = useNavigate();
-  const { isDealer, user, dealerAccount, loading: authLoading } = useAuth();
+  const { isDealer, user, dealerAccount, loading } = useAuth();
 
   // Redirect unauthenticated users to auth page
   useEffect(() => {
-    if (!authLoading && !user) {
+    if (!loading && !user) {
       navigate("/auth", { replace: true });
     }
-  }, [authLoading, user, navigate]);
+  }, [loading, user, navigate]);
   const { addItem } = useCart();
   const queryClient = useQueryClient();
   const config = brand ? brandConfig[brand] : null;
