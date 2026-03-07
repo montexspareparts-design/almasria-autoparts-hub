@@ -226,24 +226,13 @@ const ProductsPage = () => {
       <Navbar />
 
       {/* Hero Banner */}
-      <section className="pt-24 pb-10 bg-dark-section">
-        <div className="container mx-auto px-4">
-          <Link to="/#products" className="inline-flex items-center gap-2 text-sm text-primary hover:underline mb-6">
-            <ArrowRight className="w-4 h-4" />
-            العودة للمنتجات
-          </Link>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl">
-            <img src={config.logo} alt={config.title} className="h-28 md:h-36 object-contain mb-6" />
-            <div className="inline-flex items-center gap-2 bg-primary/15 border border-primary/30 rounded-full px-4 py-1.5 mb-4">
-              <ShieldCheck className="w-4 h-4 text-primary" />
-              <span className="text-sm font-semibold text-primary">{config.badge}</span>
-            </div>
-            <h1 className="text-3xl md:text-5xl font-black text-dark-section-foreground mb-2">{config.title}</h1>
-            <p className="text-lg text-dark-section-foreground/50 mb-2">{config.subtitle}</p>
-            <p className="text-dark-section-foreground/70 max-w-2xl leading-relaxed">{config.description}</p>
-          </motion.div>
-        </div>
-      </section>
+      <BrandHeroBanner
+        logo={config.logo}
+        title={config.title}
+        subtitle={config.subtitle}
+        description={config.description}
+        badge={config.badge}
+      />
 
       <section className="py-6 bg-background border-b border-border sticky top-16 z-30">
         <div className="container mx-auto px-4">
