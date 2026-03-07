@@ -63,10 +63,13 @@ serve(async (req) => {
       .from("product-images")
       .getPublicUrl(filePath);
 
+    // Add cache-busting timestamp
+    const publicUrlWithCacheBust = `${urlData.publicUrl}?t=${Date.now()}`;
+
     // Update product
     const { error: updateError } = await supabase
       .from("products")
-      .update({ image_url: urlData.publicUrl })
+      .update({ image_url: publicUrlWithCacheBust })
       .eq("id", productId);
 
     if (updateError) {
@@ -78,7 +81,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, imageUrl: urlData.publicUrl }),
+      JSON.stringify({ success: true, imageUrl: publicUrlWithCacheBust }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {

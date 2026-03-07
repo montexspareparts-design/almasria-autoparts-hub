@@ -81,9 +81,12 @@ const AdminProductImages = () => {
         .from("product-images")
         .getPublicUrl(filePath);
 
+      // Add cache-busting timestamp to avoid browser caching old images
+      const publicUrlWithCacheBust = `${urlData.publicUrl}?t=${Date.now()}`;
+
       const { error: updateError } = await supabase
         .from("products")
-        .update({ image_url: urlData.publicUrl })
+        .update({ image_url: publicUrlWithCacheBust })
         .eq("id", targetProductId);
 
       if (updateError) throw updateError;
