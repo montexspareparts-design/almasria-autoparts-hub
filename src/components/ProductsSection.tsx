@@ -15,6 +15,8 @@ import catCooling from "@/assets/cat-cooling.jpg";
 import brandGenuineParts from "@/assets/brand-genuine-parts.png";
 import brandToyotaOil from "@/assets/brand-toyota-oil.png";
 import brandMtx from "@/assets/brand-mtx.jpg";
+import brandDenso from "@/assets/brand-denso.png";
+import brandAisin from "@/assets/brand-aisin.png";
 
 const categories = [
   { name: "أجزاء المحرك", image: catEngine, count: "+800 صنف" },
@@ -121,11 +123,13 @@ const ProductsSection = () => {
         </motion.div>
 
         {/* Brand Labels */}
-        <div className="grid grid-cols-3 gap-5 md:gap-8 mb-12 max-w-3xl mx-auto">
+        <div className="grid grid-cols-3 md:grid-cols-5 gap-4 md:gap-6 mb-12 max-w-5xl mx-auto">
           {[
             { label: "قطع غيار تويوتا الأصلية", image: brandGenuineParts, to: "/products/toyota-genuine", imgScale: "scale-100" },
             { label: "زيوت تويوتا الأصلية", image: brandToyotaOil, to: "/products/toyota-oils", imgScale: "scale-150" },
             { label: "MTX Aftermarket", image: brandMtx, to: "/products/mtx-aftermarket", imgScale: "scale-150" },
+            { label: "DENSO", image: brandDenso, to: "/products/denso", imgScale: "scale-100" },
+            { label: "AISIN", image: brandAisin, to: "/products/aisin", imgScale: "scale-100" },
           ].map((b, i) => (
             <motion.div
               key={b.to}

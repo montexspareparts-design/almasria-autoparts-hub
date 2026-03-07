@@ -597,7 +597,12 @@ export type Database = {
         | "wholesale_tier2"
         | "corporate"
         | "retail"
-      product_brand: "toyota_genuine" | "toyota_oils" | "mtx_aftermarket"
+      product_brand:
+        | "toyota_genuine"
+        | "toyota_oils"
+        | "mtx_aftermarket"
+        | "denso"
+        | "aisin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -734,7 +739,13 @@ export const Constants = {
         "corporate",
         "retail",
       ],
-      product_brand: ["toyota_genuine", "toyota_oils", "mtx_aftermarket"],
+      product_brand: [
+        "toyota_genuine",
+        "toyota_oils",
+        "mtx_aftermarket",
+        "denso",
+        "aisin",
+      ],
     },
   },
 } as const
