@@ -8,7 +8,7 @@ import heroBg from "@/assets/hero-bg.jpg";
 const floatingVariants = {
   animate: {
     y: [0, -10, 0],
-    transition: { duration: 3, repeat: Infinity, ease: "easeInOut" },
+    transition: { duration: 3, repeat: Infinity, ease: "easeInOut" as const },
   },
 };
 

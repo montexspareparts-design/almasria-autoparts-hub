@@ -6,7 +6,7 @@ const listItemVariants = {
   visible: (i: number) => ({
     opacity: 1,
     x: 0,
-    transition: { delay: i * 0.1, duration: 0.4, type: "spring", stiffness: 100 },
+    transition: { delay: i * 0.1, duration: 0.4, type: "spring" as const, stiffness: 100 },
   }),
 };
 
