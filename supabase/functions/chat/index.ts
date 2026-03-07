@@ -42,10 +42,11 @@ serve(async (req) => {
 
     // Build product catalog for AI context
     const productList = (products || []).map(p => {
-      const brandLabel = p.brand === "toyota_genuine" ? "تويوتا أصلي" : p.brand === "toyota_oils" ? "زيوت تويوتا" : "MTX بديل";
+      const brandLabel = p.brand === "toyota_genuine" ? "تويوتا أصلي" : p.brand === "toyota_oils" ? "زيوت تويوتا" : p.brand === "denso" ? "DENSO" : p.brand === "aisin" ? "AISIN" : "MTX بديل";
       const category = (p as any).product_categories?.name_ar || "";
       const price = p.is_on_sale && p.sale_price ? `${p.sale_price} (بدل ${p.base_price})` : `${p.base_price}`;
-      return `- ${p.name_ar} | SKU: ${p.sku} | ${brandLabel} | ${category} | السعر: ${price} ج.م | المخزون: ${p.stock_quantity}`;
+      const availability = p.stock_quantity > 0 ? "متوفر" : "غير متوفر";
+      return `- ${p.name_ar} | رقم القطعة: ${p.sku} | ${brandLabel} | ${category} | السعر: ${price} ج.م | ${availability}`;
     }).join("\n");
 
     const categoryList = (categories || []).map(c => c.name_ar).join("، ");
