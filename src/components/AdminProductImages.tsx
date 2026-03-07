@@ -48,12 +48,19 @@ const AdminProductImages = () => {
 
   const handleUploadClick = (productId: string) => {
     setTargetProductId(productId);
-    fileInputRef.current?.click();
+    // Use setTimeout to ensure state is set before file dialog opens
+    setTimeout(() => {
+      fileInputRef.current?.click();
+    }, 100);
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !targetProductId) return;
+    const productId = targetProductId;
+    if (!file || !productId) {
+      console.error("Upload failed: no file or no targetProductId", { file: !!file, productId });
+      return;
+    }
 
     if (!file.type.startsWith("image/")) {
       toast({ title: "يرجى اختيار ملف صورة", variant: "destructive" });
@@ -65,17 +72,36 @@ const AdminProductImages = () => {
       return;
     }
 
-    setUploading(targetProductId);
+    setUploading(productId);
 
     try {
-      const ext = file.name.split(".").pop();
-      const filePath = `${targetProductId}.${ext}`;
+      const ext = file.name.split(".").pop() || "jpg";
+      const filePath = `${productId}.${ext}`;
+
+      console.log("Uploading to storage:", filePath);
+
+      // First try to remove old file if exists (different extension)
+      const { data: existingFiles } = await supabase.storage
+        .from("product-images")
+        .list("", { search: productId });
+      
+      if (existingFiles && existingFiles.length > 0) {
+        const oldFiles = existingFiles.filter(f => f.name.startsWith(productId));
+        if (oldFiles.length > 0) {
+          await supabase.storage
+            .from("product-images")
+            .remove(oldFiles.map(f => f.name));
+        }
+      }
 
       const { error: uploadError } = await supabase.storage
         .from("product-images")
         .upload(filePath, file, { upsert: true });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error("Storage upload error:", uploadError);
+        throw uploadError;
+      }
 
       const { data: urlData } = supabase.storage
         .from("product-images")
@@ -84,17 +110,23 @@ const AdminProductImages = () => {
       // Add cache-busting timestamp to avoid browser caching old images
       const publicUrlWithCacheBust = `${urlData.publicUrl}?t=${Date.now()}`;
 
+      console.log("Updating product image_url:", publicUrlWithCacheBust);
+
       const { error: updateError } = await supabase
         .from("products")
         .update({ image_url: publicUrlWithCacheBust })
-        .eq("id", targetProductId);
+        .eq("id", productId);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error("Product update error:", updateError);
+        throw updateError;
+      }
 
-      toast({ title: "تم رفع الصورة بنجاح" });
+      toast({ title: "تم رفع الصورة بنجاح ✅" });
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
     } catch (err: any) {
+      console.error("Full upload error:", err);
       toast({ title: "خطأ في رفع الصورة", description: err.message, variant: "destructive" });
     } finally {
       setUploading(null);
