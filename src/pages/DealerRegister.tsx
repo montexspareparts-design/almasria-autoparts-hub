@@ -206,8 +206,8 @@ const DealerRegister = () => {
       </section>
 
       {/* Form */}
-      <section className="py-12">
-        <div className="container mx-auto px-4">
+      <section className="py-8 md:py-12">
+        <div className="container mx-auto px-3 sm:px-4">
           <div className="max-w-2xl mx-auto">
 
             {/* Price Notice */}
