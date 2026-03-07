@@ -62,9 +62,9 @@ const RelatedProducts = ({ currentProduct, allProducts, currentCategoryId, onAdd
               transition={{ delay: i * 0.05 }}
               className="bg-card border border-border rounded-lg overflow-hidden hover:border-primary/40 hover:shadow-md transition-all group"
             >
-              <div className="aspect-square bg-muted relative overflow-hidden">
+              <div className="aspect-square bg-white relative overflow-hidden">
                 {product.image_url ? (
-                  <img src={product.image_url} alt={product.name_ar} className="w-full h-full object-cover group-hover:scale-105 transition-transform" loading="lazy" />
+                  <img src={product.image_url} alt={product.name_ar} className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform" loading="lazy" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <Package className="w-8 h-8 text-muted-foreground/20" />
