@@ -93,6 +93,11 @@ const AdminDashboard = () => {
 
     await sendNotification(app, "approved");
 
+    // Send WhatsApp to dealer
+    const approveMsg = `✅ مبروك! تمت الموافقة على طلب التسجيل كتاجر في المصرية جروب.\n\n🏢 ${app.business_name}\n📋 الفئة: ${tierLabels[assignedTier] || assignedTier}\n\nيمكنك الآن الدخول إلى حسابك والاستفادة من أسعار الجملة.`;
+    const dealerPhone = app.phone.replace(/^0/, "20").replace(/\D/g, "");
+    window.open(`https://wa.me/${dealerPhone}?text=${encodeURIComponent(approveMsg)}`, "_blank");
+
     toast({ title: "تمت الموافقة على الطلب وتم إرسال إشعار للتاجر" });
     setSelectedApp(null);
     setAssignedTier("");
