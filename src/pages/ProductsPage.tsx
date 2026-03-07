@@ -66,6 +66,7 @@ const brandConfig: Record<string, { title: string; subtitle: string; description
 
 const ProductsPage = () => {
   const { brand } = useParams<{ brand: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { isDealer, user, dealerAccount } = useAuth();
   const { addItem } = useCart();
