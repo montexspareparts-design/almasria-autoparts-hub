@@ -227,7 +227,7 @@ const DealerRegister = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
               onSubmit={handleSubmit}
-              className="bg-card border border-border rounded-xl p-6 md:p-8 shadow-sm space-y-6"
+              className="bg-card border border-border rounded-xl p-4 sm:p-6 md:p-8 shadow-sm space-y-5 md:space-y-6"
             >
               <h2 className="text-xl font-bold text-card-foreground mb-2">البيانات الأساسية</h2>
 
