@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Lock, UserPlus, CheckCircle2, Building2, Users, ShoppingBag, Loader2 } from "lucide-react";
+import { Lock, UserPlus, CheckCircle2, Building2, Users, ShoppingBag, Loader2, Phone, ShieldCheck } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -26,6 +26,8 @@ const clientTypes = [
   { value: "company", label: "شركة / هيئة حكومية", icon: Building2, desc: "شركات خاصة أو جهات حكومية" },
   { value: "distributor", label: "عميل قطاعي", icon: Users, desc: "ورش صيانة ومراكز خدمة" },
 ] as const;
+
+const ADMIN_WHATSAPP = "201020412358";
 
 const formSchema = z.object({
   fullName: z.string().trim().min(3, "الاسم يجب أن يكون 3 أحرف على الأقل").max(100),
@@ -52,12 +54,102 @@ const DealerRegister = () => {
     clientType: "" as any,
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // OTP state
+  const [otpStep, setOtpStep] = useState<"form" | "otp">("form");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [countdown, setCountdown] = useState(0);
 
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [countdown]);
+
+  const sendOtp = async () => {
+    const phoneVal = form.phone.trim();
+    if (phoneVal.length < 8) {
+      toast.error("يرجى إدخال رقم هاتف صحيح");
+      return;
+    }
+
+    setOtpSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-otp", {
+        body: { phone: phoneVal },
+      });
+
+      if (error) {
+        toast.error("فشل إرسال كود التحقق. حاول مرة أخرى.");
+      } else if (data?.success) {
+        toast.success("تم إرسال كود التحقق على رقمك");
+        setOtpStep("otp");
+        setCountdown(120);
+      } else {
+        toast.error(data?.error || "حدث خطأ");
+      }
+    } catch {
+      toast.error("حدث خطأ غير متوقع");
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  const verifyOtp = async () => {
+    if (otpCode.length !== 6) {
+      toast.error("يرجى إدخال كود مكون من 6 أرقام");
+      return;
+    }
+
+    setOtpVerifying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-otp", {
+        body: { phone: form.phone.trim(), code: otpCode },
+      });
+
+      if (error) {
+        toast.error("فشل التحقق. حاول مرة أخرى.");
+      } else if (data?.valid) {
+        toast.success("تم التحقق بنجاح ✅");
+        setOtpVerified(true);
+      } else {
+        toast.error(data?.error || "كود التحقق غير صحيح");
+      }
+    } catch {
+      toast.error("حدث خطأ غير متوقع");
+    } finally {
+      setOtpVerifying(false);
+    }
+  };
+
+  const notifyAdminWhatsApp = (appData: FormData) => {
+    const clientLabel = clientTypes.find(c => c.value === appData.clientType)?.label || appData.clientType;
+    const message = `🆕 طلب تسجيل تاجر جديد\n\n👤 الاسم: ${appData.fullName}\n🏢 الشركة: ${appData.businessName}\n📞 الهاتف: ${appData.phone}\n📍 المحافظة: ${appData.governorate}\n📋 النوع: ${clientLabel}\n\nادخل لوحة التحكم للموافقة على الطلب.`;
+    const url = `https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(message)}`;
+    window.open(url, "_blank");
+  };
+
+  const handleFormValidation = () => {
     const result = formSchema.safeParse(form);
     if (!result.success) {
       toast.error(result.error.issues[0].message);
+      return false;
+    }
+    return true;
+  };
+
+  const handleRequestOtp = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!handleFormValidation()) return;
+    sendOtp();
+  };
+
+  const handleSubmit = async () => {
+    if (!otpVerified) {
+      toast.error("يرجى التحقق من رقم الهاتف أولاً");
       return;
     }
 
@@ -117,6 +209,9 @@ const DealerRegister = () => {
         setLoading(false);
         return;
       }
+
+      // Notify admin via WhatsApp
+      notifyAdminWhatsApp(form);
 
       setSubmitted(true);
     } catch {
@@ -204,7 +299,7 @@ const DealerRegister = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              onSubmit={handleSubmit}
+              onSubmit={handleRequestOtp}
               className="bg-card border border-border rounded-xl p-6 md:p-8 shadow-sm space-y-6"
             >
               <h2 className="text-xl font-bold text-card-foreground mb-2">البيانات الأساسية</h2>
@@ -219,20 +314,29 @@ const DealerRegister = () => {
                   placeholder="أدخل اسمك الكامل"
                   className="text-right"
                   required
+                  disabled={otpVerified}
                 />
               </div>
 
               {/* Phone */}
               <div className="space-y-2">
                 <Label htmlFor="phone">رقم الهاتف <span className="text-primary">*</span></Label>
-                <Input
-                  id="phone"
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  placeholder="01xxxxxxxxx"
-                  className="text-right"
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="phone"
+                    value={form.phone}
+                    onChange={(e) => { setForm({ ...form, phone: e.target.value }); setOtpVerified(false); setOtpStep("form"); }}
+                    placeholder="01xxxxxxxxx"
+                    className="text-right"
+                    required
+                    disabled={otpVerified}
+                  />
+                  {otpVerified && (
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                      <ShieldCheck className="w-5 h-5 text-green-500" />
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Business Name */}
@@ -245,6 +349,7 @@ const DealerRegister = () => {
                   placeholder="اسم النشاط التجاري"
                   className="text-right"
                   required
+                  disabled={otpVerified}
                 />
               </div>
 
@@ -254,6 +359,7 @@ const DealerRegister = () => {
                 <Select
                   value={form.governorate}
                   onValueChange={(val) => setForm({ ...form, governorate: val })}
+                  disabled={otpVerified}
                 >
                   <SelectTrigger className="text-right">
                     <SelectValue placeholder="اختر المحافظة" />
@@ -276,6 +382,7 @@ const DealerRegister = () => {
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   placeholder="example@email.com"
                   className="text-right"
+                  disabled={otpVerified}
                 />
               </div>
 
@@ -289,12 +396,12 @@ const DealerRegister = () => {
                       <button
                         key={type.value}
                         type="button"
-                        onClick={() => setForm({ ...form, clientType: type.value })}
+                        onClick={() => !otpVerified && setForm({ ...form, clientType: type.value })}
                         className={`relative rounded-lg border-2 p-4 text-center transition-all duration-200 ${
                           isSelected
                             ? "border-primary bg-primary/5 shadow-sm"
                             : "border-border bg-card hover:border-primary/40"
-                        }`}
+                        } ${otpVerified ? "opacity-60 cursor-not-allowed" : ""}`}
                       >
                         {isSelected && (
                           <div className="absolute top-2 left-2">
@@ -310,25 +417,108 @@ const DealerRegister = () => {
                 </div>
               </div>
 
+              {/* OTP Section */}
+              {otpStep === "otp" && !otpVerified && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  className="bg-muted/50 border border-border rounded-lg p-5 space-y-4"
+                >
+                  <div className="flex items-center gap-2 text-foreground font-semibold">
+                    <Phone className="w-5 h-5 text-primary" />
+                    <span>تحقق من رقم الهاتف</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    تم إرسال كود مكون من 6 أرقام إلى <strong className="text-foreground">{form.phone}</strong>
+                  </p>
+                  <div className="flex gap-3">
+                    <Input
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                      placeholder="أدخل كود التحقق"
+                      className="text-center tracking-[0.5em] font-mono text-lg"
+                      maxLength={6}
+                    />
+                    <Button
+                      type="button"
+                      onClick={verifyOtp}
+                      disabled={otpVerifying || otpCode.length !== 6}
+                      className="shrink-0"
+                    >
+                      {otpVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : "تحقق"}
+                    </Button>
+                  </div>
+                  {countdown > 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      إعادة الإرسال بعد {Math.floor(countdown / 60)}:{(countdown % 60).toString().padStart(2, "0")}
+                    </p>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={sendOtp}
+                      disabled={otpSending}
+                      className="text-xs text-primary hover:underline font-semibold"
+                    >
+                      {otpSending ? "جاري الإرسال..." : "إعادة إرسال الكود"}
+                    </button>
+                  )}
+                </motion.div>
+              )}
+
+              {otpVerified && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 flex items-center gap-3"
+                >
+                  <ShieldCheck className="w-5 h-5 text-green-500 shrink-0" />
+                  <p className="text-sm text-green-700 dark:text-green-400 font-semibold">
+                    تم التحقق من رقم الهاتف بنجاح ✅
+                  </p>
+                </motion.div>
+              )}
+
               {/* Submit */}
-              <Button
-                type="submit"
-                size="lg"
-                className="w-full gap-2 text-lg red-glow"
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    جاري الإرسال...
-                  </>
-                ) : (
-                  <>
-                    <UserPlus className="w-5 h-5" />
-                    إرسال طلب فتح الحساب
-                  </>
-                )}
-              </Button>
+              {!otpVerified ? (
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="w-full gap-2 text-lg red-glow"
+                  disabled={otpSending || otpStep === "otp"}
+                >
+                  {otpSending ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      جاري إرسال كود التحقق...
+                    </>
+                  ) : (
+                    <>
+                      <Phone className="w-5 h-5" />
+                      إرسال كود التحقق
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  size="lg"
+                  className="w-full gap-2 text-lg red-glow"
+                  disabled={loading}
+                  onClick={handleSubmit}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      جاري الإرسال...
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="w-5 h-5" />
+                      إرسال طلب فتح الحساب
+                    </>
+                  )}
+                </Button>
+              )}
 
               <p className="text-xs text-muted-foreground text-center">
                 بإرسال هذا الطلب، أنت توافق على سياسة التسعير وحماية السوق الخاصة بالمصرية جروب.
