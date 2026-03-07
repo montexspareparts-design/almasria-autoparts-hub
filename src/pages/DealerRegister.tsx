@@ -152,12 +152,12 @@ const DealerRegister = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="pt-28 pb-20">
-          <div className="container mx-auto px-4">
+        <div className="pt-24 md:pt-28 pb-16 md:pb-20">
+          <div className="container mx-auto px-3 sm:px-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="max-w-lg mx-auto text-center bg-card border border-border rounded-xl p-10 shadow-lg"
+              className="max-w-lg mx-auto text-center bg-card border border-border rounded-xl p-6 sm:p-10 shadow-lg"
             >
               <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle2 className="w-10 h-10 text-primary" />
