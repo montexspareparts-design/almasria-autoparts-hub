@@ -358,8 +358,22 @@ const ProductsPage = () => {
                   )}
 
                   {/* Price */}
-                  {!isDealer ? (
-                    /* Visitor - always show retail price */
+                  {!user ? (
+                    /* Not logged in - prompt to register */
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full mt-1 gap-2"
+                      onClick={() => {
+                        toast({ title: "يجب تسجيل الدخول أولاً", description: "سجل دخولك لتتمكن من عرض أسعار المنتجات" });
+                        navigate("/auth");
+                      }}
+                    >
+                      <Lock className="w-3.5 h-3.5" />
+                      سجل دخولك لعرض السعر
+                    </Button>
+                  ) : !isDealer ? (
+                    /* Logged in visitor - show retail price */
                     <>
                       <div className="text-primary font-black text-lg">
                         {product.base_price.toLocaleString("ar-EG")} ج.م
