@@ -187,20 +187,20 @@ const DealerRegister = () => {
       <Navbar />
 
       {/* Hero */}
-      <section className="pt-28 pb-12 bg-dark-section">
+      <section className="pt-24 md:pt-28 pb-8 md:pb-12 bg-dark-section">
         <div className="container mx-auto px-4 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="inline-flex items-center gap-2 bg-primary/15 border border-primary/30 rounded-full px-4 py-1.5 mb-4">
+            <div className="inline-flex items-center gap-2 bg-primary/15 border border-primary/30 rounded-full px-3 py-1.5 mb-3 md:mb-4">
               <UserPlus className="w-4 h-4 text-primary" />
-              <span className="text-sm font-semibold text-primary">تسجيل عميل جديد</span>
+              <span className="text-xs sm:text-sm font-semibold text-primary">تسجيل عميل جديد</span>
             </div>
-            <h1 className="text-3xl md:text-5xl font-black text-dark-section-foreground mb-3">
+            <h1 className="text-2xl sm:text-3xl md:text-5xl font-black text-dark-section-foreground mb-2 md:mb-3">
               فتح حساب <span className="text-gradient-red">عميل معتمد</span>
             </h1>
-            <p className="text-dark-section-foreground/60 text-lg max-w-xl mx-auto">
+            <p className="text-dark-section-foreground/60 text-sm sm:text-base md:text-lg max-w-xl mx-auto">
               المصرية جروب – خبرة 25 عامًا في سوق قطع غيار تويوتا في مصر
             </p>
-            <div className="w-20 h-1 bg-primary mx-auto mt-4" />
+            <div className="w-16 md:w-20 h-1 bg-primary mx-auto mt-3 md:mt-4" />
           </motion.div>
         </div>
       </section>
