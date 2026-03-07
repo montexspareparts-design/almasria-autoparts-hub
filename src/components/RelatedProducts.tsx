@@ -60,7 +60,7 @@ const RelatedProducts = ({ currentProduct, allProducts, currentCategoryId, onAdd
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="bg-card border border-border rounded-lg overflow-hidden hover:border-primary/40 hover:shadow-md transition-all group"
+              className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 transition-all duration-300 ease-out group"
             >
               <div className="aspect-square bg-white relative overflow-hidden">
                 {product.image_url ? (
