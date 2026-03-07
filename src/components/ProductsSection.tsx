@@ -19,12 +19,12 @@ import brandDenso from "@/assets/brand-denso.png";
 import brandAisin from "@/assets/brand-aisin.png";
 
 const categories = [
-  { name: "أجزاء المحرك", image: catEngine, count: "+800 صنف" },
-  { name: "أجزاء العفشة", image: catSuspension, count: "+600 صنف" },
-  { name: "الفلاتر", image: catFilters, count: "+400 صنف" },
-  { name: "زيوت تويوتا الأصلية", image: catOils, count: "+50 صنف" },
-  { name: "الكهرباء", image: catElectrical, count: "+500 صنف" },
-  { name: "التبريد", image: catCooling, count: "+300 صنف" },
+  { name: "أجزاء المحرك", image: catEngine, count: "+800 صنف", slug: "engine" },
+  { name: "أجزاء العفشة", image: catSuspension, count: "+600 صنف", slug: "suspension" },
+  { name: "الفلاتر", image: catFilters, count: "+400 صنف", slug: "filters" },
+  { name: "زيوت تويوتا الأصلية", image: catOils, count: "+50 صنف", slug: "oils-gasoline", brand: "toyota-oils" },
+  { name: "الكهرباء", image: catElectrical, count: "+500 صنف", slug: "electrical" },
+  { name: "التبريد", image: catCooling, count: "+300 صنف", slug: "cooling" },
 ];
 
 // Glowing particles component
@@ -185,7 +185,7 @@ const ProductsSection = () => {
               transition={{ delay: i * 0.1 }}
             >
               <Link
-                to="/products/toyota-genuine"
+                to={`/products/${cat.brand || "toyota-genuine"}?category=${cat.slug}`}
                 className="group relative rounded-lg overflow-hidden card-hover cursor-pointer block"
               >
                 <div className="aspect-[4/3] relative">

@@ -1,5 +1,5 @@
-import { useState, useMemo, useCallback } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useState, useMemo, useCallback, useEffect } from "react";
+import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Lock, ShieldCheck, Package, ShoppingCart, Eye, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -66,6 +66,7 @@ const brandConfig: Record<string, { title: string; subtitle: string; description
 
 const ProductsPage = () => {
   const { brand } = useParams<{ brand: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { isDealer, user, dealerAccount } = useAuth();
   const { addItem } = useCart();
@@ -171,6 +172,17 @@ const ProductsPage = () => {
       return data;
     },
   });
+
+  // Pre-set category filter from URL query param
+  useEffect(() => {
+    const categorySlug = searchParams.get("category");
+    if (categorySlug && categories) {
+      const matched = categories.find((c) => c.slug === categorySlug);
+      if (matched) {
+        setFilters((prev) => ({ ...prev, categoryId: matched.id }));
+      }
+    }
+  }, [categories, searchParams]);
 
   const { data: products, isLoading } = useQuery({
     queryKey: ["products", config?.brandKey],
