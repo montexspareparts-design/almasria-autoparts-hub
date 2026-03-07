@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import BrandHeroBanner from "@/components/BrandHeroBanner";
 import AdvancedProductFilter, { ProductFilters } from "@/components/AdvancedProductFilter";
 import RelatedProducts from "@/components/RelatedProducts";
 import MaintenanceBundles from "@/components/MaintenanceBundles";
