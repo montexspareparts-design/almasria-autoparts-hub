@@ -115,7 +115,8 @@ const ProductsPage = () => {
   }, [user, isDealer, viewedProductIds, limitReached, queryClient]);
 
   const canSeePrice = (productId: string) => {
-    if (!isDealer) return true; // visitors always see retail
+    if (!user) return false; // not logged in
+    if (!isDealer) return true; // logged in, non-dealer sees retail
     return viewedProductIds.includes(productId) || !limitReached;
   };
 
