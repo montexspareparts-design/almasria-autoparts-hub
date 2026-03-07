@@ -8,14 +8,14 @@ const HeroSection = () => {
   const navigate = useNavigate();
 
   return (
-    <section id="hero" className="relative min-h-screen flex items-center overflow-hidden">
+    <section id="hero" className="relative min-h-[100svh] flex items-center overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0">
         <img src={heroBg} alt="مستودع قطع غيار تويوتا" className="w-full h-full object-cover" loading="eager" />
         <div className="absolute inset-0 bg-gradient-to-l from-secondary/95 via-secondary/85 to-secondary/50" />
       </div>
 
-      <div className="container mx-auto px-4 relative z-10 pt-20">
+      <div className="container mx-auto px-4 relative z-10 pt-20 pb-8">
         <div className="max-w-3xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -31,7 +31,7 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.15 }}
-            className="text-4xl md:text-6xl lg:text-7xl font-black text-secondary-foreground leading-tight mb-6"
+            className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black text-secondary-foreground leading-tight mb-4 md:mb-6"
           >
             25 عامًا من الثقة
             <br />
@@ -42,7 +42,7 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-wrap items-center gap-3 mb-10"
+            className="flex flex-wrap items-center gap-2 sm:gap-3 mb-6 md:mb-10"
           >
             <span className="bg-white/10 backdrop-blur-sm border border-white/20 text-secondary-foreground/90 text-sm md:text-base px-5 py-2 rounded-full">قطع غيار تويوتا أصلي</span>
             <span className="bg-white/10 backdrop-blur-sm border border-white/20 text-secondary-foreground/90 text-sm md:text-base px-5 py-2 rounded-full">زيوت تويوتا أصلي</span>
@@ -73,7 +73,7 @@ const HeroSection = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.7 }}
-            className="flex gap-8 mt-12 pt-8 border-t border-secondary-foreground/10"
+            className="grid grid-cols-4 gap-3 sm:gap-8 mt-8 md:mt-12 pt-6 md:pt-8 border-t border-secondary-foreground/10"
           >
             {[
               { num: "+25", label: "سنة خبرة" },
@@ -81,9 +81,9 @@ const HeroSection = () => {
               { num: "+1000", label: "عميل نشط" },
               { num: "5", label: "فروع" },
             ].map((stat) => (
-              <div key={stat.label}>
-                <div className="text-2xl md:text-3xl font-black text-primary">{stat.num}</div>
-                <div className="text-sm text-secondary-foreground/60">{stat.label}</div>
+              <div key={stat.label} className="text-center sm:text-right">
+                <div className="text-xl sm:text-2xl md:text-3xl font-black text-primary">{stat.num}</div>
+                <div className="text-xs sm:text-sm text-secondary-foreground/60">{stat.label}</div>
               </div>
             ))}
           </motion.div>
