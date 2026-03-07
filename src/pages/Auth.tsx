@@ -144,23 +144,20 @@ const Auth = () => {
             </>
           )}
 
-          {/* Auth Method Toggle */}
-          <div className="flex gap-2 mb-5">
-            <Button type="button" variant={authMethod === "phone" ? "default" : "outline"} className="flex-1 gap-2 text-sm" onClick={() => setAuthMethod("phone")}>
-              <Phone className="w-4 h-4" /> رقم الهاتف
-            </Button>
-            <Button type="button" variant={authMethod === "email" ? "default" : "outline"} className="flex-1 gap-2 text-sm" onClick={() => setAuthMethod("email")}>
-              <Mail className="w-4 h-4" /> البريد الإلكتروني
-            </Button>
-          </div>
+          {/* Auth Method Toggle - hide in forgot mode */}
+          {!forgotMode && (
+            <div className="flex gap-2 mb-5">
+              <Button type="button" variant={authMethod === "phone" ? "default" : "outline"} className="flex-1 gap-2 text-sm" onClick={() => setAuthMethod("phone")}>
+                <Phone className="w-4 h-4" /> رقم الهاتف
+              </Button>
+              <Button type="button" variant={authMethod === "email" ? "default" : "outline"} className="flex-1 gap-2 text-sm" onClick={() => setAuthMethod("email")}>
+                <Mail className="w-4 h-4" /> البريد الإلكتروني
+              </Button>
+            </div>
+          )}
 
           {forgotMode ? (
             <ForgotPasswordForm
-              authMethod={authMethod}
-              phone={phone}
-              setPhone={setPhone}
-              email={email}
-              setEmail={setEmail}
               onBack={() => setForgotMode(false)}
             />
           ) : (
