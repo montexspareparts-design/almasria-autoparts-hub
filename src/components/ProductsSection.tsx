@@ -150,6 +150,8 @@ const ProductsSection = () => {
                 <img
                   src={b.image}
                   alt={b.label}
+                  loading="lazy"
+                  decoding="async"
                   className={`relative z-10 w-[95%] h-[95%] object-contain transition-transform duration-500 group-hover:scale-105 ${b.imgScale}`}
                 />
               </Link>

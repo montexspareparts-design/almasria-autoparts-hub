@@ -1,27 +1,52 @@
+import { lazy, Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
-import AboutSection from "@/components/AboutSection";
-import ProductsSection from "@/components/ProductsSection";
-import WhyUsSection from "@/components/WhyUsSection";
-import PartnershipsSection from "@/components/PartnershipsSection";
-import ContactSection from "@/components/ContactSection";
-import Footer from "@/components/Footer";
-import WhatsAppFloat from "@/components/WhatsAppFloat";
-import AIChatBot from "@/components/AIChatBot";
+
+// Lazy load below-fold sections
+const AboutSection = lazy(() => import("@/components/AboutSection"));
+const ProductsSection = lazy(() => import("@/components/ProductsSection"));
+const WhyUsSection = lazy(() => import("@/components/WhyUsSection"));
+const PartnershipsSection = lazy(() => import("@/components/PartnershipsSection"));
+const ContactSection = lazy(() => import("@/components/ContactSection"));
+const Footer = lazy(() => import("@/components/Footer"));
+const WhatsAppFloat = lazy(() => import("@/components/WhatsAppFloat"));
+const AIChatBot = lazy(() => import("@/components/AIChatBot"));
+
+const SectionFallback = () => (
+  <div className="flex items-center justify-center py-20">
+    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 const Index = () => {
   return (
     <div className="min-h-screen">
       <Navbar />
       <HeroSection />
-      <AboutSection />
-      <ProductsSection />
-      <WhyUsSection />
-      <PartnershipsSection />
-      <ContactSection />
-      <Footer />
-      <WhatsAppFloat />
-      <AIChatBot />
+      <Suspense fallback={<SectionFallback />}>
+        <AboutSection />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
+        <ProductsSection />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
+        <WhyUsSection />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
+        <PartnershipsSection />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
+        <ContactSection />
+      </Suspense>
+      <Suspense fallback={null}>
+        <Footer />
+      </Suspense>
+      <Suspense fallback={null}>
+        <WhatsAppFloat />
+      </Suspense>
+      <Suspense fallback={null}>
+        <AIChatBot />
+      </Suspense>
     </div>
   );
 };
