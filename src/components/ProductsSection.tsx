@@ -185,7 +185,7 @@ const ProductsSection = () => {
               transition={{ delay: i * 0.1 }}
             >
               <Link
-                to="/products/toyota-genuine"
+                to={`/products/${cat.brand || "toyota-genuine"}?category=${cat.slug}`}
                 className="group relative rounded-lg overflow-hidden card-hover cursor-pointer block"
               >
                 <div className="aspect-[4/3] relative">
