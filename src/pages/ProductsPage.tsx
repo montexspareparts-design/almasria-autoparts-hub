@@ -67,14 +67,7 @@ const brandConfig: Record<string, { title: string; subtitle: string; description
 const ProductsPage = () => {
   const { brand } = useParams<{ brand: string }>();
   const navigate = useNavigate();
-  const { isDealer, user, dealerAccount, loading } = useAuth();
-
-  // Redirect unauthenticated users to auth page
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate("/auth", { replace: true });
-    }
-  }, [loading, user, navigate]);
+  const { isDealer, user, dealerAccount } = useAuth();
   const { addItem } = useCart();
   const queryClient = useQueryClient();
   const config = brand ? brandConfig[brand] : null;
