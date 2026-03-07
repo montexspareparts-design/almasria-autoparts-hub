@@ -32,8 +32,12 @@ const DealerDashboard = () => {
       navigate("/auth");
       return;
     }
-    if (user) fetchData();
-  }, [user, authLoading]);
+    if (!authLoading && user && !isDealer) {
+      navigate("/");
+      return;
+    }
+    if (user && isDealer) fetchData();
+  }, [user, authLoading, isDealer]);
 
   const fetchData = async () => {
     // Get application status
