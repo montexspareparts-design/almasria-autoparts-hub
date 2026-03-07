@@ -152,12 +152,12 @@ const DealerRegister = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="pt-28 pb-20">
-          <div className="container mx-auto px-4">
+        <div className="pt-24 md:pt-28 pb-16 md:pb-20">
+          <div className="container mx-auto px-3 sm:px-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="max-w-lg mx-auto text-center bg-card border border-border rounded-xl p-10 shadow-lg"
+              className="max-w-lg mx-auto text-center bg-card border border-border rounded-xl p-6 sm:p-10 shadow-lg"
             >
               <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle2 className="w-10 h-10 text-primary" />
@@ -187,27 +187,27 @@ const DealerRegister = () => {
       <Navbar />
 
       {/* Hero */}
-      <section className="pt-28 pb-12 bg-dark-section">
+      <section className="pt-24 md:pt-28 pb-8 md:pb-12 bg-dark-section">
         <div className="container mx-auto px-4 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="inline-flex items-center gap-2 bg-primary/15 border border-primary/30 rounded-full px-4 py-1.5 mb-4">
+            <div className="inline-flex items-center gap-2 bg-primary/15 border border-primary/30 rounded-full px-3 py-1.5 mb-3 md:mb-4">
               <UserPlus className="w-4 h-4 text-primary" />
-              <span className="text-sm font-semibold text-primary">تسجيل عميل جديد</span>
+              <span className="text-xs sm:text-sm font-semibold text-primary">تسجيل عميل جديد</span>
             </div>
-            <h1 className="text-3xl md:text-5xl font-black text-dark-section-foreground mb-3">
+            <h1 className="text-2xl sm:text-3xl md:text-5xl font-black text-dark-section-foreground mb-2 md:mb-3">
               فتح حساب <span className="text-gradient-red">عميل معتمد</span>
             </h1>
-            <p className="text-dark-section-foreground/60 text-lg max-w-xl mx-auto">
+            <p className="text-dark-section-foreground/60 text-sm sm:text-base md:text-lg max-w-xl mx-auto">
               المصرية جروب – خبرة 25 عامًا في سوق قطع غيار تويوتا في مصر
             </p>
-            <div className="w-20 h-1 bg-primary mx-auto mt-4" />
+            <div className="w-16 md:w-20 h-1 bg-primary mx-auto mt-3 md:mt-4" />
           </motion.div>
         </div>
       </section>
 
       {/* Form */}
-      <section className="py-12">
-        <div className="container mx-auto px-4">
+      <section className="py-8 md:py-12">
+        <div className="container mx-auto px-3 sm:px-4">
           <div className="max-w-2xl mx-auto">
 
             {/* Price Notice */}
@@ -227,7 +227,7 @@ const DealerRegister = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
               onSubmit={handleSubmit}
-              className="bg-card border border-border rounded-xl p-6 md:p-8 shadow-sm space-y-6"
+              className="bg-card border border-border rounded-xl p-4 sm:p-6 md:p-8 shadow-sm space-y-5 md:space-y-6"
             >
               <h2 className="text-xl font-bold text-card-foreground mb-2">البيانات الأساسية</h2>
 
