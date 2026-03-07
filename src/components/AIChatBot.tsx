@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bot, X, Send, Loader2, Trash2 } from "lucide-react";
+import { Bot, X, Send, Loader2, Trash2, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
@@ -154,13 +154,28 @@ const AIChatBot = () => {
               </div>
               <div className="flex items-center gap-1">
                 {messages.length > 0 && (
-                  <button
-                    onClick={() => setMessages([])}
-                    className="p-1.5 rounded-lg hover:bg-primary-foreground/20 transition-colors"
-                    title="مسح المحادثة"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <>
+                    <button
+                      onClick={() => {
+                        const text = messages
+                          .map((m) => (m.role === "user" ? `🙋 العميل: ${m.content}` : `🤖 المساعد: ${m.content}`))
+                          .join("\n\n");
+                        const waUrl = `https://wa.me/201153961008?text=${encodeURIComponent("📋 محادثة من المساعد الذكي:\n\n" + text)}`;
+                        window.open(waUrl, "_blank");
+                      }}
+                      className="p-1.5 rounded-lg hover:bg-primary-foreground/20 transition-colors"
+                      title="مشاركة المحادثة عبر واتساب"
+                    >
+                      <Share2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setMessages([])}
+                      className="p-1.5 rounded-lg hover:bg-primary-foreground/20 transition-colors"
+                      title="مسح المحادثة"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </>
                 )}
                 <button
                   onClick={() => setIsOpen(false)}
