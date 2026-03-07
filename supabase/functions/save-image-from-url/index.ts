@@ -81,7 +81,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, imageUrl: urlData.publicUrl }),
+      JSON.stringify({ success: true, imageUrl: publicUrlWithCacheBust }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
