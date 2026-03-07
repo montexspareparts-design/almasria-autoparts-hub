@@ -51,6 +51,7 @@ const App = () => (
                 <Route path="/products/:brand" element={<ProductsPage />} />
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

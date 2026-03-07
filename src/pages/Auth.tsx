@@ -318,7 +318,18 @@ const Auth = () => {
             <Button type="submit" className="w-full red-glow" disabled={loading}>
               {loading ? "جاري التحميل..." : isLogin ? "تسجيل الدخول" : "إنشاء حساب"}
             </Button>
+
+            {isLogin && (
+              <button
+                type="button"
+                onClick={() => setForgotMode(true)}
+                className="text-sm text-muted-foreground hover:text-primary w-full text-center block"
+              >
+                نسيت كلمة المرور؟
+              </button>
+            )}
           </form>
+          )}
 
           <div className="mt-4 text-center">
             <button
