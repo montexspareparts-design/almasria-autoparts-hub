@@ -17,6 +17,8 @@ import SpecialOffers from "@/components/SpecialOffers";
 import brandGenuineParts from "@/assets/brand-genuine-parts.png";
 import brandToyotaOil from "@/assets/brand-toyota-oil.png";
 import brandMtx from "@/assets/brand-mtx.jpg";
+import brandDenso from "@/assets/brand-denso.png";
+import brandAisin from "@/assets/brand-aisin.png";
 
 const brandConfig: Record<string, { title: string; subtitle: string; description: string; badge: string; brandKey: string; logo: string }> = {
   "toyota-genuine": {
@@ -42,6 +44,22 @@ const brandConfig: Record<string, { title: string; subtitle: string; description
     badge: "علامة تجارية مسجلة",
     brandKey: "mtx_aftermarket",
     logo: brandMtx,
+  },
+  "denso": {
+    title: "DENSO",
+    subtitle: "قطع غيار دينسو اليابانية",
+    description: "DENSO هي واحدة من أكبر شركات تصنيع قطع غيار السيارات في العالم. متخصصة في أنظمة التكييف، الكهرباء، الفلاتر، وأنظمة الوقود.",
+    badge: "وكيل معتمد",
+    brandKey: "denso",
+    logo: brandDenso,
+  },
+  "aisin": {
+    title: "AISIN",
+    subtitle: "قطع غيار أيسن اليابانية",
+    description: "AISIN هي شريك تويوتا الاستراتيجي لتصنيع قطع غيار القوة والنقل. متخصصة في الدبرياج، طلمبات الزيت، ماستر الفرامل، والمكونات الميكانيكية.",
+    badge: "وكيل معتمد",
+    brandKey: "aisin",
+    logo: brandAisin,
   },
 };
 
