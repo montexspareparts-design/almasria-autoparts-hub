@@ -260,6 +260,8 @@ const AdminProductImages = () => {
     toyota_genuine: "تويوتا أصلي",
     toyota_oils: "زيوت تويوتا",
     mtx_aftermarket: "MTX",
+    denso: "DENSO",
+    aisin: "AISIN",
   };
 
   return (
