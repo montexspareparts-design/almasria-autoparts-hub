@@ -22,6 +22,8 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [forgotMode, setForgotMode] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -96,6 +98,32 @@ const Auth = () => {
       }
     }
     setLoading(false);
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const resetEmail = getAuthEmail();
+    if (!resetEmail) return;
+    setResetLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) {
+      toast({
+        title: "خطأ",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "تم إرسال رابط إعادة التعيين",
+        description: authMethod === "phone"
+          ? "تم إرسال رابط إعادة تعيين كلمة المرور (تحقق من البريد المرتبط بالرقم)"
+          : "تحقق من بريدك الإلكتروني لإعادة تعيين كلمة المرور",
+      });
+      setForgotMode(false);
+    }
+    setResetLoading(false);
   };
 
   const handleGoogleSignIn = async () => {
@@ -186,6 +214,30 @@ const Auth = () => {
             </Button>
           </div>
 
+          {forgotMode ? (
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <p className="text-sm text-muted-foreground text-center mb-2">
+                أدخل {authMethod === "phone" ? "رقم هاتفك" : "بريدك الإلكتروني"} لإعادة تعيين كلمة المرور
+              </p>
+              {authMethod === "phone" ? (
+                <div className="space-y-2">
+                  <Label htmlFor="forgot-phone" className="text-card-foreground">رقم الهاتف</Label>
+                  <Input id="forgot-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="01xxxxxxxxx" required dir="ltr" className="bg-background" />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="forgot-email" className="text-card-foreground">البريد الإلكتروني</Label>
+                  <Input id="forgot-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="example@email.com" required dir="ltr" className="bg-background" />
+                </div>
+              )}
+              <Button type="submit" className="w-full red-glow" disabled={resetLoading}>
+                {resetLoading ? "جاري الإرسال..." : "إرسال رابط إعادة التعيين"}
+              </Button>
+              <button type="button" onClick={() => setForgotMode(false)} className="text-sm text-primary hover:underline w-full text-center">
+                العودة لتسجيل الدخول
+              </button>
+            </form>
+          ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div className="space-y-2">
@@ -266,7 +318,18 @@ const Auth = () => {
             <Button type="submit" className="w-full red-glow" disabled={loading}>
               {loading ? "جاري التحميل..." : isLogin ? "تسجيل الدخول" : "إنشاء حساب"}
             </Button>
+
+            {isLogin && (
+              <button
+                type="button"
+                onClick={() => setForgotMode(true)}
+                className="text-sm text-muted-foreground hover:text-primary w-full text-center block"
+              >
+                نسيت كلمة المرور؟
+              </button>
+            )}
           </form>
+          )}
 
           <div className="mt-4 text-center">
             <button
