@@ -173,6 +173,17 @@ const ProductsPage = () => {
     },
   });
 
+  // Pre-set category filter from URL query param
+  useEffect(() => {
+    const categorySlug = searchParams.get("category");
+    if (categorySlug && categories) {
+      const matched = categories.find((c) => c.slug === categorySlug);
+      if (matched) {
+        setFilters((prev) => ({ ...prev, categoryId: matched.id }));
+      }
+    }
+  }, [categories, searchParams]);
+
   const { data: products, isLoading } = useQuery({
     queryKey: ["products", config?.brandKey],
     queryFn: async () => {
