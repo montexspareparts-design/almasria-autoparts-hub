@@ -188,25 +188,15 @@ const Auth = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="fullName" className="text-card-foreground">الاسم</Label>
-                  <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="الاسم الكامل" required={!isLogin} className="bg-background" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="companyName" className="text-card-foreground">اسم الشركة</Label>
-                  <Input id="companyName" value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="اسم الشركة أو النشاط" required={!isLogin} className="bg-background" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="address" className="text-card-foreground">العنوان</Label>
-                  <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="العنوان التفصيلي" required={!isLogin} className="bg-background" />
-                </div>
-              </>
+              <div className="space-y-2">
+                <Label htmlFor="fullName" className="text-card-foreground">الاسم <span className="text-primary">*</span></Label>
+                <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="الاسم الكامل" required className="bg-background" />
+              </div>
             )}
 
             {authMethod === "phone" ? (
               <div className="space-y-2">
-                <Label htmlFor="phone" className="text-card-foreground">رقم الهاتف</Label>
+                <Label htmlFor="phone" className="text-card-foreground">رقم الهاتف <span className="text-primary">*</span></Label>
                 <div className="relative">
                   <Input
                     id="phone"
@@ -223,7 +213,7 @@ const Auth = () => {
               </div>
             ) : (
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-card-foreground">البريد الإلكتروني</Label>
+                <Label htmlFor="email" className="text-card-foreground">البريد الإلكتروني <span className="text-primary">*</span></Label>
                 <div className="relative">
                   <Input
                     id="email"
@@ -241,7 +231,7 @@ const Auth = () => {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-card-foreground">كلمة المرور</Label>
+              <Label htmlFor="password" className="text-card-foreground">كلمة المرور <span className="text-primary">*</span></Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -263,6 +253,15 @@ const Auth = () => {
                 </button>
               </div>
             </div>
+
+            {!isLogin && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="address" className="text-card-foreground">العنوان <span className="text-muted-foreground text-xs">(اختياري)</span></Label>
+                  <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="العنوان التفصيلي" className="bg-background" />
+                </div>
+              </>
+            )}
 
             <Button type="submit" className="w-full red-glow" disabled={loading}>
               {loading ? "جاري التحميل..." : isLogin ? "تسجيل الدخول" : "إنشاء حساب"}
