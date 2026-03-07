@@ -73,7 +73,7 @@ const HeroSection = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.7 }}
-            className="flex gap-8 mt-12 pt-8 border-t border-secondary-foreground/10"
+            className="grid grid-cols-4 gap-3 sm:gap-8 mt-8 md:mt-12 pt-6 md:pt-8 border-t border-secondary-foreground/10"
           >
             {[
               { num: "+25", label: "سنة خبرة" },
@@ -81,9 +81,9 @@ const HeroSection = () => {
               { num: "+1000", label: "عميل نشط" },
               { num: "5", label: "فروع" },
             ].map((stat) => (
-              <div key={stat.label}>
-                <div className="text-2xl md:text-3xl font-black text-primary">{stat.num}</div>
-                <div className="text-sm text-secondary-foreground/60">{stat.label}</div>
+              <div key={stat.label} className="text-center sm:text-right">
+                <div className="text-xl sm:text-2xl md:text-3xl font-black text-primary">{stat.num}</div>
+                <div className="text-xs sm:text-sm text-secondary-foreground/60">{stat.label}</div>
               </div>
             ))}
           </motion.div>

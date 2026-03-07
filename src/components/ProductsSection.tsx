@@ -123,7 +123,7 @@ const ProductsSection = () => {
         </motion.div>
 
         {/* Brand Labels */}
-        <div className="grid grid-cols-3 md:grid-cols-5 gap-4 md:gap-6 mb-12 max-w-5xl mx-auto">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 md:gap-6 mb-12 max-w-5xl mx-auto">
           {[
             { label: "قطع غيار تويوتا الأصلية", image: brandGenuineParts, to: "/products/toyota-genuine", imgScale: "scale-100" },
             { label: "زيوت تويوتا الأصلية", image: brandToyotaOil, to: "/products/toyota-oils", imgScale: "scale-150" },
