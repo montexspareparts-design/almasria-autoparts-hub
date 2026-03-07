@@ -44,8 +44,10 @@ const GlowingParticles = () => {
     resize();
     window.addEventListener("resize", resize);
 
+    const isMobile = canvas.width < 768;
+    const particleCount = isMobile ? 20 : 60;
     const particles: { x: number; y: number; r: number; dx: number; dy: number; opacity: number; pulse: number }[] = [];
-    for (let i = 0; i < 60; i++) {
+    for (let i = 0; i < particleCount; i++) {
       particles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
