@@ -1,11 +1,15 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bot, X, Send, Loader2, Trash2, Share2 } from "lucide-react";
+import { Bot, X, Send, Loader2, Trash2, Share2, ImagePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 
-type Message = { role: "user" | "assistant"; content: string };
+type MessageContent =
+  | string
+  | Array<{ type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }>;
+
+type Message = { role: "user" | "assistant"; content: MessageContent; imagePreview?: string };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
@@ -15,41 +19,62 @@ const QUICK_QUESTIONS = [
   "أحتاج باقة صيانة دورية",
 ];
 
+const getTextContent = (content: MessageContent): string => {
+  if (typeof content === "string") return content;
+  return content.filter((c) => c.type === "text").map((c) => (c as any).text).join("");
+};
+
 const AIChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [pendingImage, setPendingImage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, scrollToBottom]);
+  useEffect(() => { scrollToBottom(); }, [messages, scrollToBottom]);
+  useEffect(() => { if (isOpen) inputRef.current?.focus(); }, [isOpen]);
 
-  useEffect(() => {
-    if (isOpen) inputRef.current?.focus();
-  }, [isOpen]);
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("يرجى اختيار صورة فقط");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("حجم الصورة كبير جداً (الحد الأقصى 5MB)");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setPendingImage(reader.result as string);
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
 
   const streamChat = async (allMessages: Message[]) => {
+    // Convert messages for API: strip imagePreview, keep content as-is
+    const apiMessages = allMessages.map(({ role, content }) => ({ role, content }));
+
     const resp = await fetch(CHAT_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
       },
-      body: JSON.stringify({ messages: allMessages }),
+      body: JSON.stringify({ messages: apiMessages }),
     });
 
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({ error: "حدث خطأ" }));
       throw new Error(err.error || "حدث خطأ في الاتصال");
     }
-
     if (!resp.body) throw new Error("No response body");
 
     const reader = resp.body.getReader();
@@ -66,14 +91,11 @@ const AIChatBot = () => {
       while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
         let line = textBuffer.slice(0, newlineIndex);
         textBuffer = textBuffer.slice(newlineIndex + 1);
-
         if (line.endsWith("\r")) line = line.slice(0, -1);
         if (line.startsWith(":") || line.trim() === "") continue;
         if (!line.startsWith("data: ")) continue;
-
         const jsonStr = line.slice(6).trim();
         if (jsonStr === "[DONE]") break;
-
         try {
           const parsed = JSON.parse(jsonStr);
           const content = parsed.choices?.[0]?.delta?.content as string | undefined;
@@ -82,9 +104,7 @@ const AIChatBot = () => {
             setMessages((prev) => {
               const last = prev[prev.length - 1];
               if (last?.role === "assistant") {
-                return prev.map((m, i) =>
-                  i === prev.length - 1 ? { ...m, content: assistantSoFar } : m
-                );
+                return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantSoFar } : m);
               }
               return [...prev, { role: "assistant", content: assistantSoFar }];
             });
@@ -98,9 +118,24 @@ const AIChatBot = () => {
   };
 
   const sendMessage = async (text: string) => {
-    if (!text.trim() || isLoading) return;
+    if ((!text.trim() && !pendingImage) || isLoading) return;
 
-    const userMsg: Message = { role: "user", content: text.trim() };
+    let content: MessageContent;
+    let imagePreview: string | undefined;
+
+    if (pendingImage) {
+      const parts: MessageContent = [];
+      if (text.trim()) parts.push({ type: "text", text: text.trim() });
+      else parts.push({ type: "text", text: "ما هي هذه القطعة؟ وهل متوفر لها بديل؟" });
+      parts.push({ type: "image_url", image_url: { url: pendingImage } });
+      content = parts;
+      imagePreview = pendingImage;
+      setPendingImage(null);
+    } else {
+      content = text.trim();
+    }
+
+    const userMsg: Message = { role: "user", content, imagePreview };
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
     setInput("");
@@ -117,7 +152,8 @@ const AIChatBot = () => {
 
   return (
     <>
-      {/* Floating button */}
+      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
+
       <AnimatePresence>
         {!isOpen && (
           <motion.button
@@ -133,7 +169,6 @@ const AIChatBot = () => {
         )}
       </AnimatePresence>
 
-      {/* Chat window */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -158,7 +193,7 @@ const AIChatBot = () => {
                     <button
                       onClick={() => {
                         const text = messages
-                          .map((m) => (m.role === "user" ? `🙋 العميل: ${m.content}` : `🤖 المساعد: ${m.content}`))
+                          .map((m) => (m.role === "user" ? `🙋 العميل: ${getTextContent(m.content)}` : `🤖 المساعد: ${getTextContent(m.content)}`))
                           .join("\n\n");
                         const waUrl = `https://wa.me/201153961008?text=${encodeURIComponent("📋 محادثة من المساعد الذكي:\n\n" + text)}`;
                         window.open(waUrl, "_blank");
@@ -177,10 +212,7 @@ const AIChatBot = () => {
                     </button>
                   </>
                 )}
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="p-1.5 rounded-lg hover:bg-primary-foreground/20 transition-colors"
-                >
+                <button onClick={() => setIsOpen(false)} className="p-1.5 rounded-lg hover:bg-primary-foreground/20 transition-colors">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -198,14 +230,15 @@ const AIChatBot = () => {
                     <p className="text-sm text-muted-foreground mt-1">
                       أنا المساعد الذكي، أقدر أساعدك تلاقي قطع الغيار المناسبة لعربيتك
                     </p>
+                    <p className="text-xs text-muted-foreground mt-2 flex items-center justify-center gap-1">
+                      <ImagePlus className="w-3.5 h-3.5" />
+                      تقدر تبعتلي صورة القطعة وأعرّفها لك
+                    </p>
                   </div>
                   <div className="space-y-2">
                     {QUICK_QUESTIONS.map((q) => (
-                      <button
-                        key={q}
-                        onClick={() => sendMessage(q)}
-                        className="block w-full text-right text-xs px-3 py-2 rounded-lg border border-border hover:bg-accent/10 hover:border-primary/30 transition-colors text-foreground"
-                      >
+                      <button key={q} onClick={() => sendMessage(q)}
+                        className="block w-full text-right text-xs px-3 py-2 rounded-lg border border-border hover:bg-accent/10 hover:border-primary/30 transition-colors text-foreground">
                         {q}
                       </button>
                     ))}
@@ -214,23 +247,19 @@ const AIChatBot = () => {
               )}
 
               {messages.map((msg, i) => (
-                <div
-                  key={i}
-                  className={`flex ${msg.role === "user" ? "justify-start" : "justify-end"}`}
-                >
-                  <div
-                    className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
-                      msg.role === "user"
-                        ? "bg-primary text-primary-foreground rounded-br-sm"
-                        : "bg-muted text-foreground rounded-bl-sm"
-                    }`}
-                  >
+                <div key={i} className={`flex ${msg.role === "user" ? "justify-start" : "justify-end"}`}>
+                  <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
+                    msg.role === "user" ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-muted text-foreground rounded-bl-sm"
+                  }`}>
+                    {msg.imagePreview && (
+                      <img src={msg.imagePreview} alt="صورة مرفقة" className="rounded-lg mb-2 max-h-32 w-auto" />
+                    )}
                     {msg.role === "assistant" ? (
                       <div className="prose prose-sm max-w-none [&_p]:m-0 [&_ul]:my-1 [&_li]:my-0">
-                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                        <ReactMarkdown>{getTextContent(msg.content)}</ReactMarkdown>
                       </div>
                     ) : (
-                      msg.content
+                      getTextContent(msg.content)
                     )}
                   </div>
                 </div>
@@ -243,33 +272,46 @@ const AIChatBot = () => {
                   </div>
                 </div>
               )}
-
               <div ref={messagesEndRef} />
             </div>
 
+            {/* Pending image preview */}
+            {pendingImage && (
+              <div className="px-3 pt-2 flex items-center gap-2 border-t border-border" dir="rtl">
+                <div className="relative">
+                  <img src={pendingImage} alt="صورة مرفقة" className="w-14 h-14 rounded-lg object-cover border border-border" />
+                  <button
+                    onClick={() => setPendingImage(null)}
+                    className="absolute -top-1.5 -left-1.5 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center text-xs"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+                <span className="text-xs text-muted-foreground">صورة جاهزة للإرسال</span>
+              </div>
+            )}
+
             {/* Input */}
             <div className="border-t border-border p-3" dir="rtl">
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  sendMessage(input);
-                }}
-                className="flex gap-2"
-              >
+              <form onSubmit={(e) => { e.preventDefault(); sendMessage(input); }} className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isLoading}
+                  className="shrink-0 w-9 h-9 rounded-xl bg-muted flex items-center justify-center hover:bg-accent/20 transition-colors disabled:opacity-50"
+                  title="إرفاق صورة"
+                >
+                  <ImagePlus className="w-4 h-4 text-muted-foreground" />
+                </button>
                 <input
                   ref={inputRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="اكتب سؤالك هنا..."
+                  placeholder={pendingImage ? "أضف وصف للصورة (اختياري)..." : "اكتب سؤالك هنا..."}
                   disabled={isLoading}
                   className="flex-1 bg-muted rounded-xl px-3 py-2 text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50"
                 />
-                <Button
-                  type="submit"
-                  size="icon"
-                  disabled={!input.trim() || isLoading}
-                  className="rounded-xl shrink-0"
-                >
+                <Button type="submit" size="icon" disabled={(!input.trim() && !pendingImage) || isLoading} className="rounded-xl shrink-0">
                   <Send className="w-4 h-4" />
                 </Button>
               </form>
