@@ -100,6 +100,32 @@ const Auth = () => {
     setLoading(false);
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const resetEmail = getAuthEmail();
+    if (!resetEmail) return;
+    setResetLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) {
+      toast({
+        title: "خطأ",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "تم إرسال رابط إعادة التعيين",
+        description: authMethod === "phone"
+          ? "تم إرسال رابط إعادة تعيين كلمة المرور (تحقق من البريد المرتبط بالرقم)"
+          : "تحقق من بريدك الإلكتروني لإعادة تعيين كلمة المرور",
+      });
+      setForgotMode(false);
+    }
+    setResetLoading(false);
+  };
+
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     const { error } = await lovable.auth.signInWithOAuth("google", {
