@@ -5,7 +5,7 @@ import { Filter, ChevronLeft, ShieldCheck, Car, Wrench, Droplets, Zap, Disc, Set
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PartRequestForm from "@/components/PartRequestForm";
-import { BreadcrumbSchema } from "@/components/SEOSchemaMarkup";
+import { BreadcrumbSchema, ItemListSchema } from "@/components/SEOSchemaMarkup";
 
 const SITE = "https://almasriaautoparts.com";
 
