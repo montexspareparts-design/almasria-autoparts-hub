@@ -253,11 +253,71 @@ const ProductsPage = () => {
 
   if (!config) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">صفحة غير موجودة</h1>
-          <Button asChild><Link to="/">العودة للرئيسية</Link></Button>
-        </div>
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        {/* Brands Landing Hero */}
+        <section className="pt-28 pb-16 bg-dark-section relative overflow-hidden">
+          <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "linear-gradient(hsl(var(--section-dark-foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--section-dark-foreground)) 1px, transparent 1px)", backgroundSize: "80px 80px" }} />
+          <motion.div className="absolute top-10 right-[10%] w-[500px] h-[500px] rounded-full bg-primary/[0.06] blur-[150px]" animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 8, repeat: Infinity }} />
+          <div className="container mx-auto px-4 relative z-10 text-center">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <span className="inline-block px-4 py-1.5 rounded-full bg-primary/15 text-primary text-sm font-bold mb-4">
+                <Package className="w-4 h-4 inline ml-1" />
+                منتجاتنا
+              </span>
+              <h1 className="text-4xl md:text-6xl font-black text-[hsl(var(--section-dark-foreground))] mb-4">
+                اختر <span className="shimmer-text">العلامة التجارية</span>
+              </h1>
+              <p className="text-[hsl(var(--section-dark-foreground))]/60 max-w-lg mx-auto">
+                نوزع أفضل العلامات التجارية في عالم قطع غيار السيارات والزيوت
+              </p>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* Brands Grid */}
+        <section className="py-20">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+              {allBrands.map((b, i) => (
+                <motion.div
+                  key={b.to}
+                  initial={{ opacity: 0, y: 40, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ delay: i * 0.1, type: "spring", stiffness: 80 }}
+                >
+                  <Link
+                    to={b.to}
+                    className="group block bg-card rounded-2xl border border-border hover:border-primary/40 overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/15 hover:-translate-y-2"
+                  >
+                    <div className="bg-white p-8 flex items-center justify-center aspect-[3/2] relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/0 group-hover:from-primary/5 group-hover:to-primary/10 transition-all duration-500" />
+                      <motion.img
+                        src={b.image}
+                        alt={b.label}
+                        className={`relative z-10 max-h-24 w-auto object-contain ${b.scale}`}
+                        whileHover={{ scale: 1.1 }}
+                        transition={{ duration: 0.3 }}
+                      />
+                    </div>
+                    <div className="p-5 text-center border-t border-border">
+                      <h3 className="font-bold text-foreground text-lg mb-1">{b.label}</h3>
+                      <p className="text-sm text-muted-foreground">{b.labelEn}</p>
+                      <motion.div
+                        className="mt-3 inline-flex items-center gap-1.5 text-primary text-sm font-semibold"
+                        whileHover={{ x: -5 }}
+                      >
+                        تصفح المنتجات
+                        <ChevronLeft className="w-4 h-4" />
+                      </motion.div>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+        <Footer />
       </div>
     );
   }
