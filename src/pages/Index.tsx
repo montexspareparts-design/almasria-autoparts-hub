@@ -5,6 +5,7 @@ import HeroSection from "@/components/HeroSection";
 
 const AboutBrief = lazy(() => import("@/components/AboutBrief"));
 const WhoWeServe = lazy(() => import("@/components/WhoWeServe"));
+const KeyMetrics = lazy(() => import("@/components/KeyMetrics"));
 const DistributionSegments = lazy(() => import("@/components/DistributionSegments"));
 const DistributionNetwork = lazy(() => import("@/components/DistributionNetwork"));
 const MTXSection = lazy(() => import("@/components/MTXSection"));
