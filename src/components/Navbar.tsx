@@ -242,20 +242,58 @@ const Navbar = () => {
               animate="visible"
               exit="exit"
             >
-              {links.map((link, i) => (
-                <motion.a
-                  key={link.href}
-                  href={link.href}
-                  custom={i}
-                  initial="hidden"
-                  animate="visible"
-                  variants={linkVariants}
-                  className="block py-3 text-sm font-medium text-secondary-foreground/80 hover:text-primary transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  {link.label}
-                </motion.a>
-              ))}
+              {links.map((link, i) =>
+                link.label === "المنتجات" ? (
+                  <div key={link.href}>
+                    <motion.button
+                      custom={i}
+                      initial="hidden"
+                      animate="visible"
+                      variants={linkVariants}
+                      className="w-full flex items-center justify-between py-3 text-sm font-medium text-secondary-foreground/80 hover:text-primary transition-colors"
+                      onClick={() => setMobileProductsOpen(!mobileProductsOpen)}
+                    >
+                      {link.label}
+                      <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${mobileProductsOpen ? "rotate-180" : ""}`} />
+                    </motion.button>
+                    <AnimatePresence>
+                      {mobileProductsOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden pr-4 border-r-2 border-primary/30"
+                        >
+                          {productCategories.map((cat) => (
+                            <Link
+                              key={cat.href}
+                              to={cat.href}
+                              className="block py-2 text-sm text-secondary-foreground/70 hover:text-primary transition-colors"
+                              onClick={() => { setIsOpen(false); setMobileProductsOpen(false); }}
+                            >
+                              {cat.label}
+                            </Link>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ) : (
+                  <motion.a
+                    key={link.href}
+                    href={link.href}
+                    custom={i}
+                    initial="hidden"
+                    animate="visible"
+                    variants={linkVariants}
+                    className="block py-3 text-sm font-medium text-secondary-foreground/80 hover:text-primary transition-colors"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {link.label}
+                  </motion.a>
+                )
+              )}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
