@@ -1,14 +1,23 @@
-import { motion } from "framer-motion";
+import { useState, useMemo, useCallback, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ShieldCheck, Wrench, CheckCircle2, ArrowLeft, MessageCircle, Users,
   Truck, Award, Target, Globe, DollarSign, Building2, Search, TestTube,
-  BarChart3, BadgeCheck, ChevronLeft
+  BarChart3, BadgeCheck, ChevronLeft, Lock, Package, ShoppingCart, Eye,
+  AlertTriangle, Grid3X3, List, ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Helmet } from "react-helmet-async";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCart, CartItem } from "@/contexts/CartContext";
+import { toast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import AdvancedProductFilter, { ProductFilters } from "@/components/AdvancedProductFilter";
+import ProductDetailDialog from "@/components/ProductDetailDialog";
 
 // Brand logos
 import brandMtx from "@/assets/brand-mtx.jpg";
