@@ -65,7 +65,7 @@ const ProductDetailDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 gap-0" dir="rtl">
+      <DialogContent className="max-w-2xl max-h-[90vh] p-0 gap-0 overflow-hidden" dir="rtl">
         <DialogHeader className="sr-only">
           <DialogTitle>{product.name_ar}</DialogTitle>
           <DialogDescription>تفاصيل المنتج</DialogDescription>
