@@ -1,186 +1,388 @@
 import { motion } from "framer-motion";
 import {
   ShieldCheck, Wrench, CheckCircle2, Filter, Disc, Settings, Zap, Cable,
-  ArrowLeft, MessageCircle, Users, Truck, Award, Target
+  ArrowLeft, MessageCircle, Users, Truck, Award, Target, Globe, DollarSign,
+  Building2, Search, TestTube, BarChart3, BadgeCheck, ChevronLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Helmet } from "react-helmet-async";
+import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import brandMtx from "@/assets/brand-mtx.jpg";
+import mtxHeroBg from "@/assets/mtx-hero-bg.jpg";
 
-const whyMtx = [
-  { icon: CheckCircle2, text: "جودة مختبرة وموثوقة" },
-  { icon: Award, text: "قيمة مقابل سعر ممتازة" },
-  { icon: Users, text: "مدعومة بشبكة المصرية جروب — 2000+ عميل" },
-  { icon: Truck, text: "تسليم خلال 48 ساعة داخل مصر" },
-  { icon: ShieldCheck, text: "انضباط سعري يحمي السوق" },
+/* ─── Data ─── */
+
+const advantages = [
+  {
+    icon: CheckCircle2,
+    title: "جودة تضاهي الأصلية",
+    desc: "يتم اختبار جميع منتجات MTX لضمان أداء موثوق وعمر افتراضي ممتاز.",
+  },
+  {
+    icon: Globe,
+    title: "ماركات عالمية",
+    desc: "تعتمد MTX على موردين عالميين لديهم خبرة في تصنيع مكونات سيارات بجودة عالية.",
+  },
+  {
+    icon: DollarSign,
+    title: "قيمة مقابل سعر",
+    desc: "تقدم MTX جودة قوية بسعر تنافسي يناسب الفئات المختلفة من العملاء.",
+  },
+  {
+    icon: Building2,
+    title: "دعم المصرية جروب",
+    desc: "تستفيد MTX من خبرة 25 عامًا للمصرية جروب وشبكة توزيع تضم أكثر من 2000 عميل.",
+  },
 ];
 
 const categories = [
   { icon: Filter, name: "فلاتر", detail: "زيت – هواء – وقود – تكييف" },
   { icon: Disc, name: "تيل فرامل", detail: "أقراص وتيل فرامل عالية الأداء" },
-  { icon: Settings, name: "قطع تعليق", detail: "مساعدين – كبالن – جلب" },
-  { icon: Zap, name: "كهرباء سيارات", detail: "بوجيهات – كويلات – حساسات" },
-  { icon: Cable, name: "سيور ومحرك", detail: "سيور توقيت – سيور مروحة" },
+  { icon: Settings, name: "قطع تعليق", detail: "مقصات – جلب – كراسي موتور" },
+  { icon: Zap, name: "كهرباء سيارات", detail: "بوجيهات – حساسات – ريلايات" },
+  { icon: Cable, name: "سيور ومحركات", detail: "سيور توقيت – سيور مروحة" },
+];
+
+const qualitySteps = [
+  { icon: Search, label: "فحص الجودة" },
+  { icon: TestTube, label: "مراجعة المواصفات" },
+  { icon: BarChart3, label: "مقارنة الأداء" },
+  { icon: BadgeCheck, label: "اعتماد المنتج" },
 ];
 
 const audiences = [
   { icon: Users, label: "تجار الجملة" },
-  { icon: Wrench, label: "مراكز الخدمة" },
-  { icon: Target, label: "الشركات" },
-  { icon: Truck, label: "أساطيل النقل" },
+  { icon: Wrench, label: "مراكز الخدمة والصيانة" },
+  { icon: Truck, label: "شركات قطاع النقل" },
+  { icon: Target, label: "أساطيل التشغيل" },
+  { icon: Award, label: "الباحثون عن جودة بسعر مناسب" },
 ];
+
+/* ─── Animations ─── */
+
+const fadeUp = {
+  initial: { opacity: 0, y: 30 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true },
+};
+
+const stagger = (i: number) => ({ delay: i * 0.1 });
+
+/* ─── Page ─── */
 
 const MTXPage = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" dir="rtl">
       <Helmet>
-        <title>MTX | علامة المصرية جروب للأفترماركت</title>
-        <meta name="description" content="MTX منتجات أفترماركت عالية الجودة مدعومة بخبرة المصرية جروب وشبكة توزيع تغطي مصر." />
+        <title>MTX | العلامة التابعة للمصرية جروب والمتخصصة في استيراد قطع غيار تويوتا</title>
+        <meta
+          name="description"
+          content="MTX إحدى شركات المصرية جروب، توفر قطع غيار تويوتا مستوردة من أفضل الموردين العالميين بجودة تضاهي الأصلية وبسعر تنافسي، لخدمة التجار ومراكز الصيانة والشركات."
+        />
+        <meta name="keywords" content="MTX, قطع غيار تويوتا, استيراد قطع غيار, موزع معتمد, أفترماركت, جودة تضاهي الأصلية" />
+        <link rel="canonical" href="https://almasriaautoparts.com/mtx" />
       </Helmet>
       <Navbar />
 
-      {/* Hero */}
-      <section className="pt-28 md:pt-36 pb-16 md:pb-24 bg-dark-section relative overflow-hidden">
-        <div className="absolute top-1/4 right-[10%] w-96 h-96 rounded-full bg-primary/5 blur-[150px]" />
-        <div className="container mx-auto px-4 relative">
-          <div className="grid md:grid-cols-2 gap-10 items-center max-w-5xl mx-auto">
+      {/* ═══════════════════════════════════════════
+          Section 1 — Hero
+      ═══════════════════════════════════════════ */}
+      <section className="relative pt-24 pb-20 md:pt-32 md:pb-28 overflow-hidden">
+        {/* Background */}
+        <img src={mtxHeroBg} alt="" className="absolute inset-0 w-full h-full object-cover" loading="eager" />
+        <div className="absolute inset-0 bg-secondary/80 backdrop-blur-[2px]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-secondary/30 to-secondary" />
+        {/* Red glow accents */}
+        <div className="absolute top-1/4 left-[10%] w-[500px] h-[500px] rounded-full bg-primary/8 blur-[180px]" />
+        <div className="absolute bottom-0 right-[15%] w-[400px] h-[400px] rounded-full bg-primary/5 blur-[150px]" />
+
+        <div className="container mx-auto px-4 relative z-10">
+          {/* Breadcrumb */}
+          <Link to="/" className="inline-flex items-center gap-2 text-sm text-primary hover:underline mb-8 group">
+            <ChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+            العودة للرئيسية
+          </Link>
+
+          <div className="grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+            {/* Text */}
             <motion.div
-              initial={{ opacity: 0, x: -40 }}
+              initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.7 }}
+              transition={{ duration: 0.8 }}
             >
-              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/15 text-primary text-sm font-bold mb-5">
-                <Wrench className="w-4 h-4" />
-                علامتنا الخاصة
-              </span>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-[hsl(var(--section-dark-foreground))] leading-[1.2] tracking-tight mb-6">
-                <span className="text-gradient-red">MTX</span> — علامتنا الخاصة للأفترماركت
+              <motion.span
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 }}
+                className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-primary/15 border border-primary/30 text-primary text-sm font-bold mb-6"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                إحدى شركات المصرية جروب
+              </motion.span>
+
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-dark-section-foreground leading-[1.15] tracking-tight mb-6">
+                <span className="shimmer-text">MTX</span> — إحدى شركات
+                <br />
+                <span className="text-primary">المصرية جروب</span>
               </h1>
-              <p className="text-[hsl(var(--section-dark-foreground))]/65 text-lg leading-relaxed max-w-lg">
-                MTX هي علامة أفترماركت تقدمها المصرية جروب، بجودة موثوقة وسعر تنافسي، مدعومة بخبرة 25 عامًا وشبكة توزيع تشمل أكثر من 2000 عميل.
-              </p>
+
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4, duration: 0.6 }}
+                className="text-dark-section-foreground/65 text-lg md:text-xl leading-relaxed max-w-xl mb-8"
+              >
+                MTX هي شركة تابعة للمصرية جروب ومتخصصة في استيراد قطع غيار تويوتا
+                عالية الجودة، بهدف تلبية احتياجات السوق المصري من خلال توفير ماركات
+                عالمية وبجودة تضاهي قطع الغيار الأصلية.
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+              >
+                <Button
+                  size="lg"
+                  className="gap-3 font-bold text-base px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl shadow-primary/20 group"
+                  asChild
+                >
+                  <Link to="/products/mtx-aftermarket">
+                    استعرض منتجات MTX
+                    <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
+                  </Link>
+                </Button>
+              </motion.div>
             </motion.div>
+
+            {/* Logo Card */}
             <motion.div
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.7, delay: 0.2 }}
+              initial={{ opacity: 0, scale: 0.85, rotateY: -15 }}
+              animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+              transition={{ duration: 0.8, delay: 0.3, type: "spring", stiffness: 80 }}
+              className="flex justify-center"
             >
-              <div className="bg-white rounded-2xl p-8 border border-border shadow-xl">
-                <img src={brandMtx} alt="MTX Aftermarket" className="w-full h-auto object-contain" />
+              <div className="relative">
+                <div className="relative w-64 h-64 md:w-80 md:h-80 rounded-3xl bg-white/95 backdrop-blur-xl border-2 border-white/40 flex items-center justify-center overflow-hidden shadow-2xl">
+                  {/* Shimmer */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -skew-x-12"
+                    animate={{ x: ["-200%", "200%"] }}
+                    transition={{ duration: 3, repeat: Infinity, repeatDelay: 5, ease: "easeInOut" }}
+                  />
+                  <img src={brandMtx} alt="MTX Aftermarket" className="relative z-10 w-[75%] h-[75%] object-contain" />
+                </div>
+                {/* Glow */}
+                <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-br from-primary/25 via-transparent to-primary/15 blur-2xl -z-10" />
+                <motion.div
+                  className="absolute -inset-2 rounded-3xl border border-primary/20 -z-10"
+                  animate={{ opacity: [0.3, 0.7, 0.3] }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                />
               </div>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Why MTX */}
-      <section className="py-20 md:py-24 bg-background">
+      {/* ═══════════════════════════════════════════
+          Section 2 — About MTX
+      ═══════════════════════════════════════════ */}
+      <section className="py-20 md:py-28 bg-background">
         <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-3xl md:text-4xl font-black text-foreground mb-4">لماذا <span className="text-gradient-red">MTX</span>؟</h2>
-            <motion.div initial={{ width: 0 }} whileInView={{ width: "4rem" }} viewport={{ once: true }} transition={{ duration: 0.8, delay: 0.3 }} className="h-1 bg-primary mx-auto rounded-full" />
-          </motion.div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-4xl mx-auto">
-            {whyMtx.map((item, i) => (
-              <motion.div
-                key={item.text}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.08 }}
-                className="flex items-start gap-3 bg-card rounded-xl border border-border p-5 hover:border-primary/25 transition-colors"
-              >
-                <div className="w-10 h-10 rounded-lg bg-primary/8 flex items-center justify-center flex-shrink-0">
-                  <item.icon className="w-5 h-5 text-primary" />
-                </div>
-                <p className="text-foreground text-sm font-medium leading-relaxed pt-2">{item.text}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Product Categories */}
-      <section className="py-20 md:py-24 bg-dark-section">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-3xl md:text-4xl font-black text-[hsl(var(--section-dark-foreground))] mb-4">فئات منتجات <span className="shimmer-text">MTX</span></h2>
-            <motion.div initial={{ width: 0 }} whileInView={{ width: "4rem" }} viewport={{ once: true }} transition={{ duration: 0.8, delay: 0.3 }} className="h-1 bg-primary mx-auto rounded-full" />
-          </motion.div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 max-w-5xl mx-auto">
-            {categories.map((cat, i) => (
-              <motion.div
-                key={cat.name}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="bg-[hsl(var(--section-dark-foreground))]/5 border border-[hsl(var(--section-dark-foreground))]/10 rounded-xl p-5 text-center hover:border-primary/40 transition-all duration-300 group"
-              >
-                <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center mx-auto mb-3 group-hover:bg-primary/25 transition-colors">
-                  <cat.icon className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="font-bold text-[hsl(var(--section-dark-foreground))] text-sm mb-1">{cat.name}</h3>
-                <p className="text-xs text-[hsl(var(--section-dark-foreground))]/50">{cat.detail}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Quality Assurance */}
-      <section className="py-20 md:py-24 bg-background">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="max-w-3xl mx-auto text-center"
-          >
-            <h2 className="text-3xl md:text-4xl font-black text-foreground mb-6">ضمان <span className="text-gradient-red">الجودة</span></h2>
-            <p className="text-muted-foreground text-base md:text-lg leading-8">
-              تخضع جميع منتجات MTX لمراحل فحص صارمة تبدأ من اختيار الموردين المعتمدين، مرورًا بمراقبة خطوط التصنيع، وحتى اختبارات الأداء النهائية. نضمن أن كل قطعة تحمل شعار MTX تستوفي معايير OE العالمية وتوفر أداءً موثوقًا يُرضي عملاءنا.
+          <motion.div {...fadeUp} className="max-w-3xl mx-auto text-center">
+            <h2 className="text-3xl md:text-4xl font-black text-foreground mb-3">
+              من نحن — <span className="text-primary">MTX</span>
+            </h2>
+            <motion.div
+              initial={{ width: 0 }}
+              whileInView={{ width: "4rem" }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="h-1 bg-primary mx-auto rounded-full mb-8"
+            />
+            <p className="text-muted-foreground text-lg md:text-xl leading-[2] tracking-wide">
+              MTX هي إحدى العلامات التابعة للمصرية جروب، وتعمل على توفير قطع غيار
+              تويوتا بطريقة احترافية تعتمد على استيراد منتجات عالية الجودة من موردين
+              عالميين، مما يجعلها خيارًا موثوقًا يلبي احتياجات العملاء الباحثين عن
+              جودة قريبة من الأصلية وبسعر مناسب.
             </p>
           </motion.div>
         </div>
       </section>
 
-      {/* Target Audience */}
-      <section className="py-20 md:py-24 bg-card border-y border-border">
+      {/* ═══════════════════════════════════════════
+          Section 3 — Key Advantages
+      ═══════════════════════════════════════════ */}
+      <section className="py-20 md:py-28 bg-dark-section">
         <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-3xl md:text-4xl font-black text-foreground mb-4">الجمهور المستهدف</h2>
-            <motion.div initial={{ width: 0 }} whileInView={{ width: "4rem" }} viewport={{ once: true }} transition={{ duration: 0.8, delay: 0.3 }} className="h-1 bg-primary mx-auto rounded-full" />
+          <motion.div {...fadeUp} className="text-center mb-14">
+            <h2 className="text-3xl md:text-4xl font-black text-dark-section-foreground mb-3">
+              لماذا <span className="shimmer-text">MTX</span>؟
+            </h2>
+            <motion.div
+              initial={{ width: 0 }}
+              whileInView={{ width: "4rem" }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="h-1 bg-primary mx-auto rounded-full"
+            />
           </motion.div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
+
+          <div className="grid sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            {advantages.map((item, i) => (
+              <motion.div
+                key={item.title}
+                {...fadeUp}
+                transition={{ ...stagger(i), duration: 0.5 }}
+                className="relative bg-dark-section-foreground/5 border border-dark-section-foreground/10 rounded-2xl p-7 hover:border-primary/30 transition-all duration-300 group overflow-hidden"
+              >
+                {/* Hover glow */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/0 group-hover:from-primary/5 group-hover:to-transparent transition-all duration-500 rounded-2xl" />
+                <div className="relative z-10 flex items-start gap-4">
+                  <div className="w-14 h-14 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/25 transition-colors">
+                    <item.icon className="w-7 h-7 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-dark-section-foreground text-lg mb-2">{item.title}</h3>
+                    <p className="text-dark-section-foreground/55 text-sm leading-relaxed">{item.desc}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════
+          Section 4 — Product Categories
+      ═══════════════════════════════════════════ */}
+      <section className="py-20 md:py-28 bg-background">
+        <div className="container mx-auto px-4">
+          <motion.div {...fadeUp} className="text-center mb-14">
+            <h2 className="text-3xl md:text-4xl font-black text-foreground mb-3">
+              فئات منتجات <span className="text-primary">MTX</span>
+            </h2>
+            <motion.div
+              initial={{ width: 0 }}
+              whileInView={{ width: "4rem" }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="h-1 bg-primary mx-auto rounded-full"
+            />
+          </motion.div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 max-w-5xl mx-auto">
+            {categories.map((cat, i) => (
+              <motion.div
+                key={cat.name}
+                {...fadeUp}
+                transition={{ ...stagger(i), duration: 0.5 }}
+                className="bg-card border border-border rounded-2xl p-6 text-center hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300 group flex flex-col"
+              >
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
+                  <cat.icon className="w-7 h-7 text-primary" />
+                </div>
+                <h3 className="font-bold text-foreground text-base mb-1.5">{cat.name}</h3>
+                <p className="text-muted-foreground text-xs leading-relaxed mb-4 flex-1">{cat.detail}</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mx-auto text-xs border-primary/20 text-primary hover:bg-primary/10 hover:text-primary"
+                  asChild
+                >
+                  <a
+                    href={`https://wa.me/201153961008?text=أريد عرض سعر لفئة ${cat.name} من MTX`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    اطلب عرض سعر
+                  </a>
+                </Button>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════
+          Section 5 — Quality Process
+      ═══════════════════════════════════════════ */}
+      <section className="py-20 md:py-28 bg-dark-section">
+        <div className="container mx-auto px-4">
+          <motion.div {...fadeUp} className="text-center mb-8">
+            <h2 className="text-3xl md:text-4xl font-black text-dark-section-foreground mb-3">
+              كيفية اختيار منتجات <span className="shimmer-text">MTX</span>
+            </h2>
+            <motion.div
+              initial={{ width: 0 }}
+              whileInView={{ width: "4rem" }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="h-1 bg-primary mx-auto rounded-full mb-8"
+            />
+            <p className="text-dark-section-foreground/60 text-base md:text-lg leading-[2] max-w-3xl mx-auto">
+              تعتمد MTX على عملية دقيقة لاختيار الموردين تشمل فحص الجودة، مراجعة
+              المواصفات، مقارنة الأداء مع القطع الأصلية، وضمان اتساق المنتج قبل
+              التوريد للسوق المصري.
+            </p>
+          </motion.div>
+
+          {/* Steps */}
+          <div className="flex flex-wrap justify-center gap-6 md:gap-10 mt-14 max-w-3xl mx-auto">
+            {qualitySteps.map((step, i) => (
+              <motion.div
+                key={step.label}
+                {...fadeUp}
+                transition={{ ...stagger(i), duration: 0.5 }}
+                className="flex flex-col items-center gap-3 text-center"
+              >
+                <div className="relative">
+                  <div className="w-20 h-20 rounded-2xl bg-primary/15 border border-primary/20 flex items-center justify-center">
+                    <step.icon className="w-9 h-9 text-primary" />
+                  </div>
+                  {/* Step number */}
+                  <span className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shadow-lg">
+                    {i + 1}
+                  </span>
+                </div>
+                <p className="text-dark-section-foreground/80 text-sm font-semibold">{step.label}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════
+          Section 6 — Target Audience
+      ═══════════════════════════════════════════ */}
+      <section className="py-20 md:py-28 bg-card border-y border-border">
+        <div className="container mx-auto px-4">
+          <motion.div {...fadeUp} className="text-center mb-14">
+            <h2 className="text-3xl md:text-4xl font-black text-foreground mb-3">
+              من يخدمهم <span className="text-primary">MTX</span>؟
+            </h2>
+            <motion.div
+              initial={{ width: 0 }}
+              whileInView={{ width: "4rem" }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="h-1 bg-primary mx-auto rounded-full"
+            />
+          </motion.div>
+
+          <div className="flex flex-wrap justify-center gap-8 max-w-4xl mx-auto">
             {audiences.map((a, i) => (
               <motion.div
                 key={a.label}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="flex flex-col items-center gap-3 text-center"
+                {...fadeUp}
+                transition={{ ...stagger(i), duration: 0.5 }}
+                className="flex flex-col items-center gap-4 text-center w-[calc(33.333%-2rem)] min-w-[160px]"
               >
-                <div className="w-14 h-14 rounded-2xl bg-primary/8 flex items-center justify-center">
-                  <a.icon className="w-7 h-7 text-primary" />
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/15 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                  <a.icon className="w-8 h-8 text-primary" />
                 </div>
                 <h3 className="font-bold text-foreground text-sm">{a.label}</h3>
               </motion.div>
@@ -189,37 +391,83 @@ const MTXPage = () => {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-20 md:py-24 bg-dark-section">
-        <div className="container mx-auto px-4 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-3xl md:text-4xl font-black text-[hsl(var(--section-dark-foreground))] mb-8">
-              ابدأ التعامل مع <span className="shimmer-text">MTX</span>
+      {/* ═══════════════════════════════════════════
+          Section 7 — Final CTA
+      ═══════════════════════════════════════════ */}
+      <section className="py-20 md:py-28 bg-dark-section relative overflow-hidden">
+        {/* Accent glows */}
+        <div className="absolute top-0 left-1/4 w-[500px] h-[300px] rounded-full bg-primary/8 blur-[160px]" />
+        <div className="absolute bottom-0 right-1/4 w-[400px] h-[250px] rounded-full bg-primary/5 blur-[140px]" />
+
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <motion.div {...fadeUp}>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-dark-section-foreground mb-4">
+              ابدأ تعاملاتك مع <span className="shimmer-text">MTX</span> الآن
             </h2>
+            <p className="text-dark-section-foreground/50 text-lg mb-10 max-w-xl mx-auto">
+              انضم لأكثر من 2000 عميل يثقون في منتجات المصرية جروب
+            </p>
+
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="lg" className="gap-3 font-bold text-base px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg group" asChild>
-                <a href="https://wa.me/201153961008?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D9%83%D8%AA%D8%A7%D9%84%D9%88%D8%AC%20MTX" target="_blank" rel="noopener noreferrer">
+              <Button
+                size="lg"
+                className="gap-3 font-bold text-base px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl shadow-primary/20 group"
+                asChild
+              >
+                <a
+                  href="https://wa.me/201153961008?text=أريد كتالوج MTX"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   اطلب كتالوج MTX
                   <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
                 </a>
               </Button>
-              <Button size="lg" variant="outline" className="gap-3 font-bold text-base px-8 py-6 border-2 border-[hsl(var(--section-dark-foreground))]/20 text-[hsl(var(--section-dark-foreground))] bg-transparent hover:bg-[hsl(var(--section-dark-foreground))]/10" asChild>
-                <a href="https://wa.me/201153961008?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A7%D9%84%D8%AA%D8%AD%D8%AF%D8%AB%20%D9%85%D8%B9%20%D9%82%D8%B3%D9%85%20%D8%A7%D9%84%D9%85%D8%A8%D9%8A%D8%B9%D8%A7%D8%AA" target="_blank" rel="noopener noreferrer">
+
+              <Button
+                size="lg"
+                variant="outline"
+                className="gap-3 font-bold text-base px-8 py-6 border-2 border-dark-section-foreground/20 text-dark-section-foreground bg-transparent hover:bg-dark-section-foreground/10"
+                asChild
+              >
+                <a
+                  href="https://wa.me/201153961008?text=أريد التحدث مع قسم المبيعات"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <MessageCircle className="w-5 h-5" />
-                  تحدث مع قسم المبيعات
+                  تواصل مع قسم المبيعات
                 </a>
               </Button>
-              <Button size="lg" variant="outline" className="gap-3 font-bold text-base px-8 py-6 border-2 border-[hsl(var(--section-dark-foreground))]/20 text-[hsl(var(--section-dark-foreground))] bg-transparent hover:bg-[hsl(var(--section-dark-foreground))]/10" asChild>
-                <a href="https://wa.me/201153961008?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A7%D9%84%D8%A7%D9%86%D8%B6%D9%85%D8%A7%D9%85%20%D9%83%D9%85%D9%88%D8%B2%D8%B9%20MTX" target="_blank" rel="noopener noreferrer">
-                  انضم كموزع لمنتجات MTX
-                </a>
+
+              <Button
+                size="lg"
+                variant="outline"
+                className="gap-3 font-bold text-base px-8 py-6 border-2 border-dark-section-foreground/20 text-dark-section-foreground bg-transparent hover:bg-dark-section-foreground/10"
+                asChild
+              >
+                <Link to="/dealer-apply">
+                  <Users className="w-5 h-5" />
+                  انضم كموزع معتمد
+                </Link>
               </Button>
             </div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Internal Navigation Links */}
+      <section className="py-10 bg-background border-t border-border">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-wrap justify-center gap-4 text-sm">
+            <Link to="/" className="text-muted-foreground hover:text-primary transition-colors font-medium">الرئيسية</Link>
+            <span className="text-border">|</span>
+            <Link to="/products/mtx-aftermarket" className="text-muted-foreground hover:text-primary transition-colors font-medium">منتجات MTX</Link>
+            <span className="text-border">|</span>
+            <Link to="/what-sets-us-apart" className="text-muted-foreground hover:text-primary transition-colors font-medium">ما يميزنا</Link>
+            <span className="text-border">|</span>
+            <Link to="/contact" className="text-muted-foreground hover:text-primary transition-colors font-medium">اتصل بنا</Link>
+          </div>
         </div>
       </section>
 
