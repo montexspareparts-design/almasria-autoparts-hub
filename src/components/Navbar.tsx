@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import logo from "@/assets/logo.png";
-import { Menu, X, Briefcase, User, LogOut, ShoppingCart } from "lucide-react";
+import { Menu, X, Briefcase, User, LogOut, ShoppingCart, ChevronDown } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
@@ -25,9 +26,18 @@ const linkVariants = {
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [productsOpen, setProductsOpen] = useState(false);
+  const [mobileProductsOpen, setMobileProductsOpen] = useState(false);
+  const productsTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user, isDealer, isAdmin, signOut } = useAuth();
   const { itemCount } = useCart();
   const navigate = useNavigate();
+
+  const productCategories = [
+    { label: "قطع غيار تويوتا أصلي", href: "/products?brand=toyota-genuine" },
+    { label: "زيوت تويوتا أصلي", href: "/products?brand=toyota-oils" },
+    { label: "MTX Aftermarket", href: "/products?brand=mtx-aftermarket" },
+  ];
 
   const links = [
     { label: "الرئيسية", href: "#hero" },
@@ -73,17 +83,63 @@ const Navbar = () => {
 
           {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-6">
-            {links.map((link) => (
-              <motion.a
-                key={link.href}
-                href={link.href}
-                className="text-sm font-medium text-secondary-foreground/80 hover:text-primary transition-colors relative group"
-                whileHover={{ y: -1 }}
-              >
-                {link.label}
-                <span className="absolute -bottom-1 right-0 w-0 h-[2px] bg-primary rounded-full transition-all duration-300 group-hover:w-full" />
-              </motion.a>
-            ))}
+            {links.map((link) =>
+              link.label === "المنتجات" ? (
+                <div
+                  key={link.href}
+                  className="relative"
+                  onMouseEnter={() => {
+                    if (productsTimeout.current) clearTimeout(productsTimeout.current);
+                    setProductsOpen(true);
+                  }}
+                  onMouseLeave={() => {
+                    productsTimeout.current = setTimeout(() => setProductsOpen(false), 200);
+                  }}
+                >
+                  <motion.a
+                    href={link.href}
+                    className="text-sm font-medium text-secondary-foreground/80 hover:text-primary transition-colors relative group flex items-center gap-1"
+                    whileHover={{ y: -1 }}
+                  >
+                    {link.label}
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${productsOpen ? "rotate-180" : ""}`} />
+                    <span className="absolute -bottom-1 right-0 w-0 h-[2px] bg-primary rounded-full transition-all duration-300 group-hover:w-full" />
+                  </motion.a>
+                  <AnimatePresence>
+                    {productsOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 8 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute top-full right-0 mt-2 w-56 bg-secondary/95 backdrop-blur-md border border-primary/20 rounded-xl shadow-xl shadow-black/20 overflow-hidden z-50"
+                      >
+                        {productCategories.map((cat) => (
+                          <Link
+                            key={cat.href}
+                            to={cat.href}
+                            onClick={() => setProductsOpen(false)}
+                            className="block px-4 py-3 text-sm font-medium text-secondary-foreground/80 hover:text-primary hover:bg-primary/10 transition-colors border-b border-white/5 last:border-b-0"
+                          >
+                            {cat.label}
+                          </Link>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : (
+                <motion.a
+                  key={link.href}
+                  href={link.href}
+                  className="text-sm font-medium text-secondary-foreground/80 hover:text-primary transition-colors relative group"
+                  whileHover={{ y: -1 }}
+                >
+                  {link.label}
+                  <span className="absolute -bottom-1 right-0 w-0 h-[2px] bg-primary rounded-full transition-all duration-300 group-hover:w-full" />
+                </motion.a>
+              )
+            )}
           </div>
 
           {/* Mobile right icons */}
@@ -186,20 +242,58 @@ const Navbar = () => {
               animate="visible"
               exit="exit"
             >
-              {links.map((link, i) => (
-                <motion.a
-                  key={link.href}
-                  href={link.href}
-                  custom={i}
-                  initial="hidden"
-                  animate="visible"
-                  variants={linkVariants}
-                  className="block py-3 text-sm font-medium text-secondary-foreground/80 hover:text-primary transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  {link.label}
-                </motion.a>
-              ))}
+              {links.map((link, i) =>
+                link.label === "المنتجات" ? (
+                  <div key={link.href}>
+                    <motion.button
+                      custom={i}
+                      initial="hidden"
+                      animate="visible"
+                      variants={linkVariants}
+                      className="w-full flex items-center justify-between py-3 text-sm font-medium text-secondary-foreground/80 hover:text-primary transition-colors"
+                      onClick={() => setMobileProductsOpen(!mobileProductsOpen)}
+                    >
+                      {link.label}
+                      <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${mobileProductsOpen ? "rotate-180" : ""}`} />
+                    </motion.button>
+                    <AnimatePresence>
+                      {mobileProductsOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden pr-4 border-r-2 border-primary/30"
+                        >
+                          {productCategories.map((cat) => (
+                            <Link
+                              key={cat.href}
+                              to={cat.href}
+                              className="block py-2 text-sm text-secondary-foreground/70 hover:text-primary transition-colors"
+                              onClick={() => { setIsOpen(false); setMobileProductsOpen(false); }}
+                            >
+                              {cat.label}
+                            </Link>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ) : (
+                  <motion.a
+                    key={link.href}
+                    href={link.href}
+                    custom={i}
+                    initial="hidden"
+                    animate="visible"
+                    variants={linkVariants}
+                    className="block py-3 text-sm font-medium text-secondary-foreground/80 hover:text-primary transition-colors"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {link.label}
+                  </motion.a>
+                )
+              )}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
