@@ -11,7 +11,7 @@ import Footer from "@/components/Footer";
 // Images
 import heroWarehouse from "@/assets/hero-warehouse.jpg";
 import warehouseLogistics from "@/assets/warehouse-logistics.jpg";
-import awardTrophy from "@/assets/award-trophy.jpg";
+import partnershipToyota from "@/assets/partnership-toyota.jpg";
 import distributionMap from "@/assets/distribution-map.jpg";
 import erpSystem from "@/assets/erp-system.jpg";
 import brandMtx from "@/assets/brand-mtx.jpg";
