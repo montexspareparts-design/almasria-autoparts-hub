@@ -54,6 +54,54 @@ const AnimatedCounter = ({ value, suffix }: { value: number; suffix: string }) =
 
 const SpeedometerDashboard = () => {
   const [activeIdx, setActiveIdx] = useState(0);
+  const [soundOn, setSoundOn] = useState(false);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const oscRef = useRef<OscillatorNode | null>(null);
+  const gainRef = useRef<GainNode | null>(null);
+
+  const ratio = STATS[activeIdx].value / Math.max(...STATS.map((s) => s.value));
+  const needleAngle = ratio * 180 - 90;
+
+  // Engine sound: oscillator frequency maps to needle ratio
+  const startEngine = useCallback(() => {
+    if (audioCtxRef.current) return;
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.value = 80 + ratio * 200;
+    gain.gain.value = 0.06;
+    osc.connect(gain).connect(ctx.destination);
+    osc.start();
+    audioCtxRef.current = ctx;
+    oscRef.current = osc;
+    gainRef.current = gain;
+  }, [ratio]);
+
+  const stopEngine = useCallback(() => {
+    oscRef.current?.stop();
+    audioCtxRef.current?.close();
+    audioCtxRef.current = null;
+    oscRef.current = null;
+    gainRef.current = null;
+  }, []);
+
+  // Update pitch when active stat changes
+  useEffect(() => {
+    if (oscRef.current) {
+      oscRef.current.frequency.linearRampToValueAtTime(
+        80 + ratio * 200,
+        (audioCtxRef.current?.currentTime ?? 0) + 0.8
+      );
+    }
+  }, [ratio]);
+
+  // Toggle sound
+  useEffect(() => {
+    if (soundOn) startEngine();
+    else stopEngine();
+    return () => { stopEngine(); };
+  }, [soundOn, startEngine, stopEngine]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -61,8 +109,6 @@ const SpeedometerDashboard = () => {
     }, 3000);
     return () => clearInterval(timer);
   }, []);
-
-  const needleAngle = (STATS[activeIdx].value / Math.max(...STATS.map((s) => s.value))) * 180 - 90;
 
   return (
     <motion.div
