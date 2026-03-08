@@ -74,7 +74,7 @@ const ProductDetailDialog = ({
         <div className="overflow-y-auto max-h-[90vh]">
         <div
           ref={imageRef}
-          className="relative bg-white aspect-[4/3] cursor-crosshair overflow-hidden rounded-t-lg"
+          className="relative bg-white aspect-[3/2] cursor-crosshair overflow-hidden rounded-t-lg shrink-0"
           onClick={() => setZoomed(!zoomed)}
           onMouseMove={handleMouseMove}
           onMouseLeave={() => { if (zoomed) setZoomPosition({ x: 50, y: 50 }); }}
