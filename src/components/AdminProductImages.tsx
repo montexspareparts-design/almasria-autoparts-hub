@@ -28,23 +28,31 @@ const AdminProductImages = () => {
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, currentSku: "", found: 0, failed: 0 });
   const bulkAbortRef = useRef(false);
 
-  const { data: products, isLoading } = useQuery({
-    queryKey: ["admin-products", search],
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 50;
+
+  const { data: productsData, isLoading } = useQuery({
+    queryKey: ["admin-products", search, page],
     queryFn: async () => {
       let query = supabase
         .from("products")
-        .select("id, name_ar, sku, brand, image_url, product_categories(name_ar)")
-        .order("name_ar");
+        .select("id, name_ar, sku, brand, image_url, product_categories(name_ar)", { count: "exact" })
+        .order("name_ar")
+        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
       if (search) {
         query = query.or(`name_ar.ilike.%${search}%,sku.ilike.%${search}%`);
       }
 
-      const { data, error } = await query.limit(50);
+      const { data, error, count } = await query;
       if (error) throw error;
-      return data;
+      return { products: data, total: count || 0 };
     },
   });
+
+  const products = productsData?.products;
+  const totalProducts = productsData?.total || 0;
+  const totalPages = Math.ceil(totalProducts / PAGE_SIZE);
 
   const handleUploadClick = (productId: string) => {
     setTargetProductId(productId);
