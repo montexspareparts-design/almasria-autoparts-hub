@@ -40,10 +40,10 @@ const Navbar = () => {
   ];
 
   const links = [
-    { label: "الرئيسية", href: "#hero" },
-    { label: "ما يميزنا", href: "#why-us" },
-    { label: "المنتجات", href: "#products" },
-    { label: "فروعنا", href: "#branches" },
+    { label: "الرئيسية", href: "/#hero" },
+    { label: "ما يميزنا", href: "/what-sets-us-apart", isRoute: true },
+    { label: "المنتجات", href: "/#products" },
+    { label: "فروعنا", href: "/#branches" },
     { label: "تواصل معنا", href: "/contact", isRoute: true },
   ];
 
