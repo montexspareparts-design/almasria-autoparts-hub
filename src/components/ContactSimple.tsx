@@ -103,7 +103,7 @@ const ContactSimple = () => {
         >
           <motion.div whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }}>
             <Button size="lg" className="gap-2 bg-[hsl(142,70%,40%)] hover:bg-[hsl(142,70%,35%)] text-white font-bold text-lg px-8 shadow-lg shadow-[hsl(142,70%,40%)]/20 relative overflow-hidden group" asChild>
-              <a href="https://wa.me/201020412358" target="_blank" rel="noopener noreferrer">
+              <a href="https://wa.me/201153961008" target="_blank" rel="noopener noreferrer">
                 <span className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12" />
                 <MessageCircle className="w-5 h-5" />
                 ابدأ محادثة واتساب

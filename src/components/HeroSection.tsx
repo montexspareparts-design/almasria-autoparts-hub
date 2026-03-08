@@ -149,7 +149,7 @@ const HeroSection = () => {
                 className="text-lg px-8 gap-2 border-secondary-foreground/30 text-secondary-foreground hover:bg-secondary-foreground/10 bg-transparent border backdrop-blur-sm"
                 asChild
               >
-                <a href="https://wa.me/201020412358" target="_blank" rel="noopener noreferrer">
+                <a href="https://wa.me/201153961008" target="_blank" rel="noopener noreferrer">
                   <MessageCircle className="w-5 h-5" />
                   تواصل معنا
                 </a>
