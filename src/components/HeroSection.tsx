@@ -1,16 +1,8 @@
-import { motion, useScroll, useTransform, useInView, animate } from "framer-motion";
-import { ArrowLeft, ShieldCheck, Package } from "lucide-react";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { ShieldCheck, FileText, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { useRef, useEffect, useState } from "react";
-import heroBg from "@/assets/hero-bg.jpg";
-
-const floatingVariants = {
-  animate: {
-    y: [0, -10, 0],
-    transition: { duration: 3, repeat: Infinity, ease: "easeInOut" as const },
-  },
-};
+import { useRef } from "react";
+import heroBg from "@/assets/hero-warehouse.jpg";
 
 const staggerContainer = {
   hidden: {},
@@ -22,58 +14,30 @@ const fadeSlideUp = {
   show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] } },
 };
 
-const AnimatedNumber = ({ value, prefix = "", suffix = "" }: { value: number; prefix?: string; suffix?: string }) => {
-  const [display, setDisplay] = useState(0);
-  const numRef = useRef<HTMLSpanElement>(null);
-  const numInView = useInView(numRef, { once: true, margin: "-50px" });
-
-  useEffect(() => {
-    if (!numInView) return;
-    const controls = animate(0, value, {
-      duration: 2,
-      ease: [0.25, 0.46, 0.45, 0.94],
-      onUpdate: (v) => setDisplay(Math.round(v)),
-    });
-    return () => controls.stop();
-  }, [numInView, value]);
-
-  return <span ref={numRef}>{prefix}{display.toLocaleString("ar-EG")}{suffix}</span>;
-};
-
 const HeroSection = () => {
-  const navigate = useNavigate();
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end start"] });
   const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
-  const overlayOpacity = useTransform(scrollYProgress, [0, 0.5], [0.85, 0.95]);
+  const overlayOpacity = useTransform(scrollYProgress, [0, 0.5], [0.82, 0.95]);
 
   return (
     <section ref={sectionRef} id="hero" className="relative min-h-[100svh] flex items-center overflow-hidden">
       {/* Parallax Background */}
       <motion.div className="absolute inset-0" style={{ y: bgY }}>
         <img src={heroBg} alt="مستودع قطع غيار تويوتا" className="w-full h-full object-cover scale-110" loading="eager" />
-        <motion.div className="absolute inset-0 bg-gradient-to-l from-secondary/95 via-secondary/85 to-secondary/50" style={{ opacity: overlayOpacity }} />
+        <motion.div className="absolute inset-0 bg-gradient-to-l from-secondary/95 via-secondary/85 to-secondary/60" style={{ opacity: overlayOpacity }} />
       </motion.div>
 
-      {/* Animated decorative elements */}
+      {/* Decorative glows */}
       <motion.div
-        className="absolute top-20 left-10 w-32 h-32 rounded-full bg-primary/5 blur-3xl"
-        animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
+        className="absolute top-20 left-10 w-40 h-40 rounded-full bg-primary/8 blur-3xl"
+        animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.5, 0.3] }}
         transition={{ duration: 4, repeat: Infinity }}
       />
-      <motion.div
-        className="absolute bottom-20 right-20 w-48 h-48 rounded-full bg-primary/5 blur-3xl"
-        animate={{ scale: [1.2, 1, 1.2], opacity: [0.2, 0.5, 0.2] }}
-        transition={{ duration: 5, repeat: Infinity }}
-      />
 
-      <div className="container mx-auto px-4 relative z-10 pt-16 md:pt-24 pb-6 md:pb-8">
-        <motion.div
-          className="max-w-3xl"
-          variants={staggerContainer}
-          initial="hidden"
-          animate="show"
-        >
+      <div className="container mx-auto px-4 relative z-10 pt-20 md:pt-28 pb-8">
+        <motion.div className="max-w-3xl" variants={staggerContainer} initial="hidden" animate="show">
+          {/* Badge */}
           <motion.div
             variants={fadeSlideUp}
             className="inline-flex items-center gap-2 bg-primary/20 border border-primary/30 rounded-full px-4 py-2 mb-6"
@@ -84,79 +48,62 @@ const HeroSection = () => {
             <span className="text-sm font-semibold text-primary">موزع معتمد رسمي لقطع غيار وزيوت تويوتا الأصلية</span>
           </motion.div>
 
+          {/* Title */}
           <motion.h1
             variants={fadeSlideUp}
-            className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black text-secondary-foreground leading-tight mb-4 md:mb-6"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-secondary-foreground leading-tight mb-5"
           >
-            25 عامًا من الثقة
+            المصرية جروب
             <br />
-            <motion.span
-              className="text-gradient-red inline-block"
-              animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
-              transition={{ duration: 5, repeat: Infinity }}
-              style={{ backgroundSize: "200% 200%" }}
-            >
-              في عالم قطع غيار تويوتا
-            </motion.span>
+            <span className="text-gradient-red">موزع معتمد لقطع غيار تويوتا</span>
+            <br />
+            <span className="text-secondary-foreground/90">الأصلية والزيوت في مصر</span>
           </motion.h1>
 
-          <motion.div variants={fadeSlideUp} className="flex flex-wrap items-center gap-2 sm:gap-3 mb-6 md:mb-10">
-            {["قطع غيار تويوتا أصلي", "زيوت تويوتا أصلي", "MTX Aftermarket"].map((tag, i) => (
-              <motion.span
-                key={tag}
-                initial={{ opacity: 0, scale: 0.8, x: -20 }}
-                animate={{ opacity: 1, scale: 1, x: 0 }}
-                transition={{ delay: 0.6 + i * 0.12, type: "spring", stiffness: 120 }}
-                whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.15)" }}
-                className="bg-white/10 backdrop-blur-sm border border-white/20 text-secondary-foreground/90 text-sm md:text-base px-5 py-2 rounded-full cursor-default transition-colors"
-              >
-                {tag}
-              </motion.span>
-            ))}
-          </motion.div>
+          {/* Description */}
+          <motion.p
+            variants={fadeSlideUp}
+            className="text-secondary-foreground/70 text-base md:text-lg max-w-2xl leading-relaxed mb-8"
+          >
+            خبرة 25 عامًا في توزيع قطع الغيار والزيوت الأصلية وشبكة توزيع تغطي جميع محافظات مصر.
+          </motion.p>
 
+          {/* CTAs */}
           <motion.div variants={fadeSlideUp} className="flex flex-col sm:flex-row gap-4">
+            <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
+              <Button size="lg" className="text-lg px-8 gap-2 red-glow font-bold" asChild>
+                <a href="#contact">
+                  <FileText className="w-5 h-5" />
+                  اطلب عرض سعر
+                </a>
+              </Button>
+            </motion.div>
             <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
               <Button
                 size="lg"
-                className="text-lg px-8 gap-2 border-secondary-foreground/30 text-secondary-foreground hover:bg-secondary-foreground/10 bg-transparent border group"
+                className="text-lg px-8 gap-2 border-secondary-foreground/30 text-secondary-foreground hover:bg-secondary-foreground/10 bg-transparent border"
                 asChild
               >
-                <a href="#products">
-                  <Package className="w-5 h-5 transition-transform group-hover:scale-110" />
-                  استعرض المنتجات
-                  <motion.div animate={{ x: [0, -5, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
-                    <ArrowLeft className="w-5 h-5" />
-                  </motion.div>
+                <a href="https://wa.me/201020412358" target="_blank" rel="noopener noreferrer">
+                  <MessageCircle className="w-5 h-5" />
+                  تواصل معنا
                 </a>
               </Button>
             </motion.div>
           </motion.div>
 
-          {/* Stats */}
-          <motion.div
-            variants={fadeSlideUp}
-            className="grid grid-cols-4 gap-3 sm:gap-8 mt-8 md:mt-12 pt-6 md:pt-8 border-t border-secondary-foreground/10"
-          >
-            {[
-              { num: 25, prefix: "+", label: "سنة خبرة" },
-              { num: 5000, prefix: "+", label: "صنف في المخزون" },
-              { num: 1000, prefix: "+", label: "عميل نشط" },
-              { num: 5, prefix: "", label: "فروع" },
-            ].map((stat, i) => (
-              <motion.div
-                key={stat.label}
-                className="text-center sm:text-right"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.9 + i * 0.1, type: "spring" }}
-                whileHover={{ scale: 1.05 }}
+          {/* Brand tags */}
+          <motion.div variants={fadeSlideUp} className="flex flex-wrap items-center gap-2 sm:gap-3 mt-8">
+            {["قطع غيار تويوتا أصلي", "زيوت تويوتا أصلي", "MTX Aftermarket"].map((tag, i) => (
+              <motion.span
+                key={tag}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.8 + i * 0.12, type: "spring", stiffness: 120 }}
+                className="bg-white/10 backdrop-blur-sm border border-white/20 text-secondary-foreground/90 text-sm px-5 py-2 rounded-full"
               >
-                <div className="text-xl sm:text-2xl md:text-3xl font-black text-primary">
-                  <AnimatedNumber value={stat.num} prefix={stat.prefix} />
-                </div>
-                <div className="text-xs sm:text-sm text-secondary-foreground/60">{stat.label}</div>
-              </motion.div>
+                {tag}
+              </motion.span>
             ))}
           </motion.div>
         </motion.div>
@@ -169,11 +116,7 @@ const HeroSection = () => {
         transition={{ duration: 2, repeat: Infinity }}
       >
         <div className="w-6 h-10 rounded-full border-2 border-secondary-foreground/30 flex justify-center pt-2">
-          <motion.div
-            className="w-1.5 h-1.5 rounded-full bg-primary"
-            animate={{ y: [0, 12, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          />
+          <motion.div className="w-1.5 h-1.5 rounded-full bg-primary" animate={{ y: [0, 12, 0] }} transition={{ duration: 2, repeat: Infinity }} />
         </div>
       </motion.div>
     </section>
