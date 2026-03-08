@@ -2,7 +2,7 @@ import { motion, useInView, useScroll, useTransform } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import {
   Clock, Award, Users, Truck, Monitor, DollarSign, Wrench, Globe,
-  ArrowLeft, MessageCircle, Sparkles, CheckCircle2, Zap,
+  ArrowLeft, MessageCircle, Sparkles, CheckCircle2, Zap, MapPin, Building2, Navigation,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
@@ -354,7 +354,63 @@ const WhatSetsUsApartPage = () => {
         </div>
       </section>
 
-      {/* ===== CTA ===== */}
+      {/* ===== BRANCHES MAP ===== */}
+      <section className="py-20 md:py-28 bg-muted/30 relative overflow-hidden">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-bold mb-4">
+              <MapPin className="w-4 h-4 inline ml-1" />
+              مواقعنا
+            </span>
+            <h2 className="text-3xl md:text-4xl font-black text-foreground mb-3">
+              زُر أقرب <span className="text-primary">فرع</span>
+            </h2>
+            <p className="text-muted-foreground max-w-lg mx-auto">اختر الفرع وافتح الموقع مباشرة على خرائط جوجل</p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-4xl mx-auto">
+            {[
+              { name: "القاهرة – التوفيقية", detail: "سوق التوفيقية لقطع غيار السيارات", icon: Building2, mapQuery: "سوق التوفيقية لقطع غيار السيارات, القاهرة, مصر" },
+              { name: "الجيزة – أوسيم", detail: "أوسيم – الجيزة", icon: Building2, mapQuery: "أوسيم, الجيزة, مصر" },
+              { name: "الأقصر", detail: "صعيد مصر", icon: Building2, mapQuery: "الأقصر, مصر" },
+              { name: "المكتب الإداري", detail: "اللبيني – الجيزة", icon: Building2, mapQuery: "اللبيني, الجيزة, مصر" },
+              { name: "دبي – Spectra Cars & Parts FZC", detail: "مركز إقليمي – الإمارات 🇦🇪", icon: Globe, mapQuery: "Spectra Cars & Parts FZC, Dubai, UAE" },
+            ].map((b, i) => (
+              <motion.a
+                key={b.name}
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(b.mapQuery)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                whileHover={{ scale: 1.03, y: -4 }}
+                className="bg-card border border-border rounded-xl p-5 hover:border-primary/40 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 group"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                    <b.icon className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-bold text-foreground text-sm">{b.name}</h4>
+                    <p className="text-xs text-muted-foreground mt-1">{b.detail}</p>
+                    <span className="inline-flex items-center gap-1.5 mt-2.5 text-xs font-semibold text-primary">
+                      <Navigation className="w-3.5 h-3.5" />
+                      افتح على خرائط جوجل
+                    </span>
+                  </div>
+                </div>
+              </motion.a>
+            ))}
+          </div>
+        </div>
+      </section>
       <section className="py-20 md:py-28 bg-dark-section relative overflow-hidden">
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle, hsl(var(--section-dark-foreground)) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
         <motion.div
