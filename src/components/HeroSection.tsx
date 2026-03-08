@@ -136,7 +136,7 @@ const HeroSection = () => {
           <motion.div variants={fadeSlideUp} className="flex flex-col sm:flex-row gap-4">
             <motion.div whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }}>
               <Button size="lg" className="text-lg px-10 py-6 gap-3 font-bold relative overflow-hidden group bg-gradient-to-l from-primary to-[hsl(355,80%,55%)] text-white shadow-xl shadow-primary/30 hover:shadow-primary/50 hover:shadow-2xl transition-shadow duration-300" asChild>
-                <a href="/#brands">
+                <a href="/products/toyota-genuine">
                   <span className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12" />
                   <Search className="w-5 h-5" />
                   اكتشف منتجاتنا
