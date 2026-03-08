@@ -13,6 +13,7 @@ const ContactSimple = lazy(() => import("@/components/ContactSimple"));
 const Footer = lazy(() => import("@/components/Footer"));
 const WhatsAppFloat = lazy(() => import("@/components/WhatsAppFloat"));
 const BackToTop = lazy(() => import("@/components/BackToTop"));
+const AIChatBot = lazy(() => import("@/components/AIChatBot"));
 
 const SectionFallback = () => (
   <div className="flex items-center justify-center py-20">
@@ -54,6 +55,9 @@ const Index = () => {
       </Suspense>
       <Suspense fallback={null}>
         <BackToTop />
+      </Suspense>
+      <Suspense fallback={null}>
+        <AIChatBot />
       </Suspense>
     </div>
   );
