@@ -1,7 +1,9 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { motion, AnimatePresence } from "framer-motion";
 import { Lock, ShieldCheck, Package, ShoppingCart, Eye, AlertTriangle, Grid3X3, List, ChevronLeft, ChevronRight } from "lucide-react";
+import { BreadcrumbSchema } from "@/components/SEOSchemaMarkup";
 import ProductDetailDialog from "@/components/ProductDetailDialog";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -258,6 +260,11 @@ const ProductsPage = () => {
   if (!config) {
     return (
       <div className="min-h-screen bg-dark-section">
+        <Helmet>
+          <title>منتجاتنا | المصرية جروب — قطع غيار وزيوت تويوتا الأصلية</title>
+          <meta name="description" content="تصفح كتالوج المصرية جروب: قطع غيار تويوتا الأصلية، زيوت تويوتا، MTX Aftermarket، DENSO، و AISIN. أكثر من 960 صنف متاح." />
+          <link rel="canonical" href="https://almasriaautoparts.com/products" />
+        </Helmet>
         <Navbar />
         
         {/* Full-page brands showcase */}
@@ -407,6 +414,16 @@ const ProductsPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>{config.title} | المصرية جروب</title>
+        <meta name="description" content={config.description} />
+        <link rel="canonical" href={`https://almasriaautoparts.com/products/${brand}`} />
+      </Helmet>
+      <BreadcrumbSchema items={[
+        { name: "الرئيسية", url: "https://almasriaautoparts.com/" },
+        { name: "المنتجات", url: "https://almasriaautoparts.com/products" },
+        { name: config.title, url: `https://almasriaautoparts.com/products/${brand}` },
+      ]} />
       <Navbar />
       <BrandHeroBanner
         logo={config.logo}
