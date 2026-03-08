@@ -154,9 +154,8 @@ const ContactSection = () => {
             </motion.div>
           </motion.form>
 
-          {/* Lucky Wheel - Fun element */}
-          <div className="md:hidden mt-8">
-            <LuckyWheel />
+          {/* Lucky Wheel */}
+          <LuckyWheel />
           </div>
 
           <motion.div
