@@ -3,18 +3,16 @@ import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 
 // Lazy load below-fold sections
-const AboutSection = lazy(() => import("@/components/AboutSection"));
-const TrustBanner = lazy(() => import("@/components/TrustBanner"));
-const VideoSection = lazy(() => import("@/components/VideoSection"));
-const ProductsSection = lazy(() => import("@/components/ProductsSection"));
+const FeaturesStrip = lazy(() => import("@/components/FeaturesStrip"));
+const AboutBrief = lazy(() => import("@/components/AboutBrief"));
+const BrandsWeDistribute = lazy(() => import("@/components/BrandsWeDistribute"));
 const WhyUsSection = lazy(() => import("@/components/WhyUsSection"));
-const TestimonialsSection = lazy(() => import("@/components/TestimonialsSection"));
-const FAQSection = lazy(() => import("@/components/FAQSection"));
-const PartnershipsSection = lazy(() => import("@/components/PartnershipsSection"));
-const ContactSection = lazy(() => import("@/components/ContactSection"));
+const DistributionNetwork = lazy(() => import("@/components/DistributionNetwork"));
+const MTXSection = lazy(() => import("@/components/MTXSection"));
+const AccreditationsSection = lazy(() => import("@/components/AccreditationsSection"));
+const ContactSimple = lazy(() => import("@/components/ContactSimple"));
 const Footer = lazy(() => import("@/components/Footer"));
 const WhatsAppFloat = lazy(() => import("@/components/WhatsAppFloat"));
-const AIChatBot = lazy(() => import("@/components/AIChatBot"));
 const BackToTop = lazy(() => import("@/components/BackToTop"));
 
 const SectionFallback = () => (
@@ -29,40 +27,34 @@ const Index = () => {
       <Navbar />
       <HeroSection />
       <Suspense fallback={<SectionFallback />}>
-        <AboutSection />
+        <FeaturesStrip />
       </Suspense>
       <Suspense fallback={<SectionFallback />}>
-        <TrustBanner />
+        <AboutBrief />
       </Suspense>
       <Suspense fallback={<SectionFallback />}>
-        <VideoSection />
-      </Suspense>
-      <Suspense fallback={<SectionFallback />}>
-        <ProductsSection />
+        <BrandsWeDistribute />
       </Suspense>
       <Suspense fallback={<SectionFallback />}>
         <WhyUsSection />
       </Suspense>
       <Suspense fallback={<SectionFallback />}>
-        <TestimonialsSection />
+        <DistributionNetwork />
       </Suspense>
       <Suspense fallback={<SectionFallback />}>
-        <PartnershipsSection />
+        <MTXSection />
       </Suspense>
       <Suspense fallback={<SectionFallback />}>
-        <FAQSection />
+        <AccreditationsSection />
       </Suspense>
       <Suspense fallback={<SectionFallback />}>
-        <ContactSection />
+        <ContactSimple />
       </Suspense>
       <Suspense fallback={null}>
         <Footer />
       </Suspense>
       <Suspense fallback={null}>
         <WhatsAppFloat />
-      </Suspense>
-      <Suspense fallback={null}>
-        <AIChatBot />
       </Suspense>
       <Suspense fallback={null}>
         <BackToTop />
