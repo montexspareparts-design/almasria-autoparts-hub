@@ -19,7 +19,7 @@ const AboutBrief = () => {
             تعرّف علينا
           </span>
           <h2 className="text-3xl md:text-4xl font-black text-foreground mb-3">
-            من <span className="text-primary">نحن</span>
+            من نحن – المصرية جروب لتوزيع قطع غيار تويوتا الأصلية في مصر
           </h2>
           <div className="h-0.5 w-16 bg-primary mx-auto rounded-full" />
         </div>
