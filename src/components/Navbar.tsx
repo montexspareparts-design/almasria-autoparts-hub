@@ -65,14 +65,14 @@ const Navbar = () => {
   const productCategories = [
     { label: "قطع غيار تويوتا أصلي", href: "/products/toyota-genuine" },
     { label: "زيوت تويوتا أصلي", href: "/products/toyota-oils" },
-    { label: "MTX Aftermarket", href: "/products/mtx-aftermarket" },
+    { label: "MTX Aftermarket", href: "/mtx" },
   ];
 
   const links = [
     { label: "الرئيسية", href: "/#hero" },
     { label: "قطع غيار تويوتا أصلي", href: "/products/toyota-genuine", isRoute: true },
     { label: "زيوت تويوتا أصلي", href: "/products/toyota-oils", isRoute: true },
-    { label: "قطع غيار MTX", href: "/products/mtx-aftermarket", isRoute: true },
+    { label: "قطع غيار MTX", href: "/mtx", isRoute: true },
     { label: "ما يميزنا", href: "/what-sets-us-apart", isRoute: true },
     { label: "اتصل بنا", href: "/contact", isRoute: true },
   ];
