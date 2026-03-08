@@ -1,7 +1,7 @@
-import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
+import partsBg from "@/assets/parts-bg.jpg";
 
 interface BrandHeroBannerProps {
   logo: string;
@@ -11,139 +11,13 @@ interface BrandHeroBannerProps {
   badge: string;
 }
 
-const StarField = () => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const resize = () => {
-      canvas.width = canvas.offsetWidth * 2;
-      canvas.height = canvas.offsetHeight * 2;
-      ctx.scale(2, 2);
-    };
-    resize();
-    window.addEventListener("resize", resize);
-
-    interface Star {
-      x: number; y: number; r: number;
-      dx: number; dy: number;
-      opacity: number; pulse: number; speed: number;
-      hue: number;
-    }
-
-    const w = () => canvas.offsetWidth;
-    const h = () => canvas.offsetHeight;
-
-    const stars: Star[] = [];
-    for (let i = 0; i < 90; i++) {
-      stars.push({
-        x: Math.random() * w(),
-        y: Math.random() * h(),
-        r: Math.random() * 1.8 + 0.3,
-        dx: (Math.random() - 0.5) * 0.4,
-        dy: (Math.random() - 0.5) * 0.4,
-        opacity: Math.random() * 0.7 + 0.3,
-        pulse: Math.random() * Math.PI * 2,
-        speed: Math.random() * 0.03 + 0.01,
-        hue: Math.random() > 0.7 ? 355 : Math.random() > 0.5 ? 210 : 40,
-      });
-    }
-
-    let animId: number;
-    const animate = () => {
-      ctx.clearRect(0, 0, w(), h());
-
-      // Draw connection lines between nearby stars
-      for (let i = 0; i < stars.length; i++) {
-        for (let j = i + 1; j < stars.length; j++) {
-          const dist = Math.hypot(stars[i].x - stars[j].x, stars[i].y - stars[j].y);
-          if (dist < 120) {
-            const alpha = (1 - dist / 120) * 0.08;
-            ctx.beginPath();
-            ctx.moveTo(stars[i].x, stars[i].y);
-            ctx.lineTo(stars[j].x, stars[j].y);
-            ctx.strokeStyle = `rgba(235, 50, 70, ${alpha})`;
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
-          }
-        }
-      }
-
-      stars.forEach((s) => {
-        s.x += s.dx;
-        s.y += s.dy;
-        s.pulse += s.speed;
-        const glow = Math.sin(s.pulse) * 0.4 + 0.6;
-
-        if (s.x < -10) s.x = w() + 10;
-        if (s.x > w() + 10) s.x = -10;
-        if (s.y < -10) s.y = h() + 10;
-        if (s.y > h() + 10) s.y = -10;
-
-        const colors: Record<number, string> = {
-          355: "235, 30, 50",
-          210: "100, 160, 230",
-          40: "230, 190, 80",
-        };
-        const rgb = colors[s.hue] || "235, 30, 50";
-
-        // Outer glow
-        const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r * 10);
-        grad.addColorStop(0, `rgba(${rgb}, ${s.opacity * glow * 0.5})`);
-        grad.addColorStop(0.4, `rgba(${rgb}, ${s.opacity * glow * 0.15})`);
-        grad.addColorStop(1, `rgba(${rgb}, 0)`);
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.r * 10, 0, Math.PI * 2);
-        ctx.fillStyle = grad;
-        ctx.fill();
-
-        // Core star
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, 255, ${s.opacity * glow})`;
-        ctx.fill();
-
-        // Cross flare for bigger stars
-        if (s.r > 1.2) {
-          const len = s.r * 5 * glow;
-          ctx.strokeStyle = `rgba(255, 255, 255, ${s.opacity * glow * 0.3})`;
-          ctx.lineWidth = 0.5;
-          ctx.beginPath();
-          ctx.moveTo(s.x - len, s.y);
-          ctx.lineTo(s.x + len, s.y);
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.moveTo(s.x, s.y - len);
-          ctx.lineTo(s.x, s.y + len);
-          ctx.stroke();
-        }
-      });
-
-      animId = requestAnimationFrame(animate);
-    };
-    animate();
-
-    return () => {
-      cancelAnimationFrame(animId);
-      window.removeEventListener("resize", resize);
-    };
-  }, []);
-
-  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />;
-};
-
 const BrandHeroBanner = ({ logo, title, subtitle, description, badge }: BrandHeroBannerProps) => {
   return (
-    <section className="pt-24 pb-14 bg-dark-section relative overflow-hidden">
-      {/* Animated star field */}
-      <StarField />
-
-      {/* Gradient overlays */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[hsl(var(--section-dark))] pointer-events-none" />
+    <section className="pt-24 pb-14 relative overflow-hidden">
+      {/* Background image */}
+      <img src={partsBg} alt="" className="absolute inset-0 w-full h-full object-cover" loading="eager" />
+      <div className="absolute inset-0 bg-secondary/85 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-secondary pointer-events-none" />
       <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-primary/5 to-transparent pointer-events-none" />
 
       <div className="container mx-auto px-4 relative z-10">
