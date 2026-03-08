@@ -67,7 +67,8 @@ const VideoSection = () => {
         <motion.div
           className="max-w-4xl mx-auto"
           initial={{ opacity: 0, scale: 0.92 }}
-          animate={inView ? { opacity: 1, scale: 1 } : {}}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
           transition={{ duration: 0.7, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] }}
         >
           <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-secondary-foreground/10 group">
