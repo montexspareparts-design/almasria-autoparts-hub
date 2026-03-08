@@ -69,6 +69,7 @@ const ContactSection = () => {
             <ContactForm />
             <CarQuiz />
             <SpeedometerDashboard />
+            <ProductCompare />
           </div>
 
           {/* Left Column - Info + Branches */}
