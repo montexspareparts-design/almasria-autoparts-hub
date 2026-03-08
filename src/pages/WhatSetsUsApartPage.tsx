@@ -256,6 +256,10 @@ const WhatSetsUsApartPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>ما يميزنا | خبرة 25 عامًا في قطاع قطع الغيار</title>
+        <meta name="description" content="تعرف على مميزات المصرية جروب: موزع معتمد، شبكة واسعة، نظام ERP، وانضباط سعري." />
+      </Helmet>
       <Navbar />
 
       {/* ===== HERO ===== */}
