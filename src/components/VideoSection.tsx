@@ -6,10 +6,9 @@ import { supabase } from "@/integrations/supabase/client";
 
 const VideoSection = () => {
   const ref = useRef<HTMLElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-100px" });
   const [playing, setPlaying] = useState(false);
 
-  const { data: videoId } = useQuery({
+  const { data: videoId, isLoading } = useQuery({
     queryKey: ["site-setting", "video_youtube_id"],
     queryFn: async () => {
       const { data } = await (supabase as any)
@@ -21,6 +20,9 @@ const VideoSection = () => {
     },
   });
 
+  const inView = useInView(ref, { once: true, margin: "-100px" });
+
+  if (isLoading) return null;
   if (!videoId) return null;
 
   return (
