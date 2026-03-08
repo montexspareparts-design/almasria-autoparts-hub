@@ -253,71 +253,150 @@ const ProductsPage = () => {
 
   if (!config) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-dark-section">
         <Navbar />
-        {/* Brands Landing Hero */}
-        <section className="pt-28 pb-16 bg-dark-section relative overflow-hidden">
-          <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "linear-gradient(hsl(var(--section-dark-foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--section-dark-foreground)) 1px, transparent 1px)", backgroundSize: "80px 80px" }} />
-          <motion.div className="absolute top-10 right-[10%] w-[500px] h-[500px] rounded-full bg-primary/[0.06] blur-[150px]" animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 8, repeat: Infinity }} />
-          <div className="container mx-auto px-4 relative z-10 text-center">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <span className="inline-block px-4 py-1.5 rounded-full bg-primary/15 text-primary text-sm font-bold mb-4">
-                <Package className="w-4 h-4 inline ml-1" />
-                منتجاتنا
-              </span>
-              <h1 className="text-4xl md:text-6xl font-black text-[hsl(var(--section-dark-foreground))] mb-4">
-                اختر <span className="shimmer-text">العلامة التجارية</span>
-              </h1>
-              <p className="text-[hsl(var(--section-dark-foreground))]/60 max-w-lg mx-auto">
-                نوزع أفضل العلامات التجارية في عالم قطع غيار السيارات والزيوت
-              </p>
-            </motion.div>
+        
+        {/* Full-page brands showcase */}
+        <section className="min-h-screen pt-24 pb-20 relative overflow-hidden flex flex-col">
+          {/* Background effects */}
+          <div className="absolute inset-0">
+            <motion.div className="absolute top-20 right-[5%] w-[600px] h-[600px] rounded-full bg-primary/[0.05] blur-[180px]" animate={{ scale: [1, 1.3, 1], x: [0, 40, 0] }} transition={{ duration: 10, repeat: Infinity }} />
+            <motion.div className="absolute bottom-20 left-[5%] w-[400px] h-[400px] rounded-full bg-[hsl(var(--gold-accent))]/[0.04] blur-[140px]" animate={{ scale: [1.2, 1, 1.2] }} transition={{ duration: 12, repeat: Infinity }} />
           </div>
-        </section>
 
-        {/* Brands Grid */}
-        <section className="py-20">
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
-              {allBrands.map((b, i) => (
-                <motion.div
-                  key={b.to}
-                  initial={{ opacity: 0, y: 40, scale: 0.9 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ delay: i * 0.1, type: "spring", stiffness: 80 }}
-                >
-                  <Link
-                    to={b.to}
-                    className="group block bg-card rounded-2xl border border-border hover:border-primary/40 overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/15 hover:-translate-y-2"
+          <div className="container mx-auto px-4 relative z-10 flex-1 flex flex-col justify-center">
+            {/* Header */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7 }}
+              className="text-center mb-16"
+            >
+              <motion.span
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 }}
+                className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-primary/12 border border-primary/20 text-primary text-sm font-bold mb-6 backdrop-blur-sm"
+              >
+                <Package className="w-4 h-4" />
+                5 علامات تجارية معتمدة
+              </motion.span>
+              <h1 className="text-5xl md:text-7xl font-black text-[hsl(var(--section-dark-foreground))] mb-5 tracking-tight leading-[1.1]">
+                اكتشف <span className="shimmer-text">منتجاتنا</span>
+              </h1>
+              <p className="text-[hsl(var(--section-dark-foreground))]/50 text-lg max-w-xl mx-auto leading-relaxed">
+                اختر العلامة التجارية وتصفح جميع المنتجات المتاحة
+              </p>
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: "6rem" }}
+                transition={{ duration: 1, delay: 0.5 }}
+                className="h-1 bg-gradient-to-l from-primary to-[hsl(var(--gold-accent))] mx-auto rounded-full mt-6"
+              />
+            </motion.div>
+
+            {/* Premium Brands Grid - Top row 3, bottom row 2 centered */}
+            <div className="max-w-5xl mx-auto w-full">
+              {/* Top row - 3 brands */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
+                {allBrands.slice(0, 3).map((b, i) => (
+                  <motion.div
+                    key={b.to}
+                    initial={{ opacity: 0, y: 50, rotateX: -10 }}
+                    animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                    transition={{ delay: 0.3 + i * 0.12, type: "spring", stiffness: 70 }}
                   >
-                    <div className="bg-white p-8 flex items-center justify-center aspect-[3/2] relative overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/0 group-hover:from-primary/5 group-hover:to-primary/10 transition-all duration-500" />
-                      <motion.img
-                        src={b.image}
-                        alt={b.label}
-                        className={`relative z-10 max-h-24 w-auto object-contain ${b.scale}`}
-                        whileHover={{ scale: 1.1 }}
-                        transition={{ duration: 0.3 }}
-                      />
-                    </div>
-                    <div className="p-5 text-center border-t border-border">
-                      <h3 className="font-bold text-foreground text-lg mb-1">{b.label}</h3>
-                      <p className="text-sm text-muted-foreground">{b.labelEn}</p>
-                      <motion.div
-                        className="mt-3 inline-flex items-center gap-1.5 text-primary text-sm font-semibold"
-                        whileHover={{ x: -5 }}
-                      >
-                        تصفح المنتجات
-                        <ChevronLeft className="w-4 h-4" />
-                      </motion.div>
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
+                    <Link
+                      to={b.to}
+                      className="group block relative rounded-2xl overflow-hidden transition-all duration-500 hover:-translate-y-3"
+                    >
+                      {/* Card with glass effect */}
+                      <div className="bg-[hsl(var(--section-dark-foreground))]/[0.06] backdrop-blur-md border border-[hsl(var(--section-dark-foreground))]/10 hover:border-primary/40 rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20">
+                        {/* Top accent line */}
+                        <motion.div
+                          className="h-1 bg-gradient-to-r from-primary via-[hsl(var(--gold-accent))] to-primary"
+                          initial={{ scaleX: 0 }}
+                          animate={{ scaleX: 1 }}
+                          transition={{ delay: 0.6 + i * 0.15, duration: 0.8 }}
+                        />
+                        
+                        {/* Logo area */}
+                        <div className="bg-white/95 mx-4 mt-4 rounded-xl p-6 flex items-center justify-center aspect-[3/2] relative overflow-hidden group-hover:shadow-lg transition-shadow duration-500">
+                          <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/0 group-hover:from-primary/5 group-hover:to-primary/8 transition-all duration-500" />
+                          <motion.div
+                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"
+                          />
+                          <motion.img
+                            src={b.image}
+                            alt={b.label}
+                            className={`relative z-10 max-h-20 w-auto object-contain ${b.scale}`}
+                            whileHover={{ scale: 1.08 }}
+                            transition={{ duration: 0.3 }}
+                          />
+                        </div>
+
+                        {/* Info */}
+                        <div className="p-5 text-center">
+                          <h3 className="font-bold text-[hsl(var(--section-dark-foreground))] text-base mb-1">{b.label}</h3>
+                          <p className="text-xs text-[hsl(var(--section-dark-foreground))]/40 mb-3">{b.labelEn}</p>
+                          <span className="inline-flex items-center gap-1.5 text-primary text-sm font-semibold group-hover:gap-3 transition-all duration-300">
+                            تصفح المنتجات
+                            <ChevronLeft className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1" />
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Bottom row - 2 brands centered */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
+                {allBrands.slice(3).map((b, i) => (
+                  <motion.div
+                    key={b.to}
+                    initial={{ opacity: 0, y: 50, rotateX: -10 }}
+                    animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                    transition={{ delay: 0.65 + i * 0.12, type: "spring", stiffness: 70 }}
+                  >
+                    <Link
+                      to={b.to}
+                      className="group block relative rounded-2xl overflow-hidden transition-all duration-500 hover:-translate-y-3"
+                    >
+                      <div className="bg-[hsl(var(--section-dark-foreground))]/[0.06] backdrop-blur-md border border-[hsl(var(--section-dark-foreground))]/10 hover:border-primary/40 rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20">
+                        <motion.div
+                          className="h-1 bg-gradient-to-r from-primary via-[hsl(var(--gold-accent))] to-primary"
+                          initial={{ scaleX: 0 }}
+                          animate={{ scaleX: 1 }}
+                          transition={{ delay: 0.8 + i * 0.15, duration: 0.8 }}
+                        />
+                        <div className="bg-white/95 mx-4 mt-4 rounded-xl p-6 flex items-center justify-center aspect-[3/2] relative overflow-hidden group-hover:shadow-lg transition-shadow duration-500">
+                          <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/0 group-hover:from-primary/5 group-hover:to-primary/8 transition-all duration-500" />
+                          <motion.div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                          <motion.img
+                            src={b.image}
+                            alt={b.label}
+                            className={`relative z-10 max-h-20 w-auto object-contain ${b.scale}`}
+                            whileHover={{ scale: 1.08 }}
+                            transition={{ duration: 0.3 }}
+                          />
+                        </div>
+                        <div className="p-5 text-center">
+                          <h3 className="font-bold text-[hsl(var(--section-dark-foreground))] text-base mb-1">{b.label}</h3>
+                          <p className="text-xs text-[hsl(var(--section-dark-foreground))]/40 mb-3">{b.labelEn}</p>
+                          <span className="inline-flex items-center gap-1.5 text-primary text-sm font-semibold group-hover:gap-3 transition-all duration-300">
+                            تصفح المنتجات
+                            <ChevronLeft className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1" />
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
-        <Footer />
       </div>
     );
   }
