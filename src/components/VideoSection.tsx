@@ -2,6 +2,9 @@ import { motion, useInView } from "framer-motion";
 import { Play, X } from "lucide-react";
 import { useRef, useState } from "react";
 
+// ✏️ غيّر الرابط هنا فقط لتغيير الفيديو
+const YOUTUBE_VIDEO_ID = "i0l9gnTDjyc";
+
 const VideoSection = () => {
   const ref = useRef<HTMLElement>(null);
   const inView = useInView(ref, { once: true, margin: "-100px" });
