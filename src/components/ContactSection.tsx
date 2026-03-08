@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Phone, Mail, MapPin, MessageCircle, Send, Clock } from "lucide-react";
+import LuckyWheel from "./LuckyWheel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -90,6 +91,8 @@ const ContactSection = () => {
         </motion.div>
 
         <div className="grid md:grid-cols-2 gap-12">
+          {/* Form + Lucky Wheel */}
+          <div className="space-y-8">
           {/* Form */}
           <motion.form
             initial={{ opacity: 0, x: -40 }}
@@ -151,7 +154,10 @@ const ContactSection = () => {
             </motion.div>
           </motion.form>
 
-          {/* Contact Info */}
+          {/* Lucky Wheel */}
+          <LuckyWheel />
+          </div>
+
           <motion.div
             initial={{ opacity: 0, x: 40 }}
             whileInView={{ opacity: 1, x: 0 }}
