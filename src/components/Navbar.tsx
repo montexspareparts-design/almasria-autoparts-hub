@@ -164,10 +164,14 @@ const Navbar = () => {
                 <motion.div key={link.href} whileHover={{ y: -1 }}>
                   <Link
                     to={link.href}
-                    className="text-sm font-medium text-secondary-foreground/80 hover:text-primary transition-colors relative group"
+                    className={`text-sm font-medium transition-colors relative group ${
+                      isLinkActive(link.href, true) ? "text-primary" : "text-secondary-foreground/80 hover:text-primary"
+                    }`}
                   >
                     {link.label}
-                    <span className="absolute -bottom-1 right-0 w-0 h-[2px] bg-primary rounded-full transition-all duration-300 group-hover:w-full" />
+                    <span className={`absolute -bottom-1 right-0 h-[2px] bg-primary rounded-full transition-all duration-300 ${
+                      isLinkActive(link.href, true) ? "w-full" : "w-0 group-hover:w-full"
+                    }`} />
                   </Link>
                 </motion.div>
               ) : (
