@@ -111,7 +111,7 @@ const VideoSection = () => {
             ) : (
               <div className="relative aspect-video">
                 <iframe
-                  src="https://www.youtube.com/embed/i0l9gnTDjyc?autoplay=1&rel=0&modestbranding=1"
+                  src={`https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}?autoplay=1&rel=0&modestbranding=1`}
                   title="فيديو المصرية جروب"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
