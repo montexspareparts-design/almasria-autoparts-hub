@@ -62,14 +62,28 @@ const Auth = () => {
     if (isLogin) {
       const { error } = await supabase.auth.signInWithPassword({ email: authEmail, password });
       if (error) {
-        toast({
-          title: "خطأ في تسجيل الدخول",
-          description: authMethod === "phone"
-            ? "رقم الهاتف أو كلمة المرور غير صحيحة"
-            : "البريد الإلكتروني أو كلمة المرور غير صحيحة",
-          variant: "destructive",
-        });
+        const attempts = loginAttempts + 1;
+        setLoginAttempts(attempts);
+        if (attempts >= MAX_LOGIN_ATTEMPTS) {
+          setLockedUntil(Date.now() + LOCKOUT_DURATION);
+          setLoginAttempts(0);
+          toast({
+            title: "تم تجاوز عدد المحاولات",
+            description: "تم قفل تسجيل الدخول مؤقتًا لمدة دقيقة",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "خطأ في تسجيل الدخول",
+            description: authMethod === "phone"
+              ? "رقم الهاتف أو كلمة المرور غير صحيحة"
+              : "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+            variant: "destructive",
+          });
+        }
       } else {
+        setLoginAttempts(0);
+        setLockedUntil(null);
         toast({ title: "تم تسجيل الدخول بنجاح" });
         navigate("/");
       }
