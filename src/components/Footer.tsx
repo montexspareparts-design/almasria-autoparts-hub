@@ -4,6 +4,7 @@ import logo from "@/assets/logo.png";
 
 const quickLinks = [
   { label: "الرئيسية", href: "/" },
+  { label: "قطع غيار تويوتا الأصلية في مصر", href: "/toyota-genuine-parts-egypt" },
   { label: "قطع غيار تويوتا", href: "/products/toyota-genuine" },
   { label: "زيوت تويوتا", href: "/products/toyota-oils" },
   { label: "MTX Aftermarket", href: "/mtx" },
