@@ -216,27 +216,6 @@ const Navbar = () => {
 
           {/* Desktop right buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <motion.button
-              onClick={() => navigate("/cart")}
-              className="relative text-secondary-foreground/80 hover:text-primary transition-colors p-2"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              <ShoppingCart className="w-5 h-5" />
-              <AnimatePresence>
-                {itemCount > 0 && (
-                  <motion.span
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    exit={{ scale: 0 }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                    className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center"
-                  >
-                    {itemCount}
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </motion.button>
             <NotificationBell />
             {user ? (
               <>
