@@ -19,10 +19,7 @@ const VideoSection = () => {
     },
   });
 
-  const inView = useInView(ref, { once: true, margin: "-100px" });
-
-  if (isLoading) return null;
-  if (!videoId) return null;
+  if (isLoading || !videoId) return null;
 
   return (
     <section ref={ref} className="relative py-24 overflow-hidden bg-secondary">
