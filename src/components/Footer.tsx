@@ -140,7 +140,7 @@ const Footer = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.3 }}
-            className="md:col-span-3"
+            className="md:col-span-3 order-2 md:order-4"
           >
             <h4 className="font-bold text-sm mb-5 text-secondary-foreground/80">تواصل معنا</h4>
             <ul className="space-y-4">
