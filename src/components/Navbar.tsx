@@ -191,7 +191,9 @@ const Navbar = () => {
                   }}
                 >
                   {link.label}
-                  <span className="absolute -bottom-1 right-0 w-0 h-[2px] bg-primary rounded-full transition-all duration-300 group-hover:w-full" />
+                  <span className={`absolute -bottom-1 right-0 h-[2px] bg-primary rounded-full transition-all duration-300 ${
+                    isLinkActive(link.href) ? "w-full" : "w-0 group-hover:w-full"
+                  }`} />
                 </motion.a>
               )
             )}
