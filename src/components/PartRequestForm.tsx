@@ -1,11 +1,13 @@
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Send, MessageCircle, Upload, X, Car, Hash, Calendar, User, Phone } from "lucide-react";
+import { Send, MessageCircle, Upload, X, Car, Hash, Calendar, User, Phone, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { trackLeadFormSubmit, trackClickWhatsApp } from "@/lib/analytics";
 
 interface PartRequestFormProps {
   defaultModel?: string;
@@ -30,6 +32,7 @@ const PartRequestForm = ({ defaultModel, compact }: PartRequestFormProps) => {
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,11 +64,36 @@ const PartRequestForm = ({ defaultModel, compact }: PartRequestFormProps) => {
       return;
     }
     setSending(true);
-    await new Promise(r => setTimeout(r, 1200));
-    toast.success("تم إرسال طلبك بنجاح! سنتواصل معك قريبًا.");
-    setForm({ name: "", phone: "", model: defaultModel || "", year: "", vin: "", notes: "" });
-    removeImage();
-    setSending(false);
+
+    try {
+      // Save to database
+      const { error } = await supabase.from("part_requests" as any).insert({
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+        model: form.model || null,
+        year: form.year || null,
+        vin: form.vin || null,
+        notes: form.notes || null,
+      });
+
+      if (error) throw error;
+
+      // Track conversion
+      trackLeadFormSubmit("part_request", form.model);
+
+      setSubmitted(true);
+      toast.success("تم إرسال طلبك بنجاح! سنتواصل معك قريبًا.");
+      setForm({ name: "", phone: "", model: defaultModel || "", year: "", vin: "", notes: "" });
+      removeImage();
+
+      // Reset success state after 8 seconds
+      setTimeout(() => setSubmitted(false), 8000);
+    } catch (err) {
+      console.error("Error submitting part request:", err);
+      toast.error("حدث خطأ أثناء الإرسال. يرجى المحاولة مرة أخرى أو التواصل عبر واتساب.");
+    } finally {
+      setSending(false);
+    }
   };
 
   const whatsappMessage = encodeURIComponent(
@@ -75,6 +103,32 @@ const PartRequestForm = ({ defaultModel, compact }: PartRequestFormProps) => {
     `رقم الشاسيه: ${form.vin || "—"}\n` +
     `ملاحظات: ${form.notes || "—"}`
   );
+
+  if (submitted) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-card border border-primary/20 rounded-2xl p-8 md:p-10 shadow-lg text-center"
+      >
+        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+          <CheckCircle className="w-8 h-8 text-primary" />
+        </div>
+        <h3 className="text-xl font-bold text-foreground mb-2">تم استلام طلبك بنجاح ✓</h3>
+        <p className="text-muted-foreground text-sm mb-6">فريقنا سيتواصل معك خلال ساعات عمل قليلة لتأكيد توفر القطعة والسعر.</p>
+        <Button
+          variant="outline"
+          className="gap-2 border-green-500/30 text-green-600"
+          asChild
+        >
+          <a href={`https://wa.me/201020412358?text=${whatsappMessage}`} target="_blank" rel="noopener noreferrer" onClick={() => trackClickWhatsApp("form_success")}>
+            <MessageCircle className="w-4 h-4" />
+            تواصل عبر واتساب للاستعجال
+          </a>
+        </Button>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -203,7 +257,7 @@ const PartRequestForm = ({ defaultModel, compact }: PartRequestFormProps) => {
             </Label>
             {imagePreview ? (
               <div className="relative inline-block">
-                <img src={imagePreview} alt="معاينة" className="h-24 w-24 object-cover rounded-lg border border-border" />
+                <img src={imagePreview} alt="معاينة صورة القطعة المطلوبة" className="h-24 w-24 object-cover rounded-lg border border-border" />
                 <button
                   type="button"
                   onClick={removeImage}
@@ -241,7 +295,7 @@ const PartRequestForm = ({ defaultModel, compact }: PartRequestFormProps) => {
             disabled={sending}
           >
             <Send className="w-4 h-4" />
-            {sending ? "جاري الإرسال..." : "إرسال الطلب"}
+            {sending ? "جاري الإرسال..." : "اطلب القطعة الآن"}
           </Button>
           <Button
             type="button"
@@ -251,12 +305,13 @@ const PartRequestForm = ({ defaultModel, compact }: PartRequestFormProps) => {
             asChild
           >
             <a
-              href={`https://wa.me/201153961008?text=${whatsappMessage}`}
+              href={`https://wa.me/201020412358?text=${whatsappMessage}`}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackClickWhatsApp("part_request_form")}
             >
               <MessageCircle className="w-4 h-4" />
-              تواصل عبر واتساب
+              تحدث عبر واتساب
             </a>
           </Button>
         </div>
