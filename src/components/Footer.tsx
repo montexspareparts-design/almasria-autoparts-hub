@@ -7,7 +7,7 @@ const quickLinks = [
   { label: "الرئيسية", href: "/#hero" },
   { label: "قطع غيار تويوتا أصلي", href: "/products/toyota-genuine" },
   { label: "زيوت تويوتا أصلي", href: "/products/toyota-oils" },
-  { label: "قطع غيار MTX", href: "/products/mtx-aftermarket" },
+  { label: "قطع غيار MTX", href: "/mtx" },
   { label: "ما يميزنا", href: "/what-sets-us-apart" },
   { label: "اتصل بنا", href: "/contact" },
 ];

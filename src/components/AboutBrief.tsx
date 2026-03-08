@@ -45,7 +45,7 @@ const AboutBrief = () => {
             <Link to="/products/toyota-genuine" className="text-primary hover:underline font-semibold">قطع غيار تويوتا الأصلية</Link>
             {" "}و<Link to="/products/toyota-oils" className="text-primary hover:underline font-semibold">الزيوت المعتمدة</Link>
             {" "}ومنتجات{" "}
-            <Link to="/products/mtx-aftermarket" className="text-primary hover:underline font-semibold">MTX الأفترماركت</Link>
+            <Link to="/mtx" className="text-primary hover:underline font-semibold">MTX الأفترماركت</Link>
             {" "}بجودة موثوقة.
           </p>
           <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>

@@ -26,7 +26,7 @@ const categories = [
 const brands = [
   { label: "قطع غيار تويوتا الأصلية", image: brandGenuineParts, to: "/products/toyota-genuine", imgScale: "scale-100" },
   { label: "زيوت تويوتا الأصلية", image: brandToyotaOil, to: "/products/toyota-oils", imgScale: "scale-150" },
-  { label: "MTX Aftermarket", image: brandMtx, to: "/products/mtx-aftermarket", imgScale: "scale-150" },
+  { label: "MTX Aftermarket", image: brandMtx, to: "/mtx", imgScale: "scale-150" },
 ];
 
 // Glowing particles component

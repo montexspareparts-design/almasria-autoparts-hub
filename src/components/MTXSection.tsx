@@ -79,7 +79,7 @@ const MTXSection = () => {
 
             <motion.div whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }}>
               <Button size="lg" className="gap-2 red-glow font-bold relative overflow-hidden group" asChild>
-                <Link to="/products/mtx-aftermarket">
+                <Link to="/mtx">
                   <span className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12" />
                   اكتشف MTX
                   <ArrowLeft className="w-4 h-4" />
