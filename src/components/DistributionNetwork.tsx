@@ -115,7 +115,7 @@ const DistributionNetwork = () => {
               <Truck className="w-5 h-5 text-primary" />
             </motion.div>
             <div className="relative z-10">
-              <h4 className="font-bold text-[hsl(var(--section-dark-foreground))] text-sm">تسليم سريع</h4>
+              <h3 className="font-bold text-[hsl(var(--section-dark-foreground))] text-sm">تسليم سريع</h3>
               <p className="text-xs text-[hsl(var(--section-dark-foreground))]/60 mt-1">48 ساعة داخل مصر</p>
             </div>
           </motion.div>
