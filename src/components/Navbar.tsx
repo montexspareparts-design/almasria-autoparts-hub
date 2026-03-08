@@ -28,10 +28,39 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [productsOpen, setProductsOpen] = useState(false);
   const [mobileProductsOpen, setMobileProductsOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>("hero");
   const productsTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user, isDealer, isAdmin, signOut } = useAuth();
   const { itemCount } = useCart();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Track active section via IntersectionObserver on homepage
+  useEffect(() => {
+    if (location.pathname !== "/") return;
+
+    const sectionIds = ["hero", "brands", "distribution"];
+    const observers: IntersectionObserver[] = [];
+
+    sectionIds.forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const observer = new IntersectionObserver(
+        ([entry]) => { if (entry.isIntersecting) setActiveSection(id); },
+        { threshold: 0.3, rootMargin: "-80px 0px 0px 0px" }
+      );
+      observer.observe(el);
+      observers.push(observer);
+    });
+
+    return () => observers.forEach((o) => o.disconnect());
+  }, [location.pathname]);
+
+  const isLinkActive = (href: string, isRoute?: boolean) => {
+    if (isRoute) return location.pathname === href;
+    const hash = href.replace("/", "").replace("#", "");
+    return location.pathname === "/" && activeSection === hash;
+  };
 
   const productCategories = [
     { label: "قطع غيار تويوتا أصلي", href: "/products/toyota-genuine" },
