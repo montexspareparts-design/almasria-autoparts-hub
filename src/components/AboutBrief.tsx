@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const AboutBrief = () => {
   return (
@@ -40,7 +41,12 @@ const AboutBrief = () => {
           className="max-w-3xl mx-auto text-center"
         >
           <p className="text-muted-foreground text-base md:text-lg leading-[2] mb-8">
-            المصرية جروب هي مجموعة توزيع سيارات رائدة تعمل منذ أكثر من 25 عامًا، وتقدم قطع غيار تويوتا الأصلية والزيوت المعتمدة ومنتجات MTX الأفترماركت بجودة موثوقة.
+            المصرية جروب هي مجموعة توزيع سيارات رائدة تعمل منذ أكثر من 25 عامًا، وتقدم{" "}
+            <Link to="/products?brand=toyota-genuine" className="text-primary hover:underline font-semibold">قطع غيار تويوتا الأصلية</Link>
+            {" "}و<Link to="/products?brand=toyota-oils" className="text-primary hover:underline font-semibold">الزيوت المعتمدة</Link>
+            {" "}ومنتجات{" "}
+            <Link to="/products?brand=mtx-aftermarket" className="text-primary hover:underline font-semibold">MTX الأفترماركت</Link>
+            {" "}بجودة موثوقة.
           </p>
           <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
             <Button variant="outline" size="lg" className="gap-2 font-bold" asChild>

@@ -44,8 +44,8 @@ const Navbar = () => {
     { label: "من نحن", href: "#about" },
     { label: "المنتجات", href: "#products" },
     { label: "لماذا نحن", href: "#why-us" },
-    { label: "الشراكات", href: "#partnerships" },
-    { label: "تواصل معنا", href: "#contact" },
+    { label: "فروعنا", href: "#branches" },
+    { label: "تواصل معنا", href: "/contact", isRoute: true },
   ];
 
   return (
@@ -128,6 +128,16 @@ const Navbar = () => {
                     )}
                   </AnimatePresence>
                 </div>
+              ) : (link as any).isRoute ? (
+                <motion.div key={link.href} whileHover={{ y: -1 }}>
+                  <Link
+                    to={link.href}
+                    className="text-sm font-medium text-secondary-foreground/80 hover:text-primary transition-colors relative group"
+                  >
+                    {link.label}
+                    <span className="absolute -bottom-1 right-0 w-0 h-[2px] bg-primary rounded-full transition-all duration-300 group-hover:w-full" />
+                  </Link>
+                </motion.div>
               ) : (
                 <motion.a
                   key={link.href}
@@ -279,6 +289,22 @@ const Navbar = () => {
                       )}
                     </AnimatePresence>
                   </div>
+                ) : (link as any).isRoute ? (
+                  <motion.div
+                    key={link.href}
+                    custom={i}
+                    initial="hidden"
+                    animate="visible"
+                    variants={linkVariants}
+                  >
+                    <Link
+                      to={link.href}
+                      className="block py-3 text-sm font-medium text-secondary-foreground/80 hover:text-primary transition-colors"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      {link.label}
+                    </Link>
+                  </motion.div>
                 ) : (
                   <motion.a
                     key={link.href}
