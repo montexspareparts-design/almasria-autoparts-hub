@@ -5,6 +5,7 @@ import HeroSection from "@/components/HeroSection";
 
 const AboutBrief = lazy(() => import("@/components/AboutBrief"));
 const WhoWeServe = lazy(() => import("@/components/WhoWeServe"));
+const KeyMetrics = lazy(() => import("@/components/KeyMetrics"));
 const DistributionSegments = lazy(() => import("@/components/DistributionSegments"));
 const DistributionNetwork = lazy(() => import("@/components/DistributionNetwork"));
 const MTXSection = lazy(() => import("@/components/MTXSection"));
@@ -43,6 +44,7 @@ const Index = () => {
       <Navbar />
       <HeroSection />
       <Suspense fallback={<SectionFallback />}><AboutBrief /></Suspense>
+      <Suspense fallback={<SectionFallback />}><KeyMetrics /></Suspense>
       <Suspense fallback={<SectionFallback />}><WhoWeServe /></Suspense>
       <Suspense fallback={<SectionFallback />}><DistributionSegments /></Suspense>
       <Suspense fallback={<SectionFallback />}><DistributionNetwork /></Suspense>
