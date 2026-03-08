@@ -29,6 +29,10 @@ const ContactPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>اتصل بنا | المصرية جروب — موزع قطع غيار تويوتا</title>
+        <meta name="description" content="تواصل مع المصرية جروب عبر الهاتف أو البريد أو واتساب. فروعنا في القاهرة والجيزة والأقصر ودبي." />
+      </Helmet>
       <Navbar />
 
       {/* Hero */}
