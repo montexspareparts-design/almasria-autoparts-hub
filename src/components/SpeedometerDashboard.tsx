@@ -1,6 +1,6 @@
-import { motion, useMotionValue, useTransform, animate } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
-import { Users, Package, MapPin, Award, Gauge } from "lucide-react";
+import { motion } from "framer-motion";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Users, Package, MapPin, Award, Gauge, Volume2, VolumeX } from "lucide-react";
 
 interface StatItem {
   label: string;
