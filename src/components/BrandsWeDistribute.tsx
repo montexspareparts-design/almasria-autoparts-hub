@@ -4,11 +4,15 @@ import { ChevronLeft } from "lucide-react";
 import brandGenuineParts from "@/assets/brand-genuine-parts.png";
 import brandToyotaOil from "@/assets/brand-toyota-oil.png";
 import brandMtx from "@/assets/brand-mtx.jpg";
+import brandDenso from "@/assets/brand-denso.png";
+import brandAisin from "@/assets/brand-aisin.png";
 
 const brands = [
   { label: "Toyota Genuine Parts", labelAr: "قطع غيار تويوتا الأصلية", image: brandGenuineParts, to: "/products/toyota-genuine", scale: "scale-100" },
   { label: "Toyota Genuine Lubricants", labelAr: "زيوت تويوتا الأصلية", image: brandToyotaOil, to: "/products/toyota-oils", scale: "scale-150" },
-  { label: "MTX Aftermarket", labelAr: "MTX — علامتنا الخاصة", image: brandMtx, to: "/mtx", scale: "scale-150" },
+  { label: "MTX Aftermarket", labelAr: "MTX — علامتنا الخاصة", image: brandMtx, to: "/products/mtx-aftermarket", scale: "scale-150" },
+  { label: "DENSO", labelAr: "دينسو", image: brandDenso, to: "/products/denso", scale: "scale-100" },
+  { label: "AISIN", labelAr: "أيسن", image: brandAisin, to: "/products/aisin", scale: "scale-100" },
 ];
 
 const BrandsWeDistribute = () => {
@@ -42,15 +46,15 @@ const BrandsWeDistribute = () => {
           />
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-4xl mx-auto">
+        <div className="flex flex-wrap justify-center gap-8 max-w-5xl mx-auto">
           {brands.map((b, i) => (
             <motion.div
               key={b.label}
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.15, type: "spring", stiffness: 80 }}
-              className="flex flex-col items-center gap-4"
+              transition={{ delay: i * 0.12, type: "spring" as const, stiffness: 80 }}
+              className="flex flex-col items-center gap-4 w-[calc(33.333%-2rem)] sm:w-[calc(33.333%-2rem)] min-w-[200px]"
             >
               <Link
                 to={b.to}
