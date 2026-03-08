@@ -1,12 +1,12 @@
 import { motion } from "framer-motion";
-import { MapPin, Building2, Globe, Truck } from "lucide-react";
+import { MapPin, Building2, Globe, Truck, Navigation } from "lucide-react";
 
 const branches = [
-  { name: "القاهرة – التوفيقية", detail: "سوق التوفيقية لقطع غيار السيارات", icon: Building2 },
-  { name: "الجيزة – أوسيم", detail: "أوسيم – الجيزة", icon: Building2 },
-  { name: "الأقصر", detail: "صعيد مصر", icon: Building2 },
-  { name: "المكتب الإداري", detail: "اللبيني – الجيزة", icon: Building2 },
-  { name: "دبي – Spectra Cars & Parts FZC", detail: "مركز إقليمي – الإمارات 🇦🇪", icon: Globe },
+  { name: "القاهرة – التوفيقية", detail: "سوق التوفيقية لقطع غيار السيارات", icon: Building2, mapQuery: "سوق التوفيقية لقطع غيار السيارات, القاهرة, مصر" },
+  { name: "الجيزة – أوسيم", detail: "أوسيم – الجيزة", icon: Building2, mapQuery: "أوسيم, الجيزة, مصر" },
+  { name: "الأقصر", detail: "صعيد مصر", icon: Building2, mapQuery: "الأقصر, مصر" },
+  { name: "المكتب الإداري", detail: "اللبيني – الجيزة", icon: Building2, mapQuery: "اللبيني, الجيزة, مصر" },
+  { name: "دبي – Spectra Cars & Parts FZC", detail: "مركز إقليمي – الإمارات 🇦🇪", icon: Globe, mapQuery: "Spectra Cars & Parts FZC, Dubai, UAE" },
 ];
 
 const DistributionNetwork = () => {
@@ -76,9 +76,18 @@ const DistributionNetwork = () => {
                 >
                   <b.icon className="w-5 h-5 text-primary" />
                 </motion.div>
-                <div>
+                <div className="flex-1">
                   <h4 className="font-bold text-[hsl(var(--section-dark-foreground))] text-sm">{b.name}</h4>
                   <p className="text-xs text-[hsl(var(--section-dark-foreground))]/60 mt-1">{b.detail}</p>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(b.mapQuery)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 mt-2.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
+                  >
+                    <Navigation className="w-3.5 h-3.5" />
+                    افتح على خرائط جوجل
+                  </a>
                 </div>
               </div>
             </motion.div>
