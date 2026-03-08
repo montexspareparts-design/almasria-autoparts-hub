@@ -64,13 +64,13 @@ const ContactPage = () => {
             >
               <h2 className="text-2xl font-bold text-foreground mb-6">معلومات التواصل</h2>
 
-              <a href="tel:+201020412358" className="flex items-start gap-4 p-4 bg-card border border-border rounded-xl hover:border-primary/30 transition-colors group">
+              <a href="tel:+201153961008" className="flex items-start gap-4 p-4 bg-card border border-border rounded-xl hover:border-primary/30 transition-colors group">
                 <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                   <Phone className="w-5 h-5 text-primary" />
                 </div>
                 <div>
                   <h3 className="font-bold text-foreground mb-1">الهاتف</h3>
-                  <p className="text-muted-foreground text-sm" dir="ltr">+20 1020412358</p>
+                  <p className="text-muted-foreground text-sm" dir="ltr">+20 1153961008</p>
                 </div>
               </a>
 
@@ -84,7 +84,7 @@ const ContactPage = () => {
                 </div>
               </a>
 
-              <a href="https://wa.me/201020412358" target="_blank" rel="noopener noreferrer" className="flex items-start gap-4 p-4 bg-card border border-border rounded-xl hover:border-primary/30 transition-colors group">
+              <a href="https://wa.me/201153961008" target="_blank" rel="noopener noreferrer" className="flex items-start gap-4 p-4 bg-card border border-border rounded-xl hover:border-primary/30 transition-colors group">
                 <div className="w-12 h-12 bg-[hsl(142,70%,40%)]/10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                   <MessageCircle className="w-5 h-5 text-[hsl(142,70%,40%)]" />
                 </div>
@@ -104,13 +104,6 @@ const ContactPage = () => {
                 </div>
               </div>
 
-              {/* Static Map Placeholder */}
-              <div className="rounded-xl border border-border overflow-hidden bg-muted aspect-video flex items-center justify-center relative">
-                <MapPin className="w-10 h-10 text-primary/30" />
-                <p className="absolute bottom-4 text-xs text-muted-foreground">
-                  اللبيني، الجيزة — المقر الإداري
-                </p>
-              </div>
             </motion.div>
 
             {/* Contact Form */}
