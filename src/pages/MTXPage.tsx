@@ -243,6 +243,10 @@ const MTXPage = () => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredProducts.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredProducts, currentPage]);
+
+  return (
+    <div className="min-h-screen bg-background" dir="rtl">
+      <Helmet>
         <title>MTX | العلامة التابعة للمصرية جروب والمتخصصة في استيراد قطع غيار تويوتا</title>
         <meta
           name="description"
