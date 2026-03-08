@@ -12,12 +12,12 @@ const VideoSection = () => {
   const { data: videoId } = useQuery({
     queryKey: ["site-setting", "video_youtube_id"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("site_settings")
         .select("value")
         .eq("key", "video_youtube_id")
         .maybeSingle();
-      return data?.value || null;
+      return (data?.value as string) || null;
     },
   });
 
