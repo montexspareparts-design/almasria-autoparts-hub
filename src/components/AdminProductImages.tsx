@@ -331,7 +331,7 @@ const AdminProductImages = () => {
           <Input
             placeholder="ابحث بالاسم أو Part Number..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setPage(0); }}
             className="pr-10"
           />
         </div>
