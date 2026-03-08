@@ -414,6 +414,7 @@ const ProductsPage = () => {
         description={config.description}
         badge={config.badge}
         backgroundImage={config.backgroundImage}
+        logoScale={config.logoScale}
       />
 
       {/* Sticky filter bar */}
