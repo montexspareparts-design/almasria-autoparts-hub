@@ -22,16 +22,17 @@ const SectionFallback = () => (
 );
 
 /**
- * Homepage Structure (SEO + Conversion Optimized):
+ * Homepage Structure (Corporate-First):
  * ─────────────────────────────────────────────────
  * 1. Hero           → H1: المصرية جروب — موزع معتمد لقطع غيار تويوتا
  * 2. FeaturesStrip  → Trust numbers
- * 3. About Brief    → H2: من نحن (40-60 word summary)
- * 4. Brands         → H2: العلامات التي نوزعها (3 brands)
- * 5. WhyUs Brief    → H2: ما يميزنا (short version + CTA)
- * 6. Distribution   → H2: شبكة التوزيع
- * 7. Contact CTA    → H2: اتصل بنا
- * 8. Footer
+ * 3. About Brief    → H2: من نحن (corporate intro)
+ * 4. WhyUs Brief    → H2: ما يميزنا (differentiators + CTA)
+ * 5. Distribution   → H2: شبكة التوزيع
+ * 6. Brands         → H2: العلامات التي نوزعها
+ * 7. Testimonials   → H2: آراء عملائنا
+ * 8. Contact CTA    → H2: اتصل بنا
+ * 9. Footer
  */
 const Index = () => {
   return (
@@ -45,9 +46,9 @@ const Index = () => {
       <HeroSection />
       <Suspense fallback={<SectionFallback />}><FeaturesStrip /></Suspense>
       <Suspense fallback={<SectionFallback />}><AboutBrief /></Suspense>
-      <Suspense fallback={<SectionFallback />}><BrandsWeDistribute /></Suspense>
       <Suspense fallback={<SectionFallback />}><WhyUsBrief /></Suspense>
       <Suspense fallback={<SectionFallback />}><DistributionNetwork /></Suspense>
+      <Suspense fallback={<SectionFallback />}><BrandsWeDistribute /></Suspense>
       <Suspense fallback={<SectionFallback />}><TestimonialsHome /></Suspense>
       <Suspense fallback={<SectionFallback />}><ContactSimple /></Suspense>
       <Suspense fallback={null}><Footer /></Suspense>
