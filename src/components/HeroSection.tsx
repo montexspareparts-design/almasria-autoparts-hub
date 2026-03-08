@@ -2,7 +2,7 @@ import { motion, useScroll, useTransform, useInView, animate } from "framer-moti
 import { ArrowLeft, ShieldCheck, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 import heroBg from "@/assets/hero-bg.jpg";
 
 const floatingVariants = {
