@@ -40,10 +40,10 @@ const Navbar = () => {
   ];
 
   const links = [
-    { label: "الرئيسية", href: "#hero" },
-    { label: "ما يميزنا", href: "#why-us" },
-    { label: "المنتجات", href: "#products" },
-    { label: "فروعنا", href: "#branches" },
+    { label: "الرئيسية", href: "/#hero" },
+    { label: "ما يميزنا", href: "/what-sets-us-apart", isRoute: true },
+    { label: "المنتجات", href: "/#products" },
+    { label: "فروعنا", href: "/#branches" },
     { label: "تواصل معنا", href: "/contact", isRoute: true },
   ];
 
@@ -143,6 +143,13 @@ const Navbar = () => {
                   href={link.href}
                   className="text-sm font-medium text-secondary-foreground/80 hover:text-primary transition-colors relative group"
                   whileHover={{ y: -1 }}
+                  onClick={(e) => {
+                    const hash = link.href.replace("/", "");
+                    if (window.location.pathname === "/") {
+                      e.preventDefault();
+                      document.querySelector(hash)?.scrollIntoView({ behavior: "smooth" });
+                    }
+                  }}
                 >
                   {link.label}
                   <span className="absolute -bottom-1 right-0 w-0 h-[2px] bg-primary rounded-full transition-all duration-300 group-hover:w-full" />
@@ -313,7 +320,14 @@ const Navbar = () => {
                     animate="visible"
                     variants={linkVariants}
                     className="block py-3 text-sm font-medium text-secondary-foreground/80 hover:text-primary transition-colors"
-                    onClick={() => setIsOpen(false)}
+                    onClick={(e) => {
+                      setIsOpen(false);
+                      const hash = link.href.replace("/", "");
+                      if (window.location.pathname === "/") {
+                        e.preventDefault();
+                        setTimeout(() => document.querySelector(hash)?.scrollIntoView({ behavior: "smooth" }), 300);
+                      }
+                    }}
                   >
                     {link.label}
                   </motion.a>
