@@ -348,7 +348,7 @@ const ProductsPage = () => {
                     )}
                   </div>
 
-                  <div className="p-4">
+                  <div className="p-4" onClick={(e) => e.stopPropagation()}>
                   {/* Part Number Badge */}
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-[11px] font-mono bg-muted text-muted-foreground px-2 py-0.5 rounded">
