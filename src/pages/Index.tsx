@@ -4,6 +4,7 @@ import HeroSection from "@/components/HeroSection";
 
 // Lazy load below-fold sections
 const AboutSection = lazy(() => import("@/components/AboutSection"));
+const TrustBanner = lazy(() => import("@/components/TrustBanner"));
 const ProductsSection = lazy(() => import("@/components/ProductsSection"));
 const WhyUsSection = lazy(() => import("@/components/WhyUsSection"));
 const TestimonialsSection = lazy(() => import("@/components/TestimonialsSection"));
