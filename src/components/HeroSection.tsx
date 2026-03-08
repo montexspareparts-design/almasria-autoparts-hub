@@ -1,5 +1,5 @@
 import { motion, useScroll, useTransform } from "framer-motion";
-import { ShieldCheck, FileText, MessageCircle } from "lucide-react";
+import { ShieldCheck, Search, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRef } from "react";
 import heroBg from "@/assets/hero-warehouse.jpg";
