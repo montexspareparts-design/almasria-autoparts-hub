@@ -1,30 +1,29 @@
-import { motion, useInView } from "framer-motion";
+import { motion } from "framer-motion";
 import { Play, X } from "lucide-react";
-import { useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const VideoSection = () => {
-  const ref = useRef<HTMLElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-100px" });
   const [playing, setPlaying] = useState(false);
+  const [videoId, setVideoId] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
-  const { data: videoId } = useQuery({
-    queryKey: ["site-setting", "video_youtube_id"],
-    queryFn: async () => {
-      const { data } = await (supabase as any)
-        .from("site_settings")
-        .select("value")
-        .eq("key", "video_youtube_id")
-        .maybeSingle();
-      return (data?.value as string) || null;
-    },
-  });
+  useEffect(() => {
+    (supabase as any)
+      .from("site_settings")
+      .select("value")
+      .eq("key", "video_youtube_id")
+      .maybeSingle()
+      .then(({ data }: any) => {
+        if (data?.value) setVideoId(data.value);
+        setLoaded(true);
+      });
+  }, []);
 
-  if (!videoId) return null;
+  if (!loaded || !videoId) return <div />;
 
   return (
-    <section ref={ref} className="relative py-24 overflow-hidden bg-secondary">
+    <section className="relative py-24 overflow-hidden bg-secondary">
       {/* Scrolling text background */}
       <div className="absolute inset-0 opacity-[0.02] pointer-events-none select-none">
         {Array.from({ length: 6 }).map((_, i) => (
@@ -44,9 +43,9 @@ const VideoSection = () => {
         {/* Header */}
         <motion.div
           className="text-center mb-12"
-          initial={{ opacity: 0, y: 30 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
+          initial={{ opacity: 1, y: 0 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
         >
           <span className="inline-flex items-center gap-2 bg-primary/15 text-primary rounded-full px-4 py-1.5 text-sm font-semibold mb-4">
             <Play className="w-4 h-4 fill-primary" />
@@ -63,9 +62,9 @@ const VideoSection = () => {
         {/* Video container */}
         <motion.div
           className="max-w-4xl mx-auto"
-          initial={{ opacity: 0, scale: 0.92 }}
-          animate={inView ? { opacity: 1, scale: 1 } : {}}
-          transition={{ duration: 0.7, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] }}
+          initial={{ opacity: 1, scale: 1 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
         >
           <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-secondary-foreground/10 group">
             {!playing ? (
