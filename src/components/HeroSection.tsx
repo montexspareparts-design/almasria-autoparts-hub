@@ -41,37 +41,34 @@ const HeroSection = () => {
             <span className="text-sm font-semibold text-primary">موزع معتمد رسمي — تويوتا مصر</span>
           </motion.div>
 
-          {/* Main Headline */}
+          {/* H1 — SEO optimized, single H1 on page */}
           <motion.h1
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.35 }}
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-secondary-foreground leading-[1.1] tracking-tight mb-8"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-secondary-foreground leading-[1.15] tracking-tight mb-8"
           >
-            المصرية جروب
+            المصرية جروب – موزع معتمد لقطع غيار تويوتا الأصلية وزيوت تويوتا الأصلية في مصر
           </motion.h1>
 
-          <motion.p
+          {/* Subheadline */}
+          <motion.h2
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.5 }}
-            className="text-xl sm:text-2xl md:text-[1.65rem] font-bold text-secondary-foreground/80 leading-[1.6] max-w-2xl mb-10"
+            className="text-lg sm:text-xl md:text-2xl font-bold text-secondary-foreground/75 leading-[1.7] max-w-2xl mb-6"
           >
-            موزع معتمد لقطع غيار وزيوت تويوتا الأصلية
-            <br />
-            ومستورد ماركات يابانية عالية الجودة
-          </motion.p>
+            متخصصون في توزيع قطع غيار تويوتا الأصلية، واستيراد الماركات اليابانية عالية الجودة التي تضاهي المواصفات الأصلية، مع شحن لجميع المحافظات وخدمة تجار الجملة والشركات والقطاعي.
+          </motion.h2>
 
-          {/* Subheadline */}
+          {/* Trust line */}
           <motion.p
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.6 }}
             className="text-secondary-foreground/50 text-base md:text-lg leading-[1.9] max-w-xl mb-12"
           >
-            أكثر من 25 عامًا من الخبرة في توزيع قطع غيار تويوتا
-            <br />
-            شبكة فروع تغطي الجمهورية مع شحن لجميع المحافظات
+            أكثر من 25 عامًا من الخبرة في سوق قطع غيار تويوتا في مصر.
           </motion.p>
 
           {/* CTAs — 2 buttons only */}
