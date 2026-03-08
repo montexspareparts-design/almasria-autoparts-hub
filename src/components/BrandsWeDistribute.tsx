@@ -4,11 +4,15 @@ import { ChevronLeft } from "lucide-react";
 import brandGenuineParts from "@/assets/brand-genuine-parts.png";
 import brandToyotaOil from "@/assets/brand-toyota-oil.png";
 import brandMtx from "@/assets/brand-mtx.jpg";
+import brandDenso from "@/assets/brand-denso.png";
+import brandAisin from "@/assets/brand-aisin.png";
 
 const brands = [
   { label: "Toyota Genuine Parts", labelAr: "قطع غيار تويوتا الأصلية", image: brandGenuineParts, to: "/products/toyota-genuine", scale: "scale-100" },
   { label: "Toyota Genuine Lubricants", labelAr: "زيوت تويوتا الأصلية", image: brandToyotaOil, to: "/products/toyota-oils", scale: "scale-150" },
   { label: "MTX Aftermarket", labelAr: "MTX أفترماركت", image: brandMtx, to: "/products/mtx-aftermarket", scale: "scale-150" },
+  { label: "DENSO", labelAr: "DENSO", image: brandDenso, to: "/products/denso", scale: "scale-100" },
+  { label: "AISIN", labelAr: "AISIN", image: brandAisin, to: "/products/aisin", scale: "scale-100" },
 ];
 
 const BrandsWeDistribute = () => {
@@ -41,7 +45,7 @@ const BrandsWeDistribute = () => {
           />
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-6 max-w-6xl mx-auto">
           {brands.map((b, i) => (
             <motion.div
               key={b.label}
