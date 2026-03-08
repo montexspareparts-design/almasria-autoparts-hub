@@ -39,6 +39,7 @@ const brandConfig: Record<string, { title: string; subtitle: string; description
     badge: "موزع معتمد رسمي",
     brandKey: "toyota_oils",
     logo: brandToyotaOil,
+    backgroundImage: oilBg,
   },
   "mtx-aftermarket": {
     title: "MTX Aftermarket",
