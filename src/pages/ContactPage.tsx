@@ -104,13 +104,6 @@ const ContactPage = () => {
                 </div>
               </div>
 
-              {/* Static Map Placeholder */}
-              <div className="rounded-xl border border-border overflow-hidden bg-muted aspect-video flex items-center justify-center relative">
-                <MapPin className="w-10 h-10 text-primary/30" />
-                <p className="absolute bottom-4 text-xs text-muted-foreground">
-                  اللبيني، الجيزة — المقر الإداري
-                </p>
-              </div>
             </motion.div>
 
             {/* Contact Form */}
