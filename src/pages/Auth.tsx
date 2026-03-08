@@ -44,6 +44,18 @@ const Auth = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Rate limiting check
+    if (isLogin && lockedUntil && Date.now() < lockedUntil) {
+      const secsLeft = Math.ceil((lockedUntil - Date.now()) / 1000);
+      toast({
+        title: "تم تجاوز عدد المحاولات المسموح",
+        description: `يرجى الانتظار ${secsLeft} ثانية قبل المحاولة مرة أخرى`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     const authEmail = getAuthEmail();
 
