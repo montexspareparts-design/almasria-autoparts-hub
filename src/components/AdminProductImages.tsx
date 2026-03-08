@@ -378,7 +378,31 @@ const AdminProductImages = () => {
             {products.map((product) => (
               <div
                 key={product.id}
-                className="flex items-center gap-3 border border-border rounded-lg p-3 hover:border-primary/30 transition-colors"
+                className={`flex items-center gap-3 border rounded-lg p-3 transition-colors ${
+                  dragOverProductId === product.id
+                    ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+                    : "border-border hover:border-primary/30"
+                }`}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setDragOverProductId(product.id);
+                }}
+                onDragLeave={(e) => {
+                  e.preventDefault();
+                  if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                    setDragOverProductId(null);
+                  }
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setDragOverProductId(null);
+                  const file = e.dataTransfer.files?.[0];
+                  if (file && file.type.startsWith("image/")) {
+                    handleDropFile(product.id, file);
+                  }
+                }}
               >
                 {/* Thumbnail */}
                 <div className="w-14 h-14 rounded-lg bg-muted overflow-hidden shrink-0 flex items-center justify-center">
@@ -399,6 +423,9 @@ const AdminProductImages = () => {
                   <p className="text-xs text-muted-foreground">
                     {product.sku} • {brandLabels[product.brand] || product.brand}
                   </p>
+                  {dragOverProductId === product.id && (
+                    <p className="text-xs text-primary font-medium mt-0.5">📥 أفلت الصورة هنا</p>
+                  )}
                 </div>
 
                 {/* Actions */}
