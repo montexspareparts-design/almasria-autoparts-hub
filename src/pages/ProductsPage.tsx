@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Lock, ShieldCheck, Package, ShoppingCart, Eye, AlertTriangle } from "lucide-react";
+import ProductDetailDialog from "@/components/ProductDetailDialog";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart, CartItem } from "@/contexts/CartContext";
@@ -82,6 +83,7 @@ const ProductsPage = () => {
     priceMin: "",
     priceMax: "",
   });
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const DAILY_LIMIT = 20;
 
   // Track viewed product IDs today (for dealers)
@@ -327,7 +329,8 @@ const ProductsPage = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: Math.min(i * 0.02, 0.5) }}
-                  className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 transition-all duration-300 ease-out group"
+                  className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 transition-all duration-300 ease-out group cursor-pointer"
+                  onClick={() => setSelectedProduct(product)}
                 >
                   {/* Product Image */}
                   <div className="aspect-square bg-white relative overflow-hidden">
@@ -345,7 +348,7 @@ const ProductsPage = () => {
                     )}
                   </div>
 
-                  <div className="p-4">
+                  <div className="p-4" onClick={(e) => e.stopPropagation()}>
                   {/* Part Number Badge */}
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-[11px] font-mono bg-muted text-muted-foreground px-2 py-0.5 rounded">
@@ -460,6 +463,32 @@ const ProductsPage = () => {
 
       {/* Maintenance Bundles */}
       <MaintenanceBundles />
+
+      {/* Product Detail Dialog */}
+      <ProductDetailDialog
+        product={selectedProduct}
+        open={!!selectedProduct}
+        onOpenChange={(open) => { if (!open) setSelectedProduct(null); }}
+        price={
+          selectedProduct
+            ? !user ? null
+            : !isDealer ? selectedProduct.base_price
+            : viewedProductIds.includes(selectedProduct.id) ? getProductPrice(selectedProduct)
+            : null
+            : null
+        }
+        priceLabel={
+          selectedProduct && user
+            ? isDealer && viewedProductIds.includes(selectedProduct.id)
+              ? "سعر الجملة الخاص بك"
+              : !isDealer ? "سعر قطاعي" : undefined
+            : undefined
+        }
+        canAddToCart={
+          !!user && (!isDealer || (selectedProduct && viewedProductIds.includes(selectedProduct.id)))
+        }
+        onAddToCart={handleAddToCart}
+      />
 
       <Footer />
     </div>
