@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 const VideoSection = () => {
-  const ref = useRef<HTMLElement>(null);
   const [playing, setPlaying] = useState(false);
 
   const { data: videoId, isLoading } = useQuery({
