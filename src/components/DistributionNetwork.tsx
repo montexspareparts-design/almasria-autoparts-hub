@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { MapPin, Building2, Globe, Truck, Navigation } from "lucide-react";
 
 const branches = [
-  { name: "القاهرة – التوفيقية", detail: "سوق التوفيقية لقطع غيار السيارات", icon: Building2, mapQuery: "سوق التوفيقية لقطع غيار السيارات, القاهرة, مصر" },
+  { name: "القاهرة – التوفيقية", detail: "سوق التوفيقية لقطع غيار السيارات", icon: Building2, mapUrl: "https://maps.app.goo.gl/B3Kb6At4dnfGy28T9" },
   { name: "الجيزة – أوسيم", detail: "أوسيم – الجيزة", icon: Building2, mapQuery: "أوسيم, الجيزة, مصر" },
   { name: "الأقصر", detail: "صعيد مصر", icon: Building2, mapQuery: "الأقصر, مصر" },
   { name: "المكتب الإداري", detail: "اللبيني – الجيزة", icon: Building2, mapQuery: "اللبيني, الجيزة, مصر" },
