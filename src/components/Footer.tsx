@@ -45,12 +45,12 @@ const Footer = () => {
             <h4 className="font-bold mb-4 text-sm">روابط سريعة</h4>
             <ul className="space-y-2.5 text-sm text-secondary-foreground/60">
               {[
-                { label: "الرئيسية", href: "#hero" },
-                { label: "من نحن", href: "#about" },
-                { label: "العلامات التجارية", href: "#brands" },
-                { label: "لماذا نحن", href: "#why-us" },
-                { label: "شبكة التوزيع", href: "#distribution" },
-                { label: "اتصل بنا", href: "#contact" },
+                { label: "الرئيسية", href: "/#hero" },
+                { label: "من نحن", href: "/#about" },
+                { label: "العلامات التجارية", href: "/products" },
+                { label: "لماذا نحن", href: "/what-sets-us-apart" },
+                { label: "شبكة التوزيع", href: "/#distribution" },
+                { label: "اتصل بنا", href: "/contact" },
               ].map((l) => (
                 <li key={l.href}>
                   <a href={l.href} className="hover:text-primary transition-colors relative group inline-block">
