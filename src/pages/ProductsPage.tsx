@@ -31,6 +31,7 @@ const brandConfig: Record<string, { title: string; subtitle: string; description
     badge: "موزع معتمد رسمي",
     brandKey: "toyota_genuine",
     logo: brandGenuineParts,
+    logoScale: 250,
   },
   "toyota-oils": {
     title: "زيوت تويوتا الأصلية",
