@@ -19,7 +19,7 @@ const Footer = () => {
             </p>
             <div className="flex items-center gap-3 mt-4">
               <a
-                href="https://wa.me/201020412358"
+                href="https://wa.me/201153961008"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-9 h-9 rounded-lg bg-secondary-foreground/10 flex items-center justify-center hover:bg-primary/20 transition-colors"
