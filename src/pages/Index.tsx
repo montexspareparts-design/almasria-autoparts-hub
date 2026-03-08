@@ -2,8 +2,8 @@ import { lazy, Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 
-// Lazy load below-fold sections for performance
 const FeaturesStrip = lazy(() => import("@/components/FeaturesStrip"));
+const AboutBrief = lazy(() => import("@/components/AboutBrief"));
 const BrandsWeDistribute = lazy(() => import("@/components/BrandsWeDistribute"));
 const MTXSection = lazy(() => import("@/components/MTXSection"));
 const WhyUsBrief = lazy(() => import("@/components/WhyUsBrief"));
@@ -22,74 +22,36 @@ const SectionFallback = () => (
 );
 
 /**
- * Homepage Structure (Conversion-Optimized Flow):
+ * Homepage Structure (SEO + Conversion Optimized):
  * ─────────────────────────────────────────────────
- * 1. Hero          → H1: Value proposition + primary CTA
- * 2. FeaturesStrip → Trust numbers strip (social proof)
- * 3. Brands        → H2: What we distribute (products)
- * 4. MTX           → H2: Our own brand (product depth)
- * 5. WhyUs         → H2: Why choose us (differentiation)
- * 6. Distribution  → H2: Coverage network (logistics proof)
- * 7. Accreditations→ H2: Awards & trust signals
- * 8. Contact       → H2: Final CTA (conversion)
- * 9. Footer        → Navigation & info
+ * 1. Hero           → H1: المصرية جروب — موزع معتمد لقطع غيار تويوتا
+ * 2. FeaturesStrip  → Trust numbers
+ * 3. About Brief    → H2: من نحن (40-60 word summary)
+ * 4. Brands         → H2: العلامات التي نوزعها (3 brands)
+ * 5. WhyUs Brief    → H2: ما يميزنا (short version + CTA)
+ * 6. Distribution   → H2: شبكة التوزيع
+ * 7. MTX Section    → H2: علامتنا الخاصة MTX
+ * 8. Accreditations → H2: الاعتمادات
+ * 9. Contact CTA    → H2: اتصل بنا
+ * 10. Footer
  */
 const Index = () => {
   return (
     <div className="min-h-screen">
       <Navbar />
-
-      {/* 1. Hero — H1: Primary value proposition */}
       <HeroSection />
-
-      {/* 2. Trust numbers strip — Quick social proof */}
-      <Suspense fallback={<SectionFallback />}>
-        <FeaturesStrip />
-      </Suspense>
-
-      {/* 3. Brands — H2: Product catalog entry point */}
-      <Suspense fallback={<SectionFallback />}>
-        <BrandsWeDistribute />
-      </Suspense>
-
-      {/* 4. MTX — H2: Our private label (product depth) */}
-      <Suspense fallback={<SectionFallback />}>
-        <MTXSection />
-      </Suspense>
-
-      {/* 5. Why Us — H2: Competitive differentiation */}
-      <Suspense fallback={<SectionFallback />}>
-        <WhyUsBrief />
-      </Suspense>
-
-      {/* 6. Distribution — H2: Logistics & coverage */}
-      <Suspense fallback={<SectionFallback />}>
-        <DistributionNetwork />
-      </Suspense>
-
-      {/* 7. Awards — H2: Trust & accreditations */}
-      <Suspense fallback={<SectionFallback />}>
-        <AccreditationsSection />
-      </Suspense>
-
-      {/* 8. Contact — H2: Final conversion CTA */}
-      <Suspense fallback={<SectionFallback />}>
-        <ContactSimple />
-      </Suspense>
-
-      {/* Footer & floating elements */}
-      <Suspense fallback={null}>
-        <Footer />
-      </Suspense>
-      <Suspense fallback={null}>
-        <WhatsAppFloat />
-      </Suspense>
-      <Suspense fallback={null}>
-        <BackToTop />
-      </Suspense>
-      <Suspense fallback={null}>
-        <AIChatBot />
-      </Suspense>
+      <Suspense fallback={<SectionFallback />}><FeaturesStrip /></Suspense>
+      <Suspense fallback={<SectionFallback />}><AboutBrief /></Suspense>
+      <Suspense fallback={<SectionFallback />}><BrandsWeDistribute /></Suspense>
+      <Suspense fallback={<SectionFallback />}><WhyUsBrief /></Suspense>
+      <Suspense fallback={<SectionFallback />}><DistributionNetwork /></Suspense>
+      <Suspense fallback={<SectionFallback />}><MTXSection /></Suspense>
+      <Suspense fallback={<SectionFallback />}><AccreditationsSection /></Suspense>
+      <Suspense fallback={<SectionFallback />}><ContactSimple /></Suspense>
+      <Suspense fallback={null}><Footer /></Suspense>
+      <Suspense fallback={null}><WhatsAppFloat /></Suspense>
+      <Suspense fallback={null}><BackToTop /></Suspense>
+      <Suspense fallback={null}><AIChatBot /></Suspense>
     </div>
   );
 };
