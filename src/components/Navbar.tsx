@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import logo from "@/assets/logo.png";
-import { Menu, X, Briefcase, User, LogOut, ShoppingCart, ChevronDown } from "lucide-react";
+import { Menu, X, Briefcase, User, LogOut, ChevronDown } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCart } from "@/contexts/CartContext";
+
 import { useNavigate } from "react-router-dom";
 import NotificationBell from "@/components/NotificationBell";
 
@@ -31,7 +31,6 @@ const Navbar = () => {
   const [activeSection, setActiveSection] = useState<string>("hero");
   const productsTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user, isDealer, isAdmin, signOut } = useAuth();
-  const { itemCount } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -202,25 +201,6 @@ const Navbar = () => {
 
           {/* Mobile right icons */}
           <div className="flex md:hidden items-center gap-1">
-            <motion.button
-              onClick={() => navigate("/cart")}
-              className="relative text-secondary-foreground/80 hover:text-primary transition-colors p-1.5"
-              whileTap={{ scale: 0.9 }}
-            >
-              <ShoppingCart className="w-5 h-5" />
-              <AnimatePresence>
-                {itemCount > 0 && (
-                  <motion.span
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    exit={{ scale: 0 }}
-                    className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center"
-                  >
-                    {itemCount}
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </motion.button>
             <NotificationBell />
             {user ? (
               <motion.button onClick={() => navigate("/dealer")} className="text-secondary-foreground/80 hover:text-primary transition-colors p-1.5" whileTap={{ scale: 0.9 }}>
@@ -235,27 +215,6 @@ const Navbar = () => {
 
           {/* Desktop right buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <motion.button
-              onClick={() => navigate("/cart")}
-              className="relative text-secondary-foreground/80 hover:text-primary transition-colors p-2"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              <ShoppingCart className="w-5 h-5" />
-              <AnimatePresence>
-                {itemCount > 0 && (
-                  <motion.span
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    exit={{ scale: 0 }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                    className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center"
-                  >
-                    {itemCount}
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </motion.button>
             <NotificationBell />
             {user ? (
               <>
