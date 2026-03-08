@@ -42,10 +42,10 @@ const AboutBrief = () => {
         >
           <p className="text-muted-foreground text-base md:text-lg leading-[2] mb-8">
             المصرية جروب هي مجموعة توزيع سيارات رائدة تعمل منذ أكثر من 25 عامًا، وتقدم{" "}
-            <Link to="/products?brand=toyota-genuine" className="text-primary hover:underline font-semibold">قطع غيار تويوتا الأصلية</Link>
-            {" "}و<Link to="/products?brand=toyota-oils" className="text-primary hover:underline font-semibold">الزيوت المعتمدة</Link>
+            <Link to="/products/toyota-genuine" className="text-primary hover:underline font-semibold">قطع غيار تويوتا الأصلية</Link>
+            {" "}و<Link to="/products/toyota-oils" className="text-primary hover:underline font-semibold">الزيوت المعتمدة</Link>
             {" "}ومنتجات{" "}
-            <Link to="/products?brand=mtx-aftermarket" className="text-primary hover:underline font-semibold">MTX الأفترماركت</Link>
+            <Link to="/products/mtx-aftermarket" className="text-primary hover:underline font-semibold">MTX الأفترماركت</Link>
             {" "}بجودة موثوقة.
           </p>
           <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
