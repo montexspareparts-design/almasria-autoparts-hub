@@ -1,62 +1,33 @@
-import { motion, useInView } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
+import { ShieldCheck, Clock, Users, Truck } from "lucide-react";
 
-const stats = [
-  { value: 25, suffix: "+", label: "عام خبرة" },
-  { value: 2000, suffix: "+", label: "عميل نشط" },
-  { value: 960, suffix: "+", label: "منتج أصلي" },
-  { value: 48, suffix: "h", label: "تسليم سريع" },
+const features = [
+  { icon: ShieldCheck, title: "موزع معتمد", desc: "لقطع غيار وزيوت تويوتا" },
+  { icon: Clock, title: "خبرة +25 سنة", desc: "في سوق قطع الغيار" },
+  { icon: Users, title: "+2000 عميل", desc: "شبكة عملاء واسعة" },
+  { icon: Truck, title: "تسليم 48 ساعة", desc: "داخل مصر بالكامل" },
 ];
-
-const AnimatedNumber = ({ value, suffix }: { value: number; suffix: string }) => {
-  const [display, setDisplay] = useState(0);
-  const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref as React.RefObject<Element>, { once: true, amount: 0.5 });
-
-  useEffect(() => {
-    if (!inView) return;
-    const duration = 1800;
-    const start = performance.now();
-    const step = (now: number) => {
-      const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplay(Math.round(eased * value));
-      if (progress < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  }, [inView, value]);
-
-  return (
-    <span ref={ref} className="tabular-nums">
-      {suffix === "h" ? (
-        <>{display}<span className="text-[0.5em] font-bold mr-0.5">h</span></>
-      ) : (
-        <>{suffix === "+" ? "+" : ""}{display.toLocaleString("en")}</>
-      )}
-    </span>
-  );
-};
 
 const FeaturesStrip = () => {
   return (
-    <section aria-label="إحصائيات الشركة" className="bg-primary relative overflow-hidden">
-      <div className="absolute inset-0 bg-[linear-gradient(135deg,transparent_25%,rgba(255,255,255,0.06)_50%,transparent_75%)]" />
+    <section aria-label="مميزات سريعة" className="py-10 md:py-12 bg-card border-b border-border relative">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-primary-foreground/15" dir="ltr">
-          {stats.map((s, i) => (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+          {features.map((f, i) => (
             <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 15 }}
+              key={f.title}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.1, duration: 0.5 }}
-              className="py-5 md:py-6 text-center"
+              transition={{ delay: i * 0.1, duration: 0.4 }}
+              className="flex flex-col items-center text-center gap-3"
             >
-              <div className="text-primary-foreground font-black text-2xl md:text-4xl lg:text-5xl leading-none tracking-tight">
-                <AnimatedNumber value={s.value} suffix={s.suffix} />
+              <div className="w-12 h-12 rounded-xl bg-primary/8 flex items-center justify-center">
+                <f.icon className="w-6 h-6 text-primary" strokeWidth={1.8} />
               </div>
-              <div className="text-primary-foreground/60 text-xs md:text-sm mt-1.5 font-medium" dir="rtl">
-                {s.label}
+              <div>
+                <h3 className="font-bold text-foreground text-sm md:text-base">{f.title}</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">{f.desc}</p>
               </div>
             </motion.div>
           ))}
