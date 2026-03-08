@@ -33,7 +33,7 @@ const AboutBrief = () => {
           </p>
           <Button variant="outline" size="lg" className="gap-2 font-bold" asChild>
             <Link to="/what-sets-us-apart">
-              اعرف أكثر
+              المزيد عن المجموعة
               <ArrowLeft className="w-4 h-4" />
             </Link>
           </Button>
