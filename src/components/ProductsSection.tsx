@@ -13,8 +13,6 @@ import catCooling from "@/assets/cat-cooling.jpg";
 import brandGenuineParts from "@/assets/brand-genuine-parts.png";
 import brandToyotaOil from "@/assets/brand-toyota-oil.png";
 import brandMtx from "@/assets/brand-mtx.jpg";
-import brandDenso from "@/assets/brand-denso.png";
-import brandAisin from "@/assets/brand-aisin.png";
 
 const categories = [
   { name: "أجزاء المحرك", image: catEngine, count: "+800 صنف", slug: "engine" },
