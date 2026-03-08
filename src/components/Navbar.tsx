@@ -143,6 +143,13 @@ const Navbar = () => {
                   href={link.href}
                   className="text-sm font-medium text-secondary-foreground/80 hover:text-primary transition-colors relative group"
                   whileHover={{ y: -1 }}
+                  onClick={(e) => {
+                    const hash = link.href.replace("/", "");
+                    if (window.location.pathname === "/") {
+                      e.preventDefault();
+                      document.querySelector(hash)?.scrollIntoView({ behavior: "smooth" });
+                    }
+                  }}
                 >
                   {link.label}
                   <span className="absolute -bottom-1 right-0 w-0 h-[2px] bg-primary rounded-full transition-all duration-300 group-hover:w-full" />
