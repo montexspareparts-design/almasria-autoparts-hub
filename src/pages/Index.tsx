@@ -4,10 +4,8 @@ import HeroSection from "@/components/HeroSection";
 
 // Lazy load below-fold sections
 const FeaturesStrip = lazy(() => import("@/components/FeaturesStrip"));
-
 const BrandsWeDistribute = lazy(() => import("@/components/BrandsWeDistribute"));
-const CategoriesCatalog = lazy(() => import("@/components/CategoriesCatalog"));
-const WhyUsSection = lazy(() => import("@/components/WhyUsSection"));
+const WhyUsBrief = lazy(() => import("@/components/WhyUsBrief"));
 const DistributionNetwork = lazy(() => import("@/components/DistributionNetwork"));
 const MTXSection = lazy(() => import("@/components/MTXSection"));
 const AccreditationsSection = lazy(() => import("@/components/AccreditationsSection"));
@@ -34,7 +32,7 @@ const Index = () => {
         <BrandsWeDistribute />
       </Suspense>
       <Suspense fallback={<SectionFallback />}>
-        <WhyUsSection />
+        <WhyUsBrief />
       </Suspense>
       <Suspense fallback={<SectionFallback />}>
         <DistributionNetwork />
