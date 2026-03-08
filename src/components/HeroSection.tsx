@@ -3,7 +3,7 @@ import { ShieldCheck, Package, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRef } from "react";
 import { Link } from "react-router-dom";
-import heroBg from "@/assets/hero-corporate.jpg";
+import heroBg from "@/assets/hero-corporate.webp";
 
 const HeroSection = () => {
   const sectionRef = useRef<HTMLElement>(null);
