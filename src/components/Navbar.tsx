@@ -1,8 +1,8 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import logo from "@/assets/logo.png";
 import { Menu, X, Briefcase, User, LogOut, ShoppingCart, ChevronDown } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
@@ -28,10 +28,39 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [productsOpen, setProductsOpen] = useState(false);
   const [mobileProductsOpen, setMobileProductsOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>("hero");
   const productsTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user, isDealer, isAdmin, signOut } = useAuth();
   const { itemCount } = useCart();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Track active section via IntersectionObserver on homepage
+  useEffect(() => {
+    if (location.pathname !== "/") return;
+
+    const sectionIds = ["hero", "brands", "distribution"];
+    const observers: IntersectionObserver[] = [];
+
+    sectionIds.forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const observer = new IntersectionObserver(
+        ([entry]) => { if (entry.isIntersecting) setActiveSection(id); },
+        { threshold: 0.3, rootMargin: "-80px 0px 0px 0px" }
+      );
+      observer.observe(el);
+      observers.push(observer);
+    });
+
+    return () => observers.forEach((o) => o.disconnect());
+  }, [location.pathname]);
+
+  const isLinkActive = (href: string, isRoute?: boolean) => {
+    if (isRoute) return location.pathname === href;
+    const hash = href.replace("/", "").replace("#", "");
+    return location.pathname === "/" && activeSection === hash;
+  };
 
   const productCategories = [
     { label: "قطع غيار تويوتا أصلي", href: "/products/toyota-genuine" },
@@ -97,12 +126,16 @@ const Navbar = () => {
                 >
                   <motion.a
                     href={link.href}
-                    className="text-sm font-medium text-secondary-foreground/80 hover:text-primary transition-colors relative group flex items-center gap-1"
+                    className={`text-sm font-medium transition-colors relative group flex items-center gap-1 ${
+                      isLinkActive(link.href) ? "text-primary" : "text-secondary-foreground/80 hover:text-primary"
+                    }`}
                     whileHover={{ y: -1 }}
                   >
                     {link.label}
                     <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${productsOpen ? "rotate-180" : ""}`} />
-                    <span className="absolute -bottom-1 right-0 w-0 h-[2px] bg-primary rounded-full transition-all duration-300 group-hover:w-full" />
+                    <span className={`absolute -bottom-1 right-0 h-[2px] bg-primary rounded-full transition-all duration-300 ${
+                      isLinkActive(link.href) ? "w-full" : "w-0 group-hover:w-full"
+                    }`} />
                   </motion.a>
                   <AnimatePresence>
                     {productsOpen && (
@@ -131,17 +164,23 @@ const Navbar = () => {
                 <motion.div key={link.href} whileHover={{ y: -1 }}>
                   <Link
                     to={link.href}
-                    className="text-sm font-medium text-secondary-foreground/80 hover:text-primary transition-colors relative group"
+                    className={`text-sm font-medium transition-colors relative group ${
+                      isLinkActive(link.href, true) ? "text-primary" : "text-secondary-foreground/80 hover:text-primary"
+                    }`}
                   >
                     {link.label}
-                    <span className="absolute -bottom-1 right-0 w-0 h-[2px] bg-primary rounded-full transition-all duration-300 group-hover:w-full" />
+                    <span className={`absolute -bottom-1 right-0 h-[2px] bg-primary rounded-full transition-all duration-300 ${
+                      isLinkActive(link.href, true) ? "w-full" : "w-0 group-hover:w-full"
+                    }`} />
                   </Link>
                 </motion.div>
               ) : (
                 <motion.a
                   key={link.href}
                   href={link.href}
-                  className="text-sm font-medium text-secondary-foreground/80 hover:text-primary transition-colors relative group"
+                  className={`text-sm font-medium transition-colors relative group ${
+                    isLinkActive(link.href) ? "text-primary" : "text-secondary-foreground/80 hover:text-primary"
+                  }`}
                   whileHover={{ y: -1 }}
                   onClick={(e) => {
                     const hash = link.href.replace("/", "");
@@ -152,7 +191,9 @@ const Navbar = () => {
                   }}
                 >
                   {link.label}
-                  <span className="absolute -bottom-1 right-0 w-0 h-[2px] bg-primary rounded-full transition-all duration-300 group-hover:w-full" />
+                  <span className={`absolute -bottom-1 right-0 h-[2px] bg-primary rounded-full transition-all duration-300 ${
+                    isLinkActive(link.href) ? "w-full" : "w-0 group-hover:w-full"
+                  }`} />
                 </motion.a>
               )
             )}
