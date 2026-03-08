@@ -71,7 +71,7 @@ const ProductDetailDialog = ({
           <DialogDescription>تفاصيل المنتج</DialogDescription>
         </DialogHeader>
 
-        {/* Image section */}
+        <div className="overflow-y-auto max-h-[90vh]">
         <div
           ref={imageRef}
           className="relative bg-white aspect-[4/3] cursor-crosshair overflow-hidden rounded-t-lg"
