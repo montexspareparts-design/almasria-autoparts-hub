@@ -157,6 +157,7 @@ const ContactSection = () => {
 
           {/* Car Quiz */}
           <CarQuiz />
+          <SpeedometerDashboard />
           </div>
 
           <motion.div
