@@ -30,7 +30,14 @@ const Navbar = () => {
   const [mobileProductsOpen, setMobileProductsOpen] = useState(false);
   const productsTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user, isDealer, isAdmin, signOut } = useAuth();
+  const { itemCount } = useCart();
   const navigate = useNavigate();
+
+  const productCategories = [
+    { label: "قطع غيار تويوتا أصلي", href: "/products?brand=toyota-genuine" },
+    { label: "زيوت تويوتا أصلي", href: "/products?brand=toyota-oils" },
+    { label: "MTX Aftermarket", href: "/products?brand=mtx-aftermarket" },
+  ];
 
   const links = [
     { label: "الرئيسية", href: "#hero" },
