@@ -289,6 +289,22 @@ const Navbar = () => {
                       )}
                     </AnimatePresence>
                   </div>
+                ) : (link as any).isRoute ? (
+                  <motion.div
+                    key={link.href}
+                    custom={i}
+                    initial="hidden"
+                    animate="visible"
+                    variants={linkVariants}
+                  >
+                    <Link
+                      to={link.href}
+                      className="block py-3 text-sm font-medium text-secondary-foreground/80 hover:text-primary transition-colors"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      {link.label}
+                    </Link>
+                  </motion.div>
                 ) : (
                   <motion.a
                     key={link.href}
