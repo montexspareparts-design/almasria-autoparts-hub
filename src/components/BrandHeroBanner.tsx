@@ -13,7 +13,7 @@ interface BrandHeroBannerProps {
   logoScale?: number;
 }
 
-const BrandHeroBanner = ({ logo, title, subtitle, description, badge, backgroundImage }: BrandHeroBannerProps) => {
+const BrandHeroBanner = ({ logo, title, subtitle, description, badge, backgroundImage, logoScale }: BrandHeroBannerProps) => {
   return (
     <section className="pt-24 pb-14 relative overflow-hidden">
       {/* Background image */}
