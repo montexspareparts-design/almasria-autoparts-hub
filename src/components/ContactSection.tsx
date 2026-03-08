@@ -5,6 +5,7 @@ import SpeedometerDashboard from "./SpeedometerDashboard";
 import ContactForm from "./ContactForm";
 import ContactInfoCard from "./ContactInfoCard";
 import BranchCard from "./BranchCard";
+import ProductCompare from "./ProductCompare";
 
 const contactInfo = [
   { icon: Mail, label: "البريد العام", value: "info@almasriaautoparts.com", href: "mailto:info@almasriaautoparts.com" },
