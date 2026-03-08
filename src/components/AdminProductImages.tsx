@@ -27,6 +27,7 @@ const AdminProductImages = () => {
   const [bulkSearching, setBulkSearching] = useState(false);
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, currentSku: "", found: 0, failed: 0 });
   const bulkAbortRef = useRef(false);
+  const [dragOverProductId, setDragOverProductId] = useState<string | null>(null);
 
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 50;
@@ -143,7 +144,39 @@ const AdminProductImages = () => {
     }
   };
 
-  const handleRemoveImage = async (productId: string, imageUrl: string) => {
+  const handleDropFile = async (productId: string, file: File) => {
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "حجم الصورة يجب أن يكون أقل من 5MB", variant: "destructive" });
+      return;
+    }
+    setTargetProductId(productId);
+    setUploading(productId);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const filePath = `${productId}.${ext}`;
+      const { data: existingFiles } = await supabase.storage.from("product-images").list("", { search: productId });
+      if (existingFiles && existingFiles.length > 0) {
+        const oldFiles = existingFiles.filter(f => f.name.startsWith(productId));
+        if (oldFiles.length > 0) await supabase.storage.from("product-images").remove(oldFiles.map(f => f.name));
+      }
+      const { error: uploadError } = await supabase.storage.from("product-images").upload(filePath, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(filePath);
+      const publicUrlWithCacheBust = `${urlData.publicUrl}?t=${Date.now()}`;
+      const { error: updateError } = await supabase.from("products").update({ image_url: publicUrlWithCacheBust }).eq("id", productId);
+      if (updateError) throw updateError;
+      toast({ title: "تم رفع الصورة بنجاح ✅" });
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    } catch (err: any) {
+      toast({ title: "خطأ في رفع الصورة", description: err.message, variant: "destructive" });
+    } finally {
+      setUploading(null);
+      setTargetProductId(null);
+    }
+  };
+
+
     setUploading(productId);
     try {
       const parts = imageUrl.split("/product-images/");
@@ -378,7 +411,31 @@ const AdminProductImages = () => {
             {products.map((product) => (
               <div
                 key={product.id}
-                className="flex items-center gap-3 border border-border rounded-lg p-3 hover:border-primary/30 transition-colors"
+                className={`flex items-center gap-3 border rounded-lg p-3 transition-colors ${
+                  dragOverProductId === product.id
+                    ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+                    : "border-border hover:border-primary/30"
+                }`}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setDragOverProductId(product.id);
+                }}
+                onDragLeave={(e) => {
+                  e.preventDefault();
+                  if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                    setDragOverProductId(null);
+                  }
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setDragOverProductId(null);
+                  const file = e.dataTransfer.files?.[0];
+                  if (file && file.type.startsWith("image/")) {
+                    handleDropFile(product.id, file);
+                  }
+                }}
               >
                 {/* Thumbnail */}
                 <div className="w-14 h-14 rounded-lg bg-muted overflow-hidden shrink-0 flex items-center justify-center">
@@ -399,6 +456,9 @@ const AdminProductImages = () => {
                   <p className="text-xs text-muted-foreground">
                     {product.sku} • {brandLabels[product.brand] || product.brand}
                   </p>
+                  {dragOverProductId === product.id && (
+                    <p className="text-xs text-primary font-medium mt-0.5">📥 أفلت الصورة هنا</p>
+                  )}
                 </div>
 
                 {/* Actions */}
