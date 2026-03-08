@@ -1,5 +1,5 @@
 import { motion, useScroll, useTransform } from "framer-motion";
-import { ShieldCheck, FileText, MessageCircle } from "lucide-react";
+import { ShieldCheck, Search, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRef } from "react";
 import heroBg from "@/assets/hero-warehouse.jpg";
@@ -51,13 +51,13 @@ const HeroSection = () => {
           {/* Title */}
           <motion.h1
             variants={fadeSlideUp}
-            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-secondary-foreground leading-tight mb-5"
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-secondary-foreground leading-[1.2] mb-6 tracking-tight"
           >
             المصرية جروب
             <br />
-            <span className="text-gradient-red">موزع معتمد لقطع غيار تويوتا</span>
+            <span className="text-gradient-red text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold">موزع معتمد لقطع غيار تويوتا</span>
             <br />
-            <span className="text-secondary-foreground/90">الأصلية والزيوت في مصر</span>
+            <span className="text-secondary-foreground/90 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold">الأصلية والزيوت في مصر</span>
           </motion.h1>
 
           {/* Description */}
@@ -72,9 +72,9 @@ const HeroSection = () => {
           <motion.div variants={fadeSlideUp} className="flex flex-col sm:flex-row gap-4">
             <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
               <Button size="lg" className="text-lg px-8 gap-2 red-glow font-bold" asChild>
-                <a href="#contact">
-                  <FileText className="w-5 h-5" />
-                  اطلب عرض سعر
+                <a href="#products">
+                  <Search className="w-5 h-5" />
+                  اكتشف منتجاتنا
                 </a>
               </Button>
             </motion.div>
