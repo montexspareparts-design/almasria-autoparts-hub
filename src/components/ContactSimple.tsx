@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 
 const contactCards = [
   {
-    href: "tel:+201153961008",
+    href: "tel:+201020412358",
     icon: Phone,
     title: "الهاتف",
-    detail: "+20 1153961008",
+    detail: "+20 1020412358",
     iconBg: "bg-primary/10",
     iconColor: "text-primary",
     dir: "ltr" as const,
