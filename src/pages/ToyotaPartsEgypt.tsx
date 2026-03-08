@@ -94,8 +94,54 @@ const ToyotaPartsEgypt = () => {
         </div>
       </section>
 
-      {/* Categories */}
+      {/* Section 1 – Why Authorized Distributor */}
       <section className="py-20 bg-muted/30">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <h2 className="text-2xl md:text-3xl font-black text-foreground text-center mb-10">
+            لماذا تختار موزع معتمد لقطع غيار تويوتا؟
+          </h2>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mx-auto">
+            {[
+              "ضمان الحصول على قطع غيار تويوتا الأصلية المعتمدة",
+              "جودة مطابقة للمواصفات",
+              "استقرار في الإمداد",
+              "دعم فني ومعرفة متخصصة بمنتجات تويوتا",
+            ].map((item) => (
+              <li key={item} className="flex items-start gap-3 border border-border rounded-lg px-5 py-4 bg-card">
+                <ShieldCheck className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                <span className="text-foreground font-medium text-sm leading-[1.8]">{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* Section 2 – Wholesale Distribution */}
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <h2 className="text-2xl md:text-3xl font-black text-foreground text-center mb-6">
+            توزيع قطع غيار تويوتا جملة في جميع المحافظات
+          </h2>
+          <p className="text-muted-foreground text-center text-base md:text-lg leading-[2] max-w-3xl mx-auto">
+            تخدم المصرية جروب تجار الجملة ومحلات قطع الغيار ومراكز الصيانة في جميع محافظات مصر من خلال منظومة توزيع تضمن الشحن السريع وتوافر الأصناف الأساسية بشكل مستمر.
+          </p>
+        </div>
+      </section>
+
+      {/* Section 3 – MTX Positioning */}
+      <section className="py-20 bg-muted/30">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <h2 className="text-2xl md:text-3xl font-black text-foreground text-center mb-6">
+            ماركات يابانية عالية الجودة تضاهي الأصلي
+          </h2>
+          <p className="text-muted-foreground text-center text-base md:text-lg leading-[2] max-w-3xl mx-auto">
+            بالإضافة إلى قطع غيار تويوتا الأصلية، توفر المجموعة من خلال علامة MTX ماركات يابانية مختارة بعناية تضاهي جودة المنتج الأصلي، لتلبية احتياجات قطاع ما بعد البيع.
+          </p>
+        </div>
+      </section>
+
+      {/* Categories */}
+      <section className="py-20 bg-background">
         <div className="container mx-auto px-4 max-w-4xl">
           <h2 className="text-2xl md:text-3xl font-black text-foreground text-center mb-4">
             فئات قطع غيار تويوتا الأصلية المتوفرة
@@ -103,7 +149,6 @@ const ToyotaPartsEgypt = () => {
           <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
             نوفر تشكيلة شاملة من قطع غيار تويوتا الأصلية التي تغطي جميع احتياجات الصيانة والإصلاح.
           </p>
-
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-3xl mx-auto">
             {categories.map((cat) => (
               <li key={cat} className="flex items-center gap-3 border border-border rounded-lg px-5 py-4 bg-card">
@@ -116,7 +161,7 @@ const ToyotaPartsEgypt = () => {
       </section>
 
       {/* Coverage */}
-      <section className="py-20 bg-background">
+      <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4 max-w-4xl">
           <h2 className="text-2xl md:text-3xl font-black text-foreground text-center mb-6">
             شحن قطع غيار تويوتا لجميع محافظات مصر
@@ -147,13 +192,13 @@ const ToyotaPartsEgypt = () => {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button size="lg" className="text-base px-8 py-6 gap-2.5 font-bold" asChild>
               <Link to="/contact">
-                <Phone className="w-5 h-5" />
-                تواصل معنا الآن
+                اطلب عرض سعر
               </Link>
             </Button>
             <Button size="lg" variant="outline" className="text-base px-8 py-6 gap-2.5 font-bold border-secondary-foreground/15 text-secondary-foreground hover:bg-secondary-foreground/10" asChild>
-              <Link to="/dealer-apply">
-                سجّل كتاجر معتمد
+              <Link to="/contact">
+                <Phone className="w-5 h-5" />
+                تواصل مع فريق المبيعات
               </Link>
             </Button>
           </div>
