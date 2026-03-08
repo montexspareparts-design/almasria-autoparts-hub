@@ -44,6 +44,7 @@ const Index = () => {
       <Navbar />
       <HeroSection />
       <Suspense fallback={<SectionFallback />}><AboutBrief /></Suspense>
+      <Suspense fallback={<SectionFallback />}><KeyMetrics /></Suspense>
       <Suspense fallback={<SectionFallback />}><WhoWeServe /></Suspense>
       <Suspense fallback={<SectionFallback />}><DistributionSegments /></Suspense>
       <Suspense fallback={<SectionFallback />}><DistributionNetwork /></Suspense>
