@@ -135,8 +135,8 @@ const HeroSection = () => {
           {/* CTAs */}
           <motion.div variants={fadeSlideUp} className="flex flex-col sm:flex-row gap-4">
             <motion.div whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }}>
-              <Button size="lg" className="text-lg px-8 gap-2 red-glow font-bold relative overflow-hidden group" asChild>
-                <a href="#products">
+              <Button size="lg" className="text-lg px-10 py-6 gap-3 font-bold relative overflow-hidden group bg-gradient-to-l from-primary to-[hsl(355,80%,55%)] text-white shadow-xl shadow-primary/30 hover:shadow-primary/50 hover:shadow-2xl transition-shadow duration-300" asChild>
+                <a href="/#brands">
                   <span className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12" />
                   <Search className="w-5 h-5" />
                   اكتشف منتجاتنا
@@ -146,11 +146,11 @@ const HeroSection = () => {
             <motion.div whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }}>
               <Button
                 size="lg"
-                className="text-lg px-8 gap-2 border-secondary-foreground/30 text-secondary-foreground hover:bg-secondary-foreground/10 bg-transparent border backdrop-blur-sm"
+                className="text-lg px-10 py-6 gap-3 font-bold border-2 border-secondary-foreground/25 text-secondary-foreground hover:bg-secondary-foreground hover:text-secondary bg-transparent backdrop-blur-sm transition-all duration-300"
                 asChild
               >
-                <a href="https://wa.me/201153961008" target="_blank" rel="noopener noreferrer">
-                  <MessageCircle className="w-5 h-5" />
+                <a href="/contact">
+                  <Search className="w-5 h-5" />
                   تواصل معنا
                 </a>
               </Button>
