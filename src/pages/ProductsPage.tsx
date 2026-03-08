@@ -47,7 +47,31 @@ const brandConfig: Record<string, { title: string; subtitle: string; description
     brandKey: "mtx_aftermarket",
     logo: brandMtx,
   },
+  "denso": {
+    title: "DENSO",
+    subtitle: "قطع غيار دينسو اليابانية",
+    description: "قطع غيار دينسو الأصلية - الشركة اليابانية الرائدة في تصنيع مكونات السيارات عالية الجودة.",
+    badge: "وكيل معتمد",
+    brandKey: "denso",
+    logo: brandDenso,
+  },
+  "aisin": {
+    title: "AISIN",
+    subtitle: "قطع غيار أيسن اليابانية",
+    description: "قطع غيار أيسن الأصلية - من أكبر مصنعي قطع غيار السيارات في العالم، جودة يابانية معتمدة.",
+    badge: "وكيل معتمد",
+    brandKey: "aisin",
+    logo: brandAisin,
+  },
 };
+
+const allBrands = [
+  { label: "قطع غيار تويوتا الأصلية", labelEn: "Toyota Genuine Parts", image: brandGenuineParts, to: "/products/toyota-genuine", scale: "scale-100" },
+  { label: "زيوت تويوتا الأصلية", labelEn: "Toyota Genuine Lubricants", image: brandToyotaOil, to: "/products/toyota-oils", scale: "scale-150" },
+  { label: "MTX أفترماركت", labelEn: "MTX Aftermarket", image: brandMtx, to: "/products/mtx-aftermarket", scale: "scale-150" },
+  { label: "DENSO", labelEn: "DENSO", image: brandDenso, to: "/products/denso", scale: "scale-100" },
+  { label: "AISIN", labelEn: "AISIN", image: brandAisin, to: "/products/aisin", scale: "scale-100" },
+];
 
 const ITEMS_PER_PAGE = 24;
 
