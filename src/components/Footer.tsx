@@ -48,7 +48,7 @@ const Footer = () => {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="md:col-span-4"
+            className="md:col-span-4 order-1"
           >
             <img src={logo} alt="المصرية جروب" className="h-16 mb-5" />
             <p className="text-secondary-foreground/50 text-sm leading-7 max-w-sm">
