@@ -1,12 +1,11 @@
 import { motion, useInView } from "framer-motion";
-import { ShieldCheck, Clock, Users, Truck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-const features = [
-  { icon: ShieldCheck, title: "موزع معتمد", desc: "لقطع غيار وزيوت تويوتا", value: 25, suffix: "+", unit: "عام" },
-  { icon: Clock, title: "خبرة +25 سنة", desc: "في سوق قطع الغيار", value: 2000, suffix: "+", unit: "عميل" },
-  { icon: Users, title: "+2000 عميل", desc: "شبكة عملاء واسعة", value: 960, suffix: "+", unit: "منتج" },
-  { icon: Truck, title: "تسليم 48 ساعة", desc: "داخل مصر بالكامل", value: 48, suffix: "h", unit: "ساعة" },
+const stats = [
+  { value: 25, suffix: "+", label: "عام خبرة" },
+  { value: 2000, suffix: "+", label: "عميل نشط" },
+  { value: 960, suffix: "+", label: "منتج أصلي" },
+  { value: 48, suffix: "h", label: "تسليم سريع" },
 ];
 
 const AnimatedNumber = ({ value, suffix }: { value: number; suffix: string }) => {
@@ -32,7 +31,7 @@ const AnimatedNumber = ({ value, suffix }: { value: number; suffix: string }) =>
       {suffix === "h" ? (
         <>{display}<span className="text-[0.5em] font-bold mr-0.5">h</span></>
       ) : (
-        <>{suffix === "+" ? "+" : ""}{display.toLocaleString("en")}{suffix === "+" ? "" : suffix}</>
+        <>{suffix === "+" ? "+" : ""}{display.toLocaleString("en")}</>
       )}
     </span>
   );
@@ -40,63 +39,27 @@ const AnimatedNumber = ({ value, suffix }: { value: number; suffix: string }) =>
 
 const FeaturesStrip = () => {
   return (
-    <section className="relative overflow-hidden">
-      {/* Top: Bold number strip */}
-      <div className="bg-primary relative">
-        <div className="absolute inset-0 bg-[linear-gradient(135deg,transparent_25%,rgba(255,255,255,0.08)_50%,transparent_75%)]" />
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-4 divide-x divide-primary-foreground/20" dir="ltr">
-            {features.map((f, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1, duration: 0.5 }}
-                className="py-4 md:py-5 text-center"
-              >
-                <div className="text-primary-foreground font-black text-2xl md:text-4xl lg:text-5xl leading-none tracking-tight">
-                  <AnimatedNumber value={f.value} suffix={f.suffix} />
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom: Feature cards */}
-      <div className="bg-card border-b border-border py-12 md:py-16 relative">
-        <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: "radial-gradient(circle, hsl(var(--primary)) 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
-        <div className="container mx-auto px-4 relative">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
-            {features.map((f, i) => (
-              <motion.div
-                key={f.title}
-                initial={{ opacity: 0, y: 25 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.15 + i * 0.1, type: "spring", stiffness: 120 }}
-                className="flex flex-col items-center text-center group"
-              >
-                <motion.div
-                  className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-primary/[0.07] flex items-center justify-center mb-4 border border-primary/10"
-                  whileHover={{ scale: 1.1, rotate: [0, -3, 3, 0] }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <f.icon className="w-6 h-6 md:w-7 md:h-7 text-primary" strokeWidth={1.8} />
-                </motion.div>
-                <h3 className="font-bold text-foreground text-sm md:text-base leading-snug">{f.title}</h3>
-                <p className="text-xs text-muted-foreground mt-1.5">{f.desc}</p>
-                <motion.div
-                  className="w-6 h-[3px] bg-primary/40 mt-3 rounded-full"
-                  initial={{ scaleX: 0 }}
-                  whileInView={{ scaleX: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.3 + i * 0.1, duration: 0.4 }}
-                />
-              </motion.div>
-            ))}
-          </div>
+    <section aria-label="إحصائيات الشركة" className="bg-primary relative overflow-hidden">
+      <div className="absolute inset-0 bg-[linear-gradient(135deg,transparent_25%,rgba(255,255,255,0.06)_50%,transparent_75%)]" />
+      <div className="container mx-auto px-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-primary-foreground/15" dir="ltr">
+          {stats.map((s, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1, duration: 0.5 }}
+              className="py-5 md:py-6 text-center"
+            >
+              <div className="text-primary-foreground font-black text-2xl md:text-4xl lg:text-5xl leading-none tracking-tight">
+                <AnimatedNumber value={s.value} suffix={s.suffix} />
+              </div>
+              <div className="text-primary-foreground/60 text-xs md:text-sm mt-1.5 font-medium" dir="rtl">
+                {s.label}
+              </div>
+            </motion.div>
+          ))}
         </div>
       </div>
     </section>

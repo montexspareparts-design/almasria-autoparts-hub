@@ -77,7 +77,7 @@ const DistributionNetwork = () => {
                   <b.icon className="w-5 h-5 text-primary" />
                 </motion.div>
                 <div className="flex-1">
-                  <h4 className="font-bold text-[hsl(var(--section-dark-foreground))] text-sm">{b.name}</h4>
+                  <h3 className="font-bold text-[hsl(var(--section-dark-foreground))] text-sm">{b.name}</h3>
                   <p className="text-xs text-[hsl(var(--section-dark-foreground))]/60 mt-1">{b.detail}</p>
                   <a
                     href={b.mapUrl}
@@ -115,7 +115,7 @@ const DistributionNetwork = () => {
               <Truck className="w-5 h-5 text-primary" />
             </motion.div>
             <div className="relative z-10">
-              <h4 className="font-bold text-[hsl(var(--section-dark-foreground))] text-sm">تسليم سريع</h4>
+              <h3 className="font-bold text-[hsl(var(--section-dark-foreground))] text-sm">تسليم سريع</h3>
               <p className="text-xs text-[hsl(var(--section-dark-foreground))]/60 mt-1">48 ساعة داخل مصر</p>
             </div>
           </motion.div>
