@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Phone, Mail, MapPin, MessageCircle, Send, Clock } from "lucide-react";
 import CarQuiz from "./CarQuiz";
+import SpeedometerDashboard from "./SpeedometerDashboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -156,6 +157,7 @@ const ContactSection = () => {
 
           {/* Car Quiz */}
           <CarQuiz />
+          <SpeedometerDashboard />
           </div>
 
           <motion.div
