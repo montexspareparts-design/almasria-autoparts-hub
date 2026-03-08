@@ -109,10 +109,10 @@ const AboutPage = () => {
           <h2 className="text-3xl md:text-4xl font-black text-foreground mb-6">من نحن</h2>
           <p className="text-muted-foreground text-base md:text-lg leading-[1.8]">
             المصرية جروب مجموعة متخصصة في توزيع قطع الغيار والزيوت لقطاع السيارات، بخبرة تتجاوز 25 عامًا في السوق المصري.
-            نعمل كموزّع معتمد لـ<Link to="/products/genuine-toyota-parts" className="text-primary font-bold hover:underline">قطع غيار تويوتا الأصلية</Link> و<Link to="/products/toyota-lubricants" className="text-primary font-bold hover:underline">زيوت تويوتا الأصلية</Link>،
-            مع نموذج تشغيل منضبط قائم على أنظمة ERP، وشبكة توزيع تتجاوز 2000 عميل من تجار الجملة ومراكز الخدمة والشركات.
-            نلتزم بسياسات تسعير منضبطة، وحماية لقيمة العلامة، وتغطية وطنية مع تسليم خلال 48 ساعة من مخازن مركزية عالية الكفاءة.
-            كما ندير علامة <Link to="/mtx" className="text-primary font-bold hover:underline">MTX</Link> للأفترماركت بجودة تضاهي المواصفات الأصلية.
+            نعمل كموزّع معتمد لـ<Link to="/products/toyota-genuine" className="text-primary font-bold hover:underline">قطع غيار تويوتا الأصلية</Link> و<Link to="/products/toyota-oils" className="text-primary font-bold hover:underline">زيوت تويوتا الأصلية</Link>،
+            مع نموذج تشغيل منضبط قائم على أنظمة إدارة رقمية متكاملة، وشبكة توزيع تتجاوز 2000 عميل من تجار الجملة ومراكز الخدمة والشركات.
+            نلتزم بسياسات تسعير منضبطة، وحماية لقيمة العلامة، وتغطية وطنية مع توصيل سريع خلال 48 ساعة من مخازن مركزية عالية الكفاءة.
+            كما ندير علامة <Link to="/mtx" className="text-primary font-bold hover:underline">MTX</Link> لقطع الغيار البديلة بجودة تضاهي المواصفات الأصلية.
           </p>
         </div>
       </section>
