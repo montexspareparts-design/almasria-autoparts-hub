@@ -414,6 +414,45 @@ export type Database = {
         }
         Relationships: []
       }
+      part_requests: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          model: string | null
+          name: string
+          notes: string | null
+          phone: string
+          status: string
+          vin: string | null
+          year: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          model?: string | null
+          name: string
+          notes?: string | null
+          phone: string
+          status?: string
+          vin?: string | null
+          year?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          model?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string
+          status?: string
+          vin?: string | null
+          year?: string | null
+        }
+        Relationships: []
+      }
       product_categories: {
         Row: {
           created_at: string
