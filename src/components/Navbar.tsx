@@ -65,7 +65,7 @@ const Navbar = () => {
   const productCategories = [
     { label: "قطع غيار تويوتا أصلي", href: "/products/toyota-genuine" },
     { label: "زيوت تويوتا أصلي", href: "/products/toyota-oils" },
-    { label: "MTX Aftermarket", href: "/products/mtx-aftermarket" },
+    { label: "MTX Aftermarket", href: "/mtx" },
   ];
 
   const links = [
