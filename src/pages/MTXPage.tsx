@@ -309,37 +309,30 @@ const MTXPage = () => {
                 key={cat.name}
                 {...fadeUp}
                 transition={{ ...stagger(i), duration: 0.5 }}
-                className="bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300 group flex flex-col"
               >
-                {/* Image */}
-                <div className="aspect-square overflow-hidden">
-                  <img
-                    src={cat.image}
-                    alt={cat.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    loading="lazy"
-                  />
-                </div>
+                <Link
+                  to={`/products/mtx-aftermarket?category=${cat.slug}`}
+                  className="bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300 group flex flex-col h-full"
+                >
+                  {/* Image */}
+                  <div className="aspect-square overflow-hidden">
+                    <img
+                      src={cat.image}
+                      alt={cat.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      loading="lazy"
+                    />
+                  </div>
 
-                {/* Info */}
-                <div className="p-4 text-center flex-1 flex flex-col">
-                  <h3 className="font-bold text-foreground text-base mb-1.5">{cat.name}</h3>
-                  <p className="text-muted-foreground text-xs leading-relaxed mb-4 flex-1">{cat.detail}</p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mx-auto text-xs border-primary/20 text-primary hover:bg-primary/10 hover:text-primary"
-                    asChild
-                  >
-                    <a
-                      href={`https://wa.me/201153961008?text=أريد عرض سعر لفئة ${cat.name} من MTX`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
+                  {/* Info */}
+                  <div className="p-4 text-center flex-1 flex flex-col">
+                    <h3 className="font-bold text-foreground text-base mb-1.5">{cat.name}</h3>
+                    <p className="text-muted-foreground text-xs leading-relaxed mb-4 flex-1">{cat.detail}</p>
+                    <span className="mx-auto text-xs border border-primary/20 text-primary rounded-md px-3 py-1.5 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                       اطلب عرض سعر
-                    </a>
-                  </Button>
-                </div>
+                    </span>
+                  </div>
+                </Link>
               </motion.div>
             ))}
           </div>
