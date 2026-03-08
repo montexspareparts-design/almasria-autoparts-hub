@@ -3,14 +3,11 @@ import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 
-const FeaturesStrip = lazy(() => import("@/components/FeaturesStrip"));
 const AboutBrief = lazy(() => import("@/components/AboutBrief"));
-const WhyAlMasria = lazy(() => import("@/components/WhyAlMasria"));
+const WhoWeServe = lazy(() => import("@/components/WhoWeServe"));
 const DistributionSegments = lazy(() => import("@/components/DistributionSegments"));
-const WhyUsBrief = lazy(() => import("@/components/WhyUsBrief"));
 const DistributionNetwork = lazy(() => import("@/components/DistributionNetwork"));
-const BrandsWeDistribute = lazy(() => import("@/components/BrandsWeDistribute"));
-const TestimonialsHome = lazy(() => import("@/components/TestimonialsHome"));
+const MTXSection = lazy(() => import("@/components/MTXSection"));
 const ContactSimple = lazy(() => import("@/components/ContactSimple"));
 const Footer = lazy(() => import("@/components/Footer"));
 const WhatsAppFloat = lazy(() => import("@/components/WhatsAppFloat"));
@@ -24,36 +21,32 @@ const SectionFallback = () => (
 );
 
 /**
- * Homepage Structure (Corporate-First):
+ * Homepage Structure (Corporate Distribution Platform):
  * ─────────────────────────────────────────────────
- * 1. Hero           → H1: المصرية جروب — موزع معتمد لقطع غيار تويوتا
- * 2. FeaturesStrip  → Trust numbers
- * 3. About Brief    → H2: من نحن (corporate intro)
- * 4. WhyUs Brief    → H2: ما يميزنا (differentiators + CTA)
- * 5. Distribution   → H2: شبكة التوزيع
- * 6. Brands         → H2: العلامات التي نوزعها
- * 7. Testimonials   → H2: آراء عملائنا
- * 8. Contact CTA    → H2: اتصل بنا
- * 9. Footer
+ * 1. Hero              → H1 الوحيد بالصفحة
+ * 2. من نحن            → H2: نبذة مؤسسية + أرقام سريعة
+ * 3. من نخدم           → H2: شرائح العملاء الثلاث
+ * 4. قطاعات التوزيع    → H2: 3 خطوط رئيسية
+ * 5. الانتشار والفروع  → H2: مواقع + شحن
+ * 6. MTX               → H2: علامتنا الخاصة
+ * 7. CTA ختامي         → ابدأ شراكتك
+ * 8. Footer
  */
 const Index = () => {
   return (
     <div className="min-h-screen">
       <Helmet>
-        <title>المصرية جروب | موزع معتمد قطع غيار تويوتا الأصلية وزيوت تويوتا في مصر</title>
-        <meta name="description" content="المصرية جروب موزع معتمد لقطع غيار تويوتا الأصلية وزيوت تويوتا في مصر، مع شحن لجميع المحافظات وخدمة تجار الجملة والشركات والقطاعي." />
+        <title>المصرية جروب | موزع معتمد لقطع غيار وزيوت تويوتا الأصلية في مصر</title>
+        <meta name="description" content="منذ 1999 نقدم توزيعًا مؤسسيًا لقطع غيار وزيوت تويوتا الأصلية عبر شبكة تغطي مصر، تسليم خلال 48 ساعة، وعلامتنا MTX بجودة تضاهي المواصفات الأصلية." />
         <link rel="canonical" href="https://almasriaautoparts.com/" />
       </Helmet>
       <Navbar />
       <HeroSection />
-      <Suspense fallback={<SectionFallback />}><FeaturesStrip /></Suspense>
       <Suspense fallback={<SectionFallback />}><AboutBrief /></Suspense>
-      <Suspense fallback={<SectionFallback />}><WhyAlMasria /></Suspense>
-      <Suspense fallback={<SectionFallback />}><WhyUsBrief /></Suspense>
+      <Suspense fallback={<SectionFallback />}><WhoWeServe /></Suspense>
       <Suspense fallback={<SectionFallback />}><DistributionSegments /></Suspense>
       <Suspense fallback={<SectionFallback />}><DistributionNetwork /></Suspense>
-      <Suspense fallback={<SectionFallback />}><BrandsWeDistribute /></Suspense>
-      <Suspense fallback={<SectionFallback />}><TestimonialsHome /></Suspense>
+      <Suspense fallback={<SectionFallback />}><MTXSection /></Suspense>
       <Suspense fallback={<SectionFallback />}><ContactSimple /></Suspense>
       <Suspense fallback={null}><Footer /></Suspense>
       <Suspense fallback={null}><WhatsAppFloat /></Suspense>

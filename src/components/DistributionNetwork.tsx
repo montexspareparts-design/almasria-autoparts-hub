@@ -11,7 +11,7 @@ const branches = [
 
 const DistributionNetwork = () => {
   return (
-    <section id="distribution" className="py-20 md:py-28 bg-secondary">
+    <section id="coverage" className="py-20 md:py-28 bg-secondary">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -24,10 +24,10 @@ const DistributionNetwork = () => {
             شبكة التوزيع
           </span>
           <h2 className="text-3xl md:text-4xl font-black text-secondary-foreground mb-3">
-            تغطية <span className="text-primary">شاملة</span>
+            الانتشار <span className="text-primary">والفروع</span>
           </h2>
           <p className="text-secondary-foreground/50 text-base max-w-xl mx-auto">
-            نغطي مصر بالكامل عبر مخازن مركزية وتسليم خلال 48 ساعة
+            تغطية وطنية وشحن لجميع محافظات مصر عبر مخازن مركزية ومنظومة لوجستية منظمة.
           </p>
         </motion.div>
 

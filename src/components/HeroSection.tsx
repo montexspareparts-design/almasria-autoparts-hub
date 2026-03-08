@@ -59,7 +59,7 @@ const HeroSection = () => {
             transition={{ duration: 0.5, delay: 0.5 }}
             className="text-secondary-foreground/65 text-base md:text-lg leading-[1.8] max-w-[660px] mb-10"
           >
-            خبرة تتجاوز 25 عامًا في توزيع قطع غيار وزيوت تويوتا الأصلية، وعلامتنا الخاصة MTX بجودة تضاهي المواصفات الأصلية، مع تغطية وطنية وشحن لجميع المحافظات.
+            خبرة تتجاوز 25 عامًا في التوزيع المؤسسي، شبكة تغطي جميع المحافظات مع تسليم خلال 48 ساعة، وعلامتنا MTX بجودة تضاهي المواصفات الأصلية.
           </motion.p>
 
           {/* CTAs */}
@@ -85,7 +85,7 @@ const HeroSection = () => {
               className="text-base px-8 py-6 gap-2.5 font-bold border border-secondary-foreground/15 text-secondary-foreground bg-secondary-foreground/[0.04] backdrop-blur-sm hover:bg-secondary-foreground/10 transition-all duration-300 w-full sm:w-auto"
               asChild
             >
-              <Link to="/what-sets-us-apart#network" aria-label="عرض فروع وانتشار المصرية جروب">
+              <Link to="/#coverage" aria-label="عرض فروع وانتشار المصرية جروب">
                 <MapPin className="w-5 h-5" />
                 فروعنا وانتشارنا
               </Link>
