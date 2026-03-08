@@ -22,13 +22,13 @@ const AboutBrief = () => {
         <div className="max-w-[760px] mx-auto text-center mb-14">
           <p className="text-muted-foreground text-base md:text-lg leading-[1.7] mb-4">
             تعمل المصرية جروب منذ <strong className="text-foreground">1999</strong> كموزّع معتمد لِـ{" "}
-            <Link to="/products/genuine-toyota-parts" className="text-primary font-bold hover:underline">قطع غيار</Link> و<Link to="/products/toyota-lubricants" className="text-primary font-bold hover:underline">زيوت تويوتا الأصلية</Link>.
-            نعتمد نموذج تشغيل منضبط قائم على <strong className="text-foreground">أنظمة ERP</strong> وشبكة توزيع تغطي الجمهورية وتخدم{" "}
-            <strong className="text-foreground">أكثر من 2000 عميل</strong>. نوفر <strong className="text-foreground">تسليمًا خلال 48&nbsp;ساعة</strong> عبر مخازن مركزية عالية الكفاءة، مع{" "}
+            <Link to="/products/toyota-genuine" className="text-primary font-bold hover:underline">قطع غيار تويوتا الأصلية</Link> و<Link to="/products/toyota-oils" className="text-primary font-bold hover:underline">زيوت تويوتا</Link>.
+            نعتمد نموذج تشغيل منضبط قائم على <strong className="text-foreground">أنظمة إدارة رقمية متكاملة</strong> وشبكة توزيع تغطي الجمهورية وتخدم{" "}
+            <strong className="text-foreground">أكثر من 2000 عميل</strong>. نوفر <strong className="text-foreground">توصيلًا سريعًا خلال 48&nbsp;ساعة</strong> عبر مخازن مركزية عالية الكفاءة، مع{" "}
             <strong className="text-foreground">وجود إقليمي في دبي</strong> يدعم استمرارية التوريد وجودة المنتجات.
           </p>
           <p className="text-muted-foreground text-base md:text-lg leading-[1.7] mb-8">
-            كما ندير علامة <Link to="/mtx" className="text-primary font-bold hover:underline">MTX</Link> للأفترماركت بجودة تضاهي المواصفات الأصلية.
+            كما ندير علامة <Link to="/mtx" className="text-primary font-bold hover:underline">MTX</Link> لقطع الغيار البديلة بجودة تضاهي المواصفات الأصلية.
           </p>
           <Button variant="outline" size="lg" className="gap-2 font-bold" asChild>
             <Link to="/about">

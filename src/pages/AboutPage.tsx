@@ -37,7 +37,7 @@ const whyUsPoints = [
   { icon: Clock, title: "خبرة +25 سنة" },
   { icon: Users, title: "شبكة +2000 عميل وتغطية وطنية" },
   { icon: Truck, title: "تسليم خلال 48 ساعة" },
-  { icon: Cog, title: "تشغيل مدعوم بأنظمة ERP" },
+  { icon: Cog, title: "تشغيل مدعوم بأنظمة إدارة رقمية" },
   { icon: Package, title: "MTX — جودة تضاهي المواصفات الأصلية" },
 ];
 
@@ -55,9 +55,9 @@ const segments = [
 ];
 
 const distributionSectors = [
-  { title: "قطع غيار تويوتا الأصلية", desc: "قطع غيار أصلية بالكامل، مطابقة لمعايير المصنع (OEM)، لكل موديلات تويوتا.", to: "/products/genuine-toyota-parts" },
-  { title: "زيوت تويوتا الأصلية", desc: "زيوت محركات تويوتا بجميع اللزوجات، أصلية 100% وبضمان الجودة.", to: "/products/toyota-lubricants" },
-  { title: "MTX — جودة تضاهي الأصلي", desc: "علامتنا الخاصة للأفترماركت بجودة يابانية تضاهي المواصفات الأصلية.", to: "/mtx" },
+  { title: "قطع غيار تويوتا الأصلية", desc: "قطع غيار أصلية بالكامل، مطابقة لمعايير المصنع، لكل موديلات تويوتا.", to: "/products/toyota-genuine" },
+  { title: "زيوت تويوتا الأصلية", desc: "زيوت محركات تويوتا بجميع اللزوجات، أصلية 100% وبضمان الجودة.", to: "/products/toyota-oils" },
+  { title: "MTX — جودة تضاهي الأصلي", desc: "علامتنا الخاصة لقطع الغيار البديلة بجودة تضاهي المواصفات الأصلية.", to: "/mtx" },
 ];
 
 /* ── Page ──────────────────────────────────────── */
@@ -69,7 +69,7 @@ const AboutPage = () => {
         <title>عن المصرية جروب | منصة توزيع مؤسسية معتمدة منذ 1999</title>
         <meta
           name="description"
-          content="المصرية جروب مجموعة توزيع رائدة منذ 1999، موزع معتمد لقطع غيار وزيوت تويوتا الأصلية. شبكة +2000 عميل، تسليم خلال 48 ساعة، تشغيل مدعوم بأنظمة ERP، وعلامة MTX."
+          content="المصرية جروب مجموعة توزيع رائدة منذ 1999، موزع معتمد لقطع غيار وزيوت تويوتا الأصلية. شبكة +2000 عميل، توصيل سريع خلال 48 ساعة، وعلامة MTX."
         />
         <link rel="canonical" href="https://almasriaautoparts.com/about" />
       </Helmet>
@@ -92,7 +92,7 @@ const AboutPage = () => {
           </h1>
           <p className="text-base md:text-lg text-white/90 leading-[1.8] mb-8">
             منذ 1999، نعمل كموزع معتمد لقطع غيار وزيوت تويوتا الأصلية عبر شبكة توزيع منظمة تغطي مصر،
-            مع وجود إقليمي في دبي، وتشغيل مدعوم بأنظمة ERP لضمان الجودة والشفافية.
+            مع وجود إقليمي في دبي، وتشغيل مدعوم بأنظمة إدارة رقمية لضمان الجودة والشفافية.
           </p>
           <Button size="lg" className="font-bold gap-2" asChild>
             <Link to="/contact" aria-label="تواصل مع فريق مبيعات المصرية جروب">
@@ -109,10 +109,10 @@ const AboutPage = () => {
           <h2 className="text-3xl md:text-4xl font-black text-foreground mb-6">من نحن</h2>
           <p className="text-muted-foreground text-base md:text-lg leading-[1.8]">
             المصرية جروب مجموعة متخصصة في توزيع قطع الغيار والزيوت لقطاع السيارات، بخبرة تتجاوز 25 عامًا في السوق المصري.
-            نعمل كموزّع معتمد لـ<Link to="/products/genuine-toyota-parts" className="text-primary font-bold hover:underline">قطع غيار تويوتا الأصلية</Link> و<Link to="/products/toyota-lubricants" className="text-primary font-bold hover:underline">زيوت تويوتا الأصلية</Link>،
-            مع نموذج تشغيل منضبط قائم على أنظمة ERP، وشبكة توزيع تتجاوز 2000 عميل من تجار الجملة ومراكز الخدمة والشركات.
-            نلتزم بسياسات تسعير منضبطة، وحماية لقيمة العلامة، وتغطية وطنية مع تسليم خلال 48 ساعة من مخازن مركزية عالية الكفاءة.
-            كما ندير علامة <Link to="/mtx" className="text-primary font-bold hover:underline">MTX</Link> للأفترماركت بجودة تضاهي المواصفات الأصلية.
+            نعمل كموزّع معتمد لـ<Link to="/products/toyota-genuine" className="text-primary font-bold hover:underline">قطع غيار تويوتا الأصلية</Link> و<Link to="/products/toyota-oils" className="text-primary font-bold hover:underline">زيوت تويوتا الأصلية</Link>،
+            مع نموذج تشغيل منضبط قائم على أنظمة إدارة رقمية متكاملة، وشبكة توزيع تتجاوز 2000 عميل من تجار الجملة ومراكز الخدمة والشركات.
+            نلتزم بسياسات تسعير منضبطة، وحماية لقيمة العلامة، وتغطية وطنية مع توصيل سريع خلال 48 ساعة من مخازن مركزية عالية الكفاءة.
+            كما ندير علامة <Link to="/mtx" className="text-primary font-bold hover:underline">MTX</Link> لقطع الغيار البديلة بجودة تضاهي المواصفات الأصلية.
           </p>
         </div>
       </section>

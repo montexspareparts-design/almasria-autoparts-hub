@@ -5,6 +5,7 @@ import HeroSection from "@/components/HeroSection";
 import { OrganizationSchema, WebSiteSchema, LocalBusinessSchema, FAQSchema } from "@/components/SEOSchemaMarkup";
 
 const AboutBrief = lazy(() => import("@/components/AboutBrief"));
+const WhyChooseUs = lazy(() => import("@/components/WhyChooseUs"));
 const WhoWeServe = lazy(() => import("@/components/WhoWeServe"));
 const KeyMetrics = lazy(() => import("@/components/KeyMetrics"));
 const DistributionSegments = lazy(() => import("@/components/DistributionSegments"));
@@ -26,13 +27,15 @@ const SectionFallback = () => (
  * Homepage Structure (Corporate Distribution Platform):
  * ─────────────────────────────────────────────────
  * 1. Hero              → H1 الوحيد بالصفحة
- * 2. من نحن            → H2: نبذة مؤسسية + أرقام سريعة
- * 3. من نخدم           → H2: شرائح العملاء الثلاث
- * 4. قطاعات التوزيع    → H2: 3 خطوط رئيسية
- * 5. الانتشار والفروع  → H2: مواقع + شحن
- * 6. MTX               → H2: علامتنا الخاصة
- * 7. CTA ختامي         → ابدأ شراكتك
- * 8. Footer
+ * 2. من نحن            → H2: نبذة مؤسسية
+ * 3. أرقامنا           → H2: مقاييس الثقة
+ * 4. لماذا تختارنا     → H2: قطع أصلية، أسعار، توصيل، دعم
+ * 5. من نخدم           → H2: شرائح العملاء
+ * 6. قطاعات التوزيع    → H2: 3 خطوط رئيسية
+ * 7. الانتشار والفروع  → H2: مواقع + شحن
+ * 8. MTX               → H2: علامتنا الخاصة
+ * 9. CTA ختامي         → ابدأ شراكتك
+ * 10. Footer
  */
 const Index = () => {
   return (
@@ -46,19 +49,20 @@ const Index = () => {
       <WebSiteSchema />
       <LocalBusinessSchema />
       <FAQSchema items={[
-        { question: "هل جميع قطع الغيار أصلية؟", answer: "نعم، جميع قطع الغيار التي نوفرها أصلية ١٠٠٪ من تويوتا مباشرة. نحن موزع معتمد رسمي ونوفر ضمان على جميع المنتجات." },
-        { question: "كيف أتحقق من أصالة القطعة؟", answer: "كل قطعة أصلية تحمل رقم تويوتا المرجعي (OEM Part Number) وعلامة الهولوجرام. يمكنك التحقق عبر رقم الشاسيه (VIN) أو التواصل معنا لتأكيد التوافق." },
-        { question: "ما المطلوب من العميل لتحديد القطعة؟", answer: "يكفي توفير موديل السيارة وسنة الصنع ورقم الشاسيه (VIN). يمكنك أيضًا إرسال صورة للقطعة المطلوبة عبر واتساب لتسريع عملية التحديد." },
-        { question: "ما هي مناطق التوصيل المتاحة؟", answer: "نوفر خدمة التوصيل لجميع محافظات مصر من خلال ٥ فروع منتشرة في أنحاء الجمهورية. التوصيل يتم خلال ٢٤-٧٢ ساعة حسب المنطقة." },
+        { question: "هل جميع قطع الغيار أصلية؟", answer: "نعم، جميع قطع الغيار التي نوفرها أصلية ١٠٠٪ من تويوتا مباشرة. نحن موزع معتمد رسمي ونوفر ضمان وكالة على جميع المنتجات." },
+        { question: "كيف أتحقق من أصالة القطعة؟", answer: "كل قطعة أصلية تحمل رقم تويوتا المرجعي وعلامة الهولوجرام. يمكنك التحقق عبر رقم الشاسيه أو التواصل معنا لتأكيد التوافق." },
+        { question: "ما المطلوب من العميل لتحديد القطعة؟", answer: "يكفي توفير موديل السيارة وسنة الصنع ورقم الشاسيه. يمكنك أيضًا إرسال صورة للقطعة المطلوبة عبر واتساب لتسريع عملية التحديد." },
+        { question: "ما هي مناطق التوصيل المتاحة؟", answer: "نوفر خدمة التوصيل لجميع محافظات مصر من خلال فروعنا المنتشرة في أنحاء الجمهورية. التوصيل يتم خلال ٢٤-٧٢ ساعة حسب المنطقة." },
         { question: "كيف أسجل كتاجر أو موزع؟", answer: "يمكنك التقديم من خلال صفحة تسجيل التجار على الموقع. ستحتاج لتقديم السجل التجاري والبطاقة الضريبية. يتم مراجعة الطلب خلال ٤٨ ساعة." },
         { question: "هل يوجد حد أدنى للطلب؟", answer: "الحد الأدنى يختلف حسب فئة العميل. للتجار والموزعين يوجد حد أدنى يتم تحديده عند فتح الحساب. للعملاء العاديين لا يوجد حد أدنى." },
-        { question: "ما هي طرق الدفع المتاحة؟", answer: "نقبل الدفع نقدًا عند الاستلام، التحويل البنكي، وفودافون كاش. للتجار المعتمدين نوفر نظام الائتمان بحسب الاتفاق." },
+        { question: "ما هي طرق الدفع المتاحة؟", answer: "نقبل الدفع نقدًا عند الاستلام، التحويل البنكي، وفودافون كاش. للتجار المعتمدين نوفر نظام ائتمان بحسب الاتفاق." },
         { question: "هل يمكن إرجاع أو استبدال المنتجات؟", answer: "نعم، نوفر سياسة إرجاع واستبدال خلال ١٤ يوم من تاريخ الشراء بشرط أن يكون المنتج في حالته الأصلية مع الفاتورة." },
       ]} />
       <Navbar />
       <HeroSection />
       <Suspense fallback={<SectionFallback />}><AboutBrief /></Suspense>
       <Suspense fallback={<SectionFallback />}><KeyMetrics /></Suspense>
+      <Suspense fallback={<SectionFallback />}><WhyChooseUs /></Suspense>
       <Suspense fallback={<SectionFallback />}><WhoWeServe /></Suspense>
       <Suspense fallback={<SectionFallback />}><DistributionSegments /></Suspense>
       <Suspense fallback={<SectionFallback />}><DistributionNetwork /></Suspense>
