@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PartRequestForm from "@/components/PartRequestForm";
-import { BreadcrumbSchema } from "@/components/SEOSchemaMarkup";
+import { BreadcrumbSchema, ItemListSchema } from "@/components/SEOSchemaMarkup";
 
 const SITE = "https://almasriaautoparts.com";
 
@@ -249,6 +249,11 @@ const ModelsLanding = () => (
       { name: "الرئيسية", url: SITE },
       { name: "حسب الموديل", url: `${SITE}/parts-by-model` },
     ]} />
+    <ItemListSchema name="موديلات تويوتا المدعومة" items={models.map((m, i) => ({
+      name: `قطع غيار تويوتا ${m.nameAr}`,
+      url: `${SITE}/parts-by-model/${m.slug}`,
+      position: i + 1,
+    }))} />
 
     <section className="pt-24 md:pt-32 pb-12 bg-gradient-to-b from-secondary to-background">
       <div className="container mx-auto px-4 text-center">

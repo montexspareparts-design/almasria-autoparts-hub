@@ -146,6 +146,26 @@ export const ProductSchema = ({ name, sku, description, image, brand, availabili
   </Helmet>
 );
 
+/* ── ItemList (for category/catalog pages) ── */
+interface ItemListItem { name: string; url: string; position?: number }
+
+export const ItemListSchema = ({ name, items }: { name: string; items: ItemListItem[] }) => (
+  <Helmet>
+    <script type="application/ld+json">{JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": name,
+      "numberOfItems": items.length,
+      "itemListElement": items.map((item, i) => ({
+        "@type": "ListItem",
+        "position": item.position || i + 1,
+        "name": item.name,
+        "url": item.url
+      }))
+    })}</script>
+  </Helmet>
+);
+
 /* ── LocalBusiness ── */
 export const LocalBusinessSchema = () => (
   <Helmet>

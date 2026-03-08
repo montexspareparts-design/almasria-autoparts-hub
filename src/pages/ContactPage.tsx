@@ -31,7 +31,8 @@ const ContactPage = () => {
     <div className="min-h-screen bg-background">
       <Helmet>
         <title>اتصل بنا | المصرية جروب — موزع قطع غيار تويوتا</title>
-        <meta name="description" content="تواصل مع المصرية جروب عبر الهاتف أو البريد أو واتساب. فروعنا في القاهرة والجيزة والأقصر ودبي." />
+        <meta name="description" content="تواصل مع المصرية جروب عبر الهاتف أو البريد أو واتساب. فروعنا في القاهرة والجيزة والأقصر ودبي. توصيل سريع لجميع المحافظات." />
+        <link rel="canonical" href="https://almasriaautoparts.com/contact" />
       </Helmet>
       <Navbar />
 

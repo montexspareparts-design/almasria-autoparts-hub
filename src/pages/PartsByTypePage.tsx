@@ -5,7 +5,7 @@ import { Filter, ChevronLeft, ShieldCheck, Car, Wrench, Droplets, Zap, Disc, Set
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PartRequestForm from "@/components/PartRequestForm";
-import { BreadcrumbSchema } from "@/components/SEOSchemaMarkup";
+import { BreadcrumbSchema, ItemListSchema } from "@/components/SEOSchemaMarkup";
 
 const SITE = "https://almasriaautoparts.com";
 
@@ -236,6 +236,11 @@ const TypesLanding = () => (
       { name: "الرئيسية", url: SITE },
       { name: "حسب نوع القطعة", url: `${SITE}/parts-by-type` },
     ]} />
+    <ItemListSchema name="أنواع قطع غيار تويوتا" items={partTypes.map((t, i) => ({
+      name: `${t.nameAr} تويوتا الأصلية`,
+      url: `${SITE}/parts-by-type/${t.slug}`,
+      position: i + 1,
+    }))} />
 
     <section className="pt-24 md:pt-32 pb-12 bg-gradient-to-b from-secondary to-background">
       <div className="container mx-auto px-4 text-center">
