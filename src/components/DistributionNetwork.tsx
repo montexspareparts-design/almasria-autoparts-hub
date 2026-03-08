@@ -76,9 +76,18 @@ const DistributionNetwork = () => {
                 >
                   <b.icon className="w-5 h-5 text-primary" />
                 </motion.div>
-                <div>
+                <div className="flex-1">
                   <h4 className="font-bold text-[hsl(var(--section-dark-foreground))] text-sm">{b.name}</h4>
                   <p className="text-xs text-[hsl(var(--section-dark-foreground))]/60 mt-1">{b.detail}</p>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(b.mapQuery)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 mt-2.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
+                  >
+                    <Navigation className="w-3.5 h-3.5" />
+                    افتح على خرائط جوجل
+                  </a>
                 </div>
               </div>
             </motion.div>
