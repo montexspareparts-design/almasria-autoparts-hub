@@ -144,7 +144,39 @@ const AdminProductImages = () => {
     }
   };
 
-  const handleRemoveImage = async (productId: string, imageUrl: string) => {
+  const handleDropFile = async (productId: string, file: File) => {
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "حجم الصورة يجب أن يكون أقل من 5MB", variant: "destructive" });
+      return;
+    }
+    setTargetProductId(productId);
+    setUploading(productId);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const filePath = `${productId}.${ext}`;
+      const { data: existingFiles } = await supabase.storage.from("product-images").list("", { search: productId });
+      if (existingFiles && existingFiles.length > 0) {
+        const oldFiles = existingFiles.filter(f => f.name.startsWith(productId));
+        if (oldFiles.length > 0) await supabase.storage.from("product-images").remove(oldFiles.map(f => f.name));
+      }
+      const { error: uploadError } = await supabase.storage.from("product-images").upload(filePath, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(filePath);
+      const publicUrlWithCacheBust = `${urlData.publicUrl}?t=${Date.now()}`;
+      const { error: updateError } = await supabase.from("products").update({ image_url: publicUrlWithCacheBust }).eq("id", productId);
+      if (updateError) throw updateError;
+      toast({ title: "تم رفع الصورة بنجاح ✅" });
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    } catch (err: any) {
+      toast({ title: "خطأ في رفع الصورة", description: err.message, variant: "destructive" });
+    } finally {
+      setUploading(null);
+      setTargetProductId(null);
+    }
+  };
+
+
     setUploading(productId);
     try {
       const parts = imageUrl.split("/product-images/");
