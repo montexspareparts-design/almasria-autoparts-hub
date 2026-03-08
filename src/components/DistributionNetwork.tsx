@@ -74,8 +74,8 @@ const DistributionNetwork = () => {
               <Truck className="w-4 h-4 text-primary" />
             </div>
             <div>
-              <h3 className="font-bold text-secondary-foreground text-sm">تسليم سريع</h3>
-              <p className="text-xs text-secondary-foreground/50 mt-1">48 ساعة داخل مصر</p>
+              <h3 className="font-bold text-secondary-foreground text-sm">توصيل سريع لجميع المحافظات</h3>
+              <p className="text-xs text-secondary-foreground/50 mt-1">تسليم خلال 48 ساعة داخل مصر</p>
             </div>
           </motion.div>
         </div>
