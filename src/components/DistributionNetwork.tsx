@@ -1,12 +1,12 @@
 import { motion } from "framer-motion";
-import { MapPin, Building2, Globe, Truck } from "lucide-react";
+import { MapPin, Building2, Globe, Truck, Navigation } from "lucide-react";
 
 const branches = [
-  { name: "القاهرة – التوفيقية", detail: "سوق التوفيقية لقطع غيار السيارات", icon: Building2 },
-  { name: "الجيزة – أوسيم", detail: "أوسيم – الجيزة", icon: Building2 },
-  { name: "الأقصر", detail: "صعيد مصر", icon: Building2 },
-  { name: "المكتب الإداري", detail: "اللبيني – الجيزة", icon: Building2 },
-  { name: "دبي – Spectra Cars & Parts FZC", detail: "مركز إقليمي – الإمارات 🇦🇪", icon: Globe },
+  { name: "القاهرة – التوفيقية", detail: "سوق التوفيقية لقطع غيار السيارات", icon: Building2, mapQuery: "سوق التوفيقية لقطع غيار السيارات, القاهرة, مصر" },
+  { name: "الجيزة – أوسيم", detail: "أوسيم – الجيزة", icon: Building2, mapQuery: "أوسيم, الجيزة, مصر" },
+  { name: "الأقصر", detail: "صعيد مصر", icon: Building2, mapQuery: "الأقصر, مصر" },
+  { name: "المكتب الإداري", detail: "اللبيني – الجيزة", icon: Building2, mapQuery: "اللبيني, الجيزة, مصر" },
+  { name: "دبي – Spectra Cars & Parts FZC", detail: "مركز إقليمي – الإمارات 🇦🇪", icon: Globe, mapQuery: "Spectra Cars & Parts FZC, Dubai, UAE" },
 ];
 
 const DistributionNetwork = () => {
