@@ -126,12 +126,16 @@ const Navbar = () => {
                 >
                   <motion.a
                     href={link.href}
-                    className="text-sm font-medium text-secondary-foreground/80 hover:text-primary transition-colors relative group flex items-center gap-1"
+                    className={`text-sm font-medium transition-colors relative group flex items-center gap-1 ${
+                      isLinkActive(link.href) ? "text-primary" : "text-secondary-foreground/80 hover:text-primary"
+                    }`}
                     whileHover={{ y: -1 }}
                   >
                     {link.label}
                     <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${productsOpen ? "rotate-180" : ""}`} />
-                    <span className="absolute -bottom-1 right-0 w-0 h-[2px] bg-primary rounded-full transition-all duration-300 group-hover:w-full" />
+                    <span className={`absolute -bottom-1 right-0 h-[2px] bg-primary rounded-full transition-all duration-300 ${
+                      isLinkActive(link.href) ? "w-full" : "w-0 group-hover:w-full"
+                    }`} />
                   </motion.a>
                   <AnimatePresence>
                     {productsOpen && (
