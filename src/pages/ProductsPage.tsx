@@ -329,7 +329,8 @@ const ProductsPage = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: Math.min(i * 0.02, 0.5) }}
-                  className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 transition-all duration-300 ease-out group"
+                  className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 transition-all duration-300 ease-out group cursor-pointer"
+                  onClick={() => setSelectedProduct(product)}
                 >
                   {/* Product Image */}
                   <div className="aspect-square bg-white relative overflow-hidden">
