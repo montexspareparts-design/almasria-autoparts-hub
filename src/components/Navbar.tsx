@@ -27,9 +27,7 @@ const linkVariants = {
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [productsOpen, setProductsOpen] = useState(false);
-  const [catalogOpen, setCatalogOpen] = useState(false);
   const [mobileProductsOpen, setMobileProductsOpen] = useState(false);
-  const [mobileCatalogOpen, setMobileCatalogOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("hero");
   const productsTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const catalogTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
