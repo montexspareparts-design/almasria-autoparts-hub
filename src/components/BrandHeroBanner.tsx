@@ -9,9 +9,10 @@ interface BrandHeroBannerProps {
   subtitle: string;
   description: string;
   badge: string;
+  backgroundImage?: string;
 }
 
-const BrandHeroBanner = ({ logo, title, subtitle, description, badge }: BrandHeroBannerProps) => {
+const BrandHeroBanner = ({ logo, title, subtitle, description, badge, backgroundImage }: BrandHeroBannerProps) => {
   return (
     <section className="pt-24 pb-14 relative overflow-hidden">
       {/* Background image */}
