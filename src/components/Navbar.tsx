@@ -178,7 +178,9 @@ const Navbar = () => {
                 <motion.a
                   key={link.href}
                   href={link.href}
-                  className="text-sm font-medium text-secondary-foreground/80 hover:text-primary transition-colors relative group"
+                  className={`text-sm font-medium transition-colors relative group ${
+                    isLinkActive(link.href) ? "text-primary" : "text-secondary-foreground/80 hover:text-primary"
+                  }`}
                   whileHover={{ y: -1 }}
                   onClick={(e) => {
                     const hash = link.href.replace("/", "");
