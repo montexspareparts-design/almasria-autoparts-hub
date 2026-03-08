@@ -223,47 +223,6 @@ const Navbar = () => {
               {links.map((link, i) => {
                 const linkAny = link as any;
                 
-                // Catalog dropdown (mobile)
-                if (linkAny.hasDropdown === "catalog") {
-                  return (
-                    <div key={link.href}>
-                      <motion.button
-                        custom={i}
-                        initial="hidden"
-                        animate="visible"
-                        variants={linkVariants}
-                        className="w-full flex items-center justify-between py-3 text-sm font-medium text-secondary-foreground/80 hover:text-primary transition-colors"
-                        onClick={() => setMobileCatalogOpen(!mobileCatalogOpen)}
-                      >
-                        {link.label}
-                        <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${mobileCatalogOpen ? "rotate-180" : ""}`} />
-                      </motion.button>
-                      <AnimatePresence>
-                        {mobileCatalogOpen && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="overflow-hidden pr-4 border-r-2 border-primary/30"
-                          >
-                            {catalogCategories.map((cat) => (
-                              <Link
-                                key={cat.href}
-                                to={cat.href}
-                                className="block py-2 text-sm text-secondary-foreground/70 hover:text-primary transition-colors"
-                                onClick={() => { setIsOpen(false); setMobileCatalogOpen(false); }}
-                              >
-                                {cat.label}
-                              </Link>
-                            ))}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  );
-                }
-
                 // Route links
                 if (linkAny.isRoute) {
                   return (
