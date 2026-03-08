@@ -11,6 +11,9 @@ import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 
 type AuthMethod = "phone" | "email";
 
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_DURATION = 60_000; // 1 minute
+
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [authMethod, setAuthMethod] = useState<AuthMethod>("phone");
@@ -24,6 +27,8 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
+  const [loginAttempts, setLoginAttempts] = useState(0);
+  const [lockedUntil, setLockedUntil] = useState<number | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
