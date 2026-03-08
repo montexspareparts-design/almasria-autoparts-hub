@@ -13,8 +13,6 @@ import catCooling from "@/assets/cat-cooling.jpg";
 import brandGenuineParts from "@/assets/brand-genuine-parts.png";
 import brandToyotaOil from "@/assets/brand-toyota-oil.png";
 import brandMtx from "@/assets/brand-mtx.jpg";
-import brandDenso from "@/assets/brand-denso.png";
-import brandAisin from "@/assets/brand-aisin.png";
 
 const categories = [
   { name: "أجزاء المحرك", image: catEngine, count: "+800 صنف", slug: "engine" },
@@ -29,8 +27,6 @@ const brands = [
   { label: "قطع غيار تويوتا الأصلية", image: brandGenuineParts, to: "/products/toyota-genuine", imgScale: "scale-100" },
   { label: "زيوت تويوتا الأصلية", image: brandToyotaOil, to: "/products/toyota-oils", imgScale: "scale-150" },
   { label: "MTX Aftermarket", image: brandMtx, to: "/products/mtx-aftermarket", imgScale: "scale-150" },
-  { label: "DENSO", image: brandDenso, to: "/products/denso", imgScale: "scale-100" },
-  { label: "AISIN", image: brandAisin, to: "/products/aisin", imgScale: "scale-100" },
 ];
 
 // Glowing particles component
