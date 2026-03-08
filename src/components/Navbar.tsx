@@ -31,7 +31,6 @@ const Navbar = () => {
   const [activeSection, setActiveSection] = useState<string>("hero");
   const productsTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user, isDealer, isAdmin, signOut } = useAuth();
-  const { user, isDealer, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
