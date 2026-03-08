@@ -1,25 +1,24 @@
 import { motion } from "framer-motion";
 import { Play, X } from "lucide-react";
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const VideoSection = () => {
   const [playing, setPlaying] = useState(false);
+  const [videoId, setVideoId] = useState<string | null>(null);
 
-  const { data: videoId, isLoading } = useQuery({
-    queryKey: ["site-setting", "video_youtube_id"],
-    queryFn: async () => {
-      const { data } = await (supabase as any)
-        .from("site_settings")
-        .select("value")
-        .eq("key", "video_youtube_id")
-        .maybeSingle();
-      return (data?.value as string) || null;
-    },
-  });
+  useEffect(() => {
+    (supabase as any)
+      .from("site_settings")
+      .select("value")
+      .eq("key", "video_youtube_id")
+      .maybeSingle()
+      .then(({ data }: any) => {
+        if (data?.value) setVideoId(data.value);
+      });
+  }, []);
 
-  if (isLoading || !videoId) return null;
+  if (!videoId) return null;
 
   return (
     <section className="relative py-24 overflow-hidden bg-secondary">
