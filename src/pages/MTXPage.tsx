@@ -75,11 +75,11 @@ const advantages = [
 ];
 
 const categories = [
-  { image: catFilters, name: "فلاتر", detail: "زيت – هواء – وقود – تكييف" },
-  { image: catBrakes, name: "تيل فرامل", detail: "أقراص وتيل فرامل عالية الأداء" },
-  { image: catSuspension, name: "قطع تعليق", detail: "مقصات – جلب – كراسي موتور" },
-  { image: catElectrical, name: "كهرباء سيارات", detail: "بوجيهات – حساسات – ريلايات" },
-  { image: catBelts, name: "سيور ومحركات", detail: "سيور توقيت – سيور مروحة" },
+  { image: catFilters, name: "فلاتر", detail: "زيت – هواء – وقود – تكييف", slug: "filters" },
+  { image: catBrakes, name: "تيل فرامل", detail: "أقراص وتيل فرامل عالية الأداء", slug: "brakes" },
+  { image: catSuspension, name: "قطع تعليق", detail: "مقصات – جلب – كراسي موتور", slug: "suspension" },
+  { image: catElectrical, name: "كهرباء سيارات", detail: "بوجيهات – حساسات – ريلايات", slug: "electrical" },
+  { image: catBelts, name: "سيور ومحركات", detail: "سيور توقيت – سيور مروحة", slug: "belts" },
 ];
 
 const qualitySteps = [
