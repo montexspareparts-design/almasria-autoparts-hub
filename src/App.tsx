@@ -23,6 +23,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
 const WhatSetsUsApartPage = lazy(() => import("./pages/WhatSetsUsApartPage"));
 const MTXPage = lazy(() => import("./pages/MTXPage"));
+const ToyotaPartsEgypt = lazy(() => import("./pages/ToyotaPartsEgypt"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
