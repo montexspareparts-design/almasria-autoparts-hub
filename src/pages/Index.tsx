@@ -6,11 +6,14 @@ import HeroSection from "@/components/HeroSection";
 const AboutSection = lazy(() => import("@/components/AboutSection"));
 const ProductsSection = lazy(() => import("@/components/ProductsSection"));
 const WhyUsSection = lazy(() => import("@/components/WhyUsSection"));
+const TestimonialsSection = lazy(() => import("@/components/TestimonialsSection"));
+const FAQSection = lazy(() => import("@/components/FAQSection"));
 const PartnershipsSection = lazy(() => import("@/components/PartnershipsSection"));
 const ContactSection = lazy(() => import("@/components/ContactSection"));
 const Footer = lazy(() => import("@/components/Footer"));
 const WhatsAppFloat = lazy(() => import("@/components/WhatsAppFloat"));
 const AIChatBot = lazy(() => import("@/components/AIChatBot"));
+const BackToTop = lazy(() => import("@/components/BackToTop"));
 
 const SectionFallback = () => (
   <div className="flex items-center justify-center py-20">
