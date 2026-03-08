@@ -29,7 +29,7 @@ const Navbar = () => {
   const [productsOpen, setProductsOpen] = useState(false);
   const [mobileProductsOpen, setMobileProductsOpen] = useState(false);
   const productsTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { itemCount } = useCart();
+  const { user, isDealer, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
 
   const links = [
