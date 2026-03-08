@@ -260,6 +260,11 @@ const ProductsPage = () => {
   if (!config) {
     return (
       <div className="min-h-screen bg-dark-section">
+        <Helmet>
+          <title>منتجاتنا | المصرية جروب — قطع غيار وزيوت تويوتا الأصلية</title>
+          <meta name="description" content="تصفح كتالوج المصرية جروب: قطع غيار تويوتا الأصلية، زيوت تويوتا، MTX Aftermarket، DENSO، و AISIN. أكثر من 960 صنف متاح." />
+          <link rel="canonical" href="https://almasriaautoparts.com/products" />
+        </Helmet>
         <Navbar />
         
         {/* Full-page brands showcase */}
