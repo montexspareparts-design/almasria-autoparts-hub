@@ -271,6 +271,7 @@ const ProductDetailDialog = ({
             </Button>
           )}
         </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
