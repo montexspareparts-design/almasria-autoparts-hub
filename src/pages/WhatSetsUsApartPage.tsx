@@ -11,7 +11,7 @@ import Footer from "@/components/Footer";
 // Images
 import heroWarehouse from "@/assets/hero-warehouse.jpg";
 import warehouseLogistics from "@/assets/warehouse-logistics.jpg";
-import awardTrophy from "@/assets/award-trophy.jpg";
+import partnershipToyota from "@/assets/partnership-toyota.jpg";
 import distributionMap from "@/assets/distribution-map.jpg";
 import erpSystem from "@/assets/erp-system.jpg";
 import brandMtx from "@/assets/brand-mtx.jpg";
@@ -57,8 +57,8 @@ const sections = [
     stat: "OEM",
     statLabel: "معايير",
     highlights: ["قنوات توريد رسمية", "معايير OEM عالمية", "أعلى مستويات الجودة"],
-    image: awardTrophy,
-    imageAlt: "تكريم من تويوتا مصر للمصرية جروب",
+    image: partnershipToyota,
+    imageAlt: "شراكة المصرية جروب مع تويوتا",
   },
   {
     icon: Users,
