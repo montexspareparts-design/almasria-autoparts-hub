@@ -464,6 +464,32 @@ const ProductsPage = () => {
       {/* Maintenance Bundles */}
       <MaintenanceBundles />
 
+      {/* Product Detail Dialog */}
+      <ProductDetailDialog
+        product={selectedProduct}
+        open={!!selectedProduct}
+        onOpenChange={(open) => { if (!open) setSelectedProduct(null); }}
+        price={
+          selectedProduct
+            ? !user ? null
+            : !isDealer ? selectedProduct.base_price
+            : viewedProductIds.includes(selectedProduct.id) ? getProductPrice(selectedProduct)
+            : null
+            : null
+        }
+        priceLabel={
+          selectedProduct && user
+            ? isDealer && viewedProductIds.includes(selectedProduct.id)
+              ? "سعر الجملة الخاص بك"
+              : !isDealer ? "سعر قطاعي" : undefined
+            : undefined
+        }
+        canAddToCart={
+          !!user && (!isDealer || (selectedProduct && viewedProductIds.includes(selectedProduct.id)))
+        }
+        onAddToCart={handleAddToCart}
+      />
+
       <Footer />
     </div>
   );
