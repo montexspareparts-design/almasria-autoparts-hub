@@ -5,7 +5,9 @@ import logo from "@/assets/logo.png";
 
 const quickLinks = [
   { label: "الرئيسية", href: "/#hero" },
-  { label: "العلامات التجارية", href: "/products" },
+  { label: "المنتجات", href: "/products" },
+  { label: "MTX", href: "/mtx" },
+  { label: "ما يميزنا", href: "/what-sets-us-apart" },
   { label: "شبكة التوزيع", href: "/#distribution" },
   { label: "اتصل بنا", href: "/contact" },
 ];
