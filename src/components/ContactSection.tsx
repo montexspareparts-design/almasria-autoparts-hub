@@ -152,7 +152,11 @@ const ContactSection = () => {
             </motion.div>
           </motion.form>
 
-          {/* Contact Info */}
+          {/* Lucky Wheel - Fun element */}
+          <div className="md:hidden mt-8">
+            <LuckyWheel />
+          </div>
+
           <motion.div
             initial={{ opacity: 0, x: 40 }}
             whileInView={{ opacity: 1, x: 0 }}
