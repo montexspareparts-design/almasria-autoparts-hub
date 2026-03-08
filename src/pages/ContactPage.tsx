@@ -192,7 +192,7 @@ const ContactPage = () => {
             ].map((b, i) => (
               <motion.a
                 key={b.name}
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(b.mapQuery)}`}
+                href={b.mapUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 initial={{ opacity: 0, y: 20 }}
