@@ -8,6 +8,7 @@ const AboutBrief = lazy(() => import("@/components/AboutBrief"));
 const BrandsWeDistribute = lazy(() => import("@/components/BrandsWeDistribute"));
 const WhyUsBrief = lazy(() => import("@/components/WhyUsBrief"));
 const DistributionNetwork = lazy(() => import("@/components/DistributionNetwork"));
+const TestimonialsHome = lazy(() => import("@/components/TestimonialsHome"));
 const ContactSimple = lazy(() => import("@/components/ContactSimple"));
 const Footer = lazy(() => import("@/components/Footer"));
 const WhatsAppFloat = lazy(() => import("@/components/WhatsAppFloat"));
@@ -47,6 +48,7 @@ const Index = () => {
       <Suspense fallback={<SectionFallback />}><BrandsWeDistribute /></Suspense>
       <Suspense fallback={<SectionFallback />}><WhyUsBrief /></Suspense>
       <Suspense fallback={<SectionFallback />}><DistributionNetwork /></Suspense>
+      <Suspense fallback={<SectionFallback />}><TestimonialsHome /></Suspense>
       <Suspense fallback={<SectionFallback />}><ContactSimple /></Suspense>
       <Suspense fallback={null}><Footer /></Suspense>
       <Suspense fallback={null}><WhatsAppFloat /></Suspense>
