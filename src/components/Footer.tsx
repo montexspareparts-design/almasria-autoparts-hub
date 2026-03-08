@@ -4,12 +4,12 @@ import logo from "@/assets/logo.png";
 
 const quickLinks = [
   { label: "الرئيسية", href: "/" },
-  { label: "قطع غيار تويوتا الأصلية في مصر", href: "/toyota-genuine-parts-egypt" },
-  { label: "قطع غيار تويوتا", href: "/products/toyota-genuine" },
-  { label: "زيوت تويوتا", href: "/products/toyota-oils" },
-  { label: "MTX Aftermarket", href: "/mtx" },
+  { label: "من نحن", href: "/#about" },
+  { label: "قطاعات التوزيع", href: "/#segments" },
+  { label: "MTX", href: "/mtx" },
   { label: "ما يميزنا", href: "/what-sets-us-apart" },
   { label: "اتصل بنا", href: "/contact" },
+  { label: "قطع غيار تويوتا الأصلية في مصر", href: "/toyota-genuine-parts-egypt" },
 ];
 
 const Footer = () => {
@@ -60,24 +60,27 @@ const Footer = () => {
                 </a>
               </li>
               <li>
-                <a href="https://wa.me/201020412358" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 text-sm text-secondary-foreground/40 hover:text-primary transition-colors">
+                <a
+                  href="https://wa.me/201153961008"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2.5 text-sm text-secondary-foreground/40 hover:text-primary transition-colors"
+                >
                   <MessageCircle className="w-4 h-4 text-primary/60 flex-shrink-0" />
-                  واتساب — تواصل فوري
+                  واتساب
                 </a>
               </li>
-              <li className="flex items-start gap-2.5 text-sm text-secondary-foreground/40 pt-1">
+              <li className="flex items-start gap-2.5 text-sm text-secondary-foreground/40">
                 <MapPin className="w-4 h-4 text-primary/60 flex-shrink-0 mt-0.5" />
-                <span>القاهرة • الجيزة • الأقصر • دبي</span>
+                <span>التوفيقية — القاهرة، مصر</span>
               </li>
             </ul>
           </div>
         </div>
-      </div>
 
-      {/* Bottom bar */}
-      <div className="border-t border-secondary-foreground/[0.05]">
-        <div className="container mx-auto px-4 py-4 text-center text-xs text-secondary-foreground/25">
-          © {new Date().getFullYear()} المصرية جروب – Al Masria Group. جميع الحقوق محفوظة.
+        {/* Bottom */}
+        <div className="mt-10 pt-6 border-t border-secondary-foreground/[0.06] text-center text-xs text-secondary-foreground/30">
+          © {new Date().getFullYear()} المصرية جروب — جميع الحقوق محفوظة
         </div>
       </div>
     </footer>

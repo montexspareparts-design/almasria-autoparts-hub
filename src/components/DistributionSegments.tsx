@@ -8,7 +8,7 @@ import brandMtx from "@/assets/brand-mtx.jpg";
 
 const segments = [
   {
-    name: "قطع غيار أصلية",
+    name: "قطع غيار تويوتا الأصلية",
     nameEn: "Toyota Genuine Parts",
     image: brandGenuineParts,
     description:
@@ -17,7 +17,7 @@ const segments = [
     badge: "+800 صنف",
   },
   {
-    name: "زيوت ومنتجات أصلية",
+    name: "زيوت تويوتا الأصلية",
     nameEn: "Toyota Genuine Lubricants",
     image: brandToyotaOil,
     description:
@@ -26,11 +26,11 @@ const segments = [
     badge: "+50 صنف",
   },
   {
-    name: "ماركات يابانية مختارة — MTX",
+    name: "MTX — جودة تضاهي الأصلي",
     nameEn: "MTX Aftermarket",
     image: brandMtx,
     description:
-      "علامات يابانية عالمية بمعايير جودة تضاهي الأصلية، بأسعار تنافسية تخدم شريحة أوسع من السوق.",
+      "ماركات يابانية مختارة بعناية تضاهي المواصفات الأصلية، لتلبية احتياجات قطاع ما بعد البيع.",
     to: "/mtx",
     badge: "+100 صنف",
   },

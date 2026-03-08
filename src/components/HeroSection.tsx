@@ -85,7 +85,7 @@ const HeroSection = () => {
               className="text-base px-8 py-6 gap-2.5 font-bold border border-secondary-foreground/15 text-secondary-foreground bg-secondary-foreground/[0.04] backdrop-blur-sm hover:bg-secondary-foreground/10 transition-all duration-300 w-full sm:w-auto"
               asChild
             >
-              <Link to="/what-sets-us-apart#network" aria-label="عرض فروع وانتشار المصرية جروب">
+              <Link to="/#coverage" aria-label="عرض فروع وانتشار المصرية جروب">
                 <MapPin className="w-5 h-5" />
                 فروعنا وانتشارنا
               </Link>
