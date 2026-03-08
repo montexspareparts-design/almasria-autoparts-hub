@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { ShieldCheck, Package, Truck, Globe, Award, Handshake } from "lucide-react";
+import FloatingParticles from "./FloatingParticles";
 
 const features = [
   { icon: ShieldCheck, title: "موزع معتمد رسمي", desc: "موزع رسمي معتمد لقطع غيار وزيوت تويوتا الأصلية في مصر" },
@@ -22,7 +23,8 @@ const cardVariants = {
 
 const WhyUsSection = () => {
   return (
-    <section id="why-us" className="py-20 md:py-28 bg-background overflow-hidden">
+    <section id="why-us" className="relative py-20 md:py-28 bg-background overflow-hidden">
+      <FloatingParticles count={10} />
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
