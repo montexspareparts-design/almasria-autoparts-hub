@@ -41,7 +41,7 @@ const brandConfig: Record<string, { title: string; subtitle: string; description
     brandKey: "toyota_oils",
     logo: brandToyotaOil,
     backgroundImage: oilBg,
-    logoScale: 250,
+    logoScale: 350,
   },
   "mtx-aftermarket": {
     title: "MTX Aftermarket",
