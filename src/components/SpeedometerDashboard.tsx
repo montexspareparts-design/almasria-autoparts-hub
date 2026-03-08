@@ -54,54 +54,8 @@ const AnimatedCounter = ({ value, suffix }: { value: number; suffix: string }) =
 
 const SpeedometerDashboard = () => {
   const [activeIdx, setActiveIdx] = useState(0);
-  const [soundOn, setSoundOn] = useState(false);
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const oscRef = useRef<OscillatorNode | null>(null);
-  const gainRef = useRef<GainNode | null>(null);
 
-  const ratio = STATS[activeIdx].value / Math.max(...STATS.map((s) => s.value));
-  const needleAngle = ratio * 180 - 90;
-
-  // Engine sound: oscillator frequency maps to needle ratio
-  const startEngine = useCallback(() => {
-    if (audioCtxRef.current) return;
-    const ctx = new AudioContext();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "sawtooth";
-    osc.frequency.value = 80 + ratio * 200;
-    gain.gain.value = 0.06;
-    osc.connect(gain).connect(ctx.destination);
-    osc.start();
-    audioCtxRef.current = ctx;
-    oscRef.current = osc;
-    gainRef.current = gain;
-  }, [ratio]);
-
-  const stopEngine = useCallback(() => {
-    oscRef.current?.stop();
-    audioCtxRef.current?.close();
-    audioCtxRef.current = null;
-    oscRef.current = null;
-    gainRef.current = null;
-  }, []);
-
-  // Update pitch when active stat changes
-  useEffect(() => {
-    if (oscRef.current) {
-      oscRef.current.frequency.linearRampToValueAtTime(
-        80 + ratio * 200,
-        (audioCtxRef.current?.currentTime ?? 0) + 0.8
-      );
-    }
-  }, [ratio]);
-
-  // Toggle sound
-  useEffect(() => {
-    if (soundOn) startEngine();
-    else stopEngine();
-    return () => { stopEngine(); };
-  }, [soundOn, startEngine, stopEngine]);
+  const needleAngle = (STATS[activeIdx].value / Math.max(...STATS.map((s) => s.value))) * 180 - 90;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -124,15 +78,6 @@ const SpeedometerDashboard = () => {
         <div className="flex items-center justify-center gap-2 mb-5">
           <Gauge className="w-5 h-5 text-primary" />
           <h3 className="text-xl font-black text-foreground">أرقامنا بتتكلم 🏎️</h3>
-          <motion.button
-            onClick={() => setSoundOn((v) => !v)}
-            whileHover={{ scale: 1.15 }}
-            whileTap={{ scale: 0.9 }}
-            className="mr-2 p-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-            title={soundOn ? "كتم الصوت" : "تشغيل صوت المحرك"}
-          >
-            {soundOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-          </motion.button>
         </div>
 
         {/* Speedometer SVG */}
