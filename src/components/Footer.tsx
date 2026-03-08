@@ -106,7 +106,7 @@ const Footer = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="md:col-span-3"
+            className="md:col-span-3 order-4 md:order-3"
           >
             <h4 className="font-bold text-sm mb-5 text-secondary-foreground/80">فروعنا</h4>
             <ul className="space-y-3.5">
