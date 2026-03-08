@@ -24,6 +24,7 @@ const ContactPage = lazy(() => import("./pages/ContactPage"));
 const WhatSetsUsApartPage = lazy(() => import("./pages/WhatSetsUsApartPage"));
 const MTXPage = lazy(() => import("./pages/MTXPage"));
 const ToyotaPartsEgypt = lazy(() => import("./pages/ToyotaPartsEgypt"));
+const AboutPage = lazy(() => import("./pages/AboutPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
