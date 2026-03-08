@@ -49,12 +49,8 @@ const BrandHeroBanner = ({ logo, title, subtitle, description, badge, background
               <motion.img
                 src={logo}
                 alt={title}
-                className="relative z-10 object-contain"
-                style={{ 
-                  width: logoScale ? `${Math.min(90, 9000 / logoScale)}%` : '90%',
-                  height: logoScale ? `${Math.min(90, 9000 / logoScale)}%` : '90%',
-                  transform: logoScale ? `scale(${logoScale / 100})` : undefined 
-                }}
+                className="relative z-10 w-[90%] h-[90%] object-contain"
+                style={logoScale ? { transform: `scale(${logoScale / 100})` } : undefined}
                 animate={{ scale: [1, 1.03, 1] }}
                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
               />
