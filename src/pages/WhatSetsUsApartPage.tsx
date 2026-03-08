@@ -251,11 +251,6 @@ const WhatSetsUsApartPage = () => {
   const heroScale = useTransform(scrollYProgress, [0, 0.8], [1, 0.95]);
 
   useEffect(() => {
-    document.title = "ما يميزنا | خبرة 25 عامًا في توزيع قطع الغيار والزيوت";
-    const meta = document.querySelector('meta[name="description"]');
-    if (meta) {
-      meta.setAttribute("content", "تعرف على مميزات المصرية جروب كموزع معتمد لقطع غيار وزيوت تويوتا، خبرة منذ 1999، شبكة توزيع 2000 عميل، توريد خلال 48 ساعة، ونظام ERP.");
-    }
     window.scrollTo(0, 0);
   }, []);
 
