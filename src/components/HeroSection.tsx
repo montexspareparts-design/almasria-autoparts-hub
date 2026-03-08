@@ -81,23 +81,6 @@ const HeroSection = () => {
             </Button>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 1 }}
-            className="flex items-center gap-6 mt-12 text-sm text-secondary-foreground/45"
-          >
-            {[
-              { num: "+25", text: "عام خبرة" },
-              { num: "+2000", text: "عميل" },
-              { num: "+960", text: "منتج أصلي" },
-            ].map((s, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <span className="text-lg font-black text-primary/80">{s.num}</span>
-                <span>{s.text}</span>
-              </div>
-            ))}
-          </motion.div>
         </div>
       </motion.div>
     </section>
