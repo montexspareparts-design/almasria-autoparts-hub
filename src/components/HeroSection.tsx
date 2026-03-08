@@ -81,39 +81,29 @@ const AnimatedCounter = ({ value, suffix, delay }: { value: number; suffix: stri
   );
 };
 
-/* ── Brand Marquee ── */
-import brandToyota from "@/assets/brand-genuine-parts.png";
-import brandMtx from "@/assets/brand-mtx.jpg";
-import brandDenso from "@/assets/brand-denso.png";
-import brandAisin from "@/assets/brand-aisin.png";
-import brandToyotaOil from "@/assets/brand-toyota-oil.png";
-
-const brands = [
-  { name: "Toyota Genuine Parts", logo: brandToyota },
-  { name: "Toyota Oils", logo: brandToyotaOil },
-  { name: "MTX Aftermarket", logo: brandMtx },
-  { name: "DENSO", logo: brandDenso },
-  { name: "AISIN", logo: brandAisin },
+/* ── Trust Marquee Strip ── */
+const trustItems = [
+  "قطع غيار 100% أصلية",
+  "ضمان وكالة على جميع المنتجات",
+  "توصيل خلال 48 ساعة",
+  "+25 سنة خبرة في السوق",
+  "تغطية جميع محافظات مصر",
+  "أسعار تنافسية للتجار",
+  "دعم فني متخصص",
+  "موزع معتمد رسمي",
 ];
 
-const BrandMarquee = () => (
-  <div className="relative bg-secondary/95 border-t border-b border-primary/10 py-4 overflow-hidden z-20">
-    {/* Fade edges */}
-    <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-secondary to-transparent z-10" />
-    <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-secondary to-transparent z-10" />
-    
+const TrustMarquee = () => (
+  <div className="relative bg-primary overflow-hidden z-20">
     <motion.div
-      className="flex items-center gap-16 whitespace-nowrap"
+      className="flex items-center gap-8 whitespace-nowrap py-3"
       animate={{ x: ["0%", "-50%"] }}
-      transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+      transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
     >
-      {/* Double the brands for seamless loop */}
-      {[...brands, ...brands].map((brand, i) => (
-        <div key={`${brand.name}-${i}`} className="flex items-center gap-3 shrink-0 px-4">
-          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center p-1.5 shrink-0">
-            <img src={brand.logo} alt={brand.name} className="w-full h-full object-contain" loading="lazy" />
-          </div>
-          <span className="text-secondary-foreground/60 text-sm font-bold tracking-wider uppercase">{brand.name}</span>
+      {[...trustItems, ...trustItems].map((item, i) => (
+        <div key={`${item}-${i}`} className="flex items-center gap-4 shrink-0">
+          <span className="text-primary-foreground font-bold text-sm tracking-wide">{item}</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/40" />
         </div>
       ))}
     </motion.div>
@@ -347,8 +337,8 @@ const HeroSection = () => {
         </motion.div>
       </section>
 
-      {/* Brand Marquee strip */}
-      <BrandMarquee />
+      {/* Trust Marquee strip */}
+      <TrustMarquee />
     </>
   );
 };
