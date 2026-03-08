@@ -1,5 +1,5 @@
-import { motion, useScroll, useTransform } from "framer-motion";
-import { ArrowLeft, ShieldCheck, Package, Sparkles } from "lucide-react";
+import { motion, useScroll, useTransform, useInView, animate } from "framer-motion";
+import { ArrowLeft, ShieldCheck, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useRef } from "react";
