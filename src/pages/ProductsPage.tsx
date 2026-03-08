@@ -488,6 +488,15 @@ const ProductsPage = () => {
           !!user && (!isDealer || (selectedProduct && viewedProductIds.includes(selectedProduct.id)))
         }
         onAddToCart={handleAddToCart}
+        isLoggedIn={!!user}
+        isDealer={isDealer}
+        onLoginPrompt={() => {
+          toast({ title: "يجب تسجيل الدخول أولاً", description: "سجل دخولك لتتمكن من عرض أسعار المنتجات" });
+          navigate("/auth");
+        }}
+        onRevealPrice={(productId) => recordView(productId)}
+        remainingViews={DAILY_LIMIT - dailyViewCount}
+        limitReached={limitReached}
       />
 
       <Footer />
