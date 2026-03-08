@@ -39,6 +39,11 @@ const SectionFallback = () => (
 const Index = () => {
   return (
     <div className="min-h-screen">
+      <Helmet>
+        <title>المصرية جروب | موزع معتمد لقطع غيار تويوتا الأصلية والزيوت في مصر</title>
+        <meta name="description" content="خبرة 25 عامًا في توزيع قطع غيار تويوتا الأصلية والزيوت، شبكة تضم أكثر من 2000 عميل وتسليم خلال 48 ساعة." />
+        <link rel="canonical" href="https://almasriaautoparts.com/" />
+      </Helmet>
       <Navbar />
       <HeroSection />
       <Suspense fallback={<SectionFallback />}><FeaturesStrip /></Suspense>
@@ -46,8 +51,6 @@ const Index = () => {
       <Suspense fallback={<SectionFallback />}><BrandsWeDistribute /></Suspense>
       <Suspense fallback={<SectionFallback />}><WhyUsBrief /></Suspense>
       <Suspense fallback={<SectionFallback />}><DistributionNetwork /></Suspense>
-      <Suspense fallback={<SectionFallback />}><MTXSection /></Suspense>
-      <Suspense fallback={<SectionFallback />}><AccreditationsSection /></Suspense>
       <Suspense fallback={<SectionFallback />}><ContactSimple /></Suspense>
       <Suspense fallback={null}><Footer /></Suspense>
       <Suspense fallback={null}><WhatsAppFloat /></Suspense>
