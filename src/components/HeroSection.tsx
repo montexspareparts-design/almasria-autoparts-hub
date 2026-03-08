@@ -12,9 +12,18 @@ const HeroSection = () => {
   const contentOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
   return (
-    <section ref={sectionRef} id="hero" className="relative min-h-[100svh] flex flex-col justify-center overflow-hidden">
-      {/* Background — decorative, no alt */}
-      <motion.div className="absolute inset-0" style={{ y: bgY }} role="img" aria-hidden="true">
+    <section
+      ref={sectionRef}
+      id="hero"
+      className="relative min-h-[72vh] md:min-h-[72vh] flex flex-col justify-center overflow-hidden"
+      style={{ minHeight: "clamp(60vh, 72vh, 72vh)" }}
+    >
+      {/* Background — decorative CSS bg */}
+      <motion.div
+        className="absolute inset-0"
+        style={{ y: bgY }}
+        aria-hidden="true"
+      >
         <img
           src={heroBg}
           alt=""
@@ -23,23 +32,26 @@ const HeroSection = () => {
           decoding="async"
           fetchPriority="high"
         />
-        {/* Overlay 40% */}
-        <div className="absolute inset-0 bg-secondary/[0.82]" />
-        <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-secondary to-transparent" />
+        {/* Overlay 40% (within 35–45% range) */}
+        <div className="absolute inset-0 bg-black/40" />
+        <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-black/30 to-transparent" />
       </motion.div>
 
       {/* Content */}
-      <motion.div className="container mx-auto px-4 relative z-10 pt-28 md:pt-36 pb-20" style={{ opacity: contentOpacity }}>
+      <motion.div
+        className="container mx-auto px-4 relative z-10 pt-28 md:pt-36 pb-20"
+        style={{ opacity: contentOpacity }}
+      >
         <div className="max-w-[760px]">
-          {/* Authorized Badge */}
+          {/* Badge — موزّع معتمد */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="inline-flex items-center gap-2 border border-primary/25 rounded-full px-4 py-2 mb-8"
+            className="inline-flex items-center gap-2 border border-white/20 rounded-full px-4 py-2 mb-8 bg-white/5 backdrop-blur-sm"
           >
             <ShieldCheck className="w-4 h-4 text-primary" />
-            <span className="text-sm font-semibold text-primary">موزع معتمد رسمي — تويوتا مصر</span>
+            <span className="text-sm font-medium text-white">موزّع معتمد — تويوتا</span>
           </motion.div>
 
           {/* H1 — single on page */}
@@ -47,9 +59,9 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.35 }}
-            className="text-[1.65rem] sm:text-3xl md:text-4xl lg:text-[2.75rem] font-semibold text-secondary-foreground leading-[1.35] tracking-tight mb-6"
+            className="text-[1.65rem] sm:text-3xl md:text-4xl lg:text-[2.75rem] font-bold text-white leading-[1.6] md:leading-[1.65] tracking-tight mb-6"
           >
-            المصرية جروب — موزع معتمد لقطع غيار وزيوت تويوتا الأصلية في مصر
+            المصرية جروب — موزع معتمد لقطع&nbsp;غيار وزيوت&nbsp;تويوتا&nbsp;الأصلية في&nbsp;مصر
           </motion.h1>
 
           {/* Description */}
@@ -57,12 +69,12 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.5 }}
-            className="text-secondary-foreground/65 text-base md:text-lg leading-[1.8] max-w-[660px] mb-10"
+            className="text-white/80 text-base md:text-lg leading-[1.75] max-w-[660px] mb-10"
           >
-            خبرة تتجاوز 25 عامًا في التوزيع المؤسسي، شبكة تغطي جميع المحافظات مع تسليم خلال 48 ساعة، وعلامتنا MTX بجودة تضاهي المواصفات الأصلية.
+            خبرة تتجاوز 25 عامًا في التوزيع المؤسسي، شبكة تغطي جميع المحافظات مع تسليم خلال 48&nbsp;ساعة، وعلامتنا MTX بجودة تضاهي المواصفات&nbsp;الأصلية.
           </motion.p>
 
-          {/* CTAs */}
+          {/* CTAs — Primary first (left in RTL) */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -74,7 +86,7 @@ const HeroSection = () => {
               className="text-base px-8 py-6 gap-2.5 font-bold bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 w-full sm:w-auto"
               asChild
             >
-              <Link to="/products" aria-label="تصفّح منتجات المصرية جروب">
+              <Link to="/products" aria-label="تصفح منتجات المصرية جروب">
                 <Package className="w-5 h-5" />
                 تصفّح المنتجات
               </Link>
@@ -82,7 +94,7 @@ const HeroSection = () => {
             <Button
               size="lg"
               variant="outline"
-              className="text-base px-8 py-6 gap-2.5 font-bold border border-secondary-foreground/15 text-secondary-foreground bg-secondary-foreground/[0.04] backdrop-blur-sm hover:bg-secondary-foreground/10 transition-all duration-300 w-full sm:w-auto"
+              className="text-base px-8 py-6 gap-2.5 font-bold border border-white/20 text-white bg-white/5 backdrop-blur-sm hover:bg-white/10 transition-all duration-300 w-full sm:w-auto"
               asChild
             >
               <Link to="/#coverage" aria-label="عرض فروع وانتشار المصرية جروب">
@@ -92,21 +104,15 @@ const HeroSection = () => {
             </Button>
           </motion.div>
 
-          {/* Trust microcopy + contact link */}
+          {/* Trust line */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.8 }}
           >
-            <p className="text-secondary-foreground/40 text-sm leading-[1.7] mb-2">
-              انتشار داخل مصر وخارجها — تسليم خلال 48 ساعة عبر شبكة توزيع منظمة.
+            <p className="text-white/50 text-sm leading-[1.7]">
+              تغطية وطنية وشحن لجميع المحافظات — تسليم خلال 48&nbsp;ساعة عبر شبكة توزيع منظمة.
             </p>
-            <Link
-              to="/contact"
-              className="text-primary/80 hover:text-primary text-sm font-medium transition-colors duration-200"
-            >
-              تواصل معنا ←
-            </Link>
           </motion.div>
         </div>
       </motion.div>
