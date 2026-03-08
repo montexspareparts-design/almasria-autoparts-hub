@@ -119,70 +119,84 @@ const Navbar = () => {
 
           {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-6">
-            {links.map((link) =>
-              link.label === "المنتجات" ? (
-                <div
-                  key={link.href}
-                  className="relative"
-                  onMouseEnter={() => {
-                    if (productsTimeout.current) clearTimeout(productsTimeout.current);
-                    setProductsOpen(true);
-                  }}
-                  onMouseLeave={() => {
-                    productsTimeout.current = setTimeout(() => setProductsOpen(false), 200);
-                  }}
-                >
-                  <motion.a
-                    href={link.href}
-                    className={`text-sm font-medium transition-colors relative group flex items-center gap-1 ${
-                      isLinkActive(link.href) ? "text-primary" : "text-secondary-foreground/80 hover:text-primary"
-                    }`}
-                    whileHover={{ y: -1 }}
+            {links.map((link) => {
+              const linkAny = link as any;
+              
+              // Dropdown for catalog
+              if (linkAny.hasDropdown === "catalog") {
+                return (
+                  <div
+                    key={link.href}
+                    className="relative"
+                    onMouseEnter={() => {
+                      if (catalogTimeout.current) clearTimeout(catalogTimeout.current);
+                      setCatalogOpen(true);
+                    }}
+                    onMouseLeave={() => {
+                      catalogTimeout.current = setTimeout(() => setCatalogOpen(false), 200);
+                    }}
                   >
-                    {link.label}
-                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${productsOpen ? "rotate-180" : ""}`} />
-                    <span className={`absolute -bottom-1 right-0 h-[2px] bg-primary rounded-full transition-all duration-300 ${
-                      isLinkActive(link.href) ? "w-full" : "w-0 group-hover:w-full"
-                    }`} />
-                  </motion.a>
-                  <AnimatePresence>
-                    {productsOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 8 }}
-                        transition={{ duration: 0.2 }}
-                        className="absolute top-full right-0 mt-2 w-56 bg-secondary/95 backdrop-blur-md border border-primary/20 rounded-xl shadow-xl shadow-black/20 overflow-hidden z-50"
+                    <motion.div whileHover={{ y: -1 }}>
+                      <Link
+                        to={link.href}
+                        className={`text-sm font-medium transition-colors relative group flex items-center gap-1 ${
+                          location.pathname.startsWith("/parts-by") ? "text-primary" : "text-secondary-foreground/80 hover:text-primary"
+                        }`}
                       >
-                        {productCategories.map((cat) => (
-                          <Link
-                            key={cat.href}
-                            to={cat.href}
-                            onClick={() => setProductsOpen(false)}
-                            className="block px-4 py-3 text-sm font-medium text-secondary-foreground/80 hover:text-primary hover:bg-primary/10 transition-colors border-b border-white/5 last:border-b-0"
-                          >
-                            {cat.label}
-                          </Link>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              ) : (link as any).isRoute ? (
-                <motion.div key={link.href} whileHover={{ y: -1 }}>
-                  <Link
-                    to={link.href}
-                    className={`text-sm font-medium transition-colors relative group ${
-                      isLinkActive(link.href, true) ? "text-primary" : "text-secondary-foreground/80 hover:text-primary"
-                    }`}
-                  >
-                    {link.label}
-                    <span className={`absolute -bottom-1 right-0 h-[2px] bg-primary rounded-full transition-all duration-300 ${
-                      isLinkActive(link.href, true) ? "w-full" : "w-0 group-hover:w-full"
-                    }`} />
-                  </Link>
-                </motion.div>
-              ) : (
+                        {link.label}
+                        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${catalogOpen ? "rotate-180" : ""}`} />
+                        <span className={`absolute -bottom-1 right-0 h-[2px] bg-primary rounded-full transition-all duration-300 ${
+                          location.pathname.startsWith("/parts-by") ? "w-full" : "w-0 group-hover:w-full"
+                        }`} />
+                      </Link>
+                    </motion.div>
+                    <AnimatePresence>
+                      {catalogOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 8 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute top-full right-0 mt-2 w-56 bg-secondary/95 backdrop-blur-md border border-primary/20 rounded-xl shadow-xl shadow-black/20 overflow-hidden z-50"
+                        >
+                          {catalogCategories.map((cat) => (
+                            <Link
+                              key={cat.href}
+                              to={cat.href}
+                              onClick={() => setCatalogOpen(false)}
+                              className="block px-4 py-3 text-sm font-medium text-secondary-foreground/80 hover:text-primary hover:bg-primary/10 transition-colors border-b border-white/5 last:border-b-0"
+                            >
+                              {cat.label}
+                            </Link>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              }
+
+              // Regular route links
+              if (linkAny.isRoute) {
+                return (
+                  <motion.div key={link.href} whileHover={{ y: -1 }}>
+                    <Link
+                      to={link.href}
+                      className={`text-sm font-medium transition-colors relative group ${
+                        isLinkActive(link.href, true) ? "text-primary" : "text-secondary-foreground/80 hover:text-primary"
+                      }`}
+                    >
+                      {link.label}
+                      <span className={`absolute -bottom-1 right-0 h-[2px] bg-primary rounded-full transition-all duration-300 ${
+                        isLinkActive(link.href, true) ? "w-full" : "w-0 group-hover:w-full"
+                      }`} />
+                    </Link>
+                  </motion.div>
+                );
+              }
+
+              // Anchor links (homepage sections)
+              return (
                 <motion.a
                   key={link.href}
                   href={link.href}
@@ -203,8 +217,8 @@ const Navbar = () => {
                     isLinkActive(link.href) ? "w-full" : "w-0 group-hover:w-full"
                   }`} />
                 </motion.a>
-              )
-            )}
+              );
+            })}
           </div>
 
           {/* Mobile right icons */}
