@@ -22,7 +22,7 @@ const VideoSection = () => {
   if (isLoading || !videoId) return null;
 
   return (
-    <section ref={ref} className="relative py-24 overflow-hidden bg-secondary">
+    <section className="relative py-24 overflow-hidden bg-secondary">
       {/* Scrolling text background */}
       <div className="absolute inset-0 opacity-[0.02] pointer-events-none select-none">
         {Array.from({ length: 6 }).map((_, i) => (
