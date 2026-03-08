@@ -26,6 +26,7 @@ const MTXPage = lazy(() => import("./pages/MTXPage"));
 const ToyotaPartsEgypt = lazy(() => import("./pages/ToyotaPartsEgypt"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const ClientSegmentPage = lazy(() => import("./pages/ClientSegmentPage"));
+const GenuinePartsPage = lazy(() => import("./pages/GenuinePartsPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -55,6 +56,7 @@ const App = () => (
                   <Route path="/about" element={<AboutPage />} />
                   <Route path="/clients/:segment" element={<ClientSegmentPage />} />
                   {/* Main pages */}
+                  <Route path="/products/genuine-toyota-parts" element={<GenuinePartsPage />} />
                   <Route path="/mtx" element={<MTXPage />} />
                   <Route path="/products/:brand" element={<ProductsPage />} />
                   <Route path="/products" element={<ProductsPage />} />
