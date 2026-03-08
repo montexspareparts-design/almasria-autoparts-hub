@@ -1,9 +1,9 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Package, ShoppingCart, ZoomIn, ZoomOut, X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Package, ShoppingCart, ZoomIn, ZoomOut, Lock, Eye, Tag, Layers, Hash, Box, Info } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 interface ProductDetailDialogProps {
   product: any | null;
@@ -13,6 +13,12 @@ interface ProductDetailDialogProps {
   priceLabel?: string;
   onAddToCart?: (product: any) => void;
   canAddToCart?: boolean;
+  isLoggedIn?: boolean;
+  isDealer?: boolean;
+  onLoginPrompt?: () => void;
+  onRevealPrice?: (productId: string) => void;
+  remainingViews?: number;
+  limitReached?: boolean;
 }
 
 const ProductDetailDialog = ({
@@ -23,29 +29,43 @@ const ProductDetailDialog = ({
   priceLabel,
   onAddToCart,
   canAddToCart = false,
+  isLoggedIn = false,
+  isDealer = false,
+  onLoginPrompt,
+  onRevealPrice,
+  remainingViews = 0,
+  limitReached = false,
 }: ProductDetailDialogProps) => {
   const [zoomed, setZoomed] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
   const imageRef = useRef<HTMLDivElement>(null);
 
-  if (!product) return null;
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!zoomed || !imageRef.current) return;
     const rect = imageRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
     setZoomPosition({ x, y });
-  };
+  }, [zoomed]);
 
   const handleClose = () => {
     setZoomed(false);
     onOpenChange(false);
   };
 
+  if (!product) return null;
+
+  const brandLabels: Record<string, string> = {
+    toyota_genuine: "تويوتا الأصلية",
+    toyota_oils: "زيوت تويوتا",
+    mtx_aftermarket: "MTX",
+    denso: "DENSO",
+    aisin: "AISIN",
+  };
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 gap-0">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 gap-0" dir="rtl">
         <DialogHeader className="sr-only">
           <DialogTitle>{product.name_ar}</DialogTitle>
           <DialogDescription>تفاصيل المنتج</DialogDescription>
@@ -54,7 +74,7 @@ const ProductDetailDialog = ({
         {/* Image section */}
         <div
           ref={imageRef}
-          className="relative bg-white aspect-square cursor-crosshair overflow-hidden rounded-t-lg"
+          className="relative bg-white aspect-[4/3] cursor-crosshair overflow-hidden rounded-t-lg"
           onClick={() => setZoomed(!zoomed)}
           onMouseMove={handleMouseMove}
           onMouseLeave={() => { if (zoomed) setZoomPosition({ x: 50, y: 50 }); }}
@@ -79,79 +99,167 @@ const ProductDetailDialog = ({
             </div>
           )}
 
-          {/* Zoom toggle button */}
+          {/* Zoom toggle */}
           <button
             className="absolute bottom-3 left-3 bg-background/80 backdrop-blur-sm border border-border rounded-full p-2 text-foreground hover:bg-background transition-colors"
-            onClick={(e) => {
-              e.stopPropagation();
-              setZoomed(!zoomed);
-            }}
+            onClick={(e) => { e.stopPropagation(); setZoomed(!zoomed); }}
           >
             {zoomed ? <ZoomOut className="w-4 h-4" /> : <ZoomIn className="w-4 h-4" />}
           </button>
 
           {zoomed && (
-            <div className="absolute top-3 left-3 bg-primary/90 text-primary-foreground text-[11px] px-2 py-1 rounded-full font-semibold">
+            <div className="absolute top-3 right-3 bg-primary/90 text-primary-foreground text-[11px] px-2 py-1 rounded-full font-semibold">
               حرّك الماوس للتكبير • اضغط للتصغير
+            </div>
+          )}
+
+          {/* Sale badge */}
+          {product.is_on_sale && product.sale_price && (
+            <div className="absolute top-3 left-3 bg-destructive text-destructive-foreground text-xs font-bold px-2.5 py-1 rounded-full">
+              تخفيض
             </div>
           )}
         </div>
 
         {/* Details section */}
         <div className="p-5 space-y-4">
-          {/* SKU + stock */}
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-mono bg-muted text-muted-foreground px-2.5 py-1 rounded">
+          {/* Header: SKU + Stock + Brand */}
+          <div className="flex items-center flex-wrap gap-2">
+            <Badge variant="outline" className="font-mono text-xs gap-1">
+              <Hash className="w-3 h-3" />
               {product.sku}
-            </span>
+            </Badge>
             {product.stock_quantity > 0 ? (
-              <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200 text-xs">
-                متوفر
+              <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200 text-xs gap-1">
+                <Box className="w-3 h-3" />
+                متوفر ({product.stock_quantity})
               </Badge>
             ) : (
               <Badge variant="destructive" className="text-xs">غير متوفر</Badge>
             )}
+            {product.brand && brandLabels[product.brand] && (
+              <Badge variant="secondary" className="text-xs gap-1">
+                <Tag className="w-3 h-3" />
+                {brandLabels[product.brand]}
+              </Badge>
+            )}
           </div>
 
-          {/* Name */}
-          <h2 className="text-lg font-bold text-foreground leading-relaxed">
+          {/* Product Name */}
+          <h2 className="text-xl font-bold text-foreground leading-relaxed">
             {product.name_ar}
           </h2>
-
-          {/* Category */}
-          {product.product_categories && (
-            <p className="text-sm text-muted-foreground">
-              التصنيف: {(product.product_categories as any).name_ar}
-            </p>
+          {product.name_en && (
+            <p className="text-sm text-muted-foreground -mt-2">{product.name_en}</p>
           )}
+
+          <Separator />
+
+          {/* Info Grid */}
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            {/* Category */}
+            {product.product_categories && (
+              <div className="flex items-center gap-2">
+                <Layers className="w-4 h-4 text-primary shrink-0" />
+                <div>
+                  <p className="text-[11px] text-muted-foreground">التصنيف</p>
+                  <p className="font-semibold text-foreground">{(product.product_categories as any).name_ar}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Min Order */}
+            {product.min_order_qty > 1 && (
+              <div className="flex items-center gap-2">
+                <Box className="w-4 h-4 text-primary shrink-0" />
+                <div>
+                  <p className="text-[11px] text-muted-foreground">الحد الأدنى</p>
+                  <p className="font-semibold text-foreground">{product.min_order_qty} قطعة</p>
+                </div>
+              </div>
+            )}
+
+            {/* Brand */}
+            {product.brand && (
+              <div className="flex items-center gap-2">
+                <Tag className="w-4 h-4 text-primary shrink-0" />
+                <div>
+                  <p className="text-[11px] text-muted-foreground">العلامة التجارية</p>
+                  <p className="font-semibold text-foreground">{brandLabels[product.brand] || product.brand}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Featured */}
+            {product.is_featured && (
+              <div className="flex items-center gap-2">
+                <Info className="w-4 h-4 text-primary shrink-0" />
+                <div>
+                  <p className="text-[11px] text-muted-foreground">حالة المنتج</p>
+                  <p className="font-semibold text-foreground">منتج مميز ⭐</p>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Description */}
           {product.description_ar && (
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              {product.description_ar}
-            </p>
-          )}
-
-          {/* Price */}
-          {price !== null && (
-            <div className="bg-muted/50 rounded-lg p-3">
-              <div className="text-primary font-black text-2xl">
-                {price.toLocaleString("ar-EG")} ج.م
+            <>
+              <Separator />
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground mb-1.5">الوصف</p>
+                <p className="text-sm text-foreground leading-relaxed">
+                  {product.description_ar}
+                </p>
               </div>
-              {priceLabel && (
-                <p className="text-xs text-muted-foreground mt-1">{priceLabel}</p>
-              )}
-            </div>
+            </>
           )}
 
-          {/* Min order */}
-          {product.min_order_qty > 1 && (
-            <p className="text-xs text-muted-foreground">
-              الحد الأدنى للطلب: {product.min_order_qty} قطعة
-            </p>
-          )}
+          <Separator />
 
-          {/* Add to cart */}
+          {/* Price Section */}
+          <div className="bg-muted/50 rounded-lg p-4">
+            {!isLoggedIn ? (
+              <Button
+                variant="outline"
+                className="w-full gap-2"
+                onClick={onLoginPrompt}
+              >
+                <Lock className="w-4 h-4" />
+                سجل دخولك لعرض السعر
+              </Button>
+            ) : price !== null ? (
+              <div>
+                {product.is_on_sale && product.sale_price && !isDealer && (
+                  <div className="text-muted-foreground line-through text-sm mb-1">
+                    {product.base_price.toLocaleString("ar-EG")} ج.م
+                  </div>
+                )}
+                <div className="text-primary font-black text-2xl">
+                  {price.toLocaleString("ar-EG")} ج.م
+                </div>
+                {priceLabel && (
+                  <p className="text-xs text-muted-foreground mt-1">{priceLabel}</p>
+                )}
+              </div>
+            ) : isDealer && !limitReached && onRevealPrice ? (
+              <Button
+                variant="outline"
+                className="w-full gap-2"
+                onClick={() => onRevealPrice(product.id)}
+              >
+                <Eye className="w-4 h-4" />
+                اعرض السعر ({remainingViews} متبقي)
+              </Button>
+            ) : isDealer && limitReached ? (
+              <div className="flex items-center gap-2 text-muted-foreground text-sm justify-center py-1">
+                <Lock className="w-4 h-4" />
+                <span>استنفدت الحد اليومي (20 صنف)</span>
+              </div>
+            ) : null}
+          </div>
+
+          {/* Add to Cart */}
           {canAddToCart && product.stock_quantity > 0 && onAddToCart && (
             <Button
               className="w-full gap-2"
