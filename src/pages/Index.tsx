@@ -4,7 +4,7 @@ import HeroSection from "@/components/HeroSection";
 
 // Lazy load below-fold sections
 const FeaturesStrip = lazy(() => import("@/components/FeaturesStrip"));
-const AboutBrief = lazy(() => import("@/components/AboutBrief"));
+
 const BrandsWeDistribute = lazy(() => import("@/components/BrandsWeDistribute"));
 const CategoriesCatalog = lazy(() => import("@/components/CategoriesCatalog"));
 const WhyUsSection = lazy(() => import("@/components/WhyUsSection"));
@@ -29,9 +29,6 @@ const Index = () => {
       <HeroSection />
       <Suspense fallback={<SectionFallback />}>
         <FeaturesStrip />
-      </Suspense>
-      <Suspense fallback={<SectionFallback />}>
-        <AboutBrief />
       </Suspense>
       <Suspense fallback={<SectionFallback />}>
         <BrandsWeDistribute />
