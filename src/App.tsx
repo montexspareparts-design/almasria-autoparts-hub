@@ -26,6 +26,7 @@ const MTXPage = lazy(() => import("./pages/MTXPage"));
 const ToyotaPartsEgypt = lazy(() => import("./pages/ToyotaPartsEgypt"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const ClientSegmentPage = lazy(() => import("./pages/ClientSegmentPage"));
+const GenuinePartsPage = lazy(() => import("./pages/GenuinePartsPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
