@@ -41,11 +41,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://almasriaautoparts.com/products/genuine-toyota-parts</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://almasriaautoparts.com/mtx</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -122,6 +117,11 @@
   </url>
   <url>
     <loc>https://almasriaautoparts.com/parts-by-model/fortuner</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://almasriaautoparts.com/parts-by-model/rush</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>

@@ -2,6 +2,9 @@ User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /dealer
+Disallow: /dealer-login
+Disallow: /dealer-register
+Disallow: /client-register
 Disallow: /cart
 Disallow: /checkout
 Disallow: /reset-password
