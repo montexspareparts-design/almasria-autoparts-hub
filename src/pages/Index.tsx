@@ -40,8 +40,8 @@ const Index = () => {
   return (
     <div className="min-h-screen">
       <Helmet>
-        <title>المصرية جروب | موزع معتمد لقطع غيار تويوتا الأصلية وزيوت تويوتا في مصر</title>
-        <meta name="description" content="خبرة 25 عامًا في توزيع قطع غيار تويوتا الأصلية والزيوت، شبكة تضم أكثر من 2000 عميل وتسليم خلال 48 ساعة." />
+        <title>المصرية جروب | موزع معتمد قطع غيار تويوتا الأصلية وزيوت تويوتا في مصر</title>
+        <meta name="description" content="المصرية جروب موزع معتمد لقطع غيار تويوتا الأصلية وزيوت تويوتا في مصر، مع شحن لجميع المحافظات وخدمة تجار الجملة والشركات والقطاعي." />
         <link rel="canonical" href="https://almasriaautoparts.com/" />
       </Helmet>
       <Navbar />
