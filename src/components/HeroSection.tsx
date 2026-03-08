@@ -85,7 +85,7 @@ const HeroSection = () => {
             >
               <Link to="/products">
                 <Package className="w-5 h-5" />
-                تصفح المنتجات
+                تصفح قطع غيار تويوتا
               </Link>
             </Button>
             <Button
