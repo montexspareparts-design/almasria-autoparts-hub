@@ -10,9 +10,10 @@ interface BrandHeroBannerProps {
   description: string;
   badge: string;
   backgroundImage?: string;
+  logoScale?: number;
 }
 
-const BrandHeroBanner = ({ logo, title, subtitle, description, badge, backgroundImage }: BrandHeroBannerProps) => {
+const BrandHeroBanner = ({ logo, title, subtitle, description, badge, backgroundImage, logoScale }: BrandHeroBannerProps) => {
   return (
     <section className="pt-24 pb-14 relative overflow-hidden">
       {/* Background image */}
@@ -49,6 +50,7 @@ const BrandHeroBanner = ({ logo, title, subtitle, description, badge, background
                 src={logo}
                 alt={title}
                 className="relative z-10 w-[90%] h-[90%] object-contain"
+                style={logoScale ? { transform: `scale(${logoScale / 100})` } : undefined}
                 animate={{ scale: [1, 1.03, 1] }}
                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
               />

@@ -21,9 +21,9 @@ import brandToyotaOil from "@/assets/brand-toyota-oil.png";
 import brandMtx from "@/assets/brand-mtx.jpg";
 import brandDenso from "@/assets/brand-denso.png";
 import brandAisin from "@/assets/brand-aisin.png";
-import oilBg from "@/assets/oil-bg.jpg";
+import oilBg from "@/assets/oil-hero-bg.jpg";
 
-const brandConfig: Record<string, { title: string; subtitle: string; description: string; badge: string; brandKey: string; logo: string; backgroundImage?: string }> = {
+const brandConfig: Record<string, { title: string; subtitle: string; description: string; badge: string; brandKey: string; logo: string; backgroundImage?: string; logoScale?: number }> = {
   "toyota-genuine": {
     title: "قطع غيار تويوتا الأصلية",
     subtitle: "Toyota Genuine Parts",
@@ -40,6 +40,7 @@ const brandConfig: Record<string, { title: string; subtitle: string; description
     brandKey: "toyota_oils",
     logo: brandToyotaOil,
     backgroundImage: oilBg,
+    logoScale: 250,
   },
   "mtx-aftermarket": {
     title: "MTX Aftermarket",
@@ -413,6 +414,7 @@ const ProductsPage = () => {
         description={config.description}
         badge={config.badge}
         backgroundImage={config.backgroundImage}
+        logoScale={config.logoScale}
       />
 
       {/* Sticky filter bar */}
