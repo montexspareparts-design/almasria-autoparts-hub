@@ -10,7 +10,7 @@ import brandAisin from "@/assets/brand-aisin.png";
 const brands = [
   { label: "Toyota Genuine Parts", labelAr: "قطع غيار تويوتا الأصلية", image: brandGenuineParts, to: "/products/toyota-genuine", scale: "scale-100" },
   { label: "Toyota Genuine Lubricants", labelAr: "زيوت تويوتا الأصلية", image: brandToyotaOil, to: "/products/toyota-oils", scale: "scale-150" },
-  { label: "MTX Aftermarket", labelAr: "MTX — علامتنا الخاصة", image: brandMtx, to: "/products/mtx-aftermarket", scale: "scale-150" },
+  { label: "MTX Aftermarket", labelAr: "MTX Aftermarket", image: brandMtx, to: "/products/mtx-aftermarket", scale: "scale-150" },
   { label: "DENSO", labelAr: "DENSO", image: brandDenso, to: "/products/denso", scale: "scale-100" },
   { label: "AISIN", labelAr: "AISIN", image: brandAisin, to: "/products/aisin", scale: "scale-100" },
 ];
