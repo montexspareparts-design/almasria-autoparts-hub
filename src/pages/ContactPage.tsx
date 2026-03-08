@@ -84,7 +84,7 @@ const ContactPage = () => {
                 </div>
               </a>
 
-              <a href="https://wa.me/201020412358" target="_blank" rel="noopener noreferrer" className="flex items-start gap-4 p-4 bg-card border border-border rounded-xl hover:border-primary/30 transition-colors group">
+              <a href="https://wa.me/201153961008" target="_blank" rel="noopener noreferrer" className="flex items-start gap-4 p-4 bg-card border border-border rounded-xl hover:border-primary/30 transition-colors group">
                 <div className="w-12 h-12 bg-[hsl(142,70%,40%)]/10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                   <MessageCircle className="w-5 h-5 text-[hsl(142,70%,40%)]" />
                 </div>
