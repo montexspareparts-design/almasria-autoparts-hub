@@ -278,10 +278,10 @@ const HeroSection = () => {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="text-base px-8 py-6 gap-2.5 font-bold border border-white/15 text-white bg-white/5 backdrop-blur-md hover:bg-white/10 hover:border-white/25 transition-all duration-300 w-full sm:w-auto"
-                  asChild
+                  className="text-base px-8 py-6 gap-2.5 font-bold border border-white/15 text-white bg-white/5 backdrop-blur-md hover:bg-white/10 hover:border-white/25 transition-all duration-300 w-full sm:w-auto cursor-pointer"
+                  onClick={() => document.getElementById("coverage")?.scrollIntoView({ behavior: "smooth" })}
                 >
-                  <Link to="/#coverage"><MapPin className="w-5 h-5" />فروعنا وانتشارنا</Link>
+                  <MapPin className="w-5 h-5" />فروعنا وانتشارنا
                 </Button>
               </motion.div>
             </motion.div>
