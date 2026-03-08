@@ -1,13 +1,6 @@
-import { ArrowLeft, Calendar, Users, Truck, Globe } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-
-const metrics = [
-  { icon: Calendar, value: "+25", label: "سنة خبرة" },
-  { icon: Users, value: "+2000", label: "عميل نشط" },
-  { icon: Truck, value: "48 ساعة", label: "تسليم سريع" },
-  { icon: Globe, value: "مصر والإمارات", label: "تواجد إقليمي" },
-];
 
 const AboutBrief = () => {
   return (
