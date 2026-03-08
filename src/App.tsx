@@ -21,6 +21,7 @@ const CartPage = lazy(() => import("./pages/CartPage"));
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
+const WhatSetsUsApartPage = lazy(() => import("./pages/WhatSetsUsApartPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -55,6 +56,7 @@ const App = () => (
                 <Route path="/products/:brand" element={<ProductsPage />} />
                 <Route path="/products" element={<ProductsPage />} />
                 <Route path="/contact" element={<ContactPage />} />
+                <Route path="/what-sets-us-apart" element={<WhatSetsUsApartPage />} />
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
