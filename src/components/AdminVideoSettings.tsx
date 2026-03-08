@@ -52,14 +52,13 @@ const AdminVideoSettings = () => {
     }
 
     setSaving(true);
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from("site_settings")
       .update({ value: videoId, updated_at: new Date().toISOString() })
       .eq("key", "video_youtube_id");
 
     if (error) {
-      // If row doesn't exist, insert
-      await supabase.from("site_settings").insert({ key: "video_youtube_id", value: videoId });
+      await (supabase as any).from("site_settings").insert({ key: "video_youtube_id", value: videoId });
     }
 
     queryClient.invalidateQueries({ queryKey: ["site-setting", "video_youtube_id"] });
