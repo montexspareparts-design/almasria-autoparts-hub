@@ -19,6 +19,8 @@ import SpecialOffers from "@/components/SpecialOffers";
 import brandGenuineParts from "@/assets/brand-genuine-parts.png";
 import brandToyotaOil from "@/assets/brand-toyota-oil.png";
 import brandMtx from "@/assets/brand-mtx.jpg";
+import brandDenso from "@/assets/brand-denso.png";
+import brandAisin from "@/assets/brand-aisin.png";
 
 const brandConfig: Record<string, { title: string; subtitle: string; description: string; badge: string; brandKey: string; logo: string }> = {
   "toyota-genuine": {
