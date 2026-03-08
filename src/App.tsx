@@ -21,6 +21,7 @@ const CartPage = lazy(() => import("./pages/CartPage"));
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
+const WhatSetsUsApartPage = lazy(() => import("./pages/WhatSetsUsApartPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
