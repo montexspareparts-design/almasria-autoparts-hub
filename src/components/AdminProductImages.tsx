@@ -177,6 +177,7 @@ const AdminProductImages = () => {
   };
 
 
+  const handleRemoveImage = async (productId: string, imageUrl: string) => {
     setUploading(productId);
     try {
       const parts = imageUrl.split("/product-images/");
