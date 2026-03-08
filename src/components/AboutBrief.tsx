@@ -36,8 +36,11 @@ const AboutBrief = () => {
           transition={{ delay: 0.15, duration: 0.5 }}
           className="max-w-3xl mx-auto text-center"
         >
+          <p className="text-muted-foreground text-base md:text-lg leading-[2] mb-4">
+            المصرية جروب هي كيان متخصص في قطع غيار تويوتا الأصلية وزيوت تويوتا الأصلية، بالإضافة إلى MTX متخصصة في استيراد الماركات اليابانية مختارة تضاهي جودة المنتج الأصلي.
+          </p>
           <p className="text-muted-foreground text-base md:text-lg leading-[2] mb-8">
-            المصرية جروب مؤسسة مصرية رائدة بخبرة تتجاوز 25 عامًا في توزيع قطع غيار وزيوت تويوتا الأصلية. نخدم أكثر من 1,000 عميل في جميع محافظات مصر عبر شبكة توزيع منظّمة ومعايير تشغيل احترافية.
+            تعمل المجموعة وفق منظومة تشغيلية منظمة تخدم تجار الجملة، الشركات والهيئات، ومراكز الصيانة، من خلال شبكة توزيع تغطي جميع محافظات الجمهورية مع التزام كامل بمعايير الجودة والانضباط السوقي.
           </p>
           <Button variant="outline" size="lg" className="gap-2 font-bold" asChild>
             <Link to="/what-sets-us-apart">
