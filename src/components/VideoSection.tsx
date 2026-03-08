@@ -1,14 +1,27 @@
 import { motion, useInView } from "framer-motion";
 import { Play, X } from "lucide-react";
 import { useRef, useState } from "react";
-
-// ✏️ غيّر الرابط هنا فقط لتغيير الفيديو
-const YOUTUBE_VIDEO_ID = "i0l9gnTDjyc";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const VideoSection = () => {
   const ref = useRef<HTMLElement>(null);
   const inView = useInView(ref, { once: true, margin: "-100px" });
   const [playing, setPlaying] = useState(false);
+
+  const { data: videoId } = useQuery({
+    queryKey: ["site-setting", "video_youtube_id"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "video_youtube_id")
+        .maybeSingle();
+      return data?.value || null;
+    },
+  });
+
+  if (!videoId) return null;
 
   return (
     <section ref={ref} className="relative py-24 overflow-hidden bg-secondary">
@@ -52,7 +65,7 @@ const VideoSection = () => {
           className="max-w-4xl mx-auto"
           initial={{ opacity: 0, scale: 0.92 }}
           animate={inView ? { opacity: 1, scale: 1 } : {}}
-          transition={{ duration: 0.7, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+          transition={{ duration: 0.7, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] }}
         >
           <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-secondary-foreground/10 group">
             {!playing ? (
@@ -60,15 +73,12 @@ const VideoSection = () => {
                 {/* Thumbnail */}
                 <div className="relative aspect-video bg-secondary">
                   <img
-                    src={`https://img.youtube.com/vi/${YOUTUBE_VIDEO_ID}/maxresdefault.jpg`}
+                    src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
                     alt="فيديو المصرية جروب"
                     className="w-full h-full object-cover"
                     loading="lazy"
                   />
-                  {/* Cinematic overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-secondary/80 via-secondary/30 to-secondary/10" />
-
-                  {/* Letterbox bars */}
                   <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-black/40 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-black/40 to-transparent" />
                 </div>
@@ -79,7 +89,6 @@ const VideoSection = () => {
                   className="absolute inset-0 flex items-center justify-center cursor-pointer"
                   whileHover="hover"
                 >
-                  {/* Pulsing ring */}
                   <motion.div
                     className="absolute w-24 h-24 rounded-full border-2 border-primary/40"
                     animate={{ scale: [1, 1.4, 1], opacity: [0.6, 0, 0.6] }}
@@ -90,8 +99,6 @@ const VideoSection = () => {
                     animate={{ scale: [1, 1.8, 1], opacity: [0.3, 0, 0.3] }}
                     transition={{ duration: 2.5, repeat: Infinity, delay: 0.5 }}
                   />
-
-                  {/* Button */}
                   <motion.div
                     className="relative w-20 h-20 rounded-full bg-primary flex items-center justify-center red-glow z-10"
                     variants={{ hover: { scale: 1.12 } }}
@@ -101,7 +108,6 @@ const VideoSection = () => {
                   </motion.div>
                 </motion.button>
 
-                {/* Bottom info */}
                 <div className="absolute bottom-4 right-4 left-4 flex items-center justify-between">
                   <span className="text-secondary-foreground/70 text-sm font-semibold bg-black/30 backdrop-blur-sm rounded-full px-3 py-1">
                     المصرية جروب — الفيلم التعريفي
@@ -111,13 +117,12 @@ const VideoSection = () => {
             ) : (
               <div className="relative aspect-video">
                 <iframe
-                  src={`https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}?autoplay=1&rel=0&modestbranding=1`}
+                  src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
                   title="فيديو المصرية جروب"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                   className="absolute inset-0 w-full h-full"
                 />
-                {/* Close button */}
                 <motion.button
                   onClick={() => setPlaying(false)}
                   className="absolute top-3 left-3 z-20 w-9 h-9 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/80 transition-colors"
