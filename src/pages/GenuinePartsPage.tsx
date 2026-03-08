@@ -32,14 +32,6 @@ const whyOem = [
   { icon: Package, title: "توريد رسمي معتمد", desc: "قنوات توريد مباشرة من الموزع المعتمد." },
 ];
 
-const categoriesData = [
-  { icon: Filter, title: "فلاتر", desc: "زيت — هواء — وقود — تكييف" },
-  { icon: ShieldCheck, title: "تيل فرامل", desc: "تيل أصلي لجميع الموديلات" },
-  { icon: Wrench, title: "مساعدات وتعليق", desc: "مساعدات وكاوتش وقطع تعليق" },
-  { icon: Cog, title: "أجزاء المحرك", desc: "طلمبات مياه، سيور، حوامل" },
-  { icon: Package, title: "كهرباء وحساسات", desc: "بوجيهات، حساسات أوكسجين وحرارة" },
-  { icon: Truck, title: "سيور ونواقل", desc: "سيور كاتينة وتكييف وديناموا" },
-];
 
 const models = ["كوستر", "هاي إس", "هاي لوكس", "لاند كروزر", "كورولا / راش / بيلتا"];
 
@@ -241,31 +233,7 @@ const GenuinePartsPage = () => {
         </div>
       </section>
 
-      {/* ═══ 3. فئات القطع ═══ */}
-      <section id="categories" className="py-20 md:py-28 bg-muted/30">
-        <div className="container mx-auto px-4 max-w-5xl">
-          <h2 className="text-3xl md:text-4xl font-black text-foreground text-center mb-12">
-            فئات القطع <span className="text-primary">المتاحة</span>
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {categoriesData.map((cat) => (
-              <div key={cat.title} className="bg-card border border-border rounded-xl p-6">
-                <div className="w-11 h-11 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                  <cat.icon className="w-5 h-5 text-primary" strokeWidth={1.8} />
-                </div>
-                <p className="font-bold text-foreground mb-1">{cat.title}</p>
-                <p className="text-muted-foreground text-sm leading-[1.7] mb-4">{cat.desc}</p>
-                <Link to="/contact#quote" className="inline-flex items-center gap-1.5 text-primary text-sm font-bold hover:underline">
-                  اطلب عرض سعر
-                  <ChevronLeft className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══ 3.5 تصفح المنتجات ═══ */}
+      {/* ═══ 3. تصفح المنتجات ═══ */}
       <section id="genuine-products" className="py-12 md:py-16 bg-background border-y border-border">
         <div className="container mx-auto px-4">
           <div className="text-center mb-10">
