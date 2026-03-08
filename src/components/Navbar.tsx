@@ -37,6 +37,8 @@ const Navbar = () => {
     { label: "قطع غيار تويوتا أصلي", href: "/products/toyota-genuine" },
     { label: "زيوت تويوتا أصلي", href: "/products/toyota-oils" },
     { label: "MTX Aftermarket", href: "/products/mtx-aftermarket" },
+    { label: "DENSO", href: "/products/denso" },
+    { label: "AISIN", href: "/products/aisin" },
   ];
 
   const links = [
