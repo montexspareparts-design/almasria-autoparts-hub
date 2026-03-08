@@ -65,6 +65,10 @@ const App = () => (
                   <Route path="/contact" element={<ContactPage />} />
                   <Route path="/what-sets-us-apart" element={<WhatSetsUsApartPage />} />
                   <Route path="/toyota-genuine-parts-egypt" element={<ToyotaPartsEgypt />} />
+                  <Route path="/parts-by-model/:model" element={<PartsByModelPage />} />
+                  <Route path="/parts-by-model" element={<PartsByModelPage />} />
+                  <Route path="/parts-by-type/:type" element={<PartsByTypePage />} />
+                  <Route path="/parts-by-type" element={<PartsByTypePage />} />
                   {/* Auth & dealer */}
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/dealer-apply" element={<DealerApply />} />
