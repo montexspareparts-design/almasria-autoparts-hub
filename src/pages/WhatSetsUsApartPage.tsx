@@ -2,7 +2,7 @@ import { motion, useInView, useScroll, useTransform } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import {
   Clock, Award, Users, Truck, Monitor, DollarSign, Wrench, Globe,
-  ArrowLeft, MessageCircle, Sparkles, CheckCircle2, Zap,
+  ArrowLeft, MessageCircle, Sparkles, CheckCircle2, Zap, MapPin, Building2, Navigation,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
