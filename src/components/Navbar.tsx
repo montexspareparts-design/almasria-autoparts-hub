@@ -67,10 +67,6 @@ const Navbar = () => {
     { label: "زيوت تويوتا أصلية", href: "/products/toyota-oils" },
   ];
 
-  const catalogCategories = [
-    { label: "حسب موديل السيارة", href: "/parts-by-model" },
-    { label: "حسب نوع القطعة", href: "/parts-by-type" },
-  ];
 
   const links = [
     { label: "الرئيسية", href: "/#hero" },
