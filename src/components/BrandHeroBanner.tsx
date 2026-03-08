@@ -10,6 +10,7 @@ interface BrandHeroBannerProps {
   description: string;
   badge: string;
   backgroundImage?: string;
+  logoScale?: number;
 }
 
 const BrandHeroBanner = ({ logo, title, subtitle, description, badge, backgroundImage }: BrandHeroBannerProps) => {
