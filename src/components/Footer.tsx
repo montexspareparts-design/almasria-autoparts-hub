@@ -147,11 +147,11 @@ const Footer = () => {
             <h4 className="font-bold text-sm mb-5 text-secondary-foreground/80">تواصل معنا</h4>
             <ul className="space-y-4">
               <li>
-                <a href="tel:+201153961008" className="flex items-center gap-3 text-secondary-foreground/50 hover:text-primary transition-colors group" dir="ltr">
+                <a href="tel:+201020412358" className="flex items-center gap-3 text-secondary-foreground/50 hover:text-primary transition-colors group" dir="ltr">
                   <div className="w-9 h-9 rounded-lg bg-primary/[0.08] flex items-center justify-center flex-shrink-0 group-hover:bg-primary/15 transition-colors">
                     <Phone className="w-4 h-4 text-primary" />
                   </div>
-                  <span className="text-sm">+20 1153961008</span>
+                  <span className="text-sm">+20 1020412358</span>
                 </a>
               </li>
               <li>
