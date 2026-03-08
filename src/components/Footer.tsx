@@ -1,6 +1,54 @@
 import { motion } from "framer-motion";
 import { Phone, Mail, MapPin, MessageCircle, Globe } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
+
+const quickLinks = [
+  { label: "الرئيسية", href: "/#hero" },
+  { label: "من نحن", href: "/#about" },
+  { label: "العلامات التجارية", href: "/products" },
+  { label: "لماذا نحن", href: "/what-sets-us-apart" },
+  { label: "شبكة التوزيع", href: "/#distribution" },
+  { label: "اتصل بنا", href: "/contact" },
+];
+
+const branches = [
+  { name: "القاهرة – التوفيقية", icon: MapPin, href: "https://maps.app.goo.gl/B3Kb6At4dnfGy28T9" },
+  { name: "الجيزة – أوسيم", icon: MapPin, href: "https://maps.app.goo.gl/trZ9Q4ZhnwtsFXTB8" },
+  { name: "الأقصر", icon: MapPin, href: "https://maps.app.goo.gl/c9B4yDBY2QHWPKcT8" },
+  { name: "المكتب الإداري – اللبيني", icon: MapPin, href: null },
+  { name: "دبي – Spectra Cars & Parts", icon: Globe, href: null },
+];
+
+const FooterLink = ({ href, children }: { href: string; children: React.ReactNode }) => {
+  const isHash = href.includes("#");
+  const isExternal = href.startsWith("http");
+
+  if (isExternal) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors relative group inline-block">
+        {children}
+        <span className="absolute bottom-0 right-0 w-0 h-px bg-primary transition-all duration-300 group-hover:w-full" />
+      </a>
+    );
+  }
+
+  if (isHash) {
+    return (
+      <a href={href} className="hover:text-primary transition-colors relative group inline-block">
+        {children}
+        <span className="absolute bottom-0 right-0 w-0 h-px bg-primary transition-all duration-300 group-hover:w-full" />
+      </a>
+    );
+  }
+
+  return (
+    <Link to={href} className="hover:text-primary transition-colors relative group inline-block">
+      {children}
+      <span className="absolute bottom-0 right-0 w-0 h-px bg-primary transition-all duration-300 group-hover:w-full" />
+    </Link>
+  );
+};
 
 const Footer = () => {
   return (
@@ -44,19 +92,9 @@ const Footer = () => {
           >
             <h4 className="font-bold mb-4 text-sm">روابط سريعة</h4>
             <ul className="space-y-2.5 text-sm text-secondary-foreground/60">
-              {[
-                { label: "الرئيسية", href: "/#hero" },
-                { label: "من نحن", href: "/#about" },
-                { label: "العلامات التجارية", href: "/products" },
-                { label: "لماذا نحن", href: "/what-sets-us-apart" },
-                { label: "شبكة التوزيع", href: "/#distribution" },
-                { label: "اتصل بنا", href: "/contact" },
-              ].map((l) => (
+              {quickLinks.map((l) => (
                 <li key={l.href}>
-                  <a href={l.href} className="hover:text-primary transition-colors relative group inline-block">
-                    {l.label}
-                    <span className="absolute bottom-0 right-0 w-0 h-px bg-primary transition-all duration-300 group-hover:w-full" />
-                  </a>
+                  <FooterLink href={l.href}>{l.label}</FooterLink>
                 </li>
               ))}
             </ul>
@@ -71,16 +109,21 @@ const Footer = () => {
           >
             <h4 className="font-bold mb-4 text-sm">فروعنا</h4>
             <ul className="space-y-2.5 text-sm text-secondary-foreground/60">
-              {[
-                { name: "القاهرة – التوفيقية", icon: MapPin },
-                { name: "الجيزة – أوسيم", icon: MapPin },
-                { name: "الأقصر", icon: MapPin },
-                { name: "المكتب الإداري – اللبيني", icon: MapPin },
-                { name: "دبي – Spectra Cars & Parts", icon: Globe },
-              ].map((b) => (
+              {branches.map((b) => (
                 <li key={b.name} className="flex items-center gap-2">
                   <b.icon className="w-3 h-3 text-primary/60 flex-shrink-0" />
-                  {b.name}
+                  {b.href ? (
+                    <a
+                      href={b.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-primary transition-colors"
+                    >
+                      {b.name}
+                    </a>
+                  ) : (
+                    b.name
+                  )}
                 </li>
               ))}
             </ul>
