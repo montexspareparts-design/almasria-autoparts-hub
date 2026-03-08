@@ -22,6 +22,24 @@ const fadeSlideUp = {
   show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] } },
 };
 
+const AnimatedNumber = ({ value, prefix = "", suffix = "" }: { value: number; prefix?: string; suffix?: string }) => {
+  const [display, setDisplay] = useState(0);
+  const numRef = useRef<HTMLSpanElement>(null);
+  const numInView = useInView(numRef, { once: true, margin: "-50px" });
+
+  useEffect(() => {
+    if (!numInView) return;
+    const controls = animate(0, value, {
+      duration: 2,
+      ease: [0.25, 0.46, 0.45, 0.94],
+      onUpdate: (v) => setDisplay(Math.round(v)),
+    });
+    return () => controls.stop();
+  }, [numInView, value]);
+
+  return <span ref={numRef}>{prefix}{display.toLocaleString("ar-EG")}{suffix}</span>;
+};
+
 const HeroSection = () => {
   const navigate = useNavigate();
   const sectionRef = useRef<HTMLElement>(null);
