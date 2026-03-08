@@ -55,7 +55,7 @@ const DistributionNetwork = () => {
                     className="inline-flex items-center gap-1 mt-2 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
                   >
                     <Navigation className="w-3 h-3" />
-                    خرائط جوجل
+                    عرض الموقع على الخريطة
                   </a>
                 </div>
               </div>
