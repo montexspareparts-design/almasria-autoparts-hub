@@ -109,7 +109,7 @@ const Footer = () => {
             <div className="mt-5 bg-secondary-foreground/10 rounded-lg p-3 border border-primary/15">
               <div className="text-xs font-semibold text-secondary-foreground/80 mb-1">العلامات التي نوزعها</div>
               <div className="text-xs text-secondary-foreground/50 leading-relaxed">
-                Toyota Genuine Parts • Toyota Lubricants • MTX Aftermarket
+                Toyota Genuine Parts • Toyota Lubricants • MTX Aftermarket • DENSO • AISIN
               </div>
             </div>
           </motion.div>
