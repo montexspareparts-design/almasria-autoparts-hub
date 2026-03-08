@@ -1,68 +1,36 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { Phone, Mail, MapPin, MessageCircle, Send, Clock } from "lucide-react";
+import { motion } from "framer-motion";
+import { Phone, Mail, MapPin, MessageCircle, Send, Clock, Building2, Globe } from "lucide-react";
 import CarQuiz from "./CarQuiz";
 import SpeedometerDashboard from "./SpeedometerDashboard";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
-import { toast } from "sonner";
-import { z } from "zod";
+import ContactForm from "./ContactForm";
+import ContactInfoCard from "./ContactInfoCard";
+import BranchCard from "./BranchCard";
 
-const contactSchema = z.object({
-  name: z.string().trim().min(1, "الاسم مطلوب").max(100),
-  company: z.string().trim().max(100).optional(),
-  phone: z.string().trim().min(1, "رقم الهاتف مطلوب").max(20),
-  email: z.string().trim().email("بريد إلكتروني غير صحيح").max(255).optional().or(z.literal("")),
-  message: z.string().trim().min(1, "الرسالة مطلوبة").max(1000),
-});
+const contactInfo = [
+  { icon: Mail, label: "البريد العام", value: "info@almasriaautoparts.com", href: "mailto:info@almasriaautoparts.com" },
+  { icon: Mail, label: "بريد المبيعات", value: "sales.team@almasriaautoparts.com", href: "mailto:sales.team@almasriaautoparts.com" },
+  { icon: MessageCircle, label: "واتساب بيزنس", value: "01032104861", href: "https://wa.me/201032104861" },
+  { icon: Clock, label: "مواعيد العمل", value: "من 9 صباحًا حتى 7 مساءً", href: undefined },
+];
 
-const inputVariants = {
-  hidden: { opacity: 0, x: -20 },
-  visible: (i: number) => ({
-    opacity: 1,
-    x: 0,
-    transition: { delay: i * 0.08, duration: 0.4, ease: "easeOut" as const },
-  }),
-};
+const branches = [
+  { name: "القاهرة – التوفيقية", detail: "سوق التوفيقية لقطع غيار السيارات", phones: ["01032104861", "01151436999"], icon: Building2 },
+  { name: "الجيزة – أوسيم", detail: "أوسيم – الجيزة", phones: ["01153961008"], icon: Building2 },
+  { name: "الأقصر", detail: "صعيد مصر", phones: ["01016177204"], icon: Building2 },
+  { name: "المكتب الإداري", detail: "اللبيني – الهرم – الجيزة", phones: ["01112365417"], icon: Building2 },
+  { name: "دبي – الإمارات 🇦🇪", detail: "مركز إقليمي للتوسع الخليجي", phones: [], icon: Globe },
+];
 
 const ContactSection = () => {
-  const [form, setForm] = useState({ name: "", company: "", phone: "", email: "", message: "" });
-  const [isSending, setIsSending] = useState(false);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const result = contactSchema.safeParse(form);
-    if (!result.success) {
-      toast.error(result.error.issues[0].message);
-      return;
-    }
-    setIsSending(true);
-    setTimeout(() => {
-      toast.success("تم إرسال رسالتك بنجاح! سنتواصل معك قريبًا.");
-      setForm({ name: "", company: "", phone: "", email: "", message: "" });
-      setIsSending(false);
-    }, 800);
-  };
-
-  const contactInfo = [
-    { icon: Mail, label: "البريد العام", value: "info@almasriaautoparts.com", href: "mailto:info@almasriaautoparts.com" },
-    { icon: Mail, label: "بريد المبيعات", value: "sales.team@almasriaautoparts.com", href: "mailto:sales.team@almasriaautoparts.com" },
-    { icon: MessageCircle, label: "واتساب بيزنس", value: "01032104861", href: "https://wa.me/201032104861" },
-    { icon: Clock, label: "مواعيد العمل", value: "من 9 صباحًا حتى 7 مساءً", href: undefined },
-  ];
-
-  const branches = [
-    { name: "القاهرة – التوفيقية", detail: "سوق التوفيقية لقطع غيار السيارات", phones: ["01032104861", "01151436999"] },
-    { name: "الجيزة – أوسيم", detail: "أوسيم – الجيزة", phones: ["01153961008"] },
-    { name: "الأقصر", detail: "صعيد مصر", phones: ["01016177204"] },
-    { name: "المكتب الإداري", detail: "اللبيني – الهرم – الجيزة", phones: ["01112365417"] },
-    { name: "دبي – الإمارات 🇦🇪", detail: "مركز إقليمي للتوسع الخليجي", phones: [] },
-  ];
-
   return (
-    <section id="contact" className="py-20 md:py-28 bg-background overflow-hidden">
-      <div className="container mx-auto px-4">
+    <section id="contact" className="relative py-20 md:py-28 overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-secondary/20 pointer-events-none" />
+      <div className="absolute top-0 left-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-80 h-80 bg-primary/3 rounded-full blur-3xl translate-x-1/3 translate-y-1/3 pointer-events-none" />
+
+      <div className="container mx-auto px-4 relative z-10">
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -74,172 +42,101 @@ const ContactSection = () => {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ type: "spring", stiffness: 200 }}
-            className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-bold mb-4"
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-bold mb-5 backdrop-blur-sm"
           >
+            <MessageCircle className="w-4 h-4" />
             تواصل معنا
           </motion.span>
           <h2 className="text-3xl md:text-5xl font-black text-foreground mb-4">
-            تواصل <span className="text-gradient-red">معنا</span>
+            نحن هنا <span className="shimmer-text">لخدمتك</span>
           </h2>
-          <p className="text-muted-foreground text-lg">اطلب عرض سعر أو تقدم بطلب حساب تاجر</p>
+          <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+            اطلب عرض سعر أو تقدم بطلب حساب تاجر — فريقنا جاهز للرد عليك
+          </p>
           <motion.div
             initial={{ width: 0 }}
-            whileInView={{ width: "5rem" }}
+            whileInView={{ width: "6rem" }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.3 }}
-            className="h-1 bg-primary mx-auto mt-4 rounded-full"
+            className="h-1 bg-gradient-to-l from-primary to-primary/40 mx-auto mt-5 rounded-full"
           />
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-12">
-          {/* Form + Lucky Wheel */}
-          <div className="space-y-8">
-          {/* Form */}
-          <motion.form
-            initial={{ opacity: 0, x: -40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, type: "spring", stiffness: 60 }}
-            onSubmit={handleSubmit}
-            className="space-y-4"
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {[
-                { label: "الاسم *", key: "name", placeholder: "الاسم بالكامل", i: 0 },
-                { label: "الشركة", key: "company", placeholder: "اسم الشركة", i: 1 },
-              ].map((field) => (
-                <motion.div key={field.key} custom={field.i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={inputVariants}>
-                  <label className="text-sm font-medium text-foreground mb-1 block">{field.label}</label>
-                  <Input
-                    value={form[field.key as keyof typeof form]}
-                    onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
-                    placeholder={field.placeholder}
-                    className="text-right transition-shadow duration-300 focus:shadow-[0_0_15px_hsl(355_90%_48%/0.15)]"
-                  />
-                </motion.div>
-              ))}
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {[
-                { label: "الهاتف *", key: "phone", placeholder: "رقم الهاتف", i: 2 },
-                { label: "البريد الإلكتروني", key: "email", placeholder: "البريد الإلكتروني", i: 3 },
-              ].map((field) => (
-                <motion.div key={field.key} custom={field.i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={inputVariants}>
-                  <label className="text-sm font-medium text-foreground mb-1 block">{field.label}</label>
-                  <Input
-                    value={form[field.key as keyof typeof form]}
-                    onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
-                    placeholder={field.placeholder}
-                    className="text-right transition-shadow duration-300 focus:shadow-[0_0_15px_hsl(355_90%_48%/0.15)]"
-                  />
-                </motion.div>
-              ))}
-            </div>
-            <motion.div custom={4} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={inputVariants}>
-              <label className="text-sm font-medium text-foreground mb-1 block">الرسالة *</label>
-              <Textarea
-                value={form.message}
-                onChange={(e) => setForm({ ...form, message: e.target.value })}
-                placeholder="أخبرنا بما تحتاج..."
-                rows={5}
-                className="text-right transition-shadow duration-300 focus:shadow-[0_0_15px_hsl(355_90%_48%/0.15)]"
-              />
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
-              <Button type="submit" size="lg" className="w-full gap-2 text-lg red-glow group" disabled={isSending}>
-                <motion.div animate={isSending ? { rotate: 360 } : {}} transition={{ duration: 0.8, repeat: isSending ? Infinity : 0 }}>
-                  <Send className="w-5 h-5 transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1" />
-                </motion.div>
-                {isSending ? "جاري الإرسال..." : "إرسال الرسالة"}
-              </Button>
-            </motion.div>
-          </motion.form>
-
-          {/* Car Quiz */}
-          <CarQuiz />
-          <SpeedometerDashboard />
+        <div className="grid lg:grid-cols-2 gap-10 xl:gap-14">
+          {/* Right Column - Form + Interactive */}
+          <div className="space-y-8 order-2 lg:order-1">
+            <ContactForm />
+            <CarQuiz />
+            <SpeedometerDashboard />
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, x: 40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, type: "spring", stiffness: 60 }}
-            className="space-y-4"
-          >
-            {contactInfo.map((c, i) => {
-              const Wrapper = c.href ? 'a' : 'div';
-              return (
-                <motion.div
-                  key={c.label}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                  whileHover={{ x: -5, boxShadow: "0 8px 25px hsl(355 90% 48% / 0.08)" }}
-                >
-                  <Wrapper
-                    {...(c.href ? { href: c.href } : {})}
-                    className="flex items-center gap-4 bg-card border border-border rounded-lg p-4 transition-all duration-300 hover:border-primary/30 block"
-                  >
-                    <motion.div
-                      className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0"
-                      whileHover={{ rotate: [0, -5, 5, 0], scale: 1.1 }}
-                      transition={{ duration: 0.4 }}
-                    >
-                      <c.icon className="w-6 h-6 text-primary" />
-                    </motion.div>
-                    <div>
-                      <div className="text-sm text-muted-foreground">{c.label}</div>
-                      <div className="font-bold text-card-foreground">{c.value}</div>
-                    </div>
-                  </Wrapper>
-                </motion.div>
-              );
-            })}
+          {/* Left Column - Info + Branches */}
+          <div className="space-y-6 order-1 lg:order-2">
+            {/* Contact Info Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {contactInfo.map((c, i) => (
+                <ContactInfoCard key={c.label} {...c} index={i} />
+              ))}
+            </div>
 
             {/* Branches */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: 0.3 }}
-              className="bg-secondary text-secondary-foreground rounded-lg p-6"
+              transition={{ delay: 0.2 }}
+              className="bg-secondary rounded-2xl p-6 border border-border/50 relative overflow-hidden"
             >
-              <div className="flex items-center gap-3 mb-4">
-                <motion.div animate={{ y: [0, -3, 0] }} transition={{ duration: 2, repeat: Infinity }}>
-                  <MapPin className="w-6 h-6 text-primary" />
-                </motion.div>
-                <h4 className="font-bold text-lg">فروعنا</h4>
-              </div>
-              <div className="space-y-3">
-                {branches.map((b, i) => (
-                  <motion.div
-                    key={b.name}
-                    initial={{ opacity: 0, x: 15 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.4 + i * 0.08 }}
-                    whileHover={{ scale: 1.02 }}
-                    className="bg-secondary-foreground/10 rounded-md p-4 transition-colors hover:bg-secondary-foreground/15"
-                  >
-                    <div className="font-bold">{b.name}</div>
-                    <div className="text-sm text-secondary-foreground/70">{b.detail}</div>
-                    {b.phones.length > 0 && (
-                      <div className="flex gap-3 mt-1">
-                        {b.phones.map((p) => (
-                          <a key={p} href={`tel:${p}`} className="text-sm text-primary hover:underline flex items-center gap-1">
-                            <Phone className="w-3 h-3" />
-                            {p}
-                          </a>
-                        ))}
-                      </div>
-                    )}
-                  </motion.div>
-                ))}
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
+              <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
+                    <motion.div animate={{ y: [0, -3, 0] }} transition={{ duration: 2, repeat: Infinity }}>
+                      <MapPin className="w-5 h-5 text-primary" />
+                    </motion.div>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-lg text-secondary-foreground">فروعنا</h4>
+                    <p className="text-xs text-secondary-foreground/60">تغطية شاملة في مصر والخليج</p>
+                  </div>
+                </div>
+                <div className="space-y-2.5">
+                  {branches.map((b, i) => (
+                    <BranchCard key={b.name} {...b} index={i} />
+                  ))}
+                </div>
               </div>
             </motion.div>
-          </motion.div>
+
+            {/* Map placeholder / CTA */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 }}
+              className="bg-card border border-border rounded-2xl p-6 text-center relative overflow-hidden group"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/3 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+              <div className="relative z-10">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <MessageCircle className="w-7 h-7 text-primary" />
+                </div>
+                <h4 className="font-bold text-foreground text-lg mb-2">تواصل سريع عبر واتساب</h4>
+                <p className="text-muted-foreground text-sm mb-4">احصل على رد فوري من فريق المبيعات</p>
+                <motion.a
+                  href="https://wa.me/201032104861"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-[hsl(142,70%,40%)] text-white font-bold rounded-xl hover:bg-[hsl(142,70%,35%)] transition-colors"
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  ابدأ محادثة الآن
+                </motion.a>
+              </div>
+            </motion.div>
+          </div>
         </div>
       </div>
     </section>
