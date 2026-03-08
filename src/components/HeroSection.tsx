@@ -51,13 +51,13 @@ const HeroSection = () => {
           {/* Title */}
           <motion.h1
             variants={fadeSlideUp}
-            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-secondary-foreground leading-tight mb-5"
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-secondary-foreground leading-[1.2] mb-6 tracking-tight"
           >
             المصرية جروب
             <br />
-            <span className="text-gradient-red">موزع معتمد لقطع غيار تويوتا</span>
+            <span className="text-gradient-red text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold">موزع معتمد لقطع غيار تويوتا</span>
             <br />
-            <span className="text-secondary-foreground/90">الأصلية والزيوت في مصر</span>
+            <span className="text-secondary-foreground/90 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold">الأصلية والزيوت في مصر</span>
           </motion.h1>
 
           {/* Description */}
