@@ -22,7 +22,7 @@ const contactCards = [
     extraClass: "text-wrap break-all",
   },
   {
-    href: "https://wa.me/201020412358",
+    href: "https://wa.me/201153961008",
     icon: MessageCircle,
     title: "واتساب",
     detail: "تواصل فوري",
