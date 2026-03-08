@@ -26,7 +26,9 @@ const linkVariants = {
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, isDealer, isAdmin, signOut } = useAuth();
+  const [productsOpen, setProductsOpen] = useState(false);
+  const [mobileProductsOpen, setMobileProductsOpen] = useState(false);
+  const productsTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { itemCount } = useCart();
   const navigate = useNavigate();
 
