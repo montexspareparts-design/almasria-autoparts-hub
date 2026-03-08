@@ -13,92 +13,100 @@ const HeroSection = () => {
 
   return (
     <section ref={sectionRef} id="hero" className="relative min-h-[100svh] flex flex-col justify-center overflow-hidden">
-      {/* Background */}
-      <motion.div className="absolute inset-0" style={{ y: bgY }}>
+      {/* Background — decorative, no alt */}
+      <motion.div className="absolute inset-0" style={{ y: bgY }} role="img" aria-hidden="true">
         <img
           src={heroBg}
-          alt="مستودع توزيع المصرية جروب — قطع غيار تويوتا الأصلية"
+          alt=""
           className="w-full h-full object-cover scale-105"
           loading="eager"
           decoding="async"
           fetchPriority="high"
         />
-        <div className="absolute inset-0 bg-secondary/80" />
+        {/* Overlay 40% */}
+        <div className="absolute inset-0 bg-secondary/[0.82]" />
         <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-secondary to-transparent" />
       </motion.div>
 
       {/* Content */}
       <motion.div className="container mx-auto px-4 relative z-10 pt-28 md:pt-36 pb-20" style={{ opacity: contentOpacity }}>
-        <div className="max-w-3xl">
+        <div className="max-w-[760px]">
           {/* Authorized Badge */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="inline-flex items-center gap-2 border border-primary/25 rounded-full px-4 py-2 mb-10"
+            className="inline-flex items-center gap-2 border border-primary/25 rounded-full px-4 py-2 mb-8"
           >
             <ShieldCheck className="w-4 h-4 text-primary" />
             <span className="text-sm font-semibold text-primary">موزع معتمد رسمي — تويوتا مصر</span>
           </motion.div>
 
-          {/* H1 — SEO optimized, single H1 on page */}
+          {/* H1 — single on page */}
           <motion.h1
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.35 }}
-            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-secondary-foreground leading-[1.15] tracking-tight mb-8"
+            className="text-[1.65rem] sm:text-3xl md:text-4xl lg:text-[2.75rem] font-semibold text-secondary-foreground leading-[1.35] tracking-tight mb-6"
           >
-            المصرية جروب – موزع معتمد لقطع غيار تويوتا الأصلية وزيوت تويوتا الأصلية في مصر
+            المصرية جروب — موزع معتمد لقطع غيار وزيوت تويوتا الأصلية في مصر
           </motion.h1>
 
-          {/* Subheadline */}
-          <motion.h2
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
-            className="text-lg sm:text-xl md:text-2xl font-bold text-secondary-foreground/75 leading-[1.7] max-w-2xl mb-6"
-          >
-            متخصصون في توزيع قطع غيار تويوتا الأصلية، واستيراد الماركات اليابانية عالية الجودة التي تضاهي المواصفات الأصلية، مع شحن لجميع المحافظات وخدمة تجار الجملة والشركات والقطاعي.
-          </motion.h2>
-
-          {/* Trust line */}
+          {/* Description */}
           <motion.p
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
-            className="text-secondary-foreground/50 text-base md:text-lg leading-[1.9] max-w-xl mb-12"
+            transition={{ duration: 0.5, delay: 0.5 }}
+            className="text-secondary-foreground/65 text-base md:text-lg leading-[1.8] max-w-[660px] mb-10"
           >
-            أكثر من 25 عامًا من الخبرة في سوق قطع غيار تويوتا في مصر.
+            خبرة تتجاوز 25 عامًا في توزيع قطع غيار وزيوت تويوتا الأصلية، وعلامتنا الخاصة MTX بجودة تضاهي المواصفات الأصلية، مع تغطية وطنية وشحن لجميع المحافظات.
           </motion.p>
 
-          {/* CTAs — 2 buttons only */}
+          {/* CTAs */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.7 }}
-            className="flex flex-col sm:flex-row gap-3"
+            transition={{ duration: 0.5, delay: 0.65 }}
+            className="flex flex-col sm:flex-row gap-3 mb-5"
           >
             <Button
               size="lg"
-              className="text-base px-8 py-6 gap-2.5 font-bold bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300"
+              className="text-base px-8 py-6 gap-2.5 font-bold bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 w-full sm:w-auto"
               asChild
             >
-              <Link to="/products">
+              <Link to="/products" aria-label="تصفّح منتجات المصرية جروب">
                 <Package className="w-5 h-5" />
-                تصفح قطع غيار تويوتا
+                تصفّح المنتجات
               </Link>
             </Button>
             <Button
               size="lg"
               variant="outline"
-              className="text-base px-8 py-6 gap-2.5 font-bold border border-secondary-foreground/15 text-secondary-foreground bg-secondary-foreground/[0.04] backdrop-blur-sm hover:bg-secondary-foreground/10 transition-all duration-300"
+              className="text-base px-8 py-6 gap-2.5 font-bold border border-secondary-foreground/15 text-secondary-foreground bg-secondary-foreground/[0.04] backdrop-blur-sm hover:bg-secondary-foreground/10 transition-all duration-300 w-full sm:w-auto"
               asChild
             >
-              <Link to="/what-sets-us-apart#network">
+              <Link to="/what-sets-us-apart#network" aria-label="عرض فروع وانتشار المصرية جروب">
                 <MapPin className="w-5 h-5" />
                 فروعنا وانتشارنا
               </Link>
             </Button>
+          </motion.div>
+
+          {/* Trust microcopy + contact link */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.8 }}
+          >
+            <p className="text-secondary-foreground/40 text-sm leading-[1.7] mb-2">
+              انتشار داخل مصر وخارجها — تسليم خلال 48 ساعة عبر شبكة توزيع منظمة.
+            </p>
+            <Link
+              to="/contact"
+              className="text-primary/80 hover:text-primary text-sm font-medium transition-colors duration-200"
+            >
+              تواصل معنا ←
+            </Link>
           </motion.div>
         </div>
       </motion.div>
