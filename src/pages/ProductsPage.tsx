@@ -414,6 +414,16 @@ const ProductsPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>{config.title} | المصرية جروب</title>
+        <meta name="description" content={config.description} />
+        <link rel="canonical" href={`https://almasriaautoparts.com/products/${brand}`} />
+      </Helmet>
+      <BreadcrumbSchema items={[
+        { name: "الرئيسية", url: "https://almasriaautoparts.com/" },
+        { name: "المنتجات", url: "https://almasriaautoparts.com/products" },
+        { name: config.title, url: `https://almasriaautoparts.com/products/${brand}` },
+      ]} />
       <Navbar />
       <BrandHeroBanner
         logo={config.logo}
