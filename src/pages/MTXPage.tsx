@@ -118,10 +118,131 @@ const stagger = (i: number) => ({ delay: i * 0.1 });
 
 /* ─── Page ─── */
 
+const ITEMS_PER_PAGE = 24;
+
 const MTXPage = () => {
-  return (
-    <div className="min-h-screen bg-background" dir="rtl">
-      <Helmet>
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { isDealer, user, dealerAccount } = useAuth();
+  const { addItem } = useCart();
+  const queryClient = useQueryClient();
+  const [filters, setFilters] = useState<ProductFilters>({
+    search: "", model: null, year: null, chassisNumber: "", partNumber: "", categoryId: null, priceMin: "", priceMax: "", sortBy: "newest",
+  });
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+  const DAILY_LIMIT = 20;
+
+  useEffect(() => { setCurrentPage(1); }, [filters]);
+
+  const { data: viewedProductIds = [] } = useQuery({
+    queryKey: ["dealer_views_today", user?.id],
+    queryFn: async () => {
+      const today = new Date().toISOString().split("T")[0];
+      const { data, error } = await supabase.from("dealer_price_views").select("product_id").eq("user_id", user!.id).eq("view_date", today);
+      if (error) throw error;
+      return data.map((v) => v.product_id);
+    },
+    enabled: !!isDealer && !!user,
+  });
+  const dailyViewCount = viewedProductIds.length;
+  const limitReached = dailyViewCount >= DAILY_LIMIT;
+
+  const recordView = useCallback(async (productId: string) => {
+    if (!user || !isDealer || viewedProductIds.includes(productId) || limitReached) return;
+    await supabase.from("dealer_price_views").upsert(
+      { user_id: user.id, product_id: productId, view_date: new Date().toISOString().split("T")[0] },
+      { onConflict: "user_id,product_id,view_date" }
+    );
+    queryClient.invalidateQueries({ queryKey: ["dealer_views_today", user.id] });
+  }, [user, isDealer, viewedProductIds, limitReached, queryClient]);
+
+  const { data: tierPrices } = useQuery({
+    queryKey: ["tier_prices_mtx", dealerAccount?.tier],
+    queryFn: async () => {
+      if (!dealerAccount) return {};
+      const { data, error } = await supabase.from("product_tier_prices").select("product_id, price").eq("tier", dealerAccount.tier as any);
+      if (error) throw error;
+      const map: Record<string, number> = {};
+      data.forEach((tp) => { map[tp.product_id] = tp.price; });
+      return map;
+    },
+    enabled: !!dealerAccount,
+  });
+
+  const getProductPrice = (product: any) => {
+    if (isDealer && tierPrices && tierPrices[product.id]) return tierPrices[product.id];
+    return product.base_price;
+  };
+
+  const handleAddToCart = (product: any) => {
+    const cartItem: CartItem = {
+      id: product.id, name_ar: product.name_ar, sku: product.sku, image_url: product.image_url,
+      unit_price: getProductPrice(product), quantity: product.min_order_qty || 1,
+      stock_quantity: product.stock_quantity, min_order_qty: product.min_order_qty, brand: product.brand,
+    };
+    addItem(cartItem);
+    toast({ title: "تمت الإضافة للسلة ✅", description: product.name_ar });
+  };
+
+  const { data: dbCategories } = useQuery({
+    queryKey: ["product_categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("product_categories").select("*").order("sort_order");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  useEffect(() => {
+    const categorySlug = searchParams.get("category");
+    if (categorySlug && dbCategories) {
+      const matched = dbCategories.find((c) => c.slug === categorySlug);
+      if (matched) setFilters((prev) => ({ ...prev, categoryId: matched.id }));
+    }
+  }, [dbCategories, searchParams]);
+
+  const { data: products, isLoading } = useQuery({
+    queryKey: ["products", "mtx_aftermarket"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*, product_categories(name_ar)")
+        .eq("brand", "mtx_aftermarket" as any)
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const filteredProducts = useMemo(() => {
+    if (!products) return [];
+    let result = products.filter((p) => {
+      const s = filters.search?.toLowerCase() || "";
+      const matchesSearch = !s || p.name_ar.toLowerCase().includes(s) || p.sku.toLowerCase().includes(s);
+      const matchesCategory = !filters.categoryId || p.category_id === filters.categoryId;
+      const matchesModel = !filters.model || p.name_ar.includes(filters.model);
+      const matchesYear = !filters.year || p.name_ar.includes(filters.year);
+      const matchesPartNumber = !filters.partNumber || p.sku.toLowerCase().includes(filters.partNumber.toLowerCase());
+      const matchesPriceMin = !filters.priceMin || p.base_price >= Number(filters.priceMin);
+      const matchesPriceMax = !filters.priceMax || p.base_price <= Number(filters.priceMax);
+      return matchesSearch && matchesCategory && matchesModel && matchesYear && matchesPartNumber && matchesPriceMin && matchesPriceMax;
+    });
+    switch (filters.sortBy) {
+      case "price_asc": result.sort((a, b) => a.base_price - b.base_price); break;
+      case "price_desc": result.sort((a, b) => b.base_price - a.base_price); break;
+      case "name_asc": result.sort((a, b) => a.name_ar.localeCompare(b.name_ar, "ar")); break;
+    }
+    return result;
+  }, [products, filters]);
+
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredProducts.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredProducts, currentPage]);
         <title>MTX | العلامة التابعة للمصرية جروب والمتخصصة في استيراد قطع غيار تويوتا</title>
         <meta
           name="description"
