@@ -36,7 +36,13 @@ const Index = () => {
         <WhyUsSection />
       </Suspense>
       <Suspense fallback={<SectionFallback />}>
+        <TestimonialsSection />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
         <PartnershipsSection />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
+        <FAQSection />
       </Suspense>
       <Suspense fallback={<SectionFallback />}>
         <ContactSection />
@@ -49,6 +55,9 @@ const Index = () => {
       </Suspense>
       <Suspense fallback={null}>
         <AIChatBot />
+      </Suspense>
+      <Suspense fallback={null}>
+        <BackToTop />
       </Suspense>
     </div>
   );
