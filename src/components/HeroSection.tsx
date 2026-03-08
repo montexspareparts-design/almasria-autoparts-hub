@@ -27,6 +27,8 @@ const HeroSection = () => {
         <img
           src={heroBg}
           alt=""
+          width={1920}
+          height={1080}
           className="w-full h-full object-cover scale-105"
           loading="eager"
           decoding="async"
