@@ -35,7 +35,7 @@ const BrandHeroBanner = ({ logo, title, subtitle, description, badge, background
             transition={{ duration: 0.8, type: "spring", stiffness: 80, damping: 14 }}
             className="relative shrink-0"
           >
-            <div className="relative w-44 h-44 md:w-56 md:h-56 rounded-2xl bg-white/95 backdrop-blur-xl border-2 border-white/40 flex items-center justify-center overflow-hidden group">
+            <div className="relative w-52 h-52 md:w-64 md:h-64 rounded-2xl bg-white/95 backdrop-blur-xl border-2 border-white/40 flex items-center justify-center overflow-hidden group">
               {/* Shimmer effect */}
               <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12"
