@@ -231,7 +231,7 @@ const ProductCompare = () => {
                       <div className="flex flex-col items-center gap-0.5">
                         <row.icon className="w-3.5 h-3.5 text-muted-foreground" />
                         <span className="text-[10px] text-muted-foreground whitespace-nowrap">{row.label}</span>
-                        {isSame && <span className="text-[9px] text-green-500 font-bold">متطابق</span>}
+                        {isSame && <span className="text-[9px] text-primary font-bold">متطابق</span>}
                       </div>
                       <div className="text-xs font-semibold text-foreground text-center">{val2}</div>
                     </motion.div>
