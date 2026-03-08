@@ -42,6 +42,9 @@ const App = () => (
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/home" element={<Index />} />
+                <Route path="/home-2" element={<Index />} />
+                <Route path="/main-home" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/dealer-apply" element={<DealerApply />} />
                 <Route path="/dealer-register" element={<DealerRegister />} />
@@ -50,6 +53,8 @@ const App = () => (
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/dealer-login" element={<DealerLogin />} />
                 <Route path="/products/:brand" element={<ProductsPage />} />
+                <Route path="/products" element={<ProductsPage />} />
+                <Route path="/contact" element={<ContactPage />} />
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
