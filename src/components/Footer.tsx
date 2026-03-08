@@ -74,7 +74,7 @@ const Footer = () => {
                 <Mail className="w-5 h-5 text-primary group-hover:text-primary-foreground transition-colors" />
               </a>
               <a
-                href="tel:+201153961008"
+                href="tel:+201020412358"
                 className="w-11 h-11 rounded-xl bg-secondary-foreground/[0.06] border border-secondary-foreground/10 flex items-center justify-center hover:bg-primary hover:border-primary hover:text-primary-foreground transition-all duration-300 group"
               >
                 <Phone className="w-5 h-5 text-primary group-hover:text-primary-foreground transition-colors" />
