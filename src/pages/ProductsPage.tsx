@@ -83,6 +83,7 @@ const ProductsPage = () => {
     priceMin: "",
     priceMax: "",
   });
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const DAILY_LIMIT = 20;
 
   // Track viewed product IDs today (for dealers)
