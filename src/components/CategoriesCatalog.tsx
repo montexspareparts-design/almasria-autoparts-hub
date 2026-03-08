@@ -66,7 +66,7 @@ const CategoriesCatalog = () => {
               transition={{ delay: i * 0.12, duration: 0.5 }}
             >
               <Link
-                to={`/products?brand=${cat.slug}`}
+                to={`/products/${cat.slug}`}
                 className="group relative flex flex-col items-center rounded-2xl overflow-hidden bg-card border border-border hover:border-primary/40 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-primary/10 p-8 text-center h-full"
               >
                 {/* Image */}
