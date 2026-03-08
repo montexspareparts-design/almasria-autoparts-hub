@@ -29,10 +29,8 @@ const SectionFallback = () => (
  * 4. Brands         → H2: العلامات التي نوزعها (3 brands)
  * 5. WhyUs Brief    → H2: ما يميزنا (short version + CTA)
  * 6. Distribution   → H2: شبكة التوزيع
- * 7. MTX Section    → H2: علامتنا الخاصة MTX
- * 8. Accreditations → H2: الاعتمادات
- * 9. Contact CTA    → H2: اتصل بنا
- * 10. Footer
+ * 7. Contact CTA    → H2: اتصل بنا
+ * 8. Footer
  */
 const Index = () => {
   return (
