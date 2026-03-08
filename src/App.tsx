@@ -25,6 +25,7 @@ const WhatSetsUsApartPage = lazy(() => import("./pages/WhatSetsUsApartPage"));
 const MTXPage = lazy(() => import("./pages/MTXPage"));
 const ToyotaPartsEgypt = lazy(() => import("./pages/ToyotaPartsEgypt"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
+const ClientSegmentPage = lazy(() => import("./pages/ClientSegmentPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -52,6 +53,7 @@ const App = () => (
                   <Route path="/home-2" element={<Navigate to="/" replace />} />
                   <Route path="/main-home" element={<Navigate to="/" replace />} />
                   <Route path="/about" element={<AboutPage />} />
+                  <Route path="/clients/:segment" element={<ClientSegmentPage />} />
                   {/* Main pages */}
                   <Route path="/mtx" element={<MTXPage />} />
                   <Route path="/products/:brand" element={<ProductsPage />} />
