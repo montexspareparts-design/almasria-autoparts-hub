@@ -11,6 +11,9 @@ import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 
 type AuthMethod = "phone" | "email";
 
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_DURATION = 60_000; // 1 minute
+
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [authMethod, setAuthMethod] = useState<AuthMethod>("phone");
@@ -24,6 +27,8 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
+  const [loginAttempts, setLoginAttempts] = useState(0);
+  const [lockedUntil, setLockedUntil] = useState<number | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -39,20 +44,46 @@ const Auth = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Rate limiting check
+    if (isLogin && lockedUntil && Date.now() < lockedUntil) {
+      const secsLeft = Math.ceil((lockedUntil - Date.now()) / 1000);
+      toast({
+        title: "تم تجاوز عدد المحاولات المسموح",
+        description: `يرجى الانتظار ${secsLeft} ثانية قبل المحاولة مرة أخرى`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     const authEmail = getAuthEmail();
 
     if (isLogin) {
       const { error } = await supabase.auth.signInWithPassword({ email: authEmail, password });
       if (error) {
-        toast({
-          title: "خطأ في تسجيل الدخول",
-          description: authMethod === "phone"
-            ? "رقم الهاتف أو كلمة المرور غير صحيحة"
-            : "البريد الإلكتروني أو كلمة المرور غير صحيحة",
-          variant: "destructive",
-        });
+        const attempts = loginAttempts + 1;
+        setLoginAttempts(attempts);
+        if (attempts >= MAX_LOGIN_ATTEMPTS) {
+          setLockedUntil(Date.now() + LOCKOUT_DURATION);
+          setLoginAttempts(0);
+          toast({
+            title: "تم تجاوز عدد المحاولات",
+            description: "تم قفل تسجيل الدخول مؤقتًا لمدة دقيقة",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "خطأ في تسجيل الدخول",
+            description: authMethod === "phone"
+              ? "رقم الهاتف أو كلمة المرور غير صحيحة"
+              : "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+            variant: "destructive",
+          });
+        }
       } else {
+        setLoginAttempts(0);
+        setLockedUntil(null);
         toast({ title: "تم تسجيل الدخول بنجاح" });
         navigate("/");
       }
