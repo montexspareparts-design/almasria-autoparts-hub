@@ -44,8 +44,8 @@ const Navbar = () => {
     { label: "من نحن", href: "#about" },
     { label: "المنتجات", href: "#products" },
     { label: "لماذا نحن", href: "#why-us" },
-    { label: "الشراكات", href: "#partnerships" },
-    { label: "تواصل معنا", href: "#contact" },
+    { label: "فروعنا", href: "#branches" },
+    { label: "تواصل معنا", href: "/contact", isRoute: true },
   ];
 
   return (
