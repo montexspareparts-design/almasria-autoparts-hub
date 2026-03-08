@@ -202,19 +202,19 @@ const MTXPage = () => {
             </h2>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button size="lg" className="gap-3 font-bold text-base px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg group" asChild>
-                <a href="https://wa.me/201020412358?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D9%83%D8%AA%D8%A7%D9%84%D9%88%D8%AC%20MTX" target="_blank" rel="noopener noreferrer">
+                <a href="https://wa.me/201153961008?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D9%83%D8%AA%D8%A7%D9%84%D9%88%D8%AC%20MTX" target="_blank" rel="noopener noreferrer">
                   اطلب كتالوج MTX
                   <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
                 </a>
               </Button>
               <Button size="lg" variant="outline" className="gap-3 font-bold text-base px-8 py-6 border-2 border-[hsl(var(--section-dark-foreground))]/20 text-[hsl(var(--section-dark-foreground))] bg-transparent hover:bg-[hsl(var(--section-dark-foreground))]/10" asChild>
-                <a href="https://wa.me/201020412358?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A7%D9%84%D8%AA%D8%AD%D8%AF%D8%AB%20%D9%85%D8%B9%20%D9%82%D8%B3%D9%85%20%D8%A7%D9%84%D9%85%D8%A8%D9%8A%D8%B9%D8%A7%D8%AA" target="_blank" rel="noopener noreferrer">
+                <a href="https://wa.me/201153961008?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A7%D9%84%D8%AA%D8%AD%D8%AF%D8%AB%20%D9%85%D8%B9%20%D9%82%D8%B3%D9%85%20%D8%A7%D9%84%D9%85%D8%A8%D9%8A%D8%B9%D8%A7%D8%AA" target="_blank" rel="noopener noreferrer">
                   <MessageCircle className="w-5 h-5" />
                   تحدث مع قسم المبيعات
                 </a>
               </Button>
               <Button size="lg" variant="outline" className="gap-3 font-bold text-base px-8 py-6 border-2 border-[hsl(var(--section-dark-foreground))]/20 text-[hsl(var(--section-dark-foreground))] bg-transparent hover:bg-[hsl(var(--section-dark-foreground))]/10" asChild>
-                <a href="/dealer-apply">
+                <a href="https://wa.me/201153961008?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A7%D9%84%D8%A7%D9%86%D8%B6%D9%85%D8%A7%D9%85%20%D9%83%D9%85%D9%88%D8%B2%D8%B9%20MTX" target="_blank" rel="noopener noreferrer">
                   انضم كموزع لمنتجات MTX
                 </a>
               </Button>
