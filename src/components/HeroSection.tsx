@@ -11,7 +11,7 @@ const staggerContainer = {
 
 const fadeSlideUp = {
   hidden: { opacity: 0, y: 50, filter: "blur(10px)" },
-  show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] } },
+  show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] } },
 };
 
 const CountUp = ({ target, suffix = "" }: { target: number; suffix?: string }) => {
