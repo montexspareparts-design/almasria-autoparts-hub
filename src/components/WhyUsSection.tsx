@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { ShieldCheck, Package, Truck, Globe, Award, Handshake } from "lucide-react";
+import FloatingParticles from "./FloatingParticles";
 
 const features = [
   { icon: ShieldCheck, title: "موزع معتمد رسمي", desc: "موزع رسمي معتمد لقطع غيار وزيوت تويوتا الأصلية في مصر" },
