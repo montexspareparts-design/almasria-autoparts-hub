@@ -57,8 +57,8 @@ const sections = [
     stat: "OEM",
     statLabel: "معايير",
     highlights: ["قنوات توريد رسمية", "معايير OEM عالمية", "أعلى مستويات الجودة"],
-    image: awardTrophy,
-    imageAlt: "تكريم من تويوتا مصر للمصرية جروب",
+    image: partnershipToyota,
+    imageAlt: "شراكة المصرية جروب مع تويوتا",
   },
   {
     icon: Users,
