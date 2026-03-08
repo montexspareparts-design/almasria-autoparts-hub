@@ -320,7 +320,14 @@ const Navbar = () => {
                     animate="visible"
                     variants={linkVariants}
                     className="block py-3 text-sm font-medium text-secondary-foreground/80 hover:text-primary transition-colors"
-                    onClick={() => setIsOpen(false)}
+                    onClick={(e) => {
+                      setIsOpen(false);
+                      const hash = link.href.replace("/", "");
+                      if (window.location.pathname === "/") {
+                        e.preventDefault();
+                        setTimeout(() => document.querySelector(hash)?.scrollIntoView({ behavior: "smooth" }), 300);
+                      }
+                    }}
                   >
                     {link.label}
                   </motion.a>
