@@ -1,4 +1,5 @@
 import { motion, useInView, useScroll, useTransform } from "framer-motion";
+import { Helmet } from "react-helmet-async";
 import { useEffect, useRef, useState } from "react";
 import {
   Clock, Award, Users, Truck, Monitor, DollarSign, Wrench, Globe,
@@ -250,16 +251,15 @@ const WhatSetsUsApartPage = () => {
   const heroScale = useTransform(scrollYProgress, [0, 0.8], [1, 0.95]);
 
   useEffect(() => {
-    document.title = "ما يميزنا | خبرة 25 عامًا في توزيع قطع الغيار والزيوت";
-    const meta = document.querySelector('meta[name="description"]');
-    if (meta) {
-      meta.setAttribute("content", "تعرف على مميزات المصرية جروب كموزع معتمد لقطع غيار وزيوت تويوتا، خبرة منذ 1999، شبكة توزيع 2000 عميل، توريد خلال 48 ساعة، ونظام ERP.");
-    }
     window.scrollTo(0, 0);
   }, []);
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>ما يميزنا | خبرة 25 عامًا في قطاع قطع الغيار</title>
+        <meta name="description" content="تعرف على مميزات المصرية جروب: موزع معتمد، شبكة واسعة، نظام ERP، وانضباط سعري." />
+      </Helmet>
       <Navbar />
 
       {/* ===== HERO ===== */}
@@ -446,7 +446,7 @@ const WhatSetsUsApartPage = () => {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <motion.div whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }}>
                 <Button size="lg" className="gap-3 font-bold text-lg px-10 py-6 bg-gradient-to-l from-primary to-[hsl(355,80%,55%)] text-white shadow-xl shadow-primary/30 hover:shadow-primary/40 hover:shadow-2xl relative overflow-hidden group" asChild>
-                  <a href="https://wa.me/201153961008" target="_blank" rel="noopener noreferrer">
+                  <a href="https://wa.me/201020412358" target="_blank" rel="noopener noreferrer">
                     <span className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12" />
                     <MessageCircle className="w-5 h-5" />
                     تواصل معنا

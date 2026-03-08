@@ -5,7 +5,9 @@ import logo from "@/assets/logo.png";
 
 const quickLinks = [
   { label: "الرئيسية", href: "/#hero" },
-  { label: "العلامات التجارية", href: "/products" },
+  { label: "المنتجات", href: "/products" },
+  { label: "MTX", href: "/mtx" },
+  { label: "ما يميزنا", href: "/what-sets-us-apart" },
   { label: "شبكة التوزيع", href: "/#distribution" },
   { label: "اتصل بنا", href: "/contact" },
 ];
@@ -58,7 +60,7 @@ const Footer = () => {
             </p>
             <div className="flex items-center gap-3 mt-6">
               <a
-                href="https://wa.me/201153961008"
+                href="https://wa.me/201020412358"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-11 h-11 rounded-xl bg-secondary-foreground/[0.06] border border-secondary-foreground/10 flex items-center justify-center hover:bg-primary hover:border-primary hover:text-primary-foreground transition-all duration-300 group"
@@ -72,7 +74,7 @@ const Footer = () => {
                 <Mail className="w-5 h-5 text-primary group-hover:text-primary-foreground transition-colors" />
               </a>
               <a
-                href="tel:+201153961008"
+                href="tel:+201020412358"
                 className="w-11 h-11 rounded-xl bg-secondary-foreground/[0.06] border border-secondary-foreground/10 flex items-center justify-center hover:bg-primary hover:border-primary hover:text-primary-foreground transition-all duration-300 group"
               >
                 <Phone className="w-5 h-5 text-primary group-hover:text-primary-foreground transition-colors" />
@@ -145,11 +147,11 @@ const Footer = () => {
             <h4 className="font-bold text-sm mb-5 text-secondary-foreground/80">تواصل معنا</h4>
             <ul className="space-y-4">
               <li>
-                <a href="tel:+201153961008" className="flex items-center gap-3 text-secondary-foreground/50 hover:text-primary transition-colors group" dir="ltr">
+                <a href="tel:+201020412358" className="flex items-center gap-3 text-secondary-foreground/50 hover:text-primary transition-colors group" dir="ltr">
                   <div className="w-9 h-9 rounded-lg bg-primary/[0.08] flex items-center justify-center flex-shrink-0 group-hover:bg-primary/15 transition-colors">
                     <Phone className="w-4 h-4 text-primary" />
                   </div>
-                  <span className="text-sm">+20 1153961008</span>
+                  <span className="text-sm">+20 1020412358</span>
                 </a>
               </li>
               <li>
