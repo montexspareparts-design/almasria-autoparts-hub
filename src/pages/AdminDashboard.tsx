@@ -280,6 +280,11 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
 
+        {/* Video Settings */}
+        <div className="mt-8">
+          <AdminVideoSettings />
+        </div>
+
         {/* Product Images Management */}
         <div className="mt-8">
           <AdminProductImages />
