@@ -27,12 +27,9 @@ const linkVariants = {
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [productsOpen, setProductsOpen] = useState(false);
-  const [catalogOpen, setCatalogOpen] = useState(false);
   const [mobileProductsOpen, setMobileProductsOpen] = useState(false);
-  const [mobileCatalogOpen, setMobileCatalogOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("hero");
   const productsTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const catalogTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user, isDealer, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -69,17 +66,13 @@ const Navbar = () => {
     { label: "زيوت تويوتا أصلية", href: "/products/toyota-oils" },
   ];
 
-  const catalogCategories = [
-    { label: "حسب موديل السيارة", href: "/parts-by-model" },
-    { label: "حسب نوع القطعة", href: "/parts-by-type" },
-  ];
 
   const links = [
     { label: "الرئيسية", href: "/#hero" },
     { label: "من نحن", href: "/about", isRoute: true },
     { label: "قطع غيار أصلية", href: "/products/toyota-genuine", isRoute: true },
     { label: "زيوت تويوتا أصلية", href: "/products/toyota-oils", isRoute: true },
-    { label: "الكتالوج", href: "/parts-by-model", isRoute: true, hasDropdown: "catalog" },
+    
     { label: "قطع غيار MTX", href: "/mtx", isRoute: true },
     { label: "اتصل بنا", href: "/contact", isRoute: true },
   ];
@@ -122,60 +115,6 @@ const Navbar = () => {
             {links.map((link) => {
               const linkAny = link as any;
               
-              // Dropdown for catalog
-              if (linkAny.hasDropdown === "catalog") {
-                return (
-                  <div
-                    key={link.href}
-                    className="relative"
-                    onMouseEnter={() => {
-                      if (catalogTimeout.current) clearTimeout(catalogTimeout.current);
-                      setCatalogOpen(true);
-                    }}
-                    onMouseLeave={() => {
-                      catalogTimeout.current = setTimeout(() => setCatalogOpen(false), 200);
-                    }}
-                  >
-                    <motion.div whileHover={{ y: -1 }}>
-                      <Link
-                        to={link.href}
-                        className={`text-sm font-medium transition-colors relative group flex items-center gap-1 ${
-                          location.pathname.startsWith("/parts-by") ? "text-primary" : "text-secondary-foreground/80 hover:text-primary"
-                        }`}
-                      >
-                        {link.label}
-                        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${catalogOpen ? "rotate-180" : ""}`} />
-                        <span className={`absolute -bottom-1 right-0 h-[2px] bg-primary rounded-full transition-all duration-300 ${
-                          location.pathname.startsWith("/parts-by") ? "w-full" : "w-0 group-hover:w-full"
-                        }`} />
-                      </Link>
-                    </motion.div>
-                    <AnimatePresence>
-                      {catalogOpen && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 8 }}
-                          transition={{ duration: 0.2 }}
-                          className="absolute top-full right-0 mt-2 w-56 bg-secondary/95 backdrop-blur-md border border-primary/20 rounded-xl shadow-xl shadow-black/20 overflow-hidden z-50"
-                        >
-                          {catalogCategories.map((cat) => (
-                            <Link
-                              key={cat.href}
-                              to={cat.href}
-                              onClick={() => setCatalogOpen(false)}
-                              className="block px-4 py-3 text-sm font-medium text-secondary-foreground/80 hover:text-primary hover:bg-primary/10 transition-colors border-b border-white/5 last:border-b-0"
-                            >
-                              {cat.label}
-                            </Link>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                );
-              }
-
               // Regular route links
               if (linkAny.isRoute) {
                 return (
@@ -284,47 +223,6 @@ const Navbar = () => {
               {links.map((link, i) => {
                 const linkAny = link as any;
                 
-                // Catalog dropdown (mobile)
-                if (linkAny.hasDropdown === "catalog") {
-                  return (
-                    <div key={link.href}>
-                      <motion.button
-                        custom={i}
-                        initial="hidden"
-                        animate="visible"
-                        variants={linkVariants}
-                        className="w-full flex items-center justify-between py-3 text-sm font-medium text-secondary-foreground/80 hover:text-primary transition-colors"
-                        onClick={() => setMobileCatalogOpen(!mobileCatalogOpen)}
-                      >
-                        {link.label}
-                        <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${mobileCatalogOpen ? "rotate-180" : ""}`} />
-                      </motion.button>
-                      <AnimatePresence>
-                        {mobileCatalogOpen && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="overflow-hidden pr-4 border-r-2 border-primary/30"
-                          >
-                            {catalogCategories.map((cat) => (
-                              <Link
-                                key={cat.href}
-                                to={cat.href}
-                                className="block py-2 text-sm text-secondary-foreground/70 hover:text-primary transition-colors"
-                                onClick={() => { setIsOpen(false); setMobileCatalogOpen(false); }}
-                              >
-                                {cat.label}
-                              </Link>
-                            ))}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  );
-                }
-
                 // Route links
                 if (linkAny.isRoute) {
                   return (
