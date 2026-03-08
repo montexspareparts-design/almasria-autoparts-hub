@@ -139,10 +139,10 @@ const HeroSection = () => {
             className="grid grid-cols-4 gap-3 sm:gap-8 mt-8 md:mt-12 pt-6 md:pt-8 border-t border-secondary-foreground/10"
           >
             {[
-              { num: "+25", label: "سنة خبرة" },
-              { num: "+5000", label: "صنف في المخزون" },
-              { num: "+1000", label: "عميل نشط" },
-              { num: "5", label: "فروع" },
+              { num: 25, prefix: "+", label: "سنة خبرة" },
+              { num: 5000, prefix: "+", label: "صنف في المخزون" },
+              { num: 1000, prefix: "+", label: "عميل نشط" },
+              { num: 5, prefix: "", label: "فروع" },
             ].map((stat, i) => (
               <motion.div
                 key={stat.label}
@@ -152,14 +152,9 @@ const HeroSection = () => {
                 transition={{ delay: 0.9 + i * 0.1, type: "spring" }}
                 whileHover={{ scale: 1.05 }}
               >
-                <motion.div
-                  className="text-xl sm:text-2xl md:text-3xl font-black text-primary"
-                  variants={floatingVariants}
-                  animate="animate"
-                  style={{ animationDelay: `${i * 0.5}s` }}
-                >
-                  {stat.num}
-                </motion.div>
+                <div className="text-xl sm:text-2xl md:text-3xl font-black text-primary">
+                  <AnimatedNumber value={stat.num} prefix={stat.prefix} />
+                </div>
                 <div className="text-xs sm:text-sm text-secondary-foreground/60">{stat.label}</div>
               </motion.div>
             ))}
