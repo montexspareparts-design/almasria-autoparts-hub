@@ -5,9 +5,11 @@ import HeroSection from "@/components/HeroSection";
 
 const FeaturesStrip = lazy(() => import("@/components/FeaturesStrip"));
 const AboutBrief = lazy(() => import("@/components/AboutBrief"));
-const BrandsWeDistribute = lazy(() => import("@/components/BrandsWeDistribute"));
+const WhyAlMasria = lazy(() => import("@/components/WhyAlMasria"));
+const DistributionSegments = lazy(() => import("@/components/DistributionSegments"));
 const WhyUsBrief = lazy(() => import("@/components/WhyUsBrief"));
 const DistributionNetwork = lazy(() => import("@/components/DistributionNetwork"));
+const BrandsWeDistribute = lazy(() => import("@/components/BrandsWeDistribute"));
 const TestimonialsHome = lazy(() => import("@/components/TestimonialsHome"));
 const ContactSimple = lazy(() => import("@/components/ContactSimple"));
 const Footer = lazy(() => import("@/components/Footer"));
