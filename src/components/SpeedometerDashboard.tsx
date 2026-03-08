@@ -124,6 +124,15 @@ const SpeedometerDashboard = () => {
         <div className="flex items-center justify-center gap-2 mb-5">
           <Gauge className="w-5 h-5 text-primary" />
           <h3 className="text-xl font-black text-foreground">أرقامنا بتتكلم 🏎️</h3>
+          <motion.button
+            onClick={() => setSoundOn((v) => !v)}
+            whileHover={{ scale: 1.15 }}
+            whileTap={{ scale: 0.9 }}
+            className="mr-2 p-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+            title={soundOn ? "كتم الصوت" : "تشغيل صوت المحرك"}
+          >
+            {soundOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+          </motion.button>
         </div>
 
         {/* Speedometer SVG */}
