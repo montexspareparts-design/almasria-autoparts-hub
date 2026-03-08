@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Lock, ShieldCheck, Package, ShoppingCart, Eye, AlertTriangle } from "lucide-react";
+import ProductDetailDialog from "@/components/ProductDetailDialog";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart, CartItem } from "@/contexts/CartContext";
