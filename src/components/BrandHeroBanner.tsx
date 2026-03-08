@@ -16,7 +16,7 @@ const BrandHeroBanner = ({ logo, title, subtitle, description, badge, background
   return (
     <section className="pt-24 pb-14 relative overflow-hidden">
       {/* Background image */}
-      <img src={partsBg} alt="" className="absolute inset-0 w-full h-full object-cover" loading="eager" />
+      <img src={backgroundImage || partsBg} alt="" className="absolute inset-0 w-full h-full object-cover" loading="eager" />
       <div className="absolute inset-0 bg-secondary/85 backdrop-blur-sm" />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-secondary pointer-events-none" />
       <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-primary/5 to-transparent pointer-events-none" />
