@@ -48,7 +48,7 @@ const Footer = () => {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="md:col-span-4"
+            className="md:col-span-4 order-1"
           >
             <img src={logo} alt="المصرية جروب" className="h-16 mb-5" />
             <p className="text-secondary-foreground/50 text-sm leading-7 max-w-sm">
@@ -86,7 +86,7 @@ const Footer = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="md:col-span-2"
+            className="md:col-span-2 order-3 md:order-2"
           >
             <h4 className="font-bold text-sm mb-5 text-secondary-foreground/80">روابط سريعة</h4>
             <ul className="space-y-3.5">
@@ -106,7 +106,7 @@ const Footer = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="md:col-span-3"
+            className="md:col-span-3 order-4 md:order-3"
           >
             <h4 className="font-bold text-sm mb-5 text-secondary-foreground/80">فروعنا</h4>
             <ul className="space-y-3.5">
@@ -140,7 +140,7 @@ const Footer = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.3 }}
-            className="md:col-span-3"
+            className="md:col-span-3 order-2 md:order-4"
           >
             <h4 className="font-bold text-sm mb-5 text-secondary-foreground/80">تواصل معنا</h4>
             <ul className="space-y-4">
