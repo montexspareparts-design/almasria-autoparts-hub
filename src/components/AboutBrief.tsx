@@ -38,19 +38,6 @@ const AboutBrief = () => {
           </Button>
         </div>
 
-        {/* Key Metrics */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
-          {metrics.map((m) => (
-            <div
-              key={m.label}
-              className="flex flex-col items-center text-center gap-3 border border-border rounded-xl px-4 py-6 bg-card"
-            >
-              <m.icon className="w-6 h-6 text-primary" strokeWidth={1.8} />
-              <div className="text-2xl md:text-3xl font-black text-foreground leading-none">{m.value}</div>
-              <div className="text-sm text-muted-foreground">{m.label}</div>
-            </div>
-          ))}
-        </div>
       </div>
     </section>
   );
