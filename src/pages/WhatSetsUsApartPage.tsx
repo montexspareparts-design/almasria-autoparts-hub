@@ -2,11 +2,21 @@ import { motion, useInView, useScroll, useTransform } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import {
   Clock, Award, Users, Truck, Monitor, DollarSign, Wrench, Globe,
-  ArrowLeft, MessageCircle, Sparkles, ChevronLeft, CheckCircle2, Zap,
+  ArrowLeft, MessageCircle, Sparkles, CheckCircle2, Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+
+// Images
+import heroWarehouse from "@/assets/hero-warehouse.jpg";
+import warehouseLogistics from "@/assets/warehouse-logistics.jpg";
+import awardTrophy from "@/assets/award-trophy.jpg";
+import distributionMap from "@/assets/distribution-map.jpg";
+import erpSystem from "@/assets/erp-system.jpg";
+import brandMtx from "@/assets/brand-mtx.jpg";
+import dubaiOffice from "@/assets/dubai-office.jpg";
+import autotechExhibition from "@/assets/autotech-exhibition.jpg";
 
 const CountUpInline = ({ target, suffix = "" }: { target: number; suffix?: string }) => {
   const [count, setCount] = useState(0);
@@ -37,6 +47,8 @@ const sections = [
     stat: "1999",
     statLabel: "منذ",
     highlights: ["خبرة تشغيلية قوية", "علاقات عميقة مع السوق", "ريادة مستمرة لأكثر من 25 عامًا"],
+    image: heroWarehouse,
+    imageAlt: "مستودع المصرية جروب لقطع غيار تويوتا",
   },
   {
     icon: Award,
@@ -45,6 +57,8 @@ const sections = [
     stat: "OEM",
     statLabel: "معايير",
     highlights: ["قنوات توريد رسمية", "معايير OEM عالمية", "أعلى مستويات الجودة"],
+    image: awardTrophy,
+    imageAlt: "تكريم من تويوتا مصر للمصرية جروب",
   },
   {
     icon: Users,
@@ -53,6 +67,8 @@ const sections = [
     stat: "2000+",
     statLabel: "عميل نشط",
     highlights: ["موزعين ومراكز خدمة", "شركات وقطاع بترولي", "تغطية لمعظم المحافظات"],
+    image: distributionMap,
+    imageAlt: "شبكة توزيع المصرية جروب في مصر",
   },
   {
     icon: Truck,
@@ -61,6 +77,8 @@ const sections = [
     stat: "48h",
     statLabel: "تسليم",
     highlights: ["بنية لوجستية احترافية", "مخازن مركزية منظمة", "التزام بمعايير التسليم"],
+    image: warehouseLogistics,
+    imageAlt: "مخازن المصرية جروب المركزية",
   },
   {
     icon: Monitor,
@@ -69,6 +87,8 @@ const sections = [
     stat: "ERP",
     statLabel: "نظام متكامل",
     highlights: ["شفافية كاملة", "تتبع الطلبات", "دقة التقارير التشغيلية"],
+    image: erpSystem,
+    imageAlt: "نظام ERP المتكامل للمصرية جروب",
   },
   {
     icon: DollarSign,
@@ -77,6 +97,8 @@ const sections = [
     stat: "100%",
     statLabel: "انضباط",
     highlights: ["سياسات تسعير منضبطة", "استقرار السوق", "تعزيز ثقة الشركاء"],
+    image: autotechExhibition,
+    imageAlt: "مشاركة المصرية جروب في معرض AUTOTECH",
   },
   {
     icon: Wrench,
@@ -85,6 +107,9 @@ const sections = [
     stat: "MTX",
     statLabel: "علامة خاصة",
     highlights: ["جودة موثوقة", "أداء متسق", "سعر تنافسي"],
+    image: brandMtx,
+    imageAlt: "منتجات MTX أفترماركت",
+    imageContain: true,
   },
   {
     icon: Globe,
@@ -93,6 +118,8 @@ const sections = [
     stat: "🇦🇪",
     statLabel: "دبي",
     highlights: ["موردين يابانيين", "استمرارية المخزون", "جودة المنتجات"],
+    image: dubaiOffice,
+    imageAlt: "مكتب المصرية جروب الإقليمي في دبي",
   },
 ];
 
@@ -105,7 +132,7 @@ const quickStats = [
 
 const FeatureBlock = ({ s, i }: { s: typeof sections[0]; i: number }) => {
   const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: true, amount: 0.3 });
+  const isInView = useInView(ref, { once: true, amount: 0.2 });
   const isReversed = i % 2 !== 0;
 
   return (
@@ -114,49 +141,61 @@ const FeatureBlock = ({ s, i }: { s: typeof sections[0]; i: number }) => {
       initial={{ opacity: 0 }}
       animate={isInView ? { opacity: 1 } : {}}
       transition={{ duration: 0.5 }}
-      className={`grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center ${i > 0 ? "mt-16 md:mt-24" : ""}`}
+      className={`grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center ${i > 0 ? "mt-20 md:mt-32" : ""}`}
     >
-      {/* Stat card */}
+      {/* Image */}
       <motion.div
-        initial={{ opacity: 0, x: isReversed ? 60 : -60 }}
-        animate={isInView ? { opacity: 1, x: 0 } : {}}
+        initial={{ opacity: 0, scale: 0.92, x: isReversed ? 50 : -50 }}
+        animate={isInView ? { opacity: 1, scale: 1, x: 0 } : {}}
         transition={{ duration: 0.7, type: "spring", stiffness: 60 }}
-        className={`lg:col-span-4 ${isReversed ? "lg:order-2" : ""}`}
+        className={`lg:col-span-5 ${isReversed ? "lg:order-2" : ""}`}
       >
         <div className="relative group">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-[hsl(var(--gold-accent))]/10 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-          <div className="relative bg-card border border-border rounded-3xl p-8 md:p-10 text-center hover:border-primary/30 transition-all duration-500 overflow-hidden">
-            {/* Decorative corner */}
-            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-primary/5 to-transparent rounded-bl-[60px]" />
-            <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-[hsl(var(--gold-accent))]/5 to-transparent rounded-tr-[50px]" />
+          {/* Glow behind image */}
+          <div className="absolute -inset-3 bg-gradient-to-br from-primary/10 to-[hsl(var(--gold-accent))]/10 rounded-3xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
-            <motion.div
-              className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-[hsl(355,80%,55%)] flex items-center justify-center mx-auto mb-5 shadow-xl shadow-primary/25"
-              whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
+          <div className="relative rounded-2xl overflow-hidden border border-border group-hover:border-primary/30 transition-all duration-500 shadow-xl shadow-black/10 group-hover:shadow-primary/15 group-hover:shadow-2xl">
+            <motion.img
+              src={s.image}
+              alt={s.imageAlt}
+              loading="lazy"
+              className={`w-full aspect-[4/3] ${s.imageContain ? "object-contain bg-white p-8" : "object-cover"}`}
+              whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.6 }}
+            />
+            {/* Overlay gradient */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+            {/* Stat badge on image */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0 }}
+              animate={isInView ? { opacity: 1, scale: 1 } : {}}
+              transition={{ delay: 0.5, type: "spring" }}
+              className="absolute top-4 left-4 bg-white/90 dark:bg-card/90 backdrop-blur-md rounded-xl px-4 py-3 shadow-lg border border-border"
             >
-              <s.icon className="w-8 h-8 text-white" />
+              <div className="text-2xl font-black text-primary leading-none">{s.stat}</div>
+              <div className="text-[10px] font-semibold text-muted-foreground mt-0.5">{s.statLabel}</div>
             </motion.div>
 
-            <div className="text-5xl md:text-6xl font-black text-foreground leading-none mb-1">{s.stat}</div>
-            <div className="text-sm font-semibold text-muted-foreground">{s.statLabel}</div>
-
+            {/* Icon badge */}
             <motion.div
-              className="w-12 h-0.5 bg-gradient-to-l from-primary to-[hsl(var(--gold-accent))] mx-auto mt-4 rounded-full"
-              initial={{ width: 0 }}
-              animate={isInView ? { width: 48 } : {}}
-              transition={{ delay: 0.5, duration: 0.6 }}
-            />
+              initial={{ opacity: 0, scale: 0 }}
+              animate={isInView ? { opacity: 1, scale: 1 } : {}}
+              transition={{ delay: 0.6, type: "spring" }}
+              className="absolute bottom-4 right-4 w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-[hsl(355,80%,55%)] flex items-center justify-center shadow-lg shadow-primary/30"
+            >
+              <s.icon className="w-6 h-6 text-white" />
+            </motion.div>
           </div>
         </div>
       </motion.div>
 
       {/* Content */}
       <motion.div
-        initial={{ opacity: 0, x: isReversed ? -60 : 60 }}
+        initial={{ opacity: 0, x: isReversed ? -50 : 50 }}
         animate={isInView ? { opacity: 1, x: 0 } : {}}
         transition={{ duration: 0.7, delay: 0.15, type: "spring", stiffness: 60 }}
-        className={`lg:col-span-8 ${isReversed ? "lg:order-1" : ""}`}
+        className={`lg:col-span-7 ${isReversed ? "lg:order-1" : ""}`}
       >
         <div className="space-y-5">
           {/* Section number */}
@@ -229,10 +268,8 @@ const WhatSetsUsApartPage = () => {
         style={{ opacity: heroOpacity, scale: heroScale }}
         className="pt-28 pb-20 md:pt-40 md:pb-28 bg-dark-section relative overflow-hidden"
       >
-        {/* Animated grid */}
         <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "linear-gradient(hsl(var(--section-dark-foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--section-dark-foreground)) 1px, transparent 1px)", backgroundSize: "80px 80px" }} />
 
-        {/* Glows */}
         <motion.div
           className="absolute top-10 right-[10%] w-[600px] h-[600px] rounded-full bg-primary/[0.06] blur-[150px]"
           animate={{ scale: [1, 1.2, 1], x: [0, 30, 0] }}
@@ -274,7 +311,6 @@ const WhatSetsUsApartPage = () => {
               معايير عالمية في توزيع قطع الغيار والزيوت الأصلية
             </motion.p>
 
-            {/* Stats row */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -309,7 +345,6 @@ const WhatSetsUsApartPage = () => {
 
       {/* ===== FEATURES ===== */}
       <section className="py-20 md:py-32 relative">
-        {/* Side line decoration */}
         <div className="absolute top-0 bottom-0 right-8 w-px bg-gradient-to-b from-transparent via-border to-transparent hidden xl:block" />
 
         <div className="container mx-auto px-4">
