@@ -46,15 +46,15 @@ const BrandsWeDistribute = () => {
           />
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-4xl mx-auto">
+        <div className="flex flex-wrap justify-center gap-8 max-w-5xl mx-auto">
           {brands.map((b, i) => (
             <motion.div
               key={b.label}
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.15, type: "spring", stiffness: 80 }}
-              className="flex flex-col items-center gap-4"
+              transition={{ delay: i * 0.12, type: "spring" as const, stiffness: 80 }}
+              className="flex flex-col items-center gap-4 w-[calc(33.333%-2rem)] sm:w-[calc(33.333%-2rem)] min-w-[200px]"
             >
               <Link
                 to={b.to}
