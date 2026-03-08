@@ -48,7 +48,6 @@ const AboutBrief = () => {
             <Link to="/products?brand=mtx-aftermarket" className="text-primary hover:underline font-semibold">MTX الأفترماركت</Link>
             {" "}بجودة موثوقة.
           </p>
-          </p>
           <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
             <Button variant="outline" size="lg" className="gap-2 font-bold" asChild>
               <a href="#why-us">
