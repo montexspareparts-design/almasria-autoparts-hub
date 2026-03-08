@@ -27,6 +27,7 @@ const AdminProductImages = () => {
   const [bulkSearching, setBulkSearching] = useState(false);
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, currentSku: "", found: 0, failed: 0 });
   const bulkAbortRef = useRef(false);
+  const [dragOverProductId, setDragOverProductId] = useState<string | null>(null);
 
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 50;
