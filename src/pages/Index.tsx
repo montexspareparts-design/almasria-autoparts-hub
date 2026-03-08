@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
+import { OrganizationSchema, WebSiteSchema, LocalBusinessSchema, FAQSchema } from "@/components/SEOSchemaMarkup";
 
 const AboutBrief = lazy(() => import("@/components/AboutBrief"));
 const WhoWeServe = lazy(() => import("@/components/WhoWeServe"));
