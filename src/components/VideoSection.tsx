@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 const VideoSection = () => {
   const [playing, setPlaying] = useState(false);
   const [videoId, setVideoId] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     (supabase as any)
@@ -15,10 +16,11 @@ const VideoSection = () => {
       .maybeSingle()
       .then(({ data }: any) => {
         if (data?.value) setVideoId(data.value);
+        setLoaded(true);
       });
   }, []);
 
-  if (!videoId) return null;
+  if (!loaded || !videoId) return <div />;
 
   return (
     <section className="relative py-24 overflow-hidden bg-secondary">
