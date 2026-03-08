@@ -23,6 +23,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
 const WhatSetsUsApartPage = lazy(() => import("./pages/WhatSetsUsApartPage"));
 const MTXPage = lazy(() => import("./pages/MTXPage"));
+const ToyotaPartsEgypt = lazy(() => import("./pages/ToyotaPartsEgypt"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -55,6 +56,7 @@ const App = () => (
                   <Route path="/products" element={<ProductsPage />} />
                   <Route path="/contact" element={<ContactPage />} />
                   <Route path="/what-sets-us-apart" element={<WhatSetsUsApartPage />} />
+                  <Route path="/toyota-genuine-parts-egypt" element={<ToyotaPartsEgypt />} />
                   {/* Auth & dealer */}
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/dealer-apply" element={<DealerApply />} />
