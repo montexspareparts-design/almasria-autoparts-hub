@@ -37,7 +37,7 @@ const whyUsPoints = [
   { icon: Clock, title: "خبرة +25 سنة" },
   { icon: Users, title: "شبكة +2000 عميل وتغطية وطنية" },
   { icon: Truck, title: "تسليم خلال 48 ساعة" },
-  { icon: Cog, title: "تشغيل مدعوم بأنظمة ERP" },
+  { icon: Cog, title: "تشغيل مدعوم بأنظمة إدارة رقمية" },
   { icon: Package, title: "MTX — جودة تضاهي المواصفات الأصلية" },
 ];
 
