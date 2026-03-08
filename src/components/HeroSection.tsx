@@ -14,7 +14,7 @@ const HeroSection = () => {
   return (
     <section ref={sectionRef} id="hero" className="relative min-h-[100svh] flex items-center overflow-hidden">
       <motion.div className="absolute inset-0" style={{ y: bgY }}>
-        <img src={heroBg} alt="مستودع توزيع قطع غيار تويوتا" className="w-full h-full object-cover scale-110" loading="eager" />
+        <img src={heroBg} alt="مستودع توزيع قطع غيار تويوتا" className="w-full h-full object-cover scale-110" loading="eager" decoding="async" fetchPriority="high" />
         <div className="absolute inset-0 bg-gradient-to-l from-secondary/95 via-secondary/80 to-secondary/40" />
         <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-secondary to-transparent" />
       </motion.div>

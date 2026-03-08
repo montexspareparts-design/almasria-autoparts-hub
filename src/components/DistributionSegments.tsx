@@ -85,6 +85,7 @@ const DistributionSegments = () => {
                     alt={seg.nameEn}
                     className="w-full h-full object-contain"
                     loading="lazy"
+                    decoding="async"
                   />
                 </div>
 

@@ -52,6 +52,7 @@ const BrandsWeDistribute = () => {
                   src={b.image}
                   alt={b.label}
                   loading="lazy"
+                  decoding="async"
                   className={`w-[80%] h-[80%] object-contain ${b.scale} transition-transform duration-300 group-hover:scale-105`}
                 />
               </Link>
