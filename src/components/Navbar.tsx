@@ -73,7 +73,7 @@ const Navbar = () => {
     { label: "من نحن", href: "/about", isRoute: true },
     { label: "قطع غيار أصلية", href: "/products/toyota-genuine", isRoute: true },
     { label: "زيوت تويوتا أصلية", href: "/products/toyota-oils", isRoute: true },
-    { label: "الكتالوج", href: "/parts-by-model", isRoute: true, hasDropdown: "catalog" },
+    
     { label: "قطع غيار MTX", href: "/mtx", isRoute: true },
     { label: "اتصل بنا", href: "/contact", isRoute: true },
   ];
