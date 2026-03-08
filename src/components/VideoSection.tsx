@@ -60,7 +60,7 @@ const VideoSection = () => {
                 {/* Thumbnail */}
                 <div className="relative aspect-video bg-secondary">
                   <img
-                    src="https://img.youtube.com/vi/i0l9gnTDjyc/maxresdefault.jpg"
+                    src={`https://img.youtube.com/vi/${YOUTUBE_VIDEO_ID}/maxresdefault.jpg`}
                     alt="فيديو المصرية جروب"
                     className="w-full h-full object-cover"
                     loading="lazy"
