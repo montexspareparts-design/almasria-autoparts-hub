@@ -109,7 +109,6 @@ const TrustMarquee = () => (
     </motion.div>
   </div>
 );
-);
 
 /* ── Main Hero ── */
 const HeroSection = () => {
