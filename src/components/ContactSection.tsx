@@ -91,6 +91,8 @@ const ContactSection = () => {
         </motion.div>
 
         <div className="grid md:grid-cols-2 gap-12">
+          {/* Form + Lucky Wheel */}
+          <div className="space-y-8">
           {/* Form */}
           <motion.form
             initial={{ opacity: 0, x: -40 }}
