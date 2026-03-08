@@ -21,7 +21,7 @@ import brandToyotaOil from "@/assets/brand-toyota-oil.png";
 import brandMtx from "@/assets/brand-mtx.jpg";
 import brandDenso from "@/assets/brand-denso.png";
 import brandAisin from "@/assets/brand-aisin.png";
-import oilBg from "@/assets/oil-bg.jpg";
+import oilBg from "@/assets/oil-hero-bg.jpg";
 
 const brandConfig: Record<string, { title: string; subtitle: string; description: string; badge: string; brandKey: string; logo: string; backgroundImage?: string }> = {
   "toyota-genuine": {
