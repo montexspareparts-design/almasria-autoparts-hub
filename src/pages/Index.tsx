@@ -6,6 +6,7 @@ import HeroSection from "@/components/HeroSection";
 const FeaturesStrip = lazy(() => import("@/components/FeaturesStrip"));
 const AboutBrief = lazy(() => import("@/components/AboutBrief"));
 const BrandsWeDistribute = lazy(() => import("@/components/BrandsWeDistribute"));
+const CategoriesCatalog = lazy(() => import("@/components/CategoriesCatalog"));
 const WhyUsSection = lazy(() => import("@/components/WhyUsSection"));
 const DistributionNetwork = lazy(() => import("@/components/DistributionNetwork"));
 const MTXSection = lazy(() => import("@/components/MTXSection"));
@@ -34,6 +35,9 @@ const Index = () => {
       </Suspense>
       <Suspense fallback={<SectionFallback />}>
         <BrandsWeDistribute />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
+        <CategoriesCatalog />
       </Suspense>
       <Suspense fallback={<SectionFallback />}>
         <WhyUsSection />
