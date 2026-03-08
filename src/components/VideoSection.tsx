@@ -2,6 +2,9 @@ import { motion, useInView } from "framer-motion";
 import { Play, X } from "lucide-react";
 import { useRef, useState } from "react";
 
+// ✏️ غيّر الرابط هنا فقط لتغيير الفيديو
+const YOUTUBE_VIDEO_ID = "i0l9gnTDjyc";
+
 const VideoSection = () => {
   const ref = useRef<HTMLElement>(null);
   const inView = useInView(ref, { once: true, margin: "-100px" });
@@ -57,7 +60,7 @@ const VideoSection = () => {
                 {/* Thumbnail */}
                 <div className="relative aspect-video bg-secondary">
                   <img
-                    src="https://img.youtube.com/vi/i0l9gnTDjyc/maxresdefault.jpg"
+                    src={`https://img.youtube.com/vi/${YOUTUBE_VIDEO_ID}/maxresdefault.jpg`}
                     alt="فيديو المصرية جروب"
                     className="w-full h-full object-cover"
                     loading="lazy"
@@ -108,7 +111,7 @@ const VideoSection = () => {
             ) : (
               <div className="relative aspect-video">
                 <iframe
-                  src="https://www.youtube.com/embed/i0l9gnTDjyc?autoplay=1&rel=0&modestbranding=1"
+                  src={`https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}?autoplay=1&rel=0&modestbranding=1`}
                   title="فيديو المصرية جروب"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
