@@ -73,7 +73,7 @@ const HeroSection = () => {
             <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
               <Button size="lg" className="text-lg px-8 gap-2 red-glow font-bold" asChild>
                 <a href="#products">
-                  <FileText className="w-5 h-5" />
+                  <Search className="w-5 h-5" />
                   اكتشف منتجاتنا
                 </a>
               </Button>
