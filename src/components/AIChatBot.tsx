@@ -378,8 +378,8 @@ const AIChatBot = () => {
             <div className="flex-1 overflow-y-auto p-4 space-y-3" dir="rtl">
               {messages.length === 0 && (
                 <div className="text-center space-y-4 pt-4">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-                    <Bot className="w-8 h-8 text-primary" />
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto p-2">
+                    <img src={chatbotIcon} alt="المساعد الذكي" className="w-12 h-12 object-contain" />
                   </div>
                   {user ? (
                     <div>
