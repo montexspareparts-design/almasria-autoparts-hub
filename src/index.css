@@ -142,4 +142,24 @@
                 radial-gradient(ellipse at bottom left, hsl(var(--primary) / 0.03) 0%, transparent 50%);
     pointer-events: none;
   }
+
+  /* Hide video controls on all browsers */
+  video::-webkit-media-controls,
+  video::-webkit-media-controls-panel,
+  video::-webkit-media-controls-play-button,
+  video::-webkit-media-controls-start-playback-button,
+  video::-webkit-media-controls-overlay-play-button {
+    display: none !important;
+    -webkit-appearance: none;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  video::-moz-media-controls {
+    display: none !important;
+  }
+
+  video::--ms-media-controls {
+    display: none !important;
+  }
 }
