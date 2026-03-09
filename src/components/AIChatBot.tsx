@@ -252,18 +252,36 @@ const AIChatBot = () => {
                   <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
                     <Bot className="w-8 h-8 text-primary" />
                   </div>
-                  <div>
-                    <p className="font-bold text-foreground">أهلاً بيك! 👋</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      أنا المساعد الذكي، أقدر أساعدك تلاقي قطع الغيار المناسبة لعربيتك
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-2 flex items-center justify-center gap-1">
-                      <ImagePlus className="w-3.5 h-3.5" />
-                      تقدر تبعتلي صورة القطعة وأعرّفها لك
-                    </p>
-                  </div>
+                  {user ? (
+                    <div>
+                      <p className="font-bold text-foreground">أهلاً بيك! 👋</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        أنا مساعد المصرية، أقدر أساعدك تلاقي قطع الغيار المناسبة لعربيتك وأعرفك الأسعار
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2 flex items-center justify-center gap-1">
+                        <ImagePlus className="w-3.5 h-3.5" />
+                        تقدر تبعتلي صورة القطعة وأعرّفها لك
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="font-bold text-foreground">أهلاً بيك! 👋</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        أنا مساعد المصرية، أقدر أساعدك تعرف عن منتجاتنا وفروعنا
+                      </p>
+                      <div className="mt-3 p-3 rounded-xl bg-primary/10 border border-primary/20">
+                        <p className="text-xs text-primary font-bold mb-1">💡 عشان تشوف الأسعار وتطلب</p>
+                        <p className="text-xs text-muted-foreground">
+                          سجّل دخولك أو أنشئ حساب مجاني — بياخد ثواني بس!
+                        </p>
+                        <a href="/auth" className="inline-block mt-2 text-xs font-bold text-primary hover:underline">
+                          سجّل دخولك الآن ←
+                        </a>
+                      </div>
+                    </div>
+                  )}
                   <div className="space-y-2">
-                    {QUICK_QUESTIONS.map((q) => (
+                    {(user ? QUICK_QUESTIONS_LOGGED_IN : QUICK_QUESTIONS_GUEST).map((q) => (
                       <button key={q} onClick={() => sendMessage(q)}
                         className="block w-full text-right text-xs px-3 py-2 rounded-lg border border-border hover:bg-accent/10 hover:border-primary/30 transition-colors text-foreground">
                         {q}
