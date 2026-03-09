@@ -9,9 +9,8 @@ import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
-import PageTransition from "@/components/PageTransition";
 import InstallBanner from "@/components/InstallBanner";
-import Index from "./pages/Index";
+const Index = lazy(() => import("./pages/Index"));
 
 const Auth = lazy(() => import("./pages/Auth"));
 const DealerApply = lazy(() => import("./pages/DealerApply"));
@@ -58,7 +57,6 @@ const App = () => (
               <InstallBanner />
               <Suspense fallback={null}><AIChatBot /></Suspense>
               <Suspense fallback={<PageLoader />}>
-                <PageTransition>
                   <Routes>
                     <Route path="/" element={<Index />} />
                     {/* Redirect old/duplicate home paths */}
@@ -94,7 +92,6 @@ const App = () => (
                     <Route path="/install" element={<InstallApp />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
-                </PageTransition>
               </Suspense>
             </CartProvider>
           </AuthProvider>
