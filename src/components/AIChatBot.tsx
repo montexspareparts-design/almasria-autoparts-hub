@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bot, X, Send, Loader2, Trash2, Share2, ImagePlus, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
+import { X, Send, Loader2, Trash2, Share2, ImagePlus, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
+import chatbotIcon from "@/assets/chatbot-icon.png";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
@@ -319,7 +320,7 @@ const AIChatBot = () => {
             className="fixed bottom-20 left-4 md:bottom-24 md:left-6 z-50 w-12 h-12 md:w-14 md:h-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
             aria-label="فتح المساعد الذكي"
           >
-            <Bot className="w-7 h-7" />
+            <img src={chatbotIcon} alt="المساعد الذكي" className="w-8 h-8 md:w-9 md:h-9 object-contain" />
           </motion.button>
         )}
       </AnimatePresence>
@@ -336,7 +337,7 @@ const AIChatBot = () => {
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 bg-primary text-primary-foreground">
               <div className="flex items-center gap-2">
-                <Bot className="w-5 h-5" />
+                <img src={chatbotIcon} alt="المساعد" className="w-6 h-6 object-contain" />
                 <div>
                   <p className="font-bold text-sm">المساعد الذكي</p>
                   <p className="text-[10px] opacity-80">المصرية جروب - قطع غيار</p>
@@ -377,8 +378,8 @@ const AIChatBot = () => {
             <div className="flex-1 overflow-y-auto p-4 space-y-3" dir="rtl">
               {messages.length === 0 && (
                 <div className="text-center space-y-4 pt-4">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-                    <Bot className="w-8 h-8 text-primary" />
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto p-2">
+                    <img src={chatbotIcon} alt="المساعد الذكي" className="w-12 h-12 object-contain" />
                   </div>
                   {user ? (
                     <div>
