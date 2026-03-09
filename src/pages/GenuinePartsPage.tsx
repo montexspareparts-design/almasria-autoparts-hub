@@ -171,7 +171,7 @@ const GenuinePartsPage = () => {
   }, [filteredProducts, currentPage]);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-x-hidden">
       <Helmet>
         <title>قطع غيار تويوتا الأصلية في مصر | المصرية جروب (موزع معتمد)</title>
         <meta
