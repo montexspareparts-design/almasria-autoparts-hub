@@ -111,6 +111,24 @@ const ProductsPage = () => {
   // Reset page when filters change
   useEffect(() => { setCurrentPage(1); }, [filters]);
 
+  // Track brand visit for personalization
+  useEffect(() => {
+    if (config?.brandKey) trackBrand(config.brandKey);
+  }, [config?.brandKey, trackBrand]);
+
+  // Track search terms
+  useEffect(() => {
+    if (filters.search) {
+      const timer = setTimeout(() => trackSearch(filters.search), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [filters.search, trackSearch]);
+
+  // Track category filter
+  useEffect(() => {
+    if (filters.categoryId) trackCategory(filters.categoryId);
+  }, [filters.categoryId, trackCategory]);
+
   const { data: viewedProductIds = [] } = useQuery({
     queryKey: ["dealer_views_today", user?.id],
     queryFn: async () => {
