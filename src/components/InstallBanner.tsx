@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Download, X, Smartphone, CheckCircle } from "lucide-react";
+import { Download, X, Share, PlusSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { requestPushPermission } from "@/lib/pushNotifications";
@@ -17,7 +17,8 @@ const InstallBanner = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [show, setShow] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
-  const [justInstalled, setJustInstalled] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [showIOSSteps, setShowIOSSteps] = useState(false);
 
   useEffect(() => {
     // Already installed (check both standard and iOS standalone)
@@ -26,9 +27,12 @@ const InstallBanner = () => {
       return;
     }
 
-    // Check if on mobile
-    const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const ua = navigator.userAgent;
+    const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua);
     if (!isMobile) return;
+
+    const ios = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
+    setIsIOS(ios);
 
     // Already dismissed recently (24h cooldown)
     const dismissed = localStorage.getItem(DISMISS_KEY);
@@ -37,25 +41,21 @@ const InstallBanner = () => {
       if (Date.now() - dismissedAt < 24 * 60 * 60 * 1000) return;
     }
 
-    // Show immediately on mobile
-    setShow(true);
+    // Show after a short delay for better UX
+    const timer = setTimeout(() => setShow(true), ios ? 2000 : 0);
 
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
     };
-
     window.addEventListener("beforeinstallprompt", handler);
 
-    // Listen for successful installation
     const installHandler = () => {
       setShow(false);
-      setJustInstalled(true);
       toast.success("تم تثبيت التطبيق بنجاح! 🎉", {
         description: "يمكنك الآن فتح التطبيق من الشاشة الرئيسية",
         duration: 5000,
       });
-      // Ask for push notification permission after install
       setTimeout(async () => {
         const granted = await requestPushPermission();
         if (granted) {
@@ -69,6 +69,7 @@ const InstallBanner = () => {
     window.addEventListener("appinstalled", installHandler);
 
     return () => {
+      clearTimeout(timer);
       window.removeEventListener("beforeinstallprompt", handler);
       window.removeEventListener("appinstalled", installHandler);
     };
@@ -80,14 +81,16 @@ const InstallBanner = () => {
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === "accepted") setShow(false);
       setDeferredPrompt(null);
+    } else if (isIOS) {
+      setShowIOSSteps(true);
     } else {
-      // iOS — redirect to install page for instructions
       window.location.href = "/install";
     }
   };
 
   const handleDismiss = () => {
     setShow(false);
+    setShowIOSSteps(false);
     localStorage.setItem(DISMISS_KEY, Date.now().toString());
   };
 
@@ -113,12 +116,9 @@ const InstallBanner = () => {
             </button>
 
             <div className="flex items-center gap-4">
-              {/* Logo */}
               <div className="w-14 h-14 bg-white rounded-xl flex items-center justify-center shrink-0 shadow-md">
                 <img src={logo} alt="المصرية جروب" className="w-12 h-10 object-contain" />
               </div>
-
-              {/* Content */}
               <div className="flex-1 min-w-0">
                 <h4 className="font-bold text-secondary-foreground text-sm mb-0.5">
                   حمّل تطبيق المصرية جروب
@@ -129,6 +129,33 @@ const InstallBanner = () => {
               </div>
             </div>
 
+            {/* iOS Steps */}
+            <AnimatePresence>
+              {showIOSSteps && isIOS && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-3 space-y-2">
+                    {[
+                      { icon: Share, text: "اضغط زر المشاركة ⬆️ أسفل الشاشة" },
+                      { icon: PlusSquare, text: "اختر \"إضافة إلى الشاشة الرئيسية\"" },
+                    ].map((step, i) => (
+                      <div key={i} className="flex items-center gap-3 bg-secondary-foreground/5 rounded-lg px-3 py-2">
+                        <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                          <step.icon className="w-3.5 h-3.5 text-primary" />
+                        </div>
+                        <span className="text-secondary-foreground text-xs font-medium">{step.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Install button */}
             <motion.div className="mt-3" whileTap={{ scale: 0.97 }}>
               <Button
@@ -137,7 +164,7 @@ const InstallBanner = () => {
                 className="w-full gap-2 font-bold shadow-lg shadow-primary/20"
               >
                 <Download className="w-4 h-4" />
-                تثبيت التطبيق مجاناً
+                {showIOSSteps ? "فهمت — هثبت التطبيق" : "تثبيت التطبيق مجاناً"}
               </Button>
             </motion.div>
           </div>
