@@ -47,7 +47,7 @@ const floatingWords = [
 
 const ProductsShowcase = () => {
   return (
-    <section className="relative py-24 md:py-32 overflow-hidden bg-secondary">
+    <section className="relative py-24 md:py-32 overflow-hidden overflow-x-hidden bg-secondary" style={{ overflowX: 'clip' }}>
       {/* Gradient overlays for depth */}
       <div className="absolute inset-0 bg-gradient-to-b from-secondary via-secondary/95 to-secondary" />
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
