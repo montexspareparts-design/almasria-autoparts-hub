@@ -206,7 +206,7 @@ const Navbar = () => {
                 <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
                   <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate("/dealer")}>
                     <User className="w-4 h-4" />
-                    حسابي
+                    حساب التاجر
                   </Button>
                 </motion.div>
                 <Button variant="ghost" size="sm" onClick={() => signOut()} className="text-secondary-foreground/60">
@@ -299,7 +299,7 @@ const Navbar = () => {
                       </Button>
                     )}
                     <Button variant="outline" size="sm" className="w-full gap-2" onClick={() => { navigate("/dealer"); setIsOpen(false); }}>
-                      <User className="w-4 h-4" /> حسابي
+                      <User className="w-4 h-4" /> حساب التاجر
                     </Button>
                     <Button variant="ghost" size="sm" className="w-full" onClick={() => { signOut(); setIsOpen(false); }}>
                       <LogOut className="w-4 h-4 ml-2" /> تسجيل الخروج
