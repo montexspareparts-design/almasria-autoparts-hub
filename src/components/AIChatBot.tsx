@@ -4,6 +4,7 @@ import { Bot, X, Send, Loader2, Trash2, Share2, ImagePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
+import { useAuth } from "@/contexts/AuthContext";
 
 type MessageContent =
   | string
@@ -25,6 +26,7 @@ const getTextContent = (content: MessageContent): string => {
 };
 
 const AIChatBot = () => {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
 
   // Listen for global open event
@@ -87,7 +89,7 @@ const AIChatBot = () => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
       },
-      body: JSON.stringify({ messages: apiMessages }),
+      body: JSON.stringify({ messages: apiMessages, isLoggedIn: !!user }),
     });
 
     if (!resp.ok) {

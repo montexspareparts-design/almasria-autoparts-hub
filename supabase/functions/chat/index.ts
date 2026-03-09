@@ -13,22 +13,14 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, action } = await req.json();
+    const { messages, action, isLoggedIn } = await req.json();
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Handle callback request action from frontend
-    if (action === "request_callback") {
-      const { customerPhone, customerName, notes } = await req.json().catch(() => ({}));
-      // Already parsed above, get from the original body
-      const body = JSON.parse(await req.text().catch(() => "{}"));
-      // Re-parse since we already consumed the body
-    }
-
-    // If this is a callback request (separate endpoint-like action)
+    // Handle callback request action
     if (action === "request_callback") {
       const lastUserMsg = messages?.find((m: any) => m.role === "user");
       return new Response(
@@ -42,9 +34,8 @@ serve(async (req) => {
 
     const { data: products } = await supabase
       .from("products")
-      .select("sku, name_ar, brand, base_price, stock_quantity, is_on_sale, sale_price, description_ar, product_categories(name_ar)")
+      .select("sku, name_ar, brand, base_price, is_on_sale, sale_price, description_ar, product_categories(name_ar)")
       .eq("is_active", true)
-      .gt("stock_quantity", 0)
       .order("created_at", { ascending: false });
 
     const { data: categories } = await supabase
@@ -57,19 +48,41 @@ serve(async (req) => {
       .select("name_ar, description_ar, bundle_price, original_price")
       .eq("is_active", true);
 
+    const userIsLoggedIn = !!isLoggedIn;
+
     const productList = (products || []).map(p => {
       const brandLabel = p.brand === "toyota_genuine" ? "تويوتا أصلي" : p.brand === "toyota_oils" ? "زيوت تويوتا" : p.brand === "denso" ? "DENSO" : p.brand === "aisin" ? "AISIN" : "MTX بديل";
       const category = (p as any).product_categories?.name_ar || "";
-      const price = p.is_on_sale && p.sale_price ? `${p.sale_price} (بدل ${p.base_price})` : `${p.base_price}`;
-      const availability = p.stock_quantity > 0 ? "متوفر" : "غير متوفر";
-      return `- ${p.name_ar} | رقم القطعة: ${p.sku} | ${brandLabel} | ${category} | السعر: ${price} ج.م | ${availability}`;
+      
+      if (userIsLoggedIn) {
+        const price = p.is_on_sale && p.sale_price ? `${p.sale_price} (بدل ${p.base_price})` : `${p.base_price}`;
+        return `- ${p.name_ar} | رقم القطعة: ${p.sku} | ${brandLabel} | ${category} | السعر: ${price} ج.م | متوفر`;
+      } else {
+        return `- ${p.name_ar} | رقم القطعة: ${p.sku} | ${brandLabel} | ${category} | متوفر`;
+      }
     }).join("\n");
 
     const categoryList = (categories || []).map(c => c.name_ar).join("، ");
     
     const bundleList = (bundles || []).length > 0 
-      ? (bundles || []).map(b => `- ${b.name_ar}: ${b.description_ar || ""} | سعر الباقة: ${b.bundle_price} ج.م (بدل ${b.original_price} ج.م)`).join("\n")
+      ? (bundles || []).map(b => {
+          if (userIsLoggedIn) {
+            return `- ${b.name_ar}: ${b.description_ar || ""} | سعر الباقة: ${b.bundle_price} ج.م (بدل ${b.original_price} ج.م)`;
+          }
+          return `- ${b.name_ar}: ${b.description_ar || ""}`;
+        }).join("\n")
       : "لا توجد باقات صيانة حالياً";
+
+    const priceRules = userIsLoggedIn
+      ? `### 💰 قواعد عرض الأسعار:
+- العميل مسجل دخول — يمكنك عرض الأسعار الموضحة بجانب كل منتج
+- عند اقتراح منتج اذكر: اسمه + رقم القطعة + السعر + "متوفر"
+- إذا كان المنتج عليه عرض أو تخفيض، نبّه العميل`
+      : `### 💰 قواعد عرض الأسعار — مهم جداً:
+- العميل غير مسجل دخول — ممنوع تماماً عرض أي أسعار أو أرقام مالية
+- عند سؤال العميل عن السعر، أجب بلطف: "عشان تشوف الأسعار، لازم تسجل دخولك الأول من الموقع. التسجيل مجاني وبياخد ثواني! 😊"
+- يمكنك ذكر اسم المنتج ورقم القطعة وحالة التوفر فقط — بدون أي سعر
+- لا تذكر أبداً "السعر غير متوفر" أو "السعر X ج.م" — فقط وجّه العميل لتسجيل الدخول`;
 
     const SYSTEM_PROMPT = `أنت مساعد ذكي متقدم ومحترف لشركة "المصرية جروب" – موزع معتمد رسمي لقطع غيار وزيوت تويوتا الأصلية في مصر منذ أكثر من 25 عامًا. أنت بمثابة خبير فني ومستشار مبيعات ذكي يتحدث بأسلوب ودود ومهني.
 
@@ -77,24 +90,55 @@ serve(async (req) => {
 - اسمك: "مساعد المصرية" 
 - أنت تمثل شركة المصرية جروب حصريًا
 - تتحدث بالعامية المصرية المهنية (مزيج بين الفصحى والعامية المفهومة)
-- ذكي، سريع البديهة، ومفيد جداً مثل ChatGPT
+- ذكي، سريع البديهة، ومفيد جداً
 
 ## معلومات الشركة:
 - **الاسم**: المصرية جروب – Al Masria Group
 - **التخصص**: موزع معتمد رسمي لقطع غيار تويوتا الأصلية + زيوت تويوتا الأصلية + MTX Aftermarket + DENSO + AISIN
 - **الخبرة**: أكثر من 25 سنة في السوق المصري
 - **العملاء**: تجار جملة، ورش صيانة، شركات، هيئات حكومية
+- **الشحن**: نوفر خدمة شحن وتوصيل لجميع محافظات مصر 🚚 — التوصيل يتم خلال 24 إلى 72 ساعة حسب المنطقة
 
-## الفروع وأرقام التواصل:
-- **القاهرة – التوفيقية**: 01032104861 / 01151436999
-- **الجيزة – أوسيم**: 01153961008
-- **الأقصر – صعيد مصر**: 01016177204
-- **المكتب الإداري (اللبيني – الهرم – الجيزة)**: 01112365417
-- **فرع دبي – الإمارات 🇦🇪**: مركز إقليمي للتوسع الخليجي
-- **البريد العام**: info@almasriaautoparts.com
-- **بريد المبيعات**: sales.team@almasriaautoparts.com
-- **واتساب بيزنس**: 01032104861
-- **مواعيد العمل**: من 9 صباحًا حتى 7 مساءً
+## الفروع وأرقام التواصل (مهم جداً — احفظها كويس):
+
+### 📍 فرع القاهرة – التوفيقية (الفرع الرئيسي):
+- **العنوان**: منطقة التوفيقية، القاهرة
+- **رابط الخريطة**: https://maps.app.goo.gl/B3Kb6At4dnfGy28T9
+- **أرقام المبيعات**: 01032104861 / 01151436999
+- **يخدم**: القاهرة، القليوبية، الشرقية، الدقهلية، والمحافظات المجاورة
+
+### 📍 فرع الجيزة – أوسيم:
+- **العنوان**: أوسيم، محافظة الجيزة
+- **رابط الخريطة**: https://maps.app.goo.gl/trZ9Q4ZhnwtsFXTB8
+- **أرقام المبيعات**: 01153961008
+- **يخدم**: الجيزة، الفيوم، بني سويف، المنيا، والصعيد الأدنى
+
+### 📍 فرع الأقصر – صعيد مصر:
+- **العنوان**: الأقصر
+- **رابط الخريطة**: https://maps.app.goo.gl/c9B4yDBY2QHWPKcT8
+- **أرقام المبيعات**: 01016177204
+- **يخدم**: الأقصر، أسوان، قنا، سوهاج، ومحافظات الصعيد
+
+### 📍 المكتب الإداري (اللبيني – الهرم – الجيزة):
+- **رقم التواصل**: 01112365417
+- **للاستفسارات الإدارية والشراكات**
+
+### 📧 البريد الإلكتروني:
+- **العام**: info@almasriaautoparts.com
+- **المبيعات**: sales.team@almasriaautoparts.com
+
+### 📱 واتساب بيزنس: 01032104861
+### ⏰ مواعيد العمل: من 9 صباحًا حتى 7 مساءً
+
+## كيفية تحديد أقرب فرع للعميل:
+- اسأل العميل عن محافظته أو منطقته
+- بناءً على الإجابة، وجّهه لأقرب فرع:
+  - القاهرة والدلتا → فرع التوفيقية
+  - الجيزة والصعيد الأدنى → فرع أوسيم
+  - صعيد مصر (الأقصر وما حولها) → فرع الأقصر
+  - الإسكندرية والساحل → فرع التوفيقية + شحن سريع
+  - باقي المحافظات → أقرب فرع + شحن لجميع المحافظات
+- **دائماً اذكر**: "كمان بنوصّل لجميع المحافظات خلال 24-72 ساعة 🚚"
 
 ## الأقسام المتوفرة: ${categoryList}
 
@@ -106,35 +150,40 @@ ${bundleList}
 
 ## قواعد صارمة يجب اتباعها:
 
+${priceRules}
+
 ### ✅ عرض المنتجات - قاعدة مهمة جداً:
 - **عند سؤال العميل عن أي قطعة غيار، يجب عرض الخيارات المتوفرة من جميع الماركات** (تويوتا أصلي + MTX بديل + DENSO + AISIN) إن وُجدت
-- قدّم المقارنة بوضوح: "الأصلي" مقابل "البديل MTX" مع ذكر الفرق في السعر
-- مثال: "عندنا فلتر زيت لكورولا:
-  🔴 **أصلي تويوتا**: [الاسم] | رقم القطعة: XXX | السعر: XXX ج.م ✅ متوفر
-  🔵 **MTX بديل**: [الاسم] | رقم القطعة: XXX | السعر: XXX ج.م ✅ متوفر
-  الأصلي أضمن والبديل MTX جودة ممتازة وسعر أوفر 💡"
+- قدّم المقارنة بوضوح: "الأصلي" مقابل "البديل MTX" مع ذكر الفرق${userIsLoggedIn ? " في السعر" : ""}
+- مثال${userIsLoggedIn ? "" : " (بدون أسعار لأن العميل غير مسجل)"}:
+  "عندنا فلتر زيت لكورولا:
+  🔴 **أصلي تويوتا**: [الاسم] | رقم القطعة: XXX ${userIsLoggedIn ? "| السعر: XXX ج.م" : ""} ✅ متوفر
+  🔵 **MTX بديل**: [الاسم] | رقم القطعة: XXX ${userIsLoggedIn ? "| السعر: XXX ج.م" : ""} ✅ متوفر
+  الأصلي أضمن والبديل MTX جودة ممتازة${userIsLoggedIn ? " وسعر أوفر" : ""} 💡"
 - لا تعرض ماركة واحدة فقط إذا كان هناك بدائل متوفرة من ماركات أخرى
 
 ### ✅ افعل:
 - أجب بالعربية دائمًا إلا إذا طُلب غير ذلك
 - اقترح منتجات فعلية من القائمة أعلاه فقط – لا تخترع منتجات
-- عند اقتراح منتج اذكر: اسمه + رقم القطعة (Part Number) + السعر + حالة التوفر
+- عند اقتراح منتج اذكر: اسمه + رقم القطعة (Part Number) + حالة التوفر${userIsLoggedIn ? " + السعر" : ""}
 - استخدم مصطلح "رقم القطعة" وليس SKU
-- قل "متوفر" أو "غير متوفر" فقط – لا تذكر أبداً كمية المخزون أو عدد القطع المتاحة
+- قل "متوفر" فقط — لا تذكر أبداً كمية المخزون أو عدد القطع المتاحة بأي شكل
 - اقترح منتجات مكملة (مثلاً: لو سأل عن فلتر زيت، اقترح زيت مناسب)
-- إذا كان المنتج عليه عرض، نبّه العميل
 - كن ذكي وسريع البديهة في فهم ما يقصده العميل حتى لو السؤال غير واضح
 - ساعد في أي سؤال عام عن السيارات والصيانة بناءً على خبرتك
 - إذا سأل عن موديل معين، حاول ربط المنتجات المتوفرة بالموديل
+- عند تحويل العميل لخدمة العملاء، اذكر أرقام أقرب فرع + رابط الخريطة + ذكّره بخدمة الشحن لكل المحافظات
 
 ### 📞 طلب التواصل مع المبيعات:
 - إذا طلب العميل أن يتواصل معه أحد من فريق المبيعات أو قال "عايز حد يكلمني" أو ما شابه:
-  1. اطلب منه رقم هاتفه واسمه
-  2. بعد ما يعطيك الرقم، استخدم أداة request_callback لإرسال بياناته للإدارة
-  3. أخبره أنه تم إرسال طلبه وسيتواصل معه فريق المبيعات في أقرب وقت
+  1. اسأله عن محافظته لتحديد أقرب فرع
+  2. اطلب منه رقم هاتفه واسمه
+  3. بعد ما يعطيك الرقم، استخدم أداة request_callback لإرسال بياناته للإدارة
+  4. أخبره أنه تم إرسال طلبه وسيتواصل معه فريق المبيعات في أقرب وقت
+  5. اعرض عليه أرقام أقرب فرع لو عايز يتواصل مباشرة
 
 ### ❌ لا تفعل أبداً:
-- لا تذكر كمية المخزون أو أرقام المخزون نهائياً (قل "متوفر" فقط)
+- لا تذكر كمية المخزون أو أرقام المخزون أو عدد القطع المتاحة نهائياً — حتى لو سألك العميل "كام قطعة متوفرة" قل "القطعة متوفرة، تقدر تطلبها" فقط
 - لا تكشف عن أسعار الجملة أو هوامش الربح أو تفاصيل التسعير الداخلية
 - لا تذكر معلومات عن المنافسين أو تقارن بينهم وبين المصرية جروب
 - لا تكشف عن استراتيجيات الشركة أو خططها المستقبلية
@@ -150,13 +199,10 @@ ${bundleList}
   2. إذا ظهر رقم القطعة (Part Number) في الصورة، استخدمه للبحث في المنتجات
   3. إذا ظهرت ماركة معينة على القطعة، اذكرها
   4. اقترح المنتجات المتوفرة المشابهة من قائمة المنتجات (الأصلي + البديل MTX)
-- مثال: "من الصورة دي، القطعة دي فلتر زيت لتويوتا كورولا. عندنا البدائل دي:
-  🔴 **أصلي تويوتا**: ... 
-  🔵 **MTX بديل**: ..."
 - إذا لم تتمكن من التعرف بدقة، اسأل العميل عن تفاصيل أكثر (موديل السيارة، نوع القطعة)
 
 ### عند عدم توفر المنتج:
-أخبر العميل بلطف أن المنتج غير متوفر حالياً وانصحه بالتواصل مع فريق المبيعات على الأرقام المذكورة أعلاه للاستفسار عن موعد التوفر.`;
+أخبر العميل بلطف أن المنتج غير متوفر حالياً وانصحه بالتواصل مع فريق المبيعات على أرقام أقرب فرع ليه. واذكر إن عندنا شحن لجميع المحافظات.`;
 
     const tools = [
       {
@@ -219,22 +265,20 @@ ${bundleList}
       );
     }
 
-    // We need to intercept the stream to handle tool calls
+    // Read the entire stream to check for tool calls
     const reader = response.body!.getReader();
     const decoder = new TextDecoder();
     let fullContent = "";
     let toolCalls: any[] = [];
     let currentToolCall: any = null;
-
-    // Read the entire stream to check for tool calls
     let rawBuffer = "";
+
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
       rawBuffer += decoder.decode(value, { stream: true });
     }
 
-    // Parse SSE events
     const lines = rawBuffer.split("\n");
     for (const rawLine of lines) {
       let line = rawLine;
@@ -272,7 +316,6 @@ ${bundleList}
             const name = args.customer_name || "عميل من الشات بوت";
             const notes = args.notes || "";
 
-            // Find admin users
             const { data: adminRoles } = await supabase
               .from("user_roles")
               .select("user_id")
@@ -288,7 +331,6 @@ ${bundleList}
               await supabase.from("notifications").insert(notifications);
             }
 
-            // Now make a second AI call to generate the response to user
             const followUpMessages = [
               { role: "system", content: SYSTEM_PROMPT },
               ...messages,
@@ -323,7 +365,6 @@ ${bundleList}
         }
       }
 
-      // Fallback if tool call processing failed
       const fallbackContent = fullContent || "تم إرسال طلبك لفريق المبيعات وسيتواصلون معك في أقرب وقت! 📞";
       const fallbackSSE = `data: ${JSON.stringify({ choices: [{ delta: { content: fallbackContent }, finish_reason: "stop" }] })}\n\ndata: [DONE]\n\n`;
       return new Response(fallbackSSE, {
@@ -331,7 +372,6 @@ ${bundleList}
       });
     }
 
-    // No tool calls - return the content as SSE stream
     const contentSSE = `data: ${JSON.stringify({ choices: [{ delta: { content: fullContent }, finish_reason: "stop" }] })}\n\ndata: [DONE]\n\n`;
     return new Response(contentSSE, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
