@@ -98,6 +98,7 @@ const App = () => (
               </Suspense>
             </CartProvider>
           </AuthProvider>
+          </LanguageProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
