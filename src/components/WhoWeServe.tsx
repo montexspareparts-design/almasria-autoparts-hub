@@ -40,18 +40,18 @@ const WhoWeServe = () => {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-14"
         >
-          <h2 className="text-3xl md:text-4xl font-black text-foreground mb-3">
-            <span className="text-primary">عملائنا</span>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-foreground mb-4 leading-tight">
+            من <span className="text-primary">نخدم</span>
           </h2>
           <motion.div
-            className="w-14 h-1 bg-primary mx-auto rounded-full mb-4"
+            className="w-16 h-1 bg-primary mx-auto rounded-full mb-5"
             initial={{ scaleX: 0 }}
             whileInView={{ scaleX: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.3 }}
           />
-          <p className="text-muted-foreground text-base md:text-lg">
-            حلول توزيع مرنة ودعم توريد موثوق يلائم أحجام وأنماط أعمال مختلفة.
+          <p className="text-foreground/70 text-base md:text-lg max-w-2xl mx-auto leading-[1.9] font-medium">
+            حلول توزيع مرنة ودعم توريد موثوق يلائم احتياجات أعمال مختلفة
           </p>
         </motion.div>
 
