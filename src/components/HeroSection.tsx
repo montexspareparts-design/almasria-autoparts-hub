@@ -91,7 +91,17 @@ const HeroSection = () => {
     <section ref={sectionRef} id="hero" className="relative min-h-[85vh] md:min-h-[90vh] flex flex-col justify-center overflow-hidden">
       <div className="absolute inset-0 z-0">
         <img src={heroBg} alt="" width={1920} height={1080} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${videoLoaded ? "opacity-0" : "opacity-100"}`} loading="eager" decoding="async" fetchPriority="high" />
-        <video autoPlay muted loop playsInline preload="auto" controls={false} disablePictureInPicture disableRemotePlayback onCanPlay={() => setVideoLoaded(true)} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 pointer-events-none ${videoLoaded ? "opacity-100" : "opacity-0"}`}>
+        <video
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 pointer-events-none ${videoLoaded ? "opacity-100" : "opacity-0"}`}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          onLoadedData={() => setVideoLoaded(true)}
+          webkit-playsinline="true"
+          x-webkit-airplay="deny"
+        >
           <source src="/videos/hero-bg.mp4" type="video/mp4" />
         </video>
       </div>
