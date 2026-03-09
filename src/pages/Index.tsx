@@ -15,6 +15,7 @@ const SectionDivider = lazy(() => import("@/components/SectionDivider"));
 const DistributionNetwork = lazy(() => import("@/components/DistributionNetwork"));
 const MTXSection = lazy(() => import("@/components/MTXSection"));
 const OurClientsSection = lazy(() => import("@/components/OurClientsSection"));
+const MaintenanceTipsSection = lazy(() => import("@/components/MaintenanceTipsSection"));
 const ContactSimple = lazy(() => import("@/components/ContactSimple"));
 const Footer = lazy(() => import("@/components/Footer"));
 const WhatsAppFloat = lazy(() => import("@/components/WhatsAppFloat"));
@@ -83,6 +84,9 @@ const Index = () => {
 
       {/* Our Clients — social proof */}
       <Suspense fallback={<SectionFallback />}><OurClientsSection /></Suspense>
+
+      {/* Maintenance Tips — knowledge center */}
+      <Suspense fallback={<SectionFallback />}><MaintenanceTipsSection /></Suspense>
 
       {/* Contact CTA — dark section */}
       <Suspense fallback={<SectionFallback />}><ContactSimple /></Suspense>
