@@ -105,8 +105,8 @@ const AboutBrief = () => {
             transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
           />
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-secondary-foreground mb-5 leading-[1.3]">
-            <span className="text-primary">المصرية</span>{" "}
-            — أكثر من 25 عامًا في خدمة عملاء تويوتا
+            المصرية — أكثر من 25 عامًا في خدمة عملاء{" "}
+            <span className="text-primary">تويوتا</span>
           </h2>
         </motion.div>
 
