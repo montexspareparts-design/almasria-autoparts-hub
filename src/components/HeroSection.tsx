@@ -81,34 +81,7 @@ const AnimatedCounter = ({ value, suffix, delay }: { value: number; suffix: stri
   );
 };
 
-/* ── Trust Marquee Strip ── */
-const trustItems = [
-  "قطع غيار 100% أصلية",
-  "ضمان وكالة على جميع المنتجات",
-  "توصيل خلال 48 ساعة",
-  "+25 سنة خبرة في السوق",
-  "تغطية جميع محافظات مصر",
-  "أسعار تنافسية للتجار",
-  "دعم فني متخصص",
-  "موزع معتمد رسمي",
-];
-
-const TrustMarquee = () => (
-  <div className="relative bg-primary overflow-hidden z-20">
-    <motion.div
-      className="flex items-center gap-8 whitespace-nowrap py-3"
-      animate={{ x: ["0%", "-50%"] }}
-      transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-    >
-      {[...trustItems, ...trustItems].map((item, i) => (
-        <div key={`${item}-${i}`} className="flex items-center gap-4 shrink-0">
-          <span className="text-primary-foreground font-bold text-sm tracking-wide">{item}</span>
-          <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/40" />
-        </div>
-      ))}
-    </motion.div>
-  </div>
-);
+/* ── Main Hero ── */
 
 /* ── Main Hero ── */
 const HeroSection = () => {
