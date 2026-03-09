@@ -23,6 +23,10 @@ const InstallBanner = () => {
       return;
     }
 
+    // Check if on mobile
+    const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (!isMobile) return;
+
     // Already dismissed recently (24h cooldown)
     const dismissed = localStorage.getItem(DISMISS_KEY);
     if (dismissed) {
@@ -30,22 +34,15 @@ const InstallBanner = () => {
       if (Date.now() - dismissedAt < 24 * 60 * 60 * 1000) return;
     }
 
+    // Show immediately on mobile
+    setShow(true);
+
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      // Show banner after 5 seconds
-      setTimeout(() => setShow(true), 5000);
     };
 
     window.addEventListener("beforeinstallprompt", handler);
-
-    // For iOS — show after delay if on mobile Safari
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
-    if (isIOS && isSafari) {
-      setTimeout(() => setShow(true), 5000);
-    }
-
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
