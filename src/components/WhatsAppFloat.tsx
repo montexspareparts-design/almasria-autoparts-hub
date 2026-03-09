@@ -9,7 +9,7 @@ const WhatsAppFloat = () => {
   };
 
   return (
-    <div className="fixed bottom-4 left-4 md:bottom-6 md:left-6 z-50">
+    <div className="fixed bottom-20 left-4 md:bottom-6 md:left-6 z-50">
       <motion.a
         href={`https://wa.me/201153961008?text=${encodeURIComponent(defaultMsg)}`}
         target="_blank"
