@@ -74,8 +74,8 @@ const ProductsShowcase = () => {
         ))}
       </div>
 
-      {/* Floating words */}
-      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+      {/* Floating words - hidden on mobile */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden hidden md:block">
         {floatingWords.map((word, i) => (
           <motion.div
             key={`word-${i}`}
