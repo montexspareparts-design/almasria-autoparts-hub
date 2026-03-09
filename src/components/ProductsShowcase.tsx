@@ -62,7 +62,7 @@ const ProductsShowcase = () => {
             style={{ left: gear.x, top: gear.y }}
             initial={{ opacity: 0, scale: 0 }}
             animate={{
-              opacity: [0, 0.15, 0.08, 0.15, 0],
+              opacity: [0, 0.3, 0.18, 0.3, 0],
               scale: [0.5, 1, 0.85, 1, 0.5],
               y: [0, -20, 10, -15, 0],
               rotate: [0, gear.rotate],
