@@ -185,7 +185,7 @@ const AboutPage = () => {
           </div>
           <div className="text-center">
             <Button variant="outline" className="font-bold gap-2" asChild>
-              <Link to="/why-us">
+              <Link to="/what-sets-us-apart">
                 اقرأ التفاصيل
                 <ChevronLeft className="w-4 h-4" />
               </Link>
