@@ -11,7 +11,7 @@ import Footer from "@/components/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const ContactPage = () => {
-  const { t } = useLanguage();
+  const { t, isAr } = useLanguage();
   const [form, setForm] = useState({ name: "", phone: "", email: "", message: "" });
   const [sending, setSending] = useState(false);
 
