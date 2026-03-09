@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { useRef, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import heroBg from "@/assets/hero-corporate.webp";
 
 const floatingParts = [
