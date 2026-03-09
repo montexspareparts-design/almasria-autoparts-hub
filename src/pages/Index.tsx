@@ -56,6 +56,9 @@ const Index = () => {
       {/* Metrics — light with gear divider */}
       <Suspense fallback={<SectionFallback />}><KeyMetrics /></Suspense>
 
+      {/* Products Showcase — dark brands grid */}
+      <Suspense fallback={<SectionFallback />}><ProductsShowcase /></Suspense>
+
       {/* Gear divider */}
       <Suspense fallback={null}><SectionDivider variant="light" /></Suspense>
 
