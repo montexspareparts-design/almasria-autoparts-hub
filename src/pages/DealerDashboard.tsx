@@ -221,6 +221,5 @@ const DealerDashboard = () => {
     </div>
   );
 };
-};
 
 export default DealerDashboard;
