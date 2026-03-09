@@ -170,7 +170,7 @@ const Navbar = () => {
                   }`}
                 >
                   <BookOpen className="w-4 h-4" />
-                  كتالوجات
+                  كشوفات المصرية
                   <span className={`absolute -bottom-1 right-0 h-[2px] bg-primary rounded-full transition-all duration-300 ${
                     location.pathname === "/catalogs" ? "w-full" : "w-0 group-hover:w-full"
                   }`} />
@@ -295,7 +295,7 @@ const Navbar = () => {
                     )}
                     {isWholesaleDealer && (
                       <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-primary" onClick={() => { navigate("/catalogs"); setIsOpen(false); }}>
-                        <BookOpen className="w-4 h-4" /> كتالوجات
+                        <BookOpen className="w-4 h-4" /> كشوفات المصرية
                       </Button>
                     )}
                     <Button variant="outline" size="sm" className="w-full gap-2" onClick={() => { navigate("/dealer"); setIsOpen(false); }}>
