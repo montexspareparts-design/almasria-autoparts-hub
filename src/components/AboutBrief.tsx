@@ -25,8 +25,9 @@ const Counter = ({ target, suffix = "" }: { target: number; suffix?: string }) =
   }, [inView, target]);
 
   return (
-    <div ref={ref} className="font-black text-4xl md:text-5xl text-primary tabular-nums tracking-tight">
-      {count.toLocaleString("en")}{suffix}
+    <div ref={ref} className="font-black text-5xl md:text-6xl text-secondary-foreground tabular-nums tracking-tight leading-none">
+      <span className="text-primary">{count.toLocaleString("en")}</span>
+      <span className="text-primary text-3xl md:text-4xl">{suffix}</span>
     </div>
   );
 };
@@ -252,50 +253,52 @@ const AboutBrief = () => {
         </div>
 
         {/* Metrics - Full width dramatic bar */}
+        {/* Metrics — Corporate Institutional Style */}
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="relative rounded-3xl overflow-hidden"
+          className="border-t border-secondary-foreground/10 pt-16"
         >
-          {/* Background */}
-          <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/90 to-primary" />
-          
-          {/* Pattern overlay */}
-          <div
-            className="absolute inset-0 opacity-[0.08]"
-            style={{
-              backgroundImage: `radial-gradient(circle, white 1px, transparent 1px)`,
-              backgroundSize: "24px 24px",
-            }}
-          />
-          
-          {/* Animated glow */}
-          <motion.div
-            className="absolute -top-20 left-1/4 w-60 h-60 bg-white/10 rounded-full blur-3xl"
-            animate={{ x: [0, 60, 0], opacity: [0.1, 0.3, 0.1] }}
-            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          />
-
-          <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-1 p-2">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-0">
             {metrics.map((m, i) => (
               <motion.div
                 key={m.label}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: 0.2 + i * 0.12, type: "spring", stiffness: 80 }}
-                className="text-center py-8 md:py-10 px-4 rounded-2xl bg-white/[0.08] backdrop-blur-sm hover:bg-white/[0.15] transition-colors duration-300 cursor-default group"
+                transition={{ delay: 0.15 + i * 0.12, duration: 0.6, ease: "easeOut" }}
+                className="relative px-8 py-10 text-center group cursor-default"
               >
+                {/* Vertical divider */}
+                {i < metrics.length - 1 && (
+                  <div className="hidden md:block absolute left-0 top-1/2 -translate-y-1/2 w-px h-16 bg-secondary-foreground/10" />
+                )}
+
+                {/* Top accent line — reveals on hover */}
                 <motion.div
-                  whileHover={{ scale: 1.1 }}
-                  transition={{ duration: 0.2 }}
-                >
+                  className="absolute top-0 left-1/2 -translate-x-1/2 h-[3px] bg-primary rounded-full"
+                  initial={{ width: 0 }}
+                  whileInView={{ width: 40 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.4 + i * 0.12, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                />
+
+                {/* Number */}
+                <div className="mb-3">
                   <Counter target={m.value} suffix={m.suffix} />
-                </motion.div>
-                <p className="text-white font-black text-base mt-2">{m.label}</p>
-                <p className="text-white/50 text-sm font-medium mt-1">{m.desc}</p>
+                </div>
+
+                {/* Label */}
+                <p className="text-secondary-foreground font-black text-lg tracking-wide mb-1">
+                  {m.label}
+                </p>
+
+                {/* Sub-label */}
+                <p className="text-secondary-foreground/40 text-sm font-medium tracking-wider uppercase">
+                  {m.desc}
+                </p>
               </motion.div>
             ))}
           </div>
