@@ -25,8 +25,9 @@ const Counter = ({ target, suffix = "" }: { target: number; suffix?: string }) =
   }, [inView, target]);
 
   return (
-    <div ref={ref} className="font-black text-4xl md:text-5xl text-primary tabular-nums tracking-tight">
-      {count.toLocaleString("en")}{suffix}
+    <div ref={ref} className="font-black text-5xl md:text-6xl text-secondary-foreground tabular-nums tracking-tight leading-none">
+      <span className="text-primary">{count.toLocaleString("en")}</span>
+      <span className="text-primary text-3xl md:text-4xl">{suffix}</span>
     </div>
   );
 };
