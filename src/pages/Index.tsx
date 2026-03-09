@@ -9,6 +9,7 @@ const FeaturedProducts = lazy(() => import("@/components/FeaturedProducts"));
 const WhyChooseUs = lazy(() => import("@/components/WhyChooseUs"));
 const WhoWeServe = lazy(() => import("@/components/WhoWeServe"));
 const KeyMetrics = lazy(() => import("@/components/KeyMetrics"));
+const ProductsShowcase = lazy(() => import("@/components/ProductsShowcase"));
 const SectionDivider = lazy(() => import("@/components/SectionDivider"));
 
 const DistributionNetwork = lazy(() => import("@/components/DistributionNetwork"));
