@@ -135,13 +135,13 @@ const DistributionSegments = () => {
                   </p>
 
                   {/* CTA */}
-                  <span className="inline-flex items-center gap-2 text-sm font-bold text-primary group-hover:gap-3 transition-all">
+                  <span className="inline-flex items-center gap-2 text-sm font-black text-primary group-hover:gap-4 transition-all">
                     تفاصيل القطاع
                     <motion.span
-                      animate={{ x: [0, -4, 0] }}
+                      animate={{ x: [0, -5, 0] }}
                       transition={{ repeat: Infinity, duration: 1.6, ease: "easeInOut" }}
                     >
-                      <ArrowLeft className="w-4 h-4" />
+                      <ArrowLeft className="w-4 h-4" strokeWidth={2.5} />
                     </motion.span>
                   </span>
                 </div>

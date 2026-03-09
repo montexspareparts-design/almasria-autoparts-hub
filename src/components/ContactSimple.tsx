@@ -46,23 +46,23 @@ const ContactSimple = () => {
           transition={{ delay: 0.35, duration: 0.5 }}
           className="flex flex-col sm:flex-row gap-3 justify-center"
         >
-          <motion.div whileHover={{ scale: 1.04, y: -1 }} whileTap={{ scale: 0.97 }} transition={{ duration: 0.15 }}>
-            <Button size="lg" className="text-base px-8 py-6 font-bold shadow-lg shadow-primary/20" asChild>
+          <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.97 }} transition={{ duration: 0.2 }}>
+            <Button size="lg" className="text-base px-10 py-7 font-black shadow-xl shadow-primary/25 text-lg" asChild>
               <Link to="/contact#quote">
-                اطلب عرض سعر
+                اطلب عرض سعر الآن
               </Link>
             </Button>
           </motion.div>
-          <motion.div whileHover={{ scale: 1.04, y: -1 }} whileTap={{ scale: 0.97 }} transition={{ duration: 0.15 }}>
+          <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.97 }} transition={{ duration: 0.2 }}>
             <Button
               size="lg"
               variant="outline"
-              className="text-base px-8 py-6 gap-2.5 font-bold border-secondary-foreground/15 text-secondary-foreground hover:bg-secondary-foreground/10"
+              className="text-base px-10 py-7 gap-3 font-black border-2 border-secondary-foreground/20 text-secondary-foreground hover:bg-secondary-foreground/10 hover:border-secondary-foreground/30 text-lg"
               asChild
             >
               <Link to="/contact">
-                <Phone className="w-5 h-5" />
-                تواصل مع فريق المبيعات
+                <Phone className="w-5 h-5" strokeWidth={2.5} />
+                تواصل معنا
               </Link>
             </Button>
           </motion.div>

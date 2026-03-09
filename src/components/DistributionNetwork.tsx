@@ -106,25 +106,25 @@ const DistributionNetwork = () => {
               scale: 1.02,
               transition: { duration: 0.2 },
             }}
-            className="bg-primary/10 border border-primary/25 rounded-xl p-5 flex items-center gap-3 relative overflow-hidden group"
+            className="bg-primary/15 border-2 border-primary/35 rounded-2xl p-6 flex items-center gap-4 relative overflow-hidden group shadow-lg shadow-primary/20"
           >
             {/* Animated pulse bg */}
             <motion.div
-              className="absolute inset-0 bg-primary/5 rounded-xl"
-              animate={{ opacity: [0, 0.5, 0] }}
+              className="absolute inset-0 bg-primary/10 rounded-2xl"
+              animate={{ opacity: [0, 0.6, 0] }}
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             />
-            <div className="relative z-10 flex items-center gap-3">
+            <div className="relative z-10 flex items-center gap-4">
               <motion.div
-                className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center flex-shrink-0"
-                animate={{ y: [0, -2, 0] }}
+                className="w-12 h-12 bg-primary/30 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary/20"
+                animate={{ y: [0, -3, 0] }}
                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
               >
-                <Truck className="w-5 h-5 text-primary" />
+                <Truck className="w-6 h-6 text-primary" strokeWidth={2.5} />
               </motion.div>
               <div>
-                <h3 className="font-bold text-secondary-foreground text-sm">توصيل سريع لجميع المحافظات</h3>
-                <p className="text-xs text-secondary-foreground/50 mt-1">تسليم خلال 48 ساعة داخل مصر</p>
+                <h3 className="font-black text-secondary-foreground text-base mb-1">توصيل سريع لجميع المحافظات</h3>
+                <p className="text-sm text-secondary-foreground/60 font-medium">تسليم خلال 48 ساعة داخل مصر</p>
               </div>
             </div>
           </motion.div>
