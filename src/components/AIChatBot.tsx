@@ -26,6 +26,7 @@ const getTextContent = (content: MessageContent): string => {
 };
 
 const AIChatBot = () => {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
 
   // Listen for global open event
