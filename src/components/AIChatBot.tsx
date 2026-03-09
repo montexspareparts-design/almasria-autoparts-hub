@@ -320,7 +320,7 @@ const AIChatBot = () => {
             className="fixed bottom-20 left-4 md:bottom-24 md:left-6 z-50 w-12 h-12 md:w-14 md:h-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
             aria-label="فتح المساعد الذكي"
           >
-            <Bot className="w-7 h-7" />
+            <img src={chatbotIcon} alt="المساعد الذكي" className="w-8 h-8 md:w-9 md:h-9 object-contain" />
           </motion.button>
         )}
       </AnimatePresence>
