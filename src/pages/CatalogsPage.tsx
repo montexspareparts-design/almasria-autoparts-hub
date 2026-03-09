@@ -41,6 +41,8 @@ import {
   Minus,
   TrendingUp,
   BarChart3,
+  ClipboardList,
+  Zap,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
