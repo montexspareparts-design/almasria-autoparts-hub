@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, ShoppingCart, FileText, Tag, LogOut, Clock, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import DealerCatalogs from "@/components/DealerCatalogs";
 
 const tierLabels: Record<string, string> = {
   wholesale_tier1: "تاجر جملة – درجة أولى",

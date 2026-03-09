@@ -286,6 +286,11 @@ const AdminDashboard = () => {
           <AdminVideoSettings />
         </div>
 
+        {/* Catalogs Management */}
+        <div className="mt-8">
+          <AdminCatalogs />
+        </div>
+
         {/* Product Images Management */}
         <div className="mt-8">
           <AdminProductImages />
