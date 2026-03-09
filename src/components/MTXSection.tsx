@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import brandMtx from "@/assets/brand-mtx.jpg";
 
 const MTXSection = () => {
   return (
@@ -14,8 +15,23 @@ const MTXSection = () => {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="mb-8"
         >
+          {/* MTX Logo */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="mb-6"
+          >
+            <img
+              src={brandMtx}
+              alt="MTX Spare Parts"
+              className="h-20 md:h-24 mx-auto object-contain"
+            />
+          </motion.div>
+          
           <h2 className="text-4xl md:text-5xl font-black text-foreground leading-tight mb-4">
-            MTX — جودة تضاهي <span className="text-primary">المواصفات الأصلية</span>
+            جودة تضاهي <span className="text-primary">المواصفات الأصلية</span>
           </h2>
           <p className="text-muted-foreground text-sm leading-relaxed max-w-md mx-auto">
             قطع غيار بديلة مختارة بعناية بأسعار تنافسية
