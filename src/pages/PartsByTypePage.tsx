@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Filter, ChevronLeft, ShieldCheck, Car, Wrench, Droplets, Zap, Disc, Settings2, Wind } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import PartRequestForm from "@/components/PartRequestForm";
+
 import { BreadcrumbSchema, ItemListSchema } from "@/components/SEOSchemaMarkup";
 
 const SITE = "https://almasriaautoparts.com";
@@ -215,9 +215,6 @@ const TypeDetailView = ({ type }: { type: PartTypeData }) => {
             ))}
           </div>
 
-          <div className="max-w-2xl mx-auto">
-            <PartRequestForm />
-          </div>
         </div>
       </section>
     </>
