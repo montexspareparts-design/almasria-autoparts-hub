@@ -82,7 +82,12 @@ const InstallBanner = () => {
       if (outcome === "accepted") setShow(false);
       setDeferredPrompt(null);
     } else if (isIOS) {
-      setShowIOSSteps(true);
+      if (showIOSSteps) {
+        // Already showing steps, dismiss banner
+        handleDismiss();
+      } else {
+        setShowIOSSteps(true);
+      }
     } else {
       window.location.href = "/install";
     }
