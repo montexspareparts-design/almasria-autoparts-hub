@@ -54,6 +54,7 @@ const App = () => (
           <AuthProvider>
             <CartProvider>
               <InstallBanner />
+              <Suspense fallback={null}><AIChatBot /></Suspense>
               <Suspense fallback={<PageLoader />}>
                 <PageTransition>
                   <Routes>
