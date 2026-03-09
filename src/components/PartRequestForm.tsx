@@ -305,7 +305,7 @@ const PartRequestForm = ({ defaultModel, compact }: PartRequestFormProps) => {
             asChild
           >
             <a
-              href={`https://wa.me/201020412358?text=${whatsappMessage}`}
+              href={`https://wa.me/201153961008?text=${whatsappMessage}`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackClickWhatsApp("part_request_form")}
