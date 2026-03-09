@@ -146,6 +146,17 @@ const CatalogsPage = () => {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [addingToCart, setAddingToCart] = useState<string | null>(null);
 
+  // Quick order state
+  const [quickSkuInput, setQuickSkuInput] = useState("");
+  const [quickResults, setQuickResults] = useState<{
+    sku: string;
+    product?: Product & { tierPrice?: TierPrice };
+    found: boolean;
+  }[]>([]);
+  const [quickLoading, setQuickLoading] = useState(false);
+  const [quickQuantities, setQuickQuantities] = useState<Record<string, number>>({});
+  const [addingAllToCart, setAddingAllToCart] = useState(false);
+
   // Active tab
   const [activeTab, setActiveTab] = useState("catalogs");
 
