@@ -83,12 +83,12 @@ const DistributionNetwork = () => {
                     href={b.mapUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 mt-2 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
-                    whileHover={{ x: -3 }}
+                    className="inline-flex items-center gap-1.5 mt-3 text-sm font-black text-primary hover:text-primary/80 transition-colors"
+                    whileHover={{ x: -4 }}
                     transition={{ duration: 0.15 }}
                   >
-                    <Navigation className="w-3 h-3" />
-                    عرض الموقع على الخريطة
+                    <Navigation className="w-4 h-4" strokeWidth={2.5} />
+                    الموقع على الخريطة
                   </motion.a>
                 </div>
               </div>
