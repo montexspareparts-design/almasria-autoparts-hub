@@ -160,6 +160,23 @@ const Navbar = () => {
                 </motion.a>
               );
             })}
+            {/* Catalogs link - wholesale dealers only */}
+            {isWholesaleDealer && (
+              <motion.div whileHover={{ y: -1 }}>
+                <Link
+                  to="/catalogs"
+                  className={`text-sm font-medium transition-colors relative group flex items-center gap-1 ${
+                    location.pathname === "/catalogs" ? "text-primary" : "text-secondary-foreground/80 hover:text-primary"
+                  }`}
+                >
+                  <BookOpen className="w-4 h-4" />
+                  كتالوجات
+                  <span className={`absolute -bottom-1 right-0 h-[2px] bg-primary rounded-full transition-all duration-300 ${
+                    location.pathname === "/catalogs" ? "w-full" : "w-0 group-hover:w-full"
+                  }`} />
+                </Link>
+              </motion.div>
+            )}
           </div>
 
           {/* Mobile right icons */}
