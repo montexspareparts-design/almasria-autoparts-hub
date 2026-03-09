@@ -322,6 +322,7 @@ ${userInterests ? `## 🎯 اهتمامات هذا العميل (بناءً عل
             const name = args.customer_name || "عميل من الشات بوت";
             const notes = args.notes || "";
 
+            // 1. Send in-app notifications to admins
             const { data: adminRoles } = await supabase
               .from("user_roles")
               .select("user_id")
@@ -330,11 +331,38 @@ ${userInterests ? `## 🎯 اهتمامات هذا العميل (بناءً عل
             if (adminRoles && adminRoles.length > 0) {
               const notifications = adminRoles.map((admin: any) => ({
                 user_id: admin.user_id,
-                title: "📞 طلب تواصل من الشات بوت",
+                title: "📞 طلب تواصل عاجل من الشات بوت",
                 message: `العميل "${name}" يطلب التواصل معه\n📱 الرقم: ${phone}\n📝 ${notes}`,
                 type: "info",
               }));
               await supabase.from("notifications").insert(notifications);
+            }
+
+            // 2. Send WhatsApp message to sales (01153961008)
+            const waMessage = `🚨 *طلب تواصل عاجل من الشات بوت*\n\n👤 الاسم: ${name}\n📱 الرقم: ${phone}\n📝 الملاحظات: ${notes}\n\n⏰ الوقت: ${new Date().toLocaleString("ar-EG", { timeZone: "Africa/Cairo" })}`;
+            try {
+              const TWILIO_SID = Deno.env.get("TWILIO_ACCOUNT_SID");
+              const TWILIO_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
+              const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER");
+              if (TWILIO_SID && TWILIO_TOKEN && TWILIO_PHONE) {
+                await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_SID}/Messages.json`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    Authorization: `Basic ${btoa(`${TWILIO_SID}:${TWILIO_TOKEN}`)}`,
+                  },
+                  body: new URLSearchParams({
+                    From: `whatsapp:${TWILIO_PHONE}`,
+                    To: "whatsapp:+201153961008",
+                    Body: waMessage,
+                  }).toString(),
+                });
+                console.log("WhatsApp notification sent to sales");
+              } else {
+                console.log("Twilio not configured, skipping WhatsApp notification");
+              }
+            } catch (waErr) {
+              console.error("WhatsApp notification error:", waErr);
             }
 
             const followUpMessages = [
