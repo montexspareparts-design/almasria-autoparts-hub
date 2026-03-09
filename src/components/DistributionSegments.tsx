@@ -57,18 +57,18 @@ const DistributionSegments = () => {
           >
             خطوط التوزيع
           </motion.span>
-          <h2 className="text-3xl md:text-4xl font-black text-foreground mb-3">
-            قطاعات <span className="text-primary">التوزيع</span>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-foreground mb-4 leading-tight">
+            خطوط <span className="text-primary">المنتجات</span>
           </h2>
           <motion.div
-            className="w-14 h-1 bg-primary mx-auto rounded-full mb-4"
+            className="w-16 h-1 bg-primary mx-auto rounded-full mb-5"
             initial={{ scaleX: 0 }}
             whileInView={{ scaleX: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.3 }}
           />
-          <p className="text-muted-foreground max-w-xl mx-auto">
-            ثلاثة خطوط رئيسية تغطي كافة احتياجات سوق قطع غيار تويوتا
+          <p className="text-foreground/70 text-base md:text-lg max-w-2xl mx-auto leading-[1.9] font-medium">
+            ثلاثة خطوط رئيسية تغطي كافة احتياجات سوق قطع غيار تويوتا في مصر
           </p>
         </motion.div>
 
