@@ -296,6 +296,11 @@ const AdminDashboard = () => {
         <div className="mt-8">
           <AdminProductImages />
         </div>
+
+        {/* AI Image Verification */}
+        <div className="mt-8">
+          <AdminImageVerifier />
+        </div>
       </div>
     </div>
   );
