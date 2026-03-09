@@ -117,8 +117,12 @@ const HeroSection = () => {
             loop
             playsInline
             preload="auto"
+            controls={false}
+            disablePictureInPicture
+            disableRemotePlayback
             onCanPlay={() => setVideoLoaded(true)}
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${videoLoaded ? "opacity-100" : "opacity-0"}`}
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 pointer-events-none ${videoLoaded ? "opacity-100" : "opacity-0"}`}
+            style={{ WebkitMediaControlsPlayButton: 'none' } as any}
           >
             <source src="/videos/hero-bg.mp4" type="video/mp4" />
           </video>
