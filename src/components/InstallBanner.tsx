@@ -55,6 +55,16 @@ const InstallBanner = () => {
         description: "يمكنك الآن فتح التطبيق من الشاشة الرئيسية",
         duration: 5000,
       });
+      // Ask for push notification permission after install
+      setTimeout(async () => {
+        const granted = await requestPushPermission();
+        if (granted) {
+          toast.success("تم تفعيل الإشعارات! 🔔", {
+            description: "هتوصلك إشعارات بالعروض والتحديثات",
+            duration: 4000,
+          });
+        }
+      }, 3000);
     };
     window.addEventListener("appinstalled", installHandler);
 
