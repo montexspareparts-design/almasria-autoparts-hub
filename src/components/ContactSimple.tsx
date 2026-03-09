@@ -46,7 +46,7 @@ const ContactSimple = () => {
             <Button
               size="lg"
               variant="outline"
-              className="text-base px-10 py-7 gap-3 font-black border-2 border-secondary-foreground/20 text-secondary-foreground hover:bg-secondary-foreground/10 hover:border-secondary-foreground/30 text-lg"
+              className="text-base px-10 py-7 gap-3 font-black border-2 border-primary/40 text-primary hover:bg-primary/10 hover:border-primary text-lg"
               asChild
             >
               <Link to="/contact">
