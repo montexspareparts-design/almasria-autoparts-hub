@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Download, X, Smartphone } from "lucide-react";
+import { Download, X, Smartphone, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -15,6 +16,7 @@ const InstallBanner = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [show, setShow] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
+  const [justInstalled, setJustInstalled] = useState(false);
 
   useEffect(() => {
     // Already installed
@@ -43,7 +45,22 @@ const InstallBanner = () => {
     };
 
     window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+
+    // Listen for successful installation
+    const installHandler = () => {
+      setShow(false);
+      setJustInstalled(true);
+      toast.success("تم تثبيت التطبيق بنجاح! 🎉", {
+        description: "يمكنك الآن فتح التطبيق من الشاشة الرئيسية",
+        duration: 5000,
+      });
+    };
+    window.addEventListener("appinstalled", installHandler);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handler);
+      window.removeEventListener("appinstalled", installHandler);
+    };
   }, []);
 
   const handleInstall = async () => {
