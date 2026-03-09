@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, Loader2, Trash2, Share2, ImagePlus, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
-import chatbotIcon from "@/assets/chatbot-icon.png";
+import { Bot, X, Send, Loader2, Trash2, Share2, ImagePlus, Mic, MicOff, Volume2, VolumeX, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
@@ -16,21 +15,74 @@ type Message = { role: "user" | "assistant"; content: MessageContent; imagePrevi
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
+// Branch coordinates
+const BRANCHES = [
+  {
+    name: "فرع القاهرة – التوفيقية",
+    lat: 30.0561,
+    lng: 31.2394,
+    phone: "01153961008",
+    mapUrl: "https://maps.app.goo.gl/B3Kb6At4dnfGy28T9",
+    serves: "القاهرة، القليوبية، الشرقية، الدقهلية، الإسكندرية، والدلتا"
+  },
+  {
+    name: "فرع الجيزة – أوسيم",
+    lat: 30.1269,
+    lng: 31.1356,
+    phone: "01020412358",
+    mapUrl: "https://maps.app.goo.gl/trZ9Q4ZhnwtsFXTB8",
+    serves: "الجيزة، الفيوم، بني سويف، المنيا، والصعيد الأدنى"
+  },
+  {
+    name: "فرع الأقصر – صعيد مصر",
+    lat: 25.6872,
+    lng: 32.6396,
+    phone: "01020412358",
+    mapUrl: "https://maps.app.goo.gl/c9B4yDBY2QHWPKcT8",
+    serves: "الأقصر، أسوان، قنا، سوهاج، وصعيد مصر"
+  }
+];
+
 const QUICK_QUESTIONS_LOGGED_IN = [
   "عندكم فلتر زيت لكورولا 2020؟",
   "محتاج باقة صيانة دورية",
-  "عايز أعرف أقرب فرع ليا",
+  "📍 أقرب فرع ليا",
 ];
 
 const QUICK_QUESTIONS_GUEST = [
   "إيه الماركات المتوفرة عندكم؟",
-  "عايز أعرف أقرب فرع ليا",
+  "📍 أقرب فرع ليا",
   "بتشحنوا لكل المحافظات؟",
 ];
 
 const getTextContent = (content: MessageContent): string => {
   if (typeof content === "string") return content;
   return content.filter((c) => c.type === "text").map((c) => (c as any).text).join("");
+};
+
+// Calculate distance between two coordinates (Haversine formula)
+const getDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
+// Find nearest branch
+const findNearestBranch = (userLat: number, userLng: number) => {
+  let nearest = BRANCHES[0];
+  let minDist = getDistance(userLat, userLng, nearest.lat, nearest.lng);
+  
+  for (const branch of BRANCHES) {
+    const dist = getDistance(userLat, userLng, branch.lat, branch.lng);
+    if (dist < minDist) {
+      minDist = dist;
+      nearest = branch;
+    }
+  }
+  
+  return { branch: nearest, distance: Math.round(minDist) };
 };
 
 // Speech Recognition setup
@@ -40,6 +92,25 @@ const AIChatBot = () => {
   const { user } = useAuth();
   const { consent, interests, getTopCategories, getTopBrands } = usePersonalization();
   const [isOpen, setIsOpen] = useState(false);
+  const [hasShownIntro, setHasShownIntro] = useState(false);
+
+  // Auto-show chatbot for guests after 5 seconds
+  useEffect(() => {
+    const shown = sessionStorage.getItem("chatbot_shown");
+    if (!shown && !user) {
+      const timer = setTimeout(() => {
+        setIsOpen(true);
+        setHasShownIntro(true);
+        sessionStorage.setItem("chatbot_shown", "true");
+        // Add intro message
+        setMessages([{
+          role: "assistant",
+          content: "أهلاً بيك في المصرية جروب! 👋\n\nأنا مساعدك الذكي، هساعدك تلاقي قطع الغيار الأصلية والبديلة لعربيتك.\n\n🔹 اسألني عن أي قطعة غيار\n🔹 ابعتلي صورة القطعة وأعرّفهالك\n🔹 اعرف أقرب فرع ليك\n\nإزاي أقدر أساعدك النهاردة؟"
+        }]);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [user]);
 
   // Listen for global open event
   useEffect(() => {
@@ -65,6 +136,7 @@ const AIChatBot = () => {
   const [pendingImage, setPendingImage] = useState<string | null>(null);
   const [isListening, setIsListening] = useState(false);
   const [speakingMsgIndex, setSpeakingMsgIndex] = useState<number | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -96,6 +168,53 @@ const AIChatBot = () => {
       }
     }
   }, [isOpen, isListening]);
+
+  // ---- Find Nearest Branch with Geolocation ----
+  const findNearestBranchByLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      toast.error("المتصفح لا يدعم تحديد الموقع");
+      return;
+    }
+
+    setIsLocating(true);
+    
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const { branch, distance } = findNearestBranch(latitude, longitude);
+        
+        const response = `📍 **أقرب فرع ليك:**\n\n` +
+          `**${branch.name}**\n` +
+          `📞 ${branch.phone}\n` +
+          `📍 المسافة: حوالي ${distance} كم\n` +
+          `🗺️ [افتح الخريطة](${branch.mapUrl})\n\n` +
+          `**بيخدم**: ${branch.serves}\n\n` +
+          `⏰ مواعيد العمل: 9 صباحًا - 7 مساءً\n` +
+          `🚚 كمان بنوصّل لجميع المحافظات خلال 24-72 ساعة!`;
+        
+        setMessages(prev => [
+          ...prev,
+          { role: "user", content: "📍 أقرب فرع ليا" },
+          { role: "assistant", content: response }
+        ]);
+        setIsLocating(false);
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        setIsLocating(false);
+        
+        if (error.code === error.PERMISSION_DENIED) {
+          toast.error("يرجى السماح بالوصول للموقع من إعدادات المتصفح");
+        } else {
+          toast.error("تعذر تحديد موقعك، حاول مرة تانية");
+        }
+        
+        // Fallback: send to chat to ask manually
+        sendMessage("عايز أعرف أقرب فرع ليا");
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, []);
 
   // ---- Voice Input (STT) ----
   const toggleListening = useCallback(() => {
@@ -148,17 +267,14 @@ const AIChatBot = () => {
   const speakMessage = useCallback((text: string, msgIndex: number) => {
     const synth = synthRef.current;
 
-    // If already speaking this message, stop it
     if (speakingMsgIndex === msgIndex) {
       synth.cancel();
       setSpeakingMsgIndex(null);
       return;
     }
 
-    // Cancel any current speech
     synth.cancel();
 
-    // Clean markdown from text
     const cleanText = text
       .replace(/[#*_~`>|[\](){}]/g, "")
       .replace(/\n+/g, ". ")
@@ -172,7 +288,6 @@ const AIChatBot = () => {
     utterance.rate = 1;
     utterance.pitch = 1;
 
-    // Try to find an Arabic voice
     const voices = synth.getVoices();
     const arabicVoice = voices.find((v: SpeechSynthesisVoice) => v.lang.startsWith("ar"));
     if (arabicVoice) utterance.voice = arabicVoice;
@@ -270,6 +385,13 @@ const AIChatBot = () => {
   const sendMessage = async (text: string) => {
     if ((!text.trim() && !pendingImage) || isLoading) return;
 
+    // Check if asking for nearest branch - use geolocation
+    const branchKeywords = ["أقرب فرع", "فرع قريب", "أقرب فرع ليا", "فين فروعكم"];
+    if (branchKeywords.some(kw => text.includes(kw))) {
+      findNearestBranchByLocation();
+      return;
+    }
+
     // Stop listening if active
     if (isListening) {
       recognitionRef.current?.stop();
@@ -320,7 +442,7 @@ const AIChatBot = () => {
             className="fixed bottom-20 left-4 md:bottom-24 md:left-6 z-50 w-12 h-12 md:w-14 md:h-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
             aria-label="فتح المساعد الذكي"
           >
-            <img src={chatbotIcon} alt="المساعد الذكي" className="w-8 h-8 md:w-9 md:h-9 object-contain" />
+            <Bot className="w-7 h-7" />
           </motion.button>
         )}
       </AnimatePresence>
@@ -337,7 +459,7 @@ const AIChatBot = () => {
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 bg-primary text-primary-foreground">
               <div className="flex items-center gap-2">
-                <img src={chatbotIcon} alt="المساعد" className="w-6 h-6 object-contain" />
+                <Bot className="w-5 h-5" />
                 <div>
                   <p className="font-bold text-sm">المساعد الذكي</p>
                   <p className="text-[10px] opacity-80">المصرية جروب - قطع غيار</p>
@@ -378,8 +500,8 @@ const AIChatBot = () => {
             <div className="flex-1 overflow-y-auto p-4 space-y-3" dir="rtl">
               {messages.length === 0 && (
                 <div className="text-center space-y-4 pt-4">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto p-2">
-                    <img src={chatbotIcon} alt="المساعد الذكي" className="w-12 h-12 object-contain" />
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                    <Bot className="w-8 h-8 text-primary" />
                   </div>
                   {user ? (
                     <div>
@@ -465,10 +587,17 @@ const AIChatBot = () => {
                 </div>
               ))}
 
-              {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
+              {(isLoading || isLocating) && messages[messages.length - 1]?.role !== "assistant" && (
                 <div className="flex justify-end">
                   <div className="bg-muted rounded-2xl rounded-bl-sm px-4 py-3">
-                    <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                    {isLocating ? (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <MapPin className="w-4 h-4 animate-pulse" />
+                        <span>جاري تحديد موقعك...</span>
+                      </div>
+                    ) : (
+                      <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                    )}
                   </div>
                 </div>
               )}
@@ -497,7 +626,7 @@ const AIChatBot = () => {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={isLoading}
+                  disabled={isLoading || isLocating}
                   className="shrink-0 w-9 h-9 rounded-xl bg-muted flex items-center justify-center hover:bg-accent/20 transition-colors disabled:opacity-50"
                   title="إرفاق صورة"
                 >
@@ -508,7 +637,7 @@ const AIChatBot = () => {
                 <button
                   type="button"
                   onClick={toggleListening}
-                  disabled={isLoading}
+                  disabled={isLoading || isLocating}
                   className={`shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-colors disabled:opacity-50 ${
                     isListening
                       ? "bg-destructive text-destructive-foreground animate-pulse"
@@ -524,10 +653,10 @@ const AIChatBot = () => {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder={isListening ? "🎤 بتكلم..." : pendingImage ? "أضف وصف للصورة (اختياري)..." : "اكتب سؤالك هنا..."}
-                  disabled={isLoading}
+                  disabled={isLoading || isLocating}
                   className="flex-1 bg-muted rounded-xl px-3 py-2 text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50"
                 />
-                <Button type="submit" size="icon" disabled={(!input.trim() && !pendingImage) || isLoading} className="rounded-xl shrink-0">
+                <Button type="submit" size="icon" disabled={(!input.trim() && !pendingImage) || isLoading || isLocating} className="rounded-xl shrink-0">
                   <Send className="w-4 h-4" />
                 </Button>
               </form>
