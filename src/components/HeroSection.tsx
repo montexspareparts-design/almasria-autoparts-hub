@@ -110,7 +110,7 @@ const HeroSection = () => {
       <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent z-[1]" />
       <div className="absolute inset-0 z-[1]" style={{ background: "radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.55) 100%)" }} />
 
-      <motion.div className="absolute inset-0 z-[2] opacity-[0.03]" style={{ backgroundImage: `linear-gradient(hsl(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)`, backgroundSize: "60px 60px" }} initial={{ opacity: 0 }} animate={{ opacity: 0.03 }} transition={{ duration: 2, delay: 0.5 }} />
+      <div className="absolute inset-0 z-[2] opacity-[0.03]" style={{ backgroundImage: `linear-gradient(hsl(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)`, backgroundSize: "60px 60px" }} />
 
       <div className="absolute inset-0 z-[3] hidden md:block">
         {floatingParts.map((part, i) => <FloatingParticle key={i} part={part} />)}
