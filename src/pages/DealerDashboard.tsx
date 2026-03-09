@@ -77,16 +77,16 @@ const DealerDashboard = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="bg-secondary border-b border-primary/20">
-        <div className="container mx-auto px-4 flex items-center justify-between h-16">
-          <a href="/" className="text-xl font-bold text-secondary-foreground">
+        <div className="container mx-auto px-4 flex items-center justify-between h-14 md:h-16 gap-2">
+          <a href="/" className="text-lg md:text-xl font-bold text-secondary-foreground shrink-0">
             المصرية <span className="text-gradient-red">جروب</span>
           </a>
-          <div className="flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-full px-4 py-1.5">
+          <div className="hidden sm:flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-full px-3 md:px-4 py-1.5">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            <span className="text-sm font-semibold text-primary">حساب خاص لعملاء الجملة</span>
+            <span className="text-xs md:text-sm font-semibold text-primary">حساب خاص لعملاء الجملة</span>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-secondary-foreground/60 hidden md:inline">
+          <div className="flex items-center gap-2 md:gap-3 shrink-0">
+            <span className="text-xs md:text-sm text-secondary-foreground/60 hidden md:inline truncate max-w-[150px]">
               {user?.email}
             </span>
             <Button variant="ghost" size="sm" onClick={() => { signOut(); navigate("/"); }} className="text-secondary-foreground/60">
@@ -96,8 +96,8 @@ const DealerDashboard = () => {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-foreground mb-6">لوحة تحكم التاجر</h1>
+      <div className="container mx-auto px-4 py-5 md:py-8">
+        <h1 className="text-xl md:text-2xl font-bold text-foreground mb-5 md:mb-6">لوحة تحكم التاجر</h1>
 
         {/* Account Status */}
         {!isDealer && application && (
@@ -133,16 +133,16 @@ const DealerDashboard = () => {
         {/* Dealer Info */}
         {isDealer && dealerAccount && (
           <Card className="mb-6 bg-primary/5 border-primary/30">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
+            <CardContent className="p-4 md:p-6">
+              <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">فئة الحساب</p>
-                  <p className="text-lg font-bold text-primary">{tierLabels[dealerAccount.tier] || dealerAccount.tier}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">فئة الحساب</p>
+                  <p className="text-base md:text-lg font-bold text-primary">{tierLabels[dealerAccount.tier] || dealerAccount.tier}</p>
                 </div>
                 {dealerAccount.custom_discount && dealerAccount.custom_discount > 0 && (
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground">خصم خاص</p>
-                    <p className="text-lg font-bold text-primary">{dealerAccount.custom_discount}%</p>
+                  <div className="text-center shrink-0">
+                    <p className="text-xs md:text-sm text-muted-foreground">خصم خاص</p>
+                    <p className="text-base md:text-lg font-bold text-primary">{dealerAccount.custom_discount}%</p>
                   </div>
                 )}
               </div>
@@ -151,7 +151,7 @@ const DealerDashboard = () => {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
           {[
             { icon: ShoppingCart, label: "الطلبات", value: orders.length.toString() },
             { icon: Package, label: "المنتجات المتاحة", value: "5000+" },
@@ -159,10 +159,10 @@ const DealerDashboard = () => {
             { icon: Tag, label: "العروض الحصرية", value: "قريباً" },
           ].map((s, i) => (
             <Card key={i}>
-              <CardContent className="p-4 text-center">
-                <s.icon className="w-8 h-8 text-primary mx-auto mb-2" />
-                <p className="text-2xl font-bold text-foreground">{s.value}</p>
-                <p className="text-xs text-muted-foreground">{s.label}</p>
+              <CardContent className="p-3 md:p-4 text-center">
+                <s.icon className="w-6 h-6 md:w-8 md:h-8 text-primary mx-auto mb-1.5 md:mb-2" />
+                <p className="text-xl md:text-2xl font-bold text-foreground">{s.value}</p>
+                <p className="text-[10px] md:text-xs text-muted-foreground">{s.label}</p>
               </CardContent>
             </Card>
           ))}
@@ -179,14 +179,14 @@ const DealerDashboard = () => {
             ) : (
               <div className="space-y-3">
                 {orders.slice(0, 5).map((order) => (
-                  <div key={order.id} className="flex items-center justify-between border-b border-border pb-3">
-                    <div>
-                      <p className="font-medium text-foreground">{order.order_number}</p>
-                      <p className="text-sm text-muted-foreground">{new Date(order.created_at).toLocaleDateString("ar-EG")}</p>
+                  <div key={order.id} className="flex items-center justify-between border-b border-border pb-3 gap-3">
+                    <div className="min-w-0">
+                      <p className="font-medium text-foreground text-sm md:text-base truncate">{order.order_number}</p>
+                      <p className="text-xs md:text-sm text-muted-foreground">{new Date(order.created_at).toLocaleDateString("ar-EG")}</p>
                     </div>
-                    <div className="text-left">
-                      <p className="font-bold text-foreground">{order.total_amount} ج.م</p>
-                      <p className="text-xs text-muted-foreground">{order.status}</p>
+                    <div className="text-left shrink-0">
+                      <p className="font-bold text-foreground text-sm md:text-base">{order.total_amount} ج.م</p>
+                      <p className="text-[10px] md:text-xs text-muted-foreground">{order.status}</p>
                     </div>
                   </div>
                 ))}
@@ -207,17 +207,17 @@ const DealerDashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6">
-          <Button variant="outline" className="h-auto py-4 flex flex-col gap-2" onClick={() => navigate("/")}>
-            <Package className="w-6 h-6" />
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mt-6">
+          <Button variant="outline" className="h-auto py-3 md:py-4 flex flex-col gap-1.5 md:gap-2 text-xs md:text-sm" onClick={() => navigate("/")}>
+            <Package className="w-5 h-5 md:w-6 md:h-6" />
             <span>تصفح المنتجات</span>
           </Button>
-          <Button variant="outline" className="h-auto py-4 flex flex-col gap-2">
-            <FileText className="w-6 h-6" />
+          <Button variant="outline" className="h-auto py-3 md:py-4 flex flex-col gap-1.5 md:gap-2 text-xs md:text-sm">
+            <FileText className="w-5 h-5 md:w-6 md:h-6" />
             <span>طلب تسعير خاص</span>
           </Button>
-          <Button variant="outline" className="h-auto py-4 flex flex-col gap-2">
-            <Tag className="w-6 h-6" />
+          <Button variant="outline" className="h-auto py-3 md:py-4 flex flex-col gap-1.5 md:gap-2 text-xs md:text-sm col-span-2 md:col-span-1">
+            <Tag className="w-5 h-5 md:w-6 md:h-6" />
             <span>العروض الحصرية</span>
           </Button>
         </div>
