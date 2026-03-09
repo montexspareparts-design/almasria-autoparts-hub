@@ -76,7 +76,7 @@ const KeyMetrics = () => {
   const inView = useInView(ref, { once: true, margin: "-80px" });
 
   return (
-    <section className="py-20 md:py-28 bg-muted/30 overflow-hidden">
+    <section className="relative py-20 md:py-28 bg-muted/30 overflow-hidden section-glow">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
