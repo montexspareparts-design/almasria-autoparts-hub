@@ -150,8 +150,8 @@ function MetricCard({
           >
             {displayValue}
           </motion.p>
-          <p className="text-sm font-bold text-foreground mb-1">{m.title}</p>
-          <p className="text-xs text-muted-foreground leading-[1.7]">{m.desc}</p>
+          <p className="text-sm font-black text-foreground mb-1.5">{m.title}</p>
+          <p className="text-sm text-foreground/70 leading-[1.8] font-medium">{m.desc}</p>
         </div>
       </Link>
     </motion.div>

@@ -5,22 +5,22 @@ const reasons = [
   {
     icon: ShieldCheck,
     title: "قطع غيار تويوتا الأصلية",
-    desc: "جميع منتجاتنا أصلية بنسبة 100% من تويوتا مباشرة، مع ضمان وكالة على كل قطعة.",
+    desc: "جميع منتجاتنا أصلية بنسبة 100% من تويوتا مباشرة، مع ضمان وكالة على كل قطعة",
   },
   {
     icon: Banknote,
     title: "أسعار تنافسية",
-    desc: "أسعار منضبطة وعادلة لتجار الجملة والشركات ومراكز الصيانة، مع خصومات حسب الفئة.",
+    desc: "أسعار منضبطة وعادلة لتجار الجملة والشركات ومراكز الصيانة، مع خصومات حسب الفئة",
   },
   {
     icon: Truck,
     title: "توصيل سريع",
-    desc: "تسليم خلال 48 ساعة لجميع محافظات مصر عبر منظومة لوجستية مركزية.",
+    desc: "تسليم خلال 48 ساعة لجميع محافظات مصر عبر منظومة لوجستية مركزية",
   },
   {
     icon: Headphones,
     title: "دعم فني متخصص",
-    desc: "فريق متخصص يساعدك في تحديد القطعة المطابقة عبر رقم الشاسيه أو صورة القطعة.",
+    desc: "فريق متخصص يساعدك في تحديد القطعة المطابقة عبر رقم الشاسيه أو صورة القطعة",
   },
 ];
 
@@ -54,7 +54,7 @@ const WhyChooseUs = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.3 }}
           />
-          <p className="text-muted-foreground text-base max-w-lg mx-auto">
+          <p className="text-foreground/70 text-base md:text-lg max-w-2xl mx-auto leading-[1.9] font-medium">
             أربعة أسباب تجعل المصرية جروب الخيار الأول لتجار وموزعي قطع غيار تويوتا
           </p>
         </motion.div>
@@ -92,8 +92,8 @@ const WhyChooseUs = () => {
                 >
                   <r.icon className="w-6 h-6 text-primary" strokeWidth={1.8} />
                 </motion.div>
-                <h3 className="font-bold text-foreground text-sm mb-2">{r.title}</h3>
-                <p className="text-muted-foreground text-xs leading-[1.8]">{r.desc}</p>
+                <h3 className="font-black text-foreground text-base mb-2.5">{r.title}</h3>
+                <p className="text-foreground/70 text-sm leading-[1.9] font-medium">{r.desc}</p>
               </div>
             </motion.div>
           ))}

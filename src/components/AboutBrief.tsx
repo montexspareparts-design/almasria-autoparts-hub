@@ -118,28 +118,28 @@ const AboutBrief = () => {
             {[
               <>
                 تعمل المصرية جروب منذ{" "}
-                <strong className="text-foreground font-black">1999</strong> كموزّع معتمد لِـ{" "}
-                <Link to="/products/toyota-genuine" className="text-primary font-bold hover:underline underline-offset-4">
+                <strong className="text-primary font-black">1999</strong> كموزّع معتمد لِـ{" "}
+                <Link to="/products/toyota-genuine" className="text-primary font-bold hover:underline underline-offset-4 decoration-2">
                   قطع غيار تويوتا الأصلية
                 </Link>{" "}
                 و
-                <Link to="/products/toyota-oils" className="text-primary font-bold hover:underline underline-offset-4">
+                <Link to="/products/toyota-oils" className="text-primary font-bold hover:underline underline-offset-4 decoration-2">
                   زيوت تويوتا
                 </Link>.
                 نعتمد نموذج تشغيل منضبط قائم على{" "}
-                <strong className="text-foreground">أنظمة إدارة رقمية متكاملة</strong>{" "}
+                <strong className="text-foreground font-bold">أنظمة إدارة رقمية متكاملة</strong>{" "}
                 وشبكة توزيع تغطي الجمهورية.
               </>,
               <>
                 نوفر{" "}
-                <strong className="text-foreground">توصيلًا سريعًا خلال 48&nbsp;ساعة</strong>{" "}
+                <strong className="text-primary font-black">توصيلًا سريعًا خلال 48&nbsp;ساعة</strong>{" "}
                 عبر مخازن مركزية عالية الكفاءة، مع{" "}
-                <strong className="text-foreground">وجود إقليمي في دبي</strong>{" "}
+                <strong className="text-primary font-black">وجود إقليمي في دبي</strong>{" "}
                 يدعم استمرارية التوريد وجودة المنتجات.
               </>,
               <>
                 كما ندير علامة{" "}
-                <Link to="/mtx" className="text-primary font-bold hover:underline underline-offset-4">
+                <Link to="/mtx" className="text-primary font-bold hover:underline underline-offset-4 decoration-2">
                   MTX
                 </Link>{" "}
                 لقطع الغيار البديلة بجودة تضاهي المواصفات الأصلية.
@@ -147,7 +147,7 @@ const AboutBrief = () => {
             ].map((text, i) => (
               <motion.p
                 key={i}
-                className="text-muted-foreground text-base md:text-lg leading-[1.9] mb-5"
+                className="text-foreground/80 text-base md:text-lg leading-[2] mb-5 font-medium"
                 initial={{ opacity: 0, y: 12 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
