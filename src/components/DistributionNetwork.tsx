@@ -29,18 +29,18 @@ const DistributionNetwork = () => {
           >
             شبكة التوزيع
           </motion.span>
-          <h2 className="text-3xl md:text-4xl font-black text-secondary-foreground mb-3">
-            الانتشار <span className="text-primary">والفروع</span>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-secondary-foreground mb-4 leading-tight">
+            شبكة <span className="text-primary">التوزيع</span>
           </h2>
           <motion.div
-            className="w-14 h-1 bg-primary mx-auto rounded-full mb-4"
+            className="w-16 h-1 bg-primary mx-auto rounded-full mb-5"
             initial={{ scaleX: 0 }}
             whileInView={{ scaleX: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.3 }}
           />
-          <p className="text-secondary-foreground/50 text-base max-w-xl mx-auto">
-            تغطية وطنية وشحن لجميع محافظات مصر عبر مخازن مركزية ومنظومة لوجستية منظمة.
+          <p className="text-secondary-foreground/60 text-base md:text-lg max-w-2xl mx-auto leading-[1.9] font-medium">
+            تغطية وطنية شاملة وشحن لجميع المحافظات عبر مخازن مركزية ومنظومة لوجستية احترافية
           </p>
         </motion.div>
 
