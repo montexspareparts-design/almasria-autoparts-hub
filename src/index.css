@@ -163,3 +163,15 @@
     display: none !important;
   }
 }
+
+@keyframes float-particle {
+  0%, 100% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0.3; }
+  25% { transform: translateY(-20px) translateX(10px) rotate(90deg); opacity: 0.5; }
+  50% { transform: translateY(5px) translateX(-8px) rotate(180deg); opacity: 0.35; }
+  75% { transform: translateY(-15px) translateX(5px) rotate(270deg); opacity: 0.55; }
+}
+
+.animate-float-particle {
+  animation: float-particle linear infinite;
+  will-change: transform, opacity;
+}

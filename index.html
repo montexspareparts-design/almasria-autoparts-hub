@@ -83,7 +83,6 @@
       </style>
     </div>
     <script>
-      // Hide splash after app loads
       window.addEventListener('DOMContentLoaded', function() {
         setTimeout(function() {
           var splash = document.getElementById('splash-screen');
@@ -91,7 +90,7 @@
             splash.style.opacity = '0';
             setTimeout(function() { splash.remove(); }, 500);
           }
-        }, 1500);
+        }, 800);
       });
     </script>
     <div id="root"></div>
