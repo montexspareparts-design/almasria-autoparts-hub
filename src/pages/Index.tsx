@@ -94,7 +94,7 @@ const Index = () => {
       <Suspense fallback={null}><Footer /></Suspense>
       <Suspense fallback={null}><WhatsAppFloat /></Suspense>
       <Suspense fallback={null}><BackToTop /></Suspense>
-      <Suspense fallback={null}><AIChatBot /></Suspense>
+      
     </div>
   );
 };
