@@ -53,8 +53,8 @@ const ProductsShowcase = () => {
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
 
-      {/* Floating gears */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
+      {/* Floating gears - hidden on mobile */}
+      <div className="absolute inset-0 z-0 pointer-events-none hidden md:block">
         {floatingGears.map((gear, i) => (
           <motion.div
             key={`gear-${i}`}
