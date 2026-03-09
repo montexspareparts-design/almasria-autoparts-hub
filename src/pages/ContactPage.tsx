@@ -159,8 +159,7 @@ const ContactPage = () => {
                     </div>
                   </div>
                 </motion.a>
-              );
-            })}
+              ))}
           </div>
         </div>
       </section>
