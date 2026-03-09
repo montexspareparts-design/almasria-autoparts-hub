@@ -5,24 +5,24 @@ import { Link } from "react-router-dom";
 const segments = [
   {
     icon: Package,
-    title: "عملاء الجملة",
-    desc: "توريد منتظم، أسعار منضبطة، ومخزون جاهز مع تسليم خلال 48\u00A0ساعة على مستوى الجمهورية.",
+    title: "تجار الجملة",
+    desc: "توريد منتظم بأسعار منضبطة ومخزون جاهز مع تسليم خلال 48 ساعة على مستوى الجمهورية",
     cta: "اعرف المزيد",
     ctaTo: "/clients/wholesale",
     ariaLabel: "تفاصيل خدماتنا لعملاء الجملة",
   },
   {
     icon: Building2,
-    title: "الشركات والهيئات الحكومية",
-    desc: "عقود توريد مخصّصة، فواتير منظمة، ودعم لوجستي يلائم الأساطيل والمشروعات.",
+    title: "الشركات والأساطيل",
+    desc: "عقود توريد مخصّصة وفواتير منظمة ودعم لوجستي يلائم الأساطيل والمشروعات الكبرى",
     cta: "اعرف المزيد",
     ctaTo: "/clients/corporate",
     ariaLabel: "تفاصيل خدماتنا للشركات والهيئات",
   },
   {
     icon: Wrench,
-    title: "عملاء القطاعي",
-    desc: "قطع غيار تويوتا الأصلية وزيوت تويوتا ومنتجات MTX بجودة تضاهي المواصفات، مع تغطية وطنية.",
+    title: "مراكز الصيانة",
+    desc: "قطع غيار تويوتا الأصلية وزيوت تويوتا ومنتجات MTX بجودة تضاهي المواصفات مع تغطية وطنية",
     cta: "اعرف المزيد",
     ctaTo: "/clients/retail",
     ariaLabel: "تفاصيل خدماتنا لعملاء القطاعي",
@@ -40,18 +40,18 @@ const WhoWeServe = () => {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-14"
         >
-          <h2 className="text-3xl md:text-4xl font-black text-foreground mb-3">
-            <span className="text-primary">عملائنا</span>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-foreground mb-4 leading-tight">
+            من <span className="text-primary">نخدم</span>
           </h2>
           <motion.div
-            className="w-14 h-1 bg-primary mx-auto rounded-full mb-4"
+            className="w-16 h-1 bg-primary mx-auto rounded-full mb-5"
             initial={{ scaleX: 0 }}
             whileInView={{ scaleX: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.3 }}
           />
-          <p className="text-muted-foreground text-base md:text-lg">
-            حلول توزيع مرنة ودعم توريد موثوق يلائم أحجام وأنماط أعمال مختلفة.
+          <p className="text-foreground/70 text-base md:text-lg max-w-2xl mx-auto leading-[1.9] font-medium">
+            حلول توزيع مرنة ودعم توريد موثوق يلائم احتياجات أعمال مختلفة
           </p>
         </motion.div>
 
@@ -78,28 +78,28 @@ const WhoWeServe = () => {
               <Link
                 to={s.ctaTo}
                 aria-label={s.ariaLabel}
-                className="group relative bg-card border border-border rounded-xl p-7 text-center flex flex-col items-center hover:border-primary/30 transition-all duration-300 h-full overflow-hidden"
+                className="group relative bg-card border-2 border-border rounded-2xl p-8 text-center flex flex-col items-center hover:border-primary/40 transition-all duration-300 h-full overflow-hidden shadow-sm hover:shadow-xl hover:shadow-primary/10"
               >
                 {/* Hover gradient */}
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                 <div className="relative z-10 flex flex-col items-center">
                   <motion.div
-                    className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center mb-5 group-hover:bg-primary/20 transition-colors"
-                    whileHover={{ rotate: [0, -10, 10, -5, 0] }}
-                    transition={{ duration: 0.5 }}
+                    className="w-16 h-16 bg-gradient-to-br from-primary/15 to-primary/5 rounded-2xl flex items-center justify-center mb-6 group-hover:from-primary/25 group-hover:to-primary/10 transition-all duration-300 shadow-lg shadow-primary/10"
+                    whileHover={{ rotate: [0, -8, 8, -8, 0], scale: 1.1 }}
+                    transition={{ duration: 0.6 }}
                   >
-                    <s.icon className="w-7 h-7 text-primary" strokeWidth={1.8} />
+                    <s.icon className="w-8 h-8 text-primary" strokeWidth={2} />
                   </motion.div>
-                  <p className="text-lg font-semibold text-foreground mb-2">{s.title}</p>
-                  <p className="text-muted-foreground text-sm leading-[1.7] max-w-[260px] mb-5">{s.desc}</p>
-                  <span className="inline-flex items-center gap-1.5 text-primary text-sm font-bold group-hover:gap-3 transition-all">
+                  <h3 className="text-xl font-black text-foreground mb-3">{s.title}</h3>
+                  <p className="text-foreground/70 text-sm leading-[1.9] max-w-[280px] mb-6 font-medium">{s.desc}</p>
+                  <span className="inline-flex items-center gap-2 text-primary text-sm font-black group-hover:gap-3.5 transition-all">
                     {s.cta}
                     <motion.span
-                      animate={{ x: [0, -3, 0] }}
+                      animate={{ x: [0, -4, 0] }}
                       transition={{ repeat: Infinity, duration: 1.6, ease: "easeInOut" }}
                     >
-                      <ChevronLeft className="w-4 h-4" />
+                      <ChevronLeft className="w-4 h-4" strokeWidth={2.5} />
                     </motion.span>
                   </span>
                 </div>

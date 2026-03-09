@@ -29,18 +29,18 @@ const DistributionNetwork = () => {
           >
             شبكة التوزيع
           </motion.span>
-          <h2 className="text-3xl md:text-4xl font-black text-secondary-foreground mb-3">
-            الانتشار <span className="text-primary">والفروع</span>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-secondary-foreground mb-4 leading-tight">
+            شبكة <span className="text-primary">التوزيع</span>
           </h2>
           <motion.div
-            className="w-14 h-1 bg-primary mx-auto rounded-full mb-4"
+            className="w-16 h-1 bg-primary mx-auto rounded-full mb-5"
             initial={{ scaleX: 0 }}
             whileInView={{ scaleX: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.3 }}
           />
-          <p className="text-secondary-foreground/50 text-base max-w-xl mx-auto">
-            تغطية وطنية وشحن لجميع محافظات مصر عبر مخازن مركزية ومنظومة لوجستية منظمة.
+          <p className="text-secondary-foreground/60 text-base md:text-lg max-w-2xl mx-auto leading-[1.9] font-medium">
+            تغطية وطنية شاملة وشحن لجميع المحافظات عبر مخازن مركزية ومنظومة لوجستية احترافية
           </p>
         </motion.div>
 
@@ -63,32 +63,32 @@ const DistributionNetwork = () => {
                 borderColor: "hsl(var(--primary) / 0.35)",
                 transition: { duration: 0.2 },
               }}
-              className="group bg-secondary-foreground/[0.04] border border-secondary-foreground/10 rounded-xl p-5 transition-all duration-300 relative overflow-hidden"
+              className="group bg-secondary-foreground/[0.06] border-2 border-secondary-foreground/15 rounded-2xl p-6 transition-all duration-300 relative overflow-hidden hover:bg-secondary-foreground/[0.08] shadow-sm hover:shadow-lg"
             >
               {/* Hover shine */}
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/8 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               
-              <div className="relative z-10 flex items-start gap-3">
+              <div className="relative z-10 flex items-start gap-4">
                 <motion.div
-                  className="w-10 h-10 bg-primary/15 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-primary/25 transition-colors"
-                  whileHover={{ rotate: [0, -8, 8, 0] }}
-                  transition={{ duration: 0.4 }}
+                  className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-primary/30 transition-colors shadow-md shadow-primary/10"
+                  whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
+                  transition={{ duration: 0.5 }}
                 >
-                  <b.icon className="w-5 h-5 text-primary" />
+                  <b.icon className="w-6 h-6 text-primary" strokeWidth={2} />
                 </motion.div>
                 <div>
-                  <h3 className="font-bold text-secondary-foreground text-sm">{b.name}</h3>
-                  <p className="text-xs text-secondary-foreground/50 mt-1">{b.detail}</p>
+                  <h3 className="font-black text-secondary-foreground text-base mb-1">{b.name}</h3>
+                  <p className="text-sm text-secondary-foreground/60 mt-1.5 font-medium">{b.detail}</p>
                   <motion.a
                     href={b.mapUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 mt-2 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
-                    whileHover={{ x: -3 }}
+                    className="inline-flex items-center gap-1.5 mt-3 text-sm font-black text-primary hover:text-primary/80 transition-colors"
+                    whileHover={{ x: -4 }}
                     transition={{ duration: 0.15 }}
                   >
-                    <Navigation className="w-3 h-3" />
-                    عرض الموقع على الخريطة
+                    <Navigation className="w-4 h-4" strokeWidth={2.5} />
+                    الموقع على الخريطة
                   </motion.a>
                 </div>
               </div>
@@ -106,25 +106,25 @@ const DistributionNetwork = () => {
               scale: 1.02,
               transition: { duration: 0.2 },
             }}
-            className="bg-primary/10 border border-primary/25 rounded-xl p-5 flex items-center gap-3 relative overflow-hidden group"
+            className="bg-primary/15 border-2 border-primary/35 rounded-2xl p-6 flex items-center gap-4 relative overflow-hidden group shadow-lg shadow-primary/20"
           >
             {/* Animated pulse bg */}
             <motion.div
-              className="absolute inset-0 bg-primary/5 rounded-xl"
-              animate={{ opacity: [0, 0.5, 0] }}
+              className="absolute inset-0 bg-primary/10 rounded-2xl"
+              animate={{ opacity: [0, 0.6, 0] }}
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             />
-            <div className="relative z-10 flex items-center gap-3">
+            <div className="relative z-10 flex items-center gap-4">
               <motion.div
-                className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center flex-shrink-0"
-                animate={{ y: [0, -2, 0] }}
+                className="w-12 h-12 bg-primary/30 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary/20"
+                animate={{ y: [0, -3, 0] }}
                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
               >
-                <Truck className="w-5 h-5 text-primary" />
+                <Truck className="w-6 h-6 text-primary" strokeWidth={2.5} />
               </motion.div>
               <div>
-                <h3 className="font-bold text-secondary-foreground text-sm">توصيل سريع لجميع المحافظات</h3>
-                <p className="text-xs text-secondary-foreground/50 mt-1">تسليم خلال 48 ساعة داخل مصر</p>
+                <h3 className="font-black text-secondary-foreground text-base mb-1">توصيل سريع لجميع المحافظات</h3>
+                <p className="text-sm text-secondary-foreground/60 font-medium">تسليم خلال 48 ساعة داخل مصر</p>
               </div>
             </div>
           </motion.div>

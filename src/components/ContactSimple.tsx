@@ -19,12 +19,12 @@ const ContactSimple = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="text-2xl md:text-3xl font-black text-secondary-foreground mb-4"
+          className="text-2xl md:text-4xl font-black text-secondary-foreground mb-5 leading-tight"
         >
-          ابدأ شراكتك مع المصرية جروب
+          ابدأ <span className="text-primary">شراكتك</span> معنا اليوم
         </motion.h2>
         <motion.div
-          className="w-14 h-1 bg-primary mx-auto rounded-full mb-5"
+          className="w-16 h-1 bg-primary mx-auto rounded-full mb-6"
           initial={{ scaleX: 0 }}
           whileInView={{ scaleX: 1 }}
           viewport={{ once: true }}
@@ -35,9 +35,9 @@ const ContactSimple = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="text-secondary-foreground/50 mb-8 leading-[1.9]"
+          className="text-secondary-foreground/70 text-base md:text-lg mb-10 leading-[2] max-w-2xl mx-auto font-medium"
         >
-          سواء كنت تاجر جملة أو شركة أو مركز صيانة، فريقنا جاهز لتقديم عرض توريد مخصص لاحتياجاتك.
+          سواء كنت تاجر جملة أو شركة أو مركز صيانة، فريقنا جاهز لتقديم عرض توريد مخصص يلبي احتياجاتك
         </motion.p>
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -46,23 +46,23 @@ const ContactSimple = () => {
           transition={{ delay: 0.35, duration: 0.5 }}
           className="flex flex-col sm:flex-row gap-3 justify-center"
         >
-          <motion.div whileHover={{ scale: 1.04, y: -1 }} whileTap={{ scale: 0.97 }} transition={{ duration: 0.15 }}>
-            <Button size="lg" className="text-base px-8 py-6 font-bold shadow-lg shadow-primary/20" asChild>
+          <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.97 }} transition={{ duration: 0.2 }}>
+            <Button size="lg" className="text-base px-10 py-7 font-black shadow-xl shadow-primary/25 text-lg" asChild>
               <Link to="/contact#quote">
-                اطلب عرض سعر
+                اطلب عرض سعر الآن
               </Link>
             </Button>
           </motion.div>
-          <motion.div whileHover={{ scale: 1.04, y: -1 }} whileTap={{ scale: 0.97 }} transition={{ duration: 0.15 }}>
+          <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.97 }} transition={{ duration: 0.2 }}>
             <Button
               size="lg"
               variant="outline"
-              className="text-base px-8 py-6 gap-2.5 font-bold border-secondary-foreground/15 text-secondary-foreground hover:bg-secondary-foreground/10"
+              className="text-base px-10 py-7 gap-3 font-black border-2 border-secondary-foreground/20 text-secondary-foreground hover:bg-secondary-foreground/10 hover:border-secondary-foreground/30 text-lg"
               asChild
             >
               <Link to="/contact">
-                <Phone className="w-5 h-5" />
-                تواصل مع فريق المبيعات
+                <Phone className="w-5 h-5" strokeWidth={2.5} />
+                تواصل معنا
               </Link>
             </Button>
           </motion.div>
