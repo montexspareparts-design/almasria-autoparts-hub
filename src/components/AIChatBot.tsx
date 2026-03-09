@@ -29,7 +29,7 @@ const BRANCHES = [
     name: "فرع الجيزة – أوسيم",
     lat: 30.1269,
     lng: 31.1356,
-    phone: "01020412358",
+    phone: "01153961008",
     mapUrl: "https://maps.app.goo.gl/trZ9Q4ZhnwtsFXTB8",
     serves: "الجيزة، الفيوم، بني سويف، المنيا، والصعيد الأدنى"
   },
