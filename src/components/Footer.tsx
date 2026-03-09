@@ -8,9 +8,6 @@ const quickLinks = [
   { label: "الرئيسية", href: "/" },
   { label: "من نحن", href: "/about" },
   { label: "المتجر", href: "/products" },
-  { label: "حسب الموديل", href: "/parts-by-model" },
-  { label: "حسب نوع القطعة", href: "/parts-by-type" },
-  { label: "MTX", href: "/mtx" },
   { label: "ما يميزنا", href: "/what-sets-us-apart" },
   { label: "اتصل بنا", href: "/contact" },
 ];
