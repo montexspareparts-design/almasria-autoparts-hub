@@ -337,7 +337,7 @@ const AIChatBot = () => {
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 bg-primary text-primary-foreground">
               <div className="flex items-center gap-2">
-                <Bot className="w-5 h-5" />
+                <img src={chatbotIcon} alt="المساعد" className="w-6 h-6 object-contain" />
                 <div>
                   <p className="font-bold text-sm">المساعد الذكي</p>
                   <p className="text-[10px] opacity-80">المصرية جروب - قطع غيار</p>
