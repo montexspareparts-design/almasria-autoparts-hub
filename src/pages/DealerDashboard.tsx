@@ -133,16 +133,16 @@ const DealerDashboard = () => {
         {/* Dealer Info */}
         {isDealer && dealerAccount && (
           <Card className="mb-6 bg-primary/5 border-primary/30">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
+            <CardContent className="p-4 md:p-6">
+              <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">فئة الحساب</p>
-                  <p className="text-lg font-bold text-primary">{tierLabels[dealerAccount.tier] || dealerAccount.tier}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">فئة الحساب</p>
+                  <p className="text-base md:text-lg font-bold text-primary">{tierLabels[dealerAccount.tier] || dealerAccount.tier}</p>
                 </div>
                 {dealerAccount.custom_discount && dealerAccount.custom_discount > 0 && (
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground">خصم خاص</p>
-                    <p className="text-lg font-bold text-primary">{dealerAccount.custom_discount}%</p>
+                  <div className="text-center shrink-0">
+                    <p className="text-xs md:text-sm text-muted-foreground">خصم خاص</p>
+                    <p className="text-base md:text-lg font-bold text-primary">{dealerAccount.custom_discount}%</p>
                   </div>
                 )}
               </div>
