@@ -24,15 +24,6 @@ const MTXSection = () => {
             قطع غيار بديلة مختارة بعناية بأسعار تنافسية
           </p>
         </motion.div>
-        <motion.p
-          initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.25 }}
-          className="text-muted-foreground text-base md:text-lg leading-[2] mb-8 max-w-2xl mx-auto"
-        >
-          من خلال علامة MTX، نوفر قطع غيار بديلة مختارة بعناية تضاهي جودة المنتج الأصلي بأسعار تنافسية، لتلبية احتياجات خدمة ما بعد البيع في مصر والمنطقة.
-        </motion.p>
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}

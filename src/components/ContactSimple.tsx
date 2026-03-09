@@ -31,15 +31,6 @@ const ContactSimple = () => {
             فريقنا جاهز لتقديم عرض توريد مخصص يلبي احتياجاتك
           </p>
         </motion.div>
-        <motion.p
-          initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="text-secondary-foreground/70 text-base md:text-lg mb-10 leading-[2] max-w-2xl mx-auto font-medium"
-        >
-          سواء كنت تاجر جملة أو شركة أو مركز صيانة، فريقنا جاهز لتقديم عرض توريد مخصص يلبي احتياجاتك
-        </motion.p>
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Package, ShoppingCart, Eye, Sparkles, ChevronLeft } from "lucide-react";
+import { Package, ShoppingCart, Eye, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
