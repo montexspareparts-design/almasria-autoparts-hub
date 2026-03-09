@@ -19,12 +19,12 @@ const ContactSimple = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="text-2xl md:text-3xl font-black text-secondary-foreground mb-4"
+          className="text-2xl md:text-4xl font-black text-secondary-foreground mb-5 leading-tight"
         >
-          ابدأ شراكتك مع المصرية جروب
+          ابدأ <span className="text-primary">شراكتك</span> معنا اليوم
         </motion.h2>
         <motion.div
-          className="w-14 h-1 bg-primary mx-auto rounded-full mb-5"
+          className="w-16 h-1 bg-primary mx-auto rounded-full mb-6"
           initial={{ scaleX: 0 }}
           whileInView={{ scaleX: 1 }}
           viewport={{ once: true }}
@@ -35,9 +35,9 @@ const ContactSimple = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="text-secondary-foreground/50 mb-8 leading-[1.9]"
+          className="text-secondary-foreground/70 text-base md:text-lg mb-10 leading-[2] max-w-2xl mx-auto font-medium"
         >
-          سواء كنت تاجر جملة أو شركة أو مركز صيانة، فريقنا جاهز لتقديم عرض توريد مخصص لاحتياجاتك.
+          سواء كنت تاجر جملة أو شركة أو مركز صيانة، فريقنا جاهز لتقديم عرض توريد مخصص يلبي احتياجاتك
         </motion.p>
         <motion.div
           initial={{ opacity: 0, y: 16 }}
