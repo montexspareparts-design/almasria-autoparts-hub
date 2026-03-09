@@ -362,7 +362,7 @@ const ProductsPage = () => {
               </div>
 
               {/* Bottom row - 2 brands centered */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:max-w-3xl mx-auto">
                 {allBrands.slice(3).map((b, i) => (
                   <motion.div
                     key={b.to}
