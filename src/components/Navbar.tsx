@@ -30,7 +30,9 @@ const Navbar = () => {
   const [mobileProductsOpen, setMobileProductsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("hero");
   const productsTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { user, isDealer, isAdmin, signOut } = useAuth();
+  const { user, dealerAccount, loading: authLoading, isAdmin, signOut } = useAuth();
+  const isWholesaleDealer = !authLoading && !!dealerAccount?.is_active &&
+    (dealerAccount?.tier === "wholesale_tier1" || dealerAccount?.tier === "wholesale_tier2");
   const navigate = useNavigate();
   const location = useLocation();
 
