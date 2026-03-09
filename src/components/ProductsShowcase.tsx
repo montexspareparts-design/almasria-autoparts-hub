@@ -76,7 +76,7 @@ const ProductsShowcase = () => {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-16"
         >
-          <p className="text-primary text-xs font-black tracking-[0.35em] uppercase mb-5">
+          <p className="text-primary text-sm font-black tracking-[0.3em] uppercase mb-5">
             تصفح الماركات
           </p>
           <h2 className="text-3xl md:text-4xl font-black text-secondary-foreground leading-snug mb-3">
