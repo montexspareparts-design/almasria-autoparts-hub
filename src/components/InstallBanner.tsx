@@ -45,7 +45,22 @@ const InstallBanner = () => {
     };
 
     window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+
+    // Listen for successful installation
+    const installHandler = () => {
+      setShow(false);
+      setJustInstalled(true);
+      toast.success("تم تثبيت التطبيق بنجاح! 🎉", {
+        description: "يمكنك الآن فتح التطبيق من الشاشة الرئيسية",
+        duration: 5000,
+      });
+    };
+    window.addEventListener("appinstalled", installHandler);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handler);
+      window.removeEventListener("appinstalled", installHandler);
+    };
   }, []);
 
   const handleInstall = async () => {
