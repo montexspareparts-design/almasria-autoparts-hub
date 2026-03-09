@@ -131,9 +131,10 @@ const MaintenanceTipsSection = () => {
         >
           <Button
             size="lg"
-            variant="outline"
-            className="gap-2 font-bold border-2 border-secondary-foreground/20 text-secondary-foreground hover:border-primary hover:text-primary hover:bg-primary/5 px-8"
-            onClick={() => window.open("https://wa.me/201234567890?text=محتاج استشارة صيانة", "_blank")}
+            className="gap-2 font-bold shadow-lg shadow-primary/20 px-8"
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('open-ai-chat', { detail: { message: 'محتاج استشارة صيانة لسيارتي' } }));
+            }}
           >
             استشر خبراءنا مجانًا
             <motion.span animate={{ x: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 1.5 }}>
