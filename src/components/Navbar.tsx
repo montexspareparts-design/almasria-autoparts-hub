@@ -206,7 +206,7 @@ const Navbar = () => {
                 <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
                   <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate("/dealer")}>
                     <User className="w-4 h-4" />
-                    حسابي
+                    حساب التاجر
                   </Button>
                 </motion.div>
                 <Button variant="ghost" size="sm" onClick={() => signOut()} className="text-secondary-foreground/60">
