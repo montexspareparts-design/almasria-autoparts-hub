@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Download, X, Smartphone, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { requestPushPermission } from "@/lib/pushNotifications";
 import logo from "@/assets/logo.png";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -54,6 +55,16 @@ const InstallBanner = () => {
         description: "يمكنك الآن فتح التطبيق من الشاشة الرئيسية",
         duration: 5000,
       });
+      // Ask for push notification permission after install
+      setTimeout(async () => {
+        const granted = await requestPushPermission();
+        if (granted) {
+          toast.success("تم تفعيل الإشعارات! 🔔", {
+            description: "هتوصلك إشعارات بالعروض والتحديثات",
+            duration: 4000,
+          });
+        }
+      }, 3000);
     };
     window.addEventListener("appinstalled", installHandler);
 

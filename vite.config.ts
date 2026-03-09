@@ -21,6 +21,7 @@ export default defineConfig(({ mode }) => ({
       includeAssets: ["favicon.ico", "robots.txt"],
       workbox: {
         navigateFallbackDenylist: [/^\/~oauth/],
+        importScripts: ["/sw-push.js"],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,jpg,jpeg,woff2}"],
         runtimeCaching: [
           {
