@@ -11,21 +11,34 @@ const branches = [
 
 const DistributionNetwork = () => {
   return (
-    <section id="coverage" className="py-20 md:py-28 bg-secondary">
+    <section id="coverage" className="py-20 md:py-28 bg-secondary overflow-hidden">
       <div className="container mx-auto px-4">
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-14"
         >
-          <span className="inline-block px-4 py-1.5 rounded-full bg-primary/15 text-primary text-sm font-bold mb-4">
+          <motion.span
+            initial={{ opacity: 0, scale: 0.85 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4 }}
+            className="inline-block px-4 py-1.5 rounded-full bg-primary/15 text-primary text-sm font-bold mb-4"
+          >
             شبكة التوزيع
-          </span>
+          </motion.span>
           <h2 className="text-3xl md:text-4xl font-black text-secondary-foreground mb-3">
             الانتشار <span className="text-primary">والفروع</span>
           </h2>
+          <motion.div
+            className="w-14 h-1 bg-primary mx-auto rounded-full mb-4"
+            initial={{ scaleX: 0 }}
+            whileInView={{ scaleX: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+          />
           <p className="text-secondary-foreground/50 text-base max-w-xl mx-auto">
             تغطية وطنية وشحن لجميع محافظات مصر عبر مخازن مركزية ومنظومة لوجستية منظمة.
           </p>
@@ -35,28 +48,48 @@ const DistributionNetwork = () => {
           {branches.map((b, i) => (
             <motion.div
               key={b.name}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.08, duration: 0.4 }}
-              className="bg-secondary-foreground/[0.04] border border-secondary-foreground/10 rounded-xl p-5"
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{
+                delay: 0.1 + i * 0.1,
+                duration: 0.5,
+                type: "spring",
+                stiffness: 100,
+              }}
+              whileHover={{
+                y: -4,
+                scale: 1.02,
+                borderColor: "hsl(var(--primary) / 0.35)",
+                transition: { duration: 0.2 },
+              }}
+              className="group bg-secondary-foreground/[0.04] border border-secondary-foreground/10 rounded-xl p-5 transition-all duration-300 relative overflow-hidden"
             >
-              <div className="flex items-start gap-3">
-                <div className="w-9 h-9 bg-primary/15 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <b.icon className="w-4 h-4 text-primary" />
-                </div>
+              {/* Hover shine */}
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              
+              <div className="relative z-10 flex items-start gap-3">
+                <motion.div
+                  className="w-10 h-10 bg-primary/15 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-primary/25 transition-colors"
+                  whileHover={{ rotate: [0, -8, 8, 0] }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <b.icon className="w-5 h-5 text-primary" />
+                </motion.div>
                 <div>
                   <h3 className="font-bold text-secondary-foreground text-sm">{b.name}</h3>
                   <p className="text-xs text-secondary-foreground/50 mt-1">{b.detail}</p>
-                  <a
+                  <motion.a
                     href={b.mapUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 mt-2 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
+                    whileHover={{ x: -3 }}
+                    transition={{ duration: 0.15 }}
                   >
                     <Navigation className="w-3 h-3" />
                     عرض الموقع على الخريطة
-                  </a>
+                  </motion.a>
                 </div>
               </div>
             </motion.div>
@@ -64,18 +97,35 @@ const DistributionNetwork = () => {
 
           {/* Delivery card */}
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.5, duration: 0.4 }}
-            className="bg-primary/10 border border-primary/25 rounded-xl p-5 flex items-center gap-3"
+            transition={{ delay: 0.6, duration: 0.5, type: "spring", stiffness: 100 }}
+            whileHover={{
+              y: -4,
+              scale: 1.02,
+              transition: { duration: 0.2 },
+            }}
+            className="bg-primary/10 border border-primary/25 rounded-xl p-5 flex items-center gap-3 relative overflow-hidden group"
           >
-            <div className="w-9 h-9 bg-primary/20 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Truck className="w-4 h-4 text-primary" />
-            </div>
-            <div>
-              <h3 className="font-bold text-secondary-foreground text-sm">توصيل سريع لجميع المحافظات</h3>
-              <p className="text-xs text-secondary-foreground/50 mt-1">تسليم خلال 48 ساعة داخل مصر</p>
+            {/* Animated pulse bg */}
+            <motion.div
+              className="absolute inset-0 bg-primary/5 rounded-xl"
+              animate={{ opacity: [0, 0.5, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <div className="relative z-10 flex items-center gap-3">
+              <motion.div
+                className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center flex-shrink-0"
+                animate={{ y: [0, -2, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <Truck className="w-5 h-5 text-primary" />
+              </motion.div>
+              <div>
+                <h3 className="font-bold text-secondary-foreground text-sm">توصيل سريع لجميع المحافظات</h3>
+                <p className="text-xs text-secondary-foreground/50 mt-1">تسليم خلال 48 ساعة داخل مصر</p>
+              </div>
             </div>
           </motion.div>
         </div>
