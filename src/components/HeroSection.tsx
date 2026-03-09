@@ -119,7 +119,7 @@ const HeroSection = () => {
           webkit-playsinline="true"
           x-webkit-airplay="deny"
         >
-          <source src="/videos/hero-bg.mp4" type="video/mp4" />
+          <source src={videoSrc} type="video/mp4" />
         </video>
       </div>
 
