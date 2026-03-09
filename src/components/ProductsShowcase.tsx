@@ -15,7 +15,7 @@ const brands = [
     nameAr: "قطع غيار تويوتا الأصلية",
     nameEn: "Toyota Genuine Parts",
     logo: brandGenuine,
-    href: "/products?brand=toyota_genuine",
+    href: "/products/toyota-genuine",
     scale: 1,
   },
   {
@@ -23,7 +23,7 @@ const brands = [
     nameAr: "زيوت تويوتا الأصلية",
     nameEn: "Toyota Genuine Lubricants",
     logo: brandOil,
-    href: "/products?brand=toyota_oils",
+    href: "/products/toyota-oils",
     scale: 1.5,
   },
   {
@@ -31,7 +31,7 @@ const brands = [
     nameAr: "MTX أفترماركت",
     nameEn: "MTX Aftermarket",
     logo: brandMtx,
-    href: "/products?brand=mtx_aftermarket",
+    href: "/products/mtx-aftermarket",
     scale: 1.5,
   },
   {
@@ -39,7 +39,7 @@ const brands = [
     nameAr: "دينسو",
     nameEn: "DENSO",
     logo: brandDenso,
-    href: "/products?brand=denso",
+    href: "/products/denso",
     scale: 1,
   },
   {
@@ -47,7 +47,7 @@ const brands = [
     nameAr: "أيسن",
     nameEn: "AISIN",
     logo: brandAisin,
-    href: "/products?brand=aisin",
+    href: "/products/aisin",
     scale: 1,
   },
 ];
