@@ -125,7 +125,7 @@ function MetricCard({
       transition={{ duration: 0.5, delay: index * 0.12, type: "spring", stiffness: 100 }}
     >
       <Link
-        to="/why-us"
+        to="/what-sets-us-apart"
         className="group relative flex flex-col items-center text-center border border-border rounded-xl px-6 py-7 bg-card hover:border-primary/30 transition-all duration-300 max-w-[260px] mx-auto w-full overflow-hidden"
       >
         {/* Hover gradient */}
