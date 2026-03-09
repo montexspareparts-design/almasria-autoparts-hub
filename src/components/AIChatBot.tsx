@@ -14,10 +14,16 @@ type Message = { role: "user" | "assistant"; content: MessageContent; imagePrevi
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
-const QUICK_QUESTIONS = [
-  "ما هي قطع الغيار المتوفرة لكورولا 2020؟",
-  "ما الفرق بين الأصلي والبديل؟",
-  "أحتاج باقة صيانة دورية",
+const QUICK_QUESTIONS_LOGGED_IN = [
+  "عندكم فلتر زيت لكورولا 2020؟",
+  "محتاج باقة صيانة دورية",
+  "عايز أعرف أقرب فرع ليا",
+];
+
+const QUICK_QUESTIONS_GUEST = [
+  "إيه الماركات المتوفرة عندكم؟",
+  "عايز أعرف أقرب فرع ليا",
+  "بتشحنوا لكل المحافظات؟",
 ];
 
 const getTextContent = (content: MessageContent): string => {
