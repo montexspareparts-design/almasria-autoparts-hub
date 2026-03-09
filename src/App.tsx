@@ -57,7 +57,6 @@ const App = () => (
               <InstallBanner />
               <Suspense fallback={null}><AIChatBot /></Suspense>
               <Suspense fallback={<PageLoader />}>
-                <PageTransition>
                   <Routes>
                     <Route path="/" element={<Index />} />
                     {/* Redirect old/duplicate home paths */}
