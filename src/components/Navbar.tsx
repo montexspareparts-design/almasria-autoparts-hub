@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import logo from "@/assets/logo.png";
-import { Menu, X, Briefcase, User, LogOut, ChevronDown } from "lucide-react";
+import { Menu, X, Briefcase, User, LogOut, BookOpen } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,7 +30,9 @@ const Navbar = () => {
   const [mobileProductsOpen, setMobileProductsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("hero");
   const productsTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { user, isDealer, isAdmin, signOut } = useAuth();
+  const { user, dealerAccount, loading: authLoading, isAdmin, signOut } = useAuth();
+  const isWholesaleDealer = !authLoading && !!dealerAccount?.is_active &&
+    (dealerAccount?.tier === "wholesale_tier1" || dealerAccount?.tier === "wholesale_tier2");
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -158,6 +160,23 @@ const Navbar = () => {
                 </motion.a>
               );
             })}
+            {/* Catalogs link - wholesale dealers only */}
+            {isWholesaleDealer && (
+              <motion.div whileHover={{ y: -1 }}>
+                <Link
+                  to="/catalogs"
+                  className={`text-sm font-medium transition-colors relative group flex items-center gap-1 ${
+                    location.pathname === "/catalogs" ? "text-primary" : "text-secondary-foreground/80 hover:text-primary"
+                  }`}
+                >
+                  <BookOpen className="w-4 h-4" />
+                  كتالوجات
+                  <span className={`absolute -bottom-1 right-0 h-[2px] bg-primary rounded-full transition-all duration-300 ${
+                    location.pathname === "/catalogs" ? "w-full" : "w-0 group-hover:w-full"
+                  }`} />
+                </Link>
+              </motion.div>
+            )}
           </div>
 
           {/* Mobile right icons */}
@@ -269,9 +288,14 @@ const Navbar = () => {
               >
                 {user ? (
                   <>
-                    {isAdmin && (
+                {isAdmin && (
                       <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={() => { navigate("/admin"); setIsOpen(false); }}>
                         الإدارة
+                      </Button>
+                    )}
+                    {isWholesaleDealer && (
+                      <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-primary" onClick={() => { navigate("/catalogs"); setIsOpen(false); }}>
+                        <BookOpen className="w-4 h-4" /> كتالوجات
                       </Button>
                     )}
                     <Button variant="outline" size="sm" className="w-full gap-2" onClick={() => { navigate("/dealer"); setIsOpen(false); }}>
