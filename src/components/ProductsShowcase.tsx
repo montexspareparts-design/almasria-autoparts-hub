@@ -69,7 +69,7 @@ const ProductsShowcase = () => {
             }}
             transition={{ duration: gear.duration, delay: gear.delay, repeat: Infinity, ease: "linear" }}
           >
-            <gear.icon className="text-primary" style={{ width: gear.size, height: gear.size, opacity: 0.15 }} strokeWidth={0.8} />
+            <gear.icon className="text-white" style={{ width: gear.size, height: gear.size, opacity: 0.1 }} strokeWidth={0.8} />
           </motion.div>
         ))}
       </div>
