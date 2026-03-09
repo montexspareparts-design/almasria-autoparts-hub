@@ -98,8 +98,9 @@ const AIChatBot = () => {
 
   // ---- Voice Input (STT) ----
   const toggleListening = useCallback(() => {
+    console.log("SpeechRecognition available:", !!SpeechRecognition);
     if (!SpeechRecognition) {
-      toast.error("المتصفح لا يدعم التعرف على الصوت");
+      toast.error("المتصفح لا يدعم التعرف على الصوت، جرب من Chrome على الموبايل أو الكمبيوتر");
       return;
     }
 
