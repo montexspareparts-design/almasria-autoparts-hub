@@ -83,6 +83,21 @@ const HeroSection = () => {
   const contentY = useTransform(scrollYProgress, [0, 0.5], [0, -40]);
   const [videoLoaded, setVideoLoaded] = useState(false);
 
+  const { data: heroVideoUrl } = useQuery({
+    queryKey: ["site-setting", "hero_video_url"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "hero_video_url")
+        .maybeSingle();
+      return (data?.value as string) || "";
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const videoSrc = heroVideoUrl || "/videos/hero-bg.mp4";
+
   const stats = [
     { value: 25, suffix: "+", label: t("hero.stat_years") },
     { value: 48, suffix: "h", label: t("hero.stat_delivery") },
