@@ -18,6 +18,8 @@ import AdvancedProductFilter, { ProductFilters } from "@/components/AdvancedProd
 import RelatedProducts from "@/components/RelatedProducts";
 import MaintenanceBundles from "@/components/MaintenanceBundles";
 import SpecialOffers from "@/components/SpecialOffers";
+import PersonalizedProducts from "@/components/PersonalizedProducts";
+import { usePersonalization } from "@/hooks/usePersonalization";
 import brandGenuineParts from "@/assets/brand-genuine-parts.png";
 import brandToyotaOil from "@/assets/brand-toyota-oil.png";
 import brandMtx from "@/assets/brand-mtx.jpg";
