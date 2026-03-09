@@ -1,40 +1,15 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { trackClickWhatsApp } from "@/lib/analytics";
 
 const defaultMsg = "مرحبًا، عايز قطعة غيار لتويوتا [الموديل/السنة/رقم الشاسيه]";
 
 const WhatsAppFloat = () => {
-  const [showTooltip, setShowTooltip] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setShowTooltip(true), 4000);
-    const hide = setTimeout(() => setShowTooltip(false), 12000);
-    return () => { clearTimeout(timer); clearTimeout(hide); };
-  }, []);
-
   const handleClick = () => {
     trackClickWhatsApp("floating_button");
   };
 
   return (
     <div className="fixed bottom-4 left-4 md:bottom-6 md:left-6 z-50">
-      <AnimatePresence>
-        {showTooltip && (
-          <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.9 }}
-            className="absolute bottom-full left-0 mb-3 bg-card border border-border rounded-xl px-4 py-2.5 shadow-lg max-w-[220px] text-xs text-foreground leading-relaxed"
-          >
-            <span className="font-bold text-primary">محتاج قطعة؟</span>
-            <br />
-            ابعتلنا الموديل ورقم الشاسيه وهنوفرهالك فورًا 🚗
-            <div className="absolute -bottom-1.5 left-5 w-3 h-3 bg-card border-b border-r border-border rotate-45" />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <motion.a
         href={`https://wa.me/201020412358?text=${encodeURIComponent(defaultMsg)}`}
         target="_blank"
