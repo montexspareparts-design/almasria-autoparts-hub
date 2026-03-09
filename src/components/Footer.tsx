@@ -1,4 +1,4 @@
-import { Phone, Mail, MapPin, MessageCircle, Send } from "lucide-react";
+import { Phone, Mail, MapPin, MessageCircle, Send, Download } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { trackClickCall, trackClickWhatsApp } from "@/lib/analytics";
@@ -10,6 +10,7 @@ const quickLinks = [
   { label: "المتجر", href: "/products" },
   { label: "ما يميزنا", href: "/what-sets-us-apart" },
   { label: "اتصل بنا", href: "/contact" },
+  { label: "حمّل التطبيق", href: "/install", icon: Download },
 ];
 
 const Footer = () => {
@@ -35,8 +36,11 @@ const Footer = () => {
                 <li key={l.href}>
                   <Link
                     to={l.href}
-                    className="text-sm text-secondary-foreground/40 hover:text-primary transition-colors duration-200"
+                    className={`text-sm transition-colors duration-200 flex items-center gap-1.5 ${
+                      l.icon ? "text-primary hover:text-primary/80 font-bold" : "text-secondary-foreground/40 hover:text-primary"
+                    }`}
                   >
+                    {l.icon && <l.icon className="w-4 h-4" />}
                     {l.label}
                   </Link>
                 </li>

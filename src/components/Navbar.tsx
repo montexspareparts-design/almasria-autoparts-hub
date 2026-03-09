@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import logo from "@/assets/logo.png";
-import { Menu, X, Briefcase, User, LogOut, BookOpen } from "lucide-react";
+import { Menu, X, Briefcase, User, LogOut, BookOpen, Download } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -280,6 +280,17 @@ const Navbar = () => {
                   </motion.a>
                 );
               })}
+              {/* Install App link */}
+              <motion.div custom={links.length} initial="hidden" animate="visible" variants={linkVariants}>
+                <Link
+                  to="/install"
+                  className="block py-3 text-sm font-bold text-primary hover:text-primary/80 transition-colors flex items-center gap-2"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <Download className="w-4 h-4" />
+                  حمّل التطبيق
+                </Link>
+              </motion.div>
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
