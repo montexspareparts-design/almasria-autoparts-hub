@@ -28,7 +28,7 @@ const brands = [
   },
   {
     id: "mtx_aftermarket",
-    nameAr: "MTX أفترماركت",
+    nameAr: "MTX Aftermarket",
     nameEn: "MTX Aftermarket",
     logo: brandMtx,
     href: "/products/mtx-aftermarket",
