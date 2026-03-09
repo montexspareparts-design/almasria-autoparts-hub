@@ -45,7 +45,7 @@ const WhyChooseUs = () => {
             <p className="text-primary text-xs font-black tracking-[0.35em] uppercase mb-5">
               لماذا تختارنا
             </p>
-            <h2 className="text-2xl md:text-3xl font-black text-foreground leading-snug mb-3">
+            <h2 className="text-3xl md:text-4xl font-black text-foreground leading-snug mb-3">
               معايير تشغيل تضعنا في{" "}
               <span className="text-primary">مستوى مختلف</span>
             </h2>
