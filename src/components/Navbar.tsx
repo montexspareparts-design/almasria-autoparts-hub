@@ -1,12 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import logo from "@/assets/logo.png";
-import { Menu, X, Briefcase, User, LogOut, BookOpen, Download } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Menu, X, Briefcase, User, LogOut, BookOpen, Download, Globe } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-
-import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 import NotificationBell from "@/components/NotificationBell";
 
 const mobileMenuVariants = {
@@ -26,23 +25,18 @@ const linkVariants = {
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [productsOpen, setProductsOpen] = useState(false);
-  const [mobileProductsOpen, setMobileProductsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("hero");
-  const productsTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user, dealerAccount, loading: authLoading, isAdmin, signOut } = useAuth();
+  const { t, lang, setLang } = useLanguage();
   const isWholesaleDealer = !authLoading && !!dealerAccount?.is_active &&
     (dealerAccount?.tier === "wholesale_tier1" || dealerAccount?.tier === "wholesale_tier2");
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Track active section via IntersectionObserver on homepage
   useEffect(() => {
     if (location.pathname !== "/") return;
-
     const sectionIds = ["hero", "brands", "distribution"];
     const observers: IntersectionObserver[] = [];
-
     sectionIds.forEach((id) => {
       const el = document.getElementById(id);
       if (!el) return;
@@ -53,7 +47,6 @@ const Navbar = () => {
       observer.observe(el);
       observers.push(observer);
     });
-
     return () => observers.forEach((o) => o.disconnect());
   }, [location.pathname]);
 
@@ -63,20 +56,15 @@ const Navbar = () => {
     return location.pathname === "/" && activeSection === hash;
   };
 
-  const productCategories = [
-    { label: "قطع غيار تويوتا أصلية", href: "/products/genuine-toyota-parts" },
-    { label: "زيوت تويوتا أصلية", href: "/products/toyota-oils" },
-  ];
-
+  const toggleLang = () => setLang(lang === "ar" ? "en" : "ar");
 
   const links = [
-    { label: "الرئيسية", href: "/#hero" },
-    { label: "من نحن", href: "/about", isRoute: true },
-    { label: "قطع غيار أصلية", href: "/products/toyota-genuine", isRoute: true },
-    { label: "زيوت تويوتا أصلية", href: "/products/toyota-oils", isRoute: true },
-    
-    { label: "قطع غيار MTX", href: "/mtx", isRoute: true },
-    { label: "اتصل بنا", href: "/contact", isRoute: true },
+    { label: t("nav.home"), href: "/#hero" },
+    { label: t("nav.about"), href: "/about", isRoute: true },
+    { label: t("nav.genuine_parts"), href: "/products/toyota-genuine", isRoute: true },
+    { label: t("nav.toyota_oils"), href: "/products/toyota-oils", isRoute: true },
+    { label: t("nav.mtx"), href: "/mtx", isRoute: true },
+    { label: t("nav.contact"), href: "/contact", isRoute: true },
   ];
 
   return (
@@ -88,11 +76,8 @@ const Navbar = () => {
     >
       <div className="container mx-auto px-3 md:px-4">
         <div className="flex items-center justify-between h-14 md:h-20">
-          {/* Hamburger - mobile only */}
-          <button
-            className="md:hidden text-secondary-foreground p-2.5 -ml-2 relative z-10 touch-manipulation"
-            onClick={() => setIsOpen(!isOpen)}
-          >
+          {/* Hamburger */}
+          <button className="md:hidden text-secondary-foreground p-2.5 -ml-2 relative z-10 touch-manipulation" onClick={() => setIsOpen(!isOpen)}>
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
 
@@ -104,10 +89,7 @@ const Navbar = () => {
           {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-6">
             {links.map((link) => {
-              const linkAny = link as any;
-              
-              // Regular route links
-              if (linkAny.isRoute) {
+              if (link.isRoute) {
                 return (
                   <motion.div key={link.href} whileHover={{ y: -1 }}>
                     <Link
@@ -117,15 +99,13 @@ const Navbar = () => {
                       }`}
                     >
                       {link.label}
-                      <span className={`absolute -bottom-1 right-0 h-[2px] bg-primary rounded-full transition-all duration-300 ${
+                      <span className={`absolute -bottom-1 ${lang === "ar" ? "right-0" : "left-0"} h-[2px] bg-primary rounded-full transition-all duration-300 ${
                         isLinkActive(link.href, true) ? "w-full" : "w-0 group-hover:w-full"
                       }`} />
                     </Link>
                   </motion.div>
                 );
               }
-
-              // Anchor links (homepage sections)
               return (
                 <motion.a
                   key={link.href}
@@ -143,13 +123,12 @@ const Navbar = () => {
                   }}
                 >
                   {link.label}
-                  <span className={`absolute -bottom-1 right-0 h-[2px] bg-primary rounded-full transition-all duration-300 ${
+                  <span className={`absolute -bottom-1 ${lang === "ar" ? "right-0" : "left-0"} h-[2px] bg-primary rounded-full transition-all duration-300 ${
                     isLinkActive(link.href) ? "w-full" : "w-0 group-hover:w-full"
                   }`} />
                 </motion.a>
               );
             })}
-            {/* Catalogs link - wholesale dealers only */}
             {isWholesaleDealer && (
               <motion.div whileHover={{ y: -1 }}>
                 <Link
@@ -159,10 +138,7 @@ const Navbar = () => {
                   }`}
                 >
                   <BookOpen className="w-4 h-4" />
-                  كشوفات المصرية
-                  <span className={`absolute -bottom-1 right-0 h-[2px] bg-primary rounded-full transition-all duration-300 ${
-                    location.pathname === "/catalogs" ? "w-full" : "w-0 group-hover:w-full"
-                  }`} />
+                  {t("nav.catalogs")}
                 </Link>
               </motion.div>
             )}
@@ -170,6 +146,9 @@ const Navbar = () => {
 
           {/* Mobile right icons */}
           <div className="flex md:hidden items-center gap-0.5 relative z-10">
+            <button onClick={toggleLang} className="text-secondary-foreground/80 hover:text-primary transition-colors p-2 touch-manipulation text-xs font-bold">
+              {lang === "ar" ? "EN" : "عربي"}
+            </button>
             <NotificationBell />
             {user ? (
               <button onClick={() => navigate("/dealer")} className="text-secondary-foreground/80 hover:text-primary transition-colors p-2.5 touch-manipulation">
@@ -184,18 +163,25 @@ const Navbar = () => {
 
           {/* Desktop right buttons */}
           <div className="hidden md:flex items-center gap-3">
+            <button
+              onClick={toggleLang}
+              className="flex items-center gap-1.5 text-secondary-foreground/70 hover:text-primary transition-colors text-sm font-bold px-2 py-1 rounded-md hover:bg-primary/5"
+            >
+              <Globe className="w-4 h-4" />
+              {lang === "ar" ? "English" : "عربي"}
+            </button>
             <NotificationBell />
             {user ? (
               <>
                 {isAdmin && (
                   <Button variant="ghost" size="sm" onClick={() => navigate("/admin")} className="text-secondary-foreground/80">
-                    الإدارة
+                    {t("nav.admin")}
                   </Button>
                 )}
                 <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
                   <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate("/dealer")}>
                     <User className="w-4 h-4" />
-                    حساب التاجر
+                    {t("nav.dealer_account")}
                   </Button>
                 </motion.div>
                 <Button variant="ghost" size="sm" onClick={() => signOut()} className="text-secondary-foreground/60">
@@ -205,12 +191,12 @@ const Navbar = () => {
             ) : (
               <>
                 <Button variant="ghost" size="sm" onClick={() => navigate("/auth")} className="text-secondary-foreground/80">
-                  تسجيل الدخول
+                  {t("nav.login")}
                 </Button>
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button variant="default" size="sm" className="gap-2" onClick={() => navigate("/dealer-apply")}>
                     <Briefcase className="w-4 h-4" />
-                    التسجيل كـ تاجر
+                    {t("nav.register_dealer")}
                   </Button>
                 </motion.div>
               </>
@@ -229,10 +215,7 @@ const Navbar = () => {
               exit="exit"
             >
               {links.map((link, i) => {
-                const linkAny = link as any;
-                
-                // Route links
-                if (linkAny.isRoute) {
+                if (link.isRoute) {
                   return (
                     <motion.div key={link.href} custom={i} initial="hidden" animate="visible" variants={linkVariants}>
                       <Link
@@ -245,8 +228,6 @@ const Navbar = () => {
                     </motion.div>
                   );
                 }
-
-                // Anchor links
                 return (
                   <motion.a
                     key={link.href}
@@ -269,7 +250,7 @@ const Navbar = () => {
                   </motion.a>
                 );
               })}
-              {/* Install App link */}
+              {/* Install App */}
               <motion.div custom={links.length} initial="hidden" animate="visible" variants={linkVariants}>
                 <Link
                   to="/install"
@@ -277,41 +258,36 @@ const Navbar = () => {
                   onClick={() => setIsOpen(false)}
                 >
                   <Download className="w-4 h-4" />
-                  حمّل التطبيق
+                  {t("nav.install_app")}
                 </Link>
               </motion.div>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="border-t border-primary/10 pt-3 mt-2 space-y-2"
-              >
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="border-t border-primary/10 pt-3 mt-2 space-y-2">
                 {user ? (
                   <>
-                {isAdmin && (
+                    {isAdmin && (
                       <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={() => { navigate("/admin"); setIsOpen(false); }}>
-                        الإدارة
+                        {t("nav.admin")}
                       </Button>
                     )}
                     {isWholesaleDealer && (
                       <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-primary" onClick={() => { navigate("/catalogs"); setIsOpen(false); }}>
-                        <BookOpen className="w-4 h-4" /> كشوفات المصرية
+                        <BookOpen className="w-4 h-4" /> {t("nav.catalogs")}
                       </Button>
                     )}
                     <Button variant="outline" size="sm" className="w-full gap-2" onClick={() => { navigate("/dealer"); setIsOpen(false); }}>
-                      <User className="w-4 h-4" /> حساب التاجر
+                      <User className="w-4 h-4" /> {t("nav.dealer_account")}
                     </Button>
                     <Button variant="ghost" size="sm" className="w-full" onClick={() => { signOut(); setIsOpen(false); }}>
-                      <LogOut className="w-4 h-4 ml-2" /> تسجيل الخروج
+                      <LogOut className="w-4 h-4 ml-2" /> {t("nav.logout")}
                     </Button>
                   </>
                 ) : (
                   <>
                     <Button variant="ghost" size="sm" className="w-full" onClick={() => { navigate("/auth"); setIsOpen(false); }}>
-                      تسجيل الدخول
+                      {t("nav.login")}
                     </Button>
                     <Button variant="default" size="sm" className="w-full gap-2" onClick={() => { navigate("/dealer-apply"); setIsOpen(false); }}>
-                      <Briefcase className="w-4 h-4" /> التسجيل كـ تاجر
+                      <Briefcase className="w-4 h-4" /> {t("nav.register_dealer")}
                     </Button>
                   </>
                 )}
