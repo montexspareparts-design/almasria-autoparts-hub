@@ -110,50 +110,74 @@ const AboutBrief = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start mb-20">
           {/* Left - Text content */}
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           >
-            <p className="text-muted-foreground text-base md:text-lg leading-[1.9] mb-5">
-              تعمل المصرية جروب منذ{" "}
-              <strong className="text-foreground font-black">1999</strong> كموزّع معتمد لِـ{" "}
-              <Link to="/products/toyota-genuine" className="text-primary font-bold hover:underline underline-offset-4">
-                قطع غيار تويوتا الأصلية
-              </Link>{" "}
-              و
-              <Link to="/products/toyota-oils" className="text-primary font-bold hover:underline underline-offset-4">
-                زيوت تويوتا
-              </Link>.
-              نعتمد نموذج تشغيل منضبط قائم على{" "}
-              <strong className="text-foreground">أنظمة إدارة رقمية متكاملة</strong>{" "}
-              وشبكة توزيع تغطي الجمهورية.
-            </p>
-            <p className="text-muted-foreground text-base md:text-lg leading-[1.9] mb-5">
-              نوفر{" "}
-              <strong className="text-foreground">توصيلًا سريعًا خلال 48&nbsp;ساعة</strong>{" "}
-              عبر مخازن مركزية عالية الكفاءة، مع{" "}
-              <strong className="text-foreground">وجود إقليمي في دبي</strong>{" "}
-              يدعم استمرارية التوريد وجودة المنتجات.
-            </p>
-            <p className="text-muted-foreground text-base md:text-lg leading-[1.9] mb-8">
-              كما ندير علامة{" "}
-              <Link to="/mtx" className="text-primary font-bold hover:underline underline-offset-4">
-                MTX
-              </Link>{" "}
-              لقطع الغيار البديلة بجودة تضاهي المواصفات الأصلية.
-            </p>
+            {[
+              <>
+                تعمل المصرية جروب منذ{" "}
+                <strong className="text-foreground font-black">1999</strong> كموزّع معتمد لِـ{" "}
+                <Link to="/products/toyota-genuine" className="text-primary font-bold hover:underline underline-offset-4">
+                  قطع غيار تويوتا الأصلية
+                </Link>{" "}
+                و
+                <Link to="/products/toyota-oils" className="text-primary font-bold hover:underline underline-offset-4">
+                  زيوت تويوتا
+                </Link>.
+                نعتمد نموذج تشغيل منضبط قائم على{" "}
+                <strong className="text-foreground">أنظمة إدارة رقمية متكاملة</strong>{" "}
+                وشبكة توزيع تغطي الجمهورية.
+              </>,
+              <>
+                نوفر{" "}
+                <strong className="text-foreground">توصيلًا سريعًا خلال 48&nbsp;ساعة</strong>{" "}
+                عبر مخازن مركزية عالية الكفاءة، مع{" "}
+                <strong className="text-foreground">وجود إقليمي في دبي</strong>{" "}
+                يدعم استمرارية التوريد وجودة المنتجات.
+              </>,
+              <>
+                كما ندير علامة{" "}
+                <Link to="/mtx" className="text-primary font-bold hover:underline underline-offset-4">
+                  MTX
+                </Link>{" "}
+                لقطع الغيار البديلة بجودة تضاهي المواصفات الأصلية.
+              </>
+            ].map((text, i) => (
+              <motion.p
+                key={i}
+                className="text-muted-foreground text-base md:text-lg leading-[1.9] mb-5"
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ delay: 0.15 + i * 0.12, duration: 0.55, ease: "easeOut" }}
+              >
+                {text}
+              </motion.p>
+            ))}
 
-            <div className="flex flex-col sm:flex-row gap-3">
-              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+            <motion.div
+              className="flex flex-col sm:flex-row gap-3 mt-8"
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.5, duration: 0.5 }}
+            >
+              <motion.div whileHover={{ scale: 1.04, y: -1 }} whileTap={{ scale: 0.97 }} transition={{ duration: 0.15 }}>
                 <Button size="lg" className="gap-2 font-bold shadow-lg shadow-primary/20" asChild>
                   <Link to="/about">
                     اكتشف قصتنا
-                    <ArrowLeft className="w-4 h-4" />
+                    <motion.span
+                      animate={{ x: [0, -4, 0] }}
+                      transition={{ repeat: Infinity, duration: 1.6, ease: "easeInOut" }}
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                    </motion.span>
                   </Link>
                 </Button>
               </motion.div>
-              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+              <motion.div whileHover={{ scale: 1.04, y: -1 }} whileTap={{ scale: 0.97 }} transition={{ duration: 0.15 }}>
                 <Button size="lg" variant="outline" className="gap-2 font-bold" asChild>
                   <Link to="/what-sets-us-apart">
                     ما يميزنا
@@ -161,7 +185,7 @@ const AboutBrief = () => {
                   </Link>
                 </Button>
               </motion.div>
-            </div>
+            </motion.div>
           </motion.div>
 
           {/* Right - Highlight cards */}
