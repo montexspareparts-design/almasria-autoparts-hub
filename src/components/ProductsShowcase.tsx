@@ -83,7 +83,7 @@ const ProductsShowcase = () => {
             style={{ left: word.x, top: word.y }}
             initial={{ opacity: 0 }}
             animate={{
-              opacity: [0, word.opacity, word.opacity * 0.5, word.opacity, 0],
+              opacity: [0, word.opacity * 2.5, word.opacity * 1.5, word.opacity * 2.5, 0],
               x: [0, 30, -20, 15, 0],
               y: [0, -10, 5, -8, 0],
             }}
