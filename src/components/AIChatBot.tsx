@@ -437,11 +437,14 @@ const AIChatBot = () => {
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            onClick={() => setIsOpen(true)}
+            onClick={() => { setIsOpen(true); setHasUnread(false); }}
             className="fixed bottom-20 left-4 md:bottom-6 md:left-6 z-50 w-12 h-12 md:w-14 md:h-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
             aria-label="فتح المساعد الذكي"
           >
             <Bot className="w-7 h-7" />
+            {hasUnread && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive rounded-full border-2 border-background animate-pulse" />
+            )}
           </motion.button>
         )}
       </AnimatePresence>
