@@ -105,23 +105,9 @@ const AboutBrief = () => {
             transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
           />
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-secondary-foreground mb-5 leading-[1.3]">
-            شريك التوزيع{" "}
-            <span className="text-primary relative inline-block">
-              الأول
-              <motion.span
-                className="absolute -bottom-2 left-0 right-0 h-1 bg-primary/40 rounded-full"
-                initial={{ scaleX: 0 }}
-                whileInView={{ scaleX: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.6 }}
-                style={{ originX: 1 }}
-              />
-            </span>
-            {" "}لقطع غيار تويوتا
+            <span className="text-primary">المصرية</span>{" "}
+            — أكثر من 25 عامًا في خدمة عملاء تويوتا
           </h2>
-          <p className="text-secondary-foreground/50 text-lg md:text-xl max-w-2xl mx-auto font-medium leading-relaxed">
-            أكثر من 25 عامًا في بناء أكبر شبكة توزيع معتمدة في مصر
-          </p>
         </motion.div>
 
         {/* Main Content - Asymmetric Layout */}
