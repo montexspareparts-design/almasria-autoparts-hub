@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, action, isLoggedIn } = await req.json();
+    const { messages, action, isLoggedIn, userInterests } = await req.json();
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
