@@ -9,6 +9,7 @@ const FeaturedProducts = lazy(() => import("@/components/FeaturedProducts"));
 const WhyChooseUs = lazy(() => import("@/components/WhyChooseUs"));
 const WhoWeServe = lazy(() => import("@/components/WhoWeServe"));
 const KeyMetrics = lazy(() => import("@/components/KeyMetrics"));
+const SectionDivider = lazy(() => import("@/components/SectionDivider"));
 
 const DistributionNetwork = lazy(() => import("@/components/DistributionNetwork"));
 const MTXSection = lazy(() => import("@/components/MTXSection"));
@@ -24,20 +25,6 @@ const SectionFallback = () => (
   </div>
 );
 
-/**
- * Homepage Structure (Corporate Distribution Platform):
- * ─────────────────────────────────────────────────
- * 1. Hero              → H1 الوحيد بالصفحة
- * 2. من نحن            → H2: نبذة مؤسسية
- * 3. أرقامنا           → H2: مقاييس الثقة
- * 4. لماذا تختارنا     → H2: قطع أصلية، أسعار، توصيل، دعم
- * 5. من نخدم           → H2: شرائح العملاء
- * 6. قطاعات التوزيع    → H2: 3 خطوط رئيسية
- * 7. الانتشار والفروع  → H2: مواقع + شحن
- * 8. MTX               → H2: علامتنا الخاصة
- * 9. CTA ختامي         → ابدأ شراكتك
- * 10. Footer
- */
 const Index = () => {
   return (
     <div className="min-h-screen">
@@ -61,15 +48,37 @@ const Index = () => {
       ]} />
       <Navbar />
       <HeroSection />
+
+      {/* About — dark section */}
       <Suspense fallback={<SectionFallback />}><AboutBrief /></Suspense>
+
+      {/* Metrics — light with gear divider */}
       <Suspense fallback={<SectionFallback />}><KeyMetrics /></Suspense>
+
+      {/* Gear divider */}
+      <Suspense fallback={null}><SectionDivider variant="light" /></Suspense>
+
+      {/* Featured Products */}
       <Suspense fallback={<SectionFallback />}><FeaturedProducts /></Suspense>
+
+      {/* Why Choose Us — light bg */}
       <Suspense fallback={<SectionFallback />}><WhyChooseUs /></Suspense>
+
+      {/* Gear divider */}
+      <Suspense fallback={null}><SectionDivider variant="light" /></Suspense>
+
+      {/* Who We Serve */}
       <Suspense fallback={<SectionFallback />}><WhoWeServe /></Suspense>
-      
+
+      {/* Distribution — dark section */}
       <Suspense fallback={<SectionFallback />}><DistributionNetwork /></Suspense>
+
+      {/* MTX — light bg */}
       <Suspense fallback={<SectionFallback />}><MTXSection /></Suspense>
+
+      {/* Contact CTA — dark section */}
       <Suspense fallback={<SectionFallback />}><ContactSimple /></Suspense>
+
       <Suspense fallback={null}><Footer /></Suspense>
       <Suspense fallback={null}><WhatsAppFloat /></Suspense>
       <Suspense fallback={null}><BackToTop /></Suspense>
