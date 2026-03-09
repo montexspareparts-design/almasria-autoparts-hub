@@ -30,89 +30,80 @@ const reasons = [
 
 const WhyChooseUs = () => {
   return (
-    <section className="py-24 md:py-32 bg-background overflow-hidden">
-      <div className="container mx-auto px-4">
+    <section className="py-20 md:py-28 bg-background overflow-hidden" dir="rtl">
+      <div className="container mx-auto px-6 max-w-6xl">
 
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="mb-20"
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="mb-16"
         >
-          {/* Label */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-primary text-sm font-black tracking-[0.25em] uppercase mb-5"
-          >
-            لماذا تختارنا
-          </motion.p>
-
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
-            <div>
-              <h2 className="text-4xl md:text-5xl font-black text-foreground leading-tight mb-0">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8">
+            {/* Right: Title block */}
+            <div className="flex-1">
+              <p className="text-primary text-xs font-bold tracking-[0.3em] uppercase mb-4">
+                لماذا تختارنا
+              </p>
+              <h2 className="text-2xl md:text-3xl font-black text-foreground leading-snug">
                 معايير تشغيل تضعنا في{" "}
                 <span className="text-primary">مستوى مختلف</span>
               </h2>
             </div>
-            <p className="text-foreground/55 text-base md:text-lg max-w-md leading-[1.9] font-medium md:text-left shrink-0">
-              التزام بالجودة والمواصفات منذ 1999 — لا استثناءات.
-            </p>
+
+            {/* Left: Sub-text */}
+            <div className="md:pt-10 md:max-w-xs">
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                التزام بالجودة والمواصفات منذ 1999 — لا استثناءات.
+              </p>
+            </div>
           </div>
 
           {/* Divider */}
           <motion.div
             className="mt-8 h-px bg-border w-full"
-            initial={{ scaleX: 0, originX: 0 }}
+            initial={{ scaleX: 0, originX: 1 }}
             whileInView={{ scaleX: 1 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.9, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
           />
         </motion.div>
 
-        {/* Reasons — editorial grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
+        {/* Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 divide-y divide-border md:divide-y-0">
           {reasons.map((r, i) => (
             <motion.div
               key={r.number}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-60px" }}
-              transition={{ delay: 0.1 + i * 0.12, duration: 0.6, ease: "easeOut" }}
-              className={`group relative flex gap-8 p-10 border-border transition-all duration-500 hover:bg-muted/40 cursor-default
-                ${i % 2 === 0 ? "md:border-l" : ""} 
-                ${i < 2 ? "border-b" : ""}
-                ${i === 0 ? "border-t" : ""}
-                ${i === 1 ? "border-t" : ""}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ delay: 0.08 * i, duration: 0.55, ease: "easeOut" }}
+              className={`group relative flex gap-6 p-8 transition-colors duration-400 hover:bg-muted/30 cursor-default
+                ${i % 2 === 0 ? "md:border-l border-border" : ""}
+                ${i < 2 ? "md:border-b border-border" : ""}
               `}
             >
-              {/* Red accent on hover */}
-              <motion.div
-                className="absolute top-0 right-0 w-[3px] h-0 bg-primary rounded-full group-hover:h-full transition-all duration-500"
-              />
+              {/* Left accent bar */}
+              <div className="absolute top-0 right-0 w-[2px] bg-primary scale-y-0 group-hover:scale-y-100 transition-transform duration-500 origin-top h-full rounded-full" />
 
               {/* Number */}
-              <div className="shrink-0 pt-1">
-                <span className="font-black text-5xl md:text-6xl text-primary/15 group-hover:text-primary/25 transition-colors duration-300 leading-none tabular-nums">
+              <div className="shrink-0 w-12 pt-0.5">
+                <span className="font-black text-3xl text-primary/12 group-hover:text-primary/22 transition-colors duration-300 tabular-nums leading-none select-none">
                   {r.number}
                 </span>
               </div>
 
               {/* Content */}
-              <div className="flex-1">
-                {/* Icon */}
-                <div className="w-12 h-12 rounded-xl bg-primary/8 flex items-center justify-center mb-5 group-hover:bg-primary/15 transition-colors duration-300">
-                  <r.icon className="w-6 h-6 text-primary" strokeWidth={1.8} />
+              <div className="flex-1 min-w-0">
+                <div className="w-9 h-9 rounded-lg bg-primary/8 flex items-center justify-center mb-4 group-hover:bg-primary/14 transition-colors duration-300">
+                  <r.icon className="w-4 h-4 text-primary" strokeWidth={1.8} />
                 </div>
-
-                <h3 className="font-black text-foreground text-xl mb-3 leading-tight">
+                <h3 className="font-bold text-foreground text-base mb-2 leading-snug">
                   {r.title}
                 </h3>
-                <p className="text-foreground/55 text-base leading-[1.9] font-medium">
+                <p className="text-muted-foreground text-sm leading-relaxed">
                   {r.desc}
                 </p>
               </div>
