@@ -8,7 +8,7 @@ const AboutBrief = lazy(() => import("@/components/AboutBrief"));
 const WhyChooseUs = lazy(() => import("@/components/WhyChooseUs"));
 const WhoWeServe = lazy(() => import("@/components/WhoWeServe"));
 const KeyMetrics = lazy(() => import("@/components/KeyMetrics"));
-const DistributionSegments = lazy(() => import("@/components/DistributionSegments"));
+
 const DistributionNetwork = lazy(() => import("@/components/DistributionNetwork"));
 const MTXSection = lazy(() => import("@/components/MTXSection"));
 const ContactSimple = lazy(() => import("@/components/ContactSimple"));
@@ -64,7 +64,7 @@ const Index = () => {
       <Suspense fallback={<SectionFallback />}><KeyMetrics /></Suspense>
       <Suspense fallback={<SectionFallback />}><WhyChooseUs /></Suspense>
       <Suspense fallback={<SectionFallback />}><WhoWeServe /></Suspense>
-      <Suspense fallback={<SectionFallback />}><DistributionSegments /></Suspense>
+      
       <Suspense fallback={<SectionFallback />}><DistributionNetwork /></Suspense>
       <Suspense fallback={<SectionFallback />}><MTXSection /></Suspense>
       <Suspense fallback={<SectionFallback />}><ContactSimple /></Suspense>
