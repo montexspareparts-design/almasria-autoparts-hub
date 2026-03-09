@@ -42,7 +42,7 @@ const WhyChooseUs = () => {
           className="mb-16"
         >
           <div className="text-center">
-            <p className="text-primary text-sm font-black tracking-[0.3em] uppercase mb-5">
+            <p className="text-[hsl(var(--gold-accent))] text-sm font-black tracking-[0.3em] uppercase mb-5">
               لماذا تختارنا
             </p>
             <h2 className="text-4xl md:text-5xl font-black text-foreground leading-tight mb-4">
