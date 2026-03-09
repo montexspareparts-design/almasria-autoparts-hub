@@ -92,7 +92,6 @@ const App = () => (
                     <Route path="/install" element={<InstallApp />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
-                </PageTransition>
               </Suspense>
             </CartProvider>
           </AuthProvider>
