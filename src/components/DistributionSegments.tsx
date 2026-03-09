@@ -94,10 +94,10 @@ const DistributionSegments = () => {
             >
               <Link
                 to={seg.to}
-                className="group relative flex flex-col items-center rounded-2xl overflow-hidden bg-card border border-border hover:border-primary/40 transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 p-8 text-center h-full"
+                className="group relative flex flex-col items-center rounded-2xl overflow-hidden bg-card border-2 border-border hover:border-primary/50 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/15 p-8 text-center h-full"
               >
-                {/* Hover gradient */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                {/* Enhanced gradient */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/8 via-primary/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                 {/* Badge */}
                 <motion.span
@@ -105,16 +105,16 @@ const DistributionSegments = () => {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: 0.4 + i * 0.15 }}
-                  className="absolute top-4 left-4 text-[11px] font-bold text-primary bg-primary/10 border border-primary/20 rounded-full px-3 py-0.5 z-10"
+                  className="absolute top-5 left-5 text-xs font-black text-primary bg-primary/15 border-2 border-primary/30 rounded-full px-3.5 py-1 z-10 shadow-sm"
                 >
                   {seg.badge}
                 </motion.span>
 
                 {/* Image */}
                 <motion.div
-                  className="w-32 h-32 md:w-36 md:h-36 rounded-xl bg-white border border-border flex items-center justify-center p-4 mb-6 relative z-10"
-                  whileHover={{ scale: 1.08, rotate: 2 }}
-                  transition={{ duration: 0.3 }}
+                  className="w-36 h-36 md:w-40 md:h-40 rounded-2xl bg-white border-2 border-border flex items-center justify-center p-5 mb-7 relative z-10 shadow-lg"
+                  whileHover={{ scale: 1.1, rotate: 3, y: -8 }}
+                  transition={{ duration: 0.4, type: "spring", stiffness: 150 }}
                 >
                   <img
                     src={seg.image}
@@ -127,10 +127,10 @@ const DistributionSegments = () => {
 
                 {/* Text */}
                 <div className="relative z-10">
-                  <h3 className="text-xl font-bold text-foreground mb-2">
+                  <h3 className="text-xl font-black text-foreground mb-3">
                     {seg.name}
                   </h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+                  <p className="text-sm text-foreground/70 leading-[1.9] mb-7 font-medium">
                     {seg.description}
                   </p>
 
