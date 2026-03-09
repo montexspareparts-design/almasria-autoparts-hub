@@ -81,6 +81,10 @@ const DealerDashboard = () => {
           <a href="/" className="text-xl font-bold text-secondary-foreground">
             المصرية <span className="text-gradient-red">جروب</span>
           </a>
+          <div className="flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-full px-4 py-1.5">
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            <span className="text-sm font-semibold text-primary">حساب خاص لعملاء الجملة</span>
+          </div>
           <div className="flex items-center gap-3">
             <span className="text-sm text-secondary-foreground/60 hidden md:inline">
               {user?.email}
