@@ -14,6 +14,7 @@ const SectionDivider = lazy(() => import("@/components/SectionDivider"));
 
 const DistributionNetwork = lazy(() => import("@/components/DistributionNetwork"));
 const MTXSection = lazy(() => import("@/components/MTXSection"));
+const OurClientsSection = lazy(() => import("@/components/OurClientsSection"));
 const ContactSimple = lazy(() => import("@/components/ContactSimple"));
 const Footer = lazy(() => import("@/components/Footer"));
 const WhatsAppFloat = lazy(() => import("@/components/WhatsAppFloat"));
