@@ -30,6 +30,7 @@ const GenuinePartsPage = lazy(() => import("./pages/GenuinePartsPage"));
 const PartsByModelPage = lazy(() => import("./pages/PartsByModelPage"));
 const PartsByTypePage = lazy(() => import("./pages/PartsByTypePage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const CatalogsPage = lazy(() => import("./pages/CatalogsPage"));
 
 const queryClient = new QueryClient();
 
