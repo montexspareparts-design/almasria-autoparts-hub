@@ -454,7 +454,7 @@ const AIChatBot = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 40, scale: 0.9 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed bottom-4 left-4 md:bottom-6 md:left-6 z-50 w-[360px] max-w-[calc(100vw-32px)] h-[480px] max-h-[calc(100vh-80px)] bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+            className="fixed inset-0 z-[100] md:inset-auto md:bottom-6 md:left-6 md:w-[360px] h-[100dvh] md:h-[480px] md:max-h-[calc(100vh-80px)] bg-card md:border md:border-border md:rounded-2xl shadow-2xl flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 bg-primary text-primary-foreground">
