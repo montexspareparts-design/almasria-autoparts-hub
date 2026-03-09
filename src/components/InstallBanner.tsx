@@ -20,8 +20,8 @@ const InstallBanner = () => {
   const [justInstalled, setJustInstalled] = useState(false);
 
   useEffect(() => {
-    // Already installed
-    if (window.matchMedia("(display-mode: standalone)").matches) {
+    // Already installed (check both standard and iOS standalone)
+    if (window.matchMedia("(display-mode: standalone)").matches || (window.navigator as any).standalone === true) {
       setIsStandalone(true);
       return;
     }
