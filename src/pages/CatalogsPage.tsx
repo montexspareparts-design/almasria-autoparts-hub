@@ -271,7 +271,8 @@ const CatalogsPage = () => {
 
       // Get tier prices for these products
       const productIds = products.map(p => p.id);
-      const tierValue = dealerAccount?.tier ?? "retail";
+      type CustomerTier = "wholesale_tier1" | "wholesale_tier2" | "corporate" | "retail";
+      const tierValue: CustomerTier = (dealerAccount?.tier as CustomerTier) ?? "retail";
       const { data: tierPrices } = await supabase
         .from("product_tier_prices")
         .select("*")
