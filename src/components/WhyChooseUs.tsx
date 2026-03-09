@@ -3,101 +3,123 @@ import { ShieldCheck, Banknote, Truck, Headphones } from "lucide-react";
 
 const reasons = [
   {
+    number: "01",
     icon: ShieldCheck,
     title: "قطع غيار تويوتا الأصلية",
-    desc: "جميع منتجاتنا أصلية بنسبة 100% من تويوتا مباشرة، مع ضمان وكالة على كل قطعة",
+    desc: "جميع منتجاتنا أصلية بنسبة 100% من تويوتا مباشرة، مع ضمان وكالة كامل على كل قطعة.",
   },
   {
+    number: "02",
     icon: Banknote,
-    title: "أسعار تنافسية",
-    desc: "أسعار منضبطة وعادلة لتجار الجملة والشركات ومراكز الصيانة، مع خصومات حسب الفئة",
+    title: "أسعار مؤسسية منضبطة",
+    desc: "أسعار عادلة وشفافة لتجار الجملة والشركات ومراكز الصيانة، مع خصومات مدروسة حسب الفئة.",
   },
   {
+    number: "03",
     icon: Truck,
-    title: "توصيل سريع",
-    desc: "تسليم خلال 48 ساعة لجميع محافظات مصر عبر منظومة لوجستية مركزية",
+    title: "تسليم خلال 48 ساعة",
+    desc: "منظومة لوجستية مركزية تضمن وصول طلبك لجميع محافظات مصر في أقل من يومين.",
   },
   {
+    number: "04",
     icon: Headphones,
     title: "دعم فني متخصص",
-    desc: "فريق متخصص يساعدك في تحديد القطعة المطابقة عبر رقم الشاسيه أو صورة القطعة",
+    desc: "فريق مختص يحدد القطعة المطابقة بدقة عبر رقم الشاسيه أو الصورة، دون تخمين.",
   },
 ];
 
 const WhyChooseUs = () => {
   return (
-    <section className="py-20 md:py-28 bg-background overflow-hidden">
+    <section className="py-24 md:py-32 bg-background overflow-hidden">
       <div className="container mx-auto px-4">
+
+        {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="text-center mb-14"
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="mb-20"
         >
-          <motion.span
-            initial={{ opacity: 0, scale: 0.85 }}
-            whileInView={{ opacity: 1, scale: 1 }}
+          {/* Label */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.4 }}
-            className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-bold mb-4"
+            transition={{ duration: 0.5 }}
+            className="text-primary text-sm font-black tracking-[0.25em] uppercase mb-5"
           >
-            مزايانا
-          </motion.span>
-          <h2 className="text-3xl md:text-4xl font-black text-foreground mb-3">
-            لماذا <span className="text-primary">تختارنا؟</span>
-          </h2>
+            لماذا تختارنا
+          </motion.p>
+
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+            <div>
+              <h2 className="text-4xl md:text-5xl font-black text-foreground leading-tight mb-0">
+                معايير تشغيل تضعنا في{" "}
+                <span className="text-primary">مستوى مختلف</span>
+              </h2>
+            </div>
+            <p className="text-foreground/55 text-base md:text-lg max-w-md leading-[1.9] font-medium md:text-left shrink-0">
+              التزام بالجودة والمواصفات منذ 1999 — لا استثناءات.
+            </p>
+          </div>
+
+          {/* Divider */}
           <motion.div
-            className="w-14 h-1 bg-primary mx-auto rounded-full mb-4"
-            initial={{ scaleX: 0 }}
+            className="mt-8 h-px bg-border w-full"
+            initial={{ scaleX: 0, originX: 0 }}
             whileInView={{ scaleX: 1 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3 }}
+            transition={{ duration: 0.8, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
           />
-          <p className="text-foreground/70 text-base md:text-lg max-w-2xl mx-auto leading-[1.9] font-medium">
-            أربعة أسباب تجعل المصرية جروب الخيار الأول لتجار وموزعي قطع غيار تويوتا
-          </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-5xl mx-auto">
+        {/* Reasons — editorial grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
           {reasons.map((r, i) => (
             <motion.div
-              key={r.title}
-              initial={{ opacity: 0, y: 24, scale: 0.95 }}
-              whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{
-                delay: 0.15 + i * 0.12,
-                duration: 0.5,
-                type: "spring",
-                stiffness: 100,
-              }}
-              whileHover={{
-                y: -6,
-                scale: 1.02,
-                boxShadow: "0 20px 25px -5px hsl(var(--primary) / 0.1), 0 8px 10px -6px hsl(var(--primary) / 0.1)",
-                borderColor: "hsl(var(--primary) / 0.4)",
-                transition: { duration: 0.2 },
-              }}
-              className="group relative bg-card border border-border rounded-xl p-6 text-center transition-all duration-300 overflow-hidden"
+              key={r.number}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-60px" }}
+              transition={{ delay: 0.1 + i * 0.12, duration: 0.6, ease: "easeOut" }}
+              className={`group relative flex gap-8 p-10 border-border transition-all duration-500 hover:bg-muted/40 cursor-default
+                ${i % 2 === 0 ? "md:border-l" : ""} 
+                ${i < 2 ? "border-b" : ""}
+                ${i === 0 ? "border-t" : ""}
+                ${i === 1 ? "border-t" : ""}
+              `}
             >
-              {/* Hover gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              {/* Red accent on hover */}
+              <motion.div
+                className="absolute top-0 right-0 w-[3px] h-0 bg-primary rounded-full group-hover:h-full transition-all duration-500"
+              />
 
-              <div className="relative z-10">
-                <motion.div
-                  className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors"
-                  whileHover={{ rotate: [0, -10, 10, -5, 0] }}
-                  transition={{ duration: 0.5 }}
-                >
+              {/* Number */}
+              <div className="shrink-0 pt-1">
+                <span className="font-black text-5xl md:text-6xl text-primary/15 group-hover:text-primary/25 transition-colors duration-300 leading-none tabular-nums">
+                  {r.number}
+                </span>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1">
+                {/* Icon */}
+                <div className="w-12 h-12 rounded-xl bg-primary/8 flex items-center justify-center mb-5 group-hover:bg-primary/15 transition-colors duration-300">
                   <r.icon className="w-6 h-6 text-primary" strokeWidth={1.8} />
-                </motion.div>
-                <h3 className="font-black text-foreground text-base mb-2.5">{r.title}</h3>
-                <p className="text-foreground/70 text-sm leading-[1.9] font-medium">{r.desc}</p>
+                </div>
+
+                <h3 className="font-black text-foreground text-xl mb-3 leading-tight">
+                  {r.title}
+                </h3>
+                <p className="text-foreground/55 text-base leading-[1.9] font-medium">
+                  {r.desc}
+                </p>
               </div>
             </motion.div>
           ))}
         </div>
+
       </div>
     </section>
   );
