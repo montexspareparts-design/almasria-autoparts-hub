@@ -77,16 +77,16 @@ const DealerDashboard = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="bg-secondary border-b border-primary/20">
-        <div className="container mx-auto px-4 flex items-center justify-between h-16">
-          <a href="/" className="text-xl font-bold text-secondary-foreground">
+        <div className="container mx-auto px-4 flex items-center justify-between h-14 md:h-16 gap-2">
+          <a href="/" className="text-lg md:text-xl font-bold text-secondary-foreground shrink-0">
             المصرية <span className="text-gradient-red">جروب</span>
           </a>
-          <div className="flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-full px-4 py-1.5">
+          <div className="hidden sm:flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-full px-3 md:px-4 py-1.5">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            <span className="text-sm font-semibold text-primary">حساب خاص لعملاء الجملة</span>
+            <span className="text-xs md:text-sm font-semibold text-primary">حساب خاص لعملاء الجملة</span>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-secondary-foreground/60 hidden md:inline">
+          <div className="flex items-center gap-2 md:gap-3 shrink-0">
+            <span className="text-xs md:text-sm text-secondary-foreground/60 hidden md:inline truncate max-w-[150px]">
               {user?.email}
             </span>
             <Button variant="ghost" size="sm" onClick={() => { signOut(); navigate("/"); }} className="text-secondary-foreground/60">
