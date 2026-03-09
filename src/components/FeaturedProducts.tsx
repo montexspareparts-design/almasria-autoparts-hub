@@ -50,7 +50,7 @@ const FeaturedProducts = () => {
 
   if (isLoading) {
     return (
-      <section className="py-20 md:py-28 bg-muted/30 overflow-hidden">
+      <section className="relative py-20 md:py-28 bg-muted/30 overflow-hidden section-glow">
         <div className="container mx-auto px-4">
           <div className="text-center mb-14">
             <div className="h-8 w-48 bg-muted rounded-lg mx-auto mb-4 animate-pulse" />
