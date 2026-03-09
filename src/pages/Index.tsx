@@ -85,6 +85,9 @@ const Index = () => {
       {/* Our Clients — social proof */}
       <Suspense fallback={<SectionFallback />}><OurClientsSection /></Suspense>
 
+      {/* Maintenance Tips — knowledge center */}
+      <Suspense fallback={<SectionFallback />}><MaintenanceTipsSection /></Suspense>
+
       {/* Contact CTA — dark section */}
       <Suspense fallback={<SectionFallback />}><ContactSimple /></Suspense>
 
