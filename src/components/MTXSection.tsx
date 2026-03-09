@@ -17,8 +17,8 @@ const MTXSection = () => {
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             className="flex-1 text-center md:text-right"
           >
-            <h2 className="text-4xl md:text-5xl font-black text-foreground leading-tight mb-4">
-              جودة تضاهي <span className="text-primary">المواصفات الأصلية</span>
+            <h2 className="text-3xl md:text-5xl font-black text-foreground mb-4" style={{ lineHeight: 1.5 }}>
+              جودة تضاهي{" "}<br className="hidden md:block" /><span className="text-primary">المواصفات الأصلية</span>
             </h2>
             <p className="text-muted-foreground text-sm leading-relaxed max-w-md md:max-w-none mb-8">
               قطع غيار بديلة مختارة بعناية بأسعار تنافسية
