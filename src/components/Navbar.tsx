@@ -295,7 +295,7 @@ const Navbar = () => {
                     )}
                     {isWholesaleDealer && (
                       <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-primary" onClick={() => { navigate("/catalogs"); setIsOpen(false); }}>
-                        <BookOpen className="w-4 h-4" /> كتالوجات
+                        <BookOpen className="w-4 h-4" /> كشوفات المصرية
                       </Button>
                     )}
                     <Button variant="outline" size="sm" className="w-full gap-2" onClick={() => { navigate("/dealer"); setIsOpen(false); }}>
