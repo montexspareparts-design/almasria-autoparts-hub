@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
+import PageTransition from "@/components/PageTransition";
 import Index from "./pages/Index";
 
 const Auth = lazy(() => import("./pages/Auth"));
@@ -50,40 +51,42 @@ const App = () => (
           <AuthProvider>
             <CartProvider>
               <Suspense fallback={<PageLoader />}>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  {/* Redirect old/duplicate home paths */}
-                  <Route path="/home" element={<Navigate to="/" replace />} />
-                  <Route path="/home-2" element={<Navigate to="/" replace />} />
-                  <Route path="/main-home" element={<Navigate to="/" replace />} />
-                  <Route path="/about" element={<AboutPage />} />
-                  <Route path="/clients/:segment" element={<ClientSegmentPage />} />
-                  {/* Main pages */}
-                  <Route path="/products/genuine-toyota-parts" element={<GenuinePartsPage />} />
-                  <Route path="/mtx" element={<MTXPage />} />
-                  <Route path="/products/:brand" element={<ProductsPage />} />
-                  <Route path="/products" element={<ProductsPage />} />
-                  <Route path="/contact" element={<ContactPage />} />
-                  <Route path="/what-sets-us-apart" element={<WhatSetsUsApartPage />} />
-                  <Route path="/toyota-genuine-parts-egypt" element={<ToyotaPartsEgypt />} />
-                  <Route path="/parts-by-model/:model" element={<PartsByModelPage />} />
-                  <Route path="/parts-by-model" element={<PartsByModelPage />} />
-                  <Route path="/parts-by-type/:type" element={<PartsByTypePage />} />
-                  <Route path="/parts-by-type" element={<PartsByTypePage />} />
-                  {/* Auth & dealer */}
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/dealer-apply" element={<DealerApply />} />
-                  <Route path="/dealer-register" element={<DealerRegister />} />
-                  <Route path="/dealer" element={<DealerDashboard />} />
-                  <Route path="/client-register" element={<ClientRegister />} />
-                  <Route path="/admin" element={<AdminDashboard />} />
-                  <Route path="/dealer-login" element={<DealerLogin />} />
-                  <Route path="/cart" element={<CartPage />} />
-                  <Route path="/checkout" element={<CheckoutPage />} />
-                  <Route path="/reset-password" element={<ResetPassword />} />
-                  <Route path="/catalogs" element={<CatalogsPage />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
+                <PageTransition>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    {/* Redirect old/duplicate home paths */}
+                    <Route path="/home" element={<Navigate to="/" replace />} />
+                    <Route path="/home-2" element={<Navigate to="/" replace />} />
+                    <Route path="/main-home" element={<Navigate to="/" replace />} />
+                    <Route path="/about" element={<AboutPage />} />
+                    <Route path="/clients/:segment" element={<ClientSegmentPage />} />
+                    {/* Main pages */}
+                    <Route path="/products/genuine-toyota-parts" element={<GenuinePartsPage />} />
+                    <Route path="/mtx" element={<MTXPage />} />
+                    <Route path="/products/:brand" element={<ProductsPage />} />
+                    <Route path="/products" element={<ProductsPage />} />
+                    <Route path="/contact" element={<ContactPage />} />
+                    <Route path="/what-sets-us-apart" element={<WhatSetsUsApartPage />} />
+                    <Route path="/toyota-genuine-parts-egypt" element={<ToyotaPartsEgypt />} />
+                    <Route path="/parts-by-model/:model" element={<PartsByModelPage />} />
+                    <Route path="/parts-by-model" element={<PartsByModelPage />} />
+                    <Route path="/parts-by-type/:type" element={<PartsByTypePage />} />
+                    <Route path="/parts-by-type" element={<PartsByTypePage />} />
+                    {/* Auth & dealer */}
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/dealer-apply" element={<DealerApply />} />
+                    <Route path="/dealer-register" element={<DealerRegister />} />
+                    <Route path="/dealer" element={<DealerDashboard />} />
+                    <Route path="/client-register" element={<ClientRegister />} />
+                    <Route path="/admin" element={<AdminDashboard />} />
+                    <Route path="/dealer-login" element={<DealerLogin />} />
+                    <Route path="/cart" element={<CartPage />} />
+                    <Route path="/checkout" element={<CheckoutPage />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/catalogs" element={<CatalogsPage />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </PageTransition>
               </Suspense>
             </CartProvider>
           </AuthProvider>
