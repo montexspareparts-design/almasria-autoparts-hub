@@ -215,9 +215,6 @@ const TypeDetailView = ({ type }: { type: PartTypeData }) => {
             ))}
           </div>
 
-          <div className="max-w-2xl mx-auto">
-            <PartRequestForm />
-          </div>
         </div>
       </section>
     </>

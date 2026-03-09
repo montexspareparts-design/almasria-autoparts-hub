@@ -228,10 +228,6 @@ const ModelDetailView = ({ model }: { model: ModelData }) => (
           ))}
         </div>
 
-        {/* CTA + Form */}
-        <div className="max-w-2xl mx-auto">
-          <PartRequestForm defaultModel={model.name} />
-        </div>
       </div>
     </section>
   </>
