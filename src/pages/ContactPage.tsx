@@ -37,13 +37,13 @@ const ContactPage = () => {
       <Navbar />
 
       {/* Hero */}
-      <section className="pt-28 pb-14 bg-dark-section relative overflow-hidden">
+      <section className="pt-20 md:pt-28 pb-10 md:pb-14 bg-dark-section relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
         <div className="container mx-auto px-4 relative z-10 text-center">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-3xl md:text-5xl font-black text-secondary-foreground mb-4"
+            className="text-2xl md:text-5xl font-black text-secondary-foreground mb-3 md:mb-4"
           >
             تواصل <span className="text-gradient-red">معنا</span>
           </motion.h1>
@@ -51,7 +51,7 @@ const ContactPage = () => {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="text-secondary-foreground/60 max-w-lg mx-auto"
+            className="text-secondary-foreground/60 max-w-lg mx-auto text-sm md:text-base"
           >
             فريقنا جاهز لخدمتك والرد على جميع استفساراتك حول قطع غيار تويوتا الأصلية والزيوت
           </motion.p>
