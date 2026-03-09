@@ -10,6 +10,7 @@ const quickLinks = [
   { label: "المتجر", href: "/products" },
   { label: "ما يميزنا", href: "/what-sets-us-apart" },
   { label: "اتصل بنا", href: "/contact" },
+  { label: "حمّل التطبيق", href: "/install", icon: Download },
 ];
 
 const Footer = () => {
