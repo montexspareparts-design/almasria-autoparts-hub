@@ -654,7 +654,7 @@ const AIChatBot = () => {
                   onChange={(e) => setInput(e.target.value)}
                   placeholder={isListening ? "🎤 بتكلم..." : pendingImage ? "أضف وصف للصورة (اختياري)..." : "اكتب سؤالك هنا..."}
                   disabled={isLoading || isLocating}
-                  className="flex-1 bg-muted rounded-xl px-3 py-2 text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50"
+                  className="flex-1 bg-muted rounded-xl px-3 py-2 text-base md:text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50"
                 />
                 <Button type="submit" size="icon" disabled={(!input.trim() && !pendingImage) || isLoading || isLocating} className="rounded-xl shrink-0">
                   <Send className="w-4 h-4" />
