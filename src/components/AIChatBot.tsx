@@ -97,7 +97,15 @@ const AIChatBot = () => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
       },
-      body: JSON.stringify({ messages: apiMessages, isLoggedIn: !!user }),
+      body: JSON.stringify({
+        messages: apiMessages,
+        isLoggedIn: !!user,
+        userInterests: consent ? {
+          topCategories: getTopCategories(3),
+          topBrands: getTopBrands(2),
+          recentSearches: interests.searchTerms.slice(0, 5),
+        } : null,
+      }),
     });
 
     if (!resp.ok) {
