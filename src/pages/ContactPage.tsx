@@ -144,9 +144,7 @@ const ContactPage = () => {
               { name: "الأقصر", nameEn: "Luxor", detail: "صعيد مصر", detailEn: "Upper Egypt", icon: Building2, mapUrl: "https://maps.app.goo.gl/c9B4yDBY2QHWPKcT8" },
               { name: "المكتب الإداري", nameEn: "Admin Office", detail: "اللبيني – الجيزة", detailEn: "Lebini – Giza", icon: Building2, mapUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent("اللبيني, الجيزة, مصر")}` },
               { name: "دبي – Spectra Cars & Parts FZC", nameEn: "Dubai – Spectra Cars & Parts FZC", detail: "مركز إقليمي – الإمارات 🇦🇪", detailEn: "Regional Hub – UAE 🇦🇪", icon: Globe, mapUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent("Spectra Cars & Parts FZC, Dubai, UAE")}` },
-            ].map((b, i) => {
-              const { isAr } = useLanguage();
-              return (
+            ].map((b, i) => (
                 <motion.a key={b.name} href={b.mapUrl} target="_blank" rel="noopener noreferrer" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }} whileHover={{ scale: 1.03, y: -3 }} className="bg-card border border-border rounded-xl p-5 hover:border-primary/40 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 group cursor-pointer">
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
