@@ -52,6 +52,7 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <CartProvider>
+              <InstallBanner />
               <Suspense fallback={<PageLoader />}>
                 <PageTransition>
                   <Routes>
