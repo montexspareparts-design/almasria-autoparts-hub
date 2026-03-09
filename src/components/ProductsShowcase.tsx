@@ -79,7 +79,7 @@ const ProductsShowcase = () => {
           <p className="text-primary text-sm font-black tracking-[0.3em] uppercase mb-5">
             تصفح الماركات
           </p>
-          <h2 className="text-3xl md:text-4xl font-black text-secondary-foreground leading-snug mb-3">
+          <h2 className="text-4xl md:text-5xl font-black text-secondary-foreground leading-tight mb-4">
             اكتشف <span className="text-primary">منتجاتنا</span>
           </h2>
           <p className="text-secondary-foreground/50 text-sm leading-relaxed max-w-md mx-auto mb-6">
