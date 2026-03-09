@@ -26,6 +26,25 @@ const getTextContent = (content: MessageContent): string => {
 
 const AIChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
+
+  // Listen for global open event
+  useEffect(() => {
+    const handler = (e: CustomEvent) => {
+      setIsOpen(true);
+      if (e.detail?.message) {
+        // Will be handled after open
+        setTimeout(() => {
+          const inputEl = document.querySelector<HTMLTextAreaElement>('[data-chatbot-input]');
+          if (inputEl) {
+            inputEl.value = e.detail.message;
+            inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+        }, 300);
+      }
+    };
+    window.addEventListener('open-ai-chat', handler as EventListener);
+    return () => window.removeEventListener('open-ai-chat', handler as EventListener);
+  }, []);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
