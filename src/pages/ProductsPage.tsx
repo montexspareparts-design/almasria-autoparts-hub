@@ -90,6 +90,7 @@ const ProductsPage = () => {
   const { isDealer, user, dealerAccount } = useAuth();
   const { addItem } = useCart();
   const queryClient = useQueryClient();
+  const { trackBrand, trackCategory, trackSearch, trackProductView } = usePersonalization();
   const config = brand ? brandConfig[brand] : null;
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [currentPage, setCurrentPage] = useState(1);
