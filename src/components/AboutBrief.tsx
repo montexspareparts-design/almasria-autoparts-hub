@@ -98,16 +98,15 @@ const AboutBrief = () => {
           transition={{ duration: 0.7 }}
           className="text-center mb-20"
         >
-          <motion.div
-            className="w-20 h-1 bg-primary mx-auto rounded-full mb-8"
-            initial={{ scaleX: 0 }}
-            whileInView={{ scaleX: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-          />
-          <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-secondary-foreground mb-5 leading-tight whitespace-nowrap">
+          <p className="text-primary text-xs font-black tracking-[0.35em] uppercase mb-5">
+            من نحن
+          </p>
+          <h2 className="text-2xl md:text-3xl font-black text-secondary-foreground leading-snug mb-3">
             المصرية — أكثر من 25 عامًا في خدمة عملاء <span className="text-primary">تويوتا</span>
           </h2>
+          <p className="text-secondary-foreground/50 text-sm leading-relaxed max-w-md mx-auto">
+            موزع معتمد رسمي لقطع الغيار والزيوت الأصلية منذ 1999
+          </p>
         </motion.div>
 
         {/* Main Content - Asymmetric Layout */}

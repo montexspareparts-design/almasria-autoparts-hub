@@ -14,31 +14,23 @@ const ContactSimple = () => {
       />
 
       <div className="container mx-auto px-4 max-w-3xl text-center relative z-10">
-        <motion.h2
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="text-2xl md:text-4xl font-black text-secondary-foreground mb-5 leading-tight"
+          className="mb-8"
         >
-          ابدأ <span className="text-primary">شراكتك</span> معنا اليوم
-        </motion.h2>
-        <motion.div
-          className="w-16 h-1 bg-primary mx-auto rounded-full mb-6"
-          initial={{ scaleX: 0 }}
-          whileInView={{ scaleX: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-        />
-        <motion.p
-          initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="text-secondary-foreground/70 text-base md:text-lg mb-10 leading-[2] max-w-2xl mx-auto font-medium"
-        >
-          سواء كنت تاجر جملة أو شركة أو مركز صيانة، فريقنا جاهز لتقديم عرض توريد مخصص يلبي احتياجاتك
-        </motion.p>
+          <p className="text-primary text-xs font-black tracking-[0.35em] uppercase mb-5">
+            تواصل معنا
+          </p>
+          <h2 className="text-2xl md:text-3xl font-black text-secondary-foreground leading-snug mb-3">
+            ابدأ <span className="text-primary">شراكتك</span> معنا اليوم
+          </h2>
+          <p className="text-secondary-foreground/50 text-sm leading-relaxed max-w-sm mx-auto">
+            فريقنا جاهز لتقديم عرض توريد مخصص يلبي احتياجاتك
+          </p>
+        </motion.div>
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}

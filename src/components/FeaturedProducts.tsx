@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Package, ShoppingCart, Eye, Sparkles, ChevronLeft } from "lucide-react";
+import { Package, ShoppingCart, Eye, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -84,27 +84,13 @@ const FeaturedProducts = () => {
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             className="text-center mb-14"
           >
-            <motion.span
-              initial={{ opacity: 0, scale: 0.85 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4 }}
-              className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-primary/15 text-primary text-sm font-bold mb-4 border border-primary/20"
-            >
-              <Sparkles className="w-4 h-4" />
-              منتجات مختارة
-            </motion.span>
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-foreground mb-4 leading-tight">
+            <p className="text-primary text-xs font-black tracking-[0.35em] uppercase mb-5">
+              منتجاتنا
+            </p>
+            <h2 className="text-2xl md:text-3xl font-black text-foreground leading-snug mb-3">
               منتجاتنا <span className="text-primary">المميزة</span>
             </h2>
-            <motion.div
-              className="w-16 h-1 bg-primary mx-auto rounded-full mb-5"
-              initial={{ scaleX: 0 }}
-              whileInView={{ scaleX: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-            />
-            <p className="text-foreground/70 text-base md:text-lg max-w-2xl mx-auto leading-[1.9] font-medium">
+            <p className="text-muted-foreground text-sm leading-relaxed max-w-sm mx-auto">
               اختيار متميز من قطع الغيار الأصلية والمنتجات عالية الجودة
             </p>
           </motion.div>
