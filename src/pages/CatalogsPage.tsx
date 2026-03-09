@@ -581,7 +581,7 @@ const CatalogsPage = () => {
       {/* Tabs Section */}
       <section className="max-w-6xl mx-auto px-4 -mt-6 relative z-10" dir="rtl">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 h-12 bg-card border border-border shadow-lg">
+          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-3 h-12 bg-card border border-border shadow-lg">
             <TabsTrigger value="catalogs" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <FileText className="w-4 h-4" />
               الكتالوجات
@@ -589,6 +589,10 @@ const CatalogsPage = () => {
             <TabsTrigger value="prices" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <DollarSign className="w-4 h-4" />
               استعلام الأسعار
+            </TabsTrigger>
+            <TabsTrigger value="quick-order" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Zap className="w-4 h-4" />
+              طلب جملة سريع
             </TabsTrigger>
           </TabsList>
 
