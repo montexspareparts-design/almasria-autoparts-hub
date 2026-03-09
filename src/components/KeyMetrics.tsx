@@ -85,9 +85,6 @@ const KeyMetrics = () => {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-12"
         >
-          <p className="text-[hsl(var(--gold-accent))] text-sm font-black tracking-[0.3em] uppercase mb-5">
-            إحصائياتنا
-          </p>
           <h2 className="text-4xl md:text-5xl font-black text-foreground leading-tight mb-4">
             أرقام تَمنح <span className="text-primary">الثقة</span>
           </h2>

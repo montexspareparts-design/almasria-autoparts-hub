@@ -98,9 +98,6 @@ const AboutBrief = () => {
           transition={{ duration: 0.7 }}
           className="text-center mb-20"
         >
-          <p className="text-[hsl(var(--gold-accent))] text-sm font-black tracking-[0.3em] uppercase mb-5">
-            من نحن
-          </p>
           <h2 className="text-4xl md:text-5xl font-black text-secondary-foreground leading-tight mb-4">
             المصرية — أكثر من 25 عامًا في خدمة عملاء <span className="text-primary">تويوتا</span>
           </h2>

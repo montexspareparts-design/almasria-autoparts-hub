@@ -84,9 +84,6 @@ const FeaturedProducts = () => {
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             className="text-center mb-14"
           >
-            <p className="text-[hsl(var(--gold-accent))] text-sm font-black tracking-[0.3em] uppercase mb-5">
-              منتجاتنا
-            </p>
             <h2 className="text-4xl md:text-5xl font-black text-foreground leading-tight mb-4">
               منتجاتنا <span className="text-primary">المميزة</span>
             </h2>
