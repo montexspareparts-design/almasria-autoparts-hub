@@ -27,7 +27,7 @@ const clientTypes = [
   { value: "distributor", label: "عميل قطاعي", icon: Users, desc: "ورش صيانة ومراكز خدمة" },
 ] as const;
 
-const ADMIN_WHATSAPP = "201020412358";
+const ADMIN_WHATSAPP = "201153961008";
 
 const formSchema = z.object({
   fullName: z.string().trim().min(3, "الاسم يجب أن يكون 3 أحرف على الأقل").max(100),

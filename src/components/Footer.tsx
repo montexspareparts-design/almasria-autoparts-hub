@@ -54,13 +54,13 @@ const Footer = () => {
             <ul className="space-y-3">
               <li>
                 <a
-                  href="tel:+201020412358"
-                  onClick={() => trackClickCall("+201020412358")}
+                  href="tel:+201153961008"
+                  onClick={() => trackClickCall("+201153961008")}
                   className="flex items-center gap-2.5 text-sm text-secondary-foreground/40 hover:text-primary transition-colors"
                   dir="ltr"
                 >
                   <Phone className="w-4 h-4 text-primary/60 flex-shrink-0" />
-                  +20 1020412358
+                  +20 1153961008
                 </a>
               </li>
               <li>
@@ -71,7 +71,7 @@ const Footer = () => {
               </li>
               <li>
                 <a
-                  href="https://wa.me/201020412358"
+                  href="https://wa.me/201153961008"
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => trackClickWhatsApp("footer_link")}

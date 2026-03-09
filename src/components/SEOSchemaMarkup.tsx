@@ -14,7 +14,7 @@ export const OrganizationSchema = () => (
       "logo": `${SITE_URL}/logo.png`,
       "description": "موزع معتمد رسمي لقطع غيار وزيوت تويوتا الأصلية في مصر منذ 1999",
       "foundingDate": "1999",
-      "telephone": "+201020412358",
+      "telephone": "+201153961008",
       "email": "info@almasriaautoparts.com",
       "address": [
         {
@@ -40,7 +40,7 @@ export const OrganizationSchema = () => (
           "addressCountry": "AE"
         }
       ],
-      "sameAs": ["https://wa.me/201020412358"],
+      "sameAs": ["https://wa.me/201153961008"],
       "areaServed": {
         "@type": "Country",
         "name": "Egypt"
@@ -175,7 +175,7 @@ export const LocalBusinessSchema = () => (
       "name": "المصرية جروب",
       "image": `${SITE_URL}/logo.png`,
       "url": SITE_URL,
-      "telephone": "+201020412358",
+      "telephone": "+201153961008",
       "address": {
         "@type": "PostalAddress",
         "streetAddress": "أوسيم",

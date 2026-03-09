@@ -29,7 +29,7 @@ const BRANCHES = [
     name: "فرع الجيزة – أوسيم",
     lat: 30.1269,
     lng: 31.1356,
-    phone: "01020412358",
+    phone: "01153961008",
     mapUrl: "https://maps.app.goo.gl/trZ9Q4ZhnwtsFXTB8",
     serves: "الجيزة، الفيوم، بني سويف، المنيا، والصعيد الأدنى"
   },
@@ -37,7 +37,7 @@ const BRANCHES = [
     name: "فرع الأقصر – صعيد مصر",
     lat: 25.6872,
     lng: 32.6396,
-    phone: "01020412358",
+    phone: "01153961008",
     mapUrl: "https://maps.app.goo.gl/c9B4yDBY2QHWPKcT8",
     serves: "الأقصر، أسوان، قنا، سوهاج، وصعيد مصر"
   }
@@ -473,7 +473,7 @@ const AIChatBot = () => {
                         const text = messages
                           .map((m) => (m.role === "user" ? `🙋 العميل: ${getTextContent(m.content)}` : `🤖 المساعد: ${getTextContent(m.content)}`))
                           .join("\n\n");
-                        const waUrl = `https://wa.me/201020412358?text=${encodeURIComponent("📋 محادثة من المساعد الذكي:\n\n" + text)}`;
+                        const waUrl = `https://wa.me/201153961008?text=${encodeURIComponent("📋 محادثة من المساعد الذكي:\n\n" + text)}`;
                         window.open(waUrl, "_blank");
                       }}
                       className="p-1.5 rounded-lg hover:bg-primary-foreground/20 transition-colors"

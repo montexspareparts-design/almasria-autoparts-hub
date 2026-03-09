@@ -121,7 +121,7 @@ const PartRequestForm = ({ defaultModel, compact }: PartRequestFormProps) => {
           className="gap-2 border-green-500/30 text-green-600"
           asChild
         >
-          <a href={`https://wa.me/201020412358?text=${whatsappMessage}`} target="_blank" rel="noopener noreferrer" onClick={() => trackClickWhatsApp("form_success")}>
+          <a href={`https://wa.me/201153961008?text=${whatsappMessage}`} target="_blank" rel="noopener noreferrer" onClick={() => trackClickWhatsApp("form_success")}>
             <MessageCircle className="w-4 h-4" />
             تواصل عبر واتساب للاستعجال
           </a>
@@ -305,7 +305,7 @@ const PartRequestForm = ({ defaultModel, compact }: PartRequestFormProps) => {
             asChild
           >
             <a
-              href={`https://wa.me/201020412358?text=${whatsappMessage}`}
+              href={`https://wa.me/201153961008?text=${whatsappMessage}`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackClickWhatsApp("part_request_form")}
