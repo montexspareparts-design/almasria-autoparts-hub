@@ -81,6 +81,9 @@ const Index = () => {
       {/* MTX — light bg */}
       <Suspense fallback={<SectionFallback />}><MTXSection /></Suspense>
 
+      {/* Our Clients — social proof */}
+      <Suspense fallback={<SectionFallback />}><OurClientsSection /></Suspense>
+
       {/* Contact CTA — dark section */}
       <Suspense fallback={<SectionFallback />}><ContactSimple /></Suspense>
 
