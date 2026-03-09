@@ -98,8 +98,9 @@ const AIChatBot = () => {
 
   // ---- Voice Input (STT) ----
   const toggleListening = useCallback(() => {
+    console.log("SpeechRecognition available:", !!SpeechRecognition);
     if (!SpeechRecognition) {
-      toast.error("المتصفح لا يدعم التعرف على الصوت");
+      toast.error("المتصفح لا يدعم التعرف على الصوت، جرب من Chrome على الموبايل أو الكمبيوتر");
       return;
     }
 
@@ -126,12 +127,14 @@ const AIChatBot = () => {
     };
 
     recognition.onerror = (event: any) => {
-      console.error("Speech recognition error:", event.error);
+      console.error("Speech recognition error:", event.error, event);
       setIsListening(false);
       if (event.error === "not-allowed") {
-        toast.error("يرجى السماح بالوصول للميكروفون");
+        toast.error("يرجى السماح بالوصول للميكروفون من إعدادات المتصفح");
+      } else if (event.error === "network") {
+        toast.error("خطأ في الشبكة - تأكد من اتصالك بالإنترنت");
       } else if (event.error !== "aborted") {
-        toast.error("حدث خطأ في التعرف على الصوت");
+        toast.error(`خطأ في التعرف على الصوت: ${event.error}`);
       }
     };
 
