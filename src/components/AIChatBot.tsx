@@ -37,7 +37,7 @@ const BRANCHES = [
     name: "فرع الأقصر – صعيد مصر",
     lat: 25.6872,
     lng: 32.6396,
-    phone: "01020412358",
+    phone: "01153961008",
     mapUrl: "https://maps.app.goo.gl/c9B4yDBY2QHWPKcT8",
     serves: "الأقصر، أسوان، قنا، سوهاج، وصعيد مصر"
   }

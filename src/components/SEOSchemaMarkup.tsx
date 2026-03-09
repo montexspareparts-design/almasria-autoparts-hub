@@ -175,7 +175,7 @@ export const LocalBusinessSchema = () => (
       "name": "المصرية جروب",
       "image": `${SITE_URL}/logo.png`,
       "url": SITE_URL,
-      "telephone": "+201020412358",
+      "telephone": "+201153961008",
       "address": {
         "@type": "PostalAddress",
         "streetAddress": "أوسيم",
