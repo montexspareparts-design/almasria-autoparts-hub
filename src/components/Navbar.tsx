@@ -169,16 +169,16 @@ const Navbar = () => {
           </div>
 
           {/* Mobile right icons */}
-          <div className="flex md:hidden items-center gap-1">
+          <div className="flex md:hidden items-center gap-0.5 relative z-10">
             <NotificationBell />
             {user ? (
-              <motion.button onClick={() => navigate("/dealer")} className="text-secondary-foreground/80 hover:text-primary transition-colors p-1.5" whileTap={{ scale: 0.9 }}>
+              <button onClick={() => navigate("/dealer")} className="text-secondary-foreground/80 hover:text-primary transition-colors p-2.5 touch-manipulation">
                 <User className="w-5 h-5" />
-              </motion.button>
+              </button>
             ) : (
-              <motion.button onClick={() => navigate("/auth")} className="text-secondary-foreground/80 hover:text-primary transition-colors p-1.5" whileTap={{ scale: 0.9 }}>
+              <button onClick={() => navigate("/auth")} className="text-secondary-foreground/80 hover:text-primary transition-colors p-2.5 touch-manipulation">
                 <User className="w-5 h-5" />
-              </motion.button>
+              </button>
             )}
           </div>
 
