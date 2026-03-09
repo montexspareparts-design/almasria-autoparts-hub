@@ -98,7 +98,7 @@ const AboutBrief = () => {
           transition={{ duration: 0.7 }}
           className="text-center mb-20"
         >
-          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-secondary-foreground leading-tight mb-4 lg:whitespace-nowrap">
+          <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-secondary-foreground leading-tight mb-4">
             المصرية — أكثر من 25 عامًا في خدمة عملاء <span className="text-primary">تويوتا</span>
           </h2>
           <p className="text-secondary-foreground/50 text-sm leading-relaxed max-w-md mx-auto">
