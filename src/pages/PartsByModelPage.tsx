@@ -5,7 +5,7 @@ import { Car, ChevronLeft, Search, ShieldCheck, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import PartRequestForm from "@/components/PartRequestForm";
+
 import { BreadcrumbSchema, ItemListSchema } from "@/components/SEOSchemaMarkup";
 
 const SITE = "https://almasriaautoparts.com";
