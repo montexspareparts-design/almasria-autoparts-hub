@@ -280,6 +280,17 @@ const Navbar = () => {
                   </motion.a>
                 );
               })}
+              {/* Install App link */}
+              <motion.div custom={links.length} initial="hidden" animate="visible" variants={linkVariants}>
+                <Link
+                  to="/install"
+                  className="block py-3 text-sm font-bold text-primary hover:text-primary/80 transition-colors flex items-center gap-2"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <Download className="w-4 h-4" />
+                  حمّل التطبيق
+                </Link>
+              </motion.div>
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
