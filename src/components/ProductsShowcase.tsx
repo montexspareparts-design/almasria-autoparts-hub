@@ -62,14 +62,14 @@ const ProductsShowcase = () => {
             style={{ left: gear.x, top: gear.y }}
             initial={{ opacity: 0, scale: 0 }}
             animate={{
-              opacity: [0, 0.15, 0.08, 0.15, 0],
+              opacity: [0, 0.3, 0.18, 0.3, 0],
               scale: [0.5, 1, 0.85, 1, 0.5],
               y: [0, -20, 10, -15, 0],
               rotate: [0, gear.rotate],
             }}
             transition={{ duration: gear.duration, delay: gear.delay, repeat: Infinity, ease: "linear" }}
           >
-            <gear.icon className="text-white" style={{ width: gear.size, height: gear.size, opacity: 0.1 }} strokeWidth={0.8} />
+            <gear.icon className="text-white" style={{ width: gear.size, height: gear.size, opacity: 0.2 }} strokeWidth={1} />
           </motion.div>
         ))}
       </div>
@@ -83,13 +83,13 @@ const ProductsShowcase = () => {
             style={{ left: word.x, top: word.y }}
             initial={{ opacity: 0 }}
             animate={{
-              opacity: [0, word.opacity, word.opacity * 0.5, word.opacity, 0],
+              opacity: [0, word.opacity * 2.5, word.opacity * 1.5, word.opacity * 2.5, 0],
               x: [0, 30, -20, 15, 0],
               y: [0, -10, 5, -8, 0],
             }}
             transition={{ duration: word.duration, delay: word.delay, repeat: Infinity, ease: "linear" }}
           >
-            <span className={`${word.size} font-black text-white/10 tracking-widest whitespace-nowrap`}>
+            <span className={`${word.size} font-black text-white/20 tracking-widest whitespace-nowrap`}>
               {word.text}
             </span>
           </motion.div>
