@@ -18,6 +18,8 @@ import AdvancedProductFilter, { ProductFilters } from "@/components/AdvancedProd
 import RelatedProducts from "@/components/RelatedProducts";
 import MaintenanceBundles from "@/components/MaintenanceBundles";
 import SpecialOffers from "@/components/SpecialOffers";
+import PersonalizedProducts from "@/components/PersonalizedProducts";
+import { usePersonalization } from "@/hooks/usePersonalization";
 import brandGenuineParts from "@/assets/brand-genuine-parts.png";
 import brandToyotaOil from "@/assets/brand-toyota-oil.png";
 import brandMtx from "@/assets/brand-mtx.jpg";
@@ -88,6 +90,7 @@ const ProductsPage = () => {
   const { isDealer, user, dealerAccount } = useAuth();
   const { addItem } = useCart();
   const queryClient = useQueryClient();
+  const { trackBrand, trackCategory, trackSearch, trackProductView } = usePersonalization();
   const config = brand ? brandConfig[brand] : null;
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [currentPage, setCurrentPage] = useState(1);
@@ -107,6 +110,24 @@ const ProductsPage = () => {
 
   // Reset page when filters change
   useEffect(() => { setCurrentPage(1); }, [filters]);
+
+  // Track brand visit for personalization
+  useEffect(() => {
+    if (config?.brandKey) trackBrand(config.brandKey);
+  }, [config?.brandKey, trackBrand]);
+
+  // Track search terms
+  useEffect(() => {
+    if (filters.search) {
+      const timer = setTimeout(() => trackSearch(filters.search), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [filters.search, trackSearch]);
+
+  // Track category filter
+  useEffect(() => {
+    if (filters.categoryId) trackCategory(filters.categoryId);
+  }, [filters.categoryId, trackCategory]);
 
   const { data: viewedProductIds = [] } = useQuery({
     queryKey: ["dealer_views_today", user?.id],
@@ -488,6 +509,13 @@ const ProductsPage = () => {
             totalResults={filteredProducts.length}
             isLoading={isLoading}
           />
+        </div>
+      </section>
+
+      {/* Personalized recommendations */}
+      <section className="pt-6">
+        <div className="container mx-auto px-4">
+          <PersonalizedProducts />
         </div>
       </section>
 

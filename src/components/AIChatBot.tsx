@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePersonalization } from "@/hooks/usePersonalization";
 
 type MessageContent =
   | string
@@ -33,6 +34,7 @@ const getTextContent = (content: MessageContent): string => {
 
 const AIChatBot = () => {
   const { user } = useAuth();
+  const { consent, interests, getTopCategories, getTopBrands } = usePersonalization();
   const [isOpen, setIsOpen] = useState(false);
 
   // Listen for global open event
@@ -95,7 +97,15 @@ const AIChatBot = () => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
       },
-      body: JSON.stringify({ messages: apiMessages, isLoggedIn: !!user }),
+      body: JSON.stringify({
+        messages: apiMessages,
+        isLoggedIn: !!user,
+        userInterests: consent ? {
+          topCategories: getTopCategories(3),
+          topBrands: getTopBrands(2),
+          recentSearches: interests.searchTerms.slice(0, 5),
+        } : null,
+      }),
     });
 
     if (!resp.ok) {
