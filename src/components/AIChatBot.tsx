@@ -549,7 +549,7 @@ const AIChatBot = () => {
               {messages.map((msg, i) => (
                 <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
-                    msg.role === "user" ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-muted text-foreground rounded-bl-sm"
+                    msg.role === "user" ? "bg-primary text-primary-foreground rounded-tl-sm" : "bg-muted text-foreground rounded-tr-sm"
                   }`}>
                     {msg.imagePreview && (
                       <img src={msg.imagePreview} alt="صورة مرفقة" className="rounded-lg mb-2 max-h-32 w-auto" />
