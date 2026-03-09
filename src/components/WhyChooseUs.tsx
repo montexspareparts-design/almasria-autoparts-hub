@@ -30,7 +30,7 @@ const reasons = [
 
 const WhyChooseUs = () => {
   return (
-    <section className="py-20 md:py-28 bg-background overflow-hidden" dir="rtl">
+    <section className="relative py-20 md:py-28 bg-background overflow-hidden section-glow" dir="rtl">
       <div className="container mx-auto px-6 max-w-6xl">
 
         {/* Header */}

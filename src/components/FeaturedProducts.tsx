@@ -74,7 +74,7 @@ const FeaturedProducts = () => {
 
   return (
     <>
-      <section className="py-20 md:py-28 bg-muted/30 overflow-hidden">
+      <section className="relative py-20 md:py-28 bg-muted/30 overflow-hidden section-glow">
         <div className="container mx-auto px-4">
           {/* Header */}
           <motion.div
