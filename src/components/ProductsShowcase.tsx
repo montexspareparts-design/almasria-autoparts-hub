@@ -47,14 +47,14 @@ const floatingWords = [
 
 const ProductsShowcase = () => {
   return (
-    <section className="relative py-24 md:py-32 overflow-hidden bg-secondary">
+    <section className="relative py-24 md:py-32 overflow-hidden overflow-x-hidden bg-secondary" style={{ overflowX: 'clip' }}>
       {/* Gradient overlays for depth */}
       <div className="absolute inset-0 bg-gradient-to-b from-secondary via-secondary/95 to-secondary" />
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
 
-      {/* Floating gears */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
+      {/* Floating gears - hidden on mobile */}
+      <div className="absolute inset-0 z-0 pointer-events-none hidden md:block">
         {floatingGears.map((gear, i) => (
           <motion.div
             key={`gear-${i}`}
@@ -74,8 +74,8 @@ const ProductsShowcase = () => {
         ))}
       </div>
 
-      {/* Floating words */}
-      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+      {/* Floating words - hidden on mobile */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden hidden md:block">
         {floatingWords.map((word, i) => (
           <motion.div
             key={`word-${i}`}
@@ -96,9 +96,9 @@ const ProductsShowcase = () => {
         ))}
       </div>
 
-      {/* Radial glow accents */}
-      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary/[0.03] rounded-full blur-[150px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-primary/[0.04] rounded-full blur-[120px] pointer-events-none" />
+      {/* Radial glow accents - hidden on mobile to prevent overflow */}
+      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary/[0.03] rounded-full blur-[150px] pointer-events-none hidden md:block" />
+      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-primary/[0.04] rounded-full blur-[120px] pointer-events-none hidden md:block" />
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
