@@ -92,17 +92,16 @@ const AIChatBot = () => {
   const { user } = useAuth();
   const { consent, interests, getTopCategories, getTopBrands } = usePersonalization();
   const [isOpen, setIsOpen] = useState(false);
-  const [hasShownIntro, setHasShownIntro] = useState(false);
+  const [hasUnread, setHasUnread] = useState(false);
 
-  // Auto-show chatbot for guests after 5 seconds
+  // Show unread badge after 5 seconds for guests (without opening the chat)
   useEffect(() => {
     const shown = sessionStorage.getItem("chatbot_shown");
     if (!shown && !user) {
       const timer = setTimeout(() => {
-        setIsOpen(true);
-        setHasShownIntro(true);
+        setHasUnread(true);
         sessionStorage.setItem("chatbot_shown", "true");
-        // Add intro message
+        // Prepare intro message so it's ready when user opens
         setMessages([{
           role: "assistant",
           content: "أهلاً بيك في المصرية جروب! 👋\n\nأنا مساعدك الذكي، هساعدك تلاقي قطع الغيار الأصلية والبديلة لعربيتك.\n\n🔹 اسألني عن أي قطعة غيار\n🔹 ابعتلي صورة القطعة وأعرّفهالك\n🔹 اعرف أقرب فرع ليك\n\nإزاي أقدر أساعدك النهاردة؟"
@@ -438,11 +437,14 @@ const AIChatBot = () => {
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            onClick={() => setIsOpen(true)}
+            onClick={() => { setIsOpen(true); setHasUnread(false); }}
             className="fixed bottom-20 left-4 md:bottom-6 md:left-6 z-50 w-12 h-12 md:w-14 md:h-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
             aria-label="فتح المساعد الذكي"
           >
             <Bot className="w-7 h-7" />
+            {hasUnread && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive rounded-full border-2 border-background animate-pulse" />
+            )}
           </motion.button>
         )}
       </AnimatePresence>
