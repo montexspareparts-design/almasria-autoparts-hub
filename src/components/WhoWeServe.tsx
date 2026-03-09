@@ -43,7 +43,7 @@ const WhoWeServe = () => {
           <p className="text-primary text-xs font-black tracking-[0.35em] uppercase mb-5">
             عملاؤنا
           </p>
-          <h2 className="text-2xl md:text-3xl font-black text-foreground leading-snug mb-3">
+          <h2 className="text-3xl md:text-4xl font-black text-foreground leading-snug mb-3">
             من <span className="text-primary">نخدم</span>
           </h2>
           <p className="text-muted-foreground text-sm leading-relaxed max-w-sm mx-auto">
