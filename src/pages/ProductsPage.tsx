@@ -302,28 +302,28 @@ const ProductsPage = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7 }}
-              className="text-center mb-16"
+              className="text-center mb-8 md:mb-16"
             >
               <motion.span
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2 }}
-                className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-primary/12 border border-primary/20 text-primary text-sm font-bold mb-6 backdrop-blur-sm"
+                className="inline-flex items-center gap-2 px-4 md:px-5 py-1.5 md:py-2 rounded-full bg-primary/12 border border-primary/20 text-primary text-xs md:text-sm font-bold mb-4 md:mb-6 backdrop-blur-sm"
               >
-                <Package className="w-4 h-4" />
+                <Package className="w-3.5 h-3.5 md:w-4 md:h-4" />
                 5 علامات تجارية معتمدة
               </motion.span>
-              <h1 className="text-5xl md:text-7xl font-black text-[hsl(var(--section-dark-foreground))] mb-5 tracking-tight leading-[1.1]">
+              <h1 className="text-3xl md:text-5xl lg:text-7xl font-black text-[hsl(var(--section-dark-foreground))] mb-3 md:mb-5 tracking-tight leading-[1.1]">
                 اكتشف <span className="shimmer-text">منتجاتنا</span>
               </h1>
-              <p className="text-[hsl(var(--section-dark-foreground))]/50 text-lg max-w-xl mx-auto leading-relaxed">
+              <p className="text-[hsl(var(--section-dark-foreground))]/50 text-sm md:text-lg max-w-xl mx-auto leading-relaxed">
                 اختر العلامة التجارية وتصفح جميع المنتجات المتاحة
               </p>
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: "6rem" }}
                 transition={{ duration: 1, delay: 0.5 }}
-                className="h-1 bg-gradient-to-l from-primary to-[hsl(var(--gold-accent))] mx-auto rounded-full mt-6"
+                className="h-1 bg-gradient-to-l from-primary to-[hsl(var(--gold-accent))] mx-auto rounded-full mt-4 md:mt-6"
               />
             </motion.div>
 
