@@ -85,16 +85,15 @@ const KeyMetrics = () => {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl md:text-4xl font-black text-foreground">
+          <p className="text-primary text-xs font-black tracking-[0.35em] uppercase mb-5">
+            إحصائياتنا
+          </p>
+          <h2 className="text-2xl md:text-3xl font-black text-foreground leading-snug mb-3">
             أرقام تَمنح <span className="text-primary">الثقة</span>
           </h2>
-          <motion.div
-            className="w-14 h-1 bg-primary mx-auto rounded-full mt-4"
-            initial={{ scaleX: 0 }}
-            whileInView={{ scaleX: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-          />
+          <p className="text-muted-foreground text-sm leading-relaxed max-w-sm mx-auto">
+            مؤشرات حقيقية من أكثر من ربع قرن في سوق قطع الغيار
+          </p>
         </motion.div>
 
         <div ref={ref} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-5xl mx-auto">

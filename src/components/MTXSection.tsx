@@ -7,31 +7,23 @@ const MTXSection = () => {
   return (
     <section id="mtx" className="py-20 md:py-28 bg-background overflow-hidden">
       <div className="container mx-auto px-4 max-w-3xl text-center">
-        <motion.span
-          initial={{ opacity: 0, scale: 0.85 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4 }}
-          className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-bold mb-4"
-        >
-          علامتنا الخاصة
-        </motion.span>
-        <motion.h2
-          initial={{ opacity: 0, y: 16 }}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-          className="text-3xl md:text-4xl font-black text-foreground mb-4"
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="mb-8"
         >
-          MTX — علامتنا بجودة تضاهي المواصفات الأصلية
-        </motion.h2>
-        <motion.div
-          className="w-14 h-1 bg-primary mx-auto rounded-full mb-6"
-          initial={{ scaleX: 0 }}
-          whileInView={{ scaleX: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-        />
+          <p className="text-primary text-xs font-black tracking-[0.35em] uppercase mb-5">
+            علامتنا الخاصة
+          </p>
+          <h2 className="text-2xl md:text-3xl font-black text-foreground leading-snug mb-3">
+            MTX — جودة تضاهي <span className="text-primary">المواصفات الأصلية</span>
+          </h2>
+          <p className="text-muted-foreground text-sm leading-relaxed max-w-md mx-auto">
+            قطع غيار بديلة مختارة بعناية بأسعار تنافسية
+          </p>
+        </motion.div>
         <motion.p
           initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}

@@ -20,27 +20,14 @@ const DistributionNetwork = () => {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-14"
         >
-          <motion.span
-            initial={{ opacity: 0, scale: 0.85 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4 }}
-            className="inline-block px-4 py-1.5 rounded-full bg-primary/15 text-primary text-sm font-bold mb-4"
-          >
-            شبكة التوزيع
-          </motion.span>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-secondary-foreground mb-4 leading-tight">
+          <p className="text-primary text-xs font-black tracking-[0.35em] uppercase mb-5">
+            فروعنا
+          </p>
+          <h2 className="text-2xl md:text-3xl font-black text-secondary-foreground leading-snug mb-3">
             شبكة <span className="text-primary">التوزيع</span>
           </h2>
-          <motion.div
-            className="w-16 h-1 bg-primary mx-auto rounded-full mb-5"
-            initial={{ scaleX: 0 }}
-            whileInView={{ scaleX: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-          />
-          <p className="text-secondary-foreground/60 text-base md:text-lg max-w-2xl mx-auto leading-[1.9] font-medium">
-            تغطية وطنية شاملة وشحن لجميع المحافظات عبر مخازن مركزية ومنظومة لوجستية احترافية
+          <p className="text-secondary-foreground/50 text-sm leading-relaxed max-w-md mx-auto">
+            تغطية وطنية شاملة وشحن لجميع المحافظات عبر مخازن مركزية
           </p>
         </motion.div>
 
