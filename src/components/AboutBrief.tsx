@@ -117,18 +117,12 @@ const AboutBrief = () => {
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           >
-            {/* Big quote-style block */}
-            <div className="relative pr-6 border-r-4 border-primary/30 mb-10">
-              <motion.div
-                className="absolute -top-2 -right-3 w-6 h-6 bg-primary rounded-full"
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 3, repeat: Infinity }}
-              />
-              
+            {/* Text blocks */}
+            <div className="space-y-8 mb-10">
               {[
                 <>
                   تعمل المصرية جروب منذ{" "}
-                  <strong className="text-primary font-black text-xl">1999</strong> كموزّع معتمد لِـ{" "}
+                  <strong className="text-primary font-black">1999</strong> كموزّع معتمد لِـ{" "}
                   <Link to="/products/toyota-genuine" className="text-primary font-black hover:underline underline-offset-4 decoration-2 decoration-primary/50">
                     قطع غيار تويوتا الأصلية
                   </Link>{" "}
@@ -136,15 +130,18 @@ const AboutBrief = () => {
                   <Link to="/products/toyota-oils" className="text-primary font-black hover:underline underline-offset-4 decoration-2 decoration-primary/50">
                     زيوت تويوتا
                   </Link>.
-                  نعتمد نموذج تشغيل منضبط قائم على{" "}
+                  {" "}نعتمد نموذج تشغيل منضبط قائم على{" "}
                   <strong className="text-secondary-foreground font-bold">أنظمة إدارة رقمية متكاملة</strong>{" "}
-                  وشبكة توزيع تغطي الجمهورية.
+                  و<strong className="text-secondary-foreground font-bold">شبكة توزيع</strong> تغطي الجمهورية.
                 </>,
                 <>
                   نوفر{" "}
-                  <strong className="text-primary font-black">توصيلًا سريعًا خلال 48&nbsp;ساعة</strong>{" "}
+                  <strong className="text-secondary-foreground font-bold">توصيلًا سريعًا</strong>{" "}
+                  خلال{" "}
+                  <strong className="text-primary font-black">48&nbsp;ساعة</strong>{" "}
                   عبر مخازن مركزية عالية الكفاءة، مع{" "}
-                  <strong className="text-primary font-black">وجود إقليمي في دبي</strong>{" "}
+                  <strong className="text-secondary-foreground font-bold">وجود إقليمي</strong>{" "}
+                  <strong className="text-primary font-black">في دبي</strong>{" "}
                   يدعم استمرارية التوريد وجودة المنتجات.
                 </>,
                 <>
@@ -157,7 +154,7 @@ const AboutBrief = () => {
               ].map((text, i) => (
                 <motion.p
                   key={i}
-                  className="text-secondary-foreground/75 text-lg md:text-xl leading-[2.1] mb-6 last:mb-0 font-medium"
+                  className="text-secondary-foreground/80 text-lg md:text-[1.35rem] leading-[2.2] font-medium"
                   initial={{ opacity: 0, y: 12 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-60px" }}
