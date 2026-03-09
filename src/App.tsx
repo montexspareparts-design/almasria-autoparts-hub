@@ -81,6 +81,7 @@ const App = () => (
                   <Route path="/cart" element={<CartPage />} />
                   <Route path="/checkout" element={<CheckoutPage />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/catalogs" element={<CatalogsPage />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
