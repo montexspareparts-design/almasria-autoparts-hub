@@ -240,7 +240,21 @@ const FeaturedProducts = () => {
           onOpenChange={(open) => !open && setSelectedProduct(null)}
           price={selectedProduct.sale_price || selectedProduct.base_price}
           priceLabel={user ? undefined : "سجّل لرؤية السعر"}
-          onAddToCart={user ? handleAdd : undefined}
+          onAddToCart={user ? (product) => {
+            const cartItem: CartItem = {
+              id: product.id,
+              name_ar: product.name_ar,
+              sku: product.sku,
+              image_url: product.image_url,
+              unit_price: product.sale_price || product.base_price,
+              quantity: product.min_order_qty || 1,
+              stock_quantity: product.stock_quantity,
+              min_order_qty: product.min_order_qty,
+              brand: product.brand,
+            };
+            addItem(cartItem);
+            toast({ title: "تمت الإضافة للسلة ✅", description: product.name_ar });
+          } : undefined}
           canAddToCart={!!user && selectedProduct.stock_quantity > 0}
           isLoggedIn={!!user}
         />
