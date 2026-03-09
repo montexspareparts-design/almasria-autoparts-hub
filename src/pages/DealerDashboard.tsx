@@ -191,6 +191,17 @@ const DealerDashboard = () => {
           </CardContent>
         </Card>
 
+        {/* PDF Catalogs */}
+        <div className="mt-6">
+          <DealerCatalogs
+            isWholesale={
+              isDealer &&
+              !!dealerAccount?.is_active &&
+              (dealerAccount?.tier === "wholesale_tier1" || dealerAccount?.tier === "wholesale_tier2")
+            }
+          />
+        </div>
+
         {/* Quick Actions */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6">
           <Button variant="outline" className="h-auto py-4 flex flex-col gap-2" onClick={() => navigate("/")}>
@@ -209,6 +220,7 @@ const DealerDashboard = () => {
       </div>
     </div>
   );
+};
 };
 
 export default DealerDashboard;
