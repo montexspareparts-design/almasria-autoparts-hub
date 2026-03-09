@@ -367,6 +367,129 @@ const CatalogsPage = () => {
     });
   };
 
+  // ── Quick Order ──
+  const handleQuickOrder = useCallback(async () => {
+    if (!quickSkuInput.trim()) {
+      toast({ title: "أدخل أرقام القطع", variant: "destructive" });
+      return;
+    }
+
+    const rawSkus = quickSkuInput
+      .split(/[\n,;\t]+/)
+      .map(s => s.trim().toUpperCase())
+      .filter(Boolean);
+    const uniqueSkus = [...new Set(rawSkus)];
+
+    if (uniqueSkus.length === 0) {
+      toast({ title: "لا توجد أرقام قطع صالحة", variant: "destructive" });
+      return;
+    }
+    if (uniqueSkus.length > 50) {
+      toast({ title: "الحد الأقصى 50 رقم قطعة في المرة", variant: "destructive" });
+      return;
+    }
+    if (dailyLookups + uniqueSkus.length > MAX_DAILY_LOOKUPS) {
+      toast({
+        title: "تجاوز الحد اليومي",
+        description: `متبقي ${MAX_DAILY_LOOKUPS - dailyLookups} استعلام. قلل عدد الأرقام.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setQuickLoading(true);
+    setQuickResults([]);
+
+    try {
+      const { data: products, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("is_active", true)
+        .in("sku", uniqueSkus);
+
+      if (error) throw error;
+
+      const foundIds = (products || []).map(p => p.id);
+      type CustomerTier = "wholesale_tier1" | "wholesale_tier2" | "corporate" | "retail";
+      const tierValue: CustomerTier = (dealerAccount?.tier as CustomerTier) ?? "retail";
+      let tierPrices: { product_id: string; price: number; discount_price: number | null; min_qty_for_discount: number | null }[] = [];
+
+      if (foundIds.length > 0) {
+        const { data: tp } = await supabase
+          .from("product_tier_prices")
+          .select("*")
+          .in("product_id", foundIds)
+          .eq("tier", tierValue);
+        tierPrices = tp || [];
+
+        for (const product of products!) {
+          await supabase.from("dealer_price_views").insert({
+            user_id: user!.id,
+            product_id: product.id,
+          });
+        }
+        setDailyLookups(prev => prev + foundIds.length);
+      }
+
+      const results = uniqueSkus.map(sku => {
+        const product = products?.find(p => p.sku.toUpperCase() === sku);
+        if (!product) return { sku, found: false };
+        const tierPrice = tierPrices.find(tp => tp.product_id === product.id);
+        return {
+          sku,
+          found: true,
+          product: {
+            ...product,
+            tierPrice: tierPrice
+              ? { price: tierPrice.price, discount_price: tierPrice.discount_price, min_qty_for_discount: tierPrice.min_qty_for_discount }
+              : undefined,
+          },
+        };
+      });
+
+      setQuickResults(results);
+      const initQty: Record<string, number> = {};
+      results.forEach(r => { if (r.product) initQty[r.product.id] = r.product.min_order_qty || 1; });
+      setQuickQuantities(initQty);
+
+      const notFound = results.filter(r => !r.found).length;
+      toast({
+        title: `تم البحث: ${results.filter(r => r.found).length} منتج`,
+        description: notFound > 0 ? `${notFound} رقم قطعة غير موجود` : "تم العثور على جميع القطع",
+      });
+    } catch (err) {
+      console.error(err);
+      toast({ title: "حدث خطأ أثناء البحث", variant: "destructive" });
+    }
+
+    setQuickLoading(false);
+  }, [quickSkuInput, dailyLookups, user, dealerAccount, toast]);
+
+  const handleAddAllToCart = useCallback(() => {
+    const validItems = quickResults.filter(r => r.found && r.product && r.product.stock_quantity > 0);
+    if (validItems.length === 0) {
+      toast({ title: "لا توجد قطع متوفرة للإضافة", variant: "destructive" });
+      return;
+    }
+    setAddingAllToCart(true);
+    validItems.forEach(r => {
+      const product = r.product!;
+      const qty = quickQuantities[product.id] || product.min_order_qty || 1;
+      const price = product.tierPrice?.price ?? (product.is_on_sale && product.sale_price ? product.sale_price : product.base_price);
+      addItem({ id: product.id, name_ar: product.name_ar, sku: product.sku, image_url: product.image_url, unit_price: price, quantity: qty, stock_quantity: product.stock_quantity, min_order_qty: product.min_order_qty, brand: product.brand });
+    });
+    toast({ title: `تمت إضافة ${validItems.length} منتج للسلة`, description: "يمكنك مراجعة السلة لتعديل الكميات" });
+    setTimeout(() => setAddingAllToCart(false), 600);
+  }, [quickResults, quickQuantities, addItem, toast]);
+
+  const updateQuickQuantity = (productId: string, delta: number, min: number, max: number) => {
+    setQuickQuantities(prev => {
+      const current = prev[productId] || min;
+      const next = Math.max(min, Math.min(max, current + delta));
+      return { ...prev, [productId]: next };
+    });
+  };
+
   const categories = [ALL_KEY, ...Array.from(new Set(catalogs.map(c => c.category || "general")))];
 
   const filteredCatalogs = catalogs.filter(c => {
