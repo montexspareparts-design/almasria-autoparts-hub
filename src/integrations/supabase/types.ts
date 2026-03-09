@@ -50,6 +50,45 @@ export type Database = {
           },
         ]
       }
+      catalogs: {
+        Row: {
+          category: string | null
+          created_at: string
+          description_ar: string | null
+          file_url: string | null
+          id: string
+          is_active: boolean
+          sort_order: number | null
+          title_ar: string
+          title_en: string | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description_ar?: string | null
+          file_url?: string | null
+          id?: string
+          is_active?: boolean
+          sort_order?: number | null
+          title_ar: string
+          title_en?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description_ar?: string | null
+          file_url?: string | null
+          id?: string
+          is_active?: boolean
+          sort_order?: number | null
+          title_ar?: string
+          title_en?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       dealer_accounts: {
         Row: {
           application_id: string | null

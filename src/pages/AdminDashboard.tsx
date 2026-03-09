@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle, XCircle, Clock, Eye, LogOut } from "lucide-react";
 import AdminProductImages from "@/components/AdminProductImages";
 import AdminVideoSettings from "@/components/AdminVideoSettings";
+import AdminCatalogs from "@/components/AdminCatalogs";
 import type { Database } from "@/integrations/supabase/types";
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
@@ -283,6 +284,11 @@ const AdminDashboard = () => {
         {/* Video Settings */}
         <div className="mt-8">
           <AdminVideoSettings />
+        </div>
+
+        {/* Catalogs Management */}
+        <div className="mt-8">
+          <AdminCatalogs />
         </div>
 
         {/* Product Images Management */}

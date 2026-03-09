@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, ShoppingCart, FileText, Tag, LogOut, Clock, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import DealerCatalogs from "@/components/DealerCatalogs";
 
 const tierLabels: Record<string, string> = {
   wholesale_tier1: "تاجر جملة – درجة أولى",
@@ -189,6 +190,17 @@ const DealerDashboard = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* PDF Catalogs */}
+        <div className="mt-6">
+          <DealerCatalogs
+            isWholesale={
+              isDealer &&
+              !!dealerAccount?.is_active &&
+              (dealerAccount?.tier === "wholesale_tier1" || dealerAccount?.tier === "wholesale_tier2")
+            }
+          />
+        </div>
 
         {/* Quick Actions */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6">
