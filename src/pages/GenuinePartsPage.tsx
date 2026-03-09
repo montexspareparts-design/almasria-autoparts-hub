@@ -189,11 +189,11 @@ const GenuinePartsPage = () => {
         style={{ backgroundImage: `url(${heroBg})`, backgroundSize: "cover", backgroundPosition: "center" }}
       >
         <div className="absolute inset-0 bg-black/45" aria-hidden="true" />
-        <div className="relative z-10 container mx-auto px-4 py-24 text-center max-w-[760px]">
-          <h1 className="text-3xl md:text-5xl font-black text-white leading-[1.4] mb-5">
+        <div className="relative z-10 container mx-auto px-6 py-24 text-center max-w-[760px]">
+          <h1 className="text-2xl sm:text-3xl md:text-5xl font-black text-white leading-[1.4] mb-5">
             قطع غيار تويوتا الأصلية
           </h1>
-          <p className="text-white/85 text-base md:text-lg leading-[1.75] mb-8 max-w-[660px] mx-auto">
+          <p className="text-white/85 text-sm sm:text-base md:text-lg leading-[1.75] mb-8 max-w-[660px] mx-auto">
             نوفّر قطع غيار تويوتا الأصلية عبر قنوات توريد رسمية ووفق معايير المصنع (OEM)، مع تغطية وطنية وتسليم خلال 48&nbsp;ساعة.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
