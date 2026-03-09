@@ -271,11 +271,12 @@ const CatalogsPage = () => {
 
       // Get tier prices for these products
       const productIds = products.map(p => p.id);
+      const tierValue = dealerAccount?.tier ?? "retail";
       const { data: tierPrices } = await supabase
         .from("product_tier_prices")
         .select("*")
         .in("product_id", productIds)
-        .eq("tier", dealerAccount?.tier || "retail");
+        .eq("tier", tierValue);
 
       // Log view for each product (for daily limit tracking)
       for (const product of products) {
