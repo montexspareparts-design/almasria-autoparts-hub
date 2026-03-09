@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 const segments = [
   {
     icon: Package,
-    title: "تجار الجملة",
+    title: "عملاء الجملة",
     desc: "توريد منتظم بأسعار منضبطة ومخزون جاهز مع تسليم خلال 48 ساعة على مستوى الجمهورية",
     cta: "اعرف المزيد",
     ctaTo: "/clients/wholesale",
@@ -13,7 +13,7 @@ const segments = [
   },
   {
     icon: Building2,
-    title: "الشركات والأساطيل",
+    title: "الشركات والهيئات",
     desc: "عقود توريد مخصّصة وفواتير منظمة ودعم لوجستي يلائم الأساطيل والمشروعات الكبرى",
     cta: "اعرف المزيد",
     ctaTo: "/clients/corporate",
@@ -21,7 +21,7 @@ const segments = [
   },
   {
     icon: Wrench,
-    title: "مراكز الصيانة",
+    title: "عملاء القطاعي",
     desc: "قطع غيار تويوتا الأصلية وزيوت تويوتا ومنتجات MTX بجودة تضاهي المواصفات مع تغطية وطنية",
     cta: "اعرف المزيد",
     ctaTo: "/clients/retail",
