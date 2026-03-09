@@ -41,24 +41,17 @@ const WhyChooseUs = () => {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="mb-16"
         >
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8">
-            {/* Right: Title block */}
-            <div className="flex-1">
-              <p className="text-primary text-xs font-bold tracking-[0.3em] uppercase mb-4">
-                لماذا تختارنا
-              </p>
-              <h2 className="text-2xl md:text-3xl font-black text-foreground leading-snug">
-                معايير تشغيل تضعنا في{" "}
-                <span className="text-primary">مستوى مختلف</span>
-              </h2>
-            </div>
-
-            {/* Left: Sub-text */}
-            <div className="md:pt-10 md:max-w-xs">
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                التزام بالجودة والمواصفات منذ 1999 — لا استثناءات.
-              </p>
-            </div>
+          <div className="text-center">
+            <p className="text-primary text-xs font-black tracking-[0.35em] uppercase mb-5">
+              لماذا تختارنا
+            </p>
+            <h2 className="text-2xl md:text-3xl font-black text-foreground leading-snug mb-3">
+              معايير تشغيل تضعنا في{" "}
+              <span className="text-primary">مستوى مختلف</span>
+            </h2>
+            <p className="text-muted-foreground text-sm leading-relaxed max-w-sm mx-auto">
+              التزام بالجودة والمواصفات منذ 1999 — لا استثناءات.
+            </p>
           </div>
 
           {/* Divider */}
