@@ -74,7 +74,7 @@ const brandConfig: Record<string, { title: string; subtitle: string; description
 const allBrands = [
   { label: "قطع غيار تويوتا الأصلية", labelEn: "Toyota Genuine Parts", image: brandGenuineParts, to: "/products/toyota-genuine", scale: "scale-100" },
   { label: "زيوت تويوتا الأصلية", labelEn: "Toyota Genuine Lubricants", image: brandToyotaOil, to: "/products/toyota-oils", scale: "scale-150" },
-  { label: "MTX أفترماركت", labelEn: "MTX Aftermarket", image: brandMtx, to: "/products/mtx-aftermarket", scale: "scale-150" },
+  { label: "MTX Aftermarket", labelEn: "MTX Aftermarket", image: brandMtx, to: "/products/mtx-aftermarket", scale: "scale-150" },
   { label: "DENSO", labelEn: "DENSO", image: brandDenso, to: "/products/denso", scale: "scale-100" },
   { label: "AISIN", labelEn: "AISIN", image: brandAisin, to: "/products/aisin", scale: "scale-100" },
 ];
