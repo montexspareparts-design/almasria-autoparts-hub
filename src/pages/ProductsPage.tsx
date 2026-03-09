@@ -512,6 +512,13 @@ const ProductsPage = () => {
         </div>
       </section>
 
+      {/* Personalized recommendations */}
+      <section className="pt-6">
+        <div className="container mx-auto px-4">
+          <PersonalizedProducts />
+        </div>
+      </section>
+
       {/* View mode toggle + products grid */}
       <section className="py-8">
         <div className="container mx-auto px-4">
