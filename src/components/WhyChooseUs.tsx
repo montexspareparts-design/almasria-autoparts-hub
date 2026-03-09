@@ -92,8 +92,8 @@ const WhyChooseUs = () => {
                 >
                   <r.icon className="w-6 h-6 text-primary" strokeWidth={1.8} />
                 </motion.div>
-                <h3 className="font-bold text-foreground text-sm mb-2">{r.title}</h3>
-                <p className="text-muted-foreground text-xs leading-[1.8]">{r.desc}</p>
+                <h3 className="font-black text-foreground text-base mb-2.5">{r.title}</h3>
+                <p className="text-foreground/70 text-sm leading-[1.9] font-medium">{r.desc}</p>
               </div>
             </motion.div>
           ))}

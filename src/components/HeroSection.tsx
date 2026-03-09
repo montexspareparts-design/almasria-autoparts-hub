@@ -226,9 +226,9 @@ const HeroSection = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.65 }}
-              className="text-white/70 text-base md:text-lg leading-[1.85] max-w-[660px] mb-10"
+              className="text-white/85 text-base md:text-[1.15rem] leading-[2] max-w-[680px] mb-10 font-medium"
             >
-              خبرة تتجاوز 25 عامًا في التوزيع المؤسسي، شبكة تغطي جميع المحافظات مع تسليم خلال 48&nbsp;ساعة، وعلامتنا MTX بجودة تضاهي المواصفات&nbsp;الأصلية.
+              خبرة تتجاوز <strong className="text-white font-black">25 عامًا</strong> في التوزيع المؤسسي، شبكة تغطي جميع المحافظات مع تسليم خلال <strong className="text-primary font-black">48&nbsp;ساعة</strong>، وعلامتنا <strong className="text-primary font-black">MTX</strong> بجودة تضاهي المواصفات&nbsp;الأصلية.
             </motion.p>
 
             {/* CTAs */}

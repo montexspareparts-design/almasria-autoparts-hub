@@ -147,7 +147,7 @@ const AboutBrief = () => {
             ].map((text, i) => (
               <motion.p
                 key={i}
-                className="text-muted-foreground text-base md:text-lg leading-[1.9] mb-5"
+                className="text-foreground/80 text-base md:text-lg leading-[2] mb-5 font-medium"
                 initial={{ opacity: 0, y: 12 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
