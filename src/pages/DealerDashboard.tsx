@@ -96,8 +96,8 @@ const DealerDashboard = () => {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-foreground mb-6">لوحة تحكم التاجر</h1>
+      <div className="container mx-auto px-4 py-5 md:py-8">
+        <h1 className="text-xl md:text-2xl font-bold text-foreground mb-5 md:mb-6">لوحة تحكم التاجر</h1>
 
         {/* Account Status */}
         {!isDealer && application && (
