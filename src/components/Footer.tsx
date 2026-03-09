@@ -15,36 +15,6 @@ const quickLinks = [
 const Footer = () => {
   return (
     <footer className="bg-secondary text-secondary-foreground border-t border-secondary-foreground/[0.06]">
-      {/* CTA Strip */}
-      <div className="bg-primary/5 border-b border-primary/10">
-        <div className="container mx-auto px-4 py-6 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-          <span className="text-sm font-bold text-foreground">محتاج قطعة غيار؟</span>
-          <div className="flex gap-3">
-            <Button size="sm" className="gap-2 font-bold" asChild>
-              <Link to="/parts-by-model">
-                <Send className="w-3.5 h-3.5" />
-                اطلب القطعة الآن
-              </Link>
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-2 font-bold border-green-500/30 text-green-600 hover:bg-green-50 dark:hover:bg-green-950/20"
-              asChild
-            >
-              <a
-                href="https://wa.me/201020412358?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%B9%D8%A7%D9%8A%D8%B2%20%D9%82%D8%B7%D8%B9%D8%A9%20%D9%84%D8%AA%D9%88%D9%8A%D9%88%D8%AA%D8%A7"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => trackClickWhatsApp("footer_cta")}
-              >
-                <MessageCircle className="w-3.5 h-3.5" />
-                تحدث عبر واتساب
-              </a>
-            </Button>
-          </div>
-        </div>
-      </div>
 
       <div className="container mx-auto px-4 py-14 pb-24 md:pb-14">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-8">
