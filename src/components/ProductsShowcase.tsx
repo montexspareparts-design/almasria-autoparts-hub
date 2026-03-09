@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Cog, Wrench, Settings, Droplets } from "lucide-react";
 import { Link } from "react-router-dom";
 
 // Brand logos
@@ -52,20 +52,46 @@ const brands = [
   },
 ];
 
+/* ── Floating Gears Background ── */
+const floatingGears = [
+  { icon: Cog, size: 40, x: "5%", y: "15%", duration: 25, delay: 0, rotate: 360, opacity: 0.06 },
+  { icon: Cog, size: 60, x: "90%", y: "20%", duration: 30, delay: 2, rotate: -360, opacity: 0.05 },
+  { icon: Wrench, size: 30, x: "80%", y: "70%", duration: 20, delay: 1, rotate: 15, opacity: 0.06 },
+  { icon: Cog, size: 50, x: "12%", y: "75%", duration: 28, delay: 3, rotate: 360, opacity: 0.05 },
+  { icon: Settings, size: 35, x: "50%", y: "10%", duration: 22, delay: 4, rotate: -360, opacity: 0.04 },
+  { icon: Cog, size: 70, x: "70%", y: "85%", duration: 35, delay: 1.5, rotate: 360, opacity: 0.04 },
+  { icon: Wrench, size: 25, x: "30%", y: "90%", duration: 18, delay: 2.5, rotate: -20, opacity: 0.06 },
+  { icon: Cog, size: 45, x: "95%", y: "50%", duration: 26, delay: 0.5, rotate: -360, opacity: 0.05 },
+  { icon: Droplets, size: 22, x: "20%", y: "45%", duration: 16, delay: 3.5, rotate: 0, opacity: 0.05 },
+  { icon: Settings, size: 55, x: "40%", y: "60%", duration: 32, delay: 5, rotate: 360, opacity: 0.03 },
+];
+
+const FloatingGear = ({ gear }: { gear: typeof floatingGears[0] }) => (
+  <motion.div
+    className="absolute pointer-events-none"
+    style={{ left: gear.x, top: gear.y }}
+    initial={{ opacity: 0, scale: 0 }}
+    animate={{
+      opacity: [0, gear.opacity, gear.opacity * 0.6, gear.opacity, 0],
+      scale: [0.5, 1, 0.85, 1, 0.5],
+      y: [0, -15, 8, -10, 0],
+      rotate: [0, gear.rotate],
+    }}
+    transition={{ duration: gear.duration, delay: gear.delay, repeat: Infinity, ease: "linear" }}
+  >
+    <gear.icon className="text-primary" style={{ width: gear.size, height: gear.size }} strokeWidth={0.8} />
+  </motion.div>
+);
+
 const ProductsShowcase = () => {
   return (
-    <section className="relative py-24 md:py-32 bg-secondary overflow-hidden">
-      {/* Subtle grid pattern */}
-      <div
-        className="absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage: `linear-gradient(hsl(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)`,
-          backgroundSize: "60px 60px",
-        }}
-      />
-
-      {/* Red accent line top */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary/70 to-transparent" />
+    <section className="relative py-24 md:py-32 bg-transparent overflow-hidden">
+      {/* Floating gears background */}
+      <div className="absolute inset-0 z-0">
+        {floatingGears.map((gear, i) => (
+          <FloatingGear key={i} gear={gear} />
+        ))}
+      </div>
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
@@ -76,10 +102,10 @@ const ProductsShowcase = () => {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-16"
         >
-          <h2 className="text-4xl md:text-5xl font-black text-secondary-foreground leading-tight mb-4">
+          <h2 className="text-4xl md:text-5xl font-black text-foreground leading-tight mb-4">
             اكتشف <span className="text-primary">منتجاتنا</span>
           </h2>
-          <p className="text-secondary-foreground/50 text-sm leading-relaxed max-w-md mx-auto mb-6">
+          <p className="text-muted-foreground text-sm leading-relaxed max-w-md mx-auto mb-6">
             اختر العلامة التجارية وتصفح جميع المنتجات المتاحة
           </p>
           {/* Animated underline */}
@@ -130,9 +156,6 @@ const ProductsShowcase = () => {
           </Link>
         </motion.div>
       </div>
-
-      {/* Red accent line bottom */}
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary/70 to-transparent" />
     </section>
   );
 };
@@ -162,7 +185,7 @@ const BrandCard = ({ brand, index }: { brand: typeof brands[0]; index: number })
           className="relative"
         >
           {/* Card */}
-          <div className="bg-white rounded-2xl overflow-hidden shadow-lg shadow-black/20 group-hover:shadow-xl group-hover:shadow-primary/20 transition-shadow duration-300">
+          <div className="bg-white rounded-2xl overflow-hidden shadow-lg shadow-black/10 group-hover:shadow-xl group-hover:shadow-primary/20 transition-shadow duration-300 border border-border">
             {/* Red accent bar */}
             <div className="h-1 bg-gradient-to-r from-primary via-primary/80 to-primary" />
             
@@ -179,10 +202,10 @@ const BrandCard = ({ brand, index }: { brand: typeof brands[0]; index: number })
 
           {/* Text below card */}
           <div className="text-center mt-4">
-            <h3 className="font-black text-secondary-foreground text-base mb-1 group-hover:text-primary transition-colors">
+            <h3 className="font-black text-foreground text-base mb-1 group-hover:text-primary transition-colors">
               {brand.nameAr}
             </h3>
-            <p className="text-secondary-foreground/40 text-xs font-medium">
+            <p className="text-muted-foreground text-xs font-medium">
               {brand.nameEn}
             </p>
           </div>
