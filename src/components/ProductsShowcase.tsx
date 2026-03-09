@@ -89,7 +89,7 @@ const ProductsShowcase = () => {
             }}
             transition={{ duration: word.duration, delay: word.delay, repeat: Infinity, ease: "linear" }}
           >
-            <span className={`${word.size} font-black text-secondary-foreground/10 tracking-widest whitespace-nowrap`}>
+            <span className={`${word.size} font-black text-white/10 tracking-widest whitespace-nowrap`}>
               {word.text}
             </span>
           </motion.div>
