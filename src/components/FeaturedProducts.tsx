@@ -238,6 +238,11 @@ const FeaturedProducts = () => {
           product={selectedProduct}
           open={!!selectedProduct}
           onOpenChange={(open) => !open && setSelectedProduct(null)}
+          price={selectedProduct.sale_price || selectedProduct.base_price}
+          priceLabel={user ? undefined : "سجّل لرؤية السعر"}
+          onAddToCart={user ? handleAdd : undefined}
+          canAddToCart={!!user && selectedProduct.stock_quantity > 0}
+          isLoggedIn={!!user}
         />
       )}
     </>
