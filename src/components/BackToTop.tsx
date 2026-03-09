@@ -1,8 +1,8 @@
 import { motion, AnimatePresence, useScroll } from "framer-motion";
 import { ArrowUp } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, forwardRef } from "react";
 
-const BackToTop = () => {
+const BackToTop = forwardRef<HTMLDivElement>((_, ref) => {
   const [visible, setVisible] = useState(false);
   const { scrollY } = useScroll();
 
