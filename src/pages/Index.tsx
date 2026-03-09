@@ -14,6 +14,7 @@ const SectionDivider = lazy(() => import("@/components/SectionDivider"));
 
 const DistributionNetwork = lazy(() => import("@/components/DistributionNetwork"));
 const MTXSection = lazy(() => import("@/components/MTXSection"));
+const OurClientsSection = lazy(() => import("@/components/OurClientsSection"));
 const ContactSimple = lazy(() => import("@/components/ContactSimple"));
 const Footer = lazy(() => import("@/components/Footer"));
 const WhatsAppFloat = lazy(() => import("@/components/WhatsAppFloat"));
@@ -79,6 +80,9 @@ const Index = () => {
 
       {/* MTX — light bg */}
       <Suspense fallback={<SectionFallback />}><MTXSection /></Suspense>
+
+      {/* Our Clients — social proof */}
+      <Suspense fallback={<SectionFallback />}><OurClientsSection /></Suspense>
 
       {/* Contact CTA — dark section */}
       <Suspense fallback={<SectionFallback />}><ContactSimple /></Suspense>
