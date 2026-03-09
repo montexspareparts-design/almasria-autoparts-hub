@@ -4,6 +4,7 @@ import { Bot, X, Send, Loader2, Trash2, Share2, ImagePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
+import { useAuth } from "@/contexts/AuthContext";
 
 type MessageContent =
   | string
