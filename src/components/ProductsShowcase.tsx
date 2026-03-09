@@ -33,16 +33,16 @@ const floatingGears = [
 
 /* ── Floating Toyota Words ── */
 const floatingWords = [
-  { text: "TOYOTA", x: "15%", y: "25%", size: "text-4xl", duration: 30, delay: 0, opacity: 0.12 },
-  { text: "GENUINE", x: "70%", y: "15%", size: "text-3xl", duration: 25, delay: 1.5, opacity: 0.1 },
-  { text: "قطع غيار", x: "55%", y: "75%", size: "text-2xl", duration: 28, delay: 3, opacity: 0.12 },
-  { text: "PARTS", x: "25%", y: "65%", size: "text-5xl", duration: 35, delay: 2, opacity: 0.1 },
-  { text: "أصلية", x: "82%", y: "45%", size: "text-3xl", duration: 22, delay: 4, opacity: 0.12 },
-  { text: "OIL", x: "8%", y: "55%", size: "text-4xl", duration: 20, delay: 1, opacity: 0.1 },
-  { text: "MTX", x: "60%", y: "35%", size: "text-6xl", duration: 40, delay: 5, opacity: 0.1 },
-  { text: "DENSO", x: "35%", y: "85%", size: "text-2xl", duration: 24, delay: 2.5, opacity: 0.12 },
-  { text: "تويوتا", x: "45%", y: "20%", size: "text-3xl", duration: 27, delay: 3.5, opacity: 0.1 },
-  { text: "AISIN", x: "90%", y: "70%", size: "text-2xl", duration: 19, delay: 0.5, opacity: 0.12 },
+  { text: "TOYOTA", x: "15%", y: "25%", size: "text-4xl", duration: 30, delay: 0, opacity: 0.07 },
+  { text: "GENUINE", x: "70%", y: "15%", size: "text-3xl", duration: 25, delay: 1.5, opacity: 0.06 },
+  { text: "قطع غيار", x: "55%", y: "75%", size: "text-2xl", duration: 28, delay: 3, opacity: 0.07 },
+  { text: "PARTS", x: "25%", y: "65%", size: "text-5xl", duration: 35, delay: 2, opacity: 0.06 },
+  { text: "أصلية", x: "82%", y: "45%", size: "text-3xl", duration: 22, delay: 4, opacity: 0.07 },
+  { text: "OIL", x: "8%", y: "55%", size: "text-4xl", duration: 20, delay: 1, opacity: 0.06 },
+  { text: "MTX", x: "60%", y: "35%", size: "text-6xl", duration: 40, delay: 5, opacity: 0.06 },
+  { text: "DENSO", x: "35%", y: "85%", size: "text-2xl", duration: 24, delay: 2.5, opacity: 0.07 },
+  { text: "تويوتا", x: "45%", y: "20%", size: "text-3xl", duration: 27, delay: 3.5, opacity: 0.06 },
+  { text: "AISIN", x: "90%", y: "70%", size: "text-2xl", duration: 19, delay: 0.5, opacity: 0.07 },
 ];
 
 const ProductsShowcase = () => {
