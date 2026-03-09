@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bot, X, Send, Loader2, Trash2, Share2, ImagePlus } from "lucide-react";
+import { Bot, X, Send, Loader2, Trash2, Share2, ImagePlus, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
@@ -32,6 +32,9 @@ const getTextContent = (content: MessageContent): string => {
   return content.filter((c) => c.type === "text").map((c) => (c as any).text).join("");
 };
 
+// Speech Recognition setup
+const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
 const AIChatBot = () => {
   const { user } = useAuth();
   const { consent, interests, getTopCategories, getTopBrands } = usePersonalization();
@@ -42,7 +45,6 @@ const AIChatBot = () => {
     const handler = (e: CustomEvent) => {
       setIsOpen(true);
       if (e.detail?.message) {
-        // Will be handled after open
         setTimeout(() => {
           const inputEl = document.querySelector<HTMLTextAreaElement>('[data-chatbot-input]');
           if (inputEl) {
@@ -55,13 +57,18 @@ const AIChatBot = () => {
     window.addEventListener('open-ai-chat', handler as EventListener);
     return () => window.removeEventListener('open-ai-chat', handler as EventListener);
   }, []);
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [pendingImage, setPendingImage] = useState<string | null>(null);
+  const [isListening, setIsListening] = useState(false);
+  const [speakingMsgIndex, setSpeakingMsgIndex] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<any>(null);
+  const synthRef = useRef(window.speechSynthesis);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -69,6 +76,109 @@ const AIChatBot = () => {
 
   useEffect(() => { scrollToBottom(); }, [messages, scrollToBottom]);
   useEffect(() => { if (isOpen) inputRef.current?.focus(); }, [isOpen]);
+
+  // Cleanup speech on unmount or close
+  useEffect(() => {
+    return () => {
+      synthRef.current.cancel();
+      recognitionRef.current?.stop();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) {
+      synthRef.current.cancel();
+      setSpeakingMsgIndex(null);
+      if (isListening) {
+        recognitionRef.current?.stop();
+        setIsListening(false);
+      }
+    }
+  }, [isOpen, isListening]);
+
+  // ---- Voice Input (STT) ----
+  const toggleListening = useCallback(() => {
+    if (!SpeechRecognition) {
+      toast.error("المتصفح لا يدعم التعرف على الصوت");
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "ar-EG";
+    recognition.continuous = false;
+    recognition.interimResults = true;
+
+    recognition.onresult = (event: any) => {
+      const transcript = Array.from(event.results)
+        .map((r: any) => r[0].transcript)
+        .join("");
+      setInput(transcript);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error("Speech recognition error:", event.error);
+      setIsListening(false);
+      if (event.error === "not-allowed") {
+        toast.error("يرجى السماح بالوصول للميكروفون");
+      } else if (event.error !== "aborted") {
+        toast.error("حدث خطأ في التعرف على الصوت");
+      }
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsListening(true);
+  }, [isListening]);
+
+  // ---- Voice Output (TTS) ----
+  const speakMessage = useCallback((text: string, msgIndex: number) => {
+    const synth = synthRef.current;
+
+    // If already speaking this message, stop it
+    if (speakingMsgIndex === msgIndex) {
+      synth.cancel();
+      setSpeakingMsgIndex(null);
+      return;
+    }
+
+    // Cancel any current speech
+    synth.cancel();
+
+    // Clean markdown from text
+    const cleanText = text
+      .replace(/[#*_~`>|[\](){}]/g, "")
+      .replace(/\n+/g, ". ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (!cleanText) return;
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = "ar-EG";
+    utterance.rate = 1;
+    utterance.pitch = 1;
+
+    // Try to find an Arabic voice
+    const voices = synth.getVoices();
+    const arabicVoice = voices.find((v: SpeechSynthesisVoice) => v.lang.startsWith("ar"));
+    if (arabicVoice) utterance.voice = arabicVoice;
+
+    utterance.onend = () => setSpeakingMsgIndex(null);
+    utterance.onerror = () => setSpeakingMsgIndex(null);
+
+    setSpeakingMsgIndex(msgIndex);
+    synth.speak(utterance);
+  }, [speakingMsgIndex]);
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -88,7 +198,6 @@ const AIChatBot = () => {
   };
 
   const streamChat = async (allMessages: Message[]) => {
-    // Convert messages for API: strip imagePreview, keep content as-is
     const apiMessages = allMessages.map(({ role, content }) => ({ role, content }));
 
     const resp = await fetch(CHAT_URL, {
@@ -156,6 +265,12 @@ const AIChatBot = () => {
 
   const sendMessage = async (text: string) => {
     if ((!text.trim() && !pendingImage) || isLoading) return;
+
+    // Stop listening if active
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    }
 
     let content: MessageContent;
     let imagePreview: string | undefined;
@@ -272,6 +387,10 @@ const AIChatBot = () => {
                         <ImagePlus className="w-3.5 h-3.5" />
                         تقدر تبعتلي صورة القطعة وأعرّفها لك
                       </p>
+                      <p className="text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1">
+                        <Mic className="w-3.5 h-3.5" />
+                        أو اتكلم بصوتك وأنا هسمعك
+                      </p>
                     </div>
                   ) : (
                     <div>
@@ -310,9 +429,31 @@ const AIChatBot = () => {
                       <img src={msg.imagePreview} alt="صورة مرفقة" className="rounded-lg mb-2 max-h-32 w-auto" />
                     )}
                     {msg.role === "assistant" ? (
-                      <div className="prose prose-sm max-w-none [&_p]:m-0 [&_ul]:my-1 [&_li]:my-0">
-                        <ReactMarkdown>{getTextContent(msg.content)}</ReactMarkdown>
-                      </div>
+                      <>
+                        <div className="prose prose-sm max-w-none [&_p]:m-0 [&_ul]:my-1 [&_li]:my-0">
+                          <ReactMarkdown>{getTextContent(msg.content)}</ReactMarkdown>
+                        </div>
+                        {/* TTS button for assistant messages */}
+                        {!isLoading && (
+                          <button
+                            onClick={() => speakMessage(getTextContent(msg.content), i)}
+                            className="mt-1.5 flex items-center gap-1 text-[10px] opacity-60 hover:opacity-100 transition-opacity"
+                            title={speakingMsgIndex === i ? "إيقاف القراءة" : "اسمع الرد بالصوت"}
+                          >
+                            {speakingMsgIndex === i ? (
+                              <>
+                                <VolumeX className="w-3 h-3" />
+                                <span>إيقاف</span>
+                              </>
+                            ) : (
+                              <>
+                                <Volume2 className="w-3 h-3" />
+                                <span>اسمع</span>
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </>
                     ) : (
                       getTextContent(msg.content)
                     )}
@@ -358,11 +499,27 @@ const AIChatBot = () => {
                 >
                   <ImagePlus className="w-4 h-4 text-muted-foreground" />
                 </button>
+
+                {/* Mic button */}
+                <button
+                  type="button"
+                  onClick={toggleListening}
+                  disabled={isLoading}
+                  className={`shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-colors disabled:opacity-50 ${
+                    isListening
+                      ? "bg-destructive text-destructive-foreground animate-pulse"
+                      : "bg-muted hover:bg-accent/20"
+                  }`}
+                  title={isListening ? "إيقاف التسجيل" : "تحدث بصوتك"}
+                >
+                  {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4 text-muted-foreground" />}
+                </button>
+
                 <input
                   ref={inputRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder={pendingImage ? "أضف وصف للصورة (اختياري)..." : "اكتب سؤالك هنا..."}
+                  placeholder={isListening ? "🎤 بتكلم..." : pendingImage ? "أضف وصف للصورة (اختياري)..." : "اكتب سؤالك هنا..."}
                   disabled={isLoading}
                   className="flex-1 bg-muted rounded-xl px-3 py-2 text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50"
                 />
