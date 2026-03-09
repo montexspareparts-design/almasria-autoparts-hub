@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+const AIChatBot = lazy(() => import("@/components/AIChatBot"));
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -53,6 +54,7 @@ const App = () => (
           <AuthProvider>
             <CartProvider>
               <InstallBanner />
+              <Suspense fallback={null}><AIChatBot /></Suspense>
               <Suspense fallback={<PageLoader />}>
                 <PageTransition>
                   <Routes>
