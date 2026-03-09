@@ -151,7 +151,7 @@ const DealerDashboard = () => {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
           {[
             { icon: ShoppingCart, label: "الطلبات", value: orders.length.toString() },
             { icon: Package, label: "المنتجات المتاحة", value: "5000+" },
@@ -159,10 +159,10 @@ const DealerDashboard = () => {
             { icon: Tag, label: "العروض الحصرية", value: "قريباً" },
           ].map((s, i) => (
             <Card key={i}>
-              <CardContent className="p-4 text-center">
-                <s.icon className="w-8 h-8 text-primary mx-auto mb-2" />
-                <p className="text-2xl font-bold text-foreground">{s.value}</p>
-                <p className="text-xs text-muted-foreground">{s.label}</p>
+              <CardContent className="p-3 md:p-4 text-center">
+                <s.icon className="w-6 h-6 md:w-8 md:h-8 text-primary mx-auto mb-1.5 md:mb-2" />
+                <p className="text-xl md:text-2xl font-bold text-foreground">{s.value}</p>
+                <p className="text-[10px] md:text-xs text-muted-foreground">{s.label}</p>
               </CardContent>
             </Card>
           ))}
