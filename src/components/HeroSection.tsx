@@ -310,8 +310,6 @@ const HeroSection = () => {
         </motion.div>
       </section>
 
-      {/* Trust Marquee strip */}
-      <TrustMarquee />
     </>
   );
 };
