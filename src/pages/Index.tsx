@@ -8,7 +8,7 @@ const AboutBrief = lazy(() => import("@/components/AboutBrief"));
 const WhyChooseUs = lazy(() => import("@/components/WhyChooseUs"));
 const WhoWeServe = lazy(() => import("@/components/WhoWeServe"));
 const KeyMetrics = lazy(() => import("@/components/KeyMetrics"));
-const DistributionSegments = lazy(() => import("@/components/DistributionSegments"));
+
 const DistributionNetwork = lazy(() => import("@/components/DistributionNetwork"));
 const MTXSection = lazy(() => import("@/components/MTXSection"));
 const ContactSimple = lazy(() => import("@/components/ContactSimple"));
