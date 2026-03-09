@@ -33,16 +33,16 @@ const floatingGears = [
 
 /* ── Floating Toyota Words ── */
 const floatingWords = [
-  { text: "TOYOTA", x: "15%", y: "25%", size: "text-4xl", duration: 30, delay: 0, opacity: 0.04 },
-  { text: "GENUINE", x: "70%", y: "15%", size: "text-3xl", duration: 25, delay: 1.5, opacity: 0.03 },
-  { text: "قطع غيار", x: "55%", y: "75%", size: "text-2xl", duration: 28, delay: 3, opacity: 0.04 },
-  { text: "PARTS", x: "25%", y: "65%", size: "text-5xl", duration: 35, delay: 2, opacity: 0.03 },
-  { text: "أصلية", x: "82%", y: "45%", size: "text-3xl", duration: 22, delay: 4, opacity: 0.04 },
-  { text: "OIL", x: "8%", y: "55%", size: "text-4xl", duration: 20, delay: 1, opacity: 0.03 },
-  { text: "MTX", x: "60%", y: "35%", size: "text-6xl", duration: 40, delay: 5, opacity: 0.03 },
-  { text: "DENSO", x: "35%", y: "85%", size: "text-2xl", duration: 24, delay: 2.5, opacity: 0.04 },
-  { text: "تويوتا", x: "45%", y: "20%", size: "text-3xl", duration: 27, delay: 3.5, opacity: 0.03 },
-  { text: "AISIN", x: "90%", y: "70%", size: "text-2xl", duration: 19, delay: 0.5, opacity: 0.04 },
+  { text: "TOYOTA", x: "15%", y: "25%", size: "text-4xl", duration: 30, delay: 0, opacity: 0.12 },
+  { text: "GENUINE", x: "70%", y: "15%", size: "text-3xl", duration: 25, delay: 1.5, opacity: 0.1 },
+  { text: "قطع غيار", x: "55%", y: "75%", size: "text-2xl", duration: 28, delay: 3, opacity: 0.12 },
+  { text: "PARTS", x: "25%", y: "65%", size: "text-5xl", duration: 35, delay: 2, opacity: 0.1 },
+  { text: "أصلية", x: "82%", y: "45%", size: "text-3xl", duration: 22, delay: 4, opacity: 0.12 },
+  { text: "OIL", x: "8%", y: "55%", size: "text-4xl", duration: 20, delay: 1, opacity: 0.1 },
+  { text: "MTX", x: "60%", y: "35%", size: "text-6xl", duration: 40, delay: 5, opacity: 0.1 },
+  { text: "DENSO", x: "35%", y: "85%", size: "text-2xl", duration: 24, delay: 2.5, opacity: 0.12 },
+  { text: "تويوتا", x: "45%", y: "20%", size: "text-3xl", duration: 27, delay: 3.5, opacity: 0.1 },
+  { text: "AISIN", x: "90%", y: "70%", size: "text-2xl", duration: 19, delay: 0.5, opacity: 0.12 },
 ];
 
 const ProductsShowcase = () => {
@@ -62,14 +62,14 @@ const ProductsShowcase = () => {
             style={{ left: gear.x, top: gear.y }}
             initial={{ opacity: 0, scale: 0 }}
             animate={{
-              opacity: [0, 0.08, 0.04, 0.08, 0],
+              opacity: [0, 0.25, 0.15, 0.25, 0],
               scale: [0.5, 1, 0.85, 1, 0.5],
               y: [0, -20, 10, -15, 0],
               rotate: [0, gear.rotate],
             }}
             transition={{ duration: gear.duration, delay: gear.delay, repeat: Infinity, ease: "linear" }}
           >
-            <gear.icon className="text-primary/40" style={{ width: gear.size, height: gear.size }} strokeWidth={0.6} />
+            <gear.icon className="text-primary" style={{ width: gear.size, height: gear.size, opacity: 0.3 }} strokeWidth={1} />
           </motion.div>
         ))}
       </div>
@@ -89,7 +89,7 @@ const ProductsShowcase = () => {
             }}
             transition={{ duration: word.duration, delay: word.delay, repeat: Infinity, ease: "linear" }}
           >
-            <span className={`${word.size} font-black text-secondary-foreground/[0.06] tracking-widest whitespace-nowrap`}>
+            <span className={`${word.size} font-black text-secondary-foreground/20 tracking-widest whitespace-nowrap`}>
               {word.text}
             </span>
           </motion.div>
