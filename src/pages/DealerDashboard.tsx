@@ -179,14 +179,14 @@ const DealerDashboard = () => {
             ) : (
               <div className="space-y-3">
                 {orders.slice(0, 5).map((order) => (
-                  <div key={order.id} className="flex items-center justify-between border-b border-border pb-3">
-                    <div>
-                      <p className="font-medium text-foreground">{order.order_number}</p>
-                      <p className="text-sm text-muted-foreground">{new Date(order.created_at).toLocaleDateString("ar-EG")}</p>
+                  <div key={order.id} className="flex items-center justify-between border-b border-border pb-3 gap-3">
+                    <div className="min-w-0">
+                      <p className="font-medium text-foreground text-sm md:text-base truncate">{order.order_number}</p>
+                      <p className="text-xs md:text-sm text-muted-foreground">{new Date(order.created_at).toLocaleDateString("ar-EG")}</p>
                     </div>
-                    <div className="text-left">
-                      <p className="font-bold text-foreground">{order.total_amount} ج.م</p>
-                      <p className="text-xs text-muted-foreground">{order.status}</p>
+                    <div className="text-left shrink-0">
+                      <p className="font-bold text-foreground text-sm md:text-base">{order.total_amount} ج.م</p>
+                      <p className="text-[10px] md:text-xs text-muted-foreground">{order.status}</p>
                     </div>
                   </div>
                 ))}
