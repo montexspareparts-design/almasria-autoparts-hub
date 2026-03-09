@@ -12,6 +12,7 @@ import AdminProductImages from "@/components/AdminProductImages";
 import AdminVideoSettings from "@/components/AdminVideoSettings";
 import AdminCatalogs from "@/components/AdminCatalogs";
 import AdminImageVerifier from "@/components/AdminImageVerifier";
+import AdminHeroVideo from "@/components/AdminHeroVideo";
 import type { Database } from "@/integrations/supabase/types";
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
@@ -282,7 +283,12 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Video Settings */}
+        {/* Hero Video Settings */}
+        <div className="mt-8">
+          <AdminHeroVideo />
+        </div>
+
+        {/* YouTube Video Settings */}
         <div className="mt-8">
           <AdminVideoSettings />
         </div>
