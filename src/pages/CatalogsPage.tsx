@@ -885,6 +885,233 @@ const CatalogsPage = () => {
               </div>
             )}
           </TabsContent>
+
+          {/* ── Quick Order Tab ── */}
+          <TabsContent value="quick-order" className="mt-6">
+            {/* Input Area */}
+            <div className="bg-card border border-border rounded-xl p-6 mb-6 shadow-sm">
+              <div className="flex items-center gap-2 mb-3">
+                <Zap className="w-5 h-5 text-primary" />
+                <h2 className="font-bold text-foreground">طلب جملة سريع</h2>
+                <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full mr-auto">
+                  {dailyLookups}/{MAX_DAILY_LOOKUPS} استعلام
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground mb-4">
+                الصق أرقام القطع مفصولة بسطر جديد أو فاصلة — الحد الأقصى 50 رقم في المرة الواحدة
+              </p>
+              <div className="space-y-3">
+                <div className="relative">
+                  <Textarea
+                    placeholder={"TF-001\nTF-002\nTF-003\nأو: TF-001, TF-002, TF-003"}
+                    value={quickSkuInput}
+                    onChange={e => setQuickSkuInput(e.target.value)}
+                    className="min-h-[140px] font-mono text-sm resize-none"
+                    dir="ltr"
+                  />
+                  {quickSkuInput && (
+                    <button
+                      onClick={() => { setQuickSkuInput(""); setQuickResults([]); }}
+                      className="absolute top-2 left-2 p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground">
+                    {quickSkuInput.split(/[\n,;\t]+/).filter(s => s.trim()).length} رقم قطعة
+                  </p>
+                  <Button
+                    onClick={handleQuickOrder}
+                    disabled={quickLoading || !quickSkuInput.trim() || dailyLookups >= MAX_DAILY_LOOKUPS}
+                    className="gap-2"
+                  >
+                    {quickLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                    استعلام عن الأسعار
+                  </Button>
+                </div>
+              </div>
+              {dailyLookups >= MAX_DAILY_LOOKUPS && (
+                <div className="mt-4 bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 flex items-start gap-2 text-amber-600 text-sm">
+                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>تم استنفاد الحد اليومي للاستعلامات ({MAX_DAILY_LOOKUPS} صنف). يتجدد منتصف الليل.</span>
+                </div>
+              )}
+            </div>
+
+            {/* Results */}
+            {quickResults.length > 0 && (
+              <div className="space-y-4">
+                {/* Summary Bar */}
+                <div className="bg-card border border-border rounded-xl p-4 flex items-center justify-between flex-wrap gap-3">
+                  <div className="flex items-center gap-4 text-sm flex-wrap">
+                    <span className="flex items-center gap-1.5 text-green-600">
+                      <CheckCircle2 className="w-4 h-4" />
+                      {quickResults.filter(r => r.found && (r.product?.stock_quantity ?? 0) > 0).length} متوفر
+                    </span>
+                    {quickResults.filter(r => !r.found).length > 0 && (
+                      <span className="flex items-center gap-1.5 text-red-500">
+                        <AlertTriangle className="w-4 h-4" />
+                        {quickResults.filter(r => !r.found).length} غير موجود
+                      </span>
+                    )}
+                    {quickResults.filter(r => r.found && r.product?.stock_quantity === 0).length > 0 && (
+                      <span className="flex items-center gap-1.5 text-amber-500">
+                        <Package className="w-4 h-4" />
+                        {quickResults.filter(r => r.found && r.product?.stock_quantity === 0).length} نافد
+                      </span>
+                    )}
+                  </div>
+                  <Button
+                    onClick={handleAddAllToCart}
+                    disabled={addingAllToCart || quickResults.filter(r => r.found && (r.product?.stock_quantity ?? 0) > 0).length === 0}
+                    className="gap-2"
+                  >
+                    {addingAllToCart ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShoppingCart className="w-4 h-4" />}
+                    أضف الكل للسلة ({quickResults.filter(r => r.found && (r.product?.stock_quantity ?? 0) > 0).length})
+                  </Button>
+                </div>
+
+                {/* Results Table */}
+                <div className="bg-card border border-border rounded-xl overflow-hidden">
+                  {/* Header */}
+                  <div className="hidden md:grid grid-cols-[2fr_3fr_1.5fr_1.5fr_auto] gap-0 text-xs font-medium text-muted-foreground bg-muted/50 px-4 py-2.5 border-b border-border" dir="rtl">
+                    <span>رقم القطعة</span>
+                    <span>المنتج</span>
+                    <span>سعر الجملة</span>
+                    <span>الكمية</span>
+                    <span></span>
+                  </div>
+                  <div className="divide-y divide-border">
+                    {quickResults.map((result, idx) => {
+                      if (!result.found) {
+                        return (
+                          <div key={result.sku + idx} className="px-4 py-3 flex items-center gap-3 bg-red-500/5" dir="rtl">
+                            <div className="w-2 h-2 rounded-full bg-red-400 shrink-0" />
+                            <span className="font-mono text-sm text-muted-foreground">{result.sku}</span>
+                            <span className="text-xs text-red-500 mr-auto bg-red-500/10 px-2 py-0.5 rounded-full">غير موجود</span>
+                          </div>
+                        );
+                      }
+
+                      const product = result.product!;
+                      const price = product.tierPrice?.price ?? (product.is_on_sale && product.sale_price ? product.sale_price : product.base_price);
+                      const qty = quickQuantities[product.id] || product.min_order_qty || 1;
+                      const isInStock = product.stock_quantity > 0;
+                      const hasDiscount = product.tierPrice?.discount_price && product.tierPrice?.min_qty_for_discount;
+
+                      return (
+                        <motion.div
+                          key={product.id}
+                          initial={{ opacity: 0, x: -8 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: idx * 0.04 }}
+                          className={`px-4 py-3 flex flex-wrap md:grid md:grid-cols-[2fr_3fr_1.5fr_1.5fr_auto] items-center gap-3 hover:bg-muted/20 transition-colors ${!isInStock ? "opacity-60" : ""}`}
+                          dir="rtl"
+                        >
+                          {/* SKU */}
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className={`w-2 h-2 rounded-full shrink-0 ${isInStock ? "bg-green-400" : "bg-amber-400"}`} />
+                            <span className="font-mono text-xs text-muted-foreground truncate">{product.sku}</span>
+                          </div>
+
+                          {/* Product */}
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-foreground line-clamp-1">{product.name_ar}</p>
+                            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                              <span className={`text-xs px-1.5 py-0.5 rounded ${categoryColors[product.brand]?.bg ?? "bg-muted"} ${categoryColors[product.brand]?.text ?? "text-muted-foreground"}`}>
+                                {brandLabels[product.brand] ?? product.brand}
+                              </span>
+                              <span className={`text-xs ${isInStock ? "text-green-600" : "text-amber-500"}`}>
+                                {isInStock ? "متوفر" : "نافد"}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Price */}
+                          <div>
+                            <p className="text-sm font-bold text-primary">{price.toLocaleString("ar-EG")} ج.م</p>
+                            {hasDiscount && (
+                              <p className="text-xs text-green-600 whitespace-nowrap">
+                                {product.tierPrice!.discount_price!.toLocaleString("ar-EG")} لـ +{product.tierPrice!.min_qty_for_discount}ق
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Quantity */}
+                          <div className="flex items-center gap-1 bg-muted rounded-lg w-fit">
+                            <button
+                              onClick={() => updateQuickQuantity(product.id, -1, product.min_order_qty || 1, product.stock_quantity)}
+                              disabled={!isInStock}
+                              className="p-1.5 hover:bg-border rounded-r-lg transition-colors disabled:opacity-30"
+                            >
+                              <Minus className="w-3 h-3" />
+                            </button>
+                            <span className="text-sm font-bold min-w-[2.5rem] text-center">{qty}</span>
+                            <button
+                              onClick={() => updateQuickQuantity(product.id, 1, product.min_order_qty || 1, product.stock_quantity)}
+                              disabled={!isInStock || qty >= product.stock_quantity}
+                              className="p-1.5 hover:bg-border rounded-l-lg transition-colors disabled:opacity-30"
+                            >
+                              <Plus className="w-3 h-3" />
+                            </button>
+                          </div>
+
+                          {/* Add single */}
+                          <Button
+                            size="sm"
+                            variant={isInStock ? "default" : "outline"}
+                            className="gap-1 shrink-0"
+                            disabled={!isInStock || addingToCart === product.id}
+                            onClick={() => handleAddToCart(product)}
+                          >
+                            {addingToCart === product.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <ShoppingCart className="w-3 h-3" />}
+                            <span className="hidden sm:inline text-xs">أضف</span>
+                          </Button>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Order Total */}
+                {quickResults.filter(r => r.found && (r.product?.stock_quantity ?? 0) > 0).length > 0 && (
+                  <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex items-center justify-between gap-4 flex-wrap" dir="rtl">
+                    <div>
+                      <p className="text-sm text-muted-foreground">إجمالي الطلب (قبل الضريبة)</p>
+                      <p className="text-2xl font-bold text-foreground mt-0.5">
+                        {quickResults
+                          .filter(r => r.found && (r.product?.stock_quantity ?? 0) > 0)
+                          .reduce((sum, r) => {
+                            const p = r.product!;
+                            const price = p.tierPrice?.price ?? (p.is_on_sale && p.sale_price ? p.sale_price : p.base_price);
+                            return sum + price * (quickQuantities[p.id] || p.min_order_qty || 1);
+                          }, 0)
+                          .toLocaleString("ar-EG")} ج.م
+                      </p>
+                    </div>
+                    <Button onClick={handleAddAllToCart} disabled={addingAllToCart} size="lg" className="gap-2">
+                      {addingAllToCart ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShoppingCart className="w-4 h-4" />}
+                      أضف الكل للسلة
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Empty state */}
+            {!quickLoading && quickResults.length === 0 && (
+              <div className="text-center py-16 text-muted-foreground">
+                <ClipboardList className="w-14 h-14 mx-auto mb-4 opacity-20" />
+                <p className="text-lg font-medium">الصق أرقام القطع للبدء</p>
+                <p className="text-sm mt-2 max-w-sm mx-auto leading-relaxed">
+                  انسخ قائمة أرقام القطع من أي مصدر والصقها في الحقل أعلاه، وسنعرض لك أسعار الجملة فوراً
+                </p>
+              </div>
+            )}
+          </TabsContent>
+
         </Tabs>
       </section>
 
