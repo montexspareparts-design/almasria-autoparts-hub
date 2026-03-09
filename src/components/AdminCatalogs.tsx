@@ -93,6 +93,20 @@ const AdminCatalogs = () => {
       toast({ title: "خطأ في حفظ البيانات", description: dbError.message, variant: "destructive" });
     } else {
       toast({ title: "تم رفع الكتالوج بنجاح ✅" });
+
+      // Notify all approved wholesale dealers (in-app + WhatsApp)
+      try {
+        const categoryLabel = categories.find((c) => c.value === form.category)?.label || form.category;
+        await supabase.functions.invoke("notify-catalog-new", {
+          body: {
+            catalogTitle: form.title_ar,
+            catalogCategory: categoryLabel,
+          },
+        });
+      } catch (notifyErr) {
+        console.error("Failed to notify dealers:", notifyErr);
+      }
+
       setForm({ title_ar: "", title_en: "", category: "", description_ar: "", sort_order: "0" });
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
