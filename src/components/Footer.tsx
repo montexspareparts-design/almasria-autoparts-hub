@@ -71,7 +71,7 @@ const Footer = () => {
               </li>
               <li>
                 <a
-                  href="https://wa.me/201020412358"
+                  href="https://wa.me/201153961008"
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => trackClickWhatsApp("footer_link")}
