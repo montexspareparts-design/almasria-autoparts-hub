@@ -238,28 +238,44 @@ const AboutBrief = () => {
 
         {/* Metrics bar */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="bg-secondary rounded-2xl p-8 md:p-10"
+          initial={{ opacity: 0, y: 30, scale: 0.97 }}
+          whileInView={{ opacity: 1, y: 0, scale: 1 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="bg-secondary rounded-2xl p-8 md:p-10 relative overflow-hidden"
         >
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4">
+          {/* Animated decorative glow */}
+          <motion.div
+            className="absolute -top-20 -left-20 w-40 h-40 bg-primary/10 rounded-full blur-3xl"
+            animate={{ x: [0, 30, 0], y: [0, 15, 0], opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute -bottom-20 -right-20 w-40 h-40 bg-primary/10 rounded-full blur-3xl"
+            animate={{ x: [0, -30, 0], y: [0, -15, 0], opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 3 }}
+          />
+
+          <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4">
             {metrics.map((m, i) => (
               <motion.div
                 key={m.label}
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: 0.3 + i * 0.1 }}
-                className="text-center relative"
+                transition={{ delay: 0.2 + i * 0.12, type: "spring", stiffness: 80 }}
+                className="text-center relative group cursor-default"
               >
-                {/* Separator line between items on desktop */}
                 {i > 0 && (
                   <div className="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 w-px h-12 bg-secondary-foreground/10" />
                 )}
-                <Counter target={m.value} suffix={m.suffix} />
-                <p className="text-secondary-foreground/60 text-sm font-medium mt-1">{m.label}</p>
+                <motion.div
+                  whileHover={{ scale: 1.08 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Counter target={m.value} suffix={m.suffix} />
+                </motion.div>
+                <p className="text-secondary-foreground/60 text-sm font-medium mt-1 group-hover:text-secondary-foreground/80 transition-colors">{m.label}</p>
               </motion.div>
             ))}
           </div>
