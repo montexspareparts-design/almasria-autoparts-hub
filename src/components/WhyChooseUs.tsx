@@ -54,7 +54,7 @@ const WhyChooseUs = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.3 }}
           />
-          <p className="text-muted-foreground text-base max-w-lg mx-auto">
+          <p className="text-foreground/70 text-base md:text-lg max-w-2xl mx-auto leading-[1.9] font-medium">
             أربعة أسباب تجعل المصرية جروب الخيار الأول لتجار وموزعي قطع غيار تويوتا
           </p>
         </motion.div>
