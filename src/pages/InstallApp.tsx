@@ -29,7 +29,13 @@ const InstallApp = () => {
     };
 
     window.addEventListener("beforeinstallprompt", handler);
-    window.addEventListener("appinstalled", () => setIsInstalled(true));
+    window.addEventListener("appinstalled", () => {
+      setIsInstalled(true);
+      // Auto-open the app after install (redirect to home in standalone mode)
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 2000);
+    });
 
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
