@@ -62,14 +62,14 @@ const ProductsShowcase = () => {
             style={{ left: gear.x, top: gear.y }}
             initial={{ opacity: 0, scale: 0 }}
             animate={{
-              opacity: [0, 0.08, 0.04, 0.08, 0],
+              opacity: [0, 0.25, 0.15, 0.25, 0],
               scale: [0.5, 1, 0.85, 1, 0.5],
               y: [0, -20, 10, -15, 0],
               rotate: [0, gear.rotate],
             }}
             transition={{ duration: gear.duration, delay: gear.delay, repeat: Infinity, ease: "linear" }}
           >
-            <gear.icon className="text-primary/40" style={{ width: gear.size, height: gear.size }} strokeWidth={0.6} />
+            <gear.icon className="text-primary" style={{ width: gear.size, height: gear.size, opacity: 0.3 }} strokeWidth={1} />
           </motion.div>
         ))}
       </div>
