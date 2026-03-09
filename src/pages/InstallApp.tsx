@@ -133,28 +133,40 @@ const InstallApp = () => {
                     )}
 
                     <div className="bg-secondary rounded-2xl p-8 text-right space-y-6">
-                      <h3 className="text-xl font-bold text-secondary-foreground mb-4">
+                      <h3 className="text-xl font-bold text-secondary-foreground mb-2">
                         لتثبيت التطبيق على iPhone/iPad:
                       </h3>
-                      <p className="text-secondary-foreground/60 text-sm">
-                        ⚠️ يجب أن تستخدم متصفح <strong className="text-primary">Safari</strong> فقط
+                      <p className="text-secondary-foreground/50 text-sm mb-4">
+                        👇 اتبع الخطوات التالية يدوياً (هذه تعليمات وليست أزرار)
                       </p>
                       <div className="space-y-4">
-                        {[
-                          { step: "1", text: "اضغط على زر المشاركة ⬆️ أسفل الشاشة", icon: Share },
-                          { step: "2", text: 'مرر لأسفل واختر "إضافة إلى الشاشة الرئيسية"', icon: PlusSquare },
-                          { step: "3", text: 'اضغط "إضافة" في أعلى الشاشة', icon: CheckCircle },
-                        ].map((s) => (
-                          <div key={s.step} className="flex items-center gap-4 bg-secondary-foreground/5 rounded-xl p-4">
-                            <div className="w-10 h-10 bg-primary/15 rounded-full flex items-center justify-center shrink-0">
-                              <span className="text-primary font-black text-lg">{s.step}</span>
-                            </div>
-                            <div className="flex items-center gap-3 flex-1">
-                              <s.icon className="w-5 h-5 text-primary shrink-0" />
-                              <span className="text-secondary-foreground font-medium">{s.text}</span>
-                            </div>
+                        <div className="flex items-center gap-4 bg-secondary-foreground/5 rounded-xl p-4">
+                          <div className="w-12 h-12 bg-primary/15 rounded-full flex items-center justify-center shrink-0">
+                            <span className="text-2xl">1</span>
                           </div>
-                        ))}
+                          <div className="flex-1">
+                            <span className="text-secondary-foreground font-bold block mb-1">اضغط على زر المشاركة</span>
+                            <span className="text-secondary-foreground/60 text-sm">الأيقونة المربعة مع سهم لأعلى <span className="text-xl">⬆️</span> أسفل شاشة Safari</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4 bg-secondary-foreground/5 rounded-xl p-4">
+                          <div className="w-12 h-12 bg-primary/15 rounded-full flex items-center justify-center shrink-0">
+                            <span className="text-2xl">2</span>
+                          </div>
+                          <div className="flex-1">
+                            <span className="text-secondary-foreground font-bold block mb-1">مرر لأسفل واختر</span>
+                            <span className="text-secondary-foreground/60 text-sm">"إضافة إلى الشاشة الرئيسية" <span className="text-xl">➕</span></span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4 bg-secondary-foreground/5 rounded-xl p-4">
+                          <div className="w-12 h-12 bg-primary/15 rounded-full flex items-center justify-center shrink-0">
+                            <span className="text-2xl">3</span>
+                          </div>
+                          <div className="flex-1">
+                            <span className="text-secondary-foreground font-bold block mb-1">اضغط "إضافة"</span>
+                            <span className="text-secondary-foreground/60 text-sm">في أعلى يمين الشاشة ✅</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </>
