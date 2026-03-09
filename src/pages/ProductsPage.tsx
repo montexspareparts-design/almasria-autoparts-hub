@@ -727,35 +727,36 @@ const ProductsPage = () => {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-10">
+            <div className="flex items-center justify-center gap-1.5 md:gap-2 mt-8 md:mt-10">
               <Button
                 variant="outline"
                 size="sm"
                 disabled={currentPage <= 1}
                 onClick={() => { setCurrentPage((p) => p - 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                className="gap-1"
+                className="gap-1 text-xs md:text-sm px-2 md:px-3"
               >
                 <ChevronRight className="w-4 h-4" />
-                السابق
+                <span className="hidden sm:inline">السابق</span>
               </Button>
 
-              <div className="flex items-center gap-1">
-                {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+              <div className="flex items-center gap-0.5 md:gap-1">
+                {Array.from({ length: Math.min(totalPages, window.innerWidth < 640 ? 5 : 7) }, (_, i) => {
+                  const maxVisible = window.innerWidth < 640 ? 5 : 7;
                   let page: number;
-                  if (totalPages <= 7) {
+                  if (totalPages <= maxVisible) {
                     page = i + 1;
-                  } else if (currentPage <= 4) {
+                  } else if (currentPage <= Math.ceil(maxVisible / 2)) {
                     page = i + 1;
-                  } else if (currentPage >= totalPages - 3) {
-                    page = totalPages - 6 + i;
+                  } else if (currentPage >= totalPages - Math.floor(maxVisible / 2)) {
+                    page = totalPages - maxVisible + 1 + i;
                   } else {
-                    page = currentPage - 3 + i;
+                    page = currentPage - Math.floor(maxVisible / 2) + i;
                   }
                   return (
                     <button
                       key={page}
                       onClick={() => { setCurrentPage(page); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                      className={`w-9 h-9 rounded-lg text-sm font-medium transition-all ${
+                      className={`w-8 h-8 md:w-9 md:h-9 rounded-lg text-xs md:text-sm font-medium transition-all ${
                         currentPage === page
                           ? "bg-primary text-primary-foreground shadow-sm"
                           : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -772,9 +773,9 @@ const ProductsPage = () => {
                 size="sm"
                 disabled={currentPage >= totalPages}
                 onClick={() => { setCurrentPage((p) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                className="gap-1"
+                className="gap-1 text-xs md:text-sm px-2 md:px-3"
               >
-                التالي
+                <span className="hidden sm:inline">التالي</span>
                 <ChevronLeft className="w-4 h-4" />
               </Button>
             </div>

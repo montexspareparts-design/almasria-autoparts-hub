@@ -207,17 +207,17 @@ const DealerDashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6">
-          <Button variant="outline" className="h-auto py-4 flex flex-col gap-2" onClick={() => navigate("/")}>
-            <Package className="w-6 h-6" />
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mt-6">
+          <Button variant="outline" className="h-auto py-3 md:py-4 flex flex-col gap-1.5 md:gap-2 text-xs md:text-sm" onClick={() => navigate("/")}>
+            <Package className="w-5 h-5 md:w-6 md:h-6" />
             <span>تصفح المنتجات</span>
           </Button>
-          <Button variant="outline" className="h-auto py-4 flex flex-col gap-2">
-            <FileText className="w-6 h-6" />
+          <Button variant="outline" className="h-auto py-3 md:py-4 flex flex-col gap-1.5 md:gap-2 text-xs md:text-sm">
+            <FileText className="w-5 h-5 md:w-6 md:h-6" />
             <span>طلب تسعير خاص</span>
           </Button>
-          <Button variant="outline" className="h-auto py-4 flex flex-col gap-2">
-            <Tag className="w-6 h-6" />
+          <Button variant="outline" className="h-auto py-3 md:py-4 flex flex-col gap-1.5 md:gap-2 text-xs md:text-sm col-span-2 md:col-span-1">
+            <Tag className="w-5 h-5 md:w-6 md:h-6" />
             <span>العروض الحصرية</span>
           </Button>
         </div>
