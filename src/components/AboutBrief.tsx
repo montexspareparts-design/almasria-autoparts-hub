@@ -175,18 +175,38 @@ const AboutBrief = () => {
             {highlights.map((h, i) => (
               <motion.div
                 key={h.label}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.3 + i * 0.1, duration: 0.5 }}
-                whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                className="group bg-card border border-border rounded-2xl p-5 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300"
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ 
+                  delay: 0.2 + i * 0.15, 
+                  duration: 0.5,
+                  type: "spring",
+                  stiffness: 100
+                }}
+                whileHover={{ 
+                  y: -6, 
+                  scale: 1.02,
+                  boxShadow: "0 20px 25px -5px hsl(var(--primary) / 0.1), 0 8px 10px -6px hsl(var(--primary) / 0.1)",
+                  borderColor: "hsl(var(--primary) / 0.4)",
+                  transition: { duration: 0.2 } 
+                }}
+                className="group relative bg-card border border-border rounded-2xl p-5 transition-all duration-300 overflow-hidden"
               >
-                <div className="w-11 h-11 bg-primary/10 rounded-xl flex items-center justify-center mb-4 group-hover:bg-primary/15 transition-colors">
-                  <h.icon className="w-5 h-5 text-primary" strokeWidth={1.8} />
+                {/* Background gradient effect on hover */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                
+                <div className="relative z-10">
+                  <motion.div 
+                    className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors shadow-sm"
+                    whileHover={{ rotate: [0, -10, 10, -5, 0] }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <h.icon className="w-6 h-6 text-primary" strokeWidth={1.8} />
+                  </motion.div>
+                  <h3 className="font-bold text-foreground text-base mb-1.5">{h.label}</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">{h.desc}</p>
                 </div>
-                <h3 className="font-bold text-foreground text-sm mb-1">{h.label}</h3>
-                <p className="text-muted-foreground text-xs leading-relaxed">{h.desc}</p>
               </motion.div>
             ))}
           </motion.div>
