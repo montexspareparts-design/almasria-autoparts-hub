@@ -63,22 +63,22 @@ const DistributionNetwork = () => {
                 borderColor: "hsl(var(--primary) / 0.35)",
                 transition: { duration: 0.2 },
               }}
-              className="group bg-secondary-foreground/[0.04] border border-secondary-foreground/10 rounded-xl p-5 transition-all duration-300 relative overflow-hidden"
+              className="group bg-secondary-foreground/[0.06] border-2 border-secondary-foreground/15 rounded-2xl p-6 transition-all duration-300 relative overflow-hidden hover:bg-secondary-foreground/[0.08] shadow-sm hover:shadow-lg"
             >
               {/* Hover shine */}
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/8 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               
-              <div className="relative z-10 flex items-start gap-3">
+              <div className="relative z-10 flex items-start gap-4">
                 <motion.div
-                  className="w-10 h-10 bg-primary/15 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-primary/25 transition-colors"
-                  whileHover={{ rotate: [0, -8, 8, 0] }}
-                  transition={{ duration: 0.4 }}
+                  className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-primary/30 transition-colors shadow-md shadow-primary/10"
+                  whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
+                  transition={{ duration: 0.5 }}
                 >
-                  <b.icon className="w-5 h-5 text-primary" />
+                  <b.icon className="w-6 h-6 text-primary" strokeWidth={2} />
                 </motion.div>
                 <div>
-                  <h3 className="font-bold text-secondary-foreground text-sm">{b.name}</h3>
-                  <p className="text-xs text-secondary-foreground/50 mt-1">{b.detail}</p>
+                  <h3 className="font-black text-secondary-foreground text-base mb-1">{b.name}</h3>
+                  <p className="text-sm text-secondary-foreground/60 mt-1.5 font-medium">{b.detail}</p>
                   <motion.a
                     href={b.mapUrl}
                     target="_blank"
