@@ -88,7 +88,7 @@ const KeyMetrics = () => {
           <p className="text-primary text-sm font-black tracking-[0.3em] uppercase mb-5">
             إحصائياتنا
           </p>
-          <h2 className="text-3xl md:text-4xl font-black text-foreground leading-snug mb-3">
+          <h2 className="text-4xl md:text-5xl font-black text-foreground leading-tight mb-4">
             أرقام تَمنح <span className="text-primary">الثقة</span>
           </h2>
           <p className="text-muted-foreground text-sm leading-relaxed max-w-sm mx-auto">
