@@ -31,33 +31,6 @@ const tips = [
     iconBg: "bg-sky-500/15",
     iconColor: "text-sky-600",
   },
-  {
-    icon: Battery,
-    title: "عمر البطارية",
-    desc: "البطارية تعيش 2-4 سنوات. افحصها دوريًا خاصة في الصيف — الحرارة العالية أكبر عدو للبطارية.",
-    tag: "كهرباء",
-    color: "from-emerald-500/15 to-emerald-500/5",
-    iconBg: "bg-emerald-500/15",
-    iconColor: "text-emerald-600",
-  },
-  {
-    icon: ThermometerSun,
-    title: "نظام التبريد",
-    desc: "افحص مستوى سائل التبريد شهريًا. نقصه يسبب ارتفاع حرارة المحرك وقد يؤدي لأعطال مكلفة.",
-    tag: "تبريد",
-    color: "from-cyan-500/15 to-cyan-500/5",
-    iconBg: "bg-cyan-500/15",
-    iconColor: "text-cyan-600",
-  },
-  {
-    icon: Gauge,
-    title: "ضغط الإطارات",
-    desc: "افحص الضغط أسبوعيًا والإطارات باردة. ضغط غلط يزيد استهلاك البنزين ويقلل عمر الكاوتش.",
-    tag: "إطارات",
-    color: "from-violet-500/15 to-violet-500/5",
-    iconBg: "bg-violet-500/15",
-    iconColor: "text-violet-600",
-  },
 ];
 
 const MaintenanceTipsSection = () => {
