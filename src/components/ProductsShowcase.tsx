@@ -96,9 +96,9 @@ const ProductsShowcase = () => {
         ))}
       </div>
 
-      {/* Radial glow accents */}
-      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary/[0.03] rounded-full blur-[150px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-primary/[0.04] rounded-full blur-[120px] pointer-events-none" />
+      {/* Radial glow accents - hidden on mobile to prevent overflow */}
+      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary/[0.03] rounded-full blur-[150px] pointer-events-none hidden md:block" />
+      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-primary/[0.04] rounded-full blur-[120px] pointer-events-none hidden md:block" />
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
