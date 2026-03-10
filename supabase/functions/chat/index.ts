@@ -251,17 +251,13 @@ ${userInterests ? `## 🎯 اهتمامات هذا العميل (بناءً عل
     );
 
     if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "عدد الطلبات كثير، حاول مرة أخرى بعد قليل." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "يرجى تجديد رصيد الذكاء الاصطناعي." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+      if (response.status === 429 || response.status === 402) {
+        console.error("AI gateway limit:", response.status);
+        const fallbackMsg = "المساعد الذكي مشغول حالياً 😊\n\nتقدر تتواصل مع فريق المبيعات مباشرة:\n\n📞 **فرع القاهرة**: 01032104861\n📞 **فرع الجيزة**: 01153961008\n📞 **فرع الأقصر**: 01016177204\n📱 **واتساب**: 01032104861\n\n⏰ من 9 صباحًا لـ 7 مساءً";
+        const fallbackSSE = `data: ${JSON.stringify({ choices: [{ delta: { content: fallbackMsg }, finish_reason: "stop" }] })}\n\ndata: [DONE]\n\n`;
+        return new Response(fallbackSSE, {
+          headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+        });
       }
       const t = await response.text();
       console.error("AI gateway error:", response.status, t);
