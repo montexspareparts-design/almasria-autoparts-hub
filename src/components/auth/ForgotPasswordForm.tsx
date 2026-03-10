@@ -52,7 +52,7 @@ const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
     return `+2${cleaned}`;
   };
 
-  const handleSendOTP = async () => {
+  const handleSendOTP = async (channel: "sms" | "whatsapp" = method === "whatsapp" ? "whatsapp" : "sms") => {
     if (!phone || phone.length < 10) {
       toast({ title: "أدخل رقم هاتف صحيح", variant: "destructive" });
       return;
@@ -61,11 +61,12 @@ const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
     try {
       const formattedPhone = formatPhone(phone);
       const { data, error } = await supabase.functions.invoke("send-otp", {
-        body: { phone: formattedPhone },
+        body: { phone: formattedPhone, channel },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast({ title: "تم إرسال كود التحقق ✅", description: `تم إرسال كود على ${formattedPhone}` });
+      const channelName = channel === "whatsapp" ? "واتساب" : "SMS";
+      toast({ title: `تم إرسال كود التحقق عبر ${channelName} ✅`, description: `تم إرسال كود على ${formattedPhone}` });
       setPhoneStep("otp");
     } catch (err: any) {
       toast({ title: "خطأ", description: err.message, variant: "destructive" });
