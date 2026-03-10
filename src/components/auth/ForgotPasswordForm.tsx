@@ -223,7 +223,7 @@ const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             </div>
           </div>
-          <Button className="w-full red-glow" onClick={handleSendOTP} disabled={loading}>
+          <Button className="w-full red-glow" onClick={() => handleSendOTP()} disabled={loading}>
             {loading ? <><Loader2 className="w-4 h-4 animate-spin ml-2" />جاري الإرسال...</> : "إرسال كود التحقق"}
           </Button>
         </>
