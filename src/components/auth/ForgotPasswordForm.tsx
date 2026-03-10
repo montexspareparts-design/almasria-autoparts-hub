@@ -196,7 +196,7 @@ const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
     );
   }
 
-  // Phone method
+  // Phone / WhatsApp method
   return (
     <div className="space-y-4">
       <button type="button" onClick={() => { setMethod(null); setPhoneStep("phone"); setOtp(""); }} className="flex items-center gap-1 text-sm text-primary hover:underline">
