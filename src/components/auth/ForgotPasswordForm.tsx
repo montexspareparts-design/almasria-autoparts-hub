@@ -207,7 +207,7 @@ const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
       {phoneStep === "phone" && (
         <>
           <p className="text-sm text-muted-foreground text-center">
-            أدخل رقم هاتفك المسجل وسنرسل لك كود تحقق
+            أدخل رقم هاتفك المسجل وسنرسل لك كود تحقق {method === "whatsapp" ? "عبر واتساب" : "عبر SMS"}
           </p>
           <div className="space-y-2">
             <Label className="text-card-foreground">رقم الهاتف</Label>
@@ -224,7 +224,7 @@ const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
             </div>
           </div>
           <Button className="w-full red-glow" onClick={() => handleSendOTP()} disabled={loading}>
-            {loading ? <><Loader2 className="w-4 h-4 animate-spin ml-2" />جاري الإرسال...</> : "إرسال كود التحقق"}
+            {loading ? <><Loader2 className="w-4 h-4 animate-spin ml-2" />جاري الإرسال...</> : `إرسال كود التحقق ${method === "whatsapp" ? "عبر واتساب" : ""}`}
           </Button>
         </>
       )}
