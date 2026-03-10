@@ -256,7 +256,7 @@ const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
           <button onClick={() => { setPhoneStep("phone"); setOtp(""); }} className="text-sm text-muted-foreground hover:text-foreground w-full text-center block">
             تغيير رقم الهاتف
           </button>
-          <button onClick={handleSendOTP} className="text-sm text-muted-foreground hover:text-foreground w-full text-center block" disabled={loading}>
+          <button onClick={() => handleSendOTP()} className="text-sm text-muted-foreground hover:text-foreground w-full text-center block" disabled={loading}>
             إعادة إرسال الكود
           </button>
         </>
