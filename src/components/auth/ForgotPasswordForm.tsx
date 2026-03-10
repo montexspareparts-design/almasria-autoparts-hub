@@ -5,9 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Phone, Loader2, KeyRound, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Mail, Phone, Loader2, KeyRound, Eye, EyeOff, ArrowRight, MessageCircle } from "lucide-react";
 
-type ResetMethod = "email" | "phone";
+type ResetMethod = "email" | "phone" | "whatsapp";
 type PhoneStep = "phone" | "otp" | "new-password";
 
 interface ForgotPasswordFormProps {
