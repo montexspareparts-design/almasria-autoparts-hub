@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { phone } = await req.json();
+    const { phone, channel = "sms" } = await req.json();
 
     if (!phone || phone.length < 8) {
       return new Response(
