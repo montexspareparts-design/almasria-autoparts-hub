@@ -20,3 +20,15 @@ verify_jwt = false
 
 [functions.notify-catalog-new]
 verify_jwt = false
+
+[functions.reset-password-by-phone]
+verify_jwt = false
+
+[functions.send-dealer-notification]
+verify_jwt = false
+
+[functions.send-push]
+verify_jwt = false
+
+[functions.verify-product-images]
+verify_jwt = false

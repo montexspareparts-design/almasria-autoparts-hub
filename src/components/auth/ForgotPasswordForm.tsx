@@ -5,9 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Phone, Loader2, KeyRound, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Mail, Phone, Loader2, KeyRound, Eye, EyeOff, ArrowRight, MessageCircle } from "lucide-react";
 
-type ResetMethod = "email" | "phone";
+type ResetMethod = "email" | "phone" | "whatsapp";
 type PhoneStep = "phone" | "otp" | "new-password";
 
 interface ForgotPasswordFormProps {
@@ -52,7 +52,7 @@ const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
     return `+2${cleaned}`;
   };
 
-  const handleSendOTP = async () => {
+  const handleSendOTP = async (channel: "sms" | "whatsapp" = method === "whatsapp" ? "whatsapp" : "sms") => {
     if (!phone || phone.length < 10) {
       toast({ title: "أدخل رقم هاتف صحيح", variant: "destructive" });
       return;
@@ -61,11 +61,12 @@ const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
     try {
       const formattedPhone = formatPhone(phone);
       const { data, error } = await supabase.functions.invoke("send-otp", {
-        body: { phone: formattedPhone },
+        body: { phone: formattedPhone, channel },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast({ title: "تم إرسال كود التحقق ✅", description: `تم إرسال كود على ${formattedPhone}` });
+      const channelName = channel === "whatsapp" ? "واتساب" : "SMS";
+      toast({ title: `تم إرسال كود التحقق عبر ${channelName} ✅`, description: `تم إرسال كود على ${formattedPhone}` });
       setPhoneStep("otp");
     } catch (err: any) {
       toast({ title: "خطأ", description: err.message, variant: "destructive" });
@@ -135,8 +136,20 @@ const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
             <Phone className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <p className="font-semibold text-card-foreground text-sm">عبر رقم الهاتف</p>
+            <p className="font-semibold text-card-foreground text-sm">عبر SMS</p>
             <p className="text-xs text-muted-foreground">سنرسل كود تحقق SMS على رقمك</p>
+          </div>
+        </button>
+        <button
+          onClick={() => setMethod("whatsapp")}
+          className="w-full flex items-center gap-3 p-4 rounded-lg border border-border bg-background hover:bg-accent/50 transition-colors text-right"
+        >
+          <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center shrink-0">
+            <MessageCircle className="w-5 h-5 text-green-600" />
+          </div>
+          <div>
+            <p className="font-semibold text-card-foreground text-sm">عبر واتساب</p>
+            <p className="text-xs text-muted-foreground">سنرسل كود تحقق على واتساب</p>
           </div>
         </button>
         <button type="button" onClick={onBack} className="text-sm text-primary hover:underline w-full text-center mt-2">
@@ -183,7 +196,7 @@ const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
     );
   }
 
-  // Phone method
+  // Phone / WhatsApp method
   return (
     <div className="space-y-4">
       <button type="button" onClick={() => { setMethod(null); setPhoneStep("phone"); setOtp(""); }} className="flex items-center gap-1 text-sm text-primary hover:underline">
@@ -194,7 +207,7 @@ const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
       {phoneStep === "phone" && (
         <>
           <p className="text-sm text-muted-foreground text-center">
-            أدخل رقم هاتفك المسجل وسنرسل لك كود تحقق
+            أدخل رقم هاتفك المسجل وسنرسل لك كود تحقق {method === "whatsapp" ? "عبر واتساب" : "عبر SMS"}
           </p>
           <div className="space-y-2">
             <Label className="text-card-foreground">رقم الهاتف</Label>
@@ -210,8 +223,8 @@ const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             </div>
           </div>
-          <Button className="w-full red-glow" onClick={handleSendOTP} disabled={loading}>
-            {loading ? <><Loader2 className="w-4 h-4 animate-spin ml-2" />جاري الإرسال...</> : "إرسال كود التحقق"}
+          <Button className="w-full red-glow" onClick={() => handleSendOTP()} disabled={loading}>
+            {loading ? <><Loader2 className="w-4 h-4 animate-spin ml-2" />جاري الإرسال...</> : `إرسال كود التحقق ${method === "whatsapp" ? "عبر واتساب" : ""}`}
           </Button>
         </>
       )}
@@ -243,7 +256,7 @@ const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
           <button onClick={() => { setPhoneStep("phone"); setOtp(""); }} className="text-sm text-muted-foreground hover:text-foreground w-full text-center block">
             تغيير رقم الهاتف
           </button>
-          <button onClick={handleSendOTP} className="text-sm text-muted-foreground hover:text-foreground w-full text-center block" disabled={loading}>
+          <button onClick={() => handleSendOTP()} className="text-sm text-muted-foreground hover:text-foreground w-full text-center block" disabled={loading}>
             إعادة إرسال الكود
           </button>
         </>

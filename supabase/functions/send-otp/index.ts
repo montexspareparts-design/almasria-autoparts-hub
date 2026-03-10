@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { phone } = await req.json();
+    const { phone, channel = "sms" } = await req.json();
 
     if (!phone || phone.length < 8) {
       return new Response(
@@ -74,11 +74,19 @@ Deno.serve(async (req) => {
       formattedTwilioPhone = "+" + formattedTwilioPhone;
     }
 
-    // Send SMS via Twilio
+    // Send via Twilio (SMS or WhatsApp)
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
+    
+    const fromNumber = channel === "whatsapp" 
+      ? `whatsapp:${formattedTwilioPhone}` 
+      : formattedTwilioPhone;
+    const toNumber = channel === "whatsapp" 
+      ? `whatsapp:${formattedPhone}` 
+      : formattedPhone;
+
     const body = new URLSearchParams({
-      To: formattedPhone,
-      From: formattedTwilioPhone,
+      To: toNumber,
+      From: fromNumber,
       Body: `كود التحقق الخاص بك في المصرية جروب: ${otp}\nصالح لمدة 5 دقائق.`,
     });
 
