@@ -136,8 +136,20 @@ const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
             <Phone className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <p className="font-semibold text-card-foreground text-sm">عبر رقم الهاتف</p>
+            <p className="font-semibold text-card-foreground text-sm">عبر SMS</p>
             <p className="text-xs text-muted-foreground">سنرسل كود تحقق SMS على رقمك</p>
+          </div>
+        </button>
+        <button
+          onClick={() => setMethod("whatsapp")}
+          className="w-full flex items-center gap-3 p-4 rounded-lg border border-border bg-background hover:bg-accent/50 transition-colors text-right"
+        >
+          <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center shrink-0">
+            <MessageCircle className="w-5 h-5 text-green-600" />
+          </div>
+          <div>
+            <p className="font-semibold text-card-foreground text-sm">عبر واتساب</p>
+            <p className="text-xs text-muted-foreground">سنرسل كود تحقق على واتساب</p>
           </div>
         </button>
         <button type="button" onClick={onBack} className="text-sm text-primary hover:underline w-full text-center mt-2">
