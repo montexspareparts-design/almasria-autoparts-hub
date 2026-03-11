@@ -180,8 +180,18 @@ const Navbar = () => {
               <Globe className="w-4 h-4" />
               {lang === "ar" ? "English" : "عربي"}
             </button>
+            <button
+              onClick={() => navigate("/cart")}
+              className="flex items-center gap-1.5 text-secondary-foreground/70 hover:text-primary transition-colors text-sm font-bold px-2 py-1 rounded-md hover:bg-primary/5 relative"
+            >
+              <ShoppingCart className="w-4 h-4" />
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[10px] font-black min-w-[16px] h-[16px] rounded-full flex items-center justify-center leading-none">
+                  {itemCount}
+                </span>
+              )}
+            </button>
             <NotificationBell />
-            {user ? (
               <>
                 {isAdmin && (
                   <Button variant="ghost" size="sm" onClick={() => navigate("/admin")} className="text-secondary-foreground/80">
