@@ -151,6 +151,14 @@ const Navbar = () => {
             <button onClick={toggleLang} className="text-secondary-foreground/80 hover:text-primary transition-colors p-2 touch-manipulation text-xs font-bold">
               {lang === "ar" ? "EN" : "عربي"}
             </button>
+            <button onClick={() => navigate("/cart")} className="text-secondary-foreground/80 hover:text-primary transition-colors p-2.5 touch-manipulation relative">
+              <ShoppingCart className="w-5 h-5" />
+              {itemCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[10px] font-black min-w-[18px] h-[18px] rounded-full flex items-center justify-center leading-none">
+                  {itemCount}
+                </span>
+              )}
+            </button>
             <NotificationBell />
             {user ? (
               <button onClick={() => navigate("/dealer")} className="text-secondary-foreground/80 hover:text-primary transition-colors p-2.5 touch-manipulation">
