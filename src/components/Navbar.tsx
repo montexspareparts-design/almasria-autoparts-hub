@@ -192,6 +192,7 @@ const Navbar = () => {
               )}
             </button>
             <NotificationBell />
+            {user ? (
               <>
                 {isAdmin && (
                   <Button variant="ghost" size="sm" onClick={() => navigate("/admin")} className="text-secondary-foreground/80">
