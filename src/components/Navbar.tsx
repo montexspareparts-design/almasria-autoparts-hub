@@ -29,6 +29,7 @@ const Navbar = () => {
   const [activeSection, setActiveSection] = useState<string>("hero");
   const { user, dealerAccount, loading: authLoading, isAdmin, signOut } = useAuth();
   const { t, lang, setLang } = useLanguage();
+  const { itemCount } = useCart();
   const isWholesaleDealer = !authLoading && !!dealerAccount?.is_active &&
     (dealerAccount?.tier === "wholesale_tier1" || dealerAccount?.tier === "wholesale_tier2");
   const navigate = useNavigate();
