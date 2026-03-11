@@ -13,6 +13,7 @@ import AdminVideoSettings from "@/components/AdminVideoSettings";
 import AdminCatalogs from "@/components/AdminCatalogs";
 import AdminImageVerifier from "@/components/AdminImageVerifier";
 import AdminHeroVideo from "@/components/AdminHeroVideo";
+import AdminOrders from "@/components/AdminOrders";
 import type { Database } from "@/integrations/supabase/types";
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
@@ -282,6 +283,11 @@ const AdminDashboard = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Orders Management */}
+        <div className="mt-8">
+          <AdminOrders />
+        </div>
 
         {/* Hero Video Settings */}
         <div className="mt-8">
