@@ -284,6 +284,11 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
 
+        {/* Orders Management */}
+        <div className="mt-8">
+          <AdminOrders />
+        </div>
+
         {/* Hero Video Settings */}
         <div className="mt-8">
           <AdminHeroVideo />
