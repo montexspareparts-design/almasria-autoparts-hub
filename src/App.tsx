@@ -10,6 +10,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import InstallBanner from "@/components/InstallBanner";
+import PageTransition from "@/components/PageTransition";
 const Index = lazy(() => import("./pages/Index"));
 
 const Auth = lazy(() => import("./pages/Auth"));
@@ -56,16 +57,15 @@ const App = () => (
             <CartProvider>
               <InstallBanner />
               <Suspense fallback={null}><AIChatBot /></Suspense>
-              <Suspense fallback={<PageLoader />}>
+               <PageTransition>
+                <Suspense fallback={<PageLoader />}>
                   <Routes>
                     <Route path="/" element={<Index />} />
-                    {/* Redirect old/duplicate home paths */}
                     <Route path="/home" element={<Navigate to="/" replace />} />
                     <Route path="/home-2" element={<Navigate to="/" replace />} />
                     <Route path="/main-home" element={<Navigate to="/" replace />} />
                     <Route path="/about" element={<AboutPage />} />
                     <Route path="/clients/:segment" element={<ClientSegmentPage />} />
-                    {/* Main pages */}
                     <Route path="/products/genuine-toyota-parts" element={<GenuinePartsPage />} />
                     <Route path="/mtx" element={<MTXPage />} />
                     <Route path="/products/:brand" element={<ProductsPage />} />
@@ -77,7 +77,6 @@ const App = () => (
                     <Route path="/parts-by-model" element={<PartsByModelPage />} />
                     <Route path="/parts-by-type/:type" element={<PartsByTypePage />} />
                     <Route path="/parts-by-type" element={<PartsByTypePage />} />
-                    {/* Auth & dealer */}
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/dealer-apply" element={<DealerApply />} />
                     <Route path="/dealer-register" element={<DealerRegister />} />
@@ -92,7 +91,8 @@ const App = () => (
                     <Route path="/install" element={<InstallApp />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
-              </Suspense>
+                </Suspense>
+               </PageTransition>
             </CartProvider>
           </AuthProvider>
           </LanguageProvider>
