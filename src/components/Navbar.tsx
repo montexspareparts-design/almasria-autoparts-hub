@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import logo from "@/assets/logo.png";
-import { Menu, X, Briefcase, User, LogOut, BookOpen, Download, Globe } from "lucide-react";
+import { Menu, X, Briefcase, User, LogOut, BookOpen, Download, Globe, ShoppingCart } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useCart } from "@/contexts/CartContext";
 import NotificationBell from "@/components/NotificationBell";
 
 const mobileMenuVariants = {
@@ -28,6 +29,7 @@ const Navbar = () => {
   const [activeSection, setActiveSection] = useState<string>("hero");
   const { user, dealerAccount, loading: authLoading, isAdmin, signOut } = useAuth();
   const { t, lang, setLang } = useLanguage();
+  const { itemCount } = useCart();
   const isWholesaleDealer = !authLoading && !!dealerAccount?.is_active &&
     (dealerAccount?.tier === "wholesale_tier1" || dealerAccount?.tier === "wholesale_tier2");
   const navigate = useNavigate();
@@ -149,6 +151,14 @@ const Navbar = () => {
             <button onClick={toggleLang} className="text-secondary-foreground/80 hover:text-primary transition-colors p-2 touch-manipulation text-xs font-bold">
               {lang === "ar" ? "EN" : "عربي"}
             </button>
+            <button onClick={() => navigate("/cart")} className="text-secondary-foreground/80 hover:text-primary transition-colors p-2.5 touch-manipulation relative">
+              <ShoppingCart className="w-5 h-5" />
+              {itemCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[10px] font-black min-w-[18px] h-[18px] rounded-full flex items-center justify-center leading-none">
+                  {itemCount}
+                </span>
+              )}
+            </button>
             <NotificationBell />
             {user ? (
               <button onClick={() => navigate("/dealer")} className="text-secondary-foreground/80 hover:text-primary transition-colors p-2.5 touch-manipulation">
@@ -169,6 +179,17 @@ const Navbar = () => {
             >
               <Globe className="w-4 h-4" />
               {lang === "ar" ? "English" : "عربي"}
+            </button>
+            <button
+              onClick={() => navigate("/cart")}
+              className="flex items-center gap-1.5 text-secondary-foreground/70 hover:text-primary transition-colors text-sm font-bold px-2 py-1 rounded-md hover:bg-primary/5 relative"
+            >
+              <ShoppingCart className="w-4 h-4" />
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[10px] font-black min-w-[16px] h-[16px] rounded-full flex items-center justify-center leading-none">
+                  {itemCount}
+                </span>
+              )}
             </button>
             <NotificationBell />
             {user ? (
