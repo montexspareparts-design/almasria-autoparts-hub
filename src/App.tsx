@@ -56,8 +56,7 @@ const App = () => (
             <CartProvider>
               <InstallBanner />
               <Suspense fallback={null}><AIChatBot /></Suspense>
-               <PageTransition>
-                <Suspense fallback={<PageLoader />}>
+               <Suspense fallback={<PageLoader />}>
                   <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/home" element={<Navigate to="/" replace />} />
@@ -90,8 +89,7 @@ const App = () => (
                     <Route path="/install" element={<InstallApp />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
-                </Suspense>
-               </PageTransition>
+               </Suspense>
             </CartProvider>
           </AuthProvider>
           </LanguageProvider>
