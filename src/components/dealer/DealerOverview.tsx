@@ -354,11 +354,15 @@ const DealerOverview = ({
               عرض الكل
             </button>
           </div>
-          <div className="bg-card border border-border rounded-lg divide-y divide-border">
+          <div
+            className="bg-card border border-border rounded-lg divide-y divide-border cursor-pointer hover:border-primary/30 hover:shadow-sm transition-all"
+            onClick={() => onNavigate?.("invoices")}
+          >
             {recentInvoices.length === 0 ? (
               <div className="p-6 text-center">
                 <FileText className="w-7 h-7 mx-auto text-muted-foreground/30 mb-1.5" />
-                <p className="text-xs text-muted-foreground">لا توجد فواتير</p>
+                <p className="text-xs text-muted-foreground mb-2">لا توجد فواتير</p>
+                <span className="text-[11px] text-primary font-medium">عرض الفواتير ←</span>
               </div>
             ) : (
               recentInvoices.map(inv => (
