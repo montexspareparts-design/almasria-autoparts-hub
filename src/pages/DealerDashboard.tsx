@@ -83,6 +83,7 @@ const DealerDashboard = () => {
     quotes: "بحث القطع وعروض الأسعار",
     quick_order: "طلب سريع — رفع Excel",
     orders: "الطلبية",
+    payment: "الدفع الإلكتروني",
     invoices: "الفواتير",
     statement: "كشف الحساب",
     price_lists: "كشوفات الأسعار",
