@@ -372,8 +372,8 @@ const Navbar = () => {
                     <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-secondary-foreground/70 font-semibold" onClick={() => { navigate("/my-orders"); setIsOpen(false); }}>
                       <ClipboardList className="w-4 h-4" /> {lang === "ar" ? "طلباتي" : "My Orders"}
                     </Button>
-                    <Button variant="outline" size="sm" className="w-full gap-2 font-semibold" onClick={() => { navigate("/dealer"); setIsOpen(false); }}>
-                      <User className="w-4 h-4" /> {t("nav.dealer_account")}
+                    <Button variant="outline" size="sm" className="w-full gap-2 font-semibold" onClick={() => { navigate(dealerAccount ? "/dealer" : "/dealer-apply"); setIsOpen(false); }}>
+                      <User className="w-4 h-4" /> {dealerAccount ? t("nav.dealer_account") : (lang === "ar" ? "تقديم طلب اعتماد" : "Apply as Dealer")}
                     </Button>
                     <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-secondary-foreground/50 font-semibold" onClick={() => { signOut(); setIsOpen(false); }}>
                       <LogOut className="w-4 h-4" /> {t("nav.logout")}
