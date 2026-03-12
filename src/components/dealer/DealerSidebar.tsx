@@ -43,26 +43,31 @@ const tierLabels: Record<string, string> = {
 };
 
 const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, unreadCount }: DealerSidebarProps) => {
-  const renderTab = (tab: typeof mainTabs[0]) => (
-    <button
-      key={tab.id}
-      onClick={() => onTabChange(tab.id)}
-      className={cn(
-        "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all",
-        activeTab === tab.id
-          ? "bg-primary text-primary-foreground shadow-sm"
-          : "text-secondary-foreground/60 hover:bg-secondary-foreground/5 hover:text-secondary-foreground"
-      )}
-    >
-      <tab.icon className="w-4 h-4 shrink-0" />
-      <span className="truncate">{tab.label}</span>
-      {tab.id === "notifications" && unreadCount > 0 && (
-        <span className="mr-auto bg-destructive text-destructive-foreground text-[9px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
-          {unreadCount}
-        </span>
-      )}
-    </button>
-  );
+  const renderTab = (tab: typeof mainTabs[0]) => {
+    const isHighlight = tab.highlight && activeTab !== tab.id;
+    return (
+      <button
+        key={tab.id}
+        onClick={() => onTabChange(tab.id)}
+        className={cn(
+          "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all",
+          activeTab === tab.id
+            ? "bg-primary text-primary-foreground shadow-sm"
+            : isHighlight
+              ? "bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 font-bold"
+              : "text-secondary-foreground/60 hover:bg-secondary-foreground/5 hover:text-secondary-foreground"
+        )}
+      >
+        <tab.icon className="w-4 h-4 shrink-0" />
+        <span className="truncate">{tab.label}</span>
+        {tab.id === "notifications" && unreadCount > 0 && (
+          <span className="mr-auto bg-destructive text-destructive-foreground text-[9px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+            {unreadCount}
+          </span>
+        )}
+      </button>
+    );
+  };
 
   return (
     <aside className="w-60 bg-secondary border-l border-secondary/80 flex flex-col h-full shrink-0 hidden lg:flex">

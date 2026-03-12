@@ -1,4 +1,4 @@
-import { LayoutDashboard, Search, ClipboardList, Upload, Bell } from "lucide-react";
+import { LayoutDashboard, Search, ClipboardList, FileText, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { DealerTab } from "./DealerSidebar";
 
@@ -8,8 +8,9 @@ interface DealerMobileNavProps {
   unreadCount: number;
 }
 
-const tabs: { id: DealerTab; label: string; icon: typeof LayoutDashboard }[] = [
+const tabs: { id: DealerTab; label: string; icon: typeof LayoutDashboard; highlight?: boolean }[] = [
   { id: "overview", label: "الرئيسية", icon: LayoutDashboard },
+  { id: "price_lists", label: "الكشوفات", icon: FileText, highlight: true },
   { id: "quotes", label: "بحث", icon: Search },
   { id: "orders", label: "الطلبية", icon: ClipboardList },
   { id: "notifications", label: "إشعارات", icon: Bell },
