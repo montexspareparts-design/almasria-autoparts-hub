@@ -106,6 +106,7 @@ const DealerOrdersList = ({ userId }: { userId: string }) => {
       .from("orders")
       .select("*")
       .eq("user_id", userId)
+      .neq("status", "cancelled")
       .order("created_at", { ascending: false });
     setOrders(data || []);
     setLoading(false);
