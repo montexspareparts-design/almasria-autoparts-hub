@@ -36,6 +36,17 @@ const DealerDashboard = () => {
     if (user && isDealer) fetchData();
   }, [user, authLoading, isDealer]);
 
+  // Respond to tab query param changes (from notification clicks)
+  useEffect(() => {
+    const tab = searchParams.get("tab") as DealerTab;
+    if (tab && tab !== activeTab) {
+      setActiveTab(tab);
+      // Clean up the URL
+      searchParams.delete("tab");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams]);
+
   const fetchData = async () => {
     const [profileRes, ordersRes, notifRes] = await Promise.all([
       supabase.from("profiles").select("full_name, email, phone").eq("user_id", user!.id).maybeSingle(),
