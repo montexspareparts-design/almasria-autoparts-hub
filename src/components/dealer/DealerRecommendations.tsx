@@ -27,7 +27,7 @@ const brandLabels: Record<string, string> = {
 const DealerRecommendations = ({ userId, tier }: { userId: string; tier?: string }) => {
   const [products, setProducts] = useState<RecommendedProduct[]>([]);
   const [loading, setLoading] = useState(true);
-  const { addToCart } = useCart();
+  const { addItem } = useCart();
 
   useEffect(() => {
     fetchRecommendations();
