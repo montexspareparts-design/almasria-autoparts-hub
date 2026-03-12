@@ -475,6 +475,17 @@ const AdminOrders = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
+                        {order.status === "pending" && (
+                          <Button
+                            size="sm"
+                            className="h-7 text-xs gap-1"
+                            onClick={(e) => { e.stopPropagation(); handleStatusUpdate(order.id, "confirmed"); }}
+                            disabled={updatingStatus === order.id}
+                          >
+                            {updatingStatus === order.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle className="w-3 h-3" />}
+                            موافقة سريعة
+                          </Button>
+                        )}
                         <span className="text-xs text-muted-foreground hidden md:inline">
                           {order.items?.length || 0} منتج
                         </span>
