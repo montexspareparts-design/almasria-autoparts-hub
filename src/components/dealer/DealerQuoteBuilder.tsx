@@ -682,10 +682,10 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
       )}
 
       {quoteItems.length === 0 && searchResults.length === 0 && !searching && !editingQuoteId && (
-        <div className="bg-card border border-dashed border-border rounded-lg p-10 text-center">
-          <Search className="w-10 h-10 mx-auto text-muted-foreground/30 mb-3" />
-          <p className="text-sm text-muted-foreground font-medium">ابحث عن الأصناف لإنشاء عرض سعر</p>
-          <p className="text-xs text-muted-foreground/60 mt-1">يمكنك البحث بالاسم أو رقم القطعة</p>
+        <div className="bg-card border border-dashed border-border rounded-xl p-8 text-center">
+          <div className="text-4xl mb-3">🔎</div>
+          <p className="text-base font-bold text-foreground mb-1">ابحث عن القطعة اللي محتاجها</p>
+          <p className="text-sm text-muted-foreground">اكتب اسم القطعة أو رقمها في خانة البحث فوق</p>
         </div>
       )}
     </div>
