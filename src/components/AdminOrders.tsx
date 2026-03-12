@@ -140,6 +140,12 @@ const AdminOrders = () => {
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
   useEffect(() => { setPage(0); }, [filterStatus, searchQuery]);
 
+  const handleStatClick = (status: string) => {
+    setFilterStatus(status);
+    setPage(0);
+    setAutoExpandFirst(true);
+  };
+
   const statusNotificationMessages: Record<string, { title: string; message: string }> = {
     confirmed: { title: "✅ تم تأكيد طلبك", message: "تم تأكيد طلبك وسيتم تجهيزه قريباً" },
     processing: { title: "📦 جاري تجهيز طلبك", message: "طلبك قيد التجهيز الآن وسيتم شحنه في أقرب وقت" },
