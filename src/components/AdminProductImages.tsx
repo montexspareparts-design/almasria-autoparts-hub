@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Upload, X, Package, Loader2, ImageIcon, Wand2, ExternalLink, Check } from "lucide-react";
+import { Search, Upload, X, Package, Loader2, ImageIcon, Wand2, ExternalLink, Check, Copy } from "lucide-react";
 
 const AdminProductImages = () => {
   const { toast } = useToast();
@@ -28,6 +28,14 @@ const AdminProductImages = () => {
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, currentSku: "", found: 0, failed: 0 });
   const bulkAbortRef = useRef(false);
   const [dragOverProductId, setDragOverProductId] = useState<string | null>(null);
+  const [copiedSku, setCopiedSku] = useState<string | null>(null);
+
+  const handleCopySku = (sku: string) => {
+    navigator.clipboard.writeText(sku);
+    setCopiedSku(sku);
+    toast({ title: `تم نسخ رقم القطعة: ${sku}` });
+    setTimeout(() => setCopiedSku(null), 2000);
+  };
 
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 50;
@@ -454,9 +462,21 @@ const AdminProductImages = () => {
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-card-foreground text-sm truncate">{product.name_ar}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {product.sku} • {brandLabels[product.brand] || product.brand}
-                  </p>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <span>{product.sku}</span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleCopySku(product.sku); }}
+                      className="p-0.5 rounded hover:bg-muted transition-colors"
+                      title="نسخ رقم القطعة"
+                    >
+                      {copiedSku === product.sku ? (
+                        <Check className="w-3 h-3 text-green-500" />
+                      ) : (
+                        <Copy className="w-3 h-3 text-muted-foreground hover:text-foreground" />
+                      )}
+                    </button>
+                    <span>• {brandLabels[product.brand] || product.brand}</span>
+                  </div>
                   {dragOverProductId === product.id && (
                     <p className="text-xs text-primary font-medium mt-0.5">📥 أفلت الصورة هنا</p>
                   )}
