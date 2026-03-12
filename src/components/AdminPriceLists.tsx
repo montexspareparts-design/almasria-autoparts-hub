@@ -76,8 +76,8 @@ const AdminPriceLists = () => {
     await supabase.from("notifications").insert(notifications);
   };
 
-  // Extract SKUs from Excel file
-  const extractSkusFromExcel = (file: File): Promise<string[]> => {
+  // Extract SKUs and prices from Excel file
+  const extractSkusFromExcel = (file: File): Promise<{ sku: string; price: number | null }[]> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -92,40 +92,53 @@ const AdminPriceLists = () => {
             return;
           }
 
-          // Find the SKU column - look for common header names
+          // Find the SKU column
           const headerRow = rows[0] as string[];
           const skuHeaders = ["sku", "SKU", "رقم القطعة", "part number", "Part Number", "PART NUMBER", "رقم_القطعة", "part_number", "OEM", "oem", "الرقم", "رقم"];
+          const priceHeaders = ["price", "Price", "PRICE", "السعر", "سعر", "الثمن", "سعر_البيع", "سعر البيع", "Unit Price", "unit_price"];
           
           let skuColIndex = -1;
+          let priceColIndex = -1;
           
           if (headerRow) {
             for (let i = 0; i < headerRow.length; i++) {
               const cell = String(headerRow[i] || "").trim();
-              if (skuHeaders.some(h => cell.toLowerCase() === h.toLowerCase() || cell.includes(h))) {
+              if (skuColIndex === -1 && skuHeaders.some(h => cell.toLowerCase() === h.toLowerCase() || cell.includes(h))) {
                 skuColIndex = i;
-                break;
+              }
+              if (priceColIndex === -1 && priceHeaders.some(h => cell.toLowerCase() === h.toLowerCase() || cell.includes(h))) {
+                priceColIndex = i;
               }
             }
           }
 
-          // If no header found, assume first column
+          // If no header found, assume first column for SKU
           if (skuColIndex === -1) {
             skuColIndex = 0;
           }
 
-          // Extract SKUs from all data rows (skip header)
-          const skus: string[] = [];
+          // Extract SKUs and prices from all data rows (skip header)
+          const results: { sku: string; price: number | null }[] = [];
+          const seenSkus = new Set<string>();
           for (let i = 1; i < rows.length; i++) {
             const row = rows[i] as any[];
             if (row && row[skuColIndex]) {
               const sku = String(row[skuColIndex]).trim();
-              if (sku && sku.length >= 3) {
-                skus.push(sku);
+              if (sku && sku.length >= 3 && !seenSkus.has(sku)) {
+                seenSkus.add(sku);
+                let price: number | null = null;
+                if (priceColIndex !== -1 && row[priceColIndex] != null) {
+                  const parsed = parseFloat(String(row[priceColIndex]).replace(/[^\d.]/g, ""));
+                  if (!isNaN(parsed) && parsed > 0) {
+                    price = parsed;
+                  }
+                }
+                results.push({ sku, price });
               }
             }
           }
 
-          resolve([...new Set(skus)]); // Remove duplicates
+          resolve(results);
         } catch (err) {
           reject(err);
         }
