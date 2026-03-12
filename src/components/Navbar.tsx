@@ -180,7 +180,7 @@ const Navbar = () => {
             </button>
             <NotificationBell />
             <button
-              onClick={() => navigate(user ? "/dealer" : "/auth")}
+              onClick={() => navigate(user ? (dealerAccount ? "/dealer" : "/dealer-apply") : "/auth")}
               className="text-secondary-foreground/70 hover:text-primary transition-colors p-2 touch-manipulation"
             >
               <User className="w-[18px] h-[18px]" />
