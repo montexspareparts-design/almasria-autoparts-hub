@@ -199,6 +199,17 @@ const Navbar = () => {
                     {t("nav.admin")}
                   </Button>
                 )}
+                <motion.div whileHover={{ y: -1 }}>
+                  <Link
+                    to="/my-orders"
+                    className={`text-sm font-medium transition-colors relative group flex items-center gap-1 ${
+                      location.pathname === "/my-orders" ? "text-primary" : "text-secondary-foreground/80 hover:text-primary"
+                    }`}
+                  >
+                    <ClipboardList className="w-4 h-4" />
+                    {lang === "ar" ? "طلباتي" : "My Orders"}
+                  </Link>
+                </motion.div>
                 <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
                   <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate("/dealer")}>
                     <User className="w-4 h-4" />
