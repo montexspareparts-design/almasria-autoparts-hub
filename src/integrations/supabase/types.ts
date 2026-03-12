@@ -270,6 +270,81 @@ export type Database = {
           },
         ]
       }
+      dealer_quote_items: {
+        Row: {
+          id: string
+          product_id: string
+          quantity: number
+          quote_id: string
+          total_price: number
+          unit_price: number
+        }
+        Insert: {
+          id?: string
+          product_id: string
+          quantity?: number
+          quote_id: string
+          total_price?: number
+          unit_price?: number
+        }
+        Update: {
+          id?: string
+          product_id?: string
+          quantity?: number
+          quote_id?: string
+          total_price?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dealer_quote_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dealer_quote_items_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "dealer_quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dealer_quotes: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          quote_number: string
+          status: string
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          quote_number: string
+          status?: string
+          total_amount?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          quote_number?: string
+          status?: string
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       maintenance_bundles: {
         Row: {
           bundle_price: number
