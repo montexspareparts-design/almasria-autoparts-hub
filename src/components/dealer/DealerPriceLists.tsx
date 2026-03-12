@@ -386,9 +386,13 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
       );
     }
 
-    // Record price views for new items only
+    // Record price views (upsert to avoid duplicate counting)
+    const today = new Date().toISOString().split("T")[0];
     for (const sp of selectedProducts) {
-      await supabase.from("dealer_price_views").insert({ user_id: user.id, product_id: sp.product.id });
+      await supabase.from("dealer_price_views").upsert(
+        { user_id: user.id, product_id: sp.product.id, view_date: today },
+        { onConflict: "user_id,product_id,view_date" }
+      );
     }
 
     // Show quote summary with action options
