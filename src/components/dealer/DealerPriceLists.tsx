@@ -78,17 +78,33 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
   };
 
   const searchProducts = useCallback(async (query: string) => {
-    if (query.length < 2) { setSearchResults([]); return; }
+    if (query.length < 2 || !viewingList) { setSearchResults([]); return; }
     setSearching(true);
+
+    // Get product IDs linked to this price list
+    const { data: linked } = await supabase
+      .from("price_list_products")
+      .select("product_id")
+      .eq("price_list_id", viewingList.id) as any;
+
+    const linkedIds = (linked || []).map((l: any) => l.product_id);
+
+    if (linkedIds.length === 0) {
+      setSearchResults([]);
+      setSearching(false);
+      return;
+    }
+
     const { data } = await supabase
       .from("products")
       .select("id, name_ar, sku, base_price, sale_price, is_on_sale, image_url, stock_quantity")
       .eq("is_active", true)
+      .in("id", linkedIds)
       .or(`name_ar.ilike.%${query}%,sku.ilike.%${query}%`)
       .limit(10);
     setSearchResults(data || []);
     setSearching(false);
-  }, []);
+  }, [viewingList]);
 
   useEffect(() => {
     const timeout = setTimeout(() => searchProducts(searchQuery), 300);
