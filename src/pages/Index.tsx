@@ -2,7 +2,8 @@ import { lazy, Suspense } from "react";
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
-import DealerWelcomeBanner from "@/components/DealerWelcomeBanner";
+import DealerHomePage from "@/components/DealerHomePage";
+import { useAuth } from "@/contexts/AuthContext";
 import { OrganizationSchema, WebSiteSchema, LocalBusinessSchema, FAQSchema } from "@/components/SEOSchemaMarkup";
 
 const AboutBrief = lazy(() => import("@/components/AboutBrief"));
@@ -30,6 +31,22 @@ const SectionFallback = () => (
 );
 
 const Index = () => {
+  const { dealerAccount, loading } = useAuth();
+  const isDealer = !!dealerAccount;
+
+  // Dealer gets a completely different homepage
+  if (!loading && isDealer) {
+    return (
+      <div className="min-h-screen">
+        <Navbar />
+        <DealerHomePage />
+        <Suspense fallback={null}><Footer /></Suspense>
+        <Suspense fallback={null}><WhatsAppFloat /></Suspense>
+        <Suspense fallback={null}><BackToTop /></Suspense>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen">
       <Helmet>
@@ -52,51 +69,23 @@ const Index = () => {
       ]} />
       <Navbar />
       <HeroSection />
-      <DealerWelcomeBanner />
 
-      {/* About — dark section */}
       <Suspense fallback={<SectionFallback />}><AboutBrief /></Suspense>
-
-      {/* Metrics — light with gear divider */}
       <Suspense fallback={<SectionFallback />}><KeyMetrics /></Suspense>
-
-      {/* Products Showcase — dark brands grid */}
       <Suspense fallback={<SectionFallback />}><ProductsShowcase /></Suspense>
-
-      {/* Gear divider */}
       <Suspense fallback={null}><SectionDivider variant="light" /></Suspense>
-
-      {/* Featured Products */}
       <Suspense fallback={<SectionFallback />}><FeaturedProducts /></Suspense>
-
-      {/* Why Choose Us — light bg */}
       <Suspense fallback={<SectionFallback />}><WhyChooseUs /></Suspense>
-
-      {/* Gear divider */}
       <Suspense fallback={null}><SectionDivider variant="light" /></Suspense>
-
-      {/* Who We Serve */}
       <Suspense fallback={<SectionFallback />}><WhoWeServe /></Suspense>
-
-      {/* Distribution — dark section */}
       <Suspense fallback={<SectionFallback />}><DistributionNetwork /></Suspense>
-
-      {/* MTX — light bg */}
       <Suspense fallback={<SectionFallback />}><MTXSection /></Suspense>
-
-      {/* Our Clients — social proof */}
       <Suspense fallback={<SectionFallback />}><OurClientsSection /></Suspense>
-
-      {/* Maintenance Tips — knowledge center */}
       <Suspense fallback={<SectionFallback />}><MaintenanceTipsSection /></Suspense>
-
-      {/* Contact CTA — dark section */}
       <Suspense fallback={<SectionFallback />}><ContactSimple /></Suspense>
-
       <Suspense fallback={null}><Footer /></Suspense>
       <Suspense fallback={null}><WhatsAppFloat /></Suspense>
       <Suspense fallback={null}><BackToTop /></Suspense>
-      
     </div>
   );
 };
