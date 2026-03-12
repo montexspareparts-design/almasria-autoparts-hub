@@ -23,6 +23,7 @@ const mainTabs: { id: DealerTab; label: string; icon: typeof LayoutDashboard }[]
   { id: "quotes", label: "بحث القطع وعروض الأسعار", icon: Search },
   { id: "orders", label: "الطلبية", icon: ClipboardList },
   { id: "invoices", label: "الفواتير", icon: Receipt },
+  { id: "statement", label: "كشف الحساب", icon: FileText },
   { id: "price_lists", label: "كشوفات الأسعار", icon: FileText },
   { id: "favorites", label: "المفضلة", icon: Heart },
 ];
