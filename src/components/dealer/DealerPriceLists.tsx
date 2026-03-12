@@ -204,6 +204,11 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
   }, [searchQuery, searchProducts]);
 
   const getProductPrice = async (product: Product): Promise<number> => {
+    // Priority 1: Price from the price list (Excel upload)
+    if (priceListPrices[product.id] != null && priceListPrices[product.id]! > 0) {
+      return priceListPrices[product.id]!;
+    }
+    // Priority 2: Tier price
     if (tierPrices[product.id]) return tierPrices[product.id];
     if (dealerAccount?.tier) {
       const { data } = await supabase
@@ -217,6 +222,7 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
         return Number(data.price);
       }
     }
+    // Priority 3: Sale/base price
     const price = product.is_on_sale && product.sale_price ? product.sale_price : product.base_price;
     setTierPrices(prev => ({ ...prev, [product.id]: price }));
     return price;
