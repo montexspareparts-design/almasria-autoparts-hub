@@ -77,6 +77,80 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
     setDailyViews(data || 0);
   };
 
+  const normalizeStoragePath = (value: string) => value.replace(/^\/+/, "").trim();
+
+  const extractStorageReference = (value: string): { bucket: string; path: string } | null => {
+    if (!value) return null;
+    const normalized = normalizeStoragePath(value);
+    if (!normalized) return null;
+
+    if (!normalized.startsWith("http")) {
+      if (normalized.startsWith("price-lists/")) {
+        return { bucket: "price-lists", path: normalized.replace(/^price-lists\//, "") };
+      }
+      if (normalized.startsWith("catalogs/")) {
+        return { bucket: "catalogs", path: normalized.replace(/^catalogs\//, "") };
+      }
+      return { bucket: "price-lists", path: normalized };
+    }
+
+    try {
+      const url = new URL(normalized);
+      const marker = "/storage/v1/object/";
+      const markerIndex = url.pathname.indexOf(marker);
+      if (markerIndex === -1) return null;
+
+      const storageParts = url.pathname
+        .slice(markerIndex + marker.length)
+        .split("/")
+        .filter(Boolean);
+
+      if (storageParts.length < 3) return null;
+
+      const bucket = storageParts[1];
+      const path = decodeURIComponent(storageParts.slice(2).join("/"));
+      if (!bucket || !path) return null;
+
+      return { bucket, path };
+    } catch {
+      return null;
+    }
+  };
+
+  const buildStorageCandidates = (fileRef: string) => {
+    const candidates: Array<{ bucket: string; path: string }> = [];
+    const parsed = extractStorageReference(fileRef);
+
+    if (parsed) {
+      candidates.push(parsed);
+
+      if (parsed.bucket === "price_lists") {
+        candidates.push({ bucket: "price-lists", path: parsed.path });
+      }
+
+      if (parsed.bucket === "catalogs" && parsed.path.startsWith("price-lists/")) {
+        candidates.push({ bucket: "price-lists", path: parsed.path.replace(/^price-lists\//, "") });
+      }
+    }
+
+    const rawPath = normalizeStoragePath(fileRef)
+      .replace(/^https?:\/\//, "")
+      .replace(/^price-lists\//, "")
+      .replace(/^catalogs\//, "");
+
+    if (rawPath && !rawPath.includes("/storage/v1/object/")) {
+      candidates.push({ bucket: "price-lists", path: rawPath });
+      candidates.push({ bucket: "catalogs", path: rawPath });
+    }
+
+    return candidates.filter(
+      (candidate, index, all) =>
+        candidate.bucket &&
+        candidate.path &&
+        all.findIndex((c) => c.bucket === candidate.bucket && c.path === candidate.path) === index
+    );
+  };
+
   const searchProducts = useCallback(async (query: string) => {
     if (query.length < 2 || !viewingList) { setSearchResults([]); return; }
     setSearching(true);
