@@ -10,7 +10,7 @@ import DealerOverview from "@/components/dealer/DealerOverview";
 import DealerOrdersList from "@/components/dealer/DealerOrdersList";
 import DealerNotificationsList from "@/components/dealer/DealerNotificationsList";
 import DealerOffers from "@/components/dealer/DealerOffers";
-import DealerCatalogs from "@/components/DealerCatalogs";
+
 import DealerQuoteBuilder from "@/components/dealer/DealerQuoteBuilder";
 import DealerPriceLists from "@/components/dealer/DealerPriceLists";
 import DealerFavorites from "@/components/dealer/DealerFavorites";
