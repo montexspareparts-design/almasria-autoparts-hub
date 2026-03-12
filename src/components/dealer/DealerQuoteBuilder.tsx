@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
+import { generateQuotePdf } from "@/lib/generateQuotePdf";
 import {
   Search, Plus, Minus, Trash2, FileText, Save, ShoppingCart,
   Eye, Loader2, Download, X, ArrowRight, Edit3, ChevronLeft
