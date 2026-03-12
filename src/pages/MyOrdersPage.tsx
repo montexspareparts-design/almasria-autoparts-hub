@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Package, Clock, CheckCircle2, Truck, PackageCheck, ChevronDown,
   ChevronUp, ArrowRight, ShoppingCart, MapPin, CreditCard, CalendarDays,
-  CircleDot, Phone
+  CircleDot, Phone, Wallet
 } from "lucide-react";
 import PaymentInstructionsBanner from "@/components/PaymentInstructionsBanner";
 import { Button } from "@/components/ui/button";
@@ -14,10 +14,10 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 const ORDER_STATUSES = [
-  { key: "pending", label: "قيد المراجعة", icon: Clock, color: "text-amber-500", bg: "bg-amber-500" },
-  { key: "confirmed", label: "تم التأكيد", icon: CheckCircle2, color: "text-blue-500", bg: "bg-blue-500" },
+  { key: "pending", label: "تم استلام الطلب", icon: Clock, color: "text-amber-500", bg: "bg-amber-500" },
+  { key: "awaiting_payment", label: "بانتظار الدفع", icon: Wallet, color: "text-orange-500", bg: "bg-orange-500" },
   { key: "processing", label: "جاري التجهيز", icon: Package, color: "text-purple-500", bg: "bg-purple-500" },
-  { key: "shipped", label: "تم الشحن", icon: Truck, color: "text-orange-500", bg: "bg-orange-500" },
+  { key: "shipped", label: "تم الشحن", icon: Truck, color: "text-blue-500", bg: "bg-blue-500" },
   { key: "delivered", label: "تم التسليم", icon: PackageCheck, color: "text-green-600", bg: "bg-green-600" },
 ];
 
@@ -31,9 +31,20 @@ const paymentLabels: Record<string, string> = {
   fawry: "Fawry",
 };
 
-const getStatusIndex = (status: string) => {
-  const idx = ORDER_STATUSES.findIndex((s) => s.key === status);
-  return idx === -1 ? 0 : idx;
+const isElectronicPayment = (method?: string | null) =>
+  !!method && ["instapay", "wallet", "bank_transfer"].includes(method);
+
+const getStatusIndex = (status: string, paymentMethod?: string | null) => {
+  const statusMap: Record<string, number> = {
+    pending: 0,
+    confirmed: isElectronicPayment(paymentMethod) ? 1 : 0,
+    awaiting_payment: 1,
+    processing: 2,
+    shipped: 3,
+    ready: 3,
+    delivered: 4,
+  };
+  return statusMap[status] ?? 0;
 };
 
 const MyOrdersPage = () => {
@@ -131,7 +142,7 @@ const MyOrdersPage = () => {
           ) : (
             <div className="space-y-4">
               {orders.map((order, i) => {
-                const statusIdx = getStatusIndex(order.status);
+                const statusIdx = getStatusIndex(order.status, order.payment_method);
                 const currentStatus = ORDER_STATUSES[statusIdx];
                 const isExpanded = expandedOrder === order.id;
                 const items = orderItems[order.id] || [];

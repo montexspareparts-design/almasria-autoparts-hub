@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Package, Clock, CheckCircle, Truck, XCircle, ChevronDown, ChevronUp,
   MessageCircle, Inbox, PackageCheck, Trash2, Pencil, Save, X, Loader2,
-  AlertTriangle
+  AlertTriangle, Wallet, CreditCard
 } from "lucide-react";
 import PaymentInstructionsBanner from "@/components/PaymentInstructionsBanner";
 import { cn } from "@/lib/utils";
@@ -47,22 +47,31 @@ interface OrderItem {
 
 const orderStages = [
   { key: "pending", label: "تم استلام الطلب", icon: Inbox },
-  { key: "confirmed", label: "قيد المراجعة", icon: Clock },
-  { key: "pending_approval", label: "بانتظار موافقتك", icon: AlertTriangle },
+  { key: "awaiting_payment", label: "بانتظار الدفع", icon: Wallet },
   { key: "processing", label: "جاري التجهيز", icon: Package },
   { key: "ready", label: "جاهز للاستلام", icon: PackageCheck },
   { key: "delivered", label: "تم التسليم", icon: CheckCircle },
 ];
 
-const stageIndex = (status: string) => {
+const stageIndex = (status: string, paymentMethod?: string | null) => {
   if (status === "cancelled") return -1;
-  const idx = orderStages.findIndex(s => s.key === status);
-  return idx >= 0 ? idx : 0;
+  // Map old statuses to new timeline
+  const statusMap: Record<string, number> = {
+    pending: 0,
+    confirmed: paymentMethod && ["instapay", "wallet", "bank_transfer"].includes(paymentMethod) ? 1 : 0,
+    awaiting_payment: 1,
+    pending_approval: 2, // treat as processing level
+    processing: 2,
+    ready: 3,
+    delivered: 4,
+  };
+  return statusMap[status] ?? 0;
 };
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   pending: { label: "تم استلام الطلب", variant: "secondary" },
-  confirmed: { label: "قيد المراجعة", variant: "default" },
+  confirmed: { label: "تم التأكيد", variant: "default" },
+  awaiting_payment: { label: "بانتظار الدفع", variant: "outline" },
   pending_approval: { label: "بانتظار موافقتك", variant: "outline" },
   processing: { label: "جاري التجهيز", variant: "default" },
   ready: { label: "جاهز للاستلام", variant: "default" },
@@ -90,7 +99,7 @@ const notifyAdmins = async (orderNumber: string, action: string, details: string
   }
 };
 
-const DealerOrdersList = ({ userId }: { userId: string }) => {
+const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onNavigateToPayment?: () => void }) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
@@ -264,7 +273,7 @@ const DealerOrdersList = ({ userId }: { userId: string }) => {
             const config = statusConfig[order.status] || statusConfig.pending;
             const isExpanded = expandedOrder === order.id;
             const items = orderItems[order.id];
-            const currentStage = stageIndex(order.status);
+            const currentStage = stageIndex(order.status, order.payment_method);
             const isEditing = editingOrder === order.id;
             const editable = canEdit(order.status);
 
@@ -391,15 +400,42 @@ const DealerOrdersList = ({ userId }: { userId: string }) => {
                       </div>
                     )}
 
-                    {/* Payment Instructions for electronic payments */}
+                    {/* Payment CTA for electronic payments */}
                     {["instapay", "wallet", "bank_transfer"].includes(order.payment_method || "") &&
-                      ["pending", "confirmed", "pending_approval"].includes(order.status) && (
-                      <PaymentInstructionsBanner
-                        paymentMethod={order.payment_method!}
-                        orderNumber={order.order_number}
-                        totalAmount={Number(order.total_amount)}
-                        compact
-                      />
+                      ["pending", "confirmed", "awaiting_payment"].includes(order.status) && (
+                      <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-700 rounded-xl p-4 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center shrink-0">
+                            <Wallet className="w-5 h-5 text-amber-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="text-sm font-bold text-amber-800 dark:text-amber-300">💳 ادفع لاستكمال إجراءات الطلب</h4>
+                            <p className="text-[11px] text-amber-700 dark:text-amber-400 mt-0.5">حوّل المبلغ المطلوب واستكمل الخطوات من صفحة الدفع</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            className="flex-1 gap-2"
+                            onClick={() => onNavigateToPayment?.()}
+                          >
+                            <CreditCard className="w-4 h-4" />
+                            انتقل لوسائل الدفع
+                          </Button>
+                          <span className="text-sm font-black text-primary">{Number(order.total_amount).toLocaleString("ar-EG")} ج.م</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Pending Approval Banner */}
+                    {order.status === "pending_approval" && (
+                      <div className="bg-orange-50 dark:bg-orange-950/30 border border-orange-300 dark:border-orange-700 rounded-xl p-4 flex items-start gap-3">
+                        <AlertTriangle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-bold text-orange-800 dark:text-orange-300">بانتظار موافقتك على تعديلات الإدارة</p>
+                          <p className="text-xs text-orange-700 dark:text-orange-400 mt-1">راجع تفاصيل الطلب المحدّثة أدناه ووافق أو ارفض</p>
+                        </div>
+                      </div>
                     )}
 
                     {order.shipping_governorate && (
