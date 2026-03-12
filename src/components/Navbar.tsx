@@ -239,14 +239,13 @@ const Navbar = () => {
                 <div className="w-px h-5 bg-secondary-foreground/10 mx-1" />
 
                 {isAdmin && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigate("/admin")}
-                    className="text-secondary-foreground/60 hover:text-secondary-foreground text-[13px] font-semibold h-8 px-2.5"
+                  <Link
+                    to="/admin"
+                    className="flex items-center gap-1.5 bg-primary text-primary-foreground text-[12px] font-bold px-3 py-1.5 rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
                   >
-                    {t("nav.admin")}
-                  </Button>
+                    <Briefcase className="w-3.5 h-3.5" />
+                    {lang === "ar" ? "لوحة التحكم" : "Admin"}
+                  </Link>
                 )}
 
                 {/* Dealer Account Button */}
