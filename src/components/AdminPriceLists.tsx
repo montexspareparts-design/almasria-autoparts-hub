@@ -6,7 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, FileText, Trash2, Eye, EyeOff, Plus, Search, X, Package } from "lucide-react";
+import { Loader2, Upload, FileText, Trash2, Eye, EyeOff, Plus, Search, X, Package, Table2, CheckCircle2 } from "lucide-react";
+import * as XLSX from "xlsx";
 
 interface PriceListRow {
   id: string;
@@ -26,14 +27,17 @@ interface Product {
 
 const AdminPriceLists = () => {
   const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
+  const excelInputRef = useRef<HTMLInputElement>(null);
   const [lists, setLists] = useState<PriceListRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: "", description: "", version: "" });
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [parsingPdf, setParsingPdf] = useState(false);
+  const [selectedPdf, setSelectedPdf] = useState<File | null>(null);
+  const [selectedExcel, setSelectedExcel] = useState<File | null>(null);
+  const [matchingSkus, setMatchingSkus] = useState(false);
+  const [matchResult, setMatchResult] = useState<{ matched: number; total: number; skus: string[] } | null>(null);
 
   // Product association
   const [managingList, setManagingList] = useState<PriceListRow | null>(null);
@@ -72,6 +76,126 @@ const AdminPriceLists = () => {
     await supabase.from("notifications").insert(notifications);
   };
 
+  // Extract SKUs from Excel file
+  const extractSkusFromExcel = (file: File): Promise<string[]> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target?.result as ArrayBuffer);
+          const workbook = XLSX.read(data, { type: "array" });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rows: any[] = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+          if (rows.length === 0) {
+            resolve([]);
+            return;
+          }
+
+          // Find the SKU column - look for common header names
+          const headerRow = rows[0] as string[];
+          const skuHeaders = ["sku", "SKU", "رقم القطعة", "part number", "Part Number", "PART NUMBER", "رقم_القطعة", "part_number", "OEM", "oem", "الرقم", "رقم"];
+          
+          let skuColIndex = -1;
+          
+          if (headerRow) {
+            for (let i = 0; i < headerRow.length; i++) {
+              const cell = String(headerRow[i] || "").trim();
+              if (skuHeaders.some(h => cell.toLowerCase() === h.toLowerCase() || cell.includes(h))) {
+                skuColIndex = i;
+                break;
+              }
+            }
+          }
+
+          // If no header found, assume first column
+          if (skuColIndex === -1) {
+            skuColIndex = 0;
+          }
+
+          // Extract SKUs from all data rows (skip header)
+          const skus: string[] = [];
+          for (let i = 1; i < rows.length; i++) {
+            const row = rows[i] as any[];
+            if (row && row[skuColIndex]) {
+              const sku = String(row[skuColIndex]).trim();
+              if (sku && sku.length >= 3) {
+                skus.push(sku);
+              }
+            }
+          }
+
+          resolve([...new Set(skus)]); // Remove duplicates
+        } catch (err) {
+          reject(err);
+        }
+      };
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(file);
+    });
+  };
+
+  // Preview Excel matching before upload
+  const handleExcelSelected = async (file: File) => {
+    setSelectedExcel(file);
+    setMatchResult(null);
+    setMatchingSkus(true);
+
+    try {
+      const skus = await extractSkusFromExcel(file);
+      
+      if (skus.length === 0) {
+        toast({ title: "لم يتم العثور على أرقام قطع في الملف", variant: "destructive" });
+        setMatchingSkus(false);
+        return;
+      }
+
+      // Match with database in batches
+      const batchSize = 50;
+      let matchedCount = 0;
+      const matchedSkus: string[] = [];
+
+      for (let i = 0; i < skus.length; i += batchSize) {
+        const batch = skus.slice(i, i + batchSize);
+        const { data, count } = await supabase
+          .from("products")
+          .select("sku", { count: "exact" })
+          .eq("is_active", true)
+          .in("sku", batch);
+
+        if (data) {
+          matchedCount += data.length;
+          matchedSkus.push(...data.map(p => p.sku));
+        }
+      }
+
+      // Also try normalized matching
+      const { data: allProducts } = await supabase
+        .from("products")
+        .select("sku")
+        .eq("is_active", true);
+
+      if (allProducts) {
+        const normalizedExcelSkus = skus.map(s => s.replace(/[-\s]/g, "").toUpperCase());
+        for (const product of allProducts) {
+          const normalizedDbSku = product.sku.replace(/[-\s]/g, "").toUpperCase();
+          if (normalizedExcelSkus.includes(normalizedDbSku) && !matchedSkus.includes(product.sku)) {
+            matchedCount++;
+            matchedSkus.push(product.sku);
+          }
+        }
+      }
+
+      setMatchResult({ matched: matchedCount, total: skus.length, skus });
+      toast({ title: `تم العثور على ${matchedCount} صنف مطابق من أصل ${skus.length} رقم قطعة` });
+    } catch (err) {
+      console.error("Excel parse error:", err);
+      toast({ title: "خطأ في قراءة ملف Excel", variant: "destructive" });
+    }
+
+    setMatchingSkus(false);
+  };
+
   const handleUpload = async () => {
     if (!form.title.trim()) {
       toast({ title: "يرجى إدخال عنوان الكشف", variant: "destructive" });
@@ -81,15 +205,16 @@ const AdminPriceLists = () => {
 
     let fileUrl: string | null = null;
 
-    if (selectedFile) {
-      const ext = selectedFile.name.split(".").pop();
+    // Upload PDF
+    if (selectedPdf) {
+      const ext = selectedPdf.name.split(".").pop();
       const path = `${Date.now()}.${ext}`;
       const { error: uploadError } = await supabase.storage
         .from("price-lists")
-        .upload(path, selectedFile, { contentType: selectedFile.type });
+        .upload(path, selectedPdf, { contentType: selectedPdf.type });
 
       if (uploadError) {
-        toast({ title: "خطأ في رفع الملف", description: uploadError.message, variant: "destructive" });
+        toast({ title: "خطأ في رفع ملف PDF", description: uploadError.message, variant: "destructive" });
         setUploading(false);
         return;
       }
@@ -97,6 +222,7 @@ const AdminPriceLists = () => {
       fileUrl = path;
     }
 
+    // Create price list record
     const { data: newList, error } = await supabase.from("price_lists").insert({
       title: form.title,
       description: form.description || null,
@@ -106,43 +232,85 @@ const AdminPriceLists = () => {
 
     if (error) {
       toast({ title: "خطأ", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "تم رفع الكشف ✓" });
-      await notifyDealers(form.title);
+      setUploading(false);
+      return;
+    }
 
-      // Auto-parse PDF to link products
-      if (newList && fileUrl) {
-        setParsingPdf(true);
-        toast({ title: "⏳ جاري تحليل الملف وربط الأصناف تلقائياً..." });
+    toast({ title: "تم رفع الكشف ✓" });
+    await notifyDealers(form.title);
 
-        try {
-          const { data: parseResult, error: parseError } = await supabase.functions.invoke(
-            "parse-price-list-pdf",
-            { body: { price_list_id: (newList as any).id, file_path: fileUrl } }
-          );
+    // Link products from Excel
+    if (newList && selectedExcel) {
+      try {
+        const skus = await extractSkusFromExcel(selectedExcel);
 
-          if (parseError) {
-            console.error("Parse error:", parseError);
-            toast({ title: "⚠️ تعذر تحليل الملف تلقائياً", description: "يمكنك ربط الأصناف يدوياً", variant: "destructive" });
-          } else if (parseResult) {
-            toast({ title: `✅ ${parseResult.message || `تم ربط ${parseResult.matched} صنف`}` });
+        if (skus.length > 0) {
+          // Get matching product IDs
+          const batchSize = 50;
+          const matchedProductIds: string[] = [];
+
+          for (let i = 0; i < skus.length; i += batchSize) {
+            const batch = skus.slice(i, i + batchSize);
+            const { data: products } = await supabase
+              .from("products")
+              .select("id, sku")
+              .eq("is_active", true)
+              .in("sku", batch);
+
+            if (products) {
+              matchedProductIds.push(...products.map(p => p.id));
+            }
           }
-        } catch (e) {
-          console.error("Parse PDF failed:", e);
-          toast({ title: "⚠️ تعذر تحليل الملف", variant: "destructive" });
+
+          // Normalized matching
+          const { data: allProducts } = await supabase
+            .from("products")
+            .select("id, sku")
+            .eq("is_active", true);
+
+          if (allProducts) {
+            const normalizedExcelSkus = skus.map(s => s.replace(/[-\s]/g, "").toUpperCase());
+            for (const product of allProducts) {
+              const normalizedDbSku = product.sku.replace(/[-\s]/g, "").toUpperCase();
+              if (normalizedExcelSkus.includes(normalizedDbSku) && !matchedProductIds.includes(product.id)) {
+                matchedProductIds.push(product.id);
+              }
+            }
+          }
+
+          // Insert links
+          const uniqueIds = [...new Set(matchedProductIds)];
+          if (uniqueIds.length > 0) {
+            for (let i = 0; i < uniqueIds.length; i += batchSize) {
+              const batch = uniqueIds.slice(i, i + batchSize).map(productId => ({
+                price_list_id: (newList as any).id,
+                product_id: productId,
+              }));
+              await supabase.from("price_list_products").upsert(batch as any, {
+                onConflict: "price_list_id,product_id",
+                ignoreDuplicates: true,
+              });
+            }
+            toast({ title: `✅ تم ربط ${uniqueIds.length} صنف بالكشف تلقائياً` });
+          } else {
+            toast({ title: "⚠️ لم يتم مطابقة أي صنف", description: "تأكد من أن أرقام القطع في الملف مطابقة للمنتجات", variant: "destructive" });
+          }
         }
-
-        setParsingPdf(false);
-      }
-
-      if (newList) {
-        setManagingList(newList as PriceListRow);
-        fetchLinkedProducts((newList as any).id);
+      } catch (e) {
+        console.error("Excel linking error:", e);
+        toast({ title: "⚠️ خطأ في ربط الأصناف من Excel", variant: "destructive" });
       }
     }
 
+    if (newList) {
+      setManagingList(newList as PriceListRow);
+      fetchLinkedProducts((newList as any).id);
+    }
+
     setForm({ title: "", description: "", version: "" });
-    setSelectedFile(null);
+    setSelectedPdf(null);
+    setSelectedExcel(null);
+    setMatchResult(null);
     setShowForm(false);
     fetchLists();
     setUploading(false);
@@ -339,22 +507,65 @@ const AdminPriceLists = () => {
                 rows={2}
               />
             </div>
-            <div className="flex items-center gap-3">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf"
-                className="hidden"
-                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-              />
-              <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-                <Upload className="w-4 h-4 ml-1" />
-                {selectedFile ? selectedFile.name : "اختر ملف PDF"}
-              </Button>
-              <Button size="sm" onClick={handleUpload} disabled={uploading || parsingPdf}>
-                {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : parsingPdf ? <><Loader2 className="w-4 h-4 animate-spin" /> جاري التحليل...</> : "رفع وإرسال إشعار"}
-              </Button>
+
+            {/* File uploads */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-3 flex-wrap">
+                {/* PDF Upload */}
+                <input
+                  ref={pdfInputRef}
+                  type="file"
+                  accept=".pdf"
+                  className="hidden"
+                  onChange={(e) => setSelectedPdf(e.target.files?.[0] || null)}
+                />
+                <Button variant="outline" size="sm" onClick={() => pdfInputRef.current?.click()}>
+                  <FileText className="w-4 h-4 ml-1" />
+                  {selectedPdf ? selectedPdf.name : "ملف PDF (للعرض)"}
+                </Button>
+
+                {/* Excel Upload */}
+                <input
+                  ref={excelInputRef}
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleExcelSelected(file);
+                  }}
+                />
+                <Button variant="outline" size="sm" onClick={() => excelInputRef.current?.click()}>
+                  <Table2 className="w-4 h-4 ml-1" />
+                  {selectedExcel ? selectedExcel.name : "ملف Excel (أرقام القطع) *"}
+                </Button>
+              </div>
+
+              {/* Excel match preview */}
+              {matchingSkus && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground p-2 rounded bg-muted/50">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  جاري مطابقة أرقام القطع...
+                </div>
+              )}
+
+              {matchResult && (
+                <div className={`flex items-center gap-2 text-xs p-2.5 rounded border ${matchResult.matched > 0 ? "bg-primary/5 border-primary/20 text-primary" : "bg-destructive/5 border-destructive/20 text-destructive"}`}>
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  <span>
+                    <strong>{matchResult.matched}</strong> صنف مطابق من أصل <strong>{matchResult.total}</strong> رقم قطعة في الملف
+                  </span>
+                </div>
+              )}
+
+              <p className="text-[10px] text-muted-foreground">
+                * ملف Excel يجب أن يحتوي على عمود "رقم القطعة" أو "SKU" — النظام يطابقه مع المنتجات تلقائياً
+              </p>
             </div>
+
+            <Button size="sm" onClick={handleUpload} disabled={uploading}>
+              {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : "رفع وإرسال إشعار"}
+            </Button>
           </div>
         )}
 
