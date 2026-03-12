@@ -42,6 +42,7 @@ interface OfferProduct {
   base_price: number;
   sale_price: number | null;
   image_url: string | null;
+  brand?: string;
 }
 
 const statusMap: Record<string, { label_ar: string; label_en: string; color: string }> = {
