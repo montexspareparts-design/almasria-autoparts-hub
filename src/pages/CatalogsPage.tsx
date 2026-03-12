@@ -430,7 +430,7 @@ const CatalogsPage = () => {
             { onConflict: "user_id,product_id,view_date" }
           );
         }
-        setDailyLookups(prev => prev + foundIds.length);
+        fetchDailyLookupCount();
       }
 
       const results = uniqueSkus.map(sku => {
