@@ -391,52 +391,14 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
       await supabase.from("dealer_price_views").insert({ user_id: user.id, product_id: sp.product.id });
     }
 
-    const quoteShareData = {
+    // Show quote summary with action options
+    setCreatedQuote({
       quoteNumber,
-      date: new Date().toLocaleDateString("ar-EG"),
-      priceListTitle: viewingList?.title || undefined,
-      dealerName: dealerInfo?.name,
-      dealerPhone: dealerInfo?.phone,
-      items: items.map(i => ({
-        name: i.product.name_ar,
-        sku: i.product.sku,
-        quantity: i.quantity,
-        unitPrice: i.price,
-        totalPrice: i.price * i.quantity,
-      })),
+      items,
       totalAmount,
-    };
-
-    toast({
-      title: "تم إنشاء عرض السعر ✓",
-      description: (
-        <div className="flex flex-col gap-2 mt-1">
-          <span>رقم العرض: {quoteNumber}</span>
-          <div className="flex gap-2">
-            <button
-              onClick={() => generateQuotePdf(quoteShareData)}
-              className="flex items-center gap-1 text-xs bg-primary/10 text-primary px-2 py-1 rounded hover:bg-primary/20 transition-colors"
-            >
-              <Download className="w-3 h-3" /> PDF
-            </button>
-            <button
-              onClick={() => shareQuoteWhatsApp(quoteShareData)}
-              className="flex items-center gap-1 text-xs bg-[#25D366]/10 text-[#25D366] px-2 py-1 rounded hover:bg-[#25D366]/20 transition-colors"
-            >
-              <MessageCircle className="w-3 h-3" /> واتساب
-            </button>
-            <button
-              onClick={() => shareQuoteEmail(quoteShareData)}
-              className="flex items-center gap-1 text-xs bg-blue-500/10 text-blue-600 px-2 py-1 rounded hover:bg-blue-500/20 transition-colors"
-            >
-              <Mail className="w-3 h-3" /> إيميل
-            </button>
-          </div>
-        </div>
-      ) as any,
+      priceListTitle: viewingList?.title || "",
+      createdAt: new Date(),
     });
-
-    // No auto-download — user clicks the PDF button in toast or summary
 
     setSelectedProducts([]);
     setEditingQuoteId(null);
@@ -444,24 +406,6 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
     setSavingQuote(false);
   };
 
-  const downloadQuotePdf = () => {
-    if (!createdQuote) return;
-    generateQuotePdf({
-      quoteNumber: createdQuote.quoteNumber,
-      date: createdQuote.createdAt.toLocaleDateString("ar-EG"),
-      priceListTitle: createdQuote.priceListTitle || undefined,
-      dealerName: dealerInfo?.name,
-      dealerPhone: dealerInfo?.phone,
-      items: createdQuote.items.map(i => ({
-        name: i.product.name_ar,
-        sku: i.product.sku,
-        quantity: i.quantity,
-        unitPrice: i.price,
-        totalPrice: i.price * i.quantity,
-      })),
-      totalAmount: createdQuote.totalAmount,
-    });
-  };
 
   const remainingToday = Math.max(0, DAILY_LIMIT - dailyViews - selectedProducts.reduce((s, p) => s + p.quantity, 0));
 
@@ -500,6 +444,53 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
 
   // ─── QUOTE SUMMARY MODE ───
   if (createdQuote) {
+    const quoteShareData = {
+      quoteNumber: createdQuote.quoteNumber,
+      date: createdQuote.createdAt.toLocaleDateString("ar-EG"),
+      dealerName: dealerInfo?.name,
+      dealerPhone: dealerInfo?.phone,
+      items: createdQuote.items.map(i => ({
+        name: i.product.name_ar,
+        sku: i.product.sku,
+        quantity: i.quantity,
+        unitPrice: i.price,
+        totalPrice: i.price * i.quantity,
+      })),
+      totalAmount: createdQuote.totalAmount,
+    };
+
+    const convertToOrder = async () => {
+      if (!user) return;
+      setSavingQuote(true);
+      const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
+
+      const { data: order, error } = await supabase
+        .from("orders")
+        .insert({ user_id: user.id, order_number: orderNumber, total_amount: createdQuote.totalAmount, status: "pending" })
+        .select()
+        .single();
+
+      if (error || !order) {
+        toast({ title: "خطأ في إنشاء الطلب", variant: "destructive" });
+        setSavingQuote(false);
+        return;
+      }
+
+      await supabase.from("order_items").insert(
+        createdQuote.items.map(i => ({
+          order_id: (order as any).id,
+          product_id: i.product.id,
+          quantity: i.quantity,
+          unit_price: i.price,
+          total_price: i.price * i.quantity,
+        }))
+      );
+
+      toast({ title: "تم إرسال الطلبية ✓", description: `رقم الطلب: ${orderNumber}` });
+      setCreatedQuote(null);
+      setSavingQuote(false);
+    };
+
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-3">
@@ -507,18 +498,12 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
             <ArrowLeft className="w-4 h-4 ml-1" />
             رجوع للكشف
           </Button>
-          <div className="flex-1" />
-          <Button variant="outline" size="sm" onClick={downloadQuotePdf}>
-            <Download className="w-4 h-4 ml-1" />
-            تحميل PDF
-          </Button>
         </div>
 
         <div className="border border-primary/20 rounded-lg bg-primary/5 p-4 text-center">
           <CheckCircle2 className="w-10 h-10 mx-auto text-primary mb-2" />
-          <h3 className="text-lg font-bold text-foreground">تم إنشاء عرض السعر وتحميله تلقائياً</h3>
+          <h3 className="text-lg font-bold text-foreground">تم حفظ عرض السعر بنجاح</h3>
           <p className="text-sm text-muted-foreground mt-1">رقم العرض: <span className="font-bold text-foreground">{createdQuote.quoteNumber}</span></p>
-          <p className="text-xs text-muted-foreground mt-0.5">من كشف: {createdQuote.priceListTitle}</p>
         </div>
 
         {/* Quote Items Table */}
@@ -548,63 +533,41 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-          <Button variant="outline" onClick={() => { setCreatedQuote(null); }}>
-            <ArrowLeft className="w-4 h-4 ml-1" />
-            عودة للكشف
-          </Button>
-          {onNavigateToQuotes && (
-            <Button variant="secondary" onClick={() => { setCreatedQuote(null); onNavigateToQuotes(); }}>
-              <Search className="w-4 h-4 ml-1" />
-              تعديل وإضافة أصناف
+        {/* Action Options */}
+        <div className="space-y-3">
+          <h4 className="text-sm font-bold text-foreground">ماذا تريد أن تفعل؟</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Button size="lg" className="h-14 text-sm gap-2" onClick={() => generateQuotePdf(quoteShareData)}>
+              <Eye className="w-5 h-5" />
+              معاينة وتحميل عرض السعر PDF
             </Button>
-          )}
-          <Button variant="default" onClick={downloadQuotePdf}>
-            <Download className="w-4 h-4 ml-1" />
-            تحميل PDF
-          </Button>
-          <Button
-            variant="outline"
-            className="border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/10"
-            onClick={() => {
-              if (!createdQuote) return;
-              shareQuoteWhatsApp({
-                quoteNumber: createdQuote.quoteNumber,
-                date: createdQuote.createdAt.toLocaleDateString("ar-EG"),
-                priceListTitle: createdQuote.priceListTitle || undefined,
-                items: createdQuote.items.map(i => ({
-                  name: i.product.name_ar, sku: i.product.sku,
-                  quantity: i.quantity, unitPrice: i.price,
-                  totalPrice: i.price * i.quantity,
-                })),
-                totalAmount: createdQuote.totalAmount,
-              });
-            }}
-          >
-            <MessageCircle className="w-4 h-4 ml-1" />
-            واتساب
-          </Button>
-          <Button
-            variant="outline"
-            className="border-blue-400/30 text-blue-600 hover:bg-blue-500/10"
-            onClick={() => {
-              if (!createdQuote) return;
-              shareQuoteEmail({
-                quoteNumber: createdQuote.quoteNumber,
-                date: createdQuote.createdAt.toLocaleDateString("ar-EG"),
-                priceListTitle: createdQuote.priceListTitle || undefined,
-                items: createdQuote.items.map(i => ({
-                  name: i.product.name_ar, sku: i.product.sku,
-                  quantity: i.quantity, unitPrice: i.price,
-                  totalPrice: i.price * i.quantity,
-                })),
-                totalAmount: createdQuote.totalAmount,
-              });
-            }}
-          >
-            <Mail className="w-4 h-4 ml-1" />
-            إيميل
-          </Button>
+            <Button size="lg" variant="destructive" className="h-14 text-sm gap-2" onClick={convertToOrder} disabled={savingQuote}>
+              {savingQuote ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShoppingCart className="w-5 h-5" />}
+              تحويل لطلبية
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <Button
+              variant="outline"
+              className="gap-1"
+              onClick={() => shareQuoteWhatsApp(quoteShareData)}
+            >
+              <MessageCircle className="w-4 h-4" />
+              مشاركة واتساب
+            </Button>
+            <Button
+              variant="outline"
+              className="gap-1"
+              onClick={() => shareQuoteEmail(quoteShareData)}
+            >
+              <Mail className="w-4 h-4" />
+              إرسال إيميل
+            </Button>
+            <Button variant="ghost" onClick={() => setCreatedQuote(null)}>
+              <ArrowLeft className="w-4 h-4 ml-1" />
+              عودة للكشف
+            </Button>
+          </div>
         </div>
       </div>
     );
