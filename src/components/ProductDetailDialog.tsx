@@ -40,7 +40,25 @@ const ProductDetailDialog = ({
 }: ProductDetailDialogProps) => {
   const [zoomed, setZoomed] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
+  const [similarProducts, setSimilarProducts] = useState<any[]>([]);
   const imageRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!product || !open) { setSimilarProducts([]); return; }
+    const fetchSimilar = async () => {
+      let query = supabase
+        .from("products")
+        .select("id, name_ar, sku, image_url, base_price, brand")
+        .eq("is_active", true)
+        .neq("id", product.id)
+        .gt("stock_quantity", 0)
+        .limit(4);
+      if (product.category_id) query = query.eq("category_id", product.category_id);
+      const { data } = await query;
+      setSimilarProducts(data || []);
+    };
+    fetchSimilar();
+  }, [product?.id, open]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!zoomed || !imageRef.current) return;
