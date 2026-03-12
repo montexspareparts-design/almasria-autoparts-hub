@@ -551,6 +551,21 @@ const DealerHomePage = () => {
     ? (isRTL ? "شركات" : "Corporate")
     : (isRTL ? "تجزئة" : "Retail");
 
+  const handleAddToQuote = useCallback((product: OfferProduct) => {
+    // Store product in sessionStorage for the quote builder to pick up
+    const existing = JSON.parse(sessionStorage.getItem("quote_pending_items") || "[]");
+    if (!existing.find((p: any) => p.id === product.id)) {
+      existing.push({ id: product.id, sku: product.sku, name_ar: product.name_ar, name_en: product.name_en });
+      sessionStorage.setItem("quote_pending_items", JSON.stringify(existing));
+    }
+    toast({
+      title: isRTL ? "✅ تمت الإضافة لعرض السعر" : "✅ Added to Quote",
+      description: isRTL
+        ? `${product.name_ar} — اذهب لعرض السعر من لوحة التحكم لمعرفة السعر`
+        : `${product.name_en || product.name_ar} — Go to Quote Builder to see pricing`,
+    });
+  }, [isRTL, toast]);
+
   return (
     <div className="pt-16 md:pt-20 min-h-screen bg-background" dir={isRTL ? "rtl" : "ltr"}>
       <DealerWelcomeHeader tierLabel={tierLabel} isRTL={isRTL} />
@@ -564,13 +579,14 @@ const DealerHomePage = () => {
         searchResults={searchResults}
         isRTL={isRTL}
         navigate={navigate}
+        onAddToQuote={handleAddToQuote}
       />
 
       <div className="container mx-auto px-4 py-8 md:py-12 space-y-8 md:space-y-12">
         <QuickActionsGrid isRTL={isRTL} />
         <StatsOverview stats={stats} loading={loading} isRTL={isRTL} />
         <RecentOrdersList orders={recentOrders} loading={loading} isRTL={isRTL} />
-        <ExclusiveOffers offers={offers} isRTL={isRTL} />
+        <ExclusiveOffers offers={offers} isRTL={isRTL} onAddToQuote={handleAddToQuote} />
       </div>
     </div>
   );
