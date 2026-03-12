@@ -149,20 +149,6 @@ const Navbar = () => {
           {/* Desktop: Center Navigation */}
           <div className="hidden lg:flex items-center gap-5 xl:gap-7">
             {links.map(renderDesktopLink)}
-            {isWholesaleDealer && (
-              <Link
-                to="/catalogs"
-                className={`relative py-1.5 text-[13px] font-semibold tracking-wide transition-all duration-200 group flex items-center gap-1.5 ${
-                  location.pathname === "/catalogs" ? "text-primary" : "text-secondary-foreground/75 hover:text-primary"
-                }`}
-              >
-                <BookOpen className="w-3.5 h-3.5" />
-                {t("nav.catalogs")}
-                <span className={`absolute -bottom-0.5 inset-x-0 h-[2px] bg-primary rounded-full transition-all duration-300 ${
-                  location.pathname === "/catalogs" ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
-                }`} />
-              </Link>
-            )}
           </div>
 
           {/* Mobile: Right Icons */}
@@ -195,7 +181,7 @@ const Navbar = () => {
               className="flex items-center gap-1.5 text-secondary-foreground/60 hover:text-secondary-foreground transition-colors text-[13px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-secondary-foreground/5"
             >
               <Globe className="w-3.5 h-3.5" />
-              {lang === "ar" ? "English" : "عربي"}
+              {lang === "ar" ? "EN" : "عربي"}
             </button>
 
             {/* Separator */}
@@ -361,11 +347,6 @@ const Navbar = () => {
                     {isAdmin && (
                       <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-secondary-foreground/70 font-semibold" onClick={() => { navigate("/admin"); setIsOpen(false); }}>
                         {t("nav.admin")}
-                      </Button>
-                    )}
-                    {isWholesaleDealer && (
-                      <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-primary font-semibold" onClick={() => { navigate("/catalogs"); setIsOpen(false); }}>
-                        <BookOpen className="w-4 h-4" /> {t("nav.catalogs")}
                       </Button>
                     )}
                     <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-secondary-foreground/70 font-semibold" onClick={() => { navigate("/my-orders"); setIsOpen(false); }}>
