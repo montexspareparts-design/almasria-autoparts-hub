@@ -159,9 +159,9 @@ const DealerHomePage = () => {
   const ArrowIcon = isRTL ? ChevronLeft : ChevronRight;
 
   const quickActions = [
-    { icon: ShoppingCart, label: isRTL ? "اطلب قطع غيار" : "Order Parts", href: "/dealer?tab=quotes", gradient: "from-primary to-primary/80", iconBg: "bg-primary-foreground/20" },
-    { icon: ClipboardList, label: isRTL ? "طلباتي" : "My Orders", href: "/dealer?tab=orders", gradient: "from-emerald-600 to-emerald-500", iconBg: "bg-white/20" },
-    { icon: FileText, label: isRTL ? "كشوفات الأسعار" : "Price Lists", href: "/dealer?tab=price_lists", gradient: "from-amber-600 to-amber-500", iconBg: "bg-white/20" },
+    { icon: ShoppingCart, label: isRTL ? "اطلب قطع غيار" : "Order Parts", href: "/dealer?tab=quotes", gradient: "from-primary to-primary/70", iconBg: "bg-white/20" },
+    { icon: ClipboardList, label: isRTL ? "طلباتي" : "My Orders", href: "/dealer?tab=orders", gradient: "from-secondary-foreground/85 to-secondary-foreground/65", iconBg: "bg-white/15" },
+    { icon: FileText, label: isRTL ? "كشوفات الأسعار" : "Price Lists", href: "/dealer?tab=price_lists", gradient: "from-primary/85 to-primary/55", iconBg: "bg-white/20" },
   ];
 
   const statCards = [
