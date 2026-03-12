@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import {
   FileText, Download, Clock, RefreshCw, Eye, Search,
-  Plus, X, ShoppingCart, ArrowLeft, Loader2, AlertTriangle, ChevronRight
+  Plus, X, ShoppingCart, ArrowLeft, Loader2, AlertTriangle, ChevronRight,
+  CheckCircle2, Printer
 } from "lucide-react";
 
 interface PriceList {
@@ -56,6 +57,15 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
   const [dailyViews, setDailyViews] = useState(0);
   const [tierPrices, setTierPrices] = useState<Record<string, number>>({});
   const [savingQuote, setSavingQuote] = useState(false);
+
+  // Quote summary state
+  const [createdQuote, setCreatedQuote] = useState<{
+    quoteNumber: string;
+    items: { product: Product; quantity: number; price: number }[];
+    totalAmount: number;
+    priceListTitle: string;
+    createdAt: Date;
+  } | null>(null);
 
   useEffect(() => {
     fetchLists();
@@ -275,12 +285,33 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
     }
 
     toast({ title: "تم إنشاء عرض السعر ✓", description: `رقم العرض: ${quoteNumber}` });
+
+    // Show quote summary
+    setCreatedQuote({
+      quoteNumber,
+      items,
+      totalAmount,
+      priceListTitle: viewingList?.title || "",
+      createdAt: new Date(),
+    });
+
     setSelectedProducts([]);
     setSavingQuote(false);
+  };
 
-    if (onNavigateToQuotes) {
-      onNavigateToQuotes();
-    }
+  const downloadQuotePdf = () => {
+    if (!createdQuote) return;
+    const lines = createdQuote.items.map((i, idx) =>
+      `${idx + 1}. ${i.product.name_ar} (${i.product.sku}) - الكمية: ${i.quantity} - السعر: ${i.price.toLocaleString("ar-EG")} ج.م - الإجمالي: ${(i.price * i.quantity).toLocaleString("ar-EG")} ج.م`
+    ).join("\n");
+    const text = `عرض أسعار - المصرية جروب\nرقم العرض: ${createdQuote.quoteNumber}\nالتاريخ: ${createdQuote.createdAt.toLocaleDateString("ar-EG")}\nمن كشف: ${createdQuote.priceListTitle}\n${"─".repeat(50)}\n\n${lines}\n\n${"─".repeat(50)}\nإجمالي العرض: ${createdQuote.totalAmount.toLocaleString("ar-EG")} ج.م\nعدد الأصناف: ${createdQuote.items.length}`;
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `عرض-اسعار-${createdQuote.quoteNumber}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const remainingToday = Math.max(0, DAILY_LIMIT - dailyViews - selectedProducts.reduce((s, p) => s + p.quantity, 0));
@@ -317,6 +348,72 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
       setPdfLoading(false);
     }
   };
+
+  // ─── QUOTE SUMMARY MODE ───
+  if (createdQuote) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={() => setCreatedQuote(null)}>
+            <ArrowLeft className="w-4 h-4 ml-1" />
+            رجوع للكشف
+          </Button>
+          <div className="flex-1" />
+          <Button variant="outline" size="sm" onClick={downloadQuotePdf}>
+            <Download className="w-4 h-4 ml-1" />
+            تحميل العرض
+          </Button>
+        </div>
+
+        <div className="border border-primary/20 rounded-lg bg-primary/5 p-4 text-center">
+          <CheckCircle2 className="w-10 h-10 mx-auto text-primary mb-2" />
+          <h3 className="text-lg font-bold text-foreground">تم إنشاء عرض السعر بنجاح</h3>
+          <p className="text-sm text-muted-foreground mt-1">رقم العرض: <span className="font-bold text-foreground">{createdQuote.quoteNumber}</span></p>
+          <p className="text-xs text-muted-foreground mt-0.5">من كشف: {createdQuote.priceListTitle}</p>
+        </div>
+
+        {/* Quote Items Table */}
+        <div className="border border-border rounded-lg bg-card overflow-hidden">
+          <div className="p-3 border-b border-border bg-muted/30 flex items-center justify-between">
+            <span className="text-sm font-bold text-foreground">تفاصيل العرض ({createdQuote.items.length} صنف)</span>
+            <span className="text-xs text-muted-foreground">{createdQuote.createdAt.toLocaleDateString("ar-EG")}</span>
+          </div>
+          <div className="divide-y divide-border">
+            {createdQuote.items.map((item, idx) => (
+              <div key={item.product.id} className="flex items-center gap-3 p-3">
+                <span className="text-xs text-muted-foreground w-6 shrink-0">{idx + 1}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{item.product.name_ar}</p>
+                  <p className="text-[10px] text-muted-foreground font-mono">{item.product.sku}</p>
+                </div>
+                <div className="text-left shrink-0 space-y-0.5">
+                  <p className="text-xs text-muted-foreground">×{item.quantity}</p>
+                  <p className="text-xs font-bold text-foreground">{(item.price * item.quantity).toLocaleString("ar-EG")} ج.م</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="p-4 border-t border-border bg-muted/30 flex items-center justify-between">
+            <span className="text-sm font-bold text-foreground">الإجمالي</span>
+            <span className="text-lg font-bold text-primary">{createdQuote.totalAmount.toLocaleString("ar-EG")} ج.م</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <Button variant="outline" onClick={() => { setCreatedQuote(null); }}>
+            <ArrowLeft className="w-4 h-4 ml-1" />
+            عودة للكشف
+          </Button>
+          {onNavigateToQuotes && (
+            <Button onClick={() => { setCreatedQuote(null); onNavigateToQuotes(); }}>
+              <ShoppingCart className="w-4 h-4 ml-1" />
+              عروض الأسعار
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   // ─── PDF VIEWER MODE ───
   if (viewingList) {
@@ -502,12 +599,20 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <h2 className="text-lg font-bold text-foreground">كشوفات الأسعار</h2>
-        <Button variant="ghost" size="sm" onClick={fetchLists}>
-          <RefreshCw className="w-4 h-4 ml-1" />
-          تحديث
-        </Button>
+        <div className="flex items-center gap-2">
+          {onNavigateToQuotes && (
+            <Button variant="outline" size="sm" onClick={onNavigateToQuotes}>
+              <ShoppingCart className="w-4 h-4 ml-1" />
+              عروض الأسعار
+            </Button>
+          )}
+          <Button variant="ghost" size="sm" onClick={fetchLists}>
+            <RefreshCw className="w-4 h-4 ml-1" />
+            تحديث
+          </Button>
+        </div>
       </div>
 
       {lists.length === 0 ? (
