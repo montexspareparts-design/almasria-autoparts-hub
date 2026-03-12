@@ -110,10 +110,11 @@ const DealerHomePage = () => {
     if (!user) return;
     const fetchData = async () => {
       setLoading(true);
-      const [ordersRes, notifsRes, offersRes] = await Promise.all([
+      const [ordersRes, notifsRes, offersRes, popularRes] = await Promise.all([
         supabase.from("orders").select("id, order_number, status, total_amount, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(5),
         supabase.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("is_read", false),
         supabase.from("products").select("id, name_ar, name_en, sku, base_price, sale_price, image_url").eq("is_active", true).eq("is_on_sale", true).limit(6),
+        supabase.from("products").select("id, name_ar, name_en, sku, base_price, sale_price, image_url, brand, stock_quantity").eq("is_active", true).gt("stock_quantity", 20).order("stock_quantity", { ascending: false }).limit(8),
       ]);
 
       const orders = ordersRes.data || [];
@@ -125,6 +126,11 @@ const DealerHomePage = () => {
         unreadNotifs: notifsRes.count || 0,
       });
       setOffers((offersRes.data as OfferProduct[]) || []);
+      setPopularProducts(
+        ((popularRes.data as any[]) || [])
+          .sort(() => Math.random() - 0.5)
+          .map((p) => ({ id: p.id, name_ar: p.name_ar, name_en: p.name_en, sku: p.sku, base_price: p.base_price, sale_price: p.sale_price, image_url: p.image_url, brand: p.brand }))
+      );
       setLoading(false);
     };
     fetchData();
