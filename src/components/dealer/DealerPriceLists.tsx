@@ -56,6 +56,7 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
   const [selectedProducts, setSelectedProducts] = useState<{ product: Product; quantity: number }[]>([]);
   const [dailyViews, setDailyViews] = useState(0);
   const [tierPrices, setTierPrices] = useState<Record<string, number>>({});
+  const [priceListPrices, setPriceListPrices] = useState<Record<string, number | null>>({});
   const [savingQuote, setSavingQuote] = useState(false);
 
   // Quote summary state
