@@ -29,6 +29,14 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("hero");
+  const [authDialogOpen, setAuthDialogOpen] = useState(false);
+  const [authDialogTab, setAuthDialogTab] = useState<"login" | "register">("login");
+
+  const openAuthDialog = (tab: "login" | "register" = "login") => {
+    setAuthDialogTab(tab);
+    setAuthDialogOpen(true);
+    setIsOpen(false);
+  };
   const { user, dealerAccount, loading: authLoading, isAdmin, signOut } = useAuth();
   const { t, lang, setLang } = useLanguage();
   const { itemCount } = useCart();
