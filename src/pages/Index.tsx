@@ -2,7 +2,8 @@ import { lazy, Suspense } from "react";
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
-import DealerWelcomeBanner from "@/components/DealerWelcomeBanner";
+import DealerHomePage from "@/components/DealerHomePage";
+import { useAuth } from "@/contexts/AuthContext";
 import { OrganizationSchema, WebSiteSchema, LocalBusinessSchema, FAQSchema } from "@/components/SEOSchemaMarkup";
 
 const AboutBrief = lazy(() => import("@/components/AboutBrief"));
