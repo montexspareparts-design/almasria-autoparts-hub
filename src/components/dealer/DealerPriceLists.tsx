@@ -56,6 +56,7 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
   const [selectedProducts, setSelectedProducts] = useState<{ product: Product; quantity: number }[]>([]);
   const [dailyViews, setDailyViews] = useState(0);
   const [tierPrices, setTierPrices] = useState<Record<string, number>>({});
+  const [priceListPrices, setPriceListPrices] = useState<Record<string, number | null>>({});
   const [savingQuote, setSavingQuote] = useState(false);
 
   // Quote summary state
@@ -165,13 +166,20 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
     if (query.length < 2 || !viewingList) { setSearchResults([]); return; }
     setSearching(true);
 
-    // Get product IDs linked to this price list
+    // Get product IDs and prices linked to this price list
     const { data: linked } = await supabase
       .from("price_list_products")
-      .select("product_id")
+      .select("product_id, price")
       .eq("price_list_id", viewingList.id) as any;
 
     const linkedIds = (linked || []).map((l: any) => l.product_id);
+    
+    // Store price list prices
+    const plPrices: Record<string, number | null> = {};
+    for (const l of (linked || [])) {
+      plPrices[l.product_id] = l.price != null ? Number(l.price) : null;
+    }
+    setPriceListPrices(prev => ({ ...prev, ...plPrices }));
 
     if (linkedIds.length === 0) {
       setSearchResults([]);
@@ -196,6 +204,11 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
   }, [searchQuery, searchProducts]);
 
   const getProductPrice = async (product: Product): Promise<number> => {
+    // Priority 1: Price from the price list (Excel upload)
+    if (priceListPrices[product.id] != null && priceListPrices[product.id]! > 0) {
+      return priceListPrices[product.id]!;
+    }
+    // Priority 2: Tier price
     if (tierPrices[product.id]) return tierPrices[product.id];
     if (dealerAccount?.tier) {
       const { data } = await supabase
@@ -209,6 +222,7 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
         return Number(data.price);
       }
     }
+    // Priority 3: Sale/base price
     const price = product.is_on_sale && product.sale_price ? product.sale_price : product.base_price;
     setTierPrices(prev => ({ ...prev, [product.id]: price }));
     return price;

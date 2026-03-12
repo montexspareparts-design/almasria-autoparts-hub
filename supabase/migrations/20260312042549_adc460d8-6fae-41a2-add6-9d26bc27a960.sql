@@ -1,0 +1,1 @@
+ALTER TABLE public.price_list_products ADD COLUMN price numeric NULL;
