@@ -385,6 +385,52 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
     fetchSavedQuotes();
   };
 
+  const convertSavedQuoteToOrder = async (quote: SavedQuote) => {
+    if (!user) return;
+    setSaving(true);
+
+    // Fetch quote items
+    const { data: qItems } = await supabase
+      .from("dealer_quote_items")
+      .select("product_id, quantity, unit_price, total_price")
+      .eq("quote_id", quote.id);
+
+    if (!qItems || qItems.length === 0) {
+      toast({ title: "العرض فارغ", variant: "destructive" });
+      setSaving(false);
+      return;
+    }
+
+    const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
+    const { data: order, error } = await supabase
+      .from("orders")
+      .insert({ user_id: user.id, order_number: orderNumber, total_amount: Number(quote.total_amount), notes: quote.notes || null, status: "pending" })
+      .select()
+      .single();
+
+    if (error || !order) {
+      toast({ title: "خطأ في إنشاء الطلب", variant: "destructive" });
+      setSaving(false);
+      return;
+    }
+
+    await supabase.from("order_items").insert(
+      qItems.map(i => ({
+        order_id: (order as any).id,
+        product_id: i.product_id,
+        quantity: i.quantity,
+        unit_price: i.unit_price,
+        total_price: i.total_price,
+      }))
+    );
+
+    await supabase.from("dealer_quotes").update({ status: "converted" }).eq("id", quote.id);
+
+    toast({ title: "تم إرسال الطلبية ✓", description: `رقم الطلب: ${orderNumber}` });
+    fetchSavedQuotes();
+    setSaving(false);
+  };
+
   const remainingViews = Math.max(0, DAILY_LIMIT - dailyViews);
 
   // Shared builder UI for both "builder" and "edit" views
