@@ -17,6 +17,7 @@ import DealerFavorites from "@/components/dealer/DealerFavorites";
 import DealerQuickOrder from "@/components/dealer/DealerQuickOrder";
 import DealerInvoices from "@/components/dealer/DealerInvoices";
 import DealerAccountSettings from "@/components/dealer/DealerAccountSettings";
+import DealerStatement from "@/components/dealer/DealerStatement";
 
 const DealerDashboard = () => {
   const { user, dealerAccount, isDealer, loading: authLoading, signOut } = useAuth();
@@ -69,6 +70,7 @@ const DealerDashboard = () => {
     quick_order: "طلب سريع — رفع Excel",
     orders: "الطلبية",
     invoices: "الفواتير",
+    statement: "كشف الحساب",
     price_lists: "كشوفات الأسعار",
     favorites: "المفضلة",
     notifications: "الإشعارات",
@@ -101,6 +103,7 @@ const DealerDashboard = () => {
       case "favorites": return <DealerFavorites />;
       case "notifications": return <DealerNotificationsList userId={user!.id} />;
       case "offers": return <DealerOffers />;
+      case "statement": return <DealerStatement userId={user!.id} />;
       case "settings": return <DealerAccountSettings />;
       default: return null;
     }

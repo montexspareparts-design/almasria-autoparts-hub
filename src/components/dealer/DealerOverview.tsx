@@ -72,13 +72,9 @@ const DealerOverview = ({
 
   const allActions = [
     { icon: Search, label: "بحث القطع وعروض الأسعار", tab: "quotes" },
-    { icon: Upload, label: "طلب سريع", tab: "quick_order" },
-    { icon: ClipboardList, label: "سجل الطلبات", tab: "orders" },
-    { icon: FileText, label: "الفواتير", tab: "invoices" },
-    { icon: CreditCard, label: "كشوفات الأسعار", tab: "price_lists" },
-    { icon: Heart, label: "المفضلة", tab: "favorites" },
     { icon: ClipboardList, label: "الطلبية", tab: "orders" },
     { icon: FileText, label: "الفواتير", tab: "invoices" },
+    { icon: TrendingUp, label: "كشف الحساب", tab: "statement" },
     { icon: CreditCard, label: "كشوفات الأسعار", tab: "price_lists" },
     { icon: Heart, label: "المفضلة", tab: "favorites" },
     { icon: Bell, label: "الإشعارات", tab: "notifications" },
