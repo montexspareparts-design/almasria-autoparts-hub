@@ -181,7 +181,7 @@ const Navbar = () => {
               className="flex items-center gap-1.5 text-secondary-foreground/60 hover:text-secondary-foreground transition-colors text-[13px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-secondary-foreground/5"
             >
               <Globe className="w-3.5 h-3.5" />
-              {lang === "ar" ? "English" : "عربي"}
+              {lang === "ar" ? "EN" : "عربي"}
             </button>
 
             {/* Separator */}
