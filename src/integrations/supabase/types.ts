@@ -238,6 +238,35 @@ export type Database = {
         }
         Relationships: []
       }
+      dealer_favorites: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dealer_favorites_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dealer_price_views: {
         Row: {
           id: string
@@ -564,6 +593,39 @@ export type Database = {
           status?: string
           vin?: string | null
           year?: string | null
+        }
+        Relationships: []
+      }
+      price_lists: {
+        Row: {
+          created_at: string
+          description: string | null
+          file_url: string | null
+          id: string
+          is_active: boolean
+          title: string
+          updated_at: string
+          version: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          is_active?: boolean
+          title: string
+          updated_at?: string
+          version?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          is_active?: boolean
+          title?: string
+          updated_at?: string
+          version?: string | null
         }
         Relationships: []
       }
