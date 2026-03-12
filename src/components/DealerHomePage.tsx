@@ -470,7 +470,4 @@ const DealerHomePage = () => {
   );
 };
 
-// Fix: onAddToQuote reference in search results
-const onAddToQuote = (p: OfferProduct) => {};
-
 export default DealerHomePage;
