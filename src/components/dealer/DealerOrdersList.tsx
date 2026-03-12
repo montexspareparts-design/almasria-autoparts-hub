@@ -45,32 +45,45 @@ interface OrderItem {
   } | null;
 }
 
+const isElectronicPayment = (method?: string | null) =>
+  !!method && ["instapay", "wallet", "bank_transfer"].includes(method);
+
 const orderStages = [
   { key: "pending", label: "تم استلام الطلب", icon: Inbox },
+  { key: "confirmed", label: "تمت الموافقة", icon: CheckCircle },
   { key: "awaiting_payment", label: "بانتظار الدفع", icon: Wallet },
   { key: "processing", label: "جاري التجهيز", icon: Package },
   { key: "ready", label: "جاهز للاستلام", icon: PackageCheck },
   { key: "delivered", label: "تم التسليم", icon: CheckCircle },
 ];
 
+const getVisibleStages = (paymentMethod?: string | null) => {
+  if (isElectronicPayment(paymentMethod)) return orderStages;
+  // For COD/non-electronic, skip "بانتظار الدفع"
+  return orderStages.filter(s => s.key !== "awaiting_payment");
+};
+
 const stageIndex = (status: string, paymentMethod?: string | null) => {
   if (status === "cancelled") return -1;
-  // Map old statuses to new timeline
-  const statusMap: Record<string, number> = {
-    pending: 0,
-    confirmed: paymentMethod && ["instapay", "wallet", "bank_transfer"].includes(paymentMethod) ? 1 : 0,
-    awaiting_payment: 1,
-    pending_approval: 2, // treat as processing level
-    processing: 2,
-    ready: 3,
-    delivered: 4,
+  const stages = getVisibleStages(paymentMethod);
+  // Map statuses to stage keys
+  const statusToKey: Record<string, string> = {
+    pending: "pending",
+    confirmed: "confirmed",
+    awaiting_payment: "awaiting_payment",
+    pending_approval: "confirmed", // admin modified → stays at confirmed level
+    processing: "processing",
+    ready: "ready",
+    delivered: "delivered",
   };
-  return statusMap[status] ?? 0;
+  const key = statusToKey[status] ?? "pending";
+  const idx = stages.findIndex(s => s.key === key);
+  return idx >= 0 ? idx : 0;
 };
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   pending: { label: "تم استلام الطلب", variant: "secondary" },
-  confirmed: { label: "تم التأكيد", variant: "default" },
+  confirmed: { label: "تمت الموافقة", variant: "default" },
   awaiting_payment: { label: "بانتظار الدفع", variant: "outline" },
   pending_approval: { label: "بانتظار موافقتك", variant: "outline" },
   processing: { label: "جاري التجهيز", variant: "default" },
