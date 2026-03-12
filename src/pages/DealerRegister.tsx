@@ -98,7 +98,6 @@ const DealerRegister = () => {
       }
 
       let userId = user?.id;
-      let userId = user?.id;
 
       if (!userId) {
         const emailForAuth = form.email || `${form.phone.replace(/\D/g, "")}@client.almasria.local`;
