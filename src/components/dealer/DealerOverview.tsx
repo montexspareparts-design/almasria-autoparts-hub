@@ -314,17 +314,21 @@ const DealerOverview = ({
               عرض الكل
             </button>
           </div>
-          <div className="bg-card border border-border rounded-lg divide-y divide-border">
+          <div
+            className="bg-card border border-border rounded-lg divide-y divide-border cursor-pointer hover:border-primary/30 hover:shadow-sm transition-all"
+            onClick={() => onNavigate?.("orders")}
+          >
             {recentOrders.length === 0 ? (
               <div className="p-6 text-center">
                 <ClipboardList className="w-7 h-7 mx-auto text-muted-foreground/30 mb-1.5" />
-                <p className="text-xs text-muted-foreground">لا توجد طلبات</p>
+                <p className="text-xs text-muted-foreground mb-2">لا توجد طلبات</p>
+                <span className="text-[11px] text-primary font-medium">عرض الطلبية ←</span>
               </div>
             ) : (
               recentOrders.map(o => {
                 const st = orderStatusLabels[o.status] || orderStatusLabels.pending;
                 return (
-                  <div key={o.id} className="p-3 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => onNavigate?.("orders")}>
+                  <div key={o.id} className="p-3 hover:bg-muted/30 transition-colors">
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-xs font-medium text-foreground">{o.order_number}</span>
                       <Badge variant={st.variant} className="text-[9px] px-1.5 py-0">{st.text}</Badge>
