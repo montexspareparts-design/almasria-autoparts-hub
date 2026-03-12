@@ -65,6 +65,7 @@ const DealerQuoteBuilder = () => {
   const [editingQuoteId, setEditingQuoteId] = useState<string | null>(null);
   const [editingQuoteNumber, setEditingQuoteNumber] = useState("");
   const [loadingQuote, setLoadingQuote] = useState(false);
+  const [isFromPriceList, setIsFromPriceList] = useState(false);
 
   useEffect(() => {
     if (user) {
