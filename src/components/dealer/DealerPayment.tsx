@@ -10,7 +10,7 @@ const paymentMethods = [
     label: "InstaPay",
     icon: Smartphone,
     accountName: "Ahmed Kamal Abdalaziz",
-    accountNumber: "01153961008",
+    accountNumber: "01020412358",
     payLink: "https://ipn.eg/S/drmado/instapay/08n56S",
     instructions: "اضغط على الزر لفتح InstaPay مباشرة وادفع المبلغ المطلوب، ثم أرسل إيصال التحويل عبر واتساب",
     color: "bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800",
