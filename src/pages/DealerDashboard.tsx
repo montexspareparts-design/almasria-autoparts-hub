@@ -103,6 +103,7 @@ const DealerDashboard = () => {
       case "favorites": return <DealerFavorites />;
       case "notifications": return <DealerNotificationsList userId={user!.id} />;
       case "offers": return <DealerOffers />;
+      case "statement": return <DealerStatement userId={user!.id} />;
       case "settings": return <DealerAccountSettings />;
       default: return null;
     }
