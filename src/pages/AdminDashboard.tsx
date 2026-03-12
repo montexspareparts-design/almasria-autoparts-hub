@@ -23,6 +23,7 @@ const AdminERPSync = lazy(() => import("@/components/AdminERPSync"));
 const AdminPushNotifications = lazy(() => import("@/components/AdminPushNotifications"));
 const AdminProducts = lazy(() => import("@/components/AdminProducts"));
 const AdminAnalytics = lazy(() => import("@/components/AdminAnalytics"));
+const AdminCustomerProfile = lazy(() => import("@/components/AdminCustomerProfile"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];
