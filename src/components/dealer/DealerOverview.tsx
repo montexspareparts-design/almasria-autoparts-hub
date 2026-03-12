@@ -274,17 +274,21 @@ const DealerOverview = ({
               عرض الكل
             </button>
           </div>
-          <div className="bg-card border border-border rounded-lg divide-y divide-border">
+          <div
+            className="bg-card border border-border rounded-lg divide-y divide-border cursor-pointer hover:border-primary/30 hover:shadow-sm transition-all"
+            onClick={() => onNavigate?.("quotes")}
+          >
             {recentQuotes.length === 0 ? (
               <div className="p-6 text-center">
                 <Search className="w-7 h-7 mx-auto text-muted-foreground/30 mb-1.5" />
-                <p className="text-xs text-muted-foreground">لا توجد عروض أسعار</p>
+                <p className="text-xs text-muted-foreground mb-2">لا توجد عروض أسعار</p>
+                <span className="text-[11px] text-primary font-medium">إنشاء عرض سعر ←</span>
               </div>
             ) : (
               recentQuotes.map(q => {
                 const st = quoteStatusLabels[q.status] || quoteStatusLabels.draft;
                 return (
-                  <div key={q.id} className="p-3 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => onNavigate?.("quotes")}>
+                  <div key={q.id} className="p-3 hover:bg-muted/30 transition-colors">
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-xs font-medium text-foreground">{q.quote_number}</span>
                       <Badge variant={st.variant} className="text-[9px] px-1.5 py-0">{st.text}</Badge>
