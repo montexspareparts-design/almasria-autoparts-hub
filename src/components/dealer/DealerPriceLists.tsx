@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import {
   FileText, Download, Clock, RefreshCw, Eye, Search,
-  Plus, X, ShoppingCart, ArrowLeft, Loader2, AlertTriangle, ChevronRight
+  Plus, X, ShoppingCart, ArrowLeft, Loader2, AlertTriangle, ChevronRight,
+  CheckCircle2, Printer
 } from "lucide-react";
 
 interface PriceList {
