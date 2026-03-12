@@ -70,6 +70,7 @@ const DealerDashboard = () => {
     quick_order: "طلب سريع — رفع Excel",
     orders: "الطلبية",
     invoices: "الفواتير",
+    statement: "كشف الحساب",
     price_lists: "كشوفات الأسعار",
     favorites: "المفضلة",
     notifications: "الإشعارات",
