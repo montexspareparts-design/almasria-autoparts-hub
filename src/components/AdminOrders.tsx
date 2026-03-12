@@ -121,7 +121,17 @@ const AdminOrders = () => {
     setOrders(enriched);
     setTotalCount(count || 0);
     setLoading(false);
-  }, [page, filterStatus, searchQuery]);
+
+    // Auto-expand first order if triggered by stat card click
+    if (autoExpandFirst && enriched.length > 0) {
+      setExpandedOrder(enriched[0].id);
+      setAutoExpandFirst(false);
+      // Scroll to orders list
+      setTimeout(() => {
+        ordersListRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    }
+  }, [page, filterStatus, searchQuery, autoExpandFirst]);
 
 
 
