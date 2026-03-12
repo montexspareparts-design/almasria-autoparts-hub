@@ -377,6 +377,66 @@ export type Database = {
         }
         Relationships: []
       }
+      erp_config: {
+        Row: {
+          id: string
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          id?: string
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
+      erp_sync_logs: {
+        Row: {
+          created_at: string
+          direction: string
+          error_message: string | null
+          id: string
+          payload: Json | null
+          reference_id: string | null
+          reference_number: string | null
+          response: Json | null
+          status: string
+          sync_type: string
+        }
+        Insert: {
+          created_at?: string
+          direction?: string
+          error_message?: string | null
+          id?: string
+          payload?: Json | null
+          reference_id?: string | null
+          reference_number?: string | null
+          response?: Json | null
+          status?: string
+          sync_type: string
+        }
+        Update: {
+          created_at?: string
+          direction?: string
+          error_message?: string | null
+          id?: string
+          payload?: Json | null
+          reference_id?: string | null
+          reference_number?: string | null
+          response?: Json | null
+          status?: string
+          sync_type?: string
+        }
+        Relationships: []
+      }
       maintenance_bundles: {
         Row: {
           bundle_price: number
