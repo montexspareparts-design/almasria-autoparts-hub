@@ -267,7 +267,7 @@ const DealerHomePage = () => {
                                 size="sm"
                                 variant="ghost"
                                 className="shrink-0 gap-1 text-[10px] font-bold h-7 px-2 text-primary hover:bg-primary/10"
-                                onClick={() => onAddToQuote(p)}
+                                onClick={() => handleAddToQuote(p)}
                               >
                                 <Plus className="w-3 h-3" />
                                 {isRTL ? "تسعير" : "Quote"}
