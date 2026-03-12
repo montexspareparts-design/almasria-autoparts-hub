@@ -1,7 +1,7 @@
-import { LayoutDashboard, ShoppingCart, Bell, Tag, FileText, LogOut, User, ChevronRight, Search } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, Bell, Tag, FileText, LogOut, User, ChevronRight, Search, Heart, Upload, ClipboardList } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type DealerTab = "overview" | "quotes" | "orders" | "notifications" | "offers" | "catalogs";
+export type DealerTab = "overview" | "quotes" | "orders" | "price_lists" | "quick_order" | "favorites" | "notifications" | "offers" | "catalogs";
 
 interface DealerSidebarProps {
   activeTab: DealerTab;
@@ -15,7 +15,10 @@ interface DealerSidebarProps {
 const tabs: { id: DealerTab; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "overview", label: "نظرة عامة", icon: LayoutDashboard },
   { id: "quotes", label: "عروض الأسعار", icon: Search },
-  { id: "orders", label: "الطلبات", icon: ShoppingCart },
+  { id: "quick_order", label: "طلب سريع", icon: Upload },
+  { id: "orders", label: "سجل الطلبات", icon: ClipboardList },
+  { id: "price_lists", label: "كشوفات الأسعار", icon: FileText },
+  { id: "favorites", label: "المفضلة", icon: Heart },
   { id: "notifications", label: "الإشعارات", icon: Bell },
   { id: "offers", label: "العروض", icon: Tag },
   { id: "catalogs", label: "الكتالوجات", icon: FileText },
