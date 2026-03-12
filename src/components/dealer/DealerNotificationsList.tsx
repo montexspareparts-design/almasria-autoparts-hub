@@ -220,12 +220,12 @@ const DealerNotificationsList = ({ userId, onNavigate }: { userId: string; onNav
                   }
                 }}
                 className={cn(
-                  "w-full text-right rounded-lg border p-3.5 transition-all",
+                  "w-full text-right rounded-lg border p-3.5 transition-all cursor-pointer hover:bg-muted/30",
                   isOrderEdit && !n.is_read
                     ? "bg-orange-50 dark:bg-orange-950/20 border-orange-300 dark:border-orange-700 shadow-md"
                     : n.is_read
                       ? "bg-background border-border/50 opacity-70"
-                      : "bg-card border-primary/20 shadow-sm cursor-pointer"
+                      : "bg-card border-primary/20 shadow-sm"
                 )}
               >
                 <div className="flex items-start gap-3">
