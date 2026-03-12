@@ -112,12 +112,31 @@ const AdminOrders = () => {
       const notifData = statusNotificationMessages[newStatus];
       if (order && notifData) {
         const orderNum = order.order_number;
+        // In-app notification
         await supabase.from("notifications").insert({
           user_id: order.user_id,
           title: notifData.title,
           message: `${notifData.message} (رقم الطلب: ${orderNum})`,
           type: "order",
         });
+
+        // WhatsApp notification via Twilio
+        const customerPhone = order.profile?.phone;
+        if (customerPhone) {
+          try {
+            await supabase.functions.invoke("notify-order-whatsapp", {
+              body: {
+                orderNumber: orderNum,
+                newStatus,
+                customerPhone,
+                customerName: order.profile?.full_name || "",
+              },
+            });
+            console.log("WhatsApp notification sent for order", orderNum);
+          } catch (whatsappErr) {
+            console.error("WhatsApp notification failed:", whatsappErr);
+          }
+        }
       }
 
       toast({ title: `تم تحديث حالة الطلب إلى: ${statusConfig[newStatus]?.label || newStatus}` });
