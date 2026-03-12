@@ -29,10 +29,10 @@ const clientTypes = [
 
 const formSchema = z.object({
   fullName: z.string().trim().min(3, "الاسم يجب أن يكون 3 أحرف على الأقل").max(100),
-  phone: z.string().trim().min(8, "رقم الهاتف غير صحيح").max(20),
+  phone: z.string().trim().min(10, "رقم الهاتف يجب أن يكون 11 رقم على الأقل").max(20).regex(/^01[0-9]{9}$/, "رقم هاتف مصري غير صحيح (يبدأ بـ 01)"),
   businessName: z.string().trim().min(2, "اسم الشركة مطلوب").max(200),
   governorate: z.string().min(1, "يرجى اختيار المحافظة"),
-  email: z.string().trim().email("بريد إلكتروني غير صحيح").max(255).optional().or(z.literal("")),
+  email: z.string().trim().email("بريد إلكتروني غير صحيح").min(1, "البريد الإلكتروني مطلوب").max(255),
   clientType: z.enum(["wholesale", "company", "distributor"], { required_error: "يرجى اختيار نوع العميل" }),
 });
 
