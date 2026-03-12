@@ -533,13 +533,7 @@ const DealerQuoteBuilder = () => {
               <Button
                 variant="outline"
                 className="h-10 border-blue-400/30 text-blue-600 hover:bg-blue-500/10"
-                onClick={() => shareQuoteEmail({
-                  quoteNumber: editingQuoteNumber || `Q-${Date.now().toString(36).toUpperCase()}`,
-                  date: new Date().toLocaleDateString("ar-EG"),
-                  notes: notes || undefined,
-                  items: quoteItems.map(i => ({ name: i.product.name_ar, sku: i.product.sku, quantity: i.quantity, unitPrice: i.unit_price, totalPrice: i.unit_price * i.quantity })),
-                  totalAmount,
-                })}
+                onClick={() => shareQuoteEmail(buildQuoteData())}
               >
                 <Mail className="w-4 h-4 ml-1.5" />
                 إيميل
