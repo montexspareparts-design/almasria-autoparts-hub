@@ -103,10 +103,14 @@ const DealerOffers = () => {
                       className="h-7 w-7 p-0"
                       onClick={() => addItem({
                         id: product.id,
-                        name: product.name_ar,
-                        price: product.sale_price || product.base_price,
-                        image: product.image_url || "",
+                        name_ar: product.name_ar,
                         sku: product.sku,
+                        image_url: product.image_url,
+                        unit_price: Number(product.sale_price || product.base_price),
+                        quantity: 1,
+                        stock_quantity: 999,
+                        min_order_qty: 1,
+                        brand: product.brand,
                       })}
                     >
                       <ShoppingCart className="w-3.5 h-3.5" />
