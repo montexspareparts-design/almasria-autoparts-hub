@@ -50,9 +50,19 @@ interface SavedQuoteItem {
 
 const DAILY_LIMIT = 20;
 
-interface DealerQuoteBuilderProps {
-  onNavigateToPriceLists?: () => void;
+interface PriceListQuoteData {
+  priceListTitle: string;
+  quoteId: string;
+  quoteNumber: string;
+  items: { productId: string; quantity: number; unitPrice: number }[];
+  notes: string;
 }
+
+interface DealerQuoteBuilderProps {
+  onNavigateToPriceLists?: (quoteData?: PriceListQuoteData) => void;
+}
+
+export type { PriceListQuoteData };
 
 const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps) => {
   const { user, dealerAccount } = useAuth();
