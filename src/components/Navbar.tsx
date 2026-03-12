@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import logo from "@/assets/logo.png";
-import { Menu, X, Briefcase, User, LogOut, BookOpen, Download, Globe, ShoppingCart } from "lucide-react";
+import { Menu, X, Briefcase, User, LogOut, BookOpen, Download, Globe, ShoppingCart, ClipboardList } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -199,6 +199,17 @@ const Navbar = () => {
                     {t("nav.admin")}
                   </Button>
                 )}
+                <motion.div whileHover={{ y: -1 }}>
+                  <Link
+                    to="/my-orders"
+                    className={`text-sm font-medium transition-colors relative group flex items-center gap-1 ${
+                      location.pathname === "/my-orders" ? "text-primary" : "text-secondary-foreground/80 hover:text-primary"
+                    }`}
+                  >
+                    <ClipboardList className="w-4 h-4" />
+                    {lang === "ar" ? "طلباتي" : "My Orders"}
+                  </Link>
+                </motion.div>
                 <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
                   <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate("/dealer")}>
                     <User className="w-4 h-4" />
@@ -295,6 +306,9 @@ const Navbar = () => {
                         <BookOpen className="w-4 h-4" /> {t("nav.catalogs")}
                       </Button>
                     )}
+                    <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={() => { navigate("/my-orders"); setIsOpen(false); }}>
+                      <ClipboardList className="w-4 h-4" /> {lang === "ar" ? "طلباتي" : "My Orders"}
+                    </Button>
                     <Button variant="outline" size="sm" className="w-full gap-2" onClick={() => { navigate("/dealer"); setIsOpen(false); }}>
                       <User className="w-4 h-4" /> {t("nav.dealer_account")}
                     </Button>
