@@ -424,6 +424,68 @@ const DealerHomePage = () => {
           )}
         </section>
 
+        {/* ─── Most Popular Products ─── */}
+        {popularProducts.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-black text-foreground flex items-center gap-1.5">
+                <TrendingUp className="w-4 h-4 text-primary" />
+                {isRTL ? "الأكثر طلباً" : "Most Popular"}
+              </h2>
+              <span className="text-[10px] text-muted-foreground">{isRTL ? "متوفر للطلب الفوري" : "Ready to order"}</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              {popularProducts.map((product, i) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 + i * 0.04 }}
+                >
+                  <Card className="border-border/30 hover:border-primary/20 transition-all duration-200 hover:shadow-md group overflow-hidden rounded-xl">
+                    <CardContent className="p-0">
+                      <div className="aspect-square bg-white relative overflow-hidden">
+                        {product.image_url ? (
+                          <img
+                            src={product.image_url}
+                            alt={isRTL ? product.name_ar : (product.name_en || product.name_ar)}
+                            className="w-full h-full object-contain p-2.5 group-hover:scale-105 transition-transform duration-300"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-muted/30">
+                            <Package className="w-6 h-6 text-muted-foreground/20" />
+                          </div>
+                        )}
+                        {product.brand && (
+                          <Badge className="absolute top-1.5 right-1.5 text-[8px] px-1.5 py-0 bg-secondary text-secondary-foreground border-0">
+                            {brandLabels[product.brand] || product.brand}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="p-2.5">
+                        <p className="text-[11px] font-bold text-foreground line-clamp-2 leading-relaxed mb-1">
+                          {isRTL ? product.name_ar : (product.name_en || product.name_ar)}
+                        </p>
+                        <p className="text-[9px] text-muted-foreground mb-2 font-mono">{product.sku}</p>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full gap-1 text-[10px] font-bold h-7 rounded-lg text-primary border-primary/30 hover:bg-primary/5"
+                          onClick={() => handleAddToQuote(product)}
+                        >
+                          <Search className="w-3 h-3" />
+                          {isRTL ? "طلب عرض سعر" : "Request Quote"}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* ─── Exclusive Offers ─── */}
         {offers.length > 0 && (
           <section>
