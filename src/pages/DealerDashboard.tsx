@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { LogOut, Loader2, Menu } from "lucide-react";
+import { LogOut, Loader2 } from "lucide-react";
 import DealerSidebar, { type DealerTab } from "@/components/dealer/DealerSidebar";
 import DealerMobileNav from "@/components/dealer/DealerMobileNav";
 import DealerOverview from "@/components/dealer/DealerOverview";
@@ -12,6 +12,9 @@ import DealerNotificationsList from "@/components/dealer/DealerNotificationsList
 import DealerOffers from "@/components/dealer/DealerOffers";
 import DealerCatalogs from "@/components/DealerCatalogs";
 import DealerQuoteBuilder from "@/components/dealer/DealerQuoteBuilder";
+import DealerPriceLists from "@/components/dealer/DealerPriceLists";
+import DealerFavorites from "@/components/dealer/DealerFavorites";
+import DealerQuickOrder from "@/components/dealer/DealerQuickOrder";
 
 const DealerDashboard = () => {
   const { user, dealerAccount, isDealer, loading: authLoading, signOut } = useAuth();
@@ -23,14 +26,8 @@ const DealerDashboard = () => {
   const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/auth");
-      return;
-    }
-    if (!authLoading && user && !isDealer) {
-      navigate("/");
-      return;
-    }
+    if (!authLoading && !user) { navigate("/auth"); return; }
+    if (!authLoading && user && !isDealer) { navigate("/"); return; }
     if (user && isDealer) fetchData();
   }, [user, authLoading, isDealer]);
 
@@ -58,10 +55,7 @@ const DealerDashboard = () => {
   const totalSpent = orders.reduce((sum: number, o: any) => sum + Number(o.total_amount), 0);
   const invoicesCount = orders.filter((o: any) => o.invoice_url).length;
 
-  const handleSignOut = () => {
-    signOut();
-    navigate("/");
-  };
+  const handleSignOut = () => { signOut(); navigate("/"); };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -78,8 +72,14 @@ const DealerDashboard = () => {
         );
       case "quotes":
         return <DealerQuoteBuilder />;
+      case "quick_order":
+        return <DealerQuickOrder />;
       case "orders":
         return <DealerOrdersList userId={user!.id} />;
+      case "price_lists":
+        return <DealerPriceLists />;
+      case "favorites":
+        return <DealerFavorites />;
       case "notifications":
         return <DealerNotificationsList userId={user!.id} />;
       case "offers":
@@ -109,7 +109,7 @@ const DealerDashboard = () => {
           </a>
           <div className="hidden sm:flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-full px-4 py-1.5">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            <span className="text-xs font-semibold text-primary">حساب خاص لعملاء الجملة</span>
+            <span className="text-xs font-semibold text-primary">بوابة التوزيع B2B</span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <span className="text-xs text-secondary-foreground/60 hidden md:inline truncate max-w-[150px]">
@@ -124,7 +124,6 @@ const DealerDashboard = () => {
 
       {/* Body */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Desktop Sidebar */}
         <DealerSidebar
           activeTab={activeTab}
           onTabChange={setActiveTab}
@@ -133,14 +132,11 @@ const DealerDashboard = () => {
           onSignOut={handleSignOut}
           unreadCount={unreadCount}
         />
-
-        {/* Main Content */}
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 pb-20 lg:pb-8">
           {renderContent()}
         </main>
       </div>
 
-      {/* Mobile Bottom Nav */}
       <DealerMobileNav activeTab={activeTab} onTabChange={setActiveTab} unreadCount={unreadCount} />
     </div>
   );
