@@ -52,6 +52,7 @@ const Index = () => {
       ]} />
       <Navbar />
       <HeroSection />
+      <DealerWelcomeBanner />
 
       {/* About — dark section */}
       <Suspense fallback={<SectionFallback />}><AboutBrief /></Suspense>
