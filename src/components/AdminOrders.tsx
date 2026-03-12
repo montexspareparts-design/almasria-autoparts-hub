@@ -49,6 +49,8 @@ const AdminOrders = () => {
   const [adminNotes, setAdminNotes] = useState<Record<string, string>>({});
   const [editingOrder, setEditingOrder] = useState<string | null>(null);
   const [editedItems, setEditedItems] = useState<Record<string, { id: string; quantity: number; unit_price: number; total_price: number; product_id: string; product?: any }[]>>({});
+  const [autoExpandFirst, setAutoExpandFirst] = useState(false);
+  const ordersListRef = useRef<HTMLDivElement>(null);
 
   // Stats fetched once
   const [stats, setStats] = useState({ total: 0, pending: 0, processing: 0, shipped: 0, delivered: 0, totalRevenue: 0 });
