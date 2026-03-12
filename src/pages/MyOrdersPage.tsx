@@ -157,8 +157,9 @@ const MyOrdersPage = () => {
           ) : (
             <div className="space-y-4">
               {orders.map((order, i) => {
+                const orderStatuses = getOrderStatuses(order.payment_method);
                 const statusIdx = getStatusIndex(order.status, order.payment_method);
-                const currentStatus = ORDER_STATUSES[statusIdx];
+                const currentStatus = orderStatuses[statusIdx];
                 const isExpanded = expandedOrder === order.id;
                 const items = orderItems[order.id] || [];
                 const isHighlighted = highlightOrder === order.id || highlightOrder === order.order_number;
