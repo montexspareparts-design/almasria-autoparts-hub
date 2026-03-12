@@ -351,8 +351,8 @@ const AdminPriceLists = () => {
                 <Upload className="w-4 h-4 ml-1" />
                 {selectedFile ? selectedFile.name : "اختر ملف PDF"}
               </Button>
-              <Button size="sm" onClick={handleUpload} disabled={uploading}>
-                {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : "رفع وإرسال إشعار"}
+              <Button size="sm" onClick={handleUpload} disabled={uploading || parsingPdf}>
+                {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : parsingPdf ? <><Loader2 className="w-4 h-4 animate-spin" /> جاري التحليل...</> : "رفع وإرسال إشعار"}
               </Button>
             </div>
           </div>
