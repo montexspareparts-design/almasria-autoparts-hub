@@ -76,6 +76,8 @@ const DealerDashboard = () => {
             invoicesCount={invoicesCount}
           />
         );
+      case "quotes":
+        return <DealerQuoteBuilder />;
       case "orders":
         return <DealerOrdersList userId={user!.id} />;
       case "notifications":

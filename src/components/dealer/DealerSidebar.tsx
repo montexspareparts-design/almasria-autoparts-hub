@@ -14,6 +14,7 @@ interface DealerSidebarProps {
 
 const tabs: { id: DealerTab; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "overview", label: "نظرة عامة", icon: LayoutDashboard },
+  { id: "quotes", label: "عروض الأسعار", icon: Search },
   { id: "orders", label: "الطلبات", icon: ShoppingCart },
   { id: "notifications", label: "الإشعارات", icon: Bell },
   { id: "offers", label: "العروض", icon: Tag },
