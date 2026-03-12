@@ -153,8 +153,11 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
   };
 
   const recordPriceView = async (productId: string) => {
-    await supabase.from("dealer_price_views").insert({ user_id: user!.id, product_id: productId });
-    setDailyViews(prev => prev + 1);
+    await supabase.from("dealer_price_views").upsert(
+      { user_id: user!.id, product_id: productId, view_date: new Date().toISOString().split("T")[0] },
+      { onConflict: "user_id,product_id,view_date" }
+    );
+    fetchDailyViews();
   };
 
   const addToQuote = async (product: Product) => {

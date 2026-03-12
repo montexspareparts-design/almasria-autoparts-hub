@@ -423,11 +423,12 @@ const CatalogsPage = () => {
           .eq("tier", tierValue);
         tierPrices = tp || [];
 
+        const today = new Date().toISOString().split("T")[0];
         for (const product of products!) {
-          await supabase.from("dealer_price_views").insert({
-            user_id: user!.id,
-            product_id: product.id,
-          });
+          await supabase.from("dealer_price_views").upsert(
+            { user_id: user!.id, product_id: product.id, view_date: today },
+            { onConflict: "user_id,product_id,view_date" }
+          );
         }
         setDailyLookups(prev => prev + foundIds.length);
       }
