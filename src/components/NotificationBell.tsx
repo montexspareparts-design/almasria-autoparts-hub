@@ -65,7 +65,7 @@ const getNotificationTarget = (n: Notification, isAdmin: boolean): { path: strin
 };
 
 const NotificationBell = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
