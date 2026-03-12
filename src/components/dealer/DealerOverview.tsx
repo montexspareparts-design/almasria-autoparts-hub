@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft } from "lucide-react";
 import DealerRecommendations from "./DealerRecommendations";
+import { requestPushPermission, isPushSubscribed } from "@/lib/pushNotifications";
 
 interface DealerAccount {
   id: string;
