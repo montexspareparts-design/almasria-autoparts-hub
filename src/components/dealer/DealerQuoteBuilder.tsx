@@ -553,7 +553,11 @@ const DealerQuoteBuilder = () => {
             </div>
           ) : (
             savedQuotes.map(q => (
-              <div key={q.id} className="bg-card border border-border rounded-lg p-3.5 flex items-center gap-3">
+              <div
+                key={q.id}
+                className="bg-card border border-border rounded-lg p-3.5 flex items-center gap-3 cursor-pointer hover:border-primary/30 hover:shadow-sm transition-all"
+                onClick={() => openSavedQuote(q)}
+              >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <p className="font-bold text-foreground text-sm">{q.quote_number}</p>
@@ -575,7 +579,7 @@ const DealerQuoteBuilder = () => {
                     variant="ghost"
                     size="icon"
                     className="w-8 h-8 text-primary hover:bg-primary/10"
-                    onClick={() => openSavedQuote(q)}
+                    onClick={(e) => { e.stopPropagation(); openSavedQuote(q); }}
                     disabled={loadingQuote}
                   >
                     {loadingQuote ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Edit3 className="w-3.5 h-3.5" />}
@@ -584,7 +588,7 @@ const DealerQuoteBuilder = () => {
                     variant="ghost"
                     size="icon"
                     className="w-8 h-8 text-destructive hover:bg-destructive/10"
-                    onClick={() => deleteQuote(q.id)}
+                    onClick={(e) => { e.stopPropagation(); deleteQuote(q.id); }}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </Button>
