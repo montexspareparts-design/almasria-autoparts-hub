@@ -16,9 +16,21 @@ const LOCKOUT_DURATION = 60_000; // 1 minute
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [authMethod, setAuthMethod] = useState<AuthMethod>("phone");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
+  const [authMethod, setAuthMethod] = useState<AuthMethod>(() => {
+    const saved = localStorage.getItem("remembered_auth");
+    if (saved) { try { return JSON.parse(saved).method || "phone"; } catch { return "phone"; } }
+    return "phone";
+  });
+  const [phone, setPhone] = useState(() => {
+    const saved = localStorage.getItem("remembered_auth");
+    if (saved) { try { return JSON.parse(saved).phone || ""; } catch { return ""; } }
+    return "";
+  });
+  const [email, setEmail] = useState(() => {
+    const saved = localStorage.getItem("remembered_auth");
+    if (saved) { try { return JSON.parse(saved).email || ""; } catch { return ""; } }
+    return "";
+  });
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [companyName, setCompanyName] = useState("");
