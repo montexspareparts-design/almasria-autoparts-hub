@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
     // Format Twilio sender number
     let formattedTwilioPhone = twilioPhone.replace(/\D/g, "");
     if (formattedTwilioPhone.startsWith("0")) {
-      formattedTwilioPhone = "+2" + formattedTwilioPhone;
+      formattedTwilioPhone = "+20" + formattedTwilioPhone.substring(1);
     } else if (!formattedTwilioPhone.startsWith("+")) {
       formattedTwilioPhone = "+" + formattedTwilioPhone;
     }
@@ -80,8 +80,11 @@ Deno.serve(async (req) => {
     // Send via Twilio (SMS or WhatsApp)
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
     
+    // For WhatsApp, use Twilio Sandbox number
+    const TWILIO_WHATSAPP_SANDBOX = "+14155238886";
+    
     const fromNumber = channel === "whatsapp" 
-      ? `whatsapp:${formattedTwilioPhone}` 
+      ? `whatsapp:${TWILIO_WHATSAPP_SANDBOX}` 
       : formattedTwilioPhone;
     const toNumber = channel === "whatsapp" 
       ? `whatsapp:${formattedPhone}` 
