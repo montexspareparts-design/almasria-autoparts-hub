@@ -10,6 +10,7 @@ import {
   MessageCircle, Inbox, PackageCheck, Trash2, Pencil, Save, X, Loader2,
   AlertTriangle
 } from "lucide-react";
+import PaymentInstructionsBanner from "@/components/PaymentInstructionsBanner";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import {
