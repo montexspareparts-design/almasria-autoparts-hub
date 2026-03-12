@@ -54,6 +54,14 @@ const statusMap: Record<string, { label_ar: string; label_en: string; color: str
   cancelled: { label_ar: "ملغى", label_en: "Cancelled", color: "bg-destructive/15 text-destructive border-destructive/30" },
 };
 
+const brandLabels: Record<string, string> = {
+  toyota_genuine: "تويوتا أصلي",
+  toyota_oils: "زيوت تويوتا",
+  mtx_aftermarket: "MTX",
+  denso: "DENSO",
+  aisin: "AISIN",
+};
+
 /* ─── Main Component ─── */
 
 const DealerHomePage = () => {
