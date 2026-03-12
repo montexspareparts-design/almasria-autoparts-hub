@@ -156,14 +156,9 @@ const AdminOrders = () => {
     cancelled: { title: "❌ تم إلغاء طلبك", message: "تم إلغاء طلبك. تواصل معنا لمزيد من التفاصيل" },
   };
 
-  const notifyCustomer = async (order: OrderWithItems, title: string, message: string) => {
-    await supabase.from("notifications").insert({
-      user_id: order.user_id,
-      title,
-      message: `${message} (رقم الطلب: ${order.order_number})`,
-      type: "order",
-    });
-
+  const notifyCustomerWhatsApp = async (order: OrderWithItems, title: string, message: string) => {
+    // In-app notification is handled automatically by DB trigger
+    // Here we only send WhatsApp notification
     const customerPhone = order.profile?.phone;
     if (customerPhone) {
       try {
