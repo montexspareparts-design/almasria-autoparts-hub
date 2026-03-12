@@ -113,14 +113,24 @@ const HeroSection = () => {
           fetchPriority="high"
         />
         <video
+          key={videoSrc}
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 pointer-events-none ${videoLoaded ? "opacity-100" : "opacity-0"}`}
-          autoPlay muted loop playsInline preload="metadata"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
           onLoadedData={() => setVideoLoaded(true)}
+          onCanPlay={(e) => {
+            const vid = e.currentTarget;
+            if (vid.paused) vid.play().catch(() => {});
+          }}
           webkit-playsinline="true"
           x-webkit-airplay="deny"
-        >
-          <source src={videoSrc} type="video/mp4" />
-        </video>
+          disablePictureInPicture
+          disableRemotePlayback
+          src={videoSrc}
+        />
       </motion.div>
 
       {/* Cinematic Overlays */}
