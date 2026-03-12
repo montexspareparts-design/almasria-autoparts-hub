@@ -290,6 +290,43 @@ const ProductDetailDialog = ({
               أضف للسلة
             </Button>
           )}
+
+          <Separator />
+
+          {/* Reviews */}
+          <ProductReviews productId={product.id} />
+
+          {/* Similar Products */}
+          {similarProducts.length > 0 && (
+            <>
+              <Separator />
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <h3 className="text-sm font-bold text-foreground">منتجات مشابهة</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {similarProducts.map((sp) => (
+                    <div key={sp.id} className="border border-border rounded-lg overflow-hidden bg-card hover:border-primary/30 transition-colors">
+                      <div className="aspect-square bg-white">
+                        {sp.image_url ? (
+                          <img src={sp.image_url} alt={sp.name_ar} className="w-full h-full object-contain p-2" loading="lazy" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Package className="w-6 h-6 text-muted-foreground/20" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-2">
+                        <p className="text-[10px] font-mono text-muted-foreground">{sp.sku}</p>
+                        <p className="text-xs font-bold text-foreground line-clamp-2 leading-relaxed">{sp.name_ar}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </div>
         </div>
       </DialogContent>
