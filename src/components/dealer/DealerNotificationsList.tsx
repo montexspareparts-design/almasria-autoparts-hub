@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bell, CheckCheck, Info, AlertTriangle, CheckCircle, Package } from "lucide-react";
+import { Bell, CheckCheck, Info, AlertTriangle, CheckCircle, Package, ThumbsUp, ThumbsDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
 
 interface Notification {
   id: string;
@@ -19,6 +20,7 @@ const typeIcons: Record<string, typeof Info> = {
   success: CheckCircle,
   warning: AlertTriangle,
   order: Package,
+  order_edit: AlertTriangle,
 };
 
 const typeColors: Record<string, string> = {
@@ -26,16 +28,28 @@ const typeColors: Record<string, string> = {
   success: "text-emerald-500 bg-emerald-500/10",
   warning: "text-amber-500 bg-amber-500/10",
   order: "text-primary bg-primary/10",
+  order_edit: "text-orange-500 bg-orange-500/10",
+};
+
+/** Extract order ID from order_edit notification message */
+const extractOrderId = (message: string): string | null => {
+  const match = message.match(/\[order_edit:([a-f0-9-]+)\]/);
+  return match ? match[1] : null;
+};
+
+/** Get display message without the embedded order ID tag */
+const getDisplayMessage = (message: string): string => {
+  return message.replace(/\[order_edit:[a-f0-9-]+\]\n?/, "");
 };
 
 const DealerNotificationsList = ({ userId }: { userId: string }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [respondingId, setRespondingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchNotifications();
 
-    // Realtime subscription for new notifications
     const channel = supabase
       .channel(`dealer-notifs-${userId}`)
       .on(
@@ -49,10 +63,7 @@ const DealerNotificationsList = ({ userId }: { userId: string }) => {
         (payload) => {
           const newNotif = payload.new as Notification;
           setNotifications((prev) => [newNotif, ...prev]);
-          // Show toast for new notification
-          import("@/hooks/use-toast").then(({ toast }) => {
-            toast({ title: newNotif.title, description: newNotif.message });
-          });
+          toast({ title: newNotif.title, description: getDisplayMessage(newNotif.message) });
         }
       )
       .subscribe();
@@ -83,6 +94,70 @@ const DealerNotificationsList = ({ userId }: { userId: string }) => {
   const markRead = async (id: string) => {
     await supabase.from("notifications").update({ is_read: true }).eq("id", id);
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
+  };
+
+  const handleOrderEditResponse = async (notifId: string, orderId: string, approved: boolean) => {
+    setRespondingId(notifId);
+    try {
+      if (approved) {
+        // Approve: set order back to confirmed
+        await supabase.from("orders").update({ status: "confirmed" }).eq("id", orderId);
+      } else {
+        // Reject: revert is complex, mark as cancelled or pending
+        await supabase.from("orders").update({ status: "cancelled" }).eq("id", orderId);
+      }
+
+      // Update the notification to mark as responded
+      const responseLabel = approved ? "✅ تمت الموافقة" : "❌ تم الرفض";
+      await supabase.from("notifications").update({
+        is_read: true,
+        type: approved ? "success" : "warning",
+        title: approved ? "✅ وافقت على تعديل الطلب" : "❌ رفضت تعديل الطلب",
+      }).eq("id", notifId);
+
+      // Notify admins about the customer's decision
+      const { data: order } = await supabase
+        .from("orders")
+        .select("order_number")
+        .eq("id", orderId)
+        .maybeSingle();
+
+      const { data: adminRoles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "admin" as any);
+
+      if (adminRoles && order) {
+        const adminNotifs = adminRoles.map(admin => ({
+          user_id: admin.user_id,
+          title: approved
+            ? `✅ العميل وافق على تعديل الطلب ${order.order_number}`
+            : `❌ العميل رفض تعديل الطلب ${order.order_number}`,
+          message: approved
+            ? `وافق العميل على التعديلات وسيتم متابعة الطلب رقم ${order.order_number}`
+            : `رفض العميل التعديلات على الطلب رقم ${order.order_number}. يرجى التواصل معه.`,
+          type: approved ? "success" : "warning",
+        }));
+        await supabase.from("notifications").insert(adminNotifs);
+      }
+
+      // Update local state
+      setNotifications(prev => prev.map(n => 
+        n.id === notifId 
+          ? { ...n, is_read: true, type: approved ? "success" : "warning", title: approved ? "✅ وافقت على تعديل الطلب" : "❌ رفضت تعديل الطلب" }
+          : n
+      ));
+
+      toast({
+        title: approved ? "تمت الموافقة على التعديلات ✅" : "تم رفض التعديلات ❌",
+        description: approved ? "سيتم متابعة طلبك بالتعديلات الجديدة" : "تم إلغاء الطلب. تواصل مع الإدارة لمزيد من التفاصيل",
+      });
+    } catch (err) {
+      console.error("Error responding to order edit:", err);
+      toast({ title: "حدث خطأ", variant: "destructive" });
+    } finally {
+      setRespondingId(null);
+    }
   };
 
   if (loading) {
@@ -121,16 +196,21 @@ const DealerNotificationsList = ({ userId }: { userId: string }) => {
           {notifications.map((n) => {
             const Icon = typeIcons[n.type] || Info;
             const colorClass = typeColors[n.type] || typeColors.info;
+            const isOrderEdit = n.type === "order_edit";
+            const orderId = isOrderEdit ? extractOrderId(n.message) : null;
+            const displayMessage = getDisplayMessage(n.message);
 
             return (
-              <button
+              <div
                 key={n.id}
-                onClick={() => !n.is_read && markRead(n.id)}
+                onClick={() => !n.is_read && !isOrderEdit && markRead(n.id)}
                 className={cn(
                   "w-full text-right rounded-lg border p-3.5 transition-all",
-                  n.is_read
-                    ? "bg-background border-border/50 opacity-70"
-                    : "bg-card border-primary/20 shadow-sm"
+                  isOrderEdit && !n.is_read
+                    ? "bg-orange-50 dark:bg-orange-950/20 border-orange-300 dark:border-orange-700 shadow-md"
+                    : n.is_read
+                      ? "bg-background border-border/50 opacity-70"
+                      : "bg-card border-primary/20 shadow-sm cursor-pointer"
                 )}
               >
                 <div className="flex items-start gap-3">
@@ -142,13 +222,54 @@ const DealerNotificationsList = ({ userId }: { userId: string }) => {
                       <p className="text-sm font-semibold text-foreground">{n.title}</p>
                       {!n.is_read && <span className="w-2 h-2 rounded-full bg-primary shrink-0" />}
                     </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{n.message}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">
+                      {displayMessage}
+                    </p>
                     <p className="text-[10px] text-muted-foreground/60 mt-1.5">
                       {new Date(n.created_at).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                     </p>
+
+                    {/* Approve / Reject buttons for order_edit */}
+                    {isOrderEdit && orderId && !n.is_read && (
+                      <div className="flex gap-2 mt-3">
+                        <Button
+                          size="sm"
+                          className="flex-1 gap-1.5 h-10 font-bold text-sm"
+                          disabled={respondingId === n.id}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOrderEditResponse(n.id, orderId, true);
+                          }}
+                        >
+                          {respondingId === n.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <ThumbsUp className="w-4 h-4" />
+                          )}
+                          موافق على التعديلات
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="flex-1 gap-1.5 h-10 font-bold text-sm"
+                          disabled={respondingId === n.id}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOrderEditResponse(n.id, orderId, false);
+                          }}
+                        >
+                          {respondingId === n.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <ThumbsDown className="w-4 h-4" />
+                          )}
+                          رفض التعديلات
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </button>
+              </div>
             );
           })}
         </div>

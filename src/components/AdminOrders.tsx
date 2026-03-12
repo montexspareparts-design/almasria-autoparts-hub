@@ -25,6 +25,7 @@ interface OrderWithItems extends Order {
 const statusConfig: Record<string, { label: string; color: string; bg: string; icon: typeof Clock }> = {
   pending: { label: "قيد الانتظار", color: "text-yellow-500", bg: "bg-yellow-500/10", icon: Clock },
   confirmed: { label: "تم التأكيد", color: "text-blue-500", bg: "bg-blue-500/10", icon: CheckCircle },
+  pending_approval: { label: "بانتظار موافقة العميل", color: "text-orange-500", bg: "bg-orange-500/10", icon: Clock },
   processing: { label: "جاري التجهيز", color: "text-orange-500", bg: "bg-orange-500/10", icon: Package },
   shipped: { label: "تم الشحن", color: "text-purple-500", bg: "bg-purple-500/10", icon: Truck },
   delivered: { label: "تم التسليم", color: "text-green-500", bg: "bg-green-500/10", icon: CheckCircle },
@@ -221,7 +222,6 @@ const AdminOrders = () => {
       const originalItems = order.items || [];
       const changeLines: string[] = [];
 
-      // Detect removed items
       for (const orig of originalItems) {
         const still = items.find(i => i.id === orig.id);
         if (!still) {
@@ -229,7 +229,6 @@ const AdminOrders = () => {
         }
       }
 
-      // Detect quantity changes
       for (const item of items) {
         const orig = originalItems.find(i => i.id === item.id);
         if (orig && orig.quantity !== item.quantity) {
@@ -237,13 +236,12 @@ const AdminOrders = () => {
         }
       }
 
-      // Build the items summary
       const itemsSummary = items.map(i => 
         `• ${i.product?.name_ar || ""} (${i.product?.sku || ""}) — الكمية: ${i.quantity} — ${i.total_price.toLocaleString("ar-EG")} ج.م`
       ).join("\n");
 
       const detailedMessage = [
-        "تم تعديل طلبك. التفاصيل المحدثة:",
+        "تم تعديل طلبك وبانتظار موافقتك. التفاصيل المحدثة:",
         "",
         ...(changeLines.length > 0 ? ["التغييرات:", ...changeLines, ""] : []),
         "الأصناف الحالية:",
@@ -252,7 +250,34 @@ const AdminOrders = () => {
         `💰 الإجمالي الجديد: ${newTotal.toLocaleString("ar-EG")} ج.م`,
       ].join("\n");
 
-      await notifyCustomer(order, "📝 تم تعديل طلبك", detailedMessage);
+      // Send order_edit notification with order_id embedded
+      await supabase.from("notifications").insert({
+        user_id: order.user_id,
+        title: "📝 تم تعديل طلبك — يرجى الموافقة أو الرفض",
+        message: `[order_edit:${order.id}]\n${detailedMessage}`,
+        type: "order_edit",
+      });
+
+      // Update order status to pending_approval
+      await supabase.from("orders").update({ status: "pending_approval" }).eq("id", orderId);
+
+      // WhatsApp notification
+      const customerPhone = order.profile?.phone;
+      if (customerPhone) {
+        try {
+          await supabase.functions.invoke("notify-order-whatsapp", {
+            body: {
+              orderNumber: order.order_number,
+              newStatus: "pending_approval",
+              customerPhone,
+              customerName: order.profile?.full_name || "",
+              customMessage: `📝 تم تعديل طلبك رقم ${order.order_number}\n${detailedMessage}\n\nيرجى الدخول على حسابك للموافقة أو الرفض.`,
+            },
+          });
+        } catch (err) {
+          console.error("WhatsApp notification failed:", err);
+        }
+      }
     }
 
     toast({ title: "تم حفظ التعديلات وإبلاغ العميل ✓" });

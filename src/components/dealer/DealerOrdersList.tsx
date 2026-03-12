@@ -47,6 +47,7 @@ interface OrderItem {
 const orderStages = [
   { key: "pending", label: "تم استلام الطلب", icon: Inbox },
   { key: "confirmed", label: "قيد المراجعة", icon: Clock },
+  { key: "pending_approval", label: "بانتظار موافقتك", icon: AlertTriangle },
   { key: "processing", label: "جاري التجهيز", icon: Package },
   { key: "ready", label: "جاهز للاستلام", icon: PackageCheck },
   { key: "delivered", label: "تم التسليم", icon: CheckCircle },
@@ -61,6 +62,7 @@ const stageIndex = (status: string) => {
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   pending: { label: "تم استلام الطلب", variant: "secondary" },
   confirmed: { label: "قيد المراجعة", variant: "default" },
+  pending_approval: { label: "بانتظار موافقتك", variant: "outline" },
   processing: { label: "جاري التجهيز", variant: "default" },
   ready: { label: "جاهز للاستلام", variant: "default" },
   delivered: { label: "تم التسليم", variant: "default" },
