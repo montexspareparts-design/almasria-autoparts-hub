@@ -57,10 +57,9 @@ const orderStages = [
   { key: "delivered", label: "تم التسليم", icon: CheckCircle },
 ];
 
-const getVisibleStages = (paymentMethod?: string | null) => {
-  if (isElectronicPayment(paymentMethod)) return orderStages;
-  // For COD/non-electronic, skip "بانتظار الدفع"
-  return orderStages.filter(s => s.key !== "awaiting_payment");
+const getVisibleStages = (_paymentMethod?: string | null) => {
+  // Always show awaiting_payment stage since admin routes all orders through it
+  return orderStages;
 };
 
 const stageIndex = (status: string, paymentMethod?: string | null) => {
