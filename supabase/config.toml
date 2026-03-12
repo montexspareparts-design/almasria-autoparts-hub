@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.verify-product-images]
 verify_jwt = false
+
+[functions.parse-price-list-pdf]
+verify_jwt = false
