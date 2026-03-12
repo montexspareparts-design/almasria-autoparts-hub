@@ -77,7 +77,7 @@ export const generateQuotePdf = async (data: QuoteData) => {
   doc.setTextColor(255, 255, 255);
   doc.text("Price Quotation", pageWidth / 2, 52, { align: "center" });
 
-  y = 62;
+  y = 67;
 
   // ─── Quote Info ───
   doc.setTextColor(60, 60, 60);
