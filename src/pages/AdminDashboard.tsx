@@ -412,13 +412,13 @@ const AdminDashboard = () => {
     }
   };
 
-  const currentSection = sidebarSections.find(s => s.id === activeSection);
+  const currentSection = allSections.find(s => s.id === activeSection);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="bg-secondary border-b border-primary/20 sticky top-0 z-50">
-        <div className="flex items-center justify-between h-14 px-4">
+      <header className="bg-secondary border-b border-border sticky top-0 z-50">
+        <div className="flex items-center justify-between h-14 px-4 lg:px-6">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
@@ -428,18 +428,27 @@ const AdminDashboard = () => {
             >
               {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </Button>
-            <a href="/" className="text-lg font-bold text-secondary-foreground">
+            <Link to="/" className="text-lg font-bold text-secondary-foreground">
               المصرية <span className="text-gradient-red">جروب</span>
-            </a>
-            <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded">إدارة</span>
+            </Link>
+            <span className="text-[10px] font-bold uppercase tracking-wider bg-primary text-primary-foreground px-2.5 py-1 rounded-md">
+              لوحة التحكم
+            </span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {pendingCount > 0 && (
-              <span className="text-xs bg-yellow-500/20 text-yellow-600 px-2 py-1 rounded-full font-medium">
+              <button
+                onClick={() => setActiveSection("dealers")}
+                className="flex items-center gap-1.5 text-xs bg-yellow-500/15 text-yellow-600 dark:text-yellow-400 px-3 py-1.5 rounded-full font-medium hover:bg-yellow-500/25 transition-colors"
+              >
+                <Clock className="w-3.5 h-3.5" />
                 {pendingCount} طلب جديد
-              </span>
+              </button>
             )}
-            <Button variant="ghost" size="sm" onClick={() => { signOut(); navigate("/"); }} className="text-secondary-foreground/60">
+            <Link to="/" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+              الموقع الرئيسي
+            </Link>
+            <Button variant="ghost" size="icon" onClick={() => { signOut(); navigate("/"); }} className="text-muted-foreground hover:text-foreground h-8 w-8">
               <LogOut className="w-4 h-4" />
             </Button>
           </div>
@@ -452,14 +461,13 @@ const AdminDashboard = () => {
           className={`
             ${sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"}
             fixed lg:static inset-y-0 right-0 top-14 z-40
-            w-64 lg:w-56 xl:w-64
+            w-72 lg:w-60 xl:w-72
             bg-card border-l border-border
             transition-transform duration-200 ease-in-out
             overflow-y-auto
             lg:translate-x-0
           `}
         >
-          {/* Mobile overlay */}
           {sidebarOpen && (
             <div
               className="fixed inset-0 bg-black/40 z-[-1] lg:hidden"
@@ -467,46 +475,68 @@ const AdminDashboard = () => {
             />
           )}
 
-          <nav className="p-3 space-y-1">
-            {sidebarSections.map((section) => {
-              const Icon = section.icon;
-              const isActive = activeSection === section.id;
-              return (
-                <button
-                  key={section.id}
-                  onClick={() => {
-                    setActiveSection(section.id);
-                    setSidebarOpen(false);
-                  }}
-                  className={`
-                    w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all
-                    ${isActive
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                    }
-                  `}
-                >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span className="truncate">{section.label}</span>
-                  {section.id === "dealers" && pendingCount > 0 && !isActive && (
-                    <span className="mr-auto text-[10px] bg-yellow-500 text-white rounded-full w-5 h-5 flex items-center justify-center">
-                      {pendingCount}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+          <nav className="p-3 space-y-5">
+            {sidebarSections.map((group) => (
+              <div key={group.group}>
+                <p className="text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider px-3 mb-2">
+                  {group.group}
+                </p>
+                <div className="space-y-0.5">
+                  {group.items.map((section) => {
+                    const Icon = section.icon;
+                    const isActive = activeSection === section.id;
+                    return (
+                      <button
+                        key={section.id}
+                        onClick={() => {
+                          setActiveSection(section.id);
+                          setSidebarOpen(false);
+                        }}
+                        className={`
+                          w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all
+                          ${isActive
+                            ? "bg-primary text-primary-foreground shadow-sm font-semibold"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                          }
+                        `}
+                      >
+                        <Icon className="w-4 h-4 shrink-0" />
+                        <div className="flex flex-col items-start text-right min-w-0">
+                          <span className="truncate text-sm">{section.label}</span>
+                          {!isActive && (
+                            <span className="text-[10px] text-muted-foreground/60 truncate">{section.description}</span>
+                          )}
+                        </div>
+                        {section.hasBadge && pendingCount > 0 && !isActive && (
+                          <span className="mr-auto text-[10px] bg-yellow-500 text-white rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                            {pendingCount}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
         </aside>
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
-          <div className="p-4 lg:p-6 max-w-5xl">
-            {/* Breadcrumb */}
-            <div className="flex items-center gap-2 mb-6">
-              <span className="text-sm text-muted-foreground">لوحة التحكم</span>
-              <ChevronRight className="w-3 h-3 text-muted-foreground rotate-180" />
-              <span className="text-sm font-medium text-foreground">{currentSection?.label}</span>
+          <div className="p-4 lg:p-6 xl:p-8 max-w-6xl">
+            {/* Page Title */}
+            <div className="flex items-center gap-3 mb-6">
+              {currentSection && (
+                <>
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <currentSection.icon className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h1 className="text-xl font-bold text-foreground">{currentSection.label}</h1>
+                    <p className="text-xs text-muted-foreground">{currentSection.description}</p>
+                  </div>
+                </>
+              )}
             </div>
 
             {renderActiveSection()}
