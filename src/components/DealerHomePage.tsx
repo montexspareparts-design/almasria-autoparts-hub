@@ -223,7 +223,7 @@ const QuickActionsGrid = ({ isRTL }: { isRTL: boolean }) => {
     { icon: ShoppingCart, label: isRTL ? "اطلب قطع غيار" : "Order Parts", href: "/dealer?tab=quotes", bg: "bg-primary/10", iconColor: "text-primary" },
     { icon: LayoutDashboard, label: isRTL ? "لوحة التحكم" : "Dashboard", href: "/dealer", bg: "bg-blue-500/10", iconColor: "text-blue-600" },
     { icon: ClipboardList, label: isRTL ? "طلباتي" : "My Orders", href: "/dealer?tab=orders", bg: "bg-emerald-500/10", iconColor: "text-emerald-600" },
-    { icon: FileText, label: isRTL ? "كشوفات الأسعار" : "Price Lists", href: "/dealer?tab=prices", bg: "bg-amber-500/10", iconColor: "text-amber-600" },
+    { icon: FileText, label: isRTL ? "كشوفات الأسعار" : "Price Lists", href: "/dealer?tab=price_lists", bg: "bg-amber-500/10", iconColor: "text-amber-600" },
   ];
 
   return (
