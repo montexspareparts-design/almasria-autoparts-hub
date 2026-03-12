@@ -66,13 +66,25 @@ const DealerQuoteBuilder = () => {
   const [editingQuoteNumber, setEditingQuoteNumber] = useState("");
   const [loadingQuote, setLoadingQuote] = useState(false);
   const [isFromPriceList, setIsFromPriceList] = useState(false);
+  const [dealerInfo, setDealerInfo] = useState<{ name: string; phone: string } | null>(null);
 
   useEffect(() => {
     if (user) {
       fetchDailyViews();
       fetchSavedQuotes();
+      fetchDealerInfo();
     }
   }, [user]);
+
+  const fetchDealerInfo = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("dealer_applications")
+      .select("business_name, phone")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (data) setDealerInfo({ name: data.business_name, phone: data.phone });
+  };
 
   const fetchDailyViews = async () => {
     const { data } = await supabase.rpc("get_daily_view_count", { _user_id: user!.id });
@@ -256,20 +268,24 @@ const DealerQuoteBuilder = () => {
     setSaving(false);
   };
 
+  const buildQuoteData = () => ({
+    quoteNumber: editingQuoteNumber || `Q-${Date.now().toString(36).toUpperCase()}`,
+    date: new Date().toLocaleDateString("ar-EG"),
+    notes: notes || undefined,
+    dealerName: dealerInfo?.name,
+    dealerPhone: dealerInfo?.phone,
+    items: quoteItems.map(i => ({
+      name: i.product.name_ar,
+      sku: i.product.sku,
+      quantity: i.quantity,
+      unitPrice: i.unit_price,
+      totalPrice: i.unit_price * i.quantity,
+    })),
+    totalAmount,
+  });
+
   const downloadPDF = () => {
-    generateQuotePdf({
-      quoteNumber: editingQuoteNumber || `Q-${Date.now().toString(36).toUpperCase()}`,
-      date: new Date().toLocaleDateString("ar-EG"),
-      notes: notes || undefined,
-      items: quoteItems.map(i => ({
-        name: i.product.name_ar,
-        sku: i.product.sku,
-        quantity: i.quantity,
-        unitPrice: i.unit_price,
-        totalPrice: i.unit_price * i.quantity,
-      })),
-      totalAmount,
-    });
+    generateQuotePdf(buildQuoteData());
   };
 
   const openSavedQuote = async (quote: SavedQuote) => {
@@ -509,13 +525,7 @@ const DealerQuoteBuilder = () => {
               <Button
                 variant="outline"
                 className="h-10 border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/10"
-                onClick={() => shareQuoteWhatsApp({
-                  quoteNumber: editingQuoteNumber || `Q-${Date.now().toString(36).toUpperCase()}`,
-                  date: new Date().toLocaleDateString("ar-EG"),
-                  notes: notes || undefined,
-                  items: quoteItems.map(i => ({ name: i.product.name_ar, sku: i.product.sku, quantity: i.quantity, unitPrice: i.unit_price, totalPrice: i.unit_price * i.quantity })),
-                  totalAmount,
-                })}
+                onClick={() => shareQuoteWhatsApp(buildQuoteData())}
               >
                 <MessageCircle className="w-4 h-4 ml-1.5" />
                 واتساب
@@ -523,13 +533,7 @@ const DealerQuoteBuilder = () => {
               <Button
                 variant="outline"
                 className="h-10 border-blue-400/30 text-blue-600 hover:bg-blue-500/10"
-                onClick={() => shareQuoteEmail({
-                  quoteNumber: editingQuoteNumber || `Q-${Date.now().toString(36).toUpperCase()}`,
-                  date: new Date().toLocaleDateString("ar-EG"),
-                  notes: notes || undefined,
-                  items: quoteItems.map(i => ({ name: i.product.name_ar, sku: i.product.sku, quantity: i.quantity, unitPrice: i.unit_price, totalPrice: i.unit_price * i.quantity })),
-                  totalAmount,
-                })}
+                onClick={() => shareQuoteEmail(buildQuoteData())}
               >
                 <Mail className="w-4 h-4 ml-1.5" />
                 إيميل

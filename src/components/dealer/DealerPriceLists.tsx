@@ -60,6 +60,7 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
   const [tierPrices, setTierPrices] = useState<Record<string, number>>({});
   const [priceListPrices, setPriceListPrices] = useState<Record<string, number | null>>({});
   const [savingQuote, setSavingQuote] = useState(false);
+  const [dealerInfo, setDealerInfo] = useState<{ name: string; phone: string } | null>(null);
 
   // Quote summary state
   const [createdQuote, setCreatedQuote] = useState<{
@@ -72,8 +73,21 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
 
   useEffect(() => {
     fetchLists();
-    if (user) fetchDailyViews();
+    if (user) {
+      fetchDailyViews();
+      fetchDealerInfo();
+    }
   }, []);
+
+  const fetchDealerInfo = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("dealer_applications")
+      .select("business_name, phone")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (data) setDealerInfo({ name: data.business_name, phone: data.phone });
+  };
 
   const fetchLists = async () => {
     const { data } = await supabase
@@ -304,6 +318,8 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
       quoteNumber,
       date: new Date().toLocaleDateString("ar-EG"),
       priceListTitle: viewingList?.title || undefined,
+      dealerName: dealerInfo?.name,
+      dealerPhone: dealerInfo?.phone,
       items: items.map(i => ({
         name: i.product.name_ar,
         sku: i.product.sku,
@@ -343,8 +359,7 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
       ) as any,
     });
 
-    // Also auto-download PDF
-    generateQuotePdf(quoteShareData);
+    // No auto-download — user clicks the PDF button in toast or summary
 
     setSelectedProducts([]);
     setSavingQuote(false);
@@ -356,6 +371,8 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
       quoteNumber: createdQuote.quoteNumber,
       date: createdQuote.createdAt.toLocaleDateString("ar-EG"),
       priceListTitle: createdQuote.priceListTitle || undefined,
+      dealerName: dealerInfo?.name,
+      dealerPhone: dealerInfo?.phone,
       items: createdQuote.items.map(i => ({
         name: i.product.name_ar,
         sku: i.product.sku,
