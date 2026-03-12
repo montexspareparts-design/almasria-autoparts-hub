@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Upload, X, Package, Loader2, ImageIcon, Wand2, ExternalLink, Check } from "lucide-react";
+import { Search, Upload, X, Package, Loader2, ImageIcon, Wand2, ExternalLink, Check, Copy } from "lucide-react";
 
 const AdminProductImages = () => {
   const { toast } = useToast();
