@@ -1,0 +1,1 @@
+ALTER TABLE public.dealer_accounts ADD COLUMN active_session_id text DEFAULT NULL;

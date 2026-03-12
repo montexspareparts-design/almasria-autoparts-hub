@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useRef, useCallback, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface DealerAccount {
   id: string;
@@ -32,12 +33,68 @@ const AuthContext = createContext<AuthContextType>({
 
 export const useAuth = () => useContext(AuthContext);
 
+const SESSION_KEY = "dealer_session_id";
+
+function generateSessionId() {
+  return crypto.randomUUID();
+}
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [dealerAccount, setDealerAccount] = useState<DealerAccount | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const sessionCheckRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { toast } = useToast();
+
+  const clearSessionCheck = useCallback(() => {
+    if (sessionCheckRef.current) {
+      clearInterval(sessionCheckRef.current);
+      sessionCheckRef.current = null;
+    }
+  }, []);
+
+  // Register this device's session for a dealer
+  const registerDealerSession = useCallback(async (dealerId: string) => {
+    const sessionId = generateSessionId();
+    localStorage.setItem(SESSION_KEY, sessionId);
+
+    await supabase
+      .from("dealer_accounts")
+      .update({ active_session_id: sessionId } as any)
+      .eq("id", dealerId);
+
+    return sessionId;
+  }, []);
+
+  // Check if current session is still valid
+  const startSessionMonitor = useCallback((dealerId: string) => {
+    clearSessionCheck();
+
+    sessionCheckRef.current = setInterval(async () => {
+      const localSessionId = localStorage.getItem(SESSION_KEY);
+      if (!localSessionId) return;
+
+      const { data } = await supabase
+        .from("dealer_accounts")
+        .select("active_session_id")
+        .eq("id", dealerId)
+        .maybeSingle();
+
+      if (data && (data as any).active_session_id && (data as any).active_session_id !== localSessionId) {
+        // Another device logged in — force logout
+        clearSessionCheck();
+        localStorage.removeItem(SESSION_KEY);
+        toast({
+          title: "تم تسجيل الدخول من جهاز آخر",
+          description: "تم تسجيل خروجك تلقائياً لأن حسابك مفتوح على جهاز آخر.",
+          variant: "destructive",
+        });
+        await supabase.auth.signOut();
+      }
+    }, 10000); // Check every 10 seconds
+  }, [clearSessionCheck, toast]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -46,7 +103,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Fetch dealer account
           setTimeout(async () => {
             const { data: dealer } = await supabase
               .from("dealer_accounts")
@@ -55,6 +111,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               .eq("is_active", true)
               .maybeSingle();
             setDealerAccount(dealer);
+
+            // If dealer, register session and start monitoring
+            if (dealer) {
+              await registerDealerSession(dealer.id);
+              startSessionMonitor(dealer.id);
+            }
 
             // Check admin role
             const { data: roles } = await supabase
@@ -66,6 +128,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } else {
           setDealerAccount(null);
           setIsAdmin(false);
+          clearSessionCheck();
+          localStorage.removeItem(SESSION_KEY);
         }
 
         setLoading(false);
@@ -76,10 +140,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!session) setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      clearSessionCheck();
+    };
   }, []);
 
   const signOut = async () => {
+    clearSessionCheck();
+    localStorage.removeItem(SESSION_KEY);
     await supabase.auth.signOut();
     setDealerAccount(null);
     setIsAdmin(false);
