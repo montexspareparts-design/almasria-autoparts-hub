@@ -437,8 +437,6 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
                         </div>
                       </div>
                     )}
-                      />
-                    )}
 
                     {order.shipping_governorate && (
                       <p className="text-xs text-muted-foreground">📍 {order.shipping_governorate} — {order.shipping_address}</p>
