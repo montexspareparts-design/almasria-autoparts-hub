@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,6 +49,8 @@ const AdminOrders = () => {
   const [adminNotes, setAdminNotes] = useState<Record<string, string>>({});
   const [editingOrder, setEditingOrder] = useState<string | null>(null);
   const [editedItems, setEditedItems] = useState<Record<string, { id: string; quantity: number; unit_price: number; total_price: number; product_id: string; product?: any }[]>>({});
+  const [autoExpandFirst, setAutoExpandFirst] = useState(false);
+  const ordersListRef = useRef<HTMLDivElement>(null);
 
   // Stats fetched once
   const [stats, setStats] = useState({ total: 0, pending: 0, processing: 0, shipped: 0, delivered: 0, totalRevenue: 0 });
@@ -119,7 +121,17 @@ const AdminOrders = () => {
     setOrders(enriched);
     setTotalCount(count || 0);
     setLoading(false);
-  }, [page, filterStatus, searchQuery]);
+
+    // Auto-expand first order if triggered by stat card click
+    if (autoExpandFirst && enriched.length > 0) {
+      setExpandedOrder(enriched[0].id);
+      setAutoExpandFirst(false);
+      // Scroll to orders list
+      setTimeout(() => {
+        ordersListRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    }
+  }, [page, filterStatus, searchQuery, autoExpandFirst]);
 
 
 
@@ -127,6 +139,12 @@ const AdminOrders = () => {
   useEffect(() => { fetchStats(); }, [fetchStats]);
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
   useEffect(() => { setPage(0); }, [filterStatus, searchQuery]);
+
+  const handleStatClick = (status: string) => {
+    setFilterStatus(status);
+    setPage(0);
+    setAutoExpandFirst(true);
+  };
 
   const statusNotificationMessages: Record<string, { title: string; message: string }> = {
     confirmed: { title: "✅ تم تأكيد طلبك", message: "تم تأكيد طلبك وسيتم تجهيزه قريباً" },
@@ -341,23 +359,38 @@ const AdminOrders = () => {
         <CardContent>
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-            <div className="bg-muted/50 rounded-lg p-3 text-center">
+            <div
+              className={`rounded-lg p-3 text-center cursor-pointer transition-all hover:ring-2 hover:ring-primary/30 ${filterStatus === "all" ? "ring-2 ring-primary bg-muted" : "bg-muted/50"}`}
+              onClick={() => handleStatClick("all")}
+            >
               <p className="text-2xl font-bold text-foreground">{stats.total}</p>
               <p className="text-xs text-muted-foreground">إجمالي</p>
             </div>
-            <div className="bg-yellow-500/10 rounded-lg p-3 text-center">
+            <div
+              className={`rounded-lg p-3 text-center cursor-pointer transition-all hover:ring-2 hover:ring-yellow-400/50 ${filterStatus === "pending" ? "ring-2 ring-yellow-500" : "bg-yellow-500/10"}`}
+              onClick={() => handleStatClick("pending")}
+            >
               <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
               <p className="text-xs text-muted-foreground">قيد الانتظار</p>
             </div>
-            <div className="bg-orange-500/10 rounded-lg p-3 text-center">
+            <div
+              className={`rounded-lg p-3 text-center cursor-pointer transition-all hover:ring-2 hover:ring-orange-400/50 ${filterStatus === "processing" ? "ring-2 ring-orange-500" : "bg-orange-500/10"}`}
+              onClick={() => { setFilterStatus("confirmed"); setPage(0); setAutoExpandFirst(true); }}
+            >
               <p className="text-2xl font-bold text-orange-600">{stats.processing}</p>
               <p className="text-xs text-muted-foreground">جاري التجهيز</p>
             </div>
-            <div className="bg-purple-500/10 rounded-lg p-3 text-center">
+            <div
+              className={`rounded-lg p-3 text-center cursor-pointer transition-all hover:ring-2 hover:ring-purple-400/50 ${filterStatus === "shipped" ? "ring-2 ring-purple-500" : "bg-purple-500/10"}`}
+              onClick={() => handleStatClick("shipped")}
+            >
               <p className="text-2xl font-bold text-purple-600">{stats.shipped}</p>
               <p className="text-xs text-muted-foreground">تم الشحن</p>
             </div>
-            <div className="bg-green-500/10 rounded-lg p-3 text-center">
+            <div
+              className={`rounded-lg p-3 text-center cursor-pointer transition-all hover:ring-2 hover:ring-green-400/50 ${filterStatus === "delivered" ? "ring-2 ring-green-500" : "bg-green-500/10"}`}
+              onClick={() => handleStatClick("delivered")}
+            >
               <p className="text-2xl font-bold text-green-600">{stats.delivered}</p>
               <p className="text-xs text-muted-foreground">تم التسليم</p>
             </div>
@@ -396,6 +429,7 @@ const AdminOrders = () => {
           </div>
 
           {/* Orders List */}
+          <div ref={ordersListRef}></div>
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-6 h-6 animate-spin text-primary" />
