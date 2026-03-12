@@ -1,20 +1,15 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { TrendingUp, Plus, Loader2 } from "lucide-react";
+import { TrendingUp, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useCart } from "@/contexts/CartContext";
-import { toast } from "@/hooks/use-toast";
 
 interface PopularProduct {
   id: string;
   name_ar: string;
   sku: string;
   image_url: string | null;
-  base_price: number;
   brand: string;
-  min_order_qty: number;
-  stock_quantity: number;
 }
 
 const brandLabels: Record<string, string> = {
@@ -25,10 +20,9 @@ const brandLabels: Record<string, string> = {
   aisin: "AISIN",
 };
 
-const DealerRecommendations = ({ userId, tier }: { userId: string; tier?: string }) => {
+const DealerRecommendations = ({ userId, tier, onNavigateToQuotes }: { userId: string; tier?: string; onNavigateToQuotes?: () => void }) => {
   const [products, setProducts] = useState<PopularProduct[]>([]);
   const [loading, setLoading] = useState(true);
-  const { addItem } = useCart();
 
   useEffect(() => {
     fetchPopular();
@@ -38,36 +32,24 @@ const DealerRecommendations = ({ userId, tier }: { userId: string; tier?: string
     try {
       const { data } = await supabase
         .from("products")
-        .select("id, name_ar, sku, image_url, base_price, brand, min_order_qty, stock_quantity")
+        .select("id, name_ar, sku, image_url, brand, stock_quantity")
         .eq("is_active", true)
         .gt("stock_quantity", 20)
         .order("stock_quantity", { ascending: false })
         .limit(8);
 
-      setProducts((data || []).sort(() => Math.random() - 0.5));
+      setProducts((data || []).sort(() => Math.random() - 0.5).map(p => ({
+        id: p.id,
+        name_ar: p.name_ar,
+        sku: p.sku,
+        image_url: p.image_url,
+        brand: p.brand as string,
+      })));
     } catch (err) {
       console.error("Failed to fetch popular products:", err);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleAddToCart = (product: PopularProduct) => {
-    addItem({
-      id: product.id,
-      name_ar: product.name_ar,
-      sku: product.sku,
-      image_url: product.image_url,
-      unit_price: product.base_price,
-      quantity: 1,
-      stock_quantity: product.stock_quantity,
-      min_order_qty: product.min_order_qty,
-      brand: product.brand,
-    });
-    toast({
-      title: "تمت الإضافة",
-      description: `${product.name_ar} أُضيف للسلة`,
-    });
   };
 
   if (loading) {
@@ -119,19 +101,15 @@ const DealerRecommendations = ({ userId, tier }: { userId: string; tier?: string
                 {p.name_ar}
               </p>
               <p className="text-[10px] text-muted-foreground font-mono mb-2">{p.sku}</p>
-              <div className="flex items-center justify-between gap-1">
-                <span className="text-xs font-bold text-foreground">
-                  {p.base_price.toLocaleString("ar-EG")} ج.م
-                </span>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="w-7 h-7 hover:bg-primary/10"
-                  onClick={() => handleAddToCart(p)}
-                >
-                  <Plus className="w-3.5 h-3.5 text-primary" />
-                </Button>
-              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full h-7 text-[10px] gap-1 text-primary border-primary/30 hover:bg-primary/5"
+                onClick={() => onNavigateToQuotes?.()}
+              >
+                <Search className="w-3 h-3" />
+                طلب عرض سعر
+              </Button>
             </div>
           </div>
         ))}
