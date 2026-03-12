@@ -27,30 +27,25 @@ const tierLabels: Record<string, string> = {
 
 const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, unreadCount }: DealerSidebarProps) => {
 
-  const renderItem = (id: DealerTab, label: string, Icon: typeof LayoutDashboard, options?: { badge?: number; highlight?: boolean; emoji?: string }) => {
+  const renderItem = (id: DealerTab, label: string, Icon: typeof LayoutDashboard, options?: { badge?: number; highlight?: boolean }) => {
     const isActive = activeTab === id;
-    const isHighlight = options?.highlight && !isActive;
     return (
       <button
         key={id}
         onClick={() => onTabChange(id)}
         className={cn(
-          "w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all",
+          "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all duration-200",
           isActive
-            ? "bg-primary text-primary-foreground shadow-md"
-            : isHighlight
-              ? "bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 font-bold"
-              : "text-secondary-foreground/70 hover:bg-secondary-foreground/5 hover:text-secondary-foreground"
+            ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
+            : options?.highlight
+              ? "text-primary bg-primary/5 hover:bg-primary/10 font-semibold"
+              : "text-foreground/60 hover:bg-muted hover:text-foreground"
         )}
       >
-        {options?.emoji ? (
-          <span className="text-lg w-5 text-center shrink-0">{options.emoji}</span>
-        ) : (
-          <Icon className="w-5 h-5 shrink-0" />
-        )}
+        <Icon className={cn("w-4 h-4 shrink-0", isActive ? "text-primary-foreground" : options?.highlight ? "text-primary" : "text-muted-foreground")} />
         <span className="truncate">{label}</span>
         {(options?.badge || 0) > 0 && (
-          <span className="mr-auto bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full min-w-[22px] h-[22px] flex items-center justify-center px-1">
+          <span className="mr-auto bg-primary text-primary-foreground text-[9px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
             {options!.badge}
           </span>
         )}
@@ -59,16 +54,16 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
   };
 
   return (
-    <aside className="w-64 bg-secondary border-l border-secondary/80 flex flex-col h-full shrink-0 hidden lg:flex">
+    <aside className="w-60 bg-card border-l border-border/40 flex flex-col h-full shrink-0 hidden lg:flex shadow-sm">
       {/* Profile */}
-      <div className="p-4 border-b border-secondary-foreground/10">
+      <div className="p-4 border-b border-border/30">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-primary/20 flex items-center justify-center">
-            <User className="w-5 h-5 text-primary" />
+          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <User className="w-4.5 h-4.5 text-primary" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="font-bold text-secondary-foreground text-sm truncate">{dealerName}</p>
-            <span className="text-[11px] text-secondary-foreground/50 font-medium">
+            <p className="font-bold text-foreground text-sm truncate">{dealerName}</p>
+            <span className="text-[10px] text-muted-foreground font-medium">
               {tierLabels[tier] || tier}
             </span>
           </div>
@@ -76,37 +71,36 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-        {/* Main Actions - most used */}
-        <p className="text-[10px] font-bold text-secondary-foreground/30 uppercase tracking-widest px-3 pt-2 pb-1.5">الرئيسية</p>
-        {renderItem("overview", "لوحة التحكم", LayoutDashboard, { emoji: "🏠" })}
-        {renderItem("quotes", "اطلب قطع غيار", Search, { emoji: "🔍" })}
-        {renderItem("price_lists", "كشوفات الأسعار", FileText, { highlight: true, emoji: "📋" })}
+      <nav className="flex-1 p-2.5 space-y-0.5 overflow-y-auto">
+        <p className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-[0.15em] px-3 pt-3 pb-1.5">الرئيسية</p>
+        {renderItem("overview", "لوحة التحكم", LayoutDashboard)}
+        {renderItem("quotes", "اطلب قطع غيار", Search)}
+        {renderItem("price_lists", "كشوفات الأسعار", FileText, { highlight: true })}
 
-        <div className="h-px bg-secondary-foreground/10 my-2.5" />
-        <p className="text-[10px] font-bold text-secondary-foreground/30 uppercase tracking-widest px-3 pt-1 pb-1.5">طلباتي</p>
-        {renderItem("orders", "الطلبية", ClipboardList, { emoji: "📦" })}
-        {renderItem("payment", "الدفع الإلكتروني", CreditCard, { highlight: true, emoji: "💳" })}
-        {renderItem("invoices", "الفواتير", Receipt, { emoji: "🧾" })}
-        {renderItem("statement", "كشف الحساب", CreditCard, { emoji: "💰" })}
+        <div className="h-px bg-border/30 my-2" />
+        <p className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-[0.15em] px-3 pt-1 pb-1.5">طلباتي</p>
+        {renderItem("orders", "الطلبية", ClipboardList)}
+        {renderItem("payment", "الدفع الإلكتروني", CreditCard, { highlight: true })}
+        {renderItem("invoices", "الفواتير", Receipt)}
+        {renderItem("statement", "كشف الحساب", CreditCard)}
 
-        <div className="h-px bg-secondary-foreground/10 my-2.5" />
-        <p className="text-[10px] font-bold text-secondary-foreground/30 uppercase tracking-widest px-3 pt-1 pb-1.5">المزيد</p>
-        {renderItem("favorites", "المفضلة", Heart, { emoji: "❤️" })}
-        {renderItem("stock_alerts", "تنبيهات المخزون", Bell, { emoji: "🔔" })}
-        {renderItem("notifications", "الإشعارات", Bell, { badge: unreadCount, emoji: "📬" })}
-        {renderItem("offers", "العروض الخاصة", Tag, { emoji: "🎁" })}
-        {renderItem("quick_order", "طلب سريع (Excel)", Upload, { emoji: "📤" })}
-        {renderItem("settings", "إعدادات الحساب", Settings, { emoji: "⚙️" })}
+        <div className="h-px bg-border/30 my-2" />
+        <p className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-[0.15em] px-3 pt-1 pb-1.5">المزيد</p>
+        {renderItem("favorites", "المفضلة", Heart)}
+        {renderItem("stock_alerts", "تنبيهات المخزون", Bell)}
+        {renderItem("notifications", "الإشعارات", Bell, { badge: unreadCount })}
+        {renderItem("offers", "العروض الخاصة", Tag)}
+        {renderItem("quick_order", "طلب سريع (Excel)", Upload)}
+        {renderItem("settings", "إعدادات الحساب", Settings)}
       </nav>
 
       {/* Sign Out */}
-      <div className="p-3 border-t border-secondary-foreground/10">
+      <div className="p-2.5 border-t border-border/30">
         <button
           onClick={onSignOut}
-          className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-secondary-foreground/40 hover:bg-destructive/10 hover:text-destructive transition-all"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] text-muted-foreground hover:bg-destructive/5 hover:text-destructive transition-all"
         >
-          <span className="text-lg w-5 text-center">🚪</span>
+          <LogOut className="w-4 h-4" />
           <span>تسجيل الخروج</span>
         </button>
       </div>
