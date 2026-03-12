@@ -96,11 +96,11 @@ const DealerDashboard = () => {
             onNavigate={(tab) => setActiveTab(tab as DealerTab)}
           />
         );
-      case "quotes": return <DealerQuoteBuilder onNavigateToPriceLists={() => setActiveTab("price_lists")} />;
+      case "quotes": return <DealerQuoteBuilder onNavigateToPriceLists={(data) => { setPriceListQuoteData(data || null); setActiveTab("price_lists"); }} />;
       case "quick_order": return <DealerQuickOrder />;
       case "orders": return <DealerOrdersList userId={user!.id} />;
       case "invoices": return <DealerInvoices userId={user!.id} />;
-      case "price_lists": return <DealerPriceLists onNavigateToQuotes={() => setActiveTab("quotes")} />;
+      case "price_lists": return <DealerPriceLists onNavigateToQuotes={() => setActiveTab("quotes")} editingQuoteData={priceListQuoteData} onClearEditingQuote={() => setPriceListQuoteData(null)} />;
       case "favorites": return <DealerFavorites />;
       case "notifications": return <DealerNotificationsList userId={user!.id} />;
       case "offers": return <DealerOffers />;
