@@ -599,12 +599,20 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <h2 className="text-lg font-bold text-foreground">كشوفات الأسعار</h2>
-        <Button variant="ghost" size="sm" onClick={fetchLists}>
-          <RefreshCw className="w-4 h-4 ml-1" />
-          تحديث
-        </Button>
+        <div className="flex items-center gap-2">
+          {onNavigateToQuotes && (
+            <Button variant="outline" size="sm" onClick={onNavigateToQuotes}>
+              <ShoppingCart className="w-4 h-4 ml-1" />
+              عروض الأسعار
+            </Button>
+          )}
+          <Button variant="ghost" size="sm" onClick={fetchLists}>
+            <RefreshCw className="w-4 h-4 ml-1" />
+            تحديث
+          </Button>
+        </div>
       </div>
 
       {lists.length === 0 ? (
