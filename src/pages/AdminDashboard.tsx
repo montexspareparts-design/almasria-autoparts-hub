@@ -394,7 +394,7 @@ const AdminDashboard = () => {
       case "erp":
         return <Suspense fallback={<SectionLoader />}><AdminERPSync /></Suspense>;
       default:
-        return renderDealersSection();
+        return <Suspense fallback={<SectionLoader />}><AdminAnalytics /></Suspense>;
     }
   };
 
