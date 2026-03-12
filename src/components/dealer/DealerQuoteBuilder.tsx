@@ -335,7 +335,20 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
     setNotes(quote.notes || "");
     setEditingQuoteId(quote.id);
     setEditingQuoteNumber(quote.quote_number);
-    setIsFromPriceList(!!quote.notes?.startsWith("من كشف الأسعار"));
+    const fromPriceList = !!quote.notes?.startsWith("من كشف الأسعار");
+    setIsFromPriceList(fromPriceList);
+
+    if (fromPriceList && onNavigateToPriceLists) {
+      // Redirect to price lists tab for editing price-list quotes
+      setLoadingQuote(false);
+      onNavigateToPriceLists();
+      return;
+    }
+
+    setQuoteItems(loadedItems);
+    setNotes(quote.notes || "");
+    setEditingQuoteId(quote.id);
+    setEditingQuoteNumber(quote.quote_number);
     setActiveView("edit");
     setLoadingQuote(false);
   };
