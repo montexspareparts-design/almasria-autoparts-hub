@@ -620,7 +620,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => { setViewingList(null); setSelectedProducts([]); setSearchQuery(""); setPdfSignedUrl(null); }}>
+          <Button variant="ghost" size="sm" onClick={() => { setViewingList(null); setSelectedProducts([]); setSearchQuery(""); setPdfSignedUrl(null); setEditingQuoteId(null); setEditingQuoteNumber(null); }}>
             <ArrowLeft className="w-4 h-4 ml-1" />
             رجوع
           </Button>
@@ -628,6 +628,11 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
             <h2 className="text-sm font-bold text-foreground truncate">{viewingList.title}</h2>
             {viewingList.version && <p className="text-[10px] text-muted-foreground">{viewingList.version}</p>}
           </div>
+          {editingQuoteId && (
+            <Badge variant="secondary" className="text-xs">
+              تعديل العرض: {editingQuoteNumber}
+            </Badge>
+          )}
           {pdfSignedUrl && (
             <Button variant="outline" size="sm" onClick={downloadPdf}>
               <Download className="w-4 h-4 ml-1" />
