@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, Search, Pencil, Trash2, Package, ChevronRight, ChevronLeft } from "lucide-react";
+import { Loader2, Plus, Search, Pencil, Trash2, Package, ChevronRight, ChevronLeft, Copy, Check } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import AdminProductForm from "@/components/admin/AdminProductForm";
 import type { Database } from "@/integrations/supabase/types";
@@ -33,6 +33,14 @@ const AdminProducts = () => {
   const [brandFilter, setBrandFilter] = useState("all");
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [copiedSku, setCopiedSku] = useState<string | null>(null);
+
+  const handleCopySku = (sku: string) => {
+    navigator.clipboard.writeText(sku);
+    setCopiedSku(sku);
+    toast({ title: `تم نسخ رقم القطعة: ${sku}` });
+    setTimeout(() => setCopiedSku(null), 2000);
+  };
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -152,6 +160,17 @@ const AdminProducts = () => {
                     <p className="font-medium text-foreground truncate">{product.name_ar}</p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <span dir="ltr" className="font-mono">{product.sku}</span>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleCopySku(product.sku); }}
+                        className="p-0.5 rounded hover:bg-muted transition-colors"
+                        title="نسخ رقم القطعة"
+                      >
+                        {copiedSku === product.sku ? (
+                          <Check className="w-3 h-3 text-green-500" />
+                        ) : (
+                          <Copy className="w-3 h-3 text-muted-foreground hover:text-foreground" />
+                        )}
+                      </button>
                       <span>•</span>
                       <span className="bg-secondary text-secondary-foreground px-1.5 py-0.5 rounded text-[10px]">
                         {brandLabels[product.brand]}
