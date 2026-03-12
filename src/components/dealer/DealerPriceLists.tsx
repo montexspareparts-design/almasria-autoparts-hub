@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
+import { generateQuotePdf } from "@/lib/generateQuotePdf";
 import {
   FileText, Download, Clock, RefreshCw, Eye, Search,
   Plus, X, ShoppingCart, ArrowLeft, Loader2, AlertTriangle, ChevronRight,
