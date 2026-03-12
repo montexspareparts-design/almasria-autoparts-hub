@@ -318,6 +318,56 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
     setSelectedProducts(prev => prev.filter(p => p.product.id !== productId));
   };
 
+  const convertDirectToOrder = async () => {
+    if (selectedProducts.length === 0 || !user) return;
+    setSavingQuote(true);
+
+    const items = await Promise.all(
+      selectedProducts.map(async (sp) => {
+        const price = await getProductPrice(sp.product);
+        return { product: sp.product, quantity: sp.quantity, price };
+      })
+    );
+    const totalAmount = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+    const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
+
+    const { data: order, error } = await supabase
+      .from("orders")
+      .insert({ user_id: user.id, order_number: orderNumber, total_amount: totalAmount, status: "pending" })
+      .select()
+      .single();
+
+    if (error || !order) {
+      toast({ title: "خطأ في إنشاء الطلب", variant: "destructive" });
+      setSavingQuote(false);
+      return;
+    }
+
+    await supabase.from("order_items").insert(
+      items.map(i => ({
+        order_id: (order as any).id,
+        product_id: i.product.id,
+        quantity: i.quantity,
+        unit_price: i.price,
+        total_price: i.price * i.quantity,
+      }))
+    );
+
+    // Record price views
+    const today = new Date().toISOString().split("T")[0];
+    for (const sp of selectedProducts) {
+      await supabase.from("dealer_price_views").upsert(
+        { user_id: user.id, product_id: sp.product.id, view_date: today },
+        { onConflict: "user_id,product_id,view_date" }
+      );
+    }
+
+    toast({ title: "تم إرسال الطلبية ✓", description: `رقم الطلب: ${orderNumber}` });
+    setSelectedProducts([]);
+    setSavingQuote(false);
+    fetchDailyLookupCount();
+  };
+
   const sendToQuote = async () => {
     if (selectedProducts.length === 0 || !user) return;
     setSavingQuote(true);
