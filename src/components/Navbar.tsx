@@ -254,10 +254,10 @@ const Navbar = () => {
                   variant="outline"
                   size="sm"
                   className="gap-1.5 text-[13px] font-semibold h-8 px-3 border-secondary-foreground/15 hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
-                  onClick={() => navigate("/dealer")}
+                  onClick={() => navigate(dealerAccount ? "/dealer" : "/dealer-apply")}
                 >
                   <User className="w-3.5 h-3.5" />
-                  {t("nav.dealer_account")}
+                  {dealerAccount ? t("nav.dealer_account") : (lang === "ar" ? "تقديم طلب اعتماد" : "Apply as Dealer")}
                 </Button>
 
                 {/* Logout */}
