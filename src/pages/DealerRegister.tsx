@@ -407,7 +407,7 @@ const DealerRegister = () => {
             <div className="text-center mt-6">
               <p className="text-muted-foreground text-sm">
                 لديك حساب بالفعل؟{" "}
-                <button onClick={() => navigate("/auth")} className="text-primary font-semibold hover:underline">
+                <button onClick={() => navigate("/dealer-login")} className="text-primary font-semibold hover:underline">
                   تسجيل الدخول
                 </button>
               </p>
