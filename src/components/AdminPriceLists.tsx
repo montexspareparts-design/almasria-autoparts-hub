@@ -33,6 +33,7 @@ const AdminPriceLists = () => {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: "", description: "", version: "" });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [parsingPdf, setParsingPdf] = useState(false);
 
   // Product association
   const [managingList, setManagingList] = useState<PriceListRow | null>(null);
@@ -108,7 +109,32 @@ const AdminPriceLists = () => {
     } else {
       toast({ title: "تم رفع الكشف ✓" });
       await notifyDealers(form.title);
-      // Open product management for the new list
+
+      // Auto-parse PDF to link products
+      if (newList && fileUrl) {
+        setParsingPdf(true);
+        toast({ title: "⏳ جاري تحليل الملف وربط الأصناف تلقائياً..." });
+
+        try {
+          const { data: parseResult, error: parseError } = await supabase.functions.invoke(
+            "parse-price-list-pdf",
+            { body: { price_list_id: (newList as any).id, file_path: fileUrl } }
+          );
+
+          if (parseError) {
+            console.error("Parse error:", parseError);
+            toast({ title: "⚠️ تعذر تحليل الملف تلقائياً", description: "يمكنك ربط الأصناف يدوياً", variant: "destructive" });
+          } else if (parseResult) {
+            toast({ title: `✅ ${parseResult.message || `تم ربط ${parseResult.matched} صنف`}` });
+          }
+        } catch (e) {
+          console.error("Parse PDF failed:", e);
+          toast({ title: "⚠️ تعذر تحليل الملف", variant: "destructive" });
+        }
+
+        setParsingPdf(false);
+      }
+
       if (newList) {
         setManagingList(newList as PriceListRow);
         fetchLinkedProducts((newList as any).id);
@@ -325,8 +351,8 @@ const AdminPriceLists = () => {
                 <Upload className="w-4 h-4 ml-1" />
                 {selectedFile ? selectedFile.name : "اختر ملف PDF"}
               </Button>
-              <Button size="sm" onClick={handleUpload} disabled={uploading}>
-                {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : "رفع وإرسال إشعار"}
+              <Button size="sm" onClick={handleUpload} disabled={uploading || parsingPdf}>
+                {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : parsingPdf ? <><Loader2 className="w-4 h-4 animate-spin" /> جاري التحليل...</> : "رفع وإرسال إشعار"}
               </Button>
             </div>
           </div>
