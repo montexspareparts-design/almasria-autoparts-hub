@@ -28,6 +28,14 @@ const AdminProductImages = () => {
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, currentSku: "", found: 0, failed: 0 });
   const bulkAbortRef = useRef(false);
   const [dragOverProductId, setDragOverProductId] = useState<string | null>(null);
+  const [copiedSku, setCopiedSku] = useState<string | null>(null);
+
+  const handleCopySku = (sku: string) => {
+    navigator.clipboard.writeText(sku);
+    setCopiedSku(sku);
+    toast({ title: `تم نسخ رقم القطعة: ${sku}` });
+    setTimeout(() => setCopiedSku(null), 2000);
+  };
 
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 50;
