@@ -308,9 +308,9 @@ const MyOrdersPage = () => {
                               </div>
                             )}
 
-                            {/* Payment Instructions for electronic payments */}
-                            {["instapay", "wallet", "bank_transfer"].includes(order.payment_method || "") &&
-                              ["pending", "confirmed"].includes(order.status) && (
+                            {/* Payment Instructions - only after admin approval */}
+                            {isElectronicPayment(order.payment_method) &&
+                              ["confirmed", "awaiting_payment"].includes(order.status) && (
                               <PaymentInstructionsBanner
                                 paymentMethod={order.payment_method!}
                                 orderNumber={order.order_number}
