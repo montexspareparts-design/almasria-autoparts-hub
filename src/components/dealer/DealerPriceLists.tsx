@@ -301,6 +301,21 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
 
     toast({ title: "تم إنشاء عرض السعر ✓", description: `رقم العرض: ${quoteNumber}` });
 
+    // Generate PDF automatically
+    generateQuotePdf({
+      quoteNumber,
+      date: new Date().toLocaleDateString("ar-EG"),
+      priceListTitle: viewingList?.title || undefined,
+      items: items.map(i => ({
+        name: i.product.name_ar,
+        sku: i.product.sku,
+        quantity: i.quantity,
+        unitPrice: i.price,
+        totalPrice: i.price * i.quantity,
+      })),
+      totalAmount,
+    });
+
     // Show quote summary
     setCreatedQuote({
       quoteNumber,
