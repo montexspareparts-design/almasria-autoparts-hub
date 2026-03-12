@@ -300,6 +300,11 @@ const AdminDashboard = () => {
           <AdminVideoSettings />
         </div>
 
+        {/* Price Lists Management */}
+        <div className="mt-8">
+          <AdminPriceLists />
+        </div>
+
         {/* Catalogs Management */}
         <div className="mt-8">
           <AdminCatalogs />
