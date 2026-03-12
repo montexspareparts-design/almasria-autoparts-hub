@@ -13,9 +13,18 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
-const ORDER_STATUSES = [
+const ORDER_STATUSES_ELECTRONIC = [
   { key: "pending", label: "تم استلام الطلب", icon: Clock, color: "text-amber-500", bg: "bg-amber-500" },
+  { key: "confirmed", label: "تمت الموافقة", icon: CheckCircle2, color: "text-blue-500", bg: "bg-blue-500" },
   { key: "awaiting_payment", label: "بانتظار الدفع", icon: Wallet, color: "text-orange-500", bg: "bg-orange-500" },
+  { key: "processing", label: "جاري التجهيز", icon: Package, color: "text-purple-500", bg: "bg-purple-500" },
+  { key: "shipped", label: "تم الشحن", icon: Truck, color: "text-blue-500", bg: "bg-blue-500" },
+  { key: "delivered", label: "تم التسليم", icon: PackageCheck, color: "text-green-600", bg: "bg-green-600" },
+];
+
+const ORDER_STATUSES_COD = [
+  { key: "pending", label: "تم استلام الطلب", icon: Clock, color: "text-amber-500", bg: "bg-amber-500" },
+  { key: "confirmed", label: "تمت الموافقة", icon: CheckCircle2, color: "text-blue-500", bg: "bg-blue-500" },
   { key: "processing", label: "جاري التجهيز", icon: Package, color: "text-purple-500", bg: "bg-purple-500" },
   { key: "shipped", label: "تم الشحن", icon: Truck, color: "text-blue-500", bg: "bg-blue-500" },
   { key: "delivered", label: "تم التسليم", icon: PackageCheck, color: "text-green-600", bg: "bg-green-600" },
@@ -34,17 +43,23 @@ const paymentLabels: Record<string, string> = {
 const isElectronicPayment = (method?: string | null) =>
   !!method && ["instapay", "wallet", "bank_transfer"].includes(method);
 
+const getOrderStatuses = (paymentMethod?: string | null) =>
+  isElectronicPayment(paymentMethod) ? ORDER_STATUSES_ELECTRONIC : ORDER_STATUSES_COD;
+
 const getStatusIndex = (status: string, paymentMethod?: string | null) => {
-  const statusMap: Record<string, number> = {
-    pending: 0,
-    confirmed: isElectronicPayment(paymentMethod) ? 1 : 0,
-    awaiting_payment: 1,
-    processing: 2,
-    shipped: 3,
-    ready: 3,
-    delivered: 4,
+  const statuses = getOrderStatuses(paymentMethod);
+  const statusToKey: Record<string, string> = {
+    pending: "pending",
+    confirmed: "confirmed",
+    awaiting_payment: "awaiting_payment",
+    processing: "processing",
+    shipped: "shipped",
+    ready: "shipped",
+    delivered: "delivered",
   };
-  return statusMap[status] ?? 0;
+  const key = statusToKey[status] ?? "pending";
+  const idx = statuses.findIndex(s => s.key === key);
+  return idx >= 0 ? idx : 0;
 };
 
 const MyOrdersPage = () => {
