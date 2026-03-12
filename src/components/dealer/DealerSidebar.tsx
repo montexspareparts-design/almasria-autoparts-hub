@@ -86,6 +86,7 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
         <div className="h-px bg-secondary-foreground/10 my-2.5" />
         <p className="text-[10px] font-bold text-secondary-foreground/30 uppercase tracking-widest px-3 pt-1 pb-1.5">طلباتي</p>
         {renderItem("orders", "الطلبية", ClipboardList, { emoji: "📦" })}
+        {renderItem("payment", "الدفع الإلكتروني", CreditCard, { highlight: true, emoji: "💳" })}
         {renderItem("invoices", "الفواتير", Receipt, { emoji: "🧾" })}
         {renderItem("statement", "كشف الحساب", CreditCard, { emoji: "💰" })}
 

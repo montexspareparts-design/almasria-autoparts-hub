@@ -17,6 +17,7 @@ const primaryTabs: { id: DealerTab; label: string; emoji: string }[] = [
 ];
 
 const moreTabs: { id: DealerTab; label: string; emoji: string }[] = [
+  { id: "payment", label: "الدفع", emoji: "💳" },
   { id: "invoices", label: "الفواتير", emoji: "🧾" },
   { id: "statement", label: "كشف الحساب", emoji: "💰" },
   { id: "favorites", label: "المفضلة", emoji: "❤️" },
