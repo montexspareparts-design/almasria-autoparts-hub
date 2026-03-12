@@ -88,8 +88,36 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
       fetchDailyViews();
       fetchSavedQuotes();
       fetchDealerInfo();
+      fetchAlertedProducts();
     }
   }, [user]);
+
+  const fetchAlertedProducts = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("stock_alerts")
+      .select("product_id")
+      .eq("user_id", user.id)
+      .eq("is_active", true);
+    if (data) setAlertedProducts(new Set(data.map(a => a.product_id)));
+  };
+
+  const toggleStockAlert = async (e: React.MouseEvent, productId: string, productName: string) => {
+    e.stopPropagation();
+    if (!user) return;
+    if (alertedProducts.has(productId)) {
+      await supabase.from("stock_alerts").delete().eq("user_id", user.id).eq("product_id", productId);
+      setAlertedProducts(prev => { const s = new Set(prev); s.delete(productId); return s; });
+      toast({ title: "تم إلغاء التنبيه", description: productName });
+    } else {
+      await supabase.from("stock_alerts").insert([
+        { user_id: user.id, product_id: productId, alert_type: "back_in_stock" },
+        { user_id: user.id, product_id: productId, alert_type: "price_drop" },
+      ]);
+      setAlertedProducts(prev => new Set(prev).add(productId));
+      toast({ title: "🔔 تم تفعيل التنبيه", description: `هيوصلك إشعار لما "${productName}" يرجع متوفر أو ينزل عليه عرض` });
+    }
+  };
 
   const fetchDealerInfo = async () => {
     if (!user) return;
