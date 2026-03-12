@@ -6,21 +6,22 @@ const PAYMENT_ACCOUNTS = [
   {
     method: "instapay",
     label: "InstaPay",
-    accountName: "المصرية جروب لقطع غيار السيارات",
-    accountNumber: "01XXXXXXXXX",
-    instructions: "حوّل المبلغ المطلوب على حساب InstaPay التالي ثم أرسل إيصال التحويل عبر واتساب",
+    accountName: "Ahmed Kamal Abdalaziz",
+    accountNumber: "01153961008",
+    payLink: "https://ipn.eg/S/drmado/instapay/08n56S",
+    instructions: "ادفع مباشرة عبر رابط InstaPay أو حوّل على الرقم التالي ثم أرسل إيصال التحويل عبر واتساب",
   },
   {
     method: "wallet",
     label: "فودافون كاش / محفظة إلكترونية",
-    accountName: "المصرية جروب",
-    accountNumber: "01XXXXXXXXX",
+    accountName: "Ahmed Kamal Abdalaziz",
+    accountNumber: "01153961008",
     instructions: "حوّل المبلغ المطلوب على رقم المحفظة التالي ثم أرسل إيصال التحويل عبر واتساب",
   },
   {
     method: "bank_transfer",
     label: "تحويل بنكي",
-    accountName: "المصرية جروب لقطع غيار السيارات",
+    accountName: "Ahmed Kamal Abdalaziz",
     accountNumber: "XXXX-XXXX-XXXX-XXXX",
     instructions: "حوّل المبلغ على الحساب البنكي التالي ثم أرسل إيصال التحويل عبر واتساب",
   },
@@ -104,8 +105,18 @@ const PaymentInstructionsBanner = ({ paymentMethod, orderNumber, totalAmount, co
         </div>
       </div>
 
+      {/* InstaPay Direct Pay Link */}
+      {"payLink" in account && account.payLink && (
+        <Button asChild size="sm" className="w-full gap-2">
+          <a href={account.payLink} target="_blank" rel="noopener noreferrer">
+            <Smartphone className="w-4 h-4" />
+            ادفع الآن عبر InstaPay مباشرة
+          </a>
+        </Button>
+      )}
+
       {/* WhatsApp Receipt Button */}
-      <Button asChild variant="default" size="sm" className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white">
+      <Button asChild variant="outline" size="sm" className="w-full gap-2 border-green-600 text-green-700 hover:bg-green-50 dark:hover:bg-green-950/30">
         <a
           href={`https://wa.me/${WHATSAPP_NUMBER}?text=${receiptMsg}`}
           target="_blank"
