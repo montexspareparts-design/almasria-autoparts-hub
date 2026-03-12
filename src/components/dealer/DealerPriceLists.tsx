@@ -439,6 +439,8 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
     // No auto-download — user clicks the PDF button in toast or summary
 
     setSelectedProducts([]);
+    setEditingQuoteId(null);
+    setEditingQuoteNumber(null);
     setSavingQuote(false);
   };
 
