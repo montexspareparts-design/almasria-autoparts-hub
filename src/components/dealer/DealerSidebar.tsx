@@ -1,7 +1,7 @@
-import { LayoutDashboard, ShoppingCart, Bell, Tag, FileText, LogOut, User, ChevronRight } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, Bell, Tag, FileText, LogOut, User, ChevronRight, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type DealerTab = "overview" | "orders" | "notifications" | "offers" | "catalogs";
+export type DealerTab = "overview" | "quotes" | "orders" | "notifications" | "offers" | "catalogs";
 
 interface DealerSidebarProps {
   activeTab: DealerTab;
