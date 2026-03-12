@@ -64,13 +64,13 @@ function buildQuoteHtml(data: QuoteData): string {
       <div style="padding:16px 24px">
         <table style="width:100%;border-collapse:collapse;border:1px solid #e5e5e5;border-radius:6px;overflow:hidden">
           <thead>
-            <tr style="background:#f3f3f3">
-              <th style="padding:10px 8px;text-align:center;font-size:11px;color:#666;font-weight:700;border-bottom:2px solid #ddd;width:40px">#</th>
-              <th style="padding:10px 8px;text-align:right;font-size:11px;color:#666;font-weight:700;border-bottom:2px solid #ddd">الصنف</th>
-              <th style="padding:10px 8px;text-align:center;font-size:11px;color:#666;font-weight:700;border-bottom:2px solid #ddd;width:110px">رقم القطعة</th>
-              <th style="padding:10px 8px;text-align:center;font-size:11px;color:#666;font-weight:700;border-bottom:2px solid #ddd;width:50px">الكمية</th>
-              <th style="padding:10px 8px;text-align:center;font-size:11px;color:#666;font-weight:700;border-bottom:2px solid #ddd;width:90px">سعر الوحدة</th>
-              <th style="padding:10px 8px;text-align:center;font-size:11px;color:#666;font-weight:700;border-bottom:2px solid #ddd;width:90px">الإجمالي</th>
+             <tr style="background:#dc2626">
+              <th style="padding:10px 8px;text-align:center;font-size:11px;color:#fff;font-weight:700;border-bottom:2px solid #b91c1c;width:40px">#</th>
+              <th style="padding:10px 8px;text-align:right;font-size:11px;color:#fff;font-weight:700;border-bottom:2px solid #b91c1c">الصنف</th>
+              <th style="padding:10px 8px;text-align:center;font-size:11px;color:#fff;font-weight:700;border-bottom:2px solid #b91c1c;width:110px">رقم القطعة</th>
+              <th style="padding:10px 8px;text-align:center;font-size:11px;color:#fff;font-weight:700;border-bottom:2px solid #b91c1c;width:50px">الكمية</th>
+              <th style="padding:10px 8px;text-align:center;font-size:11px;color:#fff;font-weight:700;border-bottom:2px solid #b91c1c;width:90px">سعر الوحدة</th>
+              <th style="padding:10px 8px;text-align:center;font-size:11px;color:#fff;font-weight:700;border-bottom:2px solid #b91c1c;width:90px">الإجمالي</th>
             </tr>
           </thead>
           <tbody>
