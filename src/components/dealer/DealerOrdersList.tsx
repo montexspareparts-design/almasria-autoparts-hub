@@ -47,6 +47,7 @@ interface OrderItem {
 const orderStages = [
   { key: "pending", label: "تم استلام الطلب", icon: Inbox },
   { key: "confirmed", label: "قيد المراجعة", icon: Clock },
+  { key: "pending_approval", label: "بانتظار موافقتك", icon: AlertTriangle },
   { key: "processing", label: "جاري التجهيز", icon: Package },
   { key: "ready", label: "جاهز للاستلام", icon: PackageCheck },
   { key: "delivered", label: "تم التسليم", icon: CheckCircle },
