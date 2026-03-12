@@ -115,22 +115,7 @@ const CheckoutPage = () => {
 
       clearCart();
 
-      // Notify all admins about the new order
-      const { data: adminRoles } = await supabase
-        .from("user_roles")
-        .select("user_id")
-        .eq("role", "admin" as any);
-
-      if (adminRoles && adminRoles.length > 0) {
-        const itemsSummary = items.map(i => `${i.name_ar} × ${i.quantity}`).join("، ");
-        const adminNotifications = adminRoles.map(admin => ({
-          user_id: admin.user_id,
-          title: `🆕 طلب جديد #${orderNumber}`,
-          message: `طلب جديد بقيمة ${orderTotal.toLocaleString("ar-EG")} ج.م من ${form.name}\nالأصناف: ${itemsSummary}\nبانتظار الموافقة`,
-          type: "order",
-        }));
-        await supabase.from("notifications").insert(adminNotifications);
-      }
+      // Admin notifications are now handled automatically via DB trigger
 
       toast({ title: "تم تقديم طلبك بنجاح! ✅", description: `رقم الطلب: ${orderNumber}` });
       navigate(`/my-orders?highlight=${order.id}`);
