@@ -18,13 +18,13 @@ interface DealerSidebarProps {
   unreadCount: number;
 }
 
-const mainTabs: { id: DealerTab; label: string; icon: typeof LayoutDashboard }[] = [
+const mainTabs: { id: DealerTab; label: string; icon: typeof LayoutDashboard; highlight?: boolean }[] = [
   { id: "overview", label: "لوحة التحكم", icon: LayoutDashboard },
+  { id: "price_lists", label: "كشوفات الأسعار", icon: FileText, highlight: true },
   { id: "quotes", label: "بحث القطع وعروض الأسعار", icon: Search },
   { id: "orders", label: "الطلبية", icon: ClipboardList },
   { id: "invoices", label: "الفواتير", icon: Receipt },
   { id: "statement", label: "كشف الحساب", icon: FileText },
-  { id: "price_lists", label: "كشوفات الأسعار", icon: FileText },
   { id: "favorites", label: "المفضلة", icon: Heart },
 ];
 
