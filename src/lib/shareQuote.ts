@@ -8,6 +8,7 @@ interface ShareQuoteData {
   totalAmount: number;
   priceListTitle?: string;
   date?: string;
+  notes?: string;
 }
 
 function buildQuoteText(data: ShareQuoteData): string {
