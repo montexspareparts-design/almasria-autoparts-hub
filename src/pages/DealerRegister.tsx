@@ -321,6 +321,32 @@ const DealerRegister = () => {
                 />
               </div>
 
+              {/* Password */}
+              <div className="space-y-2">
+                <Label htmlFor="reg-password">كلمة المرور <span className="text-primary">*</span></Label>
+                <div className="relative">
+                  <Input
+                    id="reg-password"
+                    type={showPassword ? "text" : "password"}
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    placeholder="أدخل كلمة مرور (6 أحرف على الأقل)"
+                    dir="ltr"
+                    className="pl-10"
+                    required
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">ستحتاج كلمة المرور لتسجيل الدخول لاحقاً</p>
+              </div>
+
               {/* Client Type */}
               <div className="space-y-3">
                 <Label>نوع العميل <span className="text-primary">*</span></Label>
