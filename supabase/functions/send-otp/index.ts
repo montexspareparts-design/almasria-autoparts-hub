@@ -61,9 +61,12 @@ Deno.serve(async (req) => {
     // Format phone number for Twilio (add Egypt country code if needed)
     let formattedPhone = phone.replace(/\D/g, "");
     if (formattedPhone.startsWith("0")) {
-      formattedPhone = "+2" + formattedPhone;
+      // Egyptian numbers: 01xxxxxxxxx -> +201xxxxxxxxx
+      formattedPhone = "+20" + formattedPhone.substring(1);
+    } else if (formattedPhone.startsWith("20")) {
+      formattedPhone = "+" + formattedPhone;
     } else if (!formattedPhone.startsWith("+")) {
-      formattedPhone = "+2" + formattedPhone;
+      formattedPhone = "+20" + formattedPhone;
     }
 
     // Format Twilio sender number
