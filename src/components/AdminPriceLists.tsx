@@ -109,7 +109,32 @@ const AdminPriceLists = () => {
     } else {
       toast({ title: "تم رفع الكشف ✓" });
       await notifyDealers(form.title);
-      // Open product management for the new list
+
+      // Auto-parse PDF to link products
+      if (newList && fileUrl) {
+        setParsingPdf(true);
+        toast({ title: "⏳ جاري تحليل الملف وربط الأصناف تلقائياً..." });
+
+        try {
+          const { data: parseResult, error: parseError } = await supabase.functions.invoke(
+            "parse-price-list-pdf",
+            { body: { price_list_id: (newList as any).id, file_path: fileUrl } }
+          );
+
+          if (parseError) {
+            console.error("Parse error:", parseError);
+            toast({ title: "⚠️ تعذر تحليل الملف تلقائياً", description: "يمكنك ربط الأصناف يدوياً", variant: "destructive" });
+          } else if (parseResult) {
+            toast({ title: `✅ ${parseResult.message || `تم ربط ${parseResult.matched} صنف`}` });
+          }
+        } catch (e) {
+          console.error("Parse PDF failed:", e);
+          toast({ title: "⚠️ تعذر تحليل الملف", variant: "destructive" });
+        }
+
+        setParsingPdf(false);
+      }
+
       if (newList) {
         setManagingList(newList as PriceListRow);
         fetchLinkedProducts((newList as any).id);
