@@ -293,12 +293,13 @@ const CatalogsPage = () => {
         .in("product_id", productIds)
         .eq("tier", tierValue);
 
-      // Log view for each product (for daily limit tracking)
+      // Log view for each product (upsert to avoid duplicate counting)
+      const today = new Date().toISOString().split("T")[0];
       for (const product of products) {
-        await supabase.from("dealer_price_views").insert({
-          user_id: user!.id,
-          product_id: product.id,
-        });
+        await supabase.from("dealer_price_views").upsert(
+          { user_id: user!.id, product_id: product.id, view_date: today },
+          { onConflict: "user_id,product_id,view_date" }
+        );
       }
 
       // Merge tier prices with products
