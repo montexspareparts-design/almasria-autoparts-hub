@@ -75,7 +75,7 @@ const AdminDashboard = () => {
   const [processing, setProcessing] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const activeSection = searchParams.get("section") || "dealers";
+  const activeSection = searchParams.get("section") || "analytics";
 
   const setActiveSection = (section: string) => {
     setSearchParams({ section });
