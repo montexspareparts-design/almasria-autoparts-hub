@@ -116,12 +116,35 @@ const DealerLogin = () => {
     return phoneToEmail(phone);
   };
 
+  const performLogin = async (authEmail: string, pwd: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email: authEmail, password: pwd });
+    return { data, error };
+  };
+
+  const handleAutoLogin = async () => {
+    const creds = savedCreds.current;
+    if (!creds) return;
+    setLoading(true);
+    const authEmail = creds.method === "email" ? creds.identifier : phoneToEmail(creds.identifier);
+    const { data, error } = await performLogin(authEmail, creds.password);
+    if (error) {
+      // Saved credentials are invalid, clear them
+      clearCredentials();
+      savedCreds.current = null;
+      setRememberMe(false);
+    } else if (data.user) {
+      toast({ title: "تم تسجيل الدخول تلقائياً ✅" });
+      checkDealerStatus(data.user.id);
+    }
+    setLoading(false);
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     const authEmail = getAuthEmail();
-    const { data, error } = await supabase.auth.signInWithPassword({ email: authEmail, password });
+    const { data, error } = await performLogin(authEmail, password);
 
     if (error) {
       toast({
@@ -132,6 +155,13 @@ const DealerLogin = () => {
         variant: "destructive",
       });
     } else if (data.user) {
+      // Save or clear credentials based on remember me
+      if (rememberMe) {
+        const identifier = authMethod === "phone" ? phone : email;
+        saveCredentials(authMethod, identifier, password);
+      } else {
+        clearCredentials();
+      }
       toast({ title: "تم تسجيل الدخول بنجاح ✅" });
       checkDealerStatus(data.user.id);
     }
