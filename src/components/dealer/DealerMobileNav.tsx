@@ -1,4 +1,4 @@
-import { LayoutDashboard, Search, ClipboardList, Upload, Bell } from "lucide-react";
+import { LayoutDashboard, Search, ClipboardList, FileText, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { DealerTab } from "./DealerSidebar";
 
@@ -8,8 +8,9 @@ interface DealerMobileNavProps {
   unreadCount: number;
 }
 
-const tabs: { id: DealerTab; label: string; icon: typeof LayoutDashboard }[] = [
+const tabs: { id: DealerTab; label: string; icon: typeof LayoutDashboard; highlight?: boolean }[] = [
   { id: "overview", label: "الرئيسية", icon: LayoutDashboard },
+  { id: "price_lists", label: "الكشوفات", icon: FileText, highlight: true },
   { id: "quotes", label: "بحث", icon: Search },
   { id: "orders", label: "الطلبية", icon: ClipboardList },
   { id: "notifications", label: "إشعارات", icon: Bell },
@@ -25,7 +26,7 @@ const DealerMobileNav = ({ activeTab, onTabChange, unreadCount }: DealerMobileNa
             onClick={() => onTabChange(tab.id)}
             className={cn(
               "flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg transition-colors relative",
-              activeTab === tab.id ? "text-primary" : "text-muted-foreground"
+              activeTab === tab.id ? "text-primary" : tab.highlight ? "text-primary font-bold" : "text-muted-foreground"
             )}
           >
             <tab.icon className="w-5 h-5" />
