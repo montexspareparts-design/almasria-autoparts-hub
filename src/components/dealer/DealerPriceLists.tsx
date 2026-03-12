@@ -166,13 +166,20 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
     if (query.length < 2 || !viewingList) { setSearchResults([]); return; }
     setSearching(true);
 
-    // Get product IDs linked to this price list
+    // Get product IDs and prices linked to this price list
     const { data: linked } = await supabase
       .from("price_list_products")
-      .select("product_id")
+      .select("product_id, price")
       .eq("price_list_id", viewingList.id) as any;
 
     const linkedIds = (linked || []).map((l: any) => l.product_id);
+    
+    // Store price list prices
+    const plPrices: Record<string, number | null> = {};
+    for (const l of (linked || [])) {
+      plPrices[l.product_id] = l.price != null ? Number(l.price) : null;
+    }
+    setPriceListPrices(prev => ({ ...prev, ...plPrices }));
 
     if (linkedIds.length === 0) {
       setSearchResults([]);
