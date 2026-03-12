@@ -276,6 +276,34 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               )}
+
+              {/* Delete button for non-pending apps */}
+              {selectedApp.status !== "pending" && (
+                <div className="mt-6 border-t border-border pt-4">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" className="gap-2 border-destructive/30 text-destructive hover:bg-destructive/10" disabled={processing}>
+                        <Trash2 className="w-4 h-4" />
+                        حذف الطلب والتاجر
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>تأكيد حذف الطلب</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          هل أنت متأكد من حذف طلب "{selectedApp.business_name}"؟ سيتم حذف الطلب وحساب التاجر المرتبط به نهائياً.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDelete(selectedApp)} className="bg-destructive hover:bg-destructive/90">
+                          حذف نهائي
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
