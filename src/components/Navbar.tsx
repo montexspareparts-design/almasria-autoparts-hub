@@ -205,7 +205,7 @@ const Navbar = () => {
             )}
             <NotificationBell />
             <button
-              onClick={() => user ? navigate(dealerAccount ? "/dealer" : "/dealer-apply") : openAuthDialog("login")}
+              onClick={() => user ? navigate(dealerAccount ? "/dealer" : "/dealer-apply") : navigate("/auth")}
               className="text-secondary-foreground/70 hover:text-primary transition-colors p-2 touch-manipulation"
             >
               <User className="w-[18px] h-[18px]" />
@@ -300,19 +300,19 @@ const Navbar = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => openAuthDialog("login")}
+                  onClick={() => navigate("/auth")}
                   className="text-secondary-foreground/60 hover:text-secondary-foreground text-[13px] font-semibold h-8 px-2.5"
                 >
-                  {t("nav.login")}
+                  {lang === "ar" ? "تسجيل الدخول" : "Login"}
                 </Button>
                 <Button
                   variant="default"
                   size="sm"
                   className="gap-1.5 text-[13px] font-semibold h-8 px-3"
-                  onClick={() => openAuthDialog("register")}
+                  onClick={() => navigate("/dealer-login")}
                 >
                   <Briefcase className="w-3.5 h-3.5" />
-                  {t("nav.register_dealer")}
+                  {lang === "ar" ? "التسجيل كتاجر" : "Dealer Portal"}
                 </Button>
               </>
             )}
@@ -410,11 +410,11 @@ const Navbar = () => {
                   </>
                 ) : (
                   <>
-                    <Button variant="ghost" size="sm" className="w-full font-semibold" onClick={() => openAuthDialog("login")}>
-                      {t("nav.login")}
+                    <Button variant="ghost" size="sm" className="w-full font-semibold" onClick={() => { navigate("/auth"); setIsOpen(false); }}>
+                      {lang === "ar" ? "تسجيل الدخول" : "Login"}
                     </Button>
-                    <Button variant="default" size="sm" className="w-full gap-2 font-semibold" onClick={() => openAuthDialog("register")}>
-                      <Briefcase className="w-4 h-4" /> {t("nav.register_dealer")}
+                    <Button variant="default" size="sm" className="w-full gap-2 font-semibold" onClick={() => { navigate("/dealer-login"); setIsOpen(false); }}>
+                      <Briefcase className="w-4 h-4" /> {lang === "ar" ? "التسجيل كتاجر" : "Dealer Portal"}
                     </Button>
                   </>
                 )}
