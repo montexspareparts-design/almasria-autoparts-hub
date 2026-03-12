@@ -16,6 +16,7 @@ import AdminImageVerifier from "@/components/AdminImageVerifier";
 import AdminHeroVideo from "@/components/AdminHeroVideo";
 import AdminOrders from "@/components/AdminOrders";
 import AdminPriceLists from "@/components/AdminPriceLists";
+import AdminERPSync from "@/components/AdminERPSync";
 import type { Database } from "@/integrations/supabase/types";
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
