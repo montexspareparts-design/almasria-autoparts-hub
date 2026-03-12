@@ -306,6 +306,9 @@ const Navbar = () => {
                         <BookOpen className="w-4 h-4" /> {t("nav.catalogs")}
                       </Button>
                     )}
+                    <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={() => { navigate("/my-orders"); setIsOpen(false); }}>
+                      <ClipboardList className="w-4 h-4" /> {lang === "ar" ? "طلباتي" : "My Orders"}
+                    </Button>
                     <Button variant="outline" size="sm" className="w-full gap-2" onClick={() => { navigate("/dealer"); setIsOpen(false); }}>
                       <User className="w-4 h-4" /> {t("nav.dealer_account")}
                     </Button>
