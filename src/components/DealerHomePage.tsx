@@ -468,6 +468,7 @@ const DealerHomePage = () => {
   const { user, dealerAccount } = useAuth();
   const { lang } = useLanguage();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const isRTL = lang === "ar";
 
   const [stats, setStats] = useState({ totalOrders: 0, pendingOrders: 0, totalSpent: 0, unreadNotifs: 0 });
