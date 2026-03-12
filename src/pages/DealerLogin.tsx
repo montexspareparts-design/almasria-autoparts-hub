@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Phone, ShieldCheck, ArrowRight, Loader2, Mail, Eye, EyeOff, Clock, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +15,24 @@ import Footer from "@/components/Footer";
 import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 
 type AuthMethod = "phone" | "email";
+
+const REMEMBER_KEY = "almasria_remember_me";
+
+const getSavedCredentials = () => {
+  try {
+    const saved = localStorage.getItem(REMEMBER_KEY);
+    if (saved) return JSON.parse(saved) as { method: AuthMethod; identifier: string; password: string };
+  } catch {}
+  return null;
+};
+
+const saveCredentials = (method: AuthMethod, identifier: string, password: string) => {
+  localStorage.setItem(REMEMBER_KEY, JSON.stringify({ method, identifier, password }));
+};
+
+const clearCredentials = () => {
+  localStorage.removeItem(REMEMBER_KEY);
+};
 
 const statusConfig = {
   pending: { label: "قيد المراجعة", icon: Clock, color: "text-yellow-600", bg: "bg-yellow-500/10 border-yellow-500/30" },
@@ -26,15 +45,26 @@ const DealerLogin = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const [authMethod, setAuthMethod] = useState<AuthMethod>("phone");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const savedCreds = useRef(getSavedCredentials());
+  const [authMethod, setAuthMethod] = useState<AuthMethod>(savedCreds.current?.method || "phone");
+  const [phone, setPhone] = useState(savedCreds.current?.method === "phone" ? savedCreds.current.identifier : "");
+  const [email, setEmail] = useState(savedCreds.current?.method === "email" ? savedCreds.current.identifier : "");
+  const [password, setPassword] = useState(savedCreds.current?.password || "");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
   const [applicationStatus, setApplicationStatus] = useState<any>(null);
   const [checkingStatus, setCheckingStatus] = useState(false);
+  const [rememberMe, setRememberMe] = useState(!!savedCreds.current);
+  const autoLoginAttempted = useRef(false);
+
+  // Auto-login if remember me credentials exist and user is not logged in
+  useEffect(() => {
+    if (!user && savedCreds.current && !autoLoginAttempted.current) {
+      autoLoginAttempted.current = true;
+      handleAutoLogin();
+    }
+  }, []);
 
   // If user is logged in, check their dealer application status
   useEffect(() => {
