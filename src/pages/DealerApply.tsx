@@ -286,6 +286,7 @@ const DealerApply = () => {
       </section>
 
       <Footer />
+      <DealerAuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} defaultTab="register" />
     </div>
   );
 };
