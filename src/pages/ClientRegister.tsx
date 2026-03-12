@@ -88,7 +88,6 @@ const ClientRegister = () => {
         return;
       }
 
-    try {
       // If user not logged in, create account with phone as password
       let userId = user?.id;
 
