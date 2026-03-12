@@ -406,24 +406,6 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
     setSavingQuote(false);
   };
 
-  const downloadQuotePdf = () => {
-    if (!createdQuote) return;
-    generateQuotePdf({
-      quoteNumber: createdQuote.quoteNumber,
-      date: createdQuote.createdAt.toLocaleDateString("ar-EG"),
-      priceListTitle: createdQuote.priceListTitle || undefined,
-      dealerName: dealerInfo?.name,
-      dealerPhone: dealerInfo?.phone,
-      items: createdQuote.items.map(i => ({
-        name: i.product.name_ar,
-        sku: i.product.sku,
-        quantity: i.quantity,
-        unitPrice: i.price,
-        totalPrice: i.price * i.quantity,
-      })),
-      totalAmount: createdQuote.totalAmount,
-    });
-  };
 
   const remainingToday = Math.max(0, DAILY_LIMIT - dailyViews - selectedProducts.reduce((s, p) => s + p.quantity, 0));
 
