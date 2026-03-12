@@ -386,7 +386,7 @@ const RecentOrdersList = ({ orders, loading, isRTL }: { orders: OrderSummary[]; 
   );
 };
 
-const ExclusiveOffers = ({ offers, isRTL }: { offers: OfferProduct[]; isRTL: boolean }) => {
+const ExclusiveOffers = ({ offers, isRTL, onAddToQuote }: { offers: OfferProduct[]; isRTL: boolean; onAddToQuote: (p: OfferProduct) => void }) => {
   if (offers.length === 0) return null;
   const ArrowIcon = isRTL ? ChevronLeft : ChevronRight;
 
