@@ -56,12 +56,43 @@ const statusMap: Record<string, { label_ar: string; label_en: string; color: str
 const DealerHomePage = () => {
   const { user, dealerAccount } = useAuth();
   const { lang } = useLanguage();
+  const navigate = useNavigate();
   const isRTL = lang === "ar";
 
   const [stats, setStats] = useState({ totalOrders: 0, pendingOrders: 0, totalSpent: 0, unreadNotifs: 0 });
   const [recentOrders, setRecentOrders] = useState<OrderSummary[]>([]);
   const [offers, setOffers] = useState<OfferProduct[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<OfferProduct[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+
+  const handleSearch = useCallback(async (query: string) => {
+    if (query.trim().length < 2) {
+      setSearchResults([]);
+      setShowResults(false);
+      return;
+    }
+    setSearching(true);
+    setShowResults(true);
+    const q = query.trim();
+    const { data } = await supabase
+      .from("products")
+      .select("id, name_ar, name_en, sku, base_price, sale_price, image_url")
+      .eq("is_active", true)
+      .or(`name_ar.ilike.%${q}%,name_en.ilike.%${q}%,sku.ilike.%${q}%`)
+      .limit(8);
+    setSearchResults((data as OfferProduct[]) || []);
+    setSearching(false);
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => handleSearch(searchQuery), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, handleSearch]);
 
   useEffect(() => {
     if (!user) return;
