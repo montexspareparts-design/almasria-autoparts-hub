@@ -163,7 +163,7 @@ const Navbar = () => {
           {/* Desktop: Center Navigation */}
           <div className="hidden lg:flex items-center gap-5 xl:gap-7">
             {links.map(renderDesktopLink)}
-            {isWholesaleDealer && (
+            {!isDealer && isWholesaleDealer && (
               <Link
                 to="/catalogs"
                 className={`relative py-1.5 text-[13px] font-semibold tracking-wide transition-all duration-200 group flex items-center gap-1.5 ${
@@ -184,14 +184,16 @@ const Navbar = () => {
             <button onClick={toggleLang} className="text-secondary-foreground/70 hover:text-primary transition-colors p-2 touch-manipulation text-[11px] font-bold">
               {lang === "ar" ? "EN" : "عربي"}
             </button>
-            <button onClick={() => navigate("/cart")} className="text-secondary-foreground/70 hover:text-primary transition-colors p-2 touch-manipulation relative">
-              <ShoppingCart className="w-[18px] h-[18px]" />
-              {itemCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[9px] font-black min-w-[16px] h-[16px] rounded-full flex items-center justify-center leading-none">
-                  {itemCount}
-                </span>
-              )}
-            </button>
+            {!isDealer && (
+              <button onClick={() => navigate("/cart")} className="text-secondary-foreground/70 hover:text-primary transition-colors p-2 touch-manipulation relative">
+                <ShoppingCart className="w-[18px] h-[18px]" />
+                {itemCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[9px] font-black min-w-[16px] h-[16px] rounded-full flex items-center justify-center leading-none">
+                    {itemCount}
+                  </span>
+                )}
+              </button>
+            )}
             <NotificationBell />
             <button
               onClick={() => navigate(user ? (dealerAccount ? "/dealer" : "/dealer-apply") : "/auth")}
