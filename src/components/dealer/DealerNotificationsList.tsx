@@ -34,6 +34,32 @@ const DealerNotificationsList = ({ userId }: { userId: string }) => {
 
   useEffect(() => {
     fetchNotifications();
+
+    // Realtime subscription for new notifications
+    const channel = supabase
+      .channel(`dealer-notifs-${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          const newNotif = payload.new as Notification;
+          setNotifications((prev) => [newNotif, ...prev]);
+          // Show toast for new notification
+          import("@/hooks/use-toast").then(({ toast }) => {
+            toast({ title: newNotif.title, description: newNotif.message });
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [userId]);
 
   const fetchNotifications = async () => {
