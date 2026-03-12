@@ -206,16 +206,19 @@ const DealerNotificationsList = ({ userId, onNavigate }: { userId: string; onNav
                 onClick={() => {
                   if (!n.is_read) markRead(n.id);
                   if (!isOrderEdit && onNavigate) {
-                    // Navigate to relevant tab based on notification type
-                    const msg = (n.message + " " + n.title).toLowerCase();
-                    if (n.type === "order") {
+                    const msg = (n.message + " " + n.title);
+                    if (n.type === "order" || msg.includes("طلبك") || msg.includes("طلب رقم") || msg.includes("ORD-")) {
                       onNavigate("orders");
-                    } else if (msg.includes("كشف أسعار") || msg.includes("price")) {
-                      onNavigate("price-lists");
-                    } else if (msg.includes("عرض") && msg.includes("سعر")) {
-                      onNavigate("quote-builder");
-                    } else if (msg.includes("فاتورة")) {
+                    } else if (msg.includes("كشف أسعار") || n.type === "price_list") {
+                      onNavigate("price_lists");
+                    } else if (n.type === "stock_alert" || n.type === "offer" || msg.includes("عرض خاص") || msg.includes("عرض جديد") || msg.includes("متوفر الآن")) {
+                      onNavigate("offers");
+                    } else if (msg.includes("فاتورة") || n.type === "invoice") {
                       onNavigate("invoices");
+                    } else if (msg.includes("دفع") || msg.includes("تحويل")) {
+                      onNavigate("payment");
+                    } else if (msg.includes("عرض سعر")) {
+                      onNavigate("quotes");
                     }
                   }
                 }}
