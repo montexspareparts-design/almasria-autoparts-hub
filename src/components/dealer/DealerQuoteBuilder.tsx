@@ -101,7 +101,7 @@ const DealerQuoteBuilder = () => {
         .from("product_tier_prices")
         .select("price")
         .eq("product_id", product.id)
-        .eq("tier", dealerAccount.tier)
+        .eq("tier", dealerAccount.tier as any)
         .maybeSingle();
       if (data?.price) {
         setTierPrices(prev => ({ ...prev, [product.id]: Number(data.price) }));
