@@ -293,24 +293,33 @@ const DealerOrdersList = ({ userId }: { userId: string }) => {
                   <div className="border-t border-border bg-muted/30 p-4 space-y-4">
                     {/* Order Timeline */}
                     {order.status !== "cancelled" && (
-                      <div className="flex items-center justify-between gap-1 px-2">
+                      <div className="flex items-center gap-0 px-1 overflow-x-auto">
                         {orderStages.map((stage, idx) => {
                           const StageIcon = stage.icon;
                           const isActive = idx <= currentStage;
                           const isCurrent = idx === currentStage;
+                          const isLast = idx === orderStages.length - 1;
                           return (
-                            <div key={stage.key} className="flex flex-col items-center gap-1 flex-1">
-                              <div className={cn(
-                                "w-8 h-8 rounded-full flex items-center justify-center transition-all",
-                                isCurrent ? "bg-primary text-primary-foreground ring-2 ring-primary/30" :
-                                isActive ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
-                              )}>
-                                <StageIcon className="w-3.5 h-3.5" />
+                            <div key={stage.key} className="flex items-center flex-1 min-w-0">
+                              <div className="flex flex-col items-center gap-1 min-w-[52px]">
+                                <div className={cn(
+                                  "w-9 h-9 rounded-full flex items-center justify-center transition-all border-2",
+                                  isCurrent ? "bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/30" :
+                                  isActive ? "bg-primary/15 text-primary border-primary/40" : "bg-muted text-muted-foreground/40 border-border"
+                                )}>
+                                  <StageIcon className="w-4 h-4" />
+                                </div>
+                                <span className={cn(
+                                  "text-[9px] text-center leading-tight whitespace-nowrap",
+                                  isCurrent ? "text-primary font-bold" : isActive ? "text-primary/70 font-medium" : "text-muted-foreground/50"
+                                )}>{stage.label}</span>
                               </div>
-                              <span className={cn(
-                                "text-[9px] text-center leading-tight",
-                                isActive ? "text-primary font-semibold" : "text-muted-foreground"
-                              )}>{stage.label}</span>
+                              {!isLast && (
+                                <div className={cn(
+                                  "h-0.5 flex-1 mx-0.5 rounded-full min-w-[12px]",
+                                  idx < currentStage ? "bg-primary/40" : "bg-border"
+                                )} />
+                              )}
                             </div>
                           );
                         })}
