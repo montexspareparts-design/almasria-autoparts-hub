@@ -43,20 +43,30 @@ const clientTypeLabels: Record<string, string> = {
 };
 
 const sidebarSections = [
-  { id: "analytics", label: "التحليلات", icon: BarChart3 },
-  { id: "customers", label: "ملف العملاء", icon: Users },
-  { id: "dealers", label: "طلبات التجار", icon: Users },
-  { id: "products", label: "إدارة المنتجات", icon: Package },
-  { id: "orders", label: "إدارة الطلبات", icon: ShoppingBag },
-  { id: "price-lists", label: "كشوفات الأسعار", icon: FileText },
-  { id: "catalogs", label: "الكتالوجات", icon: FileText },
-  { id: "hero-video", label: "فيديو الصفحة الرئيسية", icon: Video },
-  { id: "youtube", label: "إعدادات YouTube", icon: ListVideo },
-  { id: "product-images", label: "صور المنتجات", icon: Image },
-  { id: "image-verifier", label: "مراجعة الصور (AI)", icon: Brain },
-  { id: "push-notifications", label: "إشعارات Push", icon: Bell },
-  { id: "erp", label: "ربط ERP", icon: Zap },
+  { group: "الرئيسية", items: [
+    { id: "analytics", label: "التحليلات", icon: BarChart3, description: "إحصائيات ومبيعات" },
+    { id: "customers", label: "ملف العملاء", icon: Users, description: "بيانات التجار" },
+    { id: "dealers", label: "طلبات التجار", icon: Users, description: "موافقة ورفض", hasBadge: true },
+  ]},
+  { group: "المنتجات والطلبات", items: [
+    { id: "products", label: "إدارة المنتجات", icon: Package, description: "إضافة وتعديل" },
+    { id: "orders", label: "إدارة الطلبات", icon: ShoppingBag, description: "تتبع وتأكيد" },
+    { id: "price-lists", label: "كشوفات الأسعار", icon: FileText, description: "قوائم الأسعار" },
+    { id: "catalogs", label: "الكتالوجات", icon: FileText, description: "ملفات PDF" },
+  ]},
+  { group: "المحتوى والوسائط", items: [
+    { id: "hero-video", label: "فيديو الرئيسية", icon: Video, description: "فيديو الصفحة" },
+    { id: "youtube", label: "إعدادات YouTube", icon: ListVideo, description: "فيديوهات" },
+    { id: "product-images", label: "صور المنتجات", icon: Image, description: "رفع صور" },
+    { id: "image-verifier", label: "مراجعة الصور", icon: Brain, description: "فحص AI" },
+  ]},
+  { group: "التنبيهات والربط", items: [
+    { id: "push-notifications", label: "إشعارات Push", icon: Bell, description: "إرسال جماعي" },
+    { id: "erp", label: "ربط ERP", icon: Zap, description: "تكامل النظام" },
+  ]},
 ];
+
+const allSections = sidebarSections.flatMap(g => g.items);
 
 const SectionLoader = () => (
   <div className="flex items-center justify-center py-16">
