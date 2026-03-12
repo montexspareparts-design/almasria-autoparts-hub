@@ -71,6 +71,8 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
   const [priceListPrices, setPriceListPrices] = useState<Record<string, number | null>>({});
   const [savingQuote, setSavingQuote] = useState(false);
   const [dealerInfo, setDealerInfo] = useState<{ name: string; phone: string } | null>(null);
+  const [editingQuoteId, setEditingQuoteId] = useState<string | null>(null);
+  const [editingQuoteNumber, setEditingQuoteNumber] = useState<string | null>(null);
 
   // Quote summary state
   const [createdQuote, setCreatedQuote] = useState<{
