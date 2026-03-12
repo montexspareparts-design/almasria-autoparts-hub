@@ -474,11 +474,23 @@ const AdminOrders = () => {
                           <Button
                             size="sm"
                             className="h-7 text-xs gap-1"
-                            onClick={(e) => { e.stopPropagation(); handleStatusUpdate(order.id, "confirmed"); }}
+                            onClick={(e) => { e.stopPropagation(); handleStatusUpdate(order.id, "awaiting_payment"); }}
                             disabled={updatingStatus === order.id}
                           >
                             {updatingStatus === order.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle className="w-3 h-3" />}
-                            موافقة سريعة
+                            موافقة → بانتظار الدفع
+                          </Button>
+                        )}
+                        {order.status === "awaiting_payment" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs gap-1 border-green-300 text-green-700 hover:bg-green-50"
+                            onClick={(e) => { e.stopPropagation(); handleStatusUpdate(order.id, "processing"); }}
+                            disabled={updatingStatus === order.id}
+                          >
+                            {updatingStatus === order.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <CreditCard className="w-3 h-3" />}
+                            تأكيد الدفع
                           </Button>
                         )}
                         <span className="text-xs text-muted-foreground hidden md:inline">
