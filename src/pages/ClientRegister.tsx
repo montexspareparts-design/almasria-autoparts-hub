@@ -29,10 +29,10 @@ const clientTypes = [
 
 const formSchema = z.object({
   fullName: z.string().trim().min(3, "الاسم يجب أن يكون 3 أحرف على الأقل").max(100),
-  phone: z.string().trim().min(8, "رقم الهاتف غير صحيح").max(20),
+  phone: z.string().trim().min(10, "رقم الهاتف يجب أن يكون 11 رقم على الأقل").max(20).regex(/^01[0-9]{9}$/, "رقم هاتف مصري غير صحيح (يبدأ بـ 01)"),
   businessName: z.string().trim().min(2, "اسم الشركة مطلوب").max(200),
   governorate: z.string().min(1, "يرجى اختيار المحافظة"),
-  email: z.string().trim().email("بريد إلكتروني غير صحيح").max(255).optional().or(z.literal("")),
+  email: z.string().trim().email("بريد إلكتروني غير صحيح").min(1, "البريد الإلكتروني مطلوب").max(255),
   clientType: z.enum(["wholesale", "company", "distributor"], { required_error: "يرجى اختيار نوع العميل" }),
 });
 
@@ -64,13 +64,29 @@ const ClientRegister = () => {
     setLoading(true);
 
     try {
+      // Check for duplicate phone/email
+      const { data: dupCheck } = await supabase.rpc("check_dealer_application_exists", {
+        _phone: form.phone,
+        _email: form.email,
+      });
+      const dupResult = dupCheck as any;
+      if (dupResult?.phone_exists) {
+        toast.error("رقم الهاتف مسجل بالفعل في طلب سابق. يرجى تسجيل الدخول.");
+        setLoading(false);
+        return;
+      }
+      if (dupResult?.email_exists) {
+        toast.error("البريد الإلكتروني مسجل بالفعل في طلب سابق. يرجى تسجيل الدخول.");
+        setLoading(false);
+        return;
+      }
+
       // If user not logged in, create account with phone as password
       let userId = user?.id;
 
       if (!userId) {
-        const emailForAuth = form.email || `${form.phone.replace(/\D/g, "")}@client.almasria.local`;
         const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: emailForAuth,
+          email: form.email,
           password: form.phone.replace(/\D/g, "").slice(-8).padStart(8, "0"),
           options: {
             data: { full_name: form.fullName },
@@ -278,7 +294,7 @@ const ClientRegister = () => {
 
               {/* Email */}
               <div className="space-y-2">
-                <Label htmlFor="email">البريد الإلكتروني <span className="text-muted-foreground text-xs">(اختياري)</span></Label>
+                <Label htmlFor="email">البريد الإلكتروني <span className="text-primary">*</span></Label>
                 <Input
                   id="email"
                   type="email"
@@ -286,6 +302,7 @@ const ClientRegister = () => {
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   placeholder="example@email.com"
                   className="text-right"
+                  required
                 />
               </div>
 
