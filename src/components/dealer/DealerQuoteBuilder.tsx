@@ -11,7 +11,7 @@ import { shareQuoteWhatsApp, shareQuoteEmail } from "@/lib/shareQuote";
 import {
   Search, Plus, Minus, Trash2, FileText, Save, ShoppingCart,
   Eye, Loader2, Download, X, ArrowRight, Edit3, ChevronLeft,
-  MessageCircle, Mail
+  MessageCircle, Mail, Bell
 } from "lucide-react";
 
 interface Product {
