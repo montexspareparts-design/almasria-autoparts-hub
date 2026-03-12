@@ -391,52 +391,14 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
       await supabase.from("dealer_price_views").insert({ user_id: user.id, product_id: sp.product.id });
     }
 
-    const quoteShareData = {
+    // Show quote summary with action options
+    setCreatedQuote({
       quoteNumber,
-      date: new Date().toLocaleDateString("ar-EG"),
-      priceListTitle: viewingList?.title || undefined,
-      dealerName: dealerInfo?.name,
-      dealerPhone: dealerInfo?.phone,
-      items: items.map(i => ({
-        name: i.product.name_ar,
-        sku: i.product.sku,
-        quantity: i.quantity,
-        unitPrice: i.price,
-        totalPrice: i.price * i.quantity,
-      })),
+      items,
       totalAmount,
-    };
-
-    toast({
-      title: "تم إنشاء عرض السعر ✓",
-      description: (
-        <div className="flex flex-col gap-2 mt-1">
-          <span>رقم العرض: {quoteNumber}</span>
-          <div className="flex gap-2">
-            <button
-              onClick={() => generateQuotePdf(quoteShareData)}
-              className="flex items-center gap-1 text-xs bg-primary/10 text-primary px-2 py-1 rounded hover:bg-primary/20 transition-colors"
-            >
-              <Download className="w-3 h-3" /> PDF
-            </button>
-            <button
-              onClick={() => shareQuoteWhatsApp(quoteShareData)}
-              className="flex items-center gap-1 text-xs bg-[#25D366]/10 text-[#25D366] px-2 py-1 rounded hover:bg-[#25D366]/20 transition-colors"
-            >
-              <MessageCircle className="w-3 h-3" /> واتساب
-            </button>
-            <button
-              onClick={() => shareQuoteEmail(quoteShareData)}
-              className="flex items-center gap-1 text-xs bg-blue-500/10 text-blue-600 px-2 py-1 rounded hover:bg-blue-500/20 transition-colors"
-            >
-              <Mail className="w-3 h-3" /> إيميل
-            </button>
-          </div>
-        </div>
-      ) as any,
+      priceListTitle: viewingList?.title || "",
+      createdAt: new Date(),
     });
-
-    // No auto-download — user clicks the PDF button in toast or summary
 
     setSelectedProducts([]);
     setEditingQuoteId(null);
