@@ -273,7 +273,7 @@ const DealerOrdersList = ({ userId }: { userId: string }) => {
             const config = statusConfig[order.status] || statusConfig.pending;
             const isExpanded = expandedOrder === order.id;
             const items = orderItems[order.id];
-            const currentStage = stageIndex(order.status);
+            const currentStage = stageIndex(order.status, order.payment_method);
             const isEditing = editingOrder === order.id;
             const editable = canEdit(order.status);
 
