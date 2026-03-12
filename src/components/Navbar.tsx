@@ -300,7 +300,7 @@ const Navbar = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => navigate("/auth")}
+                  onClick={() => openAuthDialog("login")}
                   className="text-secondary-foreground/60 hover:text-secondary-foreground text-[13px] font-semibold h-8 px-2.5"
                 >
                   {t("nav.login")}
@@ -309,7 +309,7 @@ const Navbar = () => {
                   variant="default"
                   size="sm"
                   className="gap-1.5 text-[13px] font-semibold h-8 px-3"
-                  onClick={() => navigate("/dealer-apply")}
+                  onClick={() => openAuthDialog("register")}
                 >
                   <Briefcase className="w-3.5 h-3.5" />
                   {t("nav.register_dealer")}
