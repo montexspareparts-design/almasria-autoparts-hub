@@ -64,25 +64,18 @@ const ClientRegister = () => {
     setLoading(true);
 
     try {
-      // Check for duplicate phone
-      const { data: existingPhone } = await supabase
-        .from("dealer_applications")
-        .select("id")
-        .eq("phone", form.phone)
-        .maybeSingle();
-      if (existingPhone) {
+      // Check for duplicate phone/email
+      const { data: dupCheck } = await supabase.rpc("check_dealer_application_exists", {
+        _phone: form.phone,
+        _email: form.email,
+      });
+      const dupResult = dupCheck as any;
+      if (dupResult?.phone_exists) {
         toast.error("رقم الهاتف مسجل بالفعل في طلب سابق. يرجى تسجيل الدخول.");
         setLoading(false);
         return;
       }
-
-      // Check for duplicate email
-      const { data: existingEmail } = await supabase
-        .from("dealer_applications")
-        .select("id")
-        .eq("email", form.email)
-        .maybeSingle();
-      if (existingEmail) {
+      if (dupResult?.email_exists) {
         toast.error("البريد الإلكتروني مسجل بالفعل في طلب سابق. يرجى تسجيل الدخول.");
         setLoading(false);
         return;

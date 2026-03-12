@@ -83,7 +83,7 @@ const DealerRegister = () => {
         setLoading(false);
         return;
       }
-      if (dupCheck?.email_exists) {
+      if (dupResult?.email_exists) {
         toast.error("البريد الإلكتروني مسجل بالفعل في طلب سابق. يرجى تسجيل الدخول.");
         setLoading(false);
         return;
