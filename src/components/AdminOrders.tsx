@@ -189,7 +189,7 @@ const AdminOrders = () => {
     } else {
       const order = orders.find(o => o.id === orderId);
       const notifData = statusNotificationMessages[newStatus];
-      if (order && notifData) await notifyCustomer(order, notifData.title, notifData.message);
+      if (order && notifData) await notifyCustomerWhatsApp(order, notifData.title, notifData.message);
       toast({ title: `تم تحديث حالة الطلب إلى: ${statusConfig[newStatus]?.label || newStatus}` });
       fetchOrders();
       fetchStats();
