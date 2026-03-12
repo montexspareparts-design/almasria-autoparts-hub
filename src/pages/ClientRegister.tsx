@@ -64,6 +64,31 @@ const ClientRegister = () => {
     setLoading(true);
 
     try {
+      // Check for duplicate phone
+      const { data: existingPhone } = await supabase
+        .from("dealer_applications")
+        .select("id")
+        .eq("phone", form.phone)
+        .maybeSingle();
+      if (existingPhone) {
+        toast.error("رقم الهاتف مسجل بالفعل في طلب سابق. يرجى تسجيل الدخول.");
+        setLoading(false);
+        return;
+      }
+
+      // Check for duplicate email
+      const { data: existingEmail } = await supabase
+        .from("dealer_applications")
+        .select("id")
+        .eq("email", form.email)
+        .maybeSingle();
+      if (existingEmail) {
+        toast.error("البريد الإلكتروني مسجل بالفعل في طلب سابق. يرجى تسجيل الدخول.");
+        setLoading(false);
+        return;
+      }
+
+    try {
       // If user not logged in, create account with phone as password
       let userId = user?.id;
 
