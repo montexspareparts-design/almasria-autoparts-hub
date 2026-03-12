@@ -92,9 +92,8 @@ const ClientRegister = () => {
       let userId = user?.id;
 
       if (!userId) {
-        const emailForAuth = form.email || `${form.phone.replace(/\D/g, "")}@client.almasria.local`;
         const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: emailForAuth,
+          email: form.email,
           password: form.phone.replace(/\D/g, "").slice(-8).padStart(8, "0"),
           options: {
             data: { full_name: form.fullName },
