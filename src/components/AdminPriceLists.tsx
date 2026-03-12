@@ -155,22 +155,25 @@ const AdminPriceLists = () => {
     setMatchingSkus(true);
 
     try {
-      const skus = await extractSkusFromExcel(file);
+      const excelRows = await extractSkusFromExcel(file);
+      const skuStrings = excelRows.map(r => r.sku);
       
-      if (skus.length === 0) {
+      if (skuStrings.length === 0) {
         toast({ title: "لم يتم العثور على أرقام قطع في الملف", variant: "destructive" });
         setMatchingSkus(false);
         return;
       }
+
+      const hasPrices = excelRows.some(r => r.price !== null);
 
       // Match with database in batches
       const batchSize = 50;
       let matchedCount = 0;
       const matchedSkus: string[] = [];
 
-      for (let i = 0; i < skus.length; i += batchSize) {
-        const batch = skus.slice(i, i + batchSize);
-        const { data, count } = await supabase
+      for (let i = 0; i < skuStrings.length; i += batchSize) {
+        const batch = skuStrings.slice(i, i + batchSize);
+        const { data } = await supabase
           .from("products")
           .select("sku", { count: "exact" })
           .eq("is_active", true)
@@ -189,7 +192,7 @@ const AdminPriceLists = () => {
         .eq("is_active", true);
 
       if (allProducts) {
-        const normalizedExcelSkus = skus.map(s => s.replace(/[-\s]/g, "").toUpperCase());
+        const normalizedExcelSkus = skuStrings.map(s => s.replace(/[-\s]/g, "").toUpperCase());
         for (const product of allProducts) {
           const normalizedDbSku = product.sku.replace(/[-\s]/g, "").toUpperCase();
           if (normalizedExcelSkus.includes(normalizedDbSku) && !matchedSkus.includes(product.sku)) {
@@ -199,8 +202,9 @@ const AdminPriceLists = () => {
         }
       }
 
-      setMatchResult({ matched: matchedCount, total: skus.length, skus });
-      toast({ title: `تم العثور على ${matchedCount} صنف مطابق من أصل ${skus.length} رقم قطعة` });
+      setMatchResult({ matched: matchedCount, total: skuStrings.length, skus: skuStrings });
+      const priceNote = hasPrices ? " (مع أسعار)" : "";
+      toast({ title: `تم العثور على ${matchedCount} صنف مطابق من أصل ${skuStrings.length} رقم قطعة${priceNote}` });
     } catch (err) {
       console.error("Excel parse error:", err);
       toast({ title: "خطأ في قراءة ملف Excel", variant: "destructive" });
