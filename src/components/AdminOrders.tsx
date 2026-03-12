@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import {
   Loader2, Package, Clock, Truck, CheckCircle, XCircle,
   ShoppingBag, MapPin, Phone, Mail, ChevronDown, ChevronUp,
-  FileText, Edit3, Trash2, Save, Plus, Minus, X
+  FileText, Edit3, Trash2, Save, Plus, Minus, X,
+  ChevronRight, ChevronLeft, Search
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -33,59 +34,120 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; i
 };
 
 const statusFlow = ["pending", "confirmed", "processing", "shipped", "delivered"];
+const PAGE_SIZE = 15;
 
 const AdminOrders = () => {
   const { toast } = useToast();
   const [orders, setOrders] = useState<OrderWithItems[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [adminNotes, setAdminNotes] = useState<Record<string, string>>({});
   const [editingOrder, setEditingOrder] = useState<string | null>(null);
   const [editedItems, setEditedItems] = useState<Record<string, { id: string; quantity: number; unit_price: number; total_price: number; product_id: string; product?: any }[]>>({});
 
-  useEffect(() => {
-    fetchOrders();
+  // Stats fetched once
+  const [stats, setStats] = useState({ total: 0, pending: 0, processing: 0, shipped: 0, delivered: 0, totalRevenue: 0 });
+
+  const fetchStats = useCallback(async () => {
+    const { data } = await supabase.from("orders").select("status, total_amount");
+    if (!data) return;
+    setStats({
+      total: data.length,
+      pending: data.filter(o => o.status === "pending").length,
+      processing: data.filter(o => ["confirmed", "processing"].includes(o.status)).length,
+      shipped: data.filter(o => o.status === "shipped").length,
+      delivered: data.filter(o => o.status === "delivered").length,
+      totalRevenue: data.filter(o => o.status !== "cancelled").reduce((s, o) => s + Number(o.total_amount), 0),
+    });
   }, []);
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setLoading(true);
-    const { data: ordersData, error } = await supabase
+
+    // Single query with joins - no N+1
+    let query = supabase
       .from("orders")
-      .select("*")
+      .select(`
+        *,
+        order_items(*, product:products(name_ar, sku, image_url)),
+        profile:profiles!orders_user_id_fkey(full_name, phone, email)
+      `, { count: "exact" })
       .order("created_at", { ascending: false });
 
-    if (error || !ordersData) {
+    if (filterStatus !== "all") {
+      query = query.eq("status", filterStatus);
+    }
+    if (searchQuery.trim()) {
+      query = query.or(`order_number.ilike.%${searchQuery.trim()}%`);
+    }
+
+    const { data, count, error } = await query.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+    if (error) {
+      // Fallback: if FK hint fails, fetch without profile join
+      console.warn("Join query failed, using fallback:", error.message);
+      await fetchOrdersFallback();
+      return;
+    }
+
+    const enriched: OrderWithItems[] = (data || []).map((order: any) => ({
+      ...order,
+      items: order.order_items || [],
+      profile: Array.isArray(order.profile) ? order.profile[0] : order.profile,
+    }));
+
+    setOrders(enriched);
+    setTotalCount(count || 0);
+    setLoading(false);
+  }, [page, filterStatus, searchQuery]);
+
+  // Fallback without FK join for profiles (manual batch)
+  const fetchOrdersFallback = async () => {
+    let query = supabase
+      .from("orders")
+      .select("*, order_items(*, product:products(name_ar, sku, image_url))", { count: "exact" })
+      .order("created_at", { ascending: false });
+
+    if (filterStatus !== "all") query = query.eq("status", filterStatus);
+    if (searchQuery.trim()) query = query.or(`order_number.ilike.%${searchQuery.trim()}%`);
+
+    const { data, count } = await query.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+    if (!data || data.length === 0) {
+      setOrders([]);
+      setTotalCount(count || 0);
       setLoading(false);
       return;
     }
 
-    const enriched: OrderWithItems[] = await Promise.all(
-      ordersData.map(async (order) => {
-        const [itemsRes, profileRes] = await Promise.all([
-          supabase
-            .from("order_items")
-            .select("*, product:products(name_ar, sku, image_url)")
-            .eq("order_id", order.id),
-          supabase
-            .from("profiles")
-            .select("full_name, phone, email")
-            .eq("user_id", order.user_id)
-            .maybeSingle(),
-        ]);
+    // Batch fetch profiles for this page's user_ids only
+    const userIds = [...new Set(data.map((o: any) => o.user_id))];
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("user_id, full_name, phone, email")
+      .in("user_id", userIds);
 
-        return {
-          ...order,
-          items: (itemsRes.data as any) || [],
-          profile: profileRes.data || undefined,
-        };
-      })
-    );
+    const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));
+
+    const enriched: OrderWithItems[] = data.map((order: any) => ({
+      ...order,
+      items: order.order_items || [],
+      profile: profileMap.get(order.user_id) || undefined,
+    }));
 
     setOrders(enriched);
+    setTotalCount(count || 0);
     setLoading(false);
   };
+
+  useEffect(() => { fetchStats(); }, [fetchStats]);
+  useEffect(() => { fetchOrders(); }, [fetchOrders]);
+  useEffect(() => { setPage(0); }, [filterStatus, searchQuery]);
 
   const statusNotificationMessages: Record<string, { title: string; message: string }> = {
     confirmed: { title: "✅ تم تأكيد طلبك", message: "تم تأكيد طلبك وسيتم تجهيزه قريباً" },
@@ -96,7 +158,6 @@ const AdminOrders = () => {
   };
 
   const notifyCustomer = async (order: OrderWithItems, title: string, message: string) => {
-    // In-app notification
     await supabase.from("notifications").insert({
       user_id: order.user_id,
       title,
@@ -104,7 +165,6 @@ const AdminOrders = () => {
       type: "order",
     });
 
-    // WhatsApp notification
     const customerPhone = order.profile?.phone;
     if (customerPhone) {
       try {
@@ -126,25 +186,19 @@ const AdminOrders = () => {
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     setUpdatingStatus(orderId);
     const updateData: any = { status: newStatus };
-    if (adminNotes[orderId]) {
-      updateData.notes = adminNotes[orderId];
-    }
+    if (adminNotes[orderId]) updateData.notes = adminNotes[orderId];
 
-    const { error } = await supabase
-      .from("orders")
-      .update(updateData)
-      .eq("id", orderId);
+    const { error } = await supabase.from("orders").update(updateData).eq("id", orderId);
 
     if (error) {
       toast({ title: "حدث خطأ أثناء تحديث الحالة", variant: "destructive" });
     } else {
-      const order = orders.find((o) => o.id === orderId);
+      const order = orders.find(o => o.id === orderId);
       const notifData = statusNotificationMessages[newStatus];
-      if (order && notifData) {
-        await notifyCustomer(order, notifData.title, notifData.message);
-      }
+      if (order && notifData) await notifyCustomer(order, notifData.title, notifData.message);
       toast({ title: `تم تحديث حالة الطلب إلى: ${statusConfig[newStatus]?.label || newStatus}` });
       fetchOrders();
+      fetchStats();
     }
     setUpdatingStatus(null);
   };
@@ -201,21 +255,23 @@ const AdminOrders = () => {
     const editedIds = items.map(i => i.id);
     const removedIds = originalIds.filter(id => !editedIds.includes(id));
 
-    for (const id of removedIds) {
-      await supabase.from("order_items").delete().eq("id", id);
+    if (removedIds.length > 0) {
+      await supabase.from("order_items").delete().in("id", removedIds);
     }
 
-    // Update remaining items
-    for (const item of items) {
-      await supabase.from("order_items").update({
-        quantity: item.quantity,
-        total_price: item.total_price,
-      }).eq("id", item.id);
-    }
+    // Batch update remaining items
+    await Promise.all(
+      items.map(item =>
+        supabase.from("order_items").update({
+          quantity: item.quantity,
+          total_price: item.total_price,
+        }).eq("id", item.id)
+      )
+    );
 
     // Recalculate total
     const newTotal = items.reduce((sum, i) => sum + i.total_price, 0);
-    await supabase.from("orders").update({ total_amount: newTotal }).eq("id", orderId);
+    await supabase.from("orders").update({ total_amount: newTotal, status: "pending_approval" }).eq("id", orderId);
 
     // Build detailed change summary for notification
     if (order) {
@@ -236,7 +292,7 @@ const AdminOrders = () => {
         }
       }
 
-      const itemsSummary = items.map(i => 
+      const itemsSummary = items.map(i =>
         `• ${i.product?.name_ar || ""} (${i.product?.sku || ""}) — الكمية: ${i.quantity} — ${i.total_price.toLocaleString("ar-EG")} ج.م`
       ).join("\n");
 
@@ -250,7 +306,6 @@ const AdminOrders = () => {
         `💰 الإجمالي الجديد: ${newTotal.toLocaleString("ar-EG")} ج.م`,
       ].join("\n");
 
-      // Send order_edit notification with order_id embedded
       await supabase.from("notifications").insert({
         user_id: order.user_id,
         title: "📝 تم تعديل طلبك — يرجى الموافقة أو الرفض",
@@ -258,10 +313,6 @@ const AdminOrders = () => {
         type: "order_edit",
       });
 
-      // Update order status to pending_approval
-      await supabase.from("orders").update({ status: "pending_approval" }).eq("id", orderId);
-
-      // WhatsApp notification
       const customerPhone = order.profile?.phone;
       if (customerPhone) {
         try {
@@ -284,24 +335,12 @@ const AdminOrders = () => {
     setEditingOrder(null);
     setUpdatingStatus(null);
     fetchOrders();
+    fetchStats();
   };
 
-  const filteredOrders = filterStatus === "all"
-    ? orders
-    : orders.filter((o) => o.status === filterStatus);
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
-  const stats = {
-    total: orders.length,
-    pending: orders.filter((o) => o.status === "pending").length,
-    processing: orders.filter((o) => ["confirmed", "processing"].includes(o.status)).length,
-    shipped: orders.filter((o) => o.status === "shipped").length,
-    delivered: orders.filter((o) => o.status === "delivered").length,
-    totalRevenue: orders
-      .filter((o) => o.status !== "cancelled")
-      .reduce((sum, o) => sum + Number(o.total_amount), 0),
-  };
-
-  if (loading) {
+  if (loading && orders.length === 0) {
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-12">
@@ -349,11 +388,20 @@ const AdminOrders = () => {
             </div>
           </div>
 
-          {/* Filter */}
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-sm text-muted-foreground">فلتر:</span>
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-4">
+            <div className="relative flex-1 w-full sm:w-auto">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="بحث برقم الطلب..."
+                className="pr-9"
+                dir="rtl"
+              />
+            </div>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full sm:w-48">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -363,17 +411,21 @@ const AdminOrders = () => {
                 ))}
               </SelectContent>
             </Select>
-            <span className="text-sm text-muted-foreground mr-auto">
-              {filteredOrders.length} طلب
+            <span className="text-sm text-muted-foreground">
+              {totalCount} طلب
             </span>
           </div>
 
           {/* Orders List */}
-          {filteredOrders.length === 0 ? (
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            </div>
+          ) : orders.length === 0 ? (
             <p className="text-center text-muted-foreground py-12">لا توجد طلبات</p>
           ) : (
             <div className="space-y-3">
-              {filteredOrders.map((order) => {
+              {orders.map((order) => {
                 const status = statusConfig[order.status] || statusConfig.pending;
                 const StatusIcon = status.icon;
                 const isExpanded = expandedOrder === order.id;
@@ -478,7 +530,6 @@ const AdminOrders = () => {
                           </div>
 
                           {isEditing ? (
-                            // ─── Edit Mode ───
                             <div className="bg-background rounded-lg divide-y divide-border overflow-hidden border border-primary/20">
                               {(editedItems[order.id] || []).map((item) => (
                                 <div key={item.id} className="flex items-center gap-3 p-3">
@@ -518,7 +569,6 @@ const AdminOrders = () => {
                               </div>
                             </div>
                           ) : (
-                            // ─── View Mode ───
                             <div className="bg-background rounded-lg divide-y divide-border overflow-hidden">
                               {order.items?.map((item) => (
                                 <div key={item.id} className="flex items-center gap-3 p-3">
@@ -568,7 +618,7 @@ const AdminOrders = () => {
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-sm font-medium text-foreground">تحديث الحالة:</span>
                               {statusFlow
-                                .filter((s) => statusFlow.indexOf(s) > statusFlow.indexOf(order.status))
+                                .filter(s => statusFlow.indexOf(s) > statusFlow.indexOf(order.status))
                                 .map((nextStatus) => {
                                   const conf = statusConfig[nextStatus];
                                   return (
@@ -603,7 +653,7 @@ const AdminOrders = () => {
                             <Textarea
                               placeholder="أضف ملاحظة على الطلب..."
                               value={adminNotes[order.id] || ""}
-                              onChange={(e) => setAdminNotes((prev) => ({ ...prev, [order.id]: e.target.value }))}
+                              onChange={(e) => setAdminNotes(prev => ({ ...prev, [order.id]: e.target.value }))}
                               className="text-sm"
                               rows={2}
                             />
@@ -632,6 +682,21 @@ const AdminOrders = () => {
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-3 pt-4">
+              <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(p => p - 1)}>
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                {page + 1} / {totalPages}
+              </span>
+              <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
             </div>
           )}
         </CardContent>
