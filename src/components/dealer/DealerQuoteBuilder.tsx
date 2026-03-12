@@ -525,13 +525,7 @@ const DealerQuoteBuilder = () => {
               <Button
                 variant="outline"
                 className="h-10 border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/10"
-                onClick={() => shareQuoteWhatsApp({
-                  quoteNumber: editingQuoteNumber || `Q-${Date.now().toString(36).toUpperCase()}`,
-                  date: new Date().toLocaleDateString("ar-EG"),
-                  notes: notes || undefined,
-                  items: quoteItems.map(i => ({ name: i.product.name_ar, sku: i.product.sku, quantity: i.quantity, unitPrice: i.unit_price, totalPrice: i.unit_price * i.quantity })),
-                  totalAmount,
-                })}
+                onClick={() => shareQuoteWhatsApp(buildQuoteData())}
               >
                 <MessageCircle className="w-4 h-4 ml-1.5" />
                 واتساب
