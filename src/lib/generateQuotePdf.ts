@@ -95,7 +95,7 @@ function buildQuoteHtml(data: QuoteData): string {
 
       <!-- Footer -->
       <div style="text-align:center;padding:16px 30px;border-top:1px solid #eee;margin-top:16px">
-        <div style="color:#aaa;font-size:10px">المصرية جروب — موزع معتمد قطع غيار وزيوت تويوتا</div>
+        <div style="color:#aaa;font-size:10px">Toyota Genuine Parts — قطع غيار تويوتا الأصلية</div>
         <div style="color:#bbb;font-size:9px;margin-top:3px">هذا العرض ساري لمدة 7 أيام من تاريخ الإصدار</div>
       </div>
     </div>
