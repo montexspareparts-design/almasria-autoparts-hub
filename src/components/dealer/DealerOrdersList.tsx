@@ -320,11 +320,12 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
                     {/* Order Timeline */}
                     {order.status !== "cancelled" && (
                       <div className="flex items-center gap-0 px-1 overflow-x-auto">
-                        {orderStages.map((stage, idx) => {
+                        {getVisibleStages(order.payment_method).map((stage, idx) => {
                           const StageIcon = stage.icon;
+                          const stages = getVisibleStages(order.payment_method);
                           const isActive = idx <= currentStage;
                           const isCurrent = idx === currentStage;
-                          const isLast = idx === orderStages.length - 1;
+                          const isLast = idx === stages.length - 1;
                           return (
                             <div key={stage.key} className="flex items-center flex-1 min-w-0">
                               <div className="flex flex-col items-center gap-1 min-w-[52px]">
