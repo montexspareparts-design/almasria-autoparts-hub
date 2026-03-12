@@ -277,7 +277,7 @@ const DealerApply = () => {
               transition={{ delay: 0.4 }}
             >
               لديك حساب بالفعل؟{" "}
-              <button onClick={() => navigate("/auth")} className="text-primary hover:underline">
+              <button onClick={() => setAuthDialogOpen(true)} className="text-primary hover:underline">
                 سجل دخول
               </button>
             </motion.p>
