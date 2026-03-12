@@ -69,9 +69,9 @@ const AdminPriceLists = () => {
 
     if (selectedFile) {
       const ext = selectedFile.name.split(".").pop();
-      const path = `price-lists/${Date.now()}.${ext}`;
+      const path = `${Date.now()}.${ext}`;
       const { error: uploadError } = await supabase.storage
-        .from("catalogs")
+        .from("price-lists")
         .upload(path, selectedFile, { contentType: selectedFile.type });
 
       if (uploadError) {
@@ -80,8 +80,8 @@ const AdminPriceLists = () => {
         return;
       }
 
-      const { data: urlData } = supabase.storage.from("catalogs").getPublicUrl(path);
-      fileUrl = urlData.publicUrl;
+      // Store the path, not the public URL (bucket is private)
+      fileUrl = path;
     }
 
     const { error } = await supabase.from("price_lists").insert({
