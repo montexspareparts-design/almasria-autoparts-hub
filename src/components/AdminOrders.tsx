@@ -373,7 +373,7 @@ const AdminOrders = () => {
               onClick={() => handleStatClick("pending")}
             >
               <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
-              <p className="text-xs text-muted-foreground">قيد الانتظار</p>
+              <p className="text-xs text-muted-foreground">بانتظار الموافقة</p>
             </div>
             <div
               className={`rounded-lg p-3 text-center cursor-pointer transition-all hover:ring-2 hover:ring-orange-400/50 ${filterStatus === "processing" ? "ring-2 ring-orange-500" : "bg-orange-500/10"}`}
