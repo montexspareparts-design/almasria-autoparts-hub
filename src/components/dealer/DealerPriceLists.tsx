@@ -318,6 +318,8 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
       quoteNumber,
       date: new Date().toLocaleDateString("ar-EG"),
       priceListTitle: viewingList?.title || undefined,
+      dealerName: dealerInfo?.name,
+      dealerPhone: dealerInfo?.phone,
       items: items.map(i => ({
         name: i.product.name_ar,
         sku: i.product.sku,
