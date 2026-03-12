@@ -45,32 +45,45 @@ interface OrderItem {
   } | null;
 }
 
+const isElectronicPayment = (method?: string | null) =>
+  !!method && ["instapay", "wallet", "bank_transfer"].includes(method);
+
 const orderStages = [
   { key: "pending", label: "تم استلام الطلب", icon: Inbox },
+  { key: "confirmed", label: "تمت الموافقة", icon: CheckCircle },
   { key: "awaiting_payment", label: "بانتظار الدفع", icon: Wallet },
   { key: "processing", label: "جاري التجهيز", icon: Package },
   { key: "ready", label: "جاهز للاستلام", icon: PackageCheck },
   { key: "delivered", label: "تم التسليم", icon: CheckCircle },
 ];
 
+const getVisibleStages = (paymentMethod?: string | null) => {
+  if (isElectronicPayment(paymentMethod)) return orderStages;
+  // For COD/non-electronic, skip "بانتظار الدفع"
+  return orderStages.filter(s => s.key !== "awaiting_payment");
+};
+
 const stageIndex = (status: string, paymentMethod?: string | null) => {
   if (status === "cancelled") return -1;
-  // Map old statuses to new timeline
-  const statusMap: Record<string, number> = {
-    pending: 0,
-    confirmed: paymentMethod && ["instapay", "wallet", "bank_transfer"].includes(paymentMethod) ? 1 : 0,
-    awaiting_payment: 1,
-    pending_approval: 2, // treat as processing level
-    processing: 2,
-    ready: 3,
-    delivered: 4,
+  const stages = getVisibleStages(paymentMethod);
+  // Map statuses to stage keys
+  const statusToKey: Record<string, string> = {
+    pending: "pending",
+    confirmed: "confirmed",
+    awaiting_payment: "awaiting_payment",
+    pending_approval: "confirmed", // admin modified → stays at confirmed level
+    processing: "processing",
+    ready: "ready",
+    delivered: "delivered",
   };
-  return statusMap[status] ?? 0;
+  const key = statusToKey[status] ?? "pending";
+  const idx = stages.findIndex(s => s.key === key);
+  return idx >= 0 ? idx : 0;
 };
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   pending: { label: "تم استلام الطلب", variant: "secondary" },
-  confirmed: { label: "تم التأكيد", variant: "default" },
+  confirmed: { label: "تمت الموافقة", variant: "default" },
   awaiting_payment: { label: "بانتظار الدفع", variant: "outline" },
   pending_approval: { label: "بانتظار موافقتك", variant: "outline" },
   processing: { label: "جاري التجهيز", variant: "default" },
@@ -307,11 +320,12 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
                     {/* Order Timeline */}
                     {order.status !== "cancelled" && (
                       <div className="flex items-center gap-0 px-1 overflow-x-auto">
-                        {orderStages.map((stage, idx) => {
+                        {getVisibleStages(order.payment_method).map((stage, idx) => {
                           const StageIcon = stage.icon;
+                          const stages = getVisibleStages(order.payment_method);
                           const isActive = idx <= currentStage;
                           const isCurrent = idx === currentStage;
-                          const isLast = idx === orderStages.length - 1;
+                          const isLast = idx === stages.length - 1;
                           return (
                             <div key={stage.key} className="flex items-center flex-1 min-w-0">
                               <div className="flex flex-col items-center gap-1 min-w-[52px]">
@@ -400,9 +414,9 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
                       </div>
                     )}
 
-                    {/* Payment CTA for electronic payments */}
-                    {["instapay", "wallet", "bank_transfer"].includes(order.payment_method || "") &&
-                      ["pending", "confirmed", "awaiting_payment"].includes(order.status) && (
+                    {/* Payment CTA for electronic payments - only after admin approval */}
+                    {isElectronicPayment(order.payment_method) &&
+                      ["confirmed", "awaiting_payment"].includes(order.status) && (
                       <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-700 rounded-xl p-4 space-y-3">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center shrink-0">

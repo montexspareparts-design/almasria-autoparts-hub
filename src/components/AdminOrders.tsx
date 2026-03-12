@@ -24,8 +24,8 @@ interface OrderWithItems extends Order {
 }
 
 const statusConfig: Record<string, { label: string; color: string; bg: string; icon: typeof Clock }> = {
-  pending: { label: "قيد الانتظار", color: "text-yellow-500", bg: "bg-yellow-500/10", icon: Clock },
-  confirmed: { label: "تم التأكيد", color: "text-blue-500", bg: "bg-blue-500/10", icon: CheckCircle },
+  pending: { label: "طلب جديد — بانتظار الموافقة", color: "text-yellow-500", bg: "bg-yellow-500/10", icon: Clock },
+  confirmed: { label: "تمت الموافقة", color: "text-blue-500", bg: "bg-blue-500/10", icon: CheckCircle },
   awaiting_payment: { label: "بانتظار الدفع", color: "text-orange-500", bg: "bg-orange-500/10", icon: Clock },
   pending_approval: { label: "بانتظار موافقة العميل", color: "text-orange-500", bg: "bg-orange-500/10", icon: Clock },
   processing: { label: "جاري التجهيز", color: "text-orange-500", bg: "bg-orange-500/10", icon: Package },
@@ -148,7 +148,8 @@ const AdminOrders = () => {
   };
 
   const statusNotificationMessages: Record<string, { title: string; message: string }> = {
-    confirmed: { title: "✅ تم تأكيد طلبك", message: "تم تأكيد طلبك وسيتم تجهيزه قريباً" },
+    confirmed: { title: "✅ تمت الموافقة على طلبك", message: "تم مراجعة طلبك والموافقة عليه. يرجى استكمال الدفع لبدء التجهيز" },
+    awaiting_payment: { title: "💳 بانتظار الدفع", message: "تم الموافقة على طلبك، يرجى تحويل المبلغ المطلوب لاستكمال الإجراءات" },
     processing: { title: "📦 جاري تجهيز طلبك", message: "طلبك قيد التجهيز الآن وسيتم شحنه في أقرب وقت" },
     shipped: { title: "🚚 تم شحن طلبك", message: "تم شحن طلبك! يمكنك متابعة حالته من صفحة طلباتي" },
     delivered: { title: "🎉 تم تسليم طلبك", message: "تم تسليم طلبك بنجاح. شكراً لتعاملك معنا!" },
@@ -372,7 +373,7 @@ const AdminOrders = () => {
               onClick={() => handleStatClick("pending")}
             >
               <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
-              <p className="text-xs text-muted-foreground">قيد الانتظار</p>
+              <p className="text-xs text-muted-foreground">بانتظار الموافقة</p>
             </div>
             <div
               className={`rounded-lg p-3 text-center cursor-pointer transition-all hover:ring-2 hover:ring-orange-400/50 ${filterStatus === "processing" ? "ring-2 ring-orange-500" : "bg-orange-500/10"}`}
