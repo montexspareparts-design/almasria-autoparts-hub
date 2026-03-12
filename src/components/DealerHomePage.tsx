@@ -406,9 +406,6 @@ const ExclusiveOffers = ({ offers, isRTL, onAddToQuote }: { offers: OfferProduct
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {offers.map((product, i) => {
-          const discount = product.sale_price && product.base_price
-            ? Math.round(((product.base_price - product.sale_price) / product.base_price) * 100)
-            : 0;
           return (
             <motion.div
               key={product.id}
@@ -431,11 +428,9 @@ const ExclusiveOffers = ({ offers, isRTL, onAddToQuote }: { offers: OfferProduct
                         <Package className="w-8 h-8 text-muted-foreground/20" />
                       </div>
                     )}
-                    {discount > 0 && (
-                      <Badge className="absolute top-2 start-2 bg-destructive text-destructive-foreground text-[10px] font-black px-2 py-0.5 rounded-lg">
-                        -{discount}%
-                      </Badge>
-                    )}
+                    <Badge className="absolute top-2 start-2 bg-primary/90 text-primary-foreground text-[10px] font-black px-2 py-0.5 rounded-lg">
+                      {isRTL ? "عرض خاص" : "Sale"}
+                    </Badge>
                   </div>
                   <div className="p-3">
                     <p className="text-xs font-bold text-foreground line-clamp-2 leading-relaxed mb-2">
