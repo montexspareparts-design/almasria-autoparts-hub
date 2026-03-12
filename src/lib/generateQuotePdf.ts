@@ -1,4 +1,5 @@
 import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 
 interface QuoteItem {
   name: string;
@@ -17,219 +18,147 @@ interface QuoteData {
   priceListTitle?: string;
 }
 
-// Load logo as base64 for embedding in PDF
-const loadLogoAsBase64 = (): Promise<string | null> => {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.drawImage(img, 0, 0);
-        resolve(canvas.toDataURL("image/png"));
-      } else {
-        resolve(null);
-      }
-    };
-    img.onerror = () => resolve(null);
-    img.src = "/images/logo-pdf.png";
-  });
-};
-
-export const generateQuotePdf = async (data: QuoteData) => {
-  const doc = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 15;
-  const contentWidth = pageWidth - margin * 2;
-  let y = margin;
-
-  // Load logo
-  const logoBase64 = await loadLogoAsBase64();
-
-  // ─── Header Background ───
-  doc.setFillColor(23, 23, 23);
-  doc.rect(0, 0, pageWidth, 56, "F");
-
-  // Red accent line
-  doc.setFillColor(220, 38, 38);
-  doc.rect(0, 56, pageWidth, 2.5, "F");
-
-  // Add logo
-  if (logoBase64) {
-    doc.addImage(logoBase64, "PNG", pageWidth / 2 - 20, 4, 40, 28);
-  }
-
-  // Company name below logo
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(11);
-  doc.text("Al Masria Group", pageWidth / 2, 38, { align: "center" });
-
-  doc.setFontSize(8);
-  doc.setTextColor(180, 180, 180);
-  doc.text("Authorized Toyota Parts & Oils Distributor", pageWidth / 2, 43, { align: "center" });
-
-  // Quote title
-  doc.setFontSize(13);
-  doc.setTextColor(255, 255, 255);
-  doc.text("Price Quotation", pageWidth / 2, 52, { align: "center" });
-
-  y = 67;
-
-  // ─── Quote Info ───
-  doc.setTextColor(60, 60, 60);
-  doc.setFontSize(9);
-
-  // Left column
-  doc.setFont("helvetica", "bold");
-  doc.text("Quote #:", margin, y);
-  doc.setFont("helvetica", "normal");
-  doc.text(data.quoteNumber, margin + 22, y);
-
-  // Right column
-  doc.setFont("helvetica", "bold");
-  doc.text("Date:", pageWidth - margin - 40, y);
-  doc.setFont("helvetica", "normal");
-  doc.text(data.date, pageWidth - margin - 28, y);
-
-  y += 6;
-
-  if (data.priceListTitle) {
-    doc.setFont("helvetica", "bold");
-    doc.text("Price List:", margin, y);
-    doc.setFont("helvetica", "normal");
-    doc.text(data.priceListTitle, margin + 25, y);
-    y += 6;
-  }
-
-  y += 4;
-
-  // ─── Separator ───
-  doc.setDrawColor(220, 220, 220);
-  doc.setLineWidth(0.3);
-  doc.line(margin, y, pageWidth - margin, y);
-  y += 6;
-
-  // ─── Table Header ───
-  const colX = {
-    num: margin,
-    name: margin + 10,
-    sku: margin + 85,
-    qty: margin + 120,
-    price: margin + 138,
-    total: pageWidth - margin - 5,
-  };
-
-  doc.setFillColor(245, 245, 245);
-  doc.roundedRect(margin, y - 4, contentWidth, 10, 1, 1, "F");
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
-  doc.setTextColor(80, 80, 80);
-  doc.text("#", colX.num + 3, y + 2, { align: "center" });
-  doc.text("Product", colX.name, y + 2);
-  doc.text("SKU", colX.sku, y + 2);
-  doc.text("Qty", colX.qty + 5, y + 2, { align: "center" });
-  doc.text("Unit Price", colX.price, y + 2);
-  doc.text("Total", colX.total, y + 2, { align: "right" });
-
-  y += 10;
-
-  // ─── Table Rows ───
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-
-  data.items.forEach((item, idx) => {
-    // Check page overflow
-    if (y > pageHeight - 45) {
-      doc.addPage();
-      y = margin + 10;
-    }
-
-    const isEven = idx % 2 === 0;
-    if (isEven) {
-      doc.setFillColor(250, 250, 250);
-      doc.rect(margin, y - 4, contentWidth, 9, "F");
-    }
-
-    doc.setTextColor(60, 60, 60);
-    doc.text(String(idx + 1), colX.num + 3, y + 1, { align: "center" });
-
-    // Truncate product name if too long
-    const maxNameWidth = colX.sku - colX.name - 3;
-    let displayName = item.name;
-    while (doc.getTextWidth(displayName) > maxNameWidth && displayName.length > 5) {
-      displayName = displayName.slice(0, -2) + "..";
-    }
-    doc.text(displayName, colX.name, y + 1);
-
-    doc.setTextColor(120, 120, 120);
-    doc.setFontSize(7);
-    doc.text(item.sku, colX.sku, y + 1);
-    doc.setFontSize(8);
-
-    doc.setTextColor(60, 60, 60);
-    doc.text(String(item.quantity), colX.qty + 5, y + 1, { align: "center" });
-    doc.text(formatNum(item.unitPrice), colX.price, y + 1);
-
-    doc.setFont("helvetica", "bold");
-    doc.text(formatNum(item.totalPrice), colX.total, y + 1, { align: "right" });
-    doc.setFont("helvetica", "normal");
-
-    y += 9;
-  });
-
-  // ─── Total Section ───
-  y += 4;
-  doc.setDrawColor(220, 220, 220);
-  doc.line(margin, y, pageWidth - margin, y);
-  y += 6;
-
-  // Items count
-  doc.setFontSize(9);
-  doc.setTextColor(120, 120, 120);
-  doc.text(`Total Items: ${data.items.length}`, margin, y + 1);
-
-  // Grand total
-  doc.setFillColor(220, 38, 38);
-  doc.roundedRect(pageWidth - margin - 60, y - 4, 60, 12, 1, 1, "F");
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.setTextColor(255, 255, 255);
-  doc.text(`${formatNum(data.totalAmount)} EGP`, pageWidth - margin - 5, y + 3, { align: "right" });
-
-  y += 16;
-
-  // Notes
-  if (data.notes) {
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.setTextColor(80, 80, 80);
-    doc.text("Notes:", margin, y);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(100, 100, 100);
-
-    const lines = doc.splitTextToSize(data.notes, contentWidth - 15);
-    doc.text(lines, margin + 15, y);
-    y += lines.length * 5 + 4;
-  }
-
-  // ─── Footer ───
-  const footerY = pageHeight - 15;
-  doc.setDrawColor(220, 220, 220);
-  doc.line(margin, footerY - 6, pageWidth - margin, footerY - 6);
-  doc.setFontSize(7);
-  doc.setTextColor(160, 160, 160);
-  doc.text("Al Masria Group - Authorized Toyota Parts Distributor", pageWidth / 2, footerY, { align: "center" });
-  doc.text("This quote is valid for 7 days from the date of issue", pageWidth / 2, footerY + 4, { align: "center" });
-
-  // Save
-  doc.save(`Quote-${data.quoteNumber}.pdf`);
-};
-
 function formatNum(n: number): string {
   return n.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 }
+
+function buildQuoteHtml(data: QuoteData): string {
+  const rows = data.items.map((item, idx) => `
+    <tr style="background:${idx % 2 === 0 ? '#fafafa' : '#fff'}">
+      <td style="padding:10px 8px;text-align:center;color:#666;font-size:13px;border-bottom:1px solid #eee">${idx + 1}</td>
+      <td style="padding:10px 8px;text-align:right;font-size:13px;color:#222;border-bottom:1px solid #eee;font-weight:500">${item.name}</td>
+      <td style="padding:10px 8px;text-align:center;font-size:12px;color:#888;border-bottom:1px solid #eee;font-family:monospace;direction:ltr">${item.sku}</td>
+      <td style="padding:10px 8px;text-align:center;font-size:13px;color:#333;border-bottom:1px solid #eee">${item.quantity}</td>
+      <td style="padding:10px 8px;text-align:center;font-size:13px;color:#333;border-bottom:1px solid #eee;direction:ltr">${formatNum(item.unitPrice)}</td>
+      <td style="padding:10px 8px;text-align:center;font-size:13px;color:#111;border-bottom:1px solid #eee;font-weight:700;direction:ltr">${formatNum(item.totalPrice)}</td>
+    </tr>
+  `).join("");
+
+  return `
+    <div id="quote-pdf-content" style="width:780px;font-family:'Segoe UI',Tahoma,Arial,sans-serif;direction:rtl;background:#fff;padding:0">
+      <!-- Header -->
+      <div style="background:#171717;padding:20px 30px 18px;text-align:center;border-radius:6px 6px 0 0">
+        <img src="/images/logo-pdf.png" style="height:70px;margin-bottom:8px" crossorigin="anonymous" />
+        <div style="color:#fff;font-size:15px;font-weight:700;letter-spacing:1px">المصرية جروب</div>
+        <div style="color:#aaa;font-size:11px;margin-top:2px">موزع معتمد قطع غيار وزيوت تويوتا</div>
+        <div style="color:#fff;font-size:17px;font-weight:700;margin-top:10px;letter-spacing:0.5px">عرض أسعار</div>
+      </div>
+      <div style="height:3px;background:#dc2626"></div>
+
+      <!-- Info -->
+      <div style="display:flex;justify-content:space-between;padding:18px 30px 10px;border-bottom:1px solid #e5e5e5">
+        <div>
+          <span style="color:#888;font-size:12px">رقم العرض:</span>
+          <span style="color:#222;font-size:14px;font-weight:700;margin-right:6px;direction:ltr;unicode-bidi:embed">${data.quoteNumber}</span>
+        </div>
+        <div>
+          <span style="color:#888;font-size:12px">التاريخ:</span>
+          <span style="color:#222;font-size:13px;font-weight:600;margin-right:6px">${data.date}</span>
+        </div>
+      </div>
+      ${data.priceListTitle ? `
+      <div style="padding:8px 30px;border-bottom:1px solid #eee">
+        <span style="color:#888;font-size:12px">من كشف:</span>
+        <span style="color:#444;font-size:13px;font-weight:600;margin-right:6px">${data.priceListTitle}</span>
+      </div>` : ""}
+
+      <!-- Table -->
+      <div style="padding:16px 24px">
+        <table style="width:100%;border-collapse:collapse;border:1px solid #e5e5e5;border-radius:6px;overflow:hidden">
+          <thead>
+            <tr style="background:#f3f3f3">
+              <th style="padding:10px 8px;text-align:center;font-size:11px;color:#666;font-weight:700;border-bottom:2px solid #ddd;width:40px">#</th>
+              <th style="padding:10px 8px;text-align:right;font-size:11px;color:#666;font-weight:700;border-bottom:2px solid #ddd">الصنف</th>
+              <th style="padding:10px 8px;text-align:center;font-size:11px;color:#666;font-weight:700;border-bottom:2px solid #ddd;width:110px">رقم القطعة</th>
+              <th style="padding:10px 8px;text-align:center;font-size:11px;color:#666;font-weight:700;border-bottom:2px solid #ddd;width:50px">الكمية</th>
+              <th style="padding:10px 8px;text-align:center;font-size:11px;color:#666;font-weight:700;border-bottom:2px solid #ddd;width:90px">سعر الوحدة</th>
+              <th style="padding:10px 8px;text-align:center;font-size:11px;color:#666;font-weight:700;border-bottom:2px solid #ddd;width:90px">الإجمالي</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Total -->
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 30px;border-top:2px solid #e5e5e5;margin:0 24px">
+        <div style="color:#888;font-size:13px">عدد الأصناف: <span style="color:#333;font-weight:700">${data.items.length}</span></div>
+        <div style="background:#dc2626;color:#fff;padding:10px 28px;border-radius:6px;font-size:18px;font-weight:800;direction:ltr">
+          ${formatNum(data.totalAmount)} ج.م
+        </div>
+      </div>
+
+      ${data.notes ? `
+      <div style="padding:14px 30px;margin:0 24px;border-top:1px solid #eee">
+        <span style="color:#666;font-size:12px;font-weight:700">ملاحظات: </span>
+        <span style="color:#555;font-size:12px">${data.notes}</span>
+      </div>` : ""}
+
+      <!-- Footer -->
+      <div style="text-align:center;padding:16px 30px;border-top:1px solid #eee;margin-top:16px">
+        <div style="color:#aaa;font-size:10px">المصرية جروب — موزع معتمد قطع غيار وزيوت تويوتا</div>
+        <div style="color:#bbb;font-size:9px;margin-top:3px">هذا العرض ساري لمدة 7 أيام من تاريخ الإصدار</div>
+      </div>
+    </div>
+  `;
+}
+
+export const generateQuotePdf = async (data: QuoteData) => {
+  // Create a hidden container for rendering
+  const container = document.createElement("div");
+  container.style.position = "fixed";
+  container.style.left = "-9999px";
+  container.style.top = "0";
+  container.style.zIndex = "-1";
+  container.innerHTML = buildQuoteHtml(data);
+  document.body.appendChild(container);
+
+  const element = container.firstElementChild as HTMLElement;
+
+  // Wait for logo image to load
+  const img = element.querySelector("img");
+  if (img && !img.complete) {
+    await new Promise<void>((resolve) => {
+      img.onload = () => resolve();
+      img.onerror = () => resolve();
+      setTimeout(resolve, 2000);
+    });
+  }
+
+  try {
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: "#ffffff",
+    });
+
+    const pdf = new jsPDF("p", "mm", "a4");
+    const imgData = canvas.toDataURL("image/png");
+
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = pdfWidth - 10; // 5mm margin each side
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    let heightLeft = imgHeight;
+    let position = 5; // top margin
+
+    pdf.addImage(imgData, "PNG", 5, position, imgWidth, imgHeight);
+    heightLeft -= (pdfHeight - 10);
+
+    while (heightLeft > 0) {
+      position = -(pdfHeight - 10 - (imgHeight - heightLeft)) + 5;
+      pdf.addPage();
+      pdf.addImage(imgData, "PNG", 5, position, imgWidth, imgHeight);
+      heightLeft -= (pdfHeight - 10);
+    }
+
+    pdf.save(`عرض-اسعار-${data.quoteNumber}.pdf`);
+  } catch (error) {
+    console.error("Error generating PDF:", error);
+  } finally {
+    document.body.removeChild(container);
+  }
+};
