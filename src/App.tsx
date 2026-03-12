@@ -22,6 +22,7 @@ const DealerLogin = lazy(() => import("./pages/DealerLogin"));
 const ProductsPage = lazy(() => import("./pages/ProductsPage"));
 const CartPage = lazy(() => import("./pages/CartPage"));
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
+const MyOrdersPage = lazy(() => import("./pages/MyOrdersPage"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
 const WhatSetsUsApartPage = lazy(() => import("./pages/WhatSetsUsApartPage"));
