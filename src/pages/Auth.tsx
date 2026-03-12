@@ -25,7 +25,7 @@ const Auth = () => {
   const [address, setAddress] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => !!localStorage.getItem("remembered_auth"));
   const [forgotMode, setForgotMode] = useState(false);
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [lockedUntil, setLockedUntil] = useState<number | null>(null);
