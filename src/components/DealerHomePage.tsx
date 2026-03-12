@@ -15,6 +15,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  Plus,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -24,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 
 interface OrderSummary {
   id: string;
@@ -102,7 +104,7 @@ const DealerWelcomeHeader = ({ tierLabel, isRTL }: { tierLabel: string; isRTL: b
 
 const QuickSearchBar = ({
   searchQuery, setSearchQuery, showResults, setShowResults,
-  searching, searchResults, isRTL, navigate,
+  searching, searchResults, isRTL, navigate, onAddToQuote,
 }: {
   searchQuery: string;
   setSearchQuery: (q: string) => void;
@@ -112,6 +114,7 @@ const QuickSearchBar = ({
   searchResults: OfferProduct[];
   isRTL: boolean;
   navigate: ReturnType<typeof useNavigate>;
+  onAddToQuote: (product: OfferProduct) => void;
 }) => (
   <section className="relative -mt-6 z-20 px-4">
     <div className="relative max-w-2xl mx-auto">
@@ -166,13 +169,8 @@ const QuickSearchBar = ({
                 ) : (
                   <div className="max-h-80 overflow-y-auto divide-y divide-border/30">
                     {searchResults.map((p) => (
-                      <button
+                      <div
                         key={p.id}
-                        onClick={() => {
-                          navigate(`/products?search=${encodeURIComponent(p.sku)}`);
-                          setShowResults(false);
-                          setSearchQuery("");
-                        }}
                         className="w-full flex items-center gap-3 p-3.5 hover:bg-muted/50 transition-colors text-start"
                       >
                         <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center shrink-0 overflow-hidden">
@@ -188,10 +186,16 @@ const QuickSearchBar = ({
                           </p>
                           <p className="text-xs text-muted-foreground mt-0.5">{p.sku}</p>
                         </div>
-                        <span className="text-xs font-black text-primary whitespace-nowrap">
-                          {(p.sale_price || p.base_price).toLocaleString()} {isRTL ? "ج.م" : "EGP"}
-                        </span>
-                      </button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="shrink-0 gap-1 text-[10px] font-bold h-7 px-2 rounded-lg border-primary/30 text-primary hover:bg-primary/10"
+                          onClick={() => onAddToQuote(p)}
+                        >
+                          <Plus className="w-3 h-3" />
+                          {isRTL ? "أضف للتسعير" : "Add to Quote"}
+                        </Button>
+                      </div>
                     ))}
                     <button
                       onClick={() => {
@@ -382,7 +386,7 @@ const RecentOrdersList = ({ orders, loading, isRTL }: { orders: OrderSummary[]; 
   );
 };
 
-const ExclusiveOffers = ({ offers, isRTL }: { offers: OfferProduct[]; isRTL: boolean }) => {
+const ExclusiveOffers = ({ offers, isRTL, onAddToQuote }: { offers: OfferProduct[]; isRTL: boolean; onAddToQuote: (p: OfferProduct) => void }) => {
   if (offers.length === 0) return null;
   const ArrowIcon = isRTL ? ChevronLeft : ChevronRight;
 
@@ -402,9 +406,6 @@ const ExclusiveOffers = ({ offers, isRTL }: { offers: OfferProduct[]; isRTL: boo
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {offers.map((product, i) => {
-          const discount = product.sale_price && product.base_price
-            ? Math.round(((product.base_price - product.sale_price) / product.base_price) * 100)
-            : 0;
           return (
             <motion.div
               key={product.id}
@@ -427,26 +428,24 @@ const ExclusiveOffers = ({ offers, isRTL }: { offers: OfferProduct[]; isRTL: boo
                         <Package className="w-8 h-8 text-muted-foreground/20" />
                       </div>
                     )}
-                    {discount > 0 && (
-                      <Badge className="absolute top-2 start-2 bg-destructive text-destructive-foreground text-[10px] font-black px-2 py-0.5 rounded-lg">
-                        -{discount}%
-                      </Badge>
-                    )}
+                    <Badge className="absolute top-2 start-2 bg-primary/90 text-primary-foreground text-[10px] font-black px-2 py-0.5 rounded-lg">
+                      {isRTL ? "عرض خاص" : "Sale"}
+                    </Badge>
                   </div>
                   <div className="p-3">
                     <p className="text-xs font-bold text-foreground line-clamp-2 leading-relaxed mb-2">
                       {isRTL ? product.name_ar : (product.name_en || product.name_ar)}
                     </p>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-black text-primary">
-                        {(product.sale_price || product.base_price).toLocaleString()} {isRTL ? "ج.م" : "EGP"}
-                      </span>
-                      {product.sale_price && (
-                        <span className="text-[10px] text-muted-foreground line-through">
-                          {product.base_price.toLocaleString()}
-                        </span>
-                      )}
-                    </div>
+                    <p className="text-[10px] text-muted-foreground mb-2">{product.sku}</p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full gap-1 text-[10px] font-bold h-7 rounded-lg border-primary/30 text-primary hover:bg-primary/10"
+                      onClick={() => onAddToQuote(product)}
+                    >
+                      <Plus className="w-3 h-3" />
+                      {isRTL ? "أضف للتسعير" : "Add to Quote"}
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -464,6 +463,7 @@ const DealerHomePage = () => {
   const { user, dealerAccount } = useAuth();
   const { lang } = useLanguage();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const isRTL = lang === "ar";
 
   const [stats, setStats] = useState({ totalOrders: 0, pendingOrders: 0, totalSpent: 0, unreadNotifs: 0 });
@@ -546,6 +546,21 @@ const DealerHomePage = () => {
     ? (isRTL ? "شركات" : "Corporate")
     : (isRTL ? "تجزئة" : "Retail");
 
+  const handleAddToQuote = useCallback((product: OfferProduct) => {
+    // Store product in sessionStorage for the quote builder to pick up
+    const existing = JSON.parse(sessionStorage.getItem("quote_pending_items") || "[]");
+    if (!existing.find((p: any) => p.id === product.id)) {
+      existing.push({ id: product.id, sku: product.sku, name_ar: product.name_ar, name_en: product.name_en });
+      sessionStorage.setItem("quote_pending_items", JSON.stringify(existing));
+    }
+    toast({
+      title: isRTL ? "✅ تمت الإضافة لعرض السعر" : "✅ Added to Quote",
+      description: isRTL
+        ? `${product.name_ar} — اذهب لعرض السعر من لوحة التحكم لمعرفة السعر`
+        : `${product.name_en || product.name_ar} — Go to Quote Builder to see pricing`,
+    });
+  }, [isRTL, toast]);
+
   return (
     <div className="pt-16 md:pt-20 min-h-screen bg-background" dir={isRTL ? "rtl" : "ltr"}>
       <DealerWelcomeHeader tierLabel={tierLabel} isRTL={isRTL} />
@@ -559,13 +574,14 @@ const DealerHomePage = () => {
         searchResults={searchResults}
         isRTL={isRTL}
         navigate={navigate}
+        onAddToQuote={handleAddToQuote}
       />
 
       <div className="container mx-auto px-4 py-8 md:py-12 space-y-8 md:space-y-12">
         <QuickActionsGrid isRTL={isRTL} />
         <StatsOverview stats={stats} loading={loading} isRTL={isRTL} />
         <RecentOrdersList orders={recentOrders} loading={loading} isRTL={isRTL} />
-        <ExclusiveOffers offers={offers} isRTL={isRTL} />
+        <ExclusiveOffers offers={offers} isRTL={isRTL} onAddToQuote={handleAddToQuote} />
       </div>
     </div>
   );
