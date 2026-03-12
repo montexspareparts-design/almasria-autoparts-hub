@@ -1,11 +1,9 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Package, ShoppingCart, ZoomIn, ZoomOut, Lock, Eye, Tag, Layers, Hash, Box, Info, Sparkles } from "lucide-react";
+import { Package, ShoppingCart, ZoomIn, ZoomOut, Lock, Eye, Tag, Layers, Hash, Box, Info } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { supabase } from "@/integrations/supabase/client";
-import ProductReviews from "./ProductReviews";
 
 interface ProductDetailDialogProps {
   product: any | null;
@@ -40,25 +38,7 @@ const ProductDetailDialog = ({
 }: ProductDetailDialogProps) => {
   const [zoomed, setZoomed] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
-  const [similarProducts, setSimilarProducts] = useState<any[]>([]);
   const imageRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!product || !open) { setSimilarProducts([]); return; }
-    const fetchSimilar = async () => {
-      let query = supabase
-        .from("products")
-        .select("id, name_ar, sku, image_url, base_price, brand")
-        .eq("is_active", true)
-        .neq("id", product.id)
-        .gt("stock_quantity", 0)
-        .limit(4);
-      if (product.category_id) query = query.eq("category_id", product.category_id);
-      const { data } = await query;
-      setSimilarProducts(data || []);
-    };
-    fetchSimilar();
-  }, [product?.id, open]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!zoomed || !imageRef.current) return;
@@ -289,43 +269,6 @@ const ProductDetailDialog = ({
               <ShoppingCart className="w-4 h-4" />
               أضف للسلة
             </Button>
-          )}
-
-          <Separator />
-
-          {/* Reviews */}
-          <ProductReviews productId={product.id} />
-
-          {/* Similar Products */}
-          {similarProducts.length > 0 && (
-            <>
-              <Separator />
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-primary" />
-                  <h3 className="text-sm font-bold text-foreground">منتجات مشابهة</h3>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {similarProducts.map((sp) => (
-                    <div key={sp.id} className="border border-border rounded-lg overflow-hidden bg-card hover:border-primary/30 transition-colors">
-                      <div className="aspect-square bg-white">
-                        {sp.image_url ? (
-                          <img src={sp.image_url} alt={sp.name_ar} className="w-full h-full object-contain p-2" loading="lazy" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Package className="w-6 h-6 text-muted-foreground/20" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-2">
-                        <p className="text-[10px] font-mono text-muted-foreground">{sp.sku}</p>
-                        <p className="text-xs font-bold text-foreground line-clamp-2 leading-relaxed">{sp.name_ar}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </>
           )}
         </div>
         </div>

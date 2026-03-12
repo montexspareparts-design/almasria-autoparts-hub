@@ -758,47 +758,6 @@ export type Database = {
         }
         Relationships: []
       }
-      product_reviews: {
-        Row: {
-          comment: string | null
-          created_at: string
-          id: string
-          is_approved: boolean
-          product_id: string
-          rating: number
-          reviewer_name: string | null
-          user_id: string
-        }
-        Insert: {
-          comment?: string | null
-          created_at?: string
-          id?: string
-          is_approved?: boolean
-          product_id: string
-          rating?: number
-          reviewer_name?: string | null
-          user_id: string
-        }
-        Update: {
-          comment?: string | null
-          created_at?: string
-          id?: string
-          is_approved?: boolean
-          product_id?: string
-          rating?: number
-          reviewer_name?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "product_reviews_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       product_tier_prices: {
         Row: {
           discount_price: number | null
