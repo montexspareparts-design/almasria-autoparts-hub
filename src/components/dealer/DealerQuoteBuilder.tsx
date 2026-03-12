@@ -349,9 +349,21 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
     setIsFromPriceList(fromPriceList);
 
     if (fromPriceList && onNavigateToPriceLists) {
-      // Redirect to price lists tab for editing price-list quotes
+      // Extract price list title from notes
+      const priceListTitle = quote.notes?.replace("من كشف الأسعار: ", "") || "";
+      const quoteData: PriceListQuoteData = {
+        priceListTitle,
+        quoteId: quote.id,
+        quoteNumber: quote.quote_number,
+        items: loadedItems.map(i => ({
+          productId: i.product.id,
+          quantity: i.quantity,
+          unitPrice: i.unit_price,
+        })),
+        notes: quote.notes || "",
+      };
       setLoadingQuote(false);
-      onNavigateToPriceLists();
+      onNavigateToPriceLists(quoteData);
       return;
     }
 
