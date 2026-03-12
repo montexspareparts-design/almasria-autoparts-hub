@@ -452,7 +452,7 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
           <Button variant="outline" onClick={() => { setCreatedQuote(null); }}>
             <ArrowLeft className="w-4 h-4 ml-1" />
             عودة للكشف
@@ -465,7 +465,49 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
           )}
           <Button variant="default" onClick={downloadQuotePdf}>
             <Download className="w-4 h-4 ml-1" />
-            تحميل PDF مرة أخرى
+            تحميل PDF
+          </Button>
+          <Button
+            variant="outline"
+            className="border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/10"
+            onClick={() => {
+              if (!createdQuote) return;
+              shareQuoteWhatsApp({
+                quoteNumber: createdQuote.quoteNumber,
+                date: createdQuote.createdAt.toLocaleDateString("ar-EG"),
+                priceListTitle: createdQuote.priceListTitle || undefined,
+                items: createdQuote.items.map(i => ({
+                  name: i.product.name_ar, sku: i.product.sku,
+                  quantity: i.quantity, unitPrice: i.price,
+                  totalPrice: i.price * i.quantity,
+                })),
+                totalAmount: createdQuote.totalAmount,
+              });
+            }}
+          >
+            <MessageCircle className="w-4 h-4 ml-1" />
+            واتساب
+          </Button>
+          <Button
+            variant="outline"
+            className="border-blue-400/30 text-blue-600 hover:bg-blue-500/10"
+            onClick={() => {
+              if (!createdQuote) return;
+              shareQuoteEmail({
+                quoteNumber: createdQuote.quoteNumber,
+                date: createdQuote.createdAt.toLocaleDateString("ar-EG"),
+                priceListTitle: createdQuote.priceListTitle || undefined,
+                items: createdQuote.items.map(i => ({
+                  name: i.product.name_ar, sku: i.product.sku,
+                  quantity: i.quantity, unitPrice: i.price,
+                  totalPrice: i.price * i.quantity,
+                })),
+                totalAmount: createdQuote.totalAmount,
+              });
+            }}
+          >
+            <Mail className="w-4 h-4 ml-1" />
+            إيميل
           </Button>
         </div>
       </div>

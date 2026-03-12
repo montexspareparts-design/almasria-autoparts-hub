@@ -487,14 +487,42 @@ const DealerQuoteBuilder = () => {
               <span className="text-sm font-medium text-muted-foreground">الإجمالي</span>
               <span className="text-lg font-bold text-foreground">{totalAmount.toLocaleString("ar-EG")} ج.م</span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
               <Button variant="outline" onClick={downloadPDF} disabled={saving} className="h-10">
                 <Download className="w-4 h-4 ml-1.5" />
-                تحميل العرض
+                تحميل PDF
+              </Button>
+              <Button
+                variant="outline"
+                className="h-10 border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/10"
+                onClick={() => shareQuoteWhatsApp({
+                  quoteNumber: editingQuoteNumber || `Q-${Date.now().toString(36).toUpperCase()}`,
+                  date: new Date().toLocaleDateString("ar-EG"),
+                  notes: notes || undefined,
+                  items: quoteItems.map(i => ({ name: i.product.name_ar, sku: i.product.sku, quantity: i.quantity, unitPrice: i.unit_price, totalPrice: i.unit_price * i.quantity })),
+                  totalAmount,
+                })}
+              >
+                <MessageCircle className="w-4 h-4 ml-1.5" />
+                واتساب
+              </Button>
+              <Button
+                variant="outline"
+                className="h-10 border-blue-400/30 text-blue-600 hover:bg-blue-500/10"
+                onClick={() => shareQuoteEmail({
+                  quoteNumber: editingQuoteNumber || `Q-${Date.now().toString(36).toUpperCase()}`,
+                  date: new Date().toLocaleDateString("ar-EG"),
+                  notes: notes || undefined,
+                  items: quoteItems.map(i => ({ name: i.product.name_ar, sku: i.product.sku, quantity: i.quantity, unitPrice: i.unit_price, totalPrice: i.unit_price * i.quantity })),
+                  totalAmount,
+                })}
+              >
+                <Mail className="w-4 h-4 ml-1.5" />
+                إيميل
               </Button>
               <Button variant="secondary" onClick={saveQuote} disabled={saving} className="h-10">
                 {saving ? <Loader2 className="w-4 h-4 ml-1.5 animate-spin" /> : <Save className="w-4 h-4 ml-1.5" />}
-                {editingQuoteId ? "تحديث العرض" : "حفظ العرض"}
+                {editingQuoteId ? "تحديث" : "حفظ"}
               </Button>
               <Button onClick={convertToOrder} disabled={saving} className="h-10 bg-primary hover:bg-primary/90">
                 {saving ? <Loader2 className="w-4 h-4 ml-1.5 animate-spin" /> : <ShoppingCart className="w-4 h-4 ml-1.5" />}
