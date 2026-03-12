@@ -666,6 +666,18 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
                 </div>
                 <p className="font-bold text-foreground text-sm shrink-0">{Number(q.total_amount).toLocaleString("ar-EG")} ج.م</p>
                 <div className="flex items-center gap-1 shrink-0">
+                  {q.status !== "converted" && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="w-8 h-8 text-primary hover:bg-primary/10"
+                      title="تحويل لطلبية"
+                      onClick={(e) => { e.stopPropagation(); convertSavedQuoteToOrder(q); }}
+                      disabled={saving}
+                    >
+                      <ShoppingCart className="w-3.5 h-3.5" />
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="icon"
@@ -673,7 +685,6 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
                     title="مشاركة عبر واتساب"
                     onClick={(e) => {
                       e.stopPropagation();
-                      // Quick share with basic info
                       shareQuoteWhatsApp({
                         quoteNumber: q.quote_number,
                         date: new Date(q.created_at).toLocaleDateString("ar-EG"),
