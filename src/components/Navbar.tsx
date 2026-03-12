@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCart } from "@/contexts/CartContext";
 import NotificationBell from "@/components/NotificationBell";
+import DealerAuthDialog from "@/components/DealerAuthDialog";
 
 const mobileMenuVariants = {
   hidden: { opacity: 0, height: 0 },
@@ -28,6 +29,14 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("hero");
+  const [authDialogOpen, setAuthDialogOpen] = useState(false);
+  const [authDialogTab, setAuthDialogTab] = useState<"login" | "register">("login");
+
+  const openAuthDialog = (tab: "login" | "register" = "login") => {
+    setAuthDialogTab(tab);
+    setAuthDialogOpen(true);
+    setIsOpen(false);
+  };
   const { user, dealerAccount, loading: authLoading, isAdmin, signOut } = useAuth();
   const { t, lang, setLang } = useLanguage();
   const { itemCount } = useCart();
@@ -196,7 +205,7 @@ const Navbar = () => {
             )}
             <NotificationBell />
             <button
-              onClick={() => navigate(user ? (dealerAccount ? "/dealer" : "/dealer-apply") : "/auth")}
+              onClick={() => user ? navigate(dealerAccount ? "/dealer" : "/dealer-apply") : openAuthDialog("login")}
               className="text-secondary-foreground/70 hover:text-primary transition-colors p-2 touch-manipulation"
             >
               <User className="w-[18px] h-[18px]" />
@@ -291,7 +300,7 @@ const Navbar = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => navigate("/auth")}
+                  onClick={() => openAuthDialog("login")}
                   className="text-secondary-foreground/60 hover:text-secondary-foreground text-[13px] font-semibold h-8 px-2.5"
                 >
                   {t("nav.login")}
@@ -300,7 +309,7 @@ const Navbar = () => {
                   variant="default"
                   size="sm"
                   className="gap-1.5 text-[13px] font-semibold h-8 px-3"
-                  onClick={() => navigate("/dealer-apply")}
+                  onClick={() => openAuthDialog("register")}
                 >
                   <Briefcase className="w-3.5 h-3.5" />
                   {t("nav.register_dealer")}
@@ -401,10 +410,10 @@ const Navbar = () => {
                   </>
                 ) : (
                   <>
-                    <Button variant="ghost" size="sm" className="w-full font-semibold" onClick={() => { navigate("/auth"); setIsOpen(false); }}>
+                    <Button variant="ghost" size="sm" className="w-full font-semibold" onClick={() => openAuthDialog("login")}>
                       {t("nav.login")}
                     </Button>
-                    <Button variant="default" size="sm" className="w-full gap-2 font-semibold" onClick={() => { navigate("/dealer-apply"); setIsOpen(false); }}>
+                    <Button variant="default" size="sm" className="w-full gap-2 font-semibold" onClick={() => openAuthDialog("register")}>
                       <Briefcase className="w-4 h-4" /> {t("nav.register_dealer")}
                     </Button>
                   </>
@@ -414,6 +423,7 @@ const Navbar = () => {
           )}
         </AnimatePresence>
       </div>
+      <DealerAuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} defaultTab={authDialogTab} />
     </motion.nav>
   );
 };

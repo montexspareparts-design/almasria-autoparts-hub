@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Shield, TrendingUp, Users, Award, CheckCircle, ArrowLeft, FileText, UserCheck, Clock, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import DealerAuthDialog from "@/components/DealerAuthDialog";
 
 const benefits = [
 { icon: TrendingUp, title: "أسعار جملة تنافسية", desc: "احصل على تسعير خاص حسب فئتك كتاجر معتمد" },
@@ -40,6 +43,16 @@ const itemVariants = {
 
 const DealerApply = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [authDialogOpen, setAuthDialogOpen] = useState(false);
+
+  const handleStartRegistration = () => {
+    if (user) {
+      navigate("/dealer-register");
+    } else {
+      setAuthDialogOpen(true);
+    }
+  };
 
   return (
     <div className="min-h-screen">
@@ -250,7 +263,7 @@ const DealerApply = () => {
               <Button
                 size="lg"
                 className="gap-2 red-glow text-lg px-10"
-                onClick={() => navigate("/dealer-register")}
+                onClick={handleStartRegistration}
               >
                 ابدأ التسجيل الآن
                 <ArrowLeft className="w-5 h-5" />
@@ -264,7 +277,7 @@ const DealerApply = () => {
               transition={{ delay: 0.4 }}
             >
               لديك حساب بالفعل؟{" "}
-              <button onClick={() => navigate("/auth")} className="text-primary hover:underline">
+              <button onClick={() => setAuthDialogOpen(true)} className="text-primary hover:underline">
                 سجل دخول
               </button>
             </motion.p>
@@ -273,6 +286,7 @@ const DealerApply = () => {
       </section>
 
       <Footer />
+      <DealerAuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} defaultTab="register" />
     </div>
   );
 };
