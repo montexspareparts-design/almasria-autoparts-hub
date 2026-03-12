@@ -599,6 +599,39 @@ export type Database = {
         }
         Relationships: []
       }
+      price_list_products: {
+        Row: {
+          id: string
+          price_list_id: string
+          product_id: string
+        }
+        Insert: {
+          id?: string
+          price_list_id: string
+          product_id: string
+        }
+        Update: {
+          id?: string
+          price_list_id?: string
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_list_products_price_list_id_fkey"
+            columns: ["price_list_id"]
+            isOneToOne: false
+            referencedRelation: "price_lists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_list_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       price_lists: {
         Row: {
           created_at: string
