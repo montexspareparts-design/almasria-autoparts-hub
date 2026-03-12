@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 export type DealerTab =
   | "overview" | "quotes" | "orders" | "invoices" | "price_lists"
   | "favorites" | "quick_order" | "notifications" | "offers"
-  | "catalogs" | "settings" | "statement";
+  | "catalogs" | "settings" | "statement" | "payment";
 
 interface DealerSidebarProps {
   activeTab: DealerTab;
