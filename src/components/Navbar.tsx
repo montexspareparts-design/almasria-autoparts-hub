@@ -84,7 +84,7 @@ const Navbar = () => {
     { label: lang === "ar" ? "لوحة التحكم" : "Dashboard", href: "/dealer", isRoute: true },
     { label: lang === "ar" ? "المنتجات" : "Products", href: "/products", isRoute: true },
     { label: lang === "ar" ? "طلباتي" : "My Orders", href: "/dealer?tab=orders", isRoute: true },
-    { label: lang === "ar" ? "كشوفات الأسعار" : "Price Lists", href: "/dealer?tab=prices", isRoute: true },
+    { label: lang === "ar" ? "كشوفات الأسعار" : "Price Lists", href: "/dealer?tab=price_lists", isRoute: true },
   ];
 
   // B2C links for regular visitors
