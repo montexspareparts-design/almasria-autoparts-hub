@@ -58,6 +58,15 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
   const [tierPrices, setTierPrices] = useState<Record<string, number>>({});
   const [savingQuote, setSavingQuote] = useState(false);
 
+  // Quote summary state
+  const [createdQuote, setCreatedQuote] = useState<{
+    quoteNumber: string;
+    items: { product: Product; quantity: number; price: number }[];
+    totalAmount: number;
+    priceListTitle: string;
+    createdAt: Date;
+  } | null>(null);
+
   useEffect(() => {
     fetchLists();
     if (user) fetchDailyViews();
