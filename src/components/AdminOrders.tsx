@@ -150,7 +150,7 @@ const AdminOrders = () => {
   const statusNotificationMessages: Record<string, { title: string; message: string }> = {
     confirmed: { title: "✅ تمت الموافقة على طلبك", message: "تم مراجعة طلبك والموافقة عليه. يرجى استكمال الدفع لبدء التجهيز" },
     awaiting_payment: { title: "💳 بانتظار الدفع", message: "تم الموافقة على طلبك، يرجى تحويل المبلغ المطلوب لاستكمال الإجراءات" },
-    processing: { title: "📦 جاري تجهيز طلبك", message: "طلبك قيد التجهيز الآن وسيتم شحنه في أقرب وقت" },
+    processing: { title: "✅ تم تأكيد استلام الدفع", message: "تم استلام الدفع بنجاح وطلبك قيد التجهيز الآن. سيتم شحنه في أقرب وقت" },
     shipped: { title: "🚚 تم شحن طلبك", message: "تم شحن طلبك! يمكنك متابعة حالته من صفحة طلباتي" },
     delivered: { title: "🎉 تم تسليم طلبك", message: "تم تسليم طلبك بنجاح. شكراً لتعاملك معنا!" },
     cancelled: { title: "❌ تم إلغاء طلبك", message: "تم إلغاء طلبك. تواصل معنا لمزيد من التفاصيل" },
