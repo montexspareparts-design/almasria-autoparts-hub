@@ -462,9 +462,21 @@ const AdminProductImages = () => {
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-card-foreground text-sm truncate">{product.name_ar}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {product.sku} • {brandLabels[product.brand] || product.brand}
-                  </p>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <span>{product.sku}</span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleCopySku(product.sku); }}
+                      className="p-0.5 rounded hover:bg-muted transition-colors"
+                      title="نسخ رقم القطعة"
+                    >
+                      {copiedSku === product.sku ? (
+                        <Check className="w-3 h-3 text-green-500" />
+                      ) : (
+                        <Copy className="w-3 h-3 text-muted-foreground hover:text-foreground" />
+                      )}
+                    </button>
+                    <span>• {brandLabels[product.brand] || product.brand}</span>
+                  </div>
                   {dragOverProductId === product.id && (
                     <p className="text-xs text-primary font-medium mt-0.5">📥 أفلت الصورة هنا</p>
                   )}
