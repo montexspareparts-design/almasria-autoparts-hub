@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Lock, UserPlus, CheckCircle2, Building2, Users, ShoppingBag, Loader2 } from "lucide-react";
+import { Lock, UserPlus, CheckCircle2, Building2, Users, ShoppingBag, Loader2, Eye, EyeOff } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
