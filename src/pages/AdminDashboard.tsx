@@ -134,6 +134,18 @@ const AdminDashboard = () => {
     setProcessing(false);
   };
 
+  const handleDelete = async (app: DealerApplication) => {
+    setProcessing(true);
+    // Delete dealer account if exists
+    await supabase.from("dealer_accounts").delete().eq("application_id", app.id);
+    // Delete the application
+    await supabase.from("dealer_applications").delete().eq("id", app.id);
+    toast({ title: "تم حذف الطلب والتاجر بنجاح" });
+    setSelectedApp(null);
+    fetchApplications();
+    setProcessing(false);
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
