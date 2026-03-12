@@ -365,7 +365,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
     toast({ title: "تم إرسال الطلبية ✓", description: `رقم الطلب: ${orderNumber}` });
     setSelectedProducts([]);
     setSavingQuote(false);
-    fetchDailyLookupCount();
+    fetchDailyViews();
   };
 
   const sendToQuote = async () => {
