@@ -456,20 +456,11 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
                         variant="default"
                         size="sm"
                         className="gap-1"
-                        onClick={() => setViewingList(list)}
+                        onClick={() => openPriceList(list)}
                       >
                         <Eye className="w-4 h-4" />
                         فتح
                       </Button>
-                      {list.file_url && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => window.open(list.file_url!, "_blank")}
-                        >
-                          <Download className="w-4 h-4" />
-                        </Button>
-                      )}
                     </div>
                   </div>
                 </CardContent>
