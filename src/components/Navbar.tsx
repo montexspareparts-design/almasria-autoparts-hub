@@ -67,7 +67,19 @@ const Navbar = () => {
 
   const toggleLang = () => setLang(lang === "ar" ? "en" : "ar");
 
-  const links = [
+  const isDealer = !!dealerAccount;
+
+  // B2B links for dealers — simplified portal navigation
+  const dealerLinks = [
+    { label: lang === "ar" ? "الرئيسية" : "Home", href: "/", isRoute: true },
+    { label: lang === "ar" ? "لوحة التحكم" : "Dashboard", href: "/dealer", isRoute: true },
+    { label: lang === "ar" ? "المنتجات" : "Products", href: "/products", isRoute: true },
+    { label: lang === "ar" ? "طلباتي" : "My Orders", href: "/dealer?tab=orders", isRoute: true },
+    { label: lang === "ar" ? "كشوفات الأسعار" : "Price Lists", href: "/dealer?tab=prices", isRoute: true },
+  ];
+
+  // B2C links for regular visitors
+  const visitorLinks = [
     { label: t("nav.home"), href: "/#hero" },
     { label: t("nav.about"), href: "/about", isRoute: true },
     { label: t("nav.genuine_parts"), href: "/products/toyota-genuine", isRoute: true },
@@ -75,6 +87,8 @@ const Navbar = () => {
     { label: t("nav.mtx"), href: "/mtx", isRoute: true },
     { label: t("nav.contact"), href: "/contact", isRoute: true },
   ];
+
+  const links = isDealer ? dealerLinks : visitorLinks;
 
   const renderDesktopLink = (link: typeof links[0]) => {
     const active = isLinkActive(link.href, link.isRoute);
