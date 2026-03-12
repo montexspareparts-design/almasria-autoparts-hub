@@ -99,7 +99,7 @@ const DealerDashboard = () => {
       case "quick_order": return <DealerQuickOrder />;
       case "orders": return <DealerOrdersList userId={user!.id} />;
       case "invoices": return <DealerInvoices userId={user!.id} />;
-      case "price_lists": return <DealerPriceLists />;
+      case "price_lists": return <DealerPriceLists onNavigateToQuotes={() => setActiveTab("quotes")} />;
       case "favorites": return <DealerFavorites />;
       case "notifications": return <DealerNotificationsList userId={user!.id} />;
       case "offers": return <DealerOffers />;
