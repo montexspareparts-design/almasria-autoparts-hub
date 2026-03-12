@@ -138,6 +138,15 @@ const DealerDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col" dir="rtl">
+      {showOnboarding && (
+        <DealerOnboarding
+          dealerName={dealerName}
+          onComplete={() => {
+            setShowOnboarding(false);
+            localStorage.setItem("dealer_onboarding_done", "1");
+          }}
+        />
+      )}
       {/* Top Bar */}
       <header className="bg-secondary border-b border-secondary/80 sticky top-0 z-40">
         <div className="flex items-center justify-between h-14 px-4 lg:px-6">
