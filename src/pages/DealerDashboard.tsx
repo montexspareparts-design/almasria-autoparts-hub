@@ -19,6 +19,7 @@ import DealerInvoices from "@/components/dealer/DealerInvoices";
 import DealerAccountSettings from "@/components/dealer/DealerAccountSettings";
 import DealerStatement from "@/components/dealer/DealerStatement";
 import DealerPayment from "@/components/dealer/DealerPayment";
+import DealerStockAlerts from "@/components/dealer/DealerStockAlerts";
 
 const DealerDashboard = () => {
   const { user, dealerAccount, isDealer, loading: authLoading, signOut } = useAuth();
@@ -88,6 +89,7 @@ const DealerDashboard = () => {
     statement: "كشف الحساب",
     price_lists: "كشوفات الأسعار",
     favorites: "المفضلة",
+    stock_alerts: "تنبيهات المخزون",
     notifications: "الإشعارات",
     offers: "العروض الخاصة",
     catalogs: "الكتالوجات",
@@ -120,6 +122,7 @@ const DealerDashboard = () => {
       case "notifications": return <DealerNotificationsList userId={user!.id} onNavigate={(tab) => setActiveTab(tab as DealerTab)} />;
       case "offers": return <DealerOffers />;
       case "statement": return <DealerStatement userId={user!.id} />;
+      case "stock_alerts": return <DealerStockAlerts />;
       case "settings": return <DealerAccountSettings />;
       default: return null;
     }

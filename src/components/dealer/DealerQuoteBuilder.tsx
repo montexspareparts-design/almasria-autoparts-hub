@@ -11,7 +11,7 @@ import { shareQuoteWhatsApp, shareQuoteEmail } from "@/lib/shareQuote";
 import {
   Search, Plus, Minus, Trash2, FileText, Save, ShoppingCart,
   Eye, Loader2, Download, X, ArrowRight, Edit3, ChevronLeft,
-  MessageCircle, Mail
+  MessageCircle, Mail, Bell
 } from "lucide-react";
 
 interface Product {
@@ -81,14 +81,43 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
   const [loadingQuote, setLoadingQuote] = useState(false);
   const [isFromPriceList, setIsFromPriceList] = useState(false);
   const [dealerInfo, setDealerInfo] = useState<{ name: string; phone: string } | null>(null);
+  const [alertedProducts, setAlertedProducts] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (user) {
       fetchDailyViews();
       fetchSavedQuotes();
       fetchDealerInfo();
+      fetchAlertedProducts();
     }
   }, [user]);
+
+  const fetchAlertedProducts = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("stock_alerts")
+      .select("product_id")
+      .eq("user_id", user.id)
+      .eq("is_active", true);
+    if (data) setAlertedProducts(new Set(data.map(a => a.product_id)));
+  };
+
+  const toggleStockAlert = async (e: React.MouseEvent, productId: string, productName: string) => {
+    e.stopPropagation();
+    if (!user) return;
+    if (alertedProducts.has(productId)) {
+      await supabase.from("stock_alerts").delete().eq("user_id", user.id).eq("product_id", productId);
+      setAlertedProducts(prev => { const s = new Set(prev); s.delete(productId); return s; });
+      toast({ title: "تم إلغاء التنبيه", description: productName });
+    } else {
+      await supabase.from("stock_alerts").insert([
+        { user_id: user.id, product_id: productId, alert_type: "back_in_stock" },
+        { user_id: user.id, product_id: productId, alert_type: "price_drop" },
+      ]);
+      setAlertedProducts(prev => new Set(prev).add(productId));
+      toast({ title: "🔔 تم تفعيل التنبيه", description: `هيوصلك إشعار لما "${productName}" يرجع متوفر أو ينزل عليه عرض` });
+    }
+  };
 
   const fetchDealerInfo = async () => {
     if (!user) return;
@@ -500,30 +529,43 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
       {/* Search Results */}
       {searchResults.length > 0 && (
         <div className="bg-card border border-border rounded-lg p-1.5 space-y-0.5 max-h-60 overflow-y-auto">
-          {searchResults.map(product => (
-            <button
-              key={product.id}
-              onClick={() => addToQuote(product)}
-              className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted transition-colors text-right"
-            >
-              {product.image_url ? (
-                <img src={product.image_url} alt="" className="w-10 h-10 rounded bg-white object-contain p-0.5 shrink-0 border border-border" />
-              ) : (
-                <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0">
-                  <FileText className="w-4 h-4 text-muted-foreground/40" />
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{product.name_ar}</p>
-                <p className="text-[11px] text-muted-foreground font-mono">{product.sku}</p>
+          {searchResults.map(product => {
+            const isAlerted = alertedProducts.has(product.id);
+            return (
+              <div
+                key={product.id}
+                className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted transition-colors text-right"
+              >
+                <button onClick={() => addToQuote(product)} className="flex items-center gap-3 flex-1 min-w-0 text-right">
+                  {product.image_url ? (
+                    <img src={product.image_url} alt="" className="w-10 h-10 rounded bg-white object-contain p-0.5 shrink-0 border border-border" />
+                  ) : (
+                    <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0">
+                      <FileText className="w-4 h-4 text-muted-foreground/40" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{product.name_ar}</p>
+                    <p className="text-[11px] text-muted-foreground font-mono">{product.sku}</p>
+                  </div>
+                  <div className="shrink-0">
+                    <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Plus className="w-3.5 h-3.5 text-primary" />
+                    </div>
+                  </div>
+                </button>
+                <button
+                  onClick={(e) => toggleStockAlert(e, product.id, product.name_ar)}
+                  className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
+                    isAlerted ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                  }`}
+                  title={isAlerted ? "إلغاء التنبيه" : "نبهني عند التوفر أو العرض"}
+                >
+                  <Bell className={`w-3.5 h-3.5 ${isAlerted ? "fill-current" : ""}`} />
+                </button>
               </div>
-              <div className="shrink-0">
-                <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Plus className="w-3.5 h-3.5 text-primary" />
-                </div>
-              </div>
-            </button>
-          ))}
+            );
+          })}
         </div>
       )}
 
