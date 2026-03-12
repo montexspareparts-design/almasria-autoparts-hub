@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
+import DealerWelcomeBanner from "@/components/DealerWelcomeBanner";
 import { OrganizationSchema, WebSiteSchema, LocalBusinessSchema, FAQSchema } from "@/components/SEOSchemaMarkup";
 
 const AboutBrief = lazy(() => import("@/components/AboutBrief"));
@@ -51,6 +52,7 @@ const Index = () => {
       ]} />
       <Navbar />
       <HeroSection />
+      <DealerWelcomeBanner />
 
       {/* About — dark section */}
       <Suspense fallback={<SectionFallback />}><AboutBrief /></Suspense>
