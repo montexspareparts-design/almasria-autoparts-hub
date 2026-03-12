@@ -100,13 +100,16 @@ const DealerRecommendations = ({ userId, tier }: { userId: string; tier?: string
   };
 
   const handleAddToCart = (product: RecommendedProduct) => {
-    addToCart({
+    addItem({
       id: product.id,
-      name: product.name_ar,
-      price: product.base_price,
-      image: product.image_url || "/placeholder.svg",
+      name_ar: product.name_ar,
       sku: product.sku,
+      image_url: product.image_url,
+      unit_price: product.base_price,
       quantity: 1,
+      stock_quantity: 100,
+      min_order_qty: 1,
+      brand: product.brand,
     });
     toast({
       title: "تمت الإضافة",
