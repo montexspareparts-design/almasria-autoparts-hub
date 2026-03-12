@@ -443,11 +443,40 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
 
                     {/* Pending Approval Banner */}
                     {order.status === "pending_approval" && (
-                      <div className="bg-orange-50 dark:bg-orange-950/30 border border-orange-300 dark:border-orange-700 rounded-xl p-4 flex items-start gap-3">
-                        <AlertTriangle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-sm font-bold text-orange-800 dark:text-orange-300">بانتظار موافقتك على تعديلات الإدارة</p>
-                          <p className="text-xs text-orange-700 dark:text-orange-400 mt-1">راجع تفاصيل الطلب المحدّثة أدناه ووافق أو ارفض</p>
+                      <div className="bg-orange-50 dark:bg-orange-950/30 border border-orange-300 dark:border-orange-700 rounded-xl p-4 space-y-3">
+                        <div className="flex items-start gap-3">
+                          <AlertTriangle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-bold text-orange-800 dark:text-orange-300">بانتظار موافقتك على تعديلات الإدارة</p>
+                            <p className="text-xs text-orange-700 dark:text-orange-400 mt-1">راجع تفاصيل الطلب المحدّثة أدناه ووافق أو ارفض</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 mr-8">
+                          <Button
+                            size="sm"
+                            className="h-8 text-xs gap-1"
+                            onClick={async () => {
+                              await supabase.from("orders").update({ status: "confirmed" }).eq("id", order.id);
+                              toast({ title: "تم قبول التعديلات ✓" });
+                              fetchOrders();
+                            }}
+                          >
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            موافق على التعديل
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 text-xs gap-1 border-destructive/30 text-destructive hover:bg-destructive/10"
+                            onClick={async () => {
+                              await supabase.from("orders").update({ status: "cancelled" }).eq("id", order.id);
+                              toast({ title: "تم رفض الطلب" });
+                              fetchOrders();
+                            }}
+                          >
+                            <XCircle className="w-3.5 h-3.5" />
+                            رفض
+                          </Button>
                         </div>
                       </div>
                     )}
