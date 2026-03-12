@@ -81,6 +81,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
   const [loadingQuote, setLoadingQuote] = useState(false);
   const [isFromPriceList, setIsFromPriceList] = useState(false);
   const [dealerInfo, setDealerInfo] = useState<{ name: string; phone: string } | null>(null);
+  const [alertedProducts, setAlertedProducts] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (user) {
