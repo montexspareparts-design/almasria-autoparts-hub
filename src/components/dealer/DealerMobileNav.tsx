@@ -11,8 +11,7 @@ interface DealerMobileNavProps {
 const tabs: { id: DealerTab; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "overview", label: "الرئيسية", icon: LayoutDashboard },
   { id: "quotes", label: "بحث", icon: Search },
-  { id: "quick_order", label: "طلب سريع", icon: Upload },
-  { id: "orders", label: "الطلبات", icon: ClipboardList },
+  { id: "orders", label: "الطلبية", icon: ClipboardList },
   { id: "notifications", label: "إشعارات", icon: Bell },
 ];
 

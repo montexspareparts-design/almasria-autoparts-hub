@@ -10,7 +10,7 @@ import DealerOverview from "@/components/dealer/DealerOverview";
 import DealerOrdersList from "@/components/dealer/DealerOrdersList";
 import DealerNotificationsList from "@/components/dealer/DealerNotificationsList";
 import DealerOffers from "@/components/dealer/DealerOffers";
-import DealerCatalogs from "@/components/DealerCatalogs";
+
 import DealerQuoteBuilder from "@/components/dealer/DealerQuoteBuilder";
 import DealerPriceLists from "@/components/dealer/DealerPriceLists";
 import DealerFavorites from "@/components/dealer/DealerFavorites";
@@ -67,7 +67,7 @@ const DealerDashboard = () => {
     overview: "لوحة التحكم",
     quotes: "بحث القطع وعروض الأسعار",
     quick_order: "طلب سريع — رفع Excel",
-    orders: "سجل الطلبات",
+    orders: "الطلبية",
     invoices: "الفواتير",
     price_lists: "كشوفات الأسعار",
     favorites: "المفضلة",
@@ -101,16 +101,6 @@ const DealerDashboard = () => {
       case "favorites": return <DealerFavorites />;
       case "notifications": return <DealerNotificationsList userId={user!.id} />;
       case "offers": return <DealerOffers />;
-      case "catalogs":
-        return (
-          <DealerCatalogs
-            isWholesale={
-              isDealer &&
-              !!dealerAccount?.is_active &&
-              (dealerAccount?.tier === "wholesale_tier1" || dealerAccount?.tier === "wholesale_tier2")
-            }
-          />
-        );
       case "settings": return <DealerAccountSettings />;
       default: return null;
     }

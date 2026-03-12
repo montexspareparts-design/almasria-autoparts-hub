@@ -21,8 +21,7 @@ interface DealerSidebarProps {
 const mainTabs: { id: DealerTab; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "overview", label: "لوحة التحكم", icon: LayoutDashboard },
   { id: "quotes", label: "بحث القطع وعروض الأسعار", icon: Search },
-  { id: "quick_order", label: "طلب سريع", icon: Upload },
-  { id: "orders", label: "سجل الطلبات", icon: ClipboardList },
+  { id: "orders", label: "الطلبية", icon: ClipboardList },
   { id: "invoices", label: "الفواتير", icon: Receipt },
   { id: "price_lists", label: "كشوفات الأسعار", icon: FileText },
   { id: "favorites", label: "المفضلة", icon: Heart },
@@ -31,8 +30,8 @@ const mainTabs: { id: DealerTab; label: string; icon: typeof LayoutDashboard }[]
 const secondaryTabs: { id: DealerTab; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "notifications", label: "الإشعارات", icon: Bell },
   { id: "offers", label: "العروض الخاصة", icon: Tag },
-  { id: "catalogs", label: "الكتالوجات", icon: BookOpen },
   { id: "settings", label: "إعدادات الحساب", icon: Settings },
+  { id: "quick_order", label: "طلب سريع", icon: Upload },
 ];
 
 const tierLabels: Record<string, string> = {
