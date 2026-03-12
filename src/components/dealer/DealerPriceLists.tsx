@@ -534,26 +534,36 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
         </div>
 
         {/* Action Options */}
-        <div className="space-y-3">
-          <h4 className="text-sm font-bold text-foreground">ماذا تريد أن تفعل؟</h4>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Button size="lg" className="h-14 text-sm gap-2" onClick={() => generateQuotePdf(quoteShareData)}>
-              <Eye className="w-5 h-5" />
-              معاينة وتحميل عرض السعر PDF
+        <div className="space-y-4">
+          <h4 className="text-base font-bold text-foreground text-center">ماذا تريد أن تفعل؟</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Button 
+              size="lg" 
+              variant="outline"
+              className="h-20 text-base gap-3 border-2 border-primary hover:bg-primary/10 flex-col"
+              onClick={() => generateQuotePdf(quoteShareData)}
+            >
+              <Download className="w-7 h-7 text-primary" />
+              <span className="font-bold">تحميل عرض السعر PDF</span>
             </Button>
-            <Button size="lg" variant="destructive" className="h-14 text-sm gap-2" onClick={convertToOrder} disabled={savingQuote}>
-              {savingQuote ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShoppingCart className="w-5 h-5" />}
-              تحويل لطلبية
+            <Button 
+              size="lg" 
+              className="h-20 text-base gap-3 bg-destructive hover:bg-destructive/90 flex-col"
+              onClick={convertToOrder} 
+              disabled={savingQuote}
+            >
+              {savingQuote ? <Loader2 className="w-7 h-7 animate-spin" /> : <ShoppingCart className="w-7 h-7" />}
+              <span className="font-bold">تحويل لطلبية</span>
             </Button>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <Button
               variant="outline"
               className="gap-1"
               onClick={() => shareQuoteWhatsApp(quoteShareData)}
             >
               <MessageCircle className="w-4 h-4" />
-              مشاركة واتساب
+              واتساب
             </Button>
             <Button
               variant="outline"
@@ -561,7 +571,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
               onClick={() => shareQuoteEmail(quoteShareData)}
             >
               <Mail className="w-4 h-4" />
-              إرسال إيميل
+              إيميل
             </Button>
             <Button variant="ghost" onClick={() => setCreatedQuote(null)}>
               <ArrowLeft className="w-4 h-4 ml-1" />
