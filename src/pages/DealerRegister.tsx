@@ -315,7 +315,7 @@ const DealerRegister = () => {
 
               {/* Email */}
               <div className="space-y-2">
-                <Label htmlFor="email">البريد الإلكتروني <span className="text-muted-foreground text-xs">(اختياري)</span></Label>
+                <Label htmlFor="email">البريد الإلكتروني <span className="text-primary">*</span></Label>
                 <Input
                   id="email"
                   type="email"
@@ -323,6 +323,7 @@ const DealerRegister = () => {
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   placeholder="example@email.com"
                   className="text-right"
+                  required
                 />
               </div>
 
