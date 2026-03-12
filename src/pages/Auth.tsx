@@ -228,6 +228,19 @@ const Auth = () => {
                 </div>
               </div>
 
+              {isLogin && (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="rememberMe"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="h-4 w-4 rounded border-input accent-primary cursor-pointer"
+                  />
+                  <Label htmlFor="rememberMe" className="text-card-foreground cursor-pointer text-sm">تذكرني</Label>
+                </div>
+              )}
+
               {!isLogin && (
                 <div className="space-y-2">
                   <Label htmlFor="address" className="text-card-foreground">العنوان <span className="text-muted-foreground text-xs">(اختياري)</span></Label>
