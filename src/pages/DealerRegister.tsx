@@ -35,6 +35,7 @@ const formSchema = z.object({
   businessName: z.string().trim().min(2, "اسم الشركة مطلوب").max(200),
   governorate: z.string().min(1, "يرجى اختيار المحافظة"),
   email: z.string().trim().email("بريد إلكتروني غير صحيح").min(1, "البريد الإلكتروني مطلوب").max(255),
+  password: z.string().min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل").max(100),
   clientType: z.enum(["wholesale", "company", "distributor"], { required_error: "يرجى اختيار نوع العميل" }),
 });
 
