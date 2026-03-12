@@ -144,42 +144,15 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
     setSavedQuotes((data as SavedQuote[]) || []);
   };
 
-  // Normalize Arabic text: treat ة/ه, أ/إ/آ/ا, ى/ي as same
-  const normalizeArabic = (text: string) => {
-    return text
-      .replace(/[أإآا]/g, "ا")
-      .replace(/ة/g, "ه")
-      .replace(/ى/g, "ي")
-      .replace(/\s+/g, " ")
-      .trim();
-  };
-
   const searchProducts = useCallback(async (query: string) => {
     if (query.length < 2) { setSearchResults([]); return; }
     setSearching(true);
-    const normalized = normalizeArabic(query);
-    // Build multiple query variants for fuzzy Arabic matching
-    const variants = new Set<string>([query, normalized]);
-    // Add variant with ة↔ه swap
-    variants.add(query.replace(/ه/g, "ة"));
-    variants.add(query.replace(/ة/g, "ه"));
-    // Add variant with أإآ↔ا swap
-    variants.add(query.replace(/[أإآ]/g, "ا"));
-    variants.add(query.replace(/ا/g, "أ"));
-    // Add variant with ى↔ي swap
-    variants.add(query.replace(/ي/g, "ى"));
-    variants.add(query.replace(/ى/g, "ي"));
-
-    const orClauses = Array.from(variants)
-      .map(v => `name_ar.ilike.%${v}%`)
-      .join(",");
-
     const { data } = await supabase
       .from("products")
       .select("id, name_ar, sku, base_price, sale_price, is_on_sale, image_url, stock_quantity")
       .eq("is_active", true)
-      .or(`${orClauses},sku.ilike.%${query}%`)
-      .limit(15);
+      .or(`name_ar.ilike.%${query}%,sku.ilike.%${query}%`)
+      .limit(10);
     setSearchResults(data || []);
     setSearching(false);
   }, []);
@@ -491,13 +464,13 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
 
   // Shared builder UI for both "builder" and "edit" views
   const renderBuilder = () => (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {/* Editing banner */}
       {editingQuoteId && (
-        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-primary/5 border border-primary/20">
+        <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
           <Edit3 className="w-4 h-4 text-primary shrink-0" />
           <p className="text-sm font-medium text-foreground flex-1">
-            تعديل: <span className="font-bold">{editingQuoteNumber}</span>
+            تعديل العرض: <span className="font-bold">{editingQuoteNumber}</span>
           </p>
           <Button
             variant="ghost"
@@ -512,32 +485,38 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
               setActiveView("builder");
             }}
           >
-            إلغاء
+            إلغاء التعديل
           </Button>
         </div>
       )}
 
-      {/* Search - the main action, prominent */}
+      {/* Daily Limit */}
+      <div className={`rounded-lg border p-3 flex items-center gap-3 ${remainingViews <= 5 ? "border-destructive/30 bg-destructive/5" : "border-primary/20 bg-primary/5"}`}>
+        <Eye className={`w-4 h-4 shrink-0 ${remainingViews <= 5 ? "text-destructive" : "text-primary"}`} />
+        <p className="text-sm text-foreground">
+          المتبقي: <span className="font-bold">{remainingViews}</span> من {DAILY_LIMIT} صنف يومياً
+        </p>
+      </div>
+
+      {/* Search - hidden for price list quotes */}
       {!isFromPriceList && (
-        <div className="relative">
-          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-          <Input
-            placeholder="🔍 اكتب اسم القطعة أو رقمها..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pr-11 h-12 text-base bg-card border-2 border-border focus:border-primary rounded-xl placeholder:text-muted-foreground/70"
-            disabled={remainingViews === 0}
-          />
-          {searchQuery && (
-            <button onClick={() => { setSearchQuery(""); setSearchResults([]); }} className="absolute left-3 top-1/2 -translate-y-1/2">
-              <X className="w-4 h-4 text-muted-foreground" />
-            </button>
-          )}
-          {/* Daily limit - subtle inline hint */}
-          <span className={`absolute left-10 top-1/2 -translate-y-1/2 text-[10px] ${remainingViews <= 5 ? "text-destructive" : "text-muted-foreground/50"}`}>
-            {remainingViews}/{DAILY_LIMIT}
-          </span>
-        </div>
+        <>
+          <div className="relative">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="ابحث بالاسم أو رقم القطعة لإضافة صنف..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pr-10 h-11 text-sm bg-card"
+              disabled={remainingViews === 0}
+            />
+            {searchQuery && (
+              <button onClick={() => { setSearchQuery(""); setSearchResults([]); }} className="absolute left-3 top-1/2 -translate-y-1/2">
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
+            )}
+          </div>
+        </>
       )}
 
       {isFromPriceList && editingQuoteId && (
@@ -662,46 +641,40 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
             />
           </div>
 
-          {/* Total & Actions - simplified */}
+          {/* Total & Actions */}
           <div className="p-3 border-t border-border bg-muted/30">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-base font-bold text-foreground">الإجمالي</span>
-              <span className="text-xl font-black text-primary">{totalAmount.toLocaleString("ar-EG")} ج.م</span>
+              <span className="text-sm font-medium text-muted-foreground">الإجمالي</span>
+              <span className="text-lg font-bold text-foreground">{totalAmount.toLocaleString("ar-EG")} ج.م</span>
             </div>
-            {/* Primary actions - big and clear */}
-            <div className="grid grid-cols-2 gap-2 mb-2">
-              <Button onClick={convertToOrder} disabled={saving} className="h-12 text-base font-bold bg-primary hover:bg-primary/90">
-                {saving ? <Loader2 className="w-5 h-5 ml-2 animate-spin" /> : <ShoppingCart className="w-5 h-5 ml-2" />}
-                اطلب دلوقتي
-              </Button>
-              <Button variant="secondary" onClick={saveQuote} disabled={saving} className="h-12 text-base font-bold">
-                {saving ? <Loader2 className="w-5 h-5 ml-2 animate-spin" /> : <Save className="w-5 h-5 ml-2" />}
-                {editingQuoteId ? "حفظ التعديل" : "احفظ العرض"}
-              </Button>
-            </div>
-            {/* Secondary actions - smaller */}
-            <div className="flex gap-2">
-              <Button variant="ghost" size="sm" onClick={downloadPDF} disabled={saving} className="flex-1 h-8 text-xs text-muted-foreground">
-                <Download className="w-3.5 h-3.5 ml-1" />
-                PDF
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+              <Button variant="outline" onClick={downloadPDF} disabled={saving} className="h-10">
+                <Download className="w-4 h-4 ml-1.5" />
+                تحميل PDF
               </Button>
               <Button
-                variant="ghost"
-                size="sm"
-                className="flex-1 h-8 text-xs text-[#25D366]"
+                variant="outline"
+                className="h-10 border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/10"
                 onClick={() => shareQuoteWhatsApp(buildQuoteData())}
               >
-                <MessageCircle className="w-3.5 h-3.5 ml-1" />
+                <MessageCircle className="w-4 h-4 ml-1.5" />
                 واتساب
               </Button>
               <Button
-                variant="ghost"
-                size="sm"
-                className="flex-1 h-8 text-xs text-blue-600"
+                variant="outline"
+                className="h-10 border-blue-400/30 text-blue-600 hover:bg-blue-500/10"
                 onClick={() => shareQuoteEmail(buildQuoteData())}
               >
-                <Mail className="w-3.5 h-3.5 ml-1" />
+                <Mail className="w-4 h-4 ml-1.5" />
                 إيميل
+              </Button>
+              <Button variant="secondary" onClick={saveQuote} disabled={saving} className="h-10">
+                {saving ? <Loader2 className="w-4 h-4 ml-1.5 animate-spin" /> : <Save className="w-4 h-4 ml-1.5" />}
+                {editingQuoteId ? "تحديث" : "حفظ"}
+              </Button>
+              <Button onClick={convertToOrder} disabled={saving} className="h-10 bg-primary hover:bg-primary/90">
+                {saving ? <Loader2 className="w-4 h-4 ml-1.5 animate-spin" /> : <ShoppingCart className="w-4 h-4 ml-1.5" />}
+                تحويل لطلب
               </Button>
             </div>
           </div>
@@ -709,10 +682,10 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
       )}
 
       {quoteItems.length === 0 && searchResults.length === 0 && !searching && !editingQuoteId && (
-        <div className="bg-card border border-dashed border-border rounded-xl p-8 text-center">
-          <div className="text-4xl mb-3">🔎</div>
-          <p className="text-base font-bold text-foreground mb-1">ابحث عن القطعة اللي محتاجها</p>
-          <p className="text-sm text-muted-foreground">اكتب اسم القطعة أو رقمها في خانة البحث فوق</p>
+        <div className="bg-card border border-dashed border-border rounded-lg p-10 text-center">
+          <Search className="w-10 h-10 mx-auto text-muted-foreground/30 mb-3" />
+          <p className="text-sm text-muted-foreground font-medium">ابحث عن الأصناف لإنشاء عرض سعر</p>
+          <p className="text-xs text-muted-foreground/60 mt-1">يمكنك البحث بالاسم أو رقم القطعة</p>
         </div>
       )}
     </div>
