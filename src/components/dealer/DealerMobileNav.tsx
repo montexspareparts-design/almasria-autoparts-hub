@@ -26,7 +26,7 @@ const DealerMobileNav = ({ activeTab, onTabChange, unreadCount }: DealerMobileNa
             onClick={() => onTabChange(tab.id)}
             className={cn(
               "flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg transition-colors relative",
-              activeTab === tab.id ? "text-primary" : "text-muted-foreground"
+              activeTab === tab.id ? "text-primary" : tab.highlight ? "text-primary font-bold" : "text-muted-foreground"
             )}
           >
             <tab.icon className="w-5 h-5" />
