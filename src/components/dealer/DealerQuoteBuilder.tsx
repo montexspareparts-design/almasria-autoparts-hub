@@ -348,6 +348,7 @@ const DealerQuoteBuilder = () => {
               setEditingQuoteNumber("");
               setQuoteItems([]);
               setNotes("");
+              setIsFromPriceList(false);
               setActiveView("builder");
             }}
           >
