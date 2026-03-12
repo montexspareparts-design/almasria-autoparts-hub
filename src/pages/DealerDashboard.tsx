@@ -61,6 +61,12 @@ const DealerDashboard = () => {
     setOrders(ordersRes.data || []);
     setUnreadCount(notifRes.data?.length || 0);
     setLoadingData(false);
+
+    // Show onboarding for new dealers (no orders yet, never dismissed)
+    const dismissed = localStorage.getItem("dealer_onboarding_done");
+    if (!dismissed && (!ordersRes.data || ordersRes.data.length === 0)) {
+      setShowOnboarding(true);
+    }
   };
 
   if (authLoading || loadingData) {
