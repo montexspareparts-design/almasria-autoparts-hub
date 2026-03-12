@@ -84,6 +84,14 @@ const AdminOrders = () => {
     setLoading(false);
   };
 
+  const statusNotificationMessages: Record<string, { title: string; message: string }> = {
+    confirmed: { title: "✅ تم تأكيد طلبك", message: "تم تأكيد طلبك وسيتم تجهيزه قريباً" },
+    processing: { title: "📦 جاري تجهيز طلبك", message: "طلبك قيد التجهيز الآن وسيتم شحنه في أقرب وقت" },
+    shipped: { title: "🚚 تم شحن طلبك", message: "تم شحن طلبك! يمكنك متابعة حالته من صفحة طلباتي" },
+    delivered: { title: "🎉 تم تسليم طلبك", message: "تم تسليم طلبك بنجاح. شكراً لتعاملك معنا!" },
+    cancelled: { title: "❌ تم إلغاء طلبك", message: "تم إلغاء طلبك. تواصل معنا لمزيد من التفاصيل" },
+  };
+
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     setUpdatingStatus(orderId);
     const updateData: any = { status: newStatus };
@@ -99,6 +107,19 @@ const AdminOrders = () => {
     if (error) {
       toast({ title: "حدث خطأ أثناء تحديث الحالة", variant: "destructive" });
     } else {
+      // Send notification to customer
+      const order = orders.find((o) => o.id === orderId);
+      const notifData = statusNotificationMessages[newStatus];
+      if (order && notifData) {
+        const orderNum = order.order_number;
+        await supabase.from("notifications").insert({
+          user_id: order.user_id,
+          title: notifData.title,
+          message: `${notifData.message} (رقم الطلب: ${orderNum})`,
+          type: "order",
+        });
+      }
+
       toast({ title: `تم تحديث حالة الطلب إلى: ${statusConfig[newStatus]?.label || newStatus}` });
       fetchOrders();
     }
