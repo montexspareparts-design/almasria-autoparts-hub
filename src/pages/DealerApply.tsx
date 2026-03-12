@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Shield, TrendingUp, Users, Award, CheckCircle, ArrowLeft } from "lucide-react";
+import { Shield, TrendingUp, Users, Award, CheckCircle, ArrowLeft, FileText, UserCheck, Clock, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -76,6 +76,64 @@ const DealerApply = () => {
               transition={{ duration: 0.8, delay: 0.7 }}
             />
           </motion.div>
+        </div>
+      </section>
+
+      {/* Welcome & Steps */}
+      <section className="py-16 bg-background overflow-hidden">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <motion.div
+            className="bg-secondary/60 border border-primary/20 rounded-2xl p-8 md:p-10 mb-10"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-xl md:text-2xl font-bold text-secondary-foreground mb-3">
+              👋 أهلاً بك في عائلة <span className="text-gradient-red">المصرية جروب</span>
+            </h2>
+            <p className="text-secondary-foreground/70 leading-relaxed">
+              نسعد بانضمامك كشريك معتمد في شبكة توزيع قطع غيار تويوتا الأصلية الأكبر في مصر. 
+              عملية التقديم بسيطة وسريعة — اتبع الخطوات التالية وهنتواصل معاك في أقرب وقت.
+            </p>
+          </motion.div>
+
+          <motion.h2
+            className="text-2xl font-bold text-foreground text-center mb-10"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            خطوات التقديم
+          </motion.h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
+            <div className="hidden md:block absolute top-10 left-[12.5%] right-[12.5%] h-0.5 bg-primary/20" />
+            {[
+              { icon: FileText, step: "١", title: "أنشئ حساب", desc: "سجّل ببياناتك الأساسية (الإيميل وكلمة المرور)" },
+              { icon: UserCheck, step: "٢", title: "قدّم طلبك", desc: "أرفق السجل التجاري والبطاقة الضريبية وبيانات النشاط" },
+              { icon: Clock, step: "٣", title: "مراجعة الطلب", desc: "فريقنا يراجع طلبك ويتواصل معك خلال ٤٨ ساعة عمل" },
+              { icon: Rocket, step: "٤", title: "ابدأ الشراء", desc: "بمجرد الموافقة، تقدر تطلب بأسعار الجملة فوراً" },
+            ].map((s, i) => (
+              <motion.div
+                key={i}
+                className="flex flex-col items-center text-center"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.15, duration: 0.5 }}
+              >
+                <div className="relative z-10 w-20 h-20 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center mb-4">
+                  <s.icon className="w-8 h-8 text-primary" />
+                  <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-black flex items-center justify-center">
+                    {s.step}
+                  </span>
+                </div>
+                <h3 className="font-bold text-foreground mb-1">{s.title}</h3>
+                <p className="text-sm text-muted-foreground">{s.desc}</p>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
