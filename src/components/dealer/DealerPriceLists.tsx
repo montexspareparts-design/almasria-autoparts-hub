@@ -764,7 +764,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
                     ) : (
                       <ShoppingCart className="w-3.5 h-3.5" />
                     )}
-                    إرسال كعرض سعر ({selectedProducts.length} صنف)
+                    {editingQuoteId ? `تحديث العرض (${selectedProducts.length} صنف)` : `إرسال كعرض سعر (${selectedProducts.length} صنف)`}
                   </Button>
                   <Button
                     size="sm"
