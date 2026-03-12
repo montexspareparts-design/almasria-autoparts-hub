@@ -169,13 +169,8 @@ const QuickSearchBar = ({
                 ) : (
                   <div className="max-h-80 overflow-y-auto divide-y divide-border/30">
                     {searchResults.map((p) => (
-                      <button
+                      <div
                         key={p.id}
-                        onClick={() => {
-                          navigate(`/products?search=${encodeURIComponent(p.sku)}`);
-                          setShowResults(false);
-                          setSearchQuery("");
-                        }}
                         className="w-full flex items-center gap-3 p-3.5 hover:bg-muted/50 transition-colors text-start"
                       >
                         <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center shrink-0 overflow-hidden">
@@ -191,10 +186,16 @@ const QuickSearchBar = ({
                           </p>
                           <p className="text-xs text-muted-foreground mt-0.5">{p.sku}</p>
                         </div>
-                        <span className="text-xs font-black text-primary whitespace-nowrap">
-                          {(p.sale_price || p.base_price).toLocaleString()} {isRTL ? "ج.م" : "EGP"}
-                        </span>
-                      </button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="shrink-0 gap-1 text-[10px] font-bold h-7 px-2 rounded-lg border-primary/30 text-primary hover:bg-primary/10"
+                          onClick={() => onAddToQuote(p)}
+                        >
+                          <Plus className="w-3 h-3" />
+                          {isRTL ? "أضف للتسعير" : "Add to Quote"}
+                        </Button>
+                      </div>
                     ))}
                     <button
                       onClick={() => {
