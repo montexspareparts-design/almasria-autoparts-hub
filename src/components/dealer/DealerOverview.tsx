@@ -127,6 +127,21 @@ const DealerOverview = ({
         )}
       </div>
 
+      {/* Push notification banner */}
+      {showPushBanner && (
+        <button
+          onClick={async () => {
+            const granted = await requestPushPermission();
+            if (granted) setShowPushBanner(false);
+          }}
+          className="w-full bg-primary/10 border border-primary/20 text-foreground rounded-2xl p-4 text-center active:scale-[0.97] transition-transform"
+        >
+          <span className="text-2xl block mb-1">🔔</span>
+          <p className="text-sm font-bold">فعّل الإشعارات</p>
+          <p className="text-xs text-muted-foreground mt-0.5">عشان توصلك تحديثات طلباتك والعروض فوراً</p>
+        </button>
+      )}
+
       {/* Big CTA — اطلب قطع غيار */}
       <button
         onClick={() => onNavigate?.("quotes")}
