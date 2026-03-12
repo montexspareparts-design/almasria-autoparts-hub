@@ -24,13 +24,13 @@ function formatNum(n: number): string {
 
 function buildQuoteHtml(data: QuoteData): string {
   const rows = data.items.map((item, idx) => `
-    <tr style="background:${idx % 2 === 0 ? '#fafafa' : '#fff'}">
-      <td style="padding:10px 8px;text-align:center;color:#666;font-size:13px;border-bottom:1px solid #eee">${idx + 1}</td>
-      <td style="padding:10px 8px;text-align:right;font-size:13px;color:#222;border-bottom:1px solid #eee;font-weight:500">${item.name}</td>
-      <td style="padding:10px 8px;text-align:center;font-size:12px;color:#888;border-bottom:1px solid #eee;font-family:monospace;direction:ltr">${item.sku}</td>
-      <td style="padding:10px 8px;text-align:center;font-size:13px;color:#333;border-bottom:1px solid #eee">${item.quantity}</td>
-      <td style="padding:10px 8px;text-align:center;font-size:13px;color:#333;border-bottom:1px solid #eee;direction:ltr">${formatNum(item.unitPrice)}</td>
-      <td style="padding:10px 8px;text-align:center;font-size:13px;color:#111;border-bottom:1px solid #eee;font-weight:700;direction:ltr">${formatNum(item.totalPrice)}</td>
+    <tr style="background:${idx % 2 === 0 ? '#fff' : '#fef2f2'}">
+      <td style="padding:10px 8px;text-align:center;color:#666;font-size:13px;border-bottom:1px solid #fecaca">${idx + 1}</td>
+      <td style="padding:10px 8px;text-align:right;font-size:13px;color:#222;border-bottom:1px solid #fecaca;font-weight:500">${item.name}</td>
+      <td style="padding:10px 8px;text-align:center;font-size:12px;color:#888;border-bottom:1px solid #fecaca;font-family:monospace;direction:ltr">${item.sku}</td>
+      <td style="padding:10px 8px;text-align:center;font-size:13px;color:#333;border-bottom:1px solid #fecaca">${item.quantity}</td>
+      <td style="padding:10px 8px;text-align:center;font-size:13px;color:#333;border-bottom:1px solid #fecaca;direction:ltr">${formatNum(item.unitPrice)}</td>
+      <td style="padding:10px 8px;text-align:center;font-size:13px;color:#b91c1c;border-bottom:1px solid #fecaca;font-weight:700;direction:ltr">${formatNum(item.totalPrice)}</td>
     </tr>
   `).join("");
 
@@ -41,7 +41,7 @@ function buildQuoteHtml(data: QuoteData): string {
         <img src="/images/toyota-quote-logo.png" style="height:90px;margin-bottom:8px" crossorigin="anonymous" />
         <div style="color:#333;font-size:17px;font-weight:700;margin-top:6px;letter-spacing:0.5px">عرض أسعار</div>
       </div>
-      <div style="height:3px;background:#dc2626"></div>
+      <div style="height:4px;background:linear-gradient(90deg,#dc2626,#ef4444,#dc2626)"></div>
 
       <!-- Info -->
       <div style="display:flex;justify-content:space-between;padding:18px 30px 10px;border-bottom:1px solid #e5e5e5">
@@ -64,13 +64,13 @@ function buildQuoteHtml(data: QuoteData): string {
       <div style="padding:16px 24px">
         <table style="width:100%;border-collapse:collapse;border:1px solid #e5e5e5;border-radius:6px;overflow:hidden">
           <thead>
-            <tr style="background:#f3f3f3">
-              <th style="padding:10px 8px;text-align:center;font-size:11px;color:#666;font-weight:700;border-bottom:2px solid #ddd;width:40px">#</th>
-              <th style="padding:10px 8px;text-align:right;font-size:11px;color:#666;font-weight:700;border-bottom:2px solid #ddd">الصنف</th>
-              <th style="padding:10px 8px;text-align:center;font-size:11px;color:#666;font-weight:700;border-bottom:2px solid #ddd;width:110px">رقم القطعة</th>
-              <th style="padding:10px 8px;text-align:center;font-size:11px;color:#666;font-weight:700;border-bottom:2px solid #ddd;width:50px">الكمية</th>
-              <th style="padding:10px 8px;text-align:center;font-size:11px;color:#666;font-weight:700;border-bottom:2px solid #ddd;width:90px">سعر الوحدة</th>
-              <th style="padding:10px 8px;text-align:center;font-size:11px;color:#666;font-weight:700;border-bottom:2px solid #ddd;width:90px">الإجمالي</th>
+             <tr style="background:#dc2626">
+              <th style="padding:10px 8px;text-align:center;font-size:11px;color:#fff;font-weight:700;border-bottom:2px solid #b91c1c;width:40px">#</th>
+              <th style="padding:10px 8px;text-align:right;font-size:11px;color:#fff;font-weight:700;border-bottom:2px solid #b91c1c">الصنف</th>
+              <th style="padding:10px 8px;text-align:center;font-size:11px;color:#fff;font-weight:700;border-bottom:2px solid #b91c1c;width:110px">رقم القطعة</th>
+              <th style="padding:10px 8px;text-align:center;font-size:11px;color:#fff;font-weight:700;border-bottom:2px solid #b91c1c;width:50px">الكمية</th>
+              <th style="padding:10px 8px;text-align:center;font-size:11px;color:#fff;font-weight:700;border-bottom:2px solid #b91c1c;width:90px">سعر الوحدة</th>
+              <th style="padding:10px 8px;text-align:center;font-size:11px;color:#fff;font-weight:700;border-bottom:2px solid #b91c1c;width:90px">الإجمالي</th>
             </tr>
           </thead>
           <tbody>
@@ -80,9 +80,9 @@ function buildQuoteHtml(data: QuoteData): string {
       </div>
 
       <!-- Total -->
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 30px;border-top:2px solid #e5e5e5;margin:0 24px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 30px;border-top:2px solid #fecaca;margin:0 24px">
         <div style="color:#888;font-size:13px">عدد الأصناف: <span style="color:#333;font-weight:700">${data.items.length}</span></div>
-        <div style="background:#dc2626;color:#fff;padding:10px 28px;border-radius:6px;font-size:18px;font-weight:800;direction:ltr">
+        <div style="background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;padding:12px 32px;border-radius:8px;font-size:18px;font-weight:800;direction:ltr;box-shadow:0 2px 8px rgba(220,38,38,0.3)">
           ${formatNum(data.totalAmount)} ج.م
         </div>
       </div>
@@ -94,9 +94,9 @@ function buildQuoteHtml(data: QuoteData): string {
       </div>` : ""}
 
       <!-- Footer -->
-      <div style="text-align:center;padding:16px 30px;border-top:1px solid #eee;margin-top:16px">
-        <div style="color:#aaa;font-size:10px">Toyota Genuine Parts — قطع غيار تويوتا الأصلية</div>
-        <div style="color:#bbb;font-size:9px;margin-top:3px">هذا العرض ساري لمدة 7 أيام من تاريخ الإصدار</div>
+      <div style="text-align:center;padding:16px 30px;border-top:2px solid #dc2626;margin-top:16px">
+        <div style="color:#dc2626;font-size:11px;font-weight:600">Toyota Genuine Parts — قطع غيار تويوتا الأصلية</div>
+        <div style="color:#999;font-size:9px;margin-top:4px">هذا العرض ساري لمدة 7 أيام من تاريخ الإصدار</div>
       </div>
     </div>
   `;

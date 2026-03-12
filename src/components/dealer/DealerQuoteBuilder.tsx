@@ -65,6 +65,7 @@ const DealerQuoteBuilder = () => {
   const [editingQuoteId, setEditingQuoteId] = useState<string | null>(null);
   const [editingQuoteNumber, setEditingQuoteNumber] = useState("");
   const [loadingQuote, setLoadingQuote] = useState(false);
+  const [isFromPriceList, setIsFromPriceList] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -314,6 +315,7 @@ const DealerQuoteBuilder = () => {
     setNotes(quote.notes || "");
     setEditingQuoteId(quote.id);
     setEditingQuoteNumber(quote.quote_number);
+    setIsFromPriceList(!!quote.notes?.startsWith("من كشف الأسعار"));
     setActiveView("edit");
     setLoadingQuote(false);
   };
@@ -346,6 +348,7 @@ const DealerQuoteBuilder = () => {
               setEditingQuoteNumber("");
               setQuoteItems([]);
               setNotes("");
+              setIsFromPriceList(false);
               setActiveView("builder");
             }}
           >
@@ -362,22 +365,33 @@ const DealerQuoteBuilder = () => {
         </p>
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder="ابحث بالاسم أو رقم القطعة لإضافة صنف..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pr-10 h-11 text-sm bg-card"
-          disabled={remainingViews === 0}
-        />
-        {searchQuery && (
-          <button onClick={() => { setSearchQuery(""); setSearchResults([]); }} className="absolute left-3 top-1/2 -translate-y-1/2">
-            <X className="w-4 h-4 text-muted-foreground" />
-          </button>
-        )}
-      </div>
+      {/* Search - hidden for price list quotes */}
+      {!isFromPriceList && (
+        <>
+          <div className="relative">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="ابحث بالاسم أو رقم القطعة لإضافة صنف..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pr-10 h-11 text-sm bg-card"
+              disabled={remainingViews === 0}
+            />
+            {searchQuery && (
+              <button onClick={() => { setSearchQuery(""); setSearchResults([]); }} className="absolute left-3 top-1/2 -translate-y-1/2">
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
+            )}
+          </div>
+        </>
+      )}
+
+      {isFromPriceList && editingQuoteId && (
+        <div className="rounded-lg border border-amber-300/30 bg-amber-50 dark:bg-amber-950/20 p-3 flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
+          <FileText className="w-4 h-4 shrink-0" />
+          <span>هذا العرض تم إنشاؤه من كشف أسعار. لإضافة أصناف جديدة، ارجع إلى <strong>كشوفات الأسعار</strong>.</span>
+        </div>
+      )}
 
       {/* Search Results */}
       {searchResults.length > 0 && (
