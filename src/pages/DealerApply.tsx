@@ -263,7 +263,7 @@ const DealerApply = () => {
               <Button
                 size="lg"
                 className="gap-2 red-glow text-lg px-10"
-                onClick={() => navigate("/dealer-register")}
+                onClick={handleStartRegistration}
               >
                 ابدأ التسجيل الآن
                 <ArrowLeft className="w-5 h-5" />
