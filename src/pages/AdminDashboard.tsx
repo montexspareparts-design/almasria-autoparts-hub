@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, XCircle, Clock, Eye, LogOut, Trash2, Users, ShoppingBag, Video, FileText, Image, Brain, Zap, Bell, ListVideo, Menu, X, ChevronRight } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Clock, Eye, LogOut, Trash2, Users, ShoppingBag, Video, FileText, Image, Brain, Zap, Bell, ListVideo, Menu, X, ChevronRight, Package } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -21,6 +21,7 @@ const AdminProductImages = lazy(() => import("@/components/AdminProductImages"))
 const AdminImageVerifier = lazy(() => import("@/components/AdminImageVerifier"));
 const AdminERPSync = lazy(() => import("@/components/AdminERPSync"));
 const AdminPushNotifications = lazy(() => import("@/components/AdminPushNotifications"));
+const AdminProducts = lazy(() => import("@/components/AdminProducts"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];
@@ -41,6 +42,7 @@ const clientTypeLabels: Record<string, string> = {
 
 const sidebarSections = [
   { id: "dealers", label: "طلبات التجار", icon: Users },
+  { id: "products", label: "إدارة المنتجات", icon: Package },
   { id: "orders", label: "إدارة الطلبات", icon: ShoppingBag },
   { id: "price-lists", label: "كشوفات الأسعار", icon: FileText },
   { id: "catalogs", label: "الكتالوجات", icon: FileText },
@@ -367,6 +369,8 @@ const AdminDashboard = () => {
     switch (activeSection) {
       case "dealers":
         return renderDealersSection();
+      case "products":
+        return <Suspense fallback={<SectionLoader />}><AdminProducts /></Suspense>;
       case "orders":
         return <Suspense fallback={<SectionLoader />}><AdminOrders /></Suspense>;
       case "price-lists":
