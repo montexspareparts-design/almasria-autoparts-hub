@@ -80,6 +80,7 @@ const DealerOverview = ({
   const [accountSummary, setAccountSummary] = useState<OrderSummary>({
     delivered_total: 0, pending_total: 0,
   });
+  const [showPushBanner, setShowPushBanner] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -99,6 +100,15 @@ const DealerOverview = ({
         pending_total: pending.reduce((s, o) => s + Number(o.total_amount), 0),
       });
     });
+
+    // Check if push notifications are supported but not subscribed
+    if ("Notification" in window && "serviceWorker" in navigator) {
+      isPushSubscribed().then((subscribed) => {
+        if (!subscribed && Notification.permission !== "denied") {
+          setShowPushBanner(true);
+        }
+      });
+    }
   }, [userId]);
 
   const firstName = dealerName?.split(" ")[0] || "تاجر";
