@@ -203,7 +203,22 @@ const DealerNotificationsList = ({ userId, onNavigate }: { userId: string; onNav
             return (
               <div
                 key={n.id}
-                onClick={() => !n.is_read && !isOrderEdit && markRead(n.id)}
+                onClick={() => {
+                  if (!n.is_read) markRead(n.id);
+                  if (!isOrderEdit && onNavigate) {
+                    // Navigate to relevant tab based on notification type
+                    const msg = (n.message + " " + n.title).toLowerCase();
+                    if (n.type === "order") {
+                      onNavigate("orders");
+                    } else if (msg.includes("كشف أسعار") || msg.includes("price")) {
+                      onNavigate("price-lists");
+                    } else if (msg.includes("عرض") && msg.includes("سعر")) {
+                      onNavigate("quote-builder");
+                    } else if (msg.includes("فاتورة")) {
+                      onNavigate("invoices");
+                    }
+                  }
+                }}
                 className={cn(
                   "w-full text-right rounded-lg border p-3.5 transition-all",
                   isOrderEdit && !n.is_read
