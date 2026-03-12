@@ -77,6 +77,7 @@ const DealerRegister = () => {
       const { data: dupCheck } = await supabase.rpc("check_dealer_application_exists", {
         _phone: form.phone,
         _email: form.email,
+      });
       const dupResult = dupCheck as any;
       if (dupResult?.phone_exists) {
         toast.error("رقم الهاتف مسجل بالفعل في طلب سابق. يرجى تسجيل الدخول.");
