@@ -240,6 +240,16 @@ const CheckoutPage = () => {
                     </label>
                   ))}
                 </RadioGroup>
+                {["instapay", "wallet", "bank_transfer"].includes(payment) && (
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-4">
+                    <PaymentInstructionsBanner
+                      paymentMethod={payment}
+                      orderNumber="(سيتم تحديده بعد التأكيد)"
+                      totalAmount={orderTotal}
+                      compact
+                    />
+                  </motion.div>
+                )}
               </motion.div>
             </div>
 
