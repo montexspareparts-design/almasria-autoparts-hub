@@ -24,13 +24,13 @@ function formatNum(n: number): string {
 
 function buildQuoteHtml(data: QuoteData): string {
   const rows = data.items.map((item, idx) => `
-    <tr style="background:${idx % 2 === 0 ? '#fafafa' : '#fff'}">
-      <td style="padding:10px 8px;text-align:center;color:#666;font-size:13px;border-bottom:1px solid #eee">${idx + 1}</td>
-      <td style="padding:10px 8px;text-align:right;font-size:13px;color:#222;border-bottom:1px solid #eee;font-weight:500">${item.name}</td>
-      <td style="padding:10px 8px;text-align:center;font-size:12px;color:#888;border-bottom:1px solid #eee;font-family:monospace;direction:ltr">${item.sku}</td>
-      <td style="padding:10px 8px;text-align:center;font-size:13px;color:#333;border-bottom:1px solid #eee">${item.quantity}</td>
-      <td style="padding:10px 8px;text-align:center;font-size:13px;color:#333;border-bottom:1px solid #eee;direction:ltr">${formatNum(item.unitPrice)}</td>
-      <td style="padding:10px 8px;text-align:center;font-size:13px;color:#111;border-bottom:1px solid #eee;font-weight:700;direction:ltr">${formatNum(item.totalPrice)}</td>
+    <tr style="background:${idx % 2 === 0 ? '#fff' : '#fef2f2'}">
+      <td style="padding:10px 8px;text-align:center;color:#666;font-size:13px;border-bottom:1px solid #fecaca">${idx + 1}</td>
+      <td style="padding:10px 8px;text-align:right;font-size:13px;color:#222;border-bottom:1px solid #fecaca;font-weight:500">${item.name}</td>
+      <td style="padding:10px 8px;text-align:center;font-size:12px;color:#888;border-bottom:1px solid #fecaca;font-family:monospace;direction:ltr">${item.sku}</td>
+      <td style="padding:10px 8px;text-align:center;font-size:13px;color:#333;border-bottom:1px solid #fecaca">${item.quantity}</td>
+      <td style="padding:10px 8px;text-align:center;font-size:13px;color:#333;border-bottom:1px solid #fecaca;direction:ltr">${formatNum(item.unitPrice)}</td>
+      <td style="padding:10px 8px;text-align:center;font-size:13px;color:#b91c1c;border-bottom:1px solid #fecaca;font-weight:700;direction:ltr">${formatNum(item.totalPrice)}</td>
     </tr>
   `).join("");
 
