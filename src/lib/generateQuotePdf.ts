@@ -41,7 +41,7 @@ function buildQuoteHtml(data: QuoteData): string {
         <img src="/images/toyota-quote-logo.png" style="height:90px;margin-bottom:8px" crossorigin="anonymous" />
         <div style="color:#333;font-size:17px;font-weight:700;margin-top:6px;letter-spacing:0.5px">عرض أسعار</div>
       </div>
-      <div style="height:3px;background:#dc2626"></div>
+      <div style="height:4px;background:linear-gradient(90deg,#dc2626,#ef4444,#dc2626)"></div>
 
       <!-- Info -->
       <div style="display:flex;justify-content:space-between;padding:18px 30px 10px;border-bottom:1px solid #e5e5e5">
