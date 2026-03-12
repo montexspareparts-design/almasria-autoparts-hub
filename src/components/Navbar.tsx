@@ -423,6 +423,7 @@ const Navbar = () => {
           )}
         </AnimatePresence>
       </div>
+      <DealerAuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} defaultTab={authDialogTab} />
     </motion.nav>
   );
 };
