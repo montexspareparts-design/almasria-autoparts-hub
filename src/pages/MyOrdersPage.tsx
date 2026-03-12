@@ -6,6 +6,7 @@ import {
   ChevronUp, ArrowRight, ShoppingCart, MapPin, CreditCard, CalendarDays,
   CircleDot, Phone
 } from "lucide-react";
+import PaymentInstructionsBanner from "@/components/PaymentInstructionsBanner";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";

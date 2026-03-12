@@ -391,6 +391,17 @@ const DealerOrdersList = ({ userId }: { userId: string }) => {
                       </div>
                     )}
 
+                    {/* Payment Instructions for electronic payments */}
+                    {["instapay", "wallet", "bank_transfer"].includes(order.payment_method || "") &&
+                      ["pending", "confirmed", "pending_approval"].includes(order.status) && (
+                      <PaymentInstructionsBanner
+                        paymentMethod={order.payment_method!}
+                        orderNumber={order.order_number}
+                        totalAmount={Number(order.total_amount)}
+                        compact
+                      />
+                    )}
+
                     {order.shipping_governorate && (
                       <p className="text-xs text-muted-foreground">📍 {order.shipping_governorate} — {order.shipping_address}</p>
                     )}
