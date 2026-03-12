@@ -47,8 +47,11 @@ const DealerDashboard = () => {
 
   if (authLoading || loadingData) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-secondary flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-xs text-secondary-foreground/60">Loading portal...</p>
+        </div>
       </div>
     );
   }
@@ -56,6 +59,7 @@ const DealerDashboard = () => {
   const dealerName = profile?.full_name || user?.user_metadata?.full_name || "التاجر";
   const totalSpent = orders.reduce((sum: number, o: any) => sum + Number(o.total_amount), 0);
   const invoicesCount = orders.filter((o: any) => o.invoice_url).length;
+  const pendingOrders = orders.filter((o: any) => o.status === "pending" || o.status === "confirmed" || o.status === "processing").length;
 
   const handleSignOut = () => { signOut(); navigate("/"); };
 
@@ -70,6 +74,8 @@ const DealerDashboard = () => {
             ordersCount={orders.length}
             totalSpent={totalSpent}
             invoicesCount={invoicesCount}
+            pendingOrders={pendingOrders}
+            userId={user!.id}
             onNavigate={(tab) => setActiveTab(tab as DealerTab)}
           />
         );
@@ -106,30 +112,60 @@ const DealerDashboard = () => {
     }
   };
 
+  // Page titles
+  const pageTitles: Record<DealerTab, string> = {
+    overview: "Dashboard",
+    quotes: "Search Parts & Quotations",
+    quick_order: "Quick Order — Excel Upload",
+    orders: "Order History",
+    invoices: "Invoices",
+    price_lists: "Price Lists",
+    favorites: "Favorites",
+    notifications: "Notifications",
+    offers: "Special Offers",
+    catalogs: "Catalogs",
+    settings: "Account Settings",
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <header className="bg-card border-b border-border sticky top-0 z-40">
-        <div className="flex items-center justify-between h-14 px-4">
-          <a href="/" className="flex items-center gap-2 shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-black text-sm">M</span>
+      {/* Top Bar */}
+      <header className="bg-secondary border-b border-secondary/80 sticky top-0 z-40">
+        <div className="flex items-center justify-between h-12 px-4">
+          <a href="/" className="flex items-center gap-2.5 shrink-0">
+            <div className="w-7 h-7 rounded bg-primary flex items-center justify-center">
+              <span className="text-primary-foreground font-black text-xs">M</span>
             </div>
-            <div className="hidden sm:block">
-              <p className="text-sm font-bold text-foreground leading-none">Al Masria Group</p>
-              <p className="text-[10px] text-muted-foreground">Distribution B2B Portal</p>
+            <div className="hidden sm:block leading-none">
+              <p className="text-xs font-bold text-secondary-foreground tracking-wide">AL MASRIA GROUP</p>
+              <p className="text-[9px] text-secondary-foreground/50 uppercase tracking-widest">Distribution B2B Portal</p>
             </div>
           </a>
-          <div className="hidden md:flex items-center gap-2 bg-primary/5 border border-primary/20 rounded-lg px-3 py-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            <span className="text-[11px] font-medium text-foreground">بوابة التوزيع B2B</span>
+
+          {/* Current Page Title - Desktop */}
+          <div className="hidden lg:block">
+            <p className="text-xs font-medium text-secondary-foreground/70">{pageTitles[activeTab]}</p>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-[11px] text-muted-foreground hidden md:inline truncate max-w-[180px]">
+
+          <div className="flex items-center gap-3 shrink-0">
+            {unreadCount > 0 && (
+              <button
+                onClick={() => setActiveTab("notifications")}
+                className="relative text-secondary-foreground/60 hover:text-secondary-foreground transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[8px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">
+                  {unreadCount}
+                </span>
+              </button>
+            )}
+            <span className="text-[10px] text-secondary-foreground/40 hidden md:inline truncate max-w-[160px]">
               {user?.email}
             </span>
-            <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-muted-foreground lg:hidden">
-              <LogOut className="w-4 h-4" />
+            <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-secondary-foreground/40 hover:text-secondary-foreground h-7 px-2 lg:hidden">
+              <LogOut className="w-3.5 h-3.5" />
             </Button>
           </div>
         </div>
@@ -145,8 +181,10 @@ const DealerDashboard = () => {
           onSignOut={handleSignOut}
           unreadCount={unreadCount}
         />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 pb-20 lg:pb-8 bg-background">
-          {renderContent()}
+        <main className="flex-1 overflow-y-auto pb-20 lg:pb-6">
+          <div className="p-4 md:p-6 lg:p-8 max-w-7xl">
+            {renderContent()}
+          </div>
         </main>
       </div>
 
