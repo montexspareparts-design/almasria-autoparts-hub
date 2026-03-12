@@ -414,9 +414,9 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
                       </div>
                     )}
 
-                    {/* Payment CTA for electronic payments */}
-                    {["instapay", "wallet", "bank_transfer"].includes(order.payment_method || "") &&
-                      ["pending", "confirmed", "awaiting_payment"].includes(order.status) && (
+                    {/* Payment CTA for electronic payments - only after admin approval */}
+                    {isElectronicPayment(order.payment_method) &&
+                      ["confirmed", "awaiting_payment"].includes(order.status) && (
                       <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-700 rounded-xl p-4 space-y-3">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center shrink-0">
