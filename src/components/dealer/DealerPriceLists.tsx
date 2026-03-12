@@ -322,7 +322,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
     if (selectedProducts.length === 0 || !user) return;
     setSavingQuote(true);
 
-    const quoteNumber = `Q-${Date.now().toString(36).toUpperCase()}`;
+    const quoteNumber = editingQuoteNumber || `Q-${Date.now().toString(36).toUpperCase()}`;
     const items = await Promise.all(
       selectedProducts.map(async (sp) => {
         const price = await getProductPrice(sp.product);
@@ -332,34 +332,61 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
 
     const totalAmount = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
-    const { data: quote, error } = await supabase
-      .from("dealer_quotes")
-      .insert({
-        user_id: user.id,
-        quote_number: quoteNumber,
+    let quoteId = editingQuoteId;
+
+    if (editingQuoteId) {
+      // Update existing quote
+      await supabase.from("dealer_quotes").update({
         total_amount: totalAmount,
         notes: viewingList ? `من كشف الأسعار: ${viewingList.title}` : null,
-      })
-      .select()
-      .single();
+      }).eq("id", editingQuoteId);
+      
+      await supabase.from("dealer_quote_items").delete().eq("quote_id", editingQuoteId);
+      
+      await supabase.from("dealer_quote_items").insert(
+        items.map(i => ({
+          quote_id: editingQuoteId!,
+          product_id: i.product.id,
+          quantity: i.quantity,
+          unit_price: i.price,
+          total_price: i.price * i.quantity,
+        }))
+      );
+      
+      toast({ title: "تم تحديث العرض ✓", description: `رقم العرض: ${quoteNumber}` });
+    } else {
+      // Create new quote
+      const { data: quote, error } = await supabase
+        .from("dealer_quotes")
+        .insert({
+          user_id: user.id,
+          quote_number: quoteNumber,
+          total_amount: totalAmount,
+          notes: viewingList ? `من كشف الأسعار: ${viewingList.title}` : null,
+        })
+        .select()
+        .single();
 
-    if (error || !quote) {
-      toast({ title: "خطأ في حفظ العرض", variant: "destructive" });
-      setSavingQuote(false);
-      return;
+      if (error || !quote) {
+        toast({ title: "خطأ في حفظ العرض", variant: "destructive" });
+        setSavingQuote(false);
+        return;
+      }
+
+      quoteId = (quote as any).id;
+
+      await supabase.from("dealer_quote_items").insert(
+        items.map(i => ({
+          quote_id: quoteId!,
+          product_id: i.product.id,
+          quantity: i.quantity,
+          unit_price: i.price,
+          total_price: i.price * i.quantity,
+        }))
+      );
     }
 
-    await supabase.from("dealer_quote_items").insert(
-      items.map(i => ({
-        quote_id: (quote as any).id,
-        product_id: i.product.id,
-        quantity: i.quantity,
-        unit_price: i.price,
-        total_price: i.price * i.quantity,
-      }))
-    );
-
-    // Record price views
+    // Record price views for new items only
     for (const sp of selectedProducts) {
       await supabase.from("dealer_price_views").insert({ user_id: user.id, product_id: sp.product.id });
     }
