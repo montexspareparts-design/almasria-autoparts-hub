@@ -46,12 +46,14 @@ const DealerRegister = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState<FormData>({
     fullName: "",
     phone: "",
     businessName: "",
     governorate: "",
     email: user?.email || "",
+    password: "",
     clientType: "" as any,
   });
 
