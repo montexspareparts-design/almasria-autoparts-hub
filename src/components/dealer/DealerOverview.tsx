@@ -213,58 +213,7 @@ const DealerOverview = ({
         ))}
       </div>
 
-      {/* Account Statement Summary */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-foreground">كشف الحساب</h3>
-          <button onClick={() => onNavigate?.("statement")} className="text-[11px] text-primary hover:underline font-medium">
-            عرض التفاصيل
-          </button>
-        </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="bg-card border border-border rounded-lg p-3.5">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-7 h-7 rounded-lg bg-green-500/10 flex items-center justify-center">
-                <TrendingUp className="w-3.5 h-3.5 text-green-600" />
-              </div>
-            </div>
-            <p className="text-lg font-bold text-foreground">{accountSummary.delivered_total.toLocaleString("ar-EG")}</p>
-            <p className="text-[11px] text-muted-foreground">ج.م — المشتريات</p>
-            <p className="text-[10px] text-muted-foreground/60">{accountSummary.delivered_count} طلب مكتمل</p>
-          </div>
-          <div className="bg-card border border-border rounded-lg p-3.5">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                <Receipt className="w-3.5 h-3.5 text-amber-600" />
-              </div>
-            </div>
-            <p className="text-lg font-bold text-foreground">{accountSummary.pending_total.toLocaleString("ar-EG")}</p>
-            <p className="text-[11px] text-muted-foreground">ج.م — معلقة</p>
-            <p className="text-[10px] text-muted-foreground/60">{accountSummary.pending_count} طلب</p>
-          </div>
-          <div className="bg-card border border-border rounded-lg p-3.5">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-                <CreditCard className="w-3.5 h-3.5 text-primary" />
-              </div>
-            </div>
-            <p className="text-lg font-bold text-foreground">{creditLimit > 0 ? creditLimit.toLocaleString("ar-EG") : "—"}</p>
-            <p className="text-[11px] text-muted-foreground">ج.م — حد الائتمان</p>
-            <p className="text-[10px] text-muted-foreground/60">{creditLimit > 0 ? `متاح: ${availableCredit.toLocaleString("ar-EG")}` : "غير محدد"}</p>
-          </div>
-          <div className="bg-card border border-border rounded-lg p-3.5">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-7 h-7 rounded-lg bg-destructive/10 flex items-center justify-center">
-                <TrendingDown className="w-3.5 h-3.5 text-destructive" />
-              </div>
-            </div>
-            <p className="text-lg font-bold text-foreground">{accountSummary.cancelled_total.toLocaleString("ar-EG")}</p>
-            <p className="text-[11px] text-muted-foreground">ج.م — ملغاة</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Quotes, Orders, Invoices — 3 columns */}
+      {/* Recent Quotes, Orders, Invoices — 3 columns (QUOTES FIRST) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Recent Quotes */}
         <div className="space-y-2">
@@ -388,6 +337,57 @@ const DealerOverview = ({
         </div>
       </div>
 
+      {/* Account Statement Summary */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-foreground">كشف الحساب</h3>
+          <button onClick={() => onNavigate?.("statement")} className="text-[11px] text-primary hover:underline font-medium">
+            عرض التفاصيل
+          </button>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="bg-card border border-border rounded-lg p-3.5">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-7 h-7 rounded-lg bg-green-500/10 flex items-center justify-center">
+                <TrendingUp className="w-3.5 h-3.5 text-green-600" />
+              </div>
+            </div>
+            <p className="text-lg font-bold text-foreground">{accountSummary.delivered_total.toLocaleString("ar-EG")}</p>
+            <p className="text-[11px] text-muted-foreground">ج.م — المشتريات</p>
+            <p className="text-[10px] text-muted-foreground/60">{accountSummary.delivered_count} طلب مكتمل</p>
+          </div>
+          <div className="bg-card border border-border rounded-lg p-3.5">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                <Receipt className="w-3.5 h-3.5 text-amber-600" />
+              </div>
+            </div>
+            <p className="text-lg font-bold text-foreground">{accountSummary.pending_total.toLocaleString("ar-EG")}</p>
+            <p className="text-[11px] text-muted-foreground">ج.م — معلقة</p>
+            <p className="text-[10px] text-muted-foreground/60">{accountSummary.pending_count} طلب</p>
+          </div>
+          <div className="bg-card border border-border rounded-lg p-3.5">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                <CreditCard className="w-3.5 h-3.5 text-primary" />
+              </div>
+            </div>
+            <p className="text-lg font-bold text-foreground">{creditLimit > 0 ? creditLimit.toLocaleString("ar-EG") : "—"}</p>
+            <p className="text-[11px] text-muted-foreground">ج.م — حد الائتمان</p>
+            <p className="text-[10px] text-muted-foreground/60">{creditLimit > 0 ? `متاح: ${availableCredit.toLocaleString("ar-EG")}` : "غير محدد"}</p>
+          </div>
+          <div className="bg-card border border-border rounded-lg p-3.5">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-7 h-7 rounded-lg bg-destructive/10 flex items-center justify-center">
+                <TrendingDown className="w-3.5 h-3.5 text-destructive" />
+              </div>
+            </div>
+            <p className="text-lg font-bold text-foreground">{accountSummary.cancelled_total.toLocaleString("ar-EG")}</p>
+            <p className="text-[11px] text-muted-foreground">ج.م — ملغاة</p>
+          </div>
+        </div>
+      </div>
+
       {/* Notifications */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -425,7 +425,7 @@ const DealerOverview = ({
       </div>
 
       {/* Recommendations */}
-      <DealerRecommendations userId={userId} tier={dealerAccount?.tier} />
+      <DealerRecommendations userId={userId} tier={dealerAccount?.tier} onNavigateToQuotes={() => onNavigate?.("quotes")} />
     </div>
   );
 };
