@@ -122,6 +122,7 @@ const DealerDashboard = () => {
       case "notifications": return <DealerNotificationsList userId={user!.id} onNavigate={(tab) => setActiveTab(tab as DealerTab)} />;
       case "offers": return <DealerOffers />;
       case "statement": return <DealerStatement userId={user!.id} />;
+      case "stock_alerts": return <DealerStockAlerts />;
       case "settings": return <DealerAccountSettings />;
       default: return null;
     }
