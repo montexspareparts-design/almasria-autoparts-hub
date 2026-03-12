@@ -1,9 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Download, Clock, RefreshCw } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { toast } from "@/hooks/use-toast";
+import {
+  FileText, Download, Clock, RefreshCw, Eye, Search,
+  Plus, X, ShoppingCart, ArrowLeft, Loader2, AlertTriangle, ChevronRight
+} from "lucide-react";
 
 interface PriceList {
   id: string;
@@ -15,12 +21,43 @@ interface PriceList {
   updated_at: string;
 }
 
-const DealerPriceLists = () => {
+interface Product {
+  id: string;
+  name_ar: string;
+  sku: string;
+  base_price: number;
+  sale_price: number | null;
+  is_on_sale: boolean;
+  image_url: string | null;
+  stock_quantity: number;
+}
+
+const DAILY_LIMIT = 20;
+
+interface DealerPriceListsProps {
+  onNavigateToQuotes?: () => void;
+}
+
+const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
+  const { user, dealerAccount } = useAuth();
   const [lists, setLists] = useState<PriceList[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // PDF Viewer state
+  const [viewingList, setViewingList] = useState<PriceList | null>(null);
+
+  // Product search & quote state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedProducts, setSelectedProducts] = useState<{ product: Product; quantity: number }[]>([]);
+  const [dailyViews, setDailyViews] = useState(0);
+  const [tierPrices, setTierPrices] = useState<Record<string, number>>({});
+  const [savingQuote, setSavingQuote] = useState(false);
+
   useEffect(() => {
     fetchLists();
+    if (user) fetchDailyViews();
   }, []);
 
   const fetchLists = async () => {
@@ -33,6 +70,295 @@ const DealerPriceLists = () => {
     setLoading(false);
   };
 
+  const fetchDailyViews = async () => {
+    const { data } = await supabase.rpc("get_daily_view_count", { _user_id: user!.id });
+    setDailyViews(data || 0);
+  };
+
+  const searchProducts = useCallback(async (query: string) => {
+    if (query.length < 2) { setSearchResults([]); return; }
+    setSearching(true);
+    const { data } = await supabase
+      .from("products")
+      .select("id, name_ar, sku, base_price, sale_price, is_on_sale, image_url, stock_quantity")
+      .eq("is_active", true)
+      .or(`name_ar.ilike.%${query}%,sku.ilike.%${query}%`)
+      .limit(10);
+    setSearchResults(data || []);
+    setSearching(false);
+  }, []);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => searchProducts(searchQuery), 300);
+    return () => clearTimeout(timeout);
+  }, [searchQuery, searchProducts]);
+
+  const getProductPrice = async (product: Product): Promise<number> => {
+    if (tierPrices[product.id]) return tierPrices[product.id];
+    if (dealerAccount?.tier) {
+      const { data } = await supabase
+        .from("product_tier_prices")
+        .select("price")
+        .eq("product_id", product.id)
+        .eq("tier", dealerAccount.tier as any)
+        .maybeSingle();
+      if (data?.price) {
+        setTierPrices(prev => ({ ...prev, [product.id]: Number(data.price) }));
+        return Number(data.price);
+      }
+    }
+    const price = product.is_on_sale && product.sale_price ? product.sale_price : product.base_price;
+    setTierPrices(prev => ({ ...prev, [product.id]: price }));
+    return price;
+  };
+
+  const addProduct = async (product: Product) => {
+    const totalSelected = selectedProducts.reduce((sum, p) => sum + p.quantity, 0);
+    if (dailyViews + totalSelected >= DAILY_LIMIT) {
+      toast({ title: "تم الوصول للحد اليومي", description: `الحد الأقصى ${DAILY_LIMIT} صنف يومياً`, variant: "destructive" });
+      return;
+    }
+    const existing = selectedProducts.find(p => p.product.id === product.id);
+    if (existing) {
+      setSelectedProducts(prev => prev.map(p =>
+        p.product.id === product.id ? { ...p, quantity: p.quantity + 1 } : p
+      ));
+      return;
+    }
+    // Pre-fetch price
+    await getProductPrice(product);
+    setSelectedProducts(prev => [...prev, { product, quantity: 1 }]);
+    setSearchQuery("");
+    setSearchResults([]);
+  };
+
+  const removeProduct = (productId: string) => {
+    setSelectedProducts(prev => prev.filter(p => p.product.id !== productId));
+  };
+
+  const sendToQuote = async () => {
+    if (selectedProducts.length === 0 || !user) return;
+    setSavingQuote(true);
+
+    const quoteNumber = `Q-${Date.now().toString(36).toUpperCase()}`;
+    const items = await Promise.all(
+      selectedProducts.map(async (sp) => {
+        const price = await getProductPrice(sp.product);
+        return { product: sp.product, quantity: sp.quantity, price };
+      })
+    );
+
+    const totalAmount = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+
+    const { data: quote, error } = await supabase
+      .from("dealer_quotes")
+      .insert({
+        user_id: user.id,
+        quote_number: quoteNumber,
+        total_amount: totalAmount,
+        notes: viewingList ? `من كشف الأسعار: ${viewingList.title}` : null,
+      })
+      .select()
+      .single();
+
+    if (error || !quote) {
+      toast({ title: "خطأ في حفظ العرض", variant: "destructive" });
+      setSavingQuote(false);
+      return;
+    }
+
+    await supabase.from("dealer_quote_items").insert(
+      items.map(i => ({
+        quote_id: (quote as any).id,
+        product_id: i.product.id,
+        quantity: i.quantity,
+        unit_price: i.price,
+        total_price: i.price * i.quantity,
+      }))
+    );
+
+    // Record price views
+    for (const sp of selectedProducts) {
+      await supabase.from("dealer_price_views").insert({ user_id: user.id, product_id: sp.product.id });
+    }
+
+    toast({ title: "تم إنشاء عرض السعر ✓", description: `رقم العرض: ${quoteNumber}` });
+    setSelectedProducts([]);
+    setSavingQuote(false);
+
+    if (onNavigateToQuotes) {
+      onNavigateToQuotes();
+    }
+  };
+
+  const remainingToday = Math.max(0, DAILY_LIMIT - dailyViews - selectedProducts.reduce((s, p) => s + p.quantity, 0));
+
+  // ─── PDF VIEWER MODE ───
+  if (viewingList) {
+    return (
+      <div className="space-y-4">
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={() => { setViewingList(null); setSelectedProducts([]); setSearchQuery(""); }}>
+            <ArrowLeft className="w-4 h-4 ml-1" />
+            رجوع
+          </Button>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-sm font-bold text-foreground truncate">{viewingList.title}</h2>
+            {viewingList.version && <p className="text-[10px] text-muted-foreground">{viewingList.version}</p>}
+          </div>
+          {viewingList.file_url && (
+            <Button variant="outline" size="sm" onClick={() => window.open(viewingList.file_url!, "_blank")}>
+              <Download className="w-4 h-4 ml-1" />
+              تحميل
+            </Button>
+          )}
+        </div>
+
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* PDF Viewer */}
+          <div className="flex-1 min-w-0">
+            {viewingList.file_url ? (
+              <div className="border border-border rounded-lg overflow-hidden bg-muted/30" style={{ height: "70vh" }}>
+                <iframe
+                  src={`${viewingList.file_url}#toolbar=1`}
+                  className="w-full h-full"
+                  title={viewingList.title}
+                />
+              </div>
+            ) : (
+              <Card className="border-dashed">
+                <CardContent className="p-16 text-center">
+                  <FileText className="w-12 h-12 mx-auto text-muted-foreground/40 mb-3" />
+                  <p className="text-muted-foreground">لا يوجد ملف مرفق لهذا الكشف</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Side Panel - Product Search & Selected */}
+          <div className="w-full lg:w-80 xl:w-96 shrink-0 space-y-3">
+            {/* Daily Limit */}
+            <div className={`rounded-lg border p-2.5 flex items-center gap-2 text-xs ${remainingToday <= 5 ? "border-destructive/30 bg-destructive/5" : "border-primary/20 bg-primary/5"}`}>
+              {remainingToday <= 5 ? (
+                <AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0" />
+              ) : (
+                <Eye className="w-3.5 h-3.5 text-primary shrink-0" />
+              )}
+              <span className="text-foreground">
+                المتبقي: <strong>{remainingToday}</strong> من {DAILY_LIMIT} صنف يومياً
+              </span>
+            </div>
+
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="ابحث برقم القطعة أو الاسم..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pr-10 h-10 text-sm"
+                disabled={remainingToday === 0}
+              />
+              {searchQuery && (
+                <button onClick={() => { setSearchQuery(""); setSearchResults([]); }} className="absolute left-3 top-1/2 -translate-y-1/2">
+                  <X className="w-4 h-4 text-muted-foreground" />
+                </button>
+              )}
+            </div>
+
+            {/* Search Results */}
+            {searchResults.length > 0 && (
+              <div className="border border-border rounded-lg bg-card max-h-48 overflow-y-auto">
+                {searchResults.map(product => (
+                  <button
+                    key={product.id}
+                    onClick={() => addProduct(product)}
+                    className="w-full flex items-center gap-2 p-2.5 hover:bg-muted transition-colors text-right border-b border-border last:border-0"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-foreground truncate">{product.name_ar}</p>
+                      <p className="text-[10px] text-muted-foreground font-mono">{product.sku}</p>
+                    </div>
+                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                      <Plus className="w-3 h-3 text-primary" />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {searching && (
+              <div className="flex justify-center py-3">
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+              </div>
+            )}
+
+            {/* Selected Products */}
+            <div className="border border-border rounded-lg bg-card">
+              <div className="flex items-center gap-2 p-3 border-b border-border">
+                <ShoppingCart className="w-4 h-4 text-foreground" />
+                <span className="text-xs font-bold text-foreground flex-1">
+                  أصناف مختارة ({selectedProducts.length})
+                </span>
+              </div>
+
+              {selectedProducts.length === 0 ? (
+                <div className="p-6 text-center">
+                  <p className="text-xs text-muted-foreground">ابحث عن أصناف من الكشف وأضفها هنا</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-border max-h-60 overflow-y-auto">
+                  {selectedProducts.map(sp => (
+                    <div key={sp.product.id} className="flex items-center gap-2 p-2.5">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-foreground truncate">{sp.product.name_ar}</p>
+                        <p className="text-[10px] text-muted-foreground font-mono">{sp.product.sku}</p>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Badge variant="secondary" className="text-[9px] h-5">×{sp.quantity}</Badge>
+                        <button onClick={() => removeProduct(sp.product.id)} className="p-1 hover:bg-destructive/10 rounded">
+                          <X className="w-3 h-3 text-destructive" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {selectedProducts.length > 0 && (
+                <div className="p-3 border-t border-border space-y-2">
+                  <Button
+                    size="sm"
+                    className="w-full h-9 text-xs gap-1"
+                    onClick={sendToQuote}
+                    disabled={savingQuote}
+                  >
+                    {savingQuote ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <ShoppingCart className="w-3.5 h-3.5" />
+                    )}
+                    إرسال كعرض سعر ({selectedProducts.length} صنف)
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="w-full h-7 text-[10px] text-muted-foreground"
+                    onClick={() => setSelectedProducts([])}
+                  >
+                    مسح الكل
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── LIST MODE ───
   if (loading) {
     return (
       <div className="space-y-3">
@@ -86,17 +412,26 @@ const DealerPriceLists = () => {
                         </span>
                       </div>
                     </div>
-                    {list.file_url && (
+                    <div className="flex items-center gap-2 shrink-0">
                       <Button
-                        variant="outline"
+                        variant="default"
                         size="sm"
-                        className="shrink-0"
-                        onClick={() => window.open(list.file_url!, "_blank")}
+                        className="gap-1"
+                        onClick={() => setViewingList(list)}
                       >
-                        <Download className="w-4 h-4 ml-1" />
-                        تحميل
+                        <Eye className="w-4 h-4" />
+                        فتح
                       </Button>
-                    )}
+                      {list.file_url && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open(list.file_url!, "_blank")}
+                        >
+                          <Download className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
