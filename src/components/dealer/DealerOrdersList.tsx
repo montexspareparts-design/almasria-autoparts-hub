@@ -3,8 +3,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Package, Clock, CheckCircle, Truck, XCircle, ChevronDown, ChevronUp, MessageCircle, Inbox, PackageCheck } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Package, Clock, CheckCircle, Truck, XCircle, ChevronDown, ChevronUp,
+  MessageCircle, Inbox, PackageCheck, Trash2, Pencil, Save, X, Loader2,
+  AlertTriangle
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogTrigger
+} from "@/components/ui/alert-dialog";
 
 interface Order {
   id: string;
@@ -16,6 +28,20 @@ interface Order {
   shipping_governorate?: string | null;
   payment_method?: string | null;
   notes?: string | null;
+}
+
+interface OrderItem {
+  id: string;
+  order_id: string;
+  product_id: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  products: {
+    name_ar: string;
+    sku: string;
+    image_url: string | null;
+  } | null;
 }
 
 const orderStages = [
@@ -41,11 +67,35 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
   cancelled: { label: "ملغي", variant: "destructive" },
 };
 
+const canEdit = (status: string) => status === "pending" || status === "confirmed";
+
+/** Send notification to all admins about order modification */
+const notifyAdmins = async (orderNumber: string, action: string, details: string) => {
+  const { data: adminRoles } = await supabase
+    .from("user_roles")
+    .select("user_id")
+    .eq("role", "admin" as any);
+
+  if (adminRoles && adminRoles.length > 0) {
+    const notifications = adminRoles.map(admin => ({
+      user_id: admin.user_id,
+      title: `تعديل على الطلب ${orderNumber}`,
+      message: `${action}: ${details}`,
+      type: "warning",
+    }));
+    await supabase.from("notifications").insert(notifications);
+  }
+};
+
 const DealerOrdersList = ({ userId }: { userId: string }) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
-  const [orderItems, setOrderItems] = useState<Record<string, any[]>>({});
+  const [orderItems, setOrderItems] = useState<Record<string, OrderItem[]>>({});
+  const [editingOrder, setEditingOrder] = useState<string | null>(null);
+  const [editNotes, setEditNotes] = useState("");
+  const [editQuantities, setEditQuantities] = useState<Record<string, number>>({});
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -62,15 +112,126 @@ const DealerOrdersList = ({ userId }: { userId: string }) => {
   };
 
   const toggleOrder = async (orderId: string) => {
-    if (expandedOrder === orderId) { setExpandedOrder(null); return; }
+    if (expandedOrder === orderId) { setExpandedOrder(null); setEditingOrder(null); return; }
     setExpandedOrder(orderId);
+    setEditingOrder(null);
     if (!orderItems[orderId]) {
       const { data } = await supabase
         .from("order_items")
         .select("*, products(name_ar, sku, image_url)")
         .eq("order_id", orderId);
-      setOrderItems(prev => ({ ...prev, [orderId]: data || [] }));
+      setOrderItems(prev => ({ ...prev, [orderId]: (data as OrderItem[]) || [] }));
     }
+  };
+
+  const startEditing = (order: Order) => {
+    setEditingOrder(order.id);
+    setEditNotes(order.notes || "");
+    const items = orderItems[order.id] || [];
+    const qtys: Record<string, number> = {};
+    items.forEach(i => { qtys[i.id] = i.quantity; });
+    setEditQuantities(qtys);
+  };
+
+  const cancelEditing = () => {
+    setEditingOrder(null);
+    setEditNotes("");
+    setEditQuantities({});
+  };
+
+  const saveEdits = async (order: Order) => {
+    setSaving(true);
+    const items = orderItems[order.id] || [];
+    const changes: string[] = [];
+
+    // Update quantities
+    for (const item of items) {
+      const newQty = editQuantities[item.id];
+      if (newQty !== undefined && newQty !== item.quantity) {
+        const newTotal = item.unit_price * newQty;
+        await supabase.from("order_items")
+          .update({ quantity: newQty, total_price: newTotal })
+          .eq("id", item.id);
+        changes.push(`تغيير كمية "${item.products?.name_ar}" من ${item.quantity} إلى ${newQty}`);
+      }
+    }
+
+    // Update notes
+    if (editNotes !== (order.notes || "")) {
+      changes.push(editNotes ? `إضافة ملاحظات: "${editNotes}"` : "إزالة الملاحظات");
+    }
+
+    // Recalculate total
+    const updatedItems = items.map(i => ({
+      ...i,
+      quantity: editQuantities[i.id] ?? i.quantity,
+      total_price: i.unit_price * (editQuantities[i.id] ?? i.quantity),
+    }));
+    const newTotal = updatedItems.reduce((sum, i) => sum + i.total_price, 0);
+
+    await supabase.from("orders")
+      .update({ total_amount: newTotal, notes: editNotes || null })
+      .eq("id", order.id);
+
+    // Notify admins
+    if (changes.length > 0) {
+      await notifyAdmins(order.order_number, "تعديل الطلب", changes.join(" | "));
+    }
+
+    // Refresh data
+    setOrderItems(prev => ({ ...prev, [order.id]: updatedItems }));
+    setOrders(prev => prev.map(o => o.id === order.id ? { ...o, total_amount: newTotal, notes: editNotes || null } : o));
+    setEditingOrder(null);
+    setSaving(false);
+    toast({ title: "تم التحديث ✓", description: "تم تعديل الطلب وإبلاغ الإدارة" });
+  };
+
+  const removeItem = async (order: Order, itemId: string) => {
+    setSaving(true);
+    const items = orderItems[order.id] || [];
+    const removedItem = items.find(i => i.id === itemId);
+
+    if (items.length <= 1) {
+      toast({ title: "لا يمكن حذف آخر صنف", description: "يمكنك إلغاء الطلب بالكامل بدلاً من ذلك", variant: "destructive" });
+      setSaving(false);
+      return;
+    }
+
+    await supabase.from("order_items").delete().eq("id", itemId);
+
+    const remaining = items.filter(i => i.id !== itemId);
+    const newTotal = remaining.reduce((sum, i) => sum + i.total_price, 0);
+    await supabase.from("orders").update({ total_amount: newTotal }).eq("id", order.id);
+
+    // Notify admins
+    await notifyAdmins(
+      order.order_number,
+      "حذف صنف من الطلب",
+      `تم حذف "${removedItem?.products?.name_ar}" (${removedItem?.products?.sku})`
+    );
+
+    setOrderItems(prev => ({ ...prev, [order.id]: remaining }));
+    setOrders(prev => prev.map(o => o.id === order.id ? { ...o, total_amount: newTotal } : o));
+    setSaving(false);
+    toast({ title: "تم الحذف ✓", description: "تم حذف الصنف وإبلاغ الإدارة" });
+  };
+
+  const cancelOrder = async (order: Order) => {
+    setSaving(true);
+    await supabase.from("orders")
+      .update({ status: "cancelled" })
+      .eq("id", order.id);
+
+    await notifyAdmins(
+      order.order_number,
+      "إلغاء الطلب",
+      `قام التاجر بإلغاء الطلب بقيمة ${Number(order.total_amount).toLocaleString("ar-EG")} ج.م`
+    );
+
+    setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: "cancelled" } : o));
+    setEditingOrder(null);
+    setSaving(false);
+    toast({ title: "تم إلغاء الطلب", description: "تم إبلاغ الإدارة بالإلغاء" });
   };
 
   if (loading) {
@@ -100,6 +261,8 @@ const DealerOrdersList = ({ userId }: { userId: string }) => {
             const isExpanded = expandedOrder === order.id;
             const items = orderItems[order.id];
             const currentStage = stageIndex(order.status);
+            const isEditing = editingOrder === order.id;
+            const editable = canEdit(order.status);
 
             return (
               <Card key={order.id} className="border-border/50 overflow-hidden">
@@ -148,12 +311,6 @@ const DealerOrdersList = ({ userId }: { userId: string }) => {
                                 "text-[9px] text-center leading-tight",
                                 isActive ? "text-primary font-semibold" : "text-muted-foreground"
                               )}>{stage.label}</span>
-                              {idx < orderStages.length - 1 && (
-                                <div className={cn(
-                                  "absolute h-0.5 top-4",
-                                  isActive ? "bg-primary" : "bg-muted"
-                                )} />
-                              )}
                             </div>
                           );
                         })}
@@ -167,6 +324,60 @@ const DealerOrdersList = ({ userId }: { userId: string }) => {
                       </div>
                     )}
 
+                    {/* Edit/Cancel Actions Bar */}
+                    {editable && !isEditing && (
+                      <div className="flex items-center gap-2 p-2.5 rounded-lg bg-primary/5 border border-primary/10">
+                        <AlertTriangle className="w-4 h-4 text-primary shrink-0" />
+                        <span className="text-xs text-muted-foreground flex-1">يمكنك تعديل أو إلغاء هذا الطلب قبل بدء التجهيز</span>
+                        <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => startEditing(order)}>
+                          <Pencil className="w-3.5 h-3.5 ml-1" />
+                          تعديل
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="outline" size="sm" className="text-xs h-7 text-destructive border-destructive/30 hover:bg-destructive/10">
+                              <Trash2 className="w-3.5 h-3.5 ml-1" />
+                              إلغاء الطلب
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>تأكيد إلغاء الطلب</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                هل أنت متأكد من إلغاء الطلب رقم {order.order_number}؟ سيتم إبلاغ الإدارة بالإلغاء. لا يمكن التراجع عن هذا الإجراء.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>تراجع</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => cancelOrder(order)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                تأكيد الإلغاء
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    )}
+
+                    {/* Editing Mode Header */}
+                    {isEditing && (
+                      <div className="flex items-center justify-between p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                        <div className="flex items-center gap-2">
+                          <Pencil className="w-4 h-4 text-amber-600" />
+                          <span className="text-xs font-semibold text-amber-700">وضع التعديل — سيتم إبلاغ الإدارة بأي تغيير</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button variant="ghost" size="sm" className="text-xs h-7" onClick={cancelEditing} disabled={saving}>
+                            <X className="w-3.5 h-3.5 ml-1" />
+                            إلغاء
+                          </Button>
+                          <Button size="sm" className="text-xs h-7" onClick={() => saveEdits(order)} disabled={saving}>
+                            {saving ? <Loader2 className="w-3.5 h-3.5 ml-1 animate-spin" /> : <Save className="w-3.5 h-3.5 ml-1" />}
+                            حفظ التعديلات
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
                     {order.shipping_governorate && (
                       <p className="text-xs text-muted-foreground">📍 {order.shipping_governorate} — {order.shipping_address}</p>
                     )}
@@ -174,18 +385,77 @@ const DealerOrdersList = ({ userId }: { userId: string }) => {
                       <p className="text-xs text-muted-foreground">💳 {order.payment_method}</p>
                     )}
 
+                    {/* Order Items */}
                     {items ? (
                       <div className="space-y-2">
-                        {items.map((item: any) => (
+                        {items.map((item) => (
                           <div key={item.id} className="flex items-center gap-3 bg-background rounded-lg p-2.5">
                             {item.products?.image_url && (
-                              <img src={item.products.image_url} alt="" className="w-10 h-10 rounded object-cover" />
+                              <img src={item.products.image_url} alt="" className="w-10 h-10 rounded object-contain bg-white shrink-0" />
                             )}
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-medium text-foreground truncate">{item.products?.name_ar}</p>
-                              <p className="text-[10px] text-muted-foreground">{item.products?.sku} × {item.quantity}</p>
+                              <p className="text-[10px] text-muted-foreground">{item.products?.sku}</p>
                             </div>
-                            <p className="text-xs font-bold text-foreground shrink-0">{Number(item.total_price).toLocaleString("ar-EG")} ج.م</p>
+
+                            {isEditing ? (
+                              <>
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="w-7 h-7"
+                                    onClick={() => setEditQuantities(prev => ({ ...prev, [item.id]: Math.max(1, (prev[item.id] ?? item.quantity) - 1) }))}
+                                  >
+                                    <span className="text-sm font-bold">−</span>
+                                  </Button>
+                                  <Input
+                                    type="number"
+                                    min={1}
+                                    value={editQuantities[item.id] ?? item.quantity}
+                                    onChange={(e) => setEditQuantities(prev => ({ ...prev, [item.id]: Math.max(1, parseInt(e.target.value) || 1) }))}
+                                    className="w-14 h-7 text-center text-sm font-bold px-1"
+                                  />
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="w-7 h-7"
+                                    onClick={() => setEditQuantities(prev => ({ ...prev, [item.id]: (prev[item.id] ?? item.quantity) + 1 }))}
+                                  >
+                                    <span className="text-sm font-bold">+</span>
+                                  </Button>
+                                </div>
+                                <p className="text-xs font-bold text-foreground shrink-0 w-20 text-left">
+                                  {(item.unit_price * (editQuantities[item.id] ?? item.quantity)).toLocaleString("ar-EG")} ج.م
+                                </p>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="w-7 h-7 text-destructive shrink-0">
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>حذف الصنف</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        هل أنت متأكد من حذف "{item.products?.name_ar}" من الطلب؟ سيتم إبلاغ الإدارة.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>تراجع</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => removeItem(order, item.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                        تأكيد الحذف
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </>
+                            ) : (
+                              <>
+                                <p className="text-[10px] text-muted-foreground shrink-0">× {item.quantity}</p>
+                                <p className="text-xs font-bold text-foreground shrink-0">{Number(item.total_price).toLocaleString("ar-EG")} ج.م</p>
+                              </>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -193,15 +463,48 @@ const DealerOrdersList = ({ userId }: { userId: string }) => {
                       <div className="h-8 animate-pulse bg-muted rounded" />
                     )}
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full text-xs"
-                      onClick={() => window.open(`https://wa.me/201000000000?text=استفسار عن الطلب رقم ${order.order_number}`, "_blank")}
-                    >
-                      <MessageCircle className="w-3.5 h-3.5 ml-1.5" />
-                      استفسار عن الطلب
-                    </Button>
+                    {/* Edit Notes */}
+                    {isEditing && (
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-foreground">ملاحظات الطلب</label>
+                        <Textarea
+                          placeholder="أضف ملاحظات للإدارة..."
+                          value={editNotes}
+                          onChange={(e) => setEditNotes(e.target.value)}
+                          className="text-sm min-h-[60px]"
+                        />
+                      </div>
+                    )}
+
+                    {/* Existing notes (non-edit mode) */}
+                    {!isEditing && order.notes && (
+                      <div className="p-2.5 rounded-lg bg-muted/50">
+                        <p className="text-[10px] text-muted-foreground/70 mb-0.5">ملاحظات:</p>
+                        <p className="text-xs text-foreground">{order.notes}</p>
+                      </div>
+                    )}
+
+                    {/* Edit mode total */}
+                    {isEditing && items && (
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 border border-border">
+                        <span className="text-sm font-medium text-muted-foreground">الإجمالي بعد التعديل</span>
+                        <span className="text-lg font-bold text-foreground">
+                          {items.reduce((sum, i) => sum + i.unit_price * (editQuantities[i.id] ?? i.quantity), 0).toLocaleString("ar-EG")} ج.م
+                        </span>
+                      </div>
+                    )}
+
+                    {!isEditing && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full text-xs"
+                        onClick={() => window.open(`https://wa.me/201000000000?text=استفسار عن الطلب رقم ${order.order_number}`, "_blank")}
+                      >
+                        <MessageCircle className="w-3.5 h-3.5 ml-1.5" />
+                        استفسار عن الطلب
+                      </Button>
+                    )}
                   </div>
                 )}
               </Card>
