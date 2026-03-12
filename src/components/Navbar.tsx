@@ -180,7 +180,7 @@ const Navbar = () => {
             </button>
             <NotificationBell />
             <button
-              onClick={() => navigate(user ? "/dealer" : "/auth")}
+              onClick={() => navigate(user ? (dealerAccount ? "/dealer" : "/dealer-apply") : "/auth")}
               className="text-secondary-foreground/70 hover:text-primary transition-colors p-2 touch-manipulation"
             >
               <User className="w-[18px] h-[18px]" />
@@ -254,10 +254,10 @@ const Navbar = () => {
                   variant="outline"
                   size="sm"
                   className="gap-1.5 text-[13px] font-semibold h-8 px-3 border-secondary-foreground/15 hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
-                  onClick={() => navigate("/dealer")}
+                  onClick={() => navigate(dealerAccount ? "/dealer" : "/dealer-apply")}
                 >
                   <User className="w-3.5 h-3.5" />
-                  {t("nav.dealer_account")}
+                  {dealerAccount ? t("nav.dealer_account") : (lang === "ar" ? "تقديم طلب اعتماد" : "Apply as Dealer")}
                 </Button>
 
                 {/* Logout */}
@@ -372,8 +372,8 @@ const Navbar = () => {
                     <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-secondary-foreground/70 font-semibold" onClick={() => { navigate("/my-orders"); setIsOpen(false); }}>
                       <ClipboardList className="w-4 h-4" /> {lang === "ar" ? "طلباتي" : "My Orders"}
                     </Button>
-                    <Button variant="outline" size="sm" className="w-full gap-2 font-semibold" onClick={() => { navigate("/dealer"); setIsOpen(false); }}>
-                      <User className="w-4 h-4" /> {t("nav.dealer_account")}
+                    <Button variant="outline" size="sm" className="w-full gap-2 font-semibold" onClick={() => { navigate(dealerAccount ? "/dealer" : "/dealer-apply"); setIsOpen(false); }}>
+                      <User className="w-4 h-4" /> {dealerAccount ? t("nav.dealer_account") : (lang === "ar" ? "تقديم طلب اعتماد" : "Apply as Dealer")}
                     </Button>
                     <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-secondary-foreground/50 font-semibold" onClick={() => { signOut(); setIsOpen(false); }}>
                       <LogOut className="w-4 h-4" /> {t("nav.logout")}
