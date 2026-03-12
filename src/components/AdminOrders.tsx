@@ -4,12 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import {
-  Loader2, Package, Clock, Truck, CheckCircle, XCircle, Eye,
-  ShoppingBag, DollarSign, MapPin, Phone, Mail, ChevronDown, ChevronUp,
-  FileText
+  Loader2, Package, Clock, Truck, CheckCircle, XCircle,
+  ShoppingBag, MapPin, Phone, Mail, ChevronDown, ChevronUp,
+  FileText, Edit3, Trash2, Save, Plus, Minus, X
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -40,6 +41,8 @@ const AdminOrders = () => {
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [adminNotes, setAdminNotes] = useState<Record<string, string>>({});
+  const [editingOrder, setEditingOrder] = useState<string | null>(null);
+  const [editedItems, setEditedItems] = useState<Record<string, { id: string; quantity: number; unit_price: number; total_price: number; product_id: string; product?: any }[]>>({});
 
   useEffect(() => {
     fetchOrders();
@@ -57,7 +60,6 @@ const AdminOrders = () => {
       return;
     }
 
-    // Fetch items and profiles for each order
     const enriched: OrderWithItems[] = await Promise.all(
       ordersData.map(async (order) => {
         const [itemsRes, profileRes] = await Promise.all([
@@ -92,6 +94,34 @@ const AdminOrders = () => {
     cancelled: { title: "❌ تم إلغاء طلبك", message: "تم إلغاء طلبك. تواصل معنا لمزيد من التفاصيل" },
   };
 
+  const notifyCustomer = async (order: OrderWithItems, title: string, message: string) => {
+    // In-app notification
+    await supabase.from("notifications").insert({
+      user_id: order.user_id,
+      title,
+      message: `${message} (رقم الطلب: ${order.order_number})`,
+      type: "order",
+    });
+
+    // WhatsApp notification
+    const customerPhone = order.profile?.phone;
+    if (customerPhone) {
+      try {
+        await supabase.functions.invoke("notify-order-whatsapp", {
+          body: {
+            orderNumber: order.order_number,
+            newStatus: order.status,
+            customerPhone,
+            customerName: order.profile?.full_name || "",
+            customMessage: `${title}\n${message} (رقم الطلب: ${order.order_number})`,
+          },
+        });
+      } catch (err) {
+        console.error("WhatsApp notification failed:", err);
+      }
+    }
+  };
+
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     setUpdatingStatus(orderId);
     const updateData: any = { status: newStatus };
@@ -107,38 +137,11 @@ const AdminOrders = () => {
     if (error) {
       toast({ title: "حدث خطأ أثناء تحديث الحالة", variant: "destructive" });
     } else {
-      // Send notification to customer
       const order = orders.find((o) => o.id === orderId);
       const notifData = statusNotificationMessages[newStatus];
       if (order && notifData) {
-        const orderNum = order.order_number;
-        // In-app notification
-        await supabase.from("notifications").insert({
-          user_id: order.user_id,
-          title: notifData.title,
-          message: `${notifData.message} (رقم الطلب: ${orderNum})`,
-          type: "order",
-        });
-
-        // WhatsApp notification via Twilio
-        const customerPhone = order.profile?.phone;
-        if (customerPhone) {
-          try {
-            await supabase.functions.invoke("notify-order-whatsapp", {
-              body: {
-                orderNumber: orderNum,
-                newStatus,
-                customerPhone,
-                customerName: order.profile?.full_name || "",
-              },
-            });
-            console.log("WhatsApp notification sent for order", orderNum);
-          } catch (whatsappErr) {
-            console.error("WhatsApp notification failed:", whatsappErr);
-          }
-        }
+        await notifyCustomer(order, notifData.title, notifData.message);
       }
-
       toast({ title: `تم تحديث حالة الطلب إلى: ${statusConfig[newStatus]?.label || newStatus}` });
       fetchOrders();
     }
@@ -147,6 +150,81 @@ const AdminOrders = () => {
 
   const handleCancel = async (orderId: string) => {
     await handleStatusUpdate(orderId, "cancelled");
+  };
+
+  // ─── Edit order items ───
+  const startEditing = (order: OrderWithItems) => {
+    setEditingOrder(order.id);
+    setEditedItems({
+      [order.id]: (order.items || []).map(item => ({
+        id: item.id,
+        quantity: item.quantity,
+        unit_price: Number(item.unit_price),
+        total_price: Number(item.total_price),
+        product_id: item.product_id,
+        product: item.product,
+      })),
+    });
+  };
+
+  const updateItemQty = (orderId: string, itemId: string, delta: number) => {
+    setEditedItems(prev => ({
+      ...prev,
+      [orderId]: (prev[orderId] || []).map(item => {
+        if (item.id !== itemId) return item;
+        const newQty = Math.max(1, item.quantity + delta);
+        return { ...item, quantity: newQty, total_price: newQty * item.unit_price };
+      }),
+    }));
+  };
+
+  const removeEditItem = (orderId: string, itemId: string) => {
+    setEditedItems(prev => ({
+      ...prev,
+      [orderId]: (prev[orderId] || []).filter(item => item.id !== itemId),
+    }));
+  };
+
+  const saveOrderEdits = async (orderId: string) => {
+    const items = editedItems[orderId];
+    if (!items || items.length === 0) {
+      toast({ title: "لا يمكن حفظ طلب فارغ", variant: "destructive" });
+      return;
+    }
+
+    setUpdatingStatus(orderId);
+    const order = orders.find(o => o.id === orderId);
+
+    // Delete removed items
+    const originalIds = (order?.items || []).map(i => i.id);
+    const editedIds = items.map(i => i.id);
+    const removedIds = originalIds.filter(id => !editedIds.includes(id));
+
+    for (const id of removedIds) {
+      await supabase.from("order_items").delete().eq("id", id);
+    }
+
+    // Update remaining items
+    for (const item of items) {
+      await supabase.from("order_items").update({
+        quantity: item.quantity,
+        total_price: item.total_price,
+      }).eq("id", item.id);
+    }
+
+    // Recalculate total
+    const newTotal = items.reduce((sum, i) => sum + i.total_price, 0);
+    await supabase.from("orders").update({ total_amount: newTotal }).eq("id", orderId);
+
+    // Notify customer
+    if (order) {
+      await notifyCustomer(order, "📝 تم تعديل طلبك", `تم تعديل بعض الأصناف أو الكميات في طلبك. الإجمالي الجديد: ${newTotal.toLocaleString("ar-EG")} ج.م`);
+    }
+
+    toast({ title: "تم حفظ التعديلات وإبلاغ العميل ✓" });
+    setEditingOrder(null);
+    setUpdatingStatus(null);
+    fetchOrders();
   };
 
   const filteredOrders = filterStatus === "all"
@@ -240,6 +318,8 @@ const AdminOrders = () => {
                 const status = statusConfig[order.status] || statusConfig.pending;
                 const StatusIcon = status.icon;
                 const isExpanded = expandedOrder === order.id;
+                const isEditing = editingOrder === order.id;
+                const canEdit = ["pending", "confirmed", "processing"].includes(order.status);
 
                 return (
                   <div key={order.id} className="border border-border rounded-xl overflow-hidden transition-all">
@@ -317,46 +397,100 @@ const AdminOrders = () => {
 
                         {/* Order Items */}
                         <div>
-                          <h4 className="text-sm font-semibold text-foreground mb-2">المنتجات</h4>
-                          <div className="bg-background rounded-lg divide-y divide-border overflow-hidden">
-                            {order.items?.map((item) => (
-                              <div key={item.id} className="flex items-center gap-3 p-3">
-                                {item.product?.image_url ? (
-                                  <img
-                                    src={item.product.image_url}
-                                    alt={item.product?.name_ar}
-                                    className="w-12 h-12 rounded-lg object-cover bg-muted"
-                                  />
-                                ) : (
-                                  <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
-                                    <Package className="w-5 h-5 text-muted-foreground" />
-                                  </div>
-                                )}
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium text-foreground truncate">
-                                    {item.product?.name_ar || "منتج محذوف"}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    SKU: {item.product?.sku || "—"}
-                                  </p>
-                                </div>
-                                <div className="text-left">
-                                  <p className="text-sm font-semibold text-foreground">
-                                    {Number(item.total_price).toLocaleString("ar-EG")} ج.م
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {item.quantity} × {Number(item.unit_price).toLocaleString("ar-EG")}
-                                  </p>
-                                </div>
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="text-sm font-semibold text-foreground">المنتجات</h4>
+                            {canEdit && !isEditing && (
+                              <Button size="sm" variant="outline" className="gap-1 text-xs h-7" onClick={() => startEditing(order)}>
+                                <Edit3 className="w-3 h-3" />
+                                تعديل الأصناف
+                              </Button>
+                            )}
+                            {isEditing && (
+                              <div className="flex gap-2">
+                                <Button size="sm" className="gap-1 text-xs h-7" onClick={() => saveOrderEdits(order.id)} disabled={updatingStatus === order.id}>
+                                  {updatingStatus === order.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                                  حفظ التعديلات
+                                </Button>
+                                <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => setEditingOrder(null)}>
+                                  <X className="w-3 h-3" />
+                                </Button>
                               </div>
-                            ))}
+                            )}
                           </div>
-                          <div className="flex justify-between items-center mt-2 px-3">
-                            <span className="text-sm font-semibold text-foreground">الإجمالي</span>
-                            <span className="text-lg font-bold text-primary">
-                              {Number(order.total_amount).toLocaleString("ar-EG")} ج.م
-                            </span>
-                          </div>
+
+                          {isEditing ? (
+                            // ─── Edit Mode ───
+                            <div className="bg-background rounded-lg divide-y divide-border overflow-hidden border border-primary/20">
+                              {(editedItems[order.id] || []).map((item) => (
+                                <div key={item.id} className="flex items-center gap-3 p-3">
+                                  {item.product?.image_url ? (
+                                    <img src={item.product.image_url} alt={item.product?.name_ar} className="w-10 h-10 rounded-lg object-cover bg-muted" />
+                                  ) : (
+                                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                                      <Package className="w-4 h-4 text-muted-foreground" />
+                                    </div>
+                                  )}
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-foreground truncate">{item.product?.name_ar || "منتج"}</p>
+                                    <p className="text-[10px] text-muted-foreground">{item.product?.sku}</p>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Button size="icon" variant="outline" className="w-7 h-7" onClick={() => updateItemQty(order.id, item.id, -1)}>
+                                      <Minus className="w-3 h-3" />
+                                    </Button>
+                                    <span className="w-8 text-center text-sm font-bold">{item.quantity}</span>
+                                    <Button size="icon" variant="outline" className="w-7 h-7" onClick={() => updateItemQty(order.id, item.id, 1)}>
+                                      <Plus className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                  <span className="text-sm font-semibold text-foreground w-20 text-left">
+                                    {item.total_price.toLocaleString("ar-EG")} ج.م
+                                  </span>
+                                  <Button size="icon" variant="ghost" className="w-7 h-7 text-destructive hover:bg-destructive/10" onClick={() => removeEditItem(order.id, item.id)}>
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </Button>
+                                </div>
+                              ))}
+                              <div className="flex justify-between items-center p-3 bg-primary/5">
+                                <span className="text-sm font-bold">الإجمالي الجديد</span>
+                                <span className="text-lg font-bold text-primary">
+                                  {(editedItems[order.id] || []).reduce((s, i) => s + i.total_price, 0).toLocaleString("ar-EG")} ج.م
+                                </span>
+                              </div>
+                            </div>
+                          ) : (
+                            // ─── View Mode ───
+                            <div className="bg-background rounded-lg divide-y divide-border overflow-hidden">
+                              {order.items?.map((item) => (
+                                <div key={item.id} className="flex items-center gap-3 p-3">
+                                  {item.product?.image_url ? (
+                                    <img src={item.product.image_url} alt={item.product?.name_ar} className="w-12 h-12 rounded-lg object-cover bg-muted" />
+                                  ) : (
+                                    <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
+                                      <Package className="w-5 h-5 text-muted-foreground" />
+                                    </div>
+                                  )}
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-foreground truncate">{item.product?.name_ar || "منتج محذوف"}</p>
+                                    <p className="text-xs text-muted-foreground">SKU: {item.product?.sku || "—"}</p>
+                                  </div>
+                                  <div className="text-left">
+                                    <p className="text-sm font-semibold text-foreground">{Number(item.total_price).toLocaleString("ar-EG")} ج.م</p>
+                                    <p className="text-xs text-muted-foreground">{item.quantity} × {Number(item.unit_price).toLocaleString("ar-EG")}</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {!isEditing && (
+                            <div className="flex justify-between items-center mt-2 px-3">
+                              <span className="text-sm font-semibold text-foreground">الإجمالي</span>
+                              <span className="text-lg font-bold text-primary">
+                                {Number(order.total_amount).toLocaleString("ar-EG")} ج.م
+                              </span>
+                            </div>
+                          )}
                         </div>
 
                         {/* Admin Notes */}
