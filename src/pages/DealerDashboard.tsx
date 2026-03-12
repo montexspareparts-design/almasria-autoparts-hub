@@ -61,7 +61,7 @@ const DealerDashboard = () => {
     setLoadingData(false);
   };
 
-  if (authLoading || loadingData) {
+  if (authLoading || loadingData || !user || !isDealer) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
         <div className="flex flex-col items-center gap-2">
