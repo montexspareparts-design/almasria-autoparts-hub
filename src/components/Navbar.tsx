@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCart } from "@/contexts/CartContext";
 import NotificationBell from "@/components/NotificationBell";
+import DealerAuthDialog from "@/components/DealerAuthDialog";
 
 const mobileMenuVariants = {
   hidden: { opacity: 0, height: 0 },
