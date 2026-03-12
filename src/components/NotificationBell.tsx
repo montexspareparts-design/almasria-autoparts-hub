@@ -48,21 +48,53 @@ const NotificationBell = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
 
-  const playNotificationSound = useCallback(() => {
-    try {
-      const ctx = new AudioContext();
-      const oscillator = ctx.createOscillator();
-      const gain = ctx.createGain();
-      oscillator.connect(gain);
-      gain.connect(ctx.destination);
-      oscillator.frequency.value = 800;
-      oscillator.type = "sine";
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
-      oscillator.start(ctx.currentTime);
-      oscillator.stop(ctx.currentTime + 0.5);
-    } catch (e) {}
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  const getAudioContext = useCallback(() => {
+    if (!audioCtxRef.current || audioCtxRef.current.state === "closed") {
+      audioCtxRef.current = new AudioContext();
+    }
+    return audioCtxRef.current;
   }, []);
+
+  const playNotificationSound = useCallback((type?: string) => {
+    try {
+      const ctx = getAudioContext();
+      if (ctx.state === "suspended") ctx.resume();
+
+      const isOrder = type === "order" || type === "order_edit";
+
+      if (isOrder) {
+        // Urgent double-ding for orders
+        [0, 0.25].forEach((delay) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.frequency.value = 1200;
+          osc.type = "sine";
+          gain.gain.setValueAtTime(0.4, ctx.currentTime + delay);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + delay + 0.3);
+          osc.start(ctx.currentTime + delay);
+          osc.stop(ctx.currentTime + delay + 0.3);
+        });
+      } else {
+        // Pleasant ding for regular notifications
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 880;
+        osc.type = "sine";
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.6);
+      }
+    } catch (e) {
+      // Audio not supported
+    }
+  }, [getAudioContext]);
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
