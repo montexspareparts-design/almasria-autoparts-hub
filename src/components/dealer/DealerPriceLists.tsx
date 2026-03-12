@@ -393,13 +393,13 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
           <div className="flex-1" />
           <Button variant="outline" size="sm" onClick={downloadQuotePdf}>
             <Download className="w-4 h-4 ml-1" />
-            تحميل العرض
+            تحميل PDF
           </Button>
         </div>
 
         <div className="border border-primary/20 rounded-lg bg-primary/5 p-4 text-center">
           <CheckCircle2 className="w-10 h-10 mx-auto text-primary mb-2" />
-          <h3 className="text-lg font-bold text-foreground">تم إنشاء عرض السعر بنجاح</h3>
+          <h3 className="text-lg font-bold text-foreground">تم إنشاء عرض السعر وتحميله تلقائياً</h3>
           <p className="text-sm text-muted-foreground mt-1">رقم العرض: <span className="font-bold text-foreground">{createdQuote.quoteNumber}</span></p>
           <p className="text-xs text-muted-foreground mt-0.5">من كشف: {createdQuote.priceListTitle}</p>
         </div>
@@ -431,17 +431,21 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           <Button variant="outline" onClick={() => { setCreatedQuote(null); }}>
             <ArrowLeft className="w-4 h-4 ml-1" />
             عودة للكشف
           </Button>
           {onNavigateToQuotes && (
-            <Button onClick={() => { setCreatedQuote(null); onNavigateToQuotes(); }}>
-              <ShoppingCart className="w-4 h-4 ml-1" />
-              عروض الأسعار
+            <Button variant="secondary" onClick={() => { setCreatedQuote(null); onNavigateToQuotes(); }}>
+              <Search className="w-4 h-4 ml-1" />
+              تعديل وإضافة أصناف
             </Button>
           )}
+          <Button variant="default" onClick={downloadQuotePdf}>
+            <Download className="w-4 h-4 ml-1" />
+            تحميل PDF مرة أخرى
+          </Button>
         </div>
       </div>
     );
