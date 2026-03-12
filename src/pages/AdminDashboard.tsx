@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState, lazy, Suspense } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,17 +7,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, XCircle, Clock, Eye, LogOut, Trash2 } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Clock, Eye, LogOut, Trash2, Users, ShoppingBag, Video, FileText, Image, Brain, Zap, Bell, ListVideo, Menu, X, ChevronRight } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import AdminProductImages from "@/components/AdminProductImages";
-import AdminVideoSettings from "@/components/AdminVideoSettings";
-import AdminCatalogs from "@/components/AdminCatalogs";
-import AdminImageVerifier from "@/components/AdminImageVerifier";
-import AdminHeroVideo from "@/components/AdminHeroVideo";
-import AdminOrders from "@/components/AdminOrders";
-import AdminPriceLists from "@/components/AdminPriceLists";
-import AdminERPSync from "@/components/AdminERPSync";
 import type { Database } from "@/integrations/supabase/types";
+
+// Lazy load admin sections
+const AdminOrders = lazy(() => import("@/components/AdminOrders"));
+const AdminHeroVideo = lazy(() => import("@/components/AdminHeroVideo"));
+const AdminVideoSettings = lazy(() => import("@/components/AdminVideoSettings"));
+const AdminPriceLists = lazy(() => import("@/components/AdminPriceLists"));
+const AdminCatalogs = lazy(() => import("@/components/AdminCatalogs"));
+const AdminProductImages = lazy(() => import("@/components/AdminProductImages"));
+const AdminImageVerifier = lazy(() => import("@/components/AdminImageVerifier"));
+const AdminERPSync = lazy(() => import("@/components/AdminERPSync"));
+const AdminPushNotifications = lazy(() => import("@/components/AdminPushNotifications"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];
@@ -36,16 +39,43 @@ const clientTypeLabels: Record<string, string> = {
   distributor: "موزع",
 };
 
+const sidebarSections = [
+  { id: "dealers", label: "طلبات التجار", icon: Users },
+  { id: "orders", label: "إدارة الطلبات", icon: ShoppingBag },
+  { id: "price-lists", label: "كشوفات الأسعار", icon: FileText },
+  { id: "catalogs", label: "الكتالوجات", icon: FileText },
+  { id: "hero-video", label: "فيديو الصفحة الرئيسية", icon: Video },
+  { id: "youtube", label: "إعدادات YouTube", icon: ListVideo },
+  { id: "product-images", label: "صور المنتجات", icon: Image },
+  { id: "image-verifier", label: "مراجعة الصور (AI)", icon: Brain },
+  { id: "push-notifications", label: "إشعارات Push", icon: Bell },
+  { id: "erp", label: "ربط ERP", icon: Zap },
+];
+
+const SectionLoader = () => (
+  <div className="flex items-center justify-center py-16">
+    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+  </div>
+);
+
 const AdminDashboard = () => {
   const { user, isAdmin, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [applications, setApplications] = useState<DealerApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedApp, setSelectedApp] = useState<DealerApplication | null>(null);
   const [assignedTier, setAssignedTier] = useState<string>("");
   const [reviewNotes, setReviewNotes] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const activeSection = searchParams.get("section") || "dealers";
+
+  const setActiveSection = (section: string) => {
+    setSearchParams({ section });
+  };
 
   useEffect(() => {
     if (!authLoading && !user) { navigate("/auth"); return; }
@@ -101,7 +131,6 @@ const AdminDashboard = () => {
 
     await sendNotification(app, "approved");
 
-    // Send WhatsApp to dealer
     const approveMsg = `✅ مبروك! تمت الموافقة على طلب التسجيل كتاجر في المصرية جروب.\n\n🏢 ${app.business_name}\n📋 الفئة: ${tierLabels[assignedTier] || assignedTier}\n\nيمكنك الآن الدخول إلى حسابك والاستفادة من أسعار الجملة.`;
     const dealerPhone = app.phone.replace(/^0/, "20").replace(/\D/g, "");
     window.open(`https://wa.me/${dealerPhone}?text=${encodeURIComponent(approveMsg)}`, "_blank");
@@ -137,9 +166,7 @@ const AdminDashboard = () => {
 
   const handleDelete = async (app: DealerApplication) => {
     setProcessing(true);
-    // Delete dealer account if exists
     await supabase.from("dealer_accounts").delete().eq("application_id", app.id);
-    // Delete the application
     await supabase.from("dealer_applications").delete().eq("id", app.id);
     toast({ title: "تم حذف الطلب والتاجر بنجاح" });
     setSelectedApp(null);
@@ -156,41 +183,26 @@ const AdminDashboard = () => {
   }
 
   const pendingCount = applications.filter(a => a.status === "pending").length;
-  const approvedCount = applications.filter(a => a.status === "approved").length;
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-secondary border-b border-primary/20">
-        <div className="container mx-auto px-4 flex items-center justify-between h-16">
-          <div className="flex items-center gap-4">
-            <a href="/" className="text-xl font-bold text-secondary-foreground">
-              المصرية <span className="text-gradient-red">جروب</span>
-            </a>
-            <span className="text-sm bg-primary text-primary-foreground px-2 py-1 rounded">إدارة</span>
-          </div>
-          <Button variant="ghost" size="sm" onClick={() => { signOut(); navigate("/"); }} className="text-secondary-foreground/60">
-            <LogOut className="w-4 h-4" />
-          </Button>
-        </div>
-      </header>
+  const renderDealersSection = () => {
+    const pendingApps = applications.filter(a => a.status === "pending").length;
+    const approvedApps = applications.filter(a => a.status === "approved").length;
 
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-foreground mb-6">إدارة طلبات التجار</h1>
-
+    return (
+      <div className="space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-3 gap-4">
           <Card>
             <CardContent className="p-4 text-center">
               <Clock className="w-6 h-6 text-yellow-500 mx-auto mb-1" />
-              <p className="text-2xl font-bold text-foreground">{pendingCount}</p>
+              <p className="text-2xl font-bold text-foreground">{pendingApps}</p>
               <p className="text-xs text-muted-foreground">قيد المراجعة</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
               <CheckCircle className="w-6 h-6 text-green-500 mx-auto mb-1" />
-              <p className="text-2xl font-bold text-foreground">{approvedCount}</p>
+              <p className="text-2xl font-bold text-foreground">{approvedApps}</p>
               <p className="text-xs text-muted-foreground">معتمد</p>
             </CardContent>
           </Card>
@@ -203,9 +215,9 @@ const AdminDashboard = () => {
           </Card>
         </div>
 
-        {/* Application Detail Modal */}
+        {/* Selected Application Detail */}
         {selectedApp && (
-          <Card className="mb-6 border-primary/30">
+          <Card className="border-primary/30">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>تفاصيل الطلب: {selectedApp.business_name}</span>
@@ -256,7 +268,7 @@ const AdminDashboard = () => {
                       <AlertDialogTrigger asChild>
                         <Button variant="outline" className="gap-2 border-destructive/30 text-destructive hover:bg-destructive/10" disabled={processing}>
                           <Trash2 className="w-4 h-4" />
-                          حذف الطلب
+                          حذف
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
@@ -278,7 +290,6 @@ const AdminDashboard = () => {
                 </div>
               )}
 
-              {/* Delete button for non-pending apps */}
               {selectedApp.status !== "pending" && (
                 <div className="mt-6 border-t border-border pt-4">
                   <AlertDialog>
@@ -348,46 +359,137 @@ const AdminDashboard = () => {
             )}
           </CardContent>
         </Card>
+      </div>
+    );
+  };
 
-        {/* Orders Management */}
-        <div className="mt-8">
-          <AdminOrders />
-        </div>
+  const renderActiveSection = () => {
+    switch (activeSection) {
+      case "dealers":
+        return renderDealersSection();
+      case "orders":
+        return <Suspense fallback={<SectionLoader />}><AdminOrders /></Suspense>;
+      case "price-lists":
+        return <Suspense fallback={<SectionLoader />}><AdminPriceLists /></Suspense>;
+      case "catalogs":
+        return <Suspense fallback={<SectionLoader />}><AdminCatalogs /></Suspense>;
+      case "hero-video":
+        return <Suspense fallback={<SectionLoader />}><AdminHeroVideo /></Suspense>;
+      case "youtube":
+        return <Suspense fallback={<SectionLoader />}><AdminVideoSettings /></Suspense>;
+      case "product-images":
+        return <Suspense fallback={<SectionLoader />}><AdminProductImages /></Suspense>;
+      case "image-verifier":
+        return <Suspense fallback={<SectionLoader />}><AdminImageVerifier /></Suspense>;
+      case "push-notifications":
+        return <Suspense fallback={<SectionLoader />}><AdminPushNotifications /></Suspense>;
+      case "erp":
+        return <Suspense fallback={<SectionLoader />}><AdminERPSync /></Suspense>;
+      default:
+        return renderDealersSection();
+    }
+  };
 
-        {/* Hero Video Settings */}
-        <div className="mt-8">
-          <AdminHeroVideo />
-        </div>
+  const currentSection = sidebarSections.find(s => s.id === activeSection);
 
-        {/* YouTube Video Settings */}
-        <div className="mt-8">
-          <AdminVideoSettings />
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Header */}
+      <header className="bg-secondary border-b border-primary/20 sticky top-0 z-50">
+        <div className="flex items-center justify-between h-14 px-4">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden text-secondary-foreground"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+            >
+              {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </Button>
+            <a href="/" className="text-lg font-bold text-secondary-foreground">
+              المصرية <span className="text-gradient-red">جروب</span>
+            </a>
+            <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded">إدارة</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {pendingCount > 0 && (
+              <span className="text-xs bg-yellow-500/20 text-yellow-600 px-2 py-1 rounded-full font-medium">
+                {pendingCount} طلب جديد
+              </span>
+            )}
+            <Button variant="ghost" size="sm" onClick={() => { signOut(); navigate("/"); }} className="text-secondary-foreground/60">
+              <LogOut className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
+      </header>
 
-        {/* Price Lists Management */}
-        <div className="mt-8">
-          <AdminPriceLists />
-        </div>
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar */}
+        <aside
+          className={`
+            ${sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"}
+            fixed lg:static inset-y-0 right-0 top-14 z-40
+            w-64 lg:w-56 xl:w-64
+            bg-card border-l border-border
+            transition-transform duration-200 ease-in-out
+            overflow-y-auto
+            lg:translate-x-0
+          `}
+        >
+          {/* Mobile overlay */}
+          {sidebarOpen && (
+            <div
+              className="fixed inset-0 bg-black/40 z-[-1] lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+            />
+          )}
 
-        {/* Catalogs Management */}
-        <div className="mt-8">
-          <AdminCatalogs />
-        </div>
+          <nav className="p-3 space-y-1">
+            {sidebarSections.map((section) => {
+              const Icon = section.icon;
+              const isActive = activeSection === section.id;
+              return (
+                <button
+                  key={section.id}
+                  onClick={() => {
+                    setActiveSection(section.id);
+                    setSidebarOpen(false);
+                  }}
+                  className={`
+                    w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all
+                    ${isActive
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    }
+                  `}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{section.label}</span>
+                  {section.id === "dealers" && pendingCount > 0 && !isActive && (
+                    <span className="mr-auto text-[10px] bg-yellow-500 text-white rounded-full w-5 h-5 flex items-center justify-center">
+                      {pendingCount}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+        </aside>
 
-        {/* Product Images Management */}
-        <div className="mt-8">
-          <AdminProductImages />
-        </div>
+        {/* Main Content */}
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-4 lg:p-6 max-w-5xl">
+            {/* Breadcrumb */}
+            <div className="flex items-center gap-2 mb-6">
+              <span className="text-sm text-muted-foreground">لوحة التحكم</span>
+              <ChevronRight className="w-3 h-3 text-muted-foreground rotate-180" />
+              <span className="text-sm font-medium text-foreground">{currentSection?.label}</span>
+            </div>
 
-        {/* AI Image Verification */}
-        <div className="mt-8">
-          <AdminImageVerifier />
-        </div>
-
-        {/* ERP Integration */}
-        <div className="mt-8">
-          <AdminERPSync />
-        </div>
+            {renderActiveSection()}
+          </div>
+        </main>
       </div>
     </div>
   );
