@@ -443,6 +443,16 @@ const DealerLogin = () => {
                     </div>
                   </div>
 
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="remember-me"
+                      checked={rememberMe}
+                      onCheckedChange={(checked) => setRememberMe(!!checked)}
+                    />
+                    <Label htmlFor="remember-me" className="text-sm text-muted-foreground cursor-pointer">
+                      تذكرني
+                    </Label>
+                  </div>
                   <Button type="submit" className="w-full red-glow" size="lg" disabled={loading}>
                     {loading ? (
                       <>
