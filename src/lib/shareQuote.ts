@@ -9,6 +9,8 @@ interface ShareQuoteData {
   priceListTitle?: string;
   date?: string;
   notes?: string;
+  dealerName?: string;
+  dealerPhone?: string;
 }
 
 function buildQuoteText(data: ShareQuoteData): string {
