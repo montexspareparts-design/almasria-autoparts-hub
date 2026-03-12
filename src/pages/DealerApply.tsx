@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Shield, TrendingUp, Users, Award, CheckCircle, ArrowLeft } from "lucide-react";
+import { Shield, TrendingUp, Users, Award, CheckCircle, ArrowLeft, FileText, UserCheck, Clock, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
