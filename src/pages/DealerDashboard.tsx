@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { LogOut, Loader2 } from "lucide-react";
+import dealerLogo from "@/assets/logo.png";
 import DealerSidebar, { type DealerTab } from "@/components/dealer/DealerSidebar";
 import DealerMobileNav from "@/components/dealer/DealerMobileNav";
 import DealerOverview from "@/components/dealer/DealerOverview";
@@ -133,10 +134,8 @@ const DealerDashboard = () => {
       {/* Top Bar */}
       <header className="bg-card border-b border-border/50 sticky top-0 z-40 shadow-sm">
         <div className="flex items-center justify-between h-14 px-4 lg:px-6">
-          <a href="/" className="flex items-center gap-3 shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-sm">
-              <span className="text-primary-foreground font-black text-sm">M</span>
-            </div>
+          <a href="/" className="flex items-center gap-2.5 shrink-0">
+            <img src={dealerLogo} alt="المصرية جروب" className="h-8 w-auto object-contain" />
             <div className="hidden sm:block leading-none">
               <p className="text-sm font-bold text-foreground tracking-wide">المصرية جروب</p>
               <p className="text-[10px] text-muted-foreground font-medium">بوابة التوزيع B2B</p>
