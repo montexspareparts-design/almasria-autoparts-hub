@@ -170,6 +170,7 @@ const DealerLogin = () => {
   };
 
   const handleLogout = async () => {
+    clearCredentials();
     await supabase.auth.signOut();
     setApplicationStatus(null);
   };
