@@ -69,6 +69,7 @@ const AnimatedCounter = ({ value, suffix, delay }: { value: number; suffix: stri
 /* ── Hero Section ── */
 const HeroSection = () => {
   const { t } = useLanguage();
+  const { user, dealerAccount, isDealer } = useAuth();
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end start"] });
   const contentOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
