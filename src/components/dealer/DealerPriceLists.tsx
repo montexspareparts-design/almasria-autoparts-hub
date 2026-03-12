@@ -91,6 +91,44 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
     }
   }, []);
 
+  // Auto-open price list when editing a quote from price list
+  useEffect(() => {
+    if (!editingQuoteData || lists.length === 0) return;
+    
+    const matchingList = lists.find(l => l.title === editingQuoteData.priceListTitle);
+    if (matchingList) {
+      setEditingQuoteId(editingQuoteData.quoteId);
+      setEditingQuoteNumber(editingQuoteData.quoteNumber);
+      
+      // Load the selected items
+      const loadItems = async () => {
+        const productIds = editingQuoteData.items.map(i => i.productId);
+        const { data: products } = await supabase
+          .from("products")
+          .select("id, name_ar, sku, base_price, sale_price, is_on_sale, image_url, stock_quantity")
+          .in("id", productIds);
+        
+        if (products) {
+          const productMap = new Map(products.map(p => [p.id, p as Product]));
+          const loaded: { product: Product; quantity: number }[] = [];
+          for (const item of editingQuoteData.items) {
+            const product = productMap.get(item.productId);
+            if (product) {
+              loaded.push({ product, quantity: item.quantity });
+              setTierPrices(prev => ({ ...prev, [product.id]: item.unitPrice }));
+            }
+          }
+          setSelectedProducts(loaded);
+        }
+
+        // Open the price list
+        openPriceList(matchingList);
+        onClearEditingQuote?.();
+      };
+      loadItems();
+    }
+  }, [editingQuoteData, lists]);
+
   const fetchDealerInfo = async () => {
     if (!user) return;
     const { data } = await supabase
