@@ -114,7 +114,7 @@ const DealerDashboard = () => {
       case "invoices": return <DealerInvoices userId={user!.id} />;
       case "price_lists": return <DealerPriceLists onNavigateToQuotes={() => setActiveTab("quotes")} editingQuoteData={priceListQuoteData} onClearEditingQuote={() => setPriceListQuoteData(null)} />;
       case "favorites": return <DealerFavorites />;
-      case "notifications": return <DealerNotificationsList userId={user!.id} />;
+      case "notifications": return <DealerNotificationsList userId={user!.id} onNavigate={(tab) => setActiveTab(tab as DealerTab)} />;
       case "offers": return <DealerOffers />;
       case "statement": return <DealerStatement userId={user!.id} />;
       case "settings": return <DealerAccountSettings />;
