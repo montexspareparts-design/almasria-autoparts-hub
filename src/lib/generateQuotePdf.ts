@@ -37,11 +37,9 @@ function buildQuoteHtml(data: QuoteData): string {
   return `
     <div id="quote-pdf-content" style="width:780px;font-family:'Segoe UI',Tahoma,Arial,sans-serif;direction:rtl;background:#fff;padding:0">
       <!-- Header -->
-      <div style="background:#171717;padding:20px 30px 18px;text-align:center;border-radius:6px 6px 0 0">
-        <img src="/images/logo-pdf.png" style="height:70px;margin-bottom:8px" crossorigin="anonymous" />
-        <div style="color:#fff;font-size:15px;font-weight:700;letter-spacing:1px">المصرية جروب</div>
-        <div style="color:#aaa;font-size:11px;margin-top:2px">موزع معتمد قطع غيار وزيوت تويوتا</div>
-        <div style="color:#fff;font-size:17px;font-weight:700;margin-top:10px;letter-spacing:0.5px">عرض أسعار</div>
+      <div style="background:#fff;padding:24px 30px 18px;text-align:center;border-radius:6px 6px 0 0;border-bottom:none">
+        <img src="/images/toyota-quote-logo.png" style="height:90px;margin-bottom:8px" crossorigin="anonymous" />
+        <div style="color:#333;font-size:17px;font-weight:700;margin-top:6px;letter-spacing:0.5px">عرض أسعار</div>
       </div>
       <div style="height:3px;background:#dc2626"></div>
 
@@ -97,7 +95,7 @@ function buildQuoteHtml(data: QuoteData): string {
 
       <!-- Footer -->
       <div style="text-align:center;padding:16px 30px;border-top:1px solid #eee;margin-top:16px">
-        <div style="color:#aaa;font-size:10px">المصرية جروب — موزع معتمد قطع غيار وزيوت تويوتا</div>
+        <div style="color:#aaa;font-size:10px">Toyota Genuine Parts — قطع غيار تويوتا الأصلية</div>
         <div style="color:#bbb;font-size:9px;margin-top:3px">هذا العرض ساري لمدة 7 أيام من تاريخ الإصدار</div>
       </div>
     </div>
