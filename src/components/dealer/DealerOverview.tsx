@@ -121,12 +121,11 @@ const DealerOverview = ({
       .rpc("get_daily_view_count", { _user_id: userId })
       .then(({ data }) => setDailyQuotes(data || 0));
 
-    // Fetch recent orders (non-cancelled)
+    // Fetch recent orders (all statuses to match count)
     supabase
       .from("orders")
       .select("id, order_number, status, total_amount, created_at, invoice_url")
       .eq("user_id", userId)
-      .neq("status", "cancelled")
       .order("created_at", { ascending: false })
       .limit(5)
       .then(({ data }) => setRecentOrders((data as RecentOrder[]) || []));
