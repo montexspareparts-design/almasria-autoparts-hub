@@ -22,20 +22,32 @@ interface Notification {
 
 /** Determine where a notification should navigate based on user role */
 const getNotificationTarget = (n: Notification, isAdmin: boolean): { path: string; tab?: string; section?: string } | null => {
-  const msg = (n.message + " " + n.title).toLowerCase();
+  const msg = (n.message + " " + n.title);
 
   // Admin-specific routing
   if (isAdmin) {
+    // Dealer registration requests
     if (msg.includes("طلب تسجيل") || msg.includes("تاجر جديد") || n.type === "dealer_application") {
       return { path: "/admin", section: "dealers" };
     }
-    if (n.type === "order" || msg.includes("طلب جديد")) {
+    // Orders (new order, status change, edit approval)
+    if (n.type === "order" || n.type === "order_edit" || msg.includes("طلب جديد") || msg.includes("طلب رقم") || msg.includes("ORD-")) {
       return { path: "/admin", section: "orders" };
     }
+    // Price lists
     if (msg.includes("كشف أسعار") || n.type === "price_list") {
       return { path: "/admin", section: "price-lists" };
     }
-    if (msg.includes("منتج") || n.type === "product") {
+    // Products / offers
+    if (msg.includes("عرض خاص") || msg.includes("عرض جديد") || n.type === "offer" || n.type === "product") {
+      return { path: "/admin", section: "products" };
+    }
+    // Stock alerts
+    if (n.type === "stock_alert" || msg.includes("متوفر الآن")) {
+      return { path: "/admin", section: "products" };
+    }
+    // Customer reviews
+    if (msg.includes("تقييم") || n.type === "review") {
       return { path: "/admin", section: "products" };
     }
     // Fallback for admin
@@ -43,25 +55,32 @@ const getNotificationTarget = (n: Notification, isAdmin: boolean): { path: strin
   }
 
   // Dealer routing
-  if (n.type === "order" || n.type === "order_edit") {
+  // Orders
+  if (n.type === "order" || n.type === "order_edit" || msg.includes("طلبك") || msg.includes("طلب رقم") || msg.includes("ORD-")) {
     return { path: "/dealer", tab: "orders" };
   }
-  if (msg.includes("كشف أسعار") || msg.includes("price") || n.type === "price_list") {
-    return { path: "/dealer", tab: "price-lists" };
+  // Price lists  
+  if (msg.includes("كشف أسعار") || n.type === "price_list") {
+    return { path: "/dealer", tab: "price_lists" };
   }
-  if (msg.includes("عرض") && msg.includes("سعر")) {
-    return { path: "/dealer", tab: "quote-builder" };
+  // Offers & stock alerts
+  if (n.type === "stock_alert" || n.type === "offer" || msg.includes("عرض خاص") || msg.includes("عرض جديد") || msg.includes("متوفر الآن")) {
+    return { path: "/dealer", tab: "offers" };
   }
-  if (msg.includes("فاتورة") || msg.includes("invoice")) {
+  // Invoices
+  if (msg.includes("فاتورة") || msg.includes("invoice") || n.type === "invoice") {
     return { path: "/dealer", tab: "invoices" };
   }
-  if (n.type === "stock_alert" || n.type === "offer") {
-    return { path: "/dealer", tab: "stock-alerts" };
+  // Payment
+  if (msg.includes("دفع") || msg.includes("تحويل") || msg.includes("payment")) {
+    return { path: "/dealer", tab: "payment" };
   }
-  if (n.type === "info" || n.type === "success" || n.type === "warning") {
-    return { path: "/dealer", tab: "notifications" };
+  // Quotes
+  if (msg.includes("عرض سعر") || msg.includes("quote")) {
+    return { path: "/dealer", tab: "quotes" };
   }
-  return null;
+  // Fallback
+  return { path: "/dealer", tab: "notifications" };
 };
 
 const NotificationBell = () => {
