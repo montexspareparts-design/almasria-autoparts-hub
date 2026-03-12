@@ -77,10 +77,14 @@ const DealerOverview = ({
     { icon: FileText, label: "الفواتير", tab: "invoices" },
     { icon: CreditCard, label: "كشوفات الأسعار", tab: "price_lists" },
     { icon: Heart, label: "المفضلة", tab: "favorites" },
+    { icon: ClipboardList, label: "الطلبية", tab: "orders" },
+    { icon: FileText, label: "الفواتير", tab: "invoices" },
+    { icon: CreditCard, label: "كشوفات الأسعار", tab: "price_lists" },
+    { icon: Heart, label: "المفضلة", tab: "favorites" },
     { icon: Bell, label: "الإشعارات", tab: "notifications" },
     { icon: Tag, label: "العروض الخاصة", tab: "offers" },
-    { icon: BookOpen, label: "الكتالوجات", tab: "catalogs" },
     { icon: Settings, label: "إعدادات الحساب", tab: "settings" },
+    { icon: Upload, label: "طلب سريع", tab: "quick_order" },
   ];
 
   const typeIcons: Record<string, string> = {
