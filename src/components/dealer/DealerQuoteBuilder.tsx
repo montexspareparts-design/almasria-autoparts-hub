@@ -585,7 +585,7 @@ const DealerQuoteBuilder = () => {
             savedQuotes.map(q => (
               <div
                 key={q.id}
-                className="bg-card border border-border rounded-lg p-3.5 flex items-center gap-3 cursor-pointer hover:border-primary/30 hover:shadow-sm transition-all"
+                className="bg-card border border-border rounded-lg p-3.5 flex items-center gap-3 cursor-pointer hover:border-primary/30 hover:shadow-md transition-all group"
                 onClick={() => openSavedQuote(q)}
               >
                 <div className="flex-1 min-w-0">
@@ -602,17 +602,28 @@ const DealerQuoteBuilder = () => {
                     {new Date(q.created_at).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                   </p>
                   {q.notes && <p className="text-[11px] text-muted-foreground/70 mt-0.5 truncate">{q.notes}</p>}
+                  <p className="text-[10px] text-primary/60 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">اضغط لفتح العرض والتعديل ←</p>
                 </div>
                 <p className="font-bold text-foreground text-sm shrink-0">{Number(q.total_amount).toLocaleString("ar-EG")} ج.م</p>
                 <div className="flex items-center gap-1 shrink-0">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="w-8 h-8 text-primary hover:bg-primary/10"
-                    onClick={(e) => { e.stopPropagation(); openSavedQuote(q); }}
-                    disabled={loadingQuote}
+                    className="w-8 h-8 text-[#25D366] hover:bg-[#25D366]/10"
+                    title="مشاركة عبر واتساب"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Quick share with basic info
+                      shareQuoteWhatsApp({
+                        quoteNumber: q.quote_number,
+                        date: new Date(q.created_at).toLocaleDateString("ar-EG"),
+                        items: [],
+                        totalAmount: Number(q.total_amount),
+                        notes: q.notes || undefined,
+                      });
+                    }}
                   >
-                    {loadingQuote ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Edit3 className="w-3.5 h-3.5" />}
+                    <MessageCircle className="w-3.5 h-3.5" />
                   </Button>
                   <Button
                     variant="ghost"
