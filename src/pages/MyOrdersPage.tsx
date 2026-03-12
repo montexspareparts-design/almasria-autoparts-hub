@@ -281,6 +281,16 @@ const MyOrdersPage = () => {
                               </div>
                             )}
 
+                            {/* Payment Instructions for electronic payments */}
+                            {["instapay", "wallet", "bank_transfer"].includes(order.payment_method || "") &&
+                              ["pending", "confirmed"].includes(order.status) && (
+                              <PaymentInstructionsBanner
+                                paymentMethod={order.payment_method!}
+                                orderNumber={order.order_number}
+                                totalAmount={Number(order.total_amount)}
+                              />
+                            )}
+
                             {/* Order Items */}
                             <div>
                               <h3 className="text-sm font-bold text-card-foreground mb-3">المنتجات ({items.length})</h3>
