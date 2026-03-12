@@ -232,29 +232,61 @@ const HeroSection = () => {
             transition={{ duration: 0.6, delay: 0.85 }}
             className="flex flex-col sm:flex-row gap-3 mb-12"
           >
-            <motion.div whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.97 }}>
-              <Button
-                size="lg"
-                className="text-[15px] px-8 py-6 gap-2.5 font-bold bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 w-full sm:w-auto shadow-[0_8px_30px_-4px_hsl(var(--primary)/0.4)] hover:shadow-[0_12px_40px_-4px_hsl(var(--primary)/0.5)]"
-                asChild
-              >
-                <Link to="/products">
-                  <Package className="w-5 h-5" />
-                  {t("hero.browse_products")}
-                </Link>
-              </Button>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.97 }}>
-              <Button
-                size="lg"
-                variant="outline"
-                className="text-[15px] px-8 py-6 gap-2.5 font-bold border border-white/10 text-white bg-white/[0.03] backdrop-blur-xl hover:bg-white/[0.08] hover:border-white/20 transition-all duration-300 w-full sm:w-auto cursor-pointer"
-                onClick={() => document.getElementById("coverage")?.scrollIntoView({ behavior: "smooth" })}
-              >
-                <MapPin className="w-5 h-5" />
-                {t("hero.our_branches")}
-              </Button>
-            </motion.div>
+            {isDealer ? (
+              <>
+                <motion.div whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.97 }}>
+                  <Button
+                    size="lg"
+                    className="text-[15px] px-8 py-6 gap-2.5 font-bold bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 w-full sm:w-auto shadow-[0_8px_30px_-4px_hsl(var(--primary)/0.4)] hover:shadow-[0_12px_40px_-4px_hsl(var(--primary)/0.5)]"
+                    asChild
+                  >
+                    <Link to="/dealer">
+                      <LayoutDashboard className="w-5 h-5" />
+                      {t("hero.dealer_dashboard") || "لوحة التحكم"}
+                    </Link>
+                  </Button>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.97 }}>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="text-[15px] px-8 py-6 gap-2.5 font-bold border border-white/10 text-white bg-white/[0.03] backdrop-blur-xl hover:bg-white/[0.08] hover:border-white/20 transition-all duration-300 w-full sm:w-auto cursor-pointer"
+                    asChild
+                  >
+                    <Link to="/products">
+                      <ShoppingCart className="w-5 h-5" />
+                      {t("hero.quick_order") || "اطلب الآن"}
+                    </Link>
+                  </Button>
+                </motion.div>
+              </>
+            ) : (
+              <>
+                <motion.div whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.97 }}>
+                  <Button
+                    size="lg"
+                    className="text-[15px] px-8 py-6 gap-2.5 font-bold bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 w-full sm:w-auto shadow-[0_8px_30px_-4px_hsl(var(--primary)/0.4)] hover:shadow-[0_12px_40px_-4px_hsl(var(--primary)/0.5)]"
+                    asChild
+                  >
+                    <Link to="/products">
+                      <Package className="w-5 h-5" />
+                      {t("hero.browse_products")}
+                    </Link>
+                  </Button>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.97 }}>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="text-[15px] px-8 py-6 gap-2.5 font-bold border border-white/10 text-white bg-white/[0.03] backdrop-blur-xl hover:bg-white/[0.08] hover:border-white/20 transition-all duration-300 w-full sm:w-auto cursor-pointer"
+                    onClick={() => document.getElementById("coverage")?.scrollIntoView({ behavior: "smooth" })}
+                  >
+                    <MapPin className="w-5 h-5" />
+                    {t("hero.our_branches")}
+                  </Button>
+                </motion.div>
+              </>
+            )}
           </motion.div>
 
           {/* Stats */}
