@@ -82,7 +82,17 @@ const AdminOrders = () => {
       query = query.or(`order_number.ilike.%${searchQuery.trim()}%`);
     }
 
-    const { data, count } = await query.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+    const { data, count, error } = await query.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+    console.log("fetchOrders result:", { data, count, error });
+
+    if (error) {
+      console.error("fetchOrders error:", error);
+      setOrders([]);
+      setTotalCount(0);
+      setLoading(false);
+      return;
+    }
 
     if (!data || data.length === 0) {
       setOrders([]);
