@@ -26,6 +26,7 @@ interface OrderWithItems extends Order {
 const statusConfig: Record<string, { label: string; color: string; bg: string; icon: typeof Clock }> = {
   pending: { label: "قيد الانتظار", color: "text-yellow-500", bg: "bg-yellow-500/10", icon: Clock },
   confirmed: { label: "تم التأكيد", color: "text-blue-500", bg: "bg-blue-500/10", icon: CheckCircle },
+  awaiting_payment: { label: "بانتظار الدفع", color: "text-orange-500", bg: "bg-orange-500/10", icon: Clock },
   pending_approval: { label: "بانتظار موافقة العميل", color: "text-orange-500", bg: "bg-orange-500/10", icon: Clock },
   processing: { label: "جاري التجهيز", color: "text-orange-500", bg: "bg-orange-500/10", icon: Package },
   shipped: { label: "تم الشحن", color: "text-purple-500", bg: "bg-purple-500/10", icon: Truck },
@@ -33,7 +34,7 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; i
   cancelled: { label: "ملغي", color: "text-destructive", bg: "bg-destructive/10", icon: XCircle },
 };
 
-const statusFlow = ["pending", "confirmed", "processing", "shipped", "delivered"];
+const statusFlow = ["pending", "confirmed", "awaiting_payment", "processing", "shipped", "delivered"];
 const PAGE_SIZE = 15;
 
 const AdminOrders = () => {
