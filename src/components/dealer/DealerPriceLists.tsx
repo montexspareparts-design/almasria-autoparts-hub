@@ -289,27 +289,31 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
   const openPriceList = async (list: PriceList) => {
     setViewingList(list);
     setPdfSignedUrl(null);
-    if (list.file_url) {
-      setPdfLoading(true);
-      // Try signed URL first (for files stored as paths in price-lists bucket)
-      const filePath = list.file_url;
-      // Check if it's already a full URL (legacy) or a path
-      if (filePath.startsWith("http")) {
-        setPdfSignedUrl(filePath);
-      } else {
+
+    if (!list.file_url) return;
+
+    setPdfLoading(true);
+
+    try {
+      const candidates = buildStorageCandidates(list.file_url);
+
+      for (const candidate of candidates) {
         const { data, error } = await supabase.storage
-          .from("price-lists")
-          .createSignedUrl(filePath, 3600); // 1 hour
-        if (data?.signedUrl) {
+          .from(candidate.bucket)
+          .createSignedUrl(candidate.path, 3600);
+
+        if (!error && data?.signedUrl) {
           setPdfSignedUrl(data.signedUrl);
-        } else {
-          // Fallback: try catalogs bucket (legacy uploads)
-          const { data: fallback } = await supabase.storage
-            .from("catalogs")
-            .createSignedUrl(filePath, 3600);
-          setPdfSignedUrl(fallback?.signedUrl || null);
+          return;
         }
       }
+
+      toast({
+        title: "تعذر فتح الملف",
+        description: "الملف غير متاح حالياً. يرجى إعادة رفع الكشف من لوحة الإدارة.",
+        variant: "destructive",
+      });
+    } finally {
       setPdfLoading(false);
     }
   };
