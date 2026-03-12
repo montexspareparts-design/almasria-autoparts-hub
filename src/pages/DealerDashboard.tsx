@@ -89,6 +89,7 @@ const DealerDashboard = () => {
     statement: "كشف الحساب",
     price_lists: "كشوفات الأسعار",
     favorites: "المفضلة",
+    stock_alerts: "تنبيهات المخزون",
     notifications: "الإشعارات",
     offers: "العروض الخاصة",
     catalogs: "الكتالوجات",
