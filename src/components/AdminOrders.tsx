@@ -216,9 +216,43 @@ const AdminOrders = () => {
     const newTotal = items.reduce((sum, i) => sum + i.total_price, 0);
     await supabase.from("orders").update({ total_amount: newTotal }).eq("id", orderId);
 
-    // Notify customer
+    // Build detailed change summary for notification
     if (order) {
-      await notifyCustomer(order, "📝 تم تعديل طلبك", `تم تعديل بعض الأصناف أو الكميات في طلبك. الإجمالي الجديد: ${newTotal.toLocaleString("ar-EG")} ج.م`);
+      const originalItems = order.items || [];
+      const changeLines: string[] = [];
+
+      // Detect removed items
+      for (const orig of originalItems) {
+        const still = items.find(i => i.id === orig.id);
+        if (!still) {
+          changeLines.push(`❌ حذف: ${orig.product?.name_ar || orig.product_id} (${orig.product?.sku || ""})`);
+        }
+      }
+
+      // Detect quantity changes
+      for (const item of items) {
+        const orig = originalItems.find(i => i.id === item.id);
+        if (orig && orig.quantity !== item.quantity) {
+          changeLines.push(`🔄 ${item.product?.name_ar || ""}: الكمية ${orig.quantity} ← ${item.quantity}`);
+        }
+      }
+
+      // Build the items summary
+      const itemsSummary = items.map(i => 
+        `• ${i.product?.name_ar || ""} (${i.product?.sku || ""}) — الكمية: ${i.quantity} — ${i.total_price.toLocaleString("ar-EG")} ج.م`
+      ).join("\n");
+
+      const detailedMessage = [
+        "تم تعديل طلبك. التفاصيل المحدثة:",
+        "",
+        ...(changeLines.length > 0 ? ["التغييرات:", ...changeLines, ""] : []),
+        "الأصناف الحالية:",
+        itemsSummary,
+        "",
+        `💰 الإجمالي الجديد: ${newTotal.toLocaleString("ar-EG")} ج.م`,
+      ].join("\n");
+
+      await notifyCustomer(order, "📝 تم تعديل طلبك", detailedMessage);
     }
 
     toast({ title: "تم حفظ التعديلات وإبلاغ العميل ✓" });
