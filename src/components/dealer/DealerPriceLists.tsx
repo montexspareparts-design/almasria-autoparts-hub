@@ -299,7 +299,7 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
       await supabase.from("dealer_price_views").insert({ user_id: user.id, product_id: sp.product.id });
     }
 
-    toast({ title: "تم إنشاء عرض السعر ✓", description: `رقم العرض: ${quoteNumber}` });
+    toast({ title: "تم إنشاء عرض السعر وتحميل PDF ✓", description: `رقم العرض: ${quoteNumber}` });
 
     // Generate PDF automatically
     generateQuotePdf({
@@ -316,15 +316,8 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
       totalAmount,
     });
 
-    // Show quote summary
-    setCreatedQuote({
-      quoteNumber,
-      items,
-      totalAmount,
-      priceListTitle: viewingList?.title || "",
-      createdAt: new Date(),
-    });
-
+    // Stay on the price list viewer — don't switch to summary
+    // User can continue searching and adding items
     setSelectedProducts([]);
     setSavingQuote(false);
   };
