@@ -93,7 +93,8 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
         <div className="h-px bg-secondary-foreground/10 my-2.5" />
         <p className="text-[10px] font-bold text-secondary-foreground/30 uppercase tracking-widest px-3 pt-1 pb-1.5">المزيد</p>
         {renderItem("favorites", "المفضلة", Heart, { emoji: "❤️" })}
-        {renderItem("notifications", "الإشعارات", Bell, { badge: unreadCount, emoji: "🔔" })}
+        {renderItem("stock_alerts", "تنبيهات المخزون", Bell, { emoji: "🔔" })}
+        {renderItem("notifications", "الإشعارات", Bell, { badge: unreadCount, emoji: "📬" })}
         {renderItem("offers", "العروض الخاصة", Tag, { emoji: "🎁" })}
         {renderItem("quick_order", "طلب سريع (Excel)", Upload, { emoji: "📤" })}
         {renderItem("settings", "إعدادات الحساب", Settings, { emoji: "⚙️" })}
