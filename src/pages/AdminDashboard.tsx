@@ -42,6 +42,7 @@ const clientTypeLabels: Record<string, string> = {
 };
 
 const sidebarSections = [
+  { id: "analytics", label: "التحليلات", icon: BarChart3 },
   { id: "dealers", label: "طلبات التجار", icon: Users },
   { id: "products", label: "إدارة المنتجات", icon: Package },
   { id: "orders", label: "إدارة الطلبات", icon: ShoppingBag },
