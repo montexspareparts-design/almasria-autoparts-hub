@@ -464,13 +464,13 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
 
   // Shared builder UI for both "builder" and "edit" views
   const renderBuilder = () => (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Editing banner */}
       {editingQuoteId && (
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
+        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-primary/5 border border-primary/20">
           <Edit3 className="w-4 h-4 text-primary shrink-0" />
           <p className="text-sm font-medium text-foreground flex-1">
-            تعديل العرض: <span className="font-bold">{editingQuoteNumber}</span>
+            تعديل: <span className="font-bold">{editingQuoteNumber}</span>
           </p>
           <Button
             variant="ghost"
@@ -485,38 +485,32 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
               setActiveView("builder");
             }}
           >
-            إلغاء التعديل
+            إلغاء
           </Button>
         </div>
       )}
 
-      {/* Daily Limit */}
-      <div className={`rounded-lg border p-3 flex items-center gap-3 ${remainingViews <= 5 ? "border-destructive/30 bg-destructive/5" : "border-primary/20 bg-primary/5"}`}>
-        <Eye className={`w-4 h-4 shrink-0 ${remainingViews <= 5 ? "text-destructive" : "text-primary"}`} />
-        <p className="text-sm text-foreground">
-          المتبقي: <span className="font-bold">{remainingViews}</span> من {DAILY_LIMIT} صنف يومياً
-        </p>
-      </div>
-
-      {/* Search - hidden for price list quotes */}
+      {/* Search - the main action, prominent */}
       {!isFromPriceList && (
-        <>
-          <div className="relative">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="ابحث بالاسم أو رقم القطعة لإضافة صنف..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pr-10 h-11 text-sm bg-card"
-              disabled={remainingViews === 0}
-            />
-            {searchQuery && (
-              <button onClick={() => { setSearchQuery(""); setSearchResults([]); }} className="absolute left-3 top-1/2 -translate-y-1/2">
-                <X className="w-4 h-4 text-muted-foreground" />
-              </button>
-            )}
-          </div>
-        </>
+        <div className="relative">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          <Input
+            placeholder="🔍 اكتب اسم القطعة أو رقمها..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pr-11 h-12 text-base bg-card border-2 border-border focus:border-primary rounded-xl placeholder:text-muted-foreground/70"
+            disabled={remainingViews === 0}
+          />
+          {searchQuery && (
+            <button onClick={() => { setSearchQuery(""); setSearchResults([]); }} className="absolute left-3 top-1/2 -translate-y-1/2">
+              <X className="w-4 h-4 text-muted-foreground" />
+            </button>
+          )}
+          {/* Daily limit - subtle inline hint */}
+          <span className={`absolute left-10 top-1/2 -translate-y-1/2 text-[10px] ${remainingViews <= 5 ? "text-destructive" : "text-muted-foreground/50"}`}>
+            {remainingViews}/{DAILY_LIMIT}
+          </span>
+        </div>
       )}
 
       {isFromPriceList && editingQuoteId && (
