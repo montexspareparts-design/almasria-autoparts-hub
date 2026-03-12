@@ -349,6 +349,72 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
     }
   };
 
+  // ─── QUOTE SUMMARY MODE ───
+  if (createdQuote) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={() => setCreatedQuote(null)}>
+            <ArrowLeft className="w-4 h-4 ml-1" />
+            رجوع للكشف
+          </Button>
+          <div className="flex-1" />
+          <Button variant="outline" size="sm" onClick={downloadQuotePdf}>
+            <Download className="w-4 h-4 ml-1" />
+            تحميل العرض
+          </Button>
+        </div>
+
+        <div className="border border-primary/20 rounded-lg bg-primary/5 p-4 text-center">
+          <CheckCircle2 className="w-10 h-10 mx-auto text-primary mb-2" />
+          <h3 className="text-lg font-bold text-foreground">تم إنشاء عرض السعر بنجاح</h3>
+          <p className="text-sm text-muted-foreground mt-1">رقم العرض: <span className="font-bold text-foreground">{createdQuote.quoteNumber}</span></p>
+          <p className="text-xs text-muted-foreground mt-0.5">من كشف: {createdQuote.priceListTitle}</p>
+        </div>
+
+        {/* Quote Items Table */}
+        <div className="border border-border rounded-lg bg-card overflow-hidden">
+          <div className="p-3 border-b border-border bg-muted/30 flex items-center justify-between">
+            <span className="text-sm font-bold text-foreground">تفاصيل العرض ({createdQuote.items.length} صنف)</span>
+            <span className="text-xs text-muted-foreground">{createdQuote.createdAt.toLocaleDateString("ar-EG")}</span>
+          </div>
+          <div className="divide-y divide-border">
+            {createdQuote.items.map((item, idx) => (
+              <div key={item.product.id} className="flex items-center gap-3 p-3">
+                <span className="text-xs text-muted-foreground w-6 shrink-0">{idx + 1}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{item.product.name_ar}</p>
+                  <p className="text-[10px] text-muted-foreground font-mono">{item.product.sku}</p>
+                </div>
+                <div className="text-left shrink-0 space-y-0.5">
+                  <p className="text-xs text-muted-foreground">×{item.quantity}</p>
+                  <p className="text-xs font-bold text-foreground">{(item.price * item.quantity).toLocaleString("ar-EG")} ج.م</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="p-4 border-t border-border bg-muted/30 flex items-center justify-between">
+            <span className="text-sm font-bold text-foreground">الإجمالي</span>
+            <span className="text-lg font-bold text-primary">{createdQuote.totalAmount.toLocaleString("ar-EG")} ج.م</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <Button variant="outline" onClick={() => { setCreatedQuote(null); }}>
+            <ArrowLeft className="w-4 h-4 ml-1" />
+            عودة للكشف
+          </Button>
+          {onNavigateToQuotes && (
+            <Button onClick={() => { setCreatedQuote(null); onNavigateToQuotes(); }}>
+              <ShoppingCart className="w-4 h-4 ml-1" />
+              عروض الأسعار
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   // ─── PDF VIEWER MODE ───
   if (viewingList) {
     const downloadPdf = () => {
