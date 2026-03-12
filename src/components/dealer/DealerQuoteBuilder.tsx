@@ -268,20 +268,24 @@ const DealerQuoteBuilder = () => {
     setSaving(false);
   };
 
+  const buildQuoteData = () => ({
+    quoteNumber: editingQuoteNumber || `Q-${Date.now().toString(36).toUpperCase()}`,
+    date: new Date().toLocaleDateString("ar-EG"),
+    notes: notes || undefined,
+    dealerName: dealerInfo?.name,
+    dealerPhone: dealerInfo?.phone,
+    items: quoteItems.map(i => ({
+      name: i.product.name_ar,
+      sku: i.product.sku,
+      quantity: i.quantity,
+      unitPrice: i.unit_price,
+      totalPrice: i.unit_price * i.quantity,
+    })),
+    totalAmount,
+  });
+
   const downloadPDF = () => {
-    generateQuotePdf({
-      quoteNumber: editingQuoteNumber || `Q-${Date.now().toString(36).toUpperCase()}`,
-      date: new Date().toLocaleDateString("ar-EG"),
-      notes: notes || undefined,
-      items: quoteItems.map(i => ({
-        name: i.product.name_ar,
-        sku: i.product.sku,
-        quantity: i.quantity,
-        unitPrice: i.unit_price,
-        totalPrice: i.unit_price * i.quantity,
-      })),
-      totalAmount,
-    });
+    generateQuotePdf(buildQuoteData());
   };
 
   const openSavedQuote = async (quote: SavedQuote) => {
