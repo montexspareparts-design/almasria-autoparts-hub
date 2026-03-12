@@ -104,7 +104,7 @@ const DealerWelcomeHeader = ({ tierLabel, isRTL }: { tierLabel: string; isRTL: b
 
 const QuickSearchBar = ({
   searchQuery, setSearchQuery, showResults, setShowResults,
-  searching, searchResults, isRTL, navigate,
+  searching, searchResults, isRTL, navigate, onAddToQuote,
 }: {
   searchQuery: string;
   setSearchQuery: (q: string) => void;
@@ -114,6 +114,7 @@ const QuickSearchBar = ({
   searchResults: OfferProduct[];
   isRTL: boolean;
   navigate: ReturnType<typeof useNavigate>;
+  onAddToQuote: (product: OfferProduct) => void;
 }) => (
   <section className="relative -mt-6 z-20 px-4">
     <div className="relative max-w-2xl mx-auto">
