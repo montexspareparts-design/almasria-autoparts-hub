@@ -45,6 +45,8 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
 
   // PDF Viewer state
   const [viewingList, setViewingList] = useState<PriceList | null>(null);
+  const [pdfSignedUrl, setPdfSignedUrl] = useState<string | null>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   // Product search & quote state
   const [searchQuery, setSearchQuery] = useState("");
