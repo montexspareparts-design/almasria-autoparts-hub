@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState, useCallback } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   LayoutDashboard,
@@ -14,6 +14,8 @@ import {
   ArrowRight,
   Bell,
   Star,
+  Search,
+  X,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -22,6 +24,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 
 interface OrderSummary {
   id: string;
@@ -53,12 +56,43 @@ const statusMap: Record<string, { label_ar: string; label_en: string; color: str
 const DealerHomePage = () => {
   const { user, dealerAccount } = useAuth();
   const { lang } = useLanguage();
+  const navigate = useNavigate();
   const isRTL = lang === "ar";
 
   const [stats, setStats] = useState({ totalOrders: 0, pendingOrders: 0, totalSpent: 0, unreadNotifs: 0 });
   const [recentOrders, setRecentOrders] = useState<OrderSummary[]>([]);
   const [offers, setOffers] = useState<OfferProduct[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<OfferProduct[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+
+  const handleSearch = useCallback(async (query: string) => {
+    if (query.trim().length < 2) {
+      setSearchResults([]);
+      setShowResults(false);
+      return;
+    }
+    setSearching(true);
+    setShowResults(true);
+    const q = query.trim();
+    const { data } = await supabase
+      .from("products")
+      .select("id, name_ar, name_en, sku, base_price, sale_price, image_url")
+      .eq("is_active", true)
+      .or(`name_ar.ilike.%${q}%,name_en.ilike.%${q}%,sku.ilike.%${q}%`)
+      .limit(8);
+    setSearchResults((data as OfferProduct[]) || []);
+    setSearching(false);
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => handleSearch(searchQuery), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, handleSearch]);
 
   useEffect(() => {
     if (!user) return;
@@ -182,6 +216,87 @@ const DealerHomePage = () => {
       </section>
 
       <div className="container mx-auto px-4 py-6 md:py-10 space-y-8 md:space-y-12">
+        {/* Quick Search */}
+        <section className="relative">
+          <div className="relative max-w-2xl mx-auto">
+            <div className="relative">
+              <Search className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground ${isRTL ? 'right-4' : 'left-4'}`} />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => searchQuery.trim().length >= 2 && setShowResults(true)}
+                placeholder={isRTL ? "ابحث برقم القطعة أو اسم المنتج..." : "Search by part number or product name..."}
+                className={`h-12 rounded-xl border-border/60 bg-card shadow-sm text-sm font-medium ${isRTL ? 'pr-12 pl-10' : 'pl-12 pr-10'} focus-visible:ring-primary/30`}
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => { setSearchQuery(""); setShowResults(false); }}
+                  className={`absolute top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-muted transition-colors ${isRTL ? 'left-3' : 'right-3'}`}
+                >
+                  <X className="w-4 h-4 text-muted-foreground" />
+                </button>
+              )}
+            </div>
+
+            {showResults && (
+              <Card className="absolute z-50 w-full mt-2 border-border/60 shadow-xl overflow-hidden">
+                <CardContent className="p-0">
+                  {searching ? (
+                    <div className="p-4 space-y-2">
+                      {[1, 2, 3].map((i) => <Skeleton key={i} className="h-10 w-full" />)}
+                    </div>
+                  ) : searchResults.length === 0 ? (
+                    <div className="p-6 text-center text-muted-foreground text-sm">
+                      {isRTL ? "لا توجد نتائج" : "No results found"}
+                    </div>
+                  ) : (
+                    <div className="max-h-80 overflow-y-auto divide-y divide-border/40">
+                      {searchResults.map((p) => (
+                        <button
+                          key={p.id}
+                          onClick={() => {
+                            navigate(`/products?search=${encodeURIComponent(p.sku)}`);
+                            setShowResults(false);
+                            setSearchQuery("");
+                          }}
+                          className="w-full flex items-center gap-3 p-3 hover:bg-muted/50 transition-colors text-start"
+                        >
+                          <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+                            {p.image_url ? (
+                              <img src={p.image_url} alt="" className="w-full h-full object-contain" />
+                            ) : (
+                              <Package className="w-4 h-4 text-muted-foreground/40" />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-bold text-foreground truncate">
+                              {isRTL ? p.name_ar : (p.name_en || p.name_ar)}
+                            </p>
+                            <p className="text-xs text-muted-foreground">{p.sku}</p>
+                          </div>
+                          <span className="text-xs font-bold text-primary whitespace-nowrap">
+                            {(p.sale_price || p.base_price).toLocaleString()} {isRTL ? "ج.م" : "EGP"}
+                          </span>
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => {
+                          navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
+                          setShowResults(false);
+                          setSearchQuery("");
+                        }}
+                        className="w-full p-3 text-center text-sm font-bold text-primary hover:bg-primary/5 transition-colors"
+                      >
+                        {isRTL ? "عرض كل النتائج ←" : "View all results →"}
+                      </button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </section>
+
         {/* Quick Actions */}
         <section>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
