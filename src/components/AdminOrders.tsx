@@ -11,7 +11,7 @@ import {
   Loader2, Package, Clock, Truck, CheckCircle, XCircle,
   ShoppingBag, MapPin, Phone, Mail, ChevronDown, ChevronUp,
   FileText, Edit3, Trash2, Save, Plus, Minus, X,
-  ChevronRight, ChevronLeft, Search
+  ChevronRight, ChevronLeft, Search, CreditCard
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
