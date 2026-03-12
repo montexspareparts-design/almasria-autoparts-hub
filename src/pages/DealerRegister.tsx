@@ -97,7 +97,7 @@ const DealerRegister = () => {
         return;
       }
 
-    try {
+      let userId = user?.id;
       let userId = user?.id;
 
       if (!userId) {
