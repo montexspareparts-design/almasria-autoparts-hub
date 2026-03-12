@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
+import { generateQuotePdf } from "@/lib/generateQuotePdf";
 import {
   Search, Plus, Minus, Trash2, FileText, Save, ShoppingCart,
   Eye, Loader2, Download, X, ArrowRight, Edit3, ChevronLeft
@@ -253,17 +254,19 @@ const DealerQuoteBuilder = () => {
   };
 
   const downloadPDF = () => {
-    const content = quoteItems.map((i, idx) =>
-      `${idx + 1}. ${i.product.name_ar} (${i.product.sku}) - الكمية: ${i.quantity} - السعر: ${i.unit_price.toLocaleString("ar-EG")} ج.م - الإجمالي: ${(i.unit_price * i.quantity).toLocaleString("ar-EG")} ج.م`
-    ).join("\n");
-    const text = `عرض أسعار - المصرية جروب\nالتاريخ: ${new Date().toLocaleDateString("ar-EG")}\n${"─".repeat(40)}\n\n${content}\n\n${"─".repeat(40)}\nإجمالي العرض: ${totalAmount.toLocaleString("ar-EG")} ج.م\nعدد الأصناف: ${quoteItems.length}\n${notes ? `\nملاحظات: ${notes}` : ""}`;
-    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `عرض-اسعار-المصرية-${Date.now()}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+    generateQuotePdf({
+      quoteNumber: editingQuoteNumber || `Q-${Date.now().toString(36).toUpperCase()}`,
+      date: new Date().toLocaleDateString("ar-EG"),
+      notes: notes || undefined,
+      items: quoteItems.map(i => ({
+        name: i.product.name_ar,
+        sku: i.product.sku,
+        quantity: i.quantity,
+        unitPrice: i.unit_price,
+        totalPrice: i.unit_price * i.quantity,
+      })),
+      totalAmount,
+    });
   };
 
   const openSavedQuote = async (quote: SavedQuote) => {
