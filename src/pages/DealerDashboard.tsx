@@ -18,6 +18,7 @@ import DealerQuickOrder from "@/components/dealer/DealerQuickOrder";
 import DealerInvoices from "@/components/dealer/DealerInvoices";
 import DealerAccountSettings from "@/components/dealer/DealerAccountSettings";
 import DealerStatement from "@/components/dealer/DealerStatement";
+import DealerPayment from "@/components/dealer/DealerPayment";
 
 const DealerDashboard = () => {
   const { user, dealerAccount, isDealer, loading: authLoading, signOut } = useAuth();
@@ -82,6 +83,7 @@ const DealerDashboard = () => {
     quotes: "بحث القطع وعروض الأسعار",
     quick_order: "طلب سريع — رفع Excel",
     orders: "الطلبية",
+    payment: "الدفع الإلكتروني",
     invoices: "الفواتير",
     statement: "كشف الحساب",
     price_lists: "كشوفات الأسعار",
@@ -112,6 +114,7 @@ const DealerDashboard = () => {
       case "quick_order": return <DealerQuickOrder />;
       case "orders": return <DealerOrdersList userId={user!.id} />;
       case "invoices": return <DealerInvoices userId={user!.id} />;
+      case "payment": return <DealerPayment />;
       case "price_lists": return <DealerPriceLists onNavigateToQuotes={() => setActiveTab("quotes")} editingQuoteData={priceListQuoteData} onClearEditingQuote={() => setPriceListQuoteData(null)} />;
       case "favorites": return <DealerFavorites />;
       case "notifications": return <DealerNotificationsList userId={user!.id} onNavigate={(tab) => setActiveTab(tab as DealerTab)} />;
