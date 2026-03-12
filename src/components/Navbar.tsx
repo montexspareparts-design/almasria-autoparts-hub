@@ -205,7 +205,7 @@ const Navbar = () => {
             )}
             <NotificationBell />
             <button
-              onClick={() => user ? navigate(dealerAccount ? "/dealer" : "/dealer-apply") : openAuthDialog("login")}
+              onClick={() => user ? navigate(dealerAccount ? "/dealer" : "/dealer-apply") : navigate("/auth")}
               className="text-secondary-foreground/70 hover:text-primary transition-colors p-2 touch-manipulation"
             >
               <User className="w-[18px] h-[18px]" />
