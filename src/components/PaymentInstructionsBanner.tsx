@@ -105,8 +105,18 @@ const PaymentInstructionsBanner = ({ paymentMethod, orderNumber, totalAmount, co
         </div>
       </div>
 
+      {/* InstaPay Direct Pay Link */}
+      {"payLink" in account && account.payLink && (
+        <Button asChild size="sm" className="w-full gap-2">
+          <a href={account.payLink} target="_blank" rel="noopener noreferrer">
+            <Smartphone className="w-4 h-4" />
+            ادفع الآن عبر InstaPay مباشرة
+          </a>
+        </Button>
+      )}
+
       {/* WhatsApp Receipt Button */}
-      <Button asChild variant="default" size="sm" className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white">
+      <Button asChild variant="outline" size="sm" className="w-full gap-2 border-green-600 text-green-700 hover:bg-green-50 dark:hover:bg-green-950/30">
         <a
           href={`https://wa.me/${WHATSAPP_NUMBER}?text=${receiptMsg}`}
           target="_blank"
