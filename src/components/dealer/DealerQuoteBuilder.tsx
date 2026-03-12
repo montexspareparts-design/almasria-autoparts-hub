@@ -144,15 +144,42 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
     setSavedQuotes((data as SavedQuote[]) || []);
   };
 
+  // Normalize Arabic text: treat ة/ه, أ/إ/آ/ا, ى/ي as same
+  const normalizeArabic = (text: string) => {
+    return text
+      .replace(/[أإآا]/g, "ا")
+      .replace(/ة/g, "ه")
+      .replace(/ى/g, "ي")
+      .replace(/\s+/g, " ")
+      .trim();
+  };
+
   const searchProducts = useCallback(async (query: string) => {
     if (query.length < 2) { setSearchResults([]); return; }
     setSearching(true);
+    const normalized = normalizeArabic(query);
+    // Build multiple query variants for fuzzy Arabic matching
+    const variants = new Set<string>([query, normalized]);
+    // Add variant with ة↔ه swap
+    variants.add(query.replace(/ه/g, "ة"));
+    variants.add(query.replace(/ة/g, "ه"));
+    // Add variant with أإآ↔ا swap
+    variants.add(query.replace(/[أإآ]/g, "ا"));
+    variants.add(query.replace(/ا/g, "أ"));
+    // Add variant with ى↔ي swap
+    variants.add(query.replace(/ي/g, "ى"));
+    variants.add(query.replace(/ى/g, "ي"));
+
+    const orClauses = Array.from(variants)
+      .map(v => `name_ar.ilike.%${v}%`)
+      .join(",");
+
     const { data } = await supabase
       .from("products")
       .select("id, name_ar, sku, base_price, sale_price, is_on_sale, image_url, stock_quantity")
       .eq("is_active", true)
-      .or(`name_ar.ilike.%${query}%,sku.ilike.%${query}%`)
-      .limit(10);
+      .or(`${orClauses},sku.ilike.%${query}%`)
+      .limit(15);
     setSearchResults(data || []);
     setSearching(false);
   }, []);
