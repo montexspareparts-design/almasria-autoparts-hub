@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, XCircle, Clock, Eye, LogOut } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Clock, Eye, LogOut, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import AdminProductImages from "@/components/AdminProductImages";
 import AdminVideoSettings from "@/components/AdminVideoSettings";
 import AdminCatalogs from "@/components/AdminCatalogs";
@@ -133,6 +134,18 @@ const AdminDashboard = () => {
     setProcessing(false);
   };
 
+  const handleDelete = async (app: DealerApplication) => {
+    setProcessing(true);
+    // Delete dealer account if exists
+    await supabase.from("dealer_accounts").delete().eq("application_id", app.id);
+    // Delete the application
+    await supabase.from("dealer_applications").delete().eq("id", app.id);
+    toast({ title: "تم حذف الطلب والتاجر بنجاح" });
+    setSelectedApp(null);
+    fetchApplications();
+    setProcessing(false);
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -238,7 +251,57 @@ const AdminDashboard = () => {
                       <XCircle className="w-4 h-4" />
                       رفض
                     </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" className="gap-2 border-destructive/30 text-destructive hover:bg-destructive/10" disabled={processing}>
+                          <Trash2 className="w-4 h-4" />
+                          حذف الطلب
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>تأكيد حذف الطلب</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            هل أنت متأكد من حذف طلب "{selectedApp.business_name}"؟ سيتم حذف الطلب وحساب التاجر المرتبط به نهائياً.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(selectedApp)} className="bg-destructive hover:bg-destructive/90">
+                            حذف نهائي
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
+                </div>
+              )}
+
+              {/* Delete button for non-pending apps */}
+              {selectedApp.status !== "pending" && (
+                <div className="mt-6 border-t border-border pt-4">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" className="gap-2 border-destructive/30 text-destructive hover:bg-destructive/10" disabled={processing}>
+                        <Trash2 className="w-4 h-4" />
+                        حذف الطلب والتاجر
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>تأكيد حذف الطلب</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          هل أنت متأكد من حذف طلب "{selectedApp.business_name}"؟ سيتم حذف الطلب وحساب التاجر المرتبط به نهائياً.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDelete(selectedApp)} className="bg-destructive hover:bg-destructive/90">
+                          حذف نهائي
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               )}
             </CardContent>
