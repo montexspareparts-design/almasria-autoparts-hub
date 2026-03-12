@@ -43,6 +43,16 @@ const itemVariants = {
 
 const DealerApply = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [authDialogOpen, setAuthDialogOpen] = useState(false);
+
+  const handleStartRegistration = () => {
+    if (user) {
+      navigate("/dealer-register");
+    } else {
+      setAuthDialogOpen(true);
+    }
+  };
 
   return (
     <div className="min-h-screen">
