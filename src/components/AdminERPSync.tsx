@@ -1,0 +1,498 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Loader2, RefreshCw, ArrowUpRight, ArrowDownLeft, CheckCircle,
+  XCircle, Clock, Settings, Play, Database, DollarSign, Package,
+  Zap, TestTube, Globe, Copy
+} from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+interface SyncLog {
+  id: string;
+  sync_type: string;
+  direction: string;
+  reference_id: string | null;
+  reference_number: string | null;
+  payload: any;
+  response: any;
+  status: string;
+  error_message: string | null;
+  created_at: string;
+}
+
+interface ERPConfig {
+  erp_base_url: string;
+  erp_mode: string;
+  erp_api_key: string;
+  webhook_secret: string;
+}
+
+const syncTypeLabels: Record<string, { label: string; icon: typeof Package }> = {
+  quote_push: { label: "إرسال عرض سعر", icon: DollarSign },
+  order_push: { label: "إرسال طلبية", icon: Package },
+  order_update: { label: "تحديث طلبية", icon: RefreshCw },
+  stock_update: { label: "تحديث مخزون", icon: Database },
+  price_update: { label: "تحديث أسعار", icon: DollarSign },
+  error: { label: "خطأ", icon: XCircle },
+};
+
+const statusStyles: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+  success: { label: "نجح", variant: "default" },
+  mock: { label: "تجريبي", variant: "secondary" },
+  failed: { label: "فشل", variant: "destructive" },
+  pending: { label: "قيد التنفيذ", variant: "outline" },
+};
+
+const AdminERPSync = () => {
+  const { toast } = useToast();
+  const [logs, setLogs] = useState<SyncLog[]>([]);
+  const [config, setConfig] = useState<ERPConfig>({
+    erp_base_url: "",
+    erp_mode: "mock",
+    erp_api_key: "",
+    webhook_secret: "",
+  });
+  const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState<string | null>(null);
+  const [savingConfig, setSavingConfig] = useState(false);
+  const [testPayload, setTestPayload] = useState(
+    JSON.stringify(
+      {
+        event: "order.updated",
+        data: {
+          order_number: "ORD-001",
+          items: [
+            { sku: "90915-YZZD3", quantity: 5 },
+            { sku: "04152-YZZA1", removed: true },
+          ],
+        },
+      },
+      null,
+      2
+    )
+  );
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    setLoading(true);
+    const [logsRes, configRes] = await Promise.all([
+      supabase
+        .from("erp_sync_logs")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(50),
+      supabase.from("erp_config").select("key, value"),
+    ]);
+
+    setLogs((logsRes.data as any) || []);
+
+    const cfg: any = {};
+    (configRes.data || []).forEach((c: any) => (cfg[c.key] = c.value));
+    setConfig({
+      erp_base_url: cfg.erp_base_url || "",
+      erp_mode: cfg.erp_mode || "mock",
+      erp_api_key: cfg.erp_api_key || "",
+      webhook_secret: cfg.webhook_secret || "",
+    });
+    setLoading(false);
+  };
+
+  const saveConfig = async () => {
+    setSavingConfig(true);
+    for (const [key, value] of Object.entries(config)) {
+      await supabase
+        .from("erp_config")
+        .upsert({ key, value, updated_at: new Date().toISOString() } as any, { onConflict: "key" });
+    }
+    toast({ title: "تم حفظ إعدادات الربط ✓" });
+    setSavingConfig(false);
+  };
+
+  const runSync = async (action: string) => {
+    setSyncing(action);
+    try {
+      const { data, error } = await supabase.functions.invoke("erp-sync-outbound", {
+        body: { action, data: {} },
+      });
+      if (error) throw error;
+      toast({
+        title: "تمت المزامنة ✓",
+        description: data?.message || `تم تنفيذ ${action} بنجاح`,
+      });
+      fetchData();
+    } catch (err: any) {
+      toast({ title: "خطأ في المزامنة", description: err.message, variant: "destructive" });
+    }
+    setSyncing(null);
+  };
+
+  const testWebhook = async () => {
+    setSyncing("webhook_test");
+    try {
+      const payload = JSON.parse(testPayload);
+      const { data, error } = await supabase.functions.invoke("erp-webhook", {
+        body: payload,
+        headers: { "x-webhook-secret": config.webhook_secret },
+      });
+      if (error) throw error;
+      toast({
+        title: "تم اختبار الـ Webhook ✓",
+        description: JSON.stringify(data),
+      });
+      fetchData();
+    } catch (err: any) {
+      toast({ title: "خطأ في الاختبار", description: err.message, variant: "destructive" });
+    }
+    setSyncing(null);
+  };
+
+  const webhookUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/erp-webhook`;
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const stats = {
+    total: logs.length,
+    success: logs.filter((l) => l.status === "success").length,
+    mock: logs.filter((l) => l.status === "mock").length,
+    failed: logs.filter((l) => l.status === "failed").length,
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+            <Zap className="w-5 h-5 text-primary" />
+            ربط نظام الفيصل ERP
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            مزامنة الأسعار والمخزون والطلبات مع نظام الـ ERP
+          </p>
+        </div>
+        <Badge variant={config.erp_mode === "mock" ? "secondary" : "default"} className="text-sm px-3 py-1">
+          {config.erp_mode === "mock" ? "🧪 وضع تجريبي" : "🟢 وضع مباشر"}
+        </Badge>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <Card>
+          <CardContent className="p-4 text-center">
+            <p className="text-2xl font-bold text-foreground">{stats.total}</p>
+            <p className="text-xs text-muted-foreground">إجمالي العمليات</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <p className="text-2xl font-bold text-emerald-500">{stats.success}</p>
+            <p className="text-xs text-muted-foreground">ناجحة</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <p className="text-2xl font-bold text-amber-500">{stats.mock}</p>
+            <p className="text-xs text-muted-foreground">تجريبية</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <p className="text-2xl font-bold text-destructive">{stats.failed}</p>
+            <p className="text-xs text-muted-foreground">فاشلة</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Tabs defaultValue="actions" dir="rtl">
+        <TabsList className="w-full">
+          <TabsTrigger value="actions" className="flex-1">⚡ إجراءات المزامنة</TabsTrigger>
+          <TabsTrigger value="webhook" className="flex-1">🔗 اختبار Webhook</TabsTrigger>
+          <TabsTrigger value="config" className="flex-1">⚙️ الإعدادات</TabsTrigger>
+          <TabsTrigger value="logs" className="flex-1">📋 سجل العمليات</TabsTrigger>
+        </TabsList>
+
+        {/* ─── SYNC ACTIONS ─── */}
+        <TabsContent value="actions" className="space-y-4 mt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Card className="border-2 hover:border-primary/40 transition-colors">
+              <CardContent className="p-5">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Database className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-foreground">مزامنة المخزون</h3>
+                    <p className="text-xs text-muted-foreground">سحب كميات المخزون من الـ ERP</p>
+                  </div>
+                </div>
+                <Button
+                  className="w-full gap-2"
+                  onClick={() => runSync("sync_stock")}
+                  disabled={syncing !== null}
+                >
+                  {syncing === "sync_stock" ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-4 h-4" />
+                  )}
+                  مزامنة الآن
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 hover:border-primary/40 transition-colors">
+              <CardContent className="p-5">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <DollarSign className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-foreground">مزامنة الأسعار</h3>
+                    <p className="text-xs text-muted-foreground">سحب أسعار المنتجات من الـ ERP</p>
+                  </div>
+                </div>
+                <Button
+                  className="w-full gap-2"
+                  onClick={() => runSync("sync_prices")}
+                  disabled={syncing !== null}
+                >
+                  {syncing === "sync_prices" ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-4 h-4" />
+                  )}
+                  مزامنة الآن
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card className="border-dashed bg-muted/30">
+            <CardContent className="p-4 text-center text-sm text-muted-foreground">
+              <p>💡 عروض الأسعار والطلبات تتم مزامنتها تلقائياً عند إنشائها</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ─── WEBHOOK TEST ─── */}
+        <TabsContent value="webhook" className="space-y-4 mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Globe className="w-4 h-4" />
+                رابط الـ Webhook
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex gap-2">
+                <Input value={webhookUrl} readOnly className="font-mono text-xs" dir="ltr" />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    navigator.clipboard.writeText(webhookUrl);
+                    toast({ title: "تم نسخ الرابط ✓" });
+                  }}
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                أرسل هذا الرابط للدعم الفني لنظام الفيصل لإعداد الـ Webhook.
+                يجب إرسال header: <code className="bg-muted px-1 rounded">x-webhook-secret: {config.webhook_secret.slice(0, 20)}...</code>
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <TestTube className="w-4 h-4" />
+                اختبار الـ Webhook
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-xs text-muted-foreground">
+                اختبر استقبال البيانات من الـ ERP. الأحداث المدعومة: 
+                <code className="bg-muted px-1 rounded mx-1">order.updated</code>
+                <code className="bg-muted px-1 rounded mx-1">stock.updated</code>
+                <code className="bg-muted px-1 rounded mx-1">price.updated</code>
+              </p>
+              <Textarea
+                value={testPayload}
+                onChange={(e) => setTestPayload(e.target.value)}
+                className="font-mono text-xs min-h-[180px]"
+                dir="ltr"
+              />
+              <Button
+                className="w-full gap-2"
+                onClick={testWebhook}
+                disabled={syncing !== null}
+              >
+                {syncing === "webhook_test" ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Play className="w-4 h-4" />
+                )}
+                إرسال اختبار
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ─── CONFIG ─── */}
+        <TabsContent value="config" className="space-y-4 mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Settings className="w-4 h-4" />
+                إعدادات الربط مع الفيصل ERP
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-foreground mb-1.5 block">وضع التشغيل</label>
+                <div className="flex gap-2">
+                  <Button
+                    variant={config.erp_mode === "mock" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setConfig((c) => ({ ...c, erp_mode: "mock" }))}
+                    className="flex-1"
+                  >
+                    🧪 تجريبي (Mock)
+                  </Button>
+                  <Button
+                    variant={config.erp_mode === "live" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setConfig((c) => ({ ...c, erp_mode: "live" }))}
+                    className="flex-1"
+                  >
+                    🟢 مباشر (Live)
+                  </Button>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-foreground mb-1.5 block">رابط الـ API</label>
+                <Input
+                  value={config.erp_base_url}
+                  onChange={(e) => setConfig((c) => ({ ...c, erp_base_url: e.target.value }))}
+                  placeholder="https://alfaysalerp.com/api"
+                  dir="ltr"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-foreground mb-1.5 block">API Key</label>
+                <Input
+                  value={config.erp_api_key}
+                  onChange={(e) => setConfig((c) => ({ ...c, erp_api_key: e.target.value }))}
+                  placeholder="أدخل مفتاح الـ API"
+                  type="password"
+                  dir="ltr"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-foreground mb-1.5 block">Webhook Secret</label>
+                <Input value={config.webhook_secret} readOnly className="font-mono text-xs" dir="ltr" />
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  يتم توليده تلقائياً — أرسله للدعم الفني للفيصل
+                </p>
+              </div>
+
+              <Button onClick={saveConfig} disabled={savingConfig} className="w-full gap-2">
+                {savingConfig ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                حفظ الإعدادات
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ─── LOGS ─── */}
+        <TabsContent value="logs" className="space-y-3 mt-4">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-bold text-foreground">سجل العمليات</h3>
+            <Button variant="ghost" size="sm" onClick={fetchData} className="gap-1 text-xs">
+              <RefreshCw className="w-3 h-3" /> تحديث
+            </Button>
+          </div>
+
+          {logs.length === 0 ? (
+            <Card className="border-dashed">
+              <CardContent className="p-8 text-center">
+                <Clock className="w-10 h-10 mx-auto text-muted-foreground/30 mb-2" />
+                <p className="text-sm text-muted-foreground">لا توجد عمليات مزامنة بعد</p>
+              </CardContent>
+            </Card>
+          ) : (
+            logs.map((log) => {
+              const typeInfo = syncTypeLabels[log.sync_type] || syncTypeLabels.error;
+              const statusInfo = statusStyles[log.status] || statusStyles.pending;
+              const TypeIcon = typeInfo.icon;
+
+              return (
+                <Card key={log.id} className="hover:bg-muted/20 transition-colors">
+                  <CardContent className="p-3">
+                    <div className="flex items-start gap-3">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                        log.direction === "outbound" ? "bg-blue-500/10" : "bg-emerald-500/10"
+                      }`}>
+                        {log.direction === "outbound" ? (
+                          <ArrowUpRight className="w-4 h-4 text-blue-500" />
+                        ) : (
+                          <ArrowDownLeft className="w-4 h-4 text-emerald-500" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-sm font-semibold text-foreground">{typeInfo.label}</span>
+                          <Badge variant={statusInfo.variant} className="text-[10px]">
+                            {statusInfo.label}
+                          </Badge>
+                          {log.reference_number && (
+                            <span className="text-[10px] font-mono text-muted-foreground">
+                              #{log.reference_number}
+                            </span>
+                          )}
+                        </div>
+                        {log.error_message && (
+                          <p className="text-xs text-destructive">{log.error_message}</p>
+                        )}
+                        <p className="text-[10px] text-muted-foreground">
+                          {new Date(log.created_at).toLocaleDateString("ar-EG", {
+                            year: "numeric", month: "short", day: "numeric",
+                            hour: "2-digit", minute: "2-digit", second: "2-digit",
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+export default AdminERPSync;
