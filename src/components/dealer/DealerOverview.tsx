@@ -411,6 +411,9 @@ const DealerOverview = ({
           )}
         </div>
       </div>
+
+      {/* Recommendations */}
+      <DealerRecommendations userId={userId} tier={dealerAccount?.tier} />
     </div>
   );
 };
