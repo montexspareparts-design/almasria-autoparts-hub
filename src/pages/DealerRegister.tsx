@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Lock, UserPlus, CheckCircle2, Building2, Users, ShoppingBag, Loader2 } from "lucide-react";
+import { Lock, UserPlus, CheckCircle2, Building2, Users, ShoppingBag, Loader2, Eye, EyeOff } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -35,6 +35,7 @@ const formSchema = z.object({
   businessName: z.string().trim().min(2, "اسم الشركة مطلوب").max(200),
   governorate: z.string().min(1, "يرجى اختيار المحافظة"),
   email: z.string().trim().email("بريد إلكتروني غير صحيح").min(1, "البريد الإلكتروني مطلوب").max(255),
+  password: z.string().min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل").max(100),
   clientType: z.enum(["wholesale", "company", "distributor"], { required_error: "يرجى اختيار نوع العميل" }),
 });
 
@@ -45,12 +46,14 @@ const DealerRegister = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState<FormData>({
     fullName: "",
     phone: "",
     businessName: "",
     governorate: "",
     email: user?.email || "",
+    password: "",
     clientType: "" as any,
   });
 
@@ -95,7 +98,7 @@ const DealerRegister = () => {
       if (!userId) {
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: form.email,
-          password: form.phone.replace(/\D/g, "").slice(-8).padStart(8, "0"),
+          password: form.password,
           options: { data: { full_name: form.fullName } },
         });
         if (authError) {
@@ -318,6 +321,32 @@ const DealerRegister = () => {
                 />
               </div>
 
+              {/* Password */}
+              <div className="space-y-2">
+                <Label htmlFor="reg-password">كلمة المرور <span className="text-primary">*</span></Label>
+                <div className="relative">
+                  <Input
+                    id="reg-password"
+                    type={showPassword ? "text" : "password"}
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    placeholder="أدخل كلمة مرور (6 أحرف على الأقل)"
+                    dir="ltr"
+                    className="pl-10"
+                    required
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">ستحتاج كلمة المرور لتسجيل الدخول لاحقاً</p>
+              </div>
+
               {/* Client Type */}
               <div className="space-y-3">
                 <Label>نوع العميل <span className="text-primary">*</span></Label>
@@ -378,7 +407,7 @@ const DealerRegister = () => {
             <div className="text-center mt-6">
               <p className="text-muted-foreground text-sm">
                 لديك حساب بالفعل؟{" "}
-                <button onClick={() => navigate("/auth")} className="text-primary font-semibold hover:underline">
+                <button onClick={() => navigate("/dealer-login")} className="text-primary font-semibold hover:underline">
                   تسجيل الدخول
                 </button>
               </p>
