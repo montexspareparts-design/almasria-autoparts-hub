@@ -441,16 +441,16 @@ const ExclusiveOffers = ({ offers, isRTL, onAddToQuote }: { offers: OfferProduct
                     <p className="text-xs font-bold text-foreground line-clamp-2 leading-relaxed mb-2">
                       {isRTL ? product.name_ar : (product.name_en || product.name_ar)}
                     </p>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-black text-primary">
-                        {(product.sale_price || product.base_price).toLocaleString()} {isRTL ? "ج.م" : "EGP"}
-                      </span>
-                      {product.sale_price && (
-                        <span className="text-[10px] text-muted-foreground line-through">
-                          {product.base_price.toLocaleString()}
-                        </span>
-                      )}
-                    </div>
+                    <p className="text-[10px] text-muted-foreground mb-2">{product.sku}</p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full gap-1 text-[10px] font-bold h-7 rounded-lg border-primary/30 text-primary hover:bg-primary/10"
+                      onClick={() => onAddToQuote(product)}
+                    >
+                      <Plus className="w-3 h-3" />
+                      {isRTL ? "أضف للتسعير" : "Add to Quote"}
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
