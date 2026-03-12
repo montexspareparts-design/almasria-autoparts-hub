@@ -42,7 +42,7 @@ const getDisplayMessage = (message: string): string => {
   return message.replace(/\[order_edit:[a-f0-9-]+\]\n?/, "");
 };
 
-const DealerNotificationsList = ({ userId }: { userId: string }) => {
+const DealerNotificationsList = ({ userId, onNavigate }: { userId: string; onNavigate?: (tab: string) => void }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [respondingId, setRespondingId] = useState<string | null>(null);
