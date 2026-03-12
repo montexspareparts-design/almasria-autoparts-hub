@@ -174,9 +174,9 @@ const DealerOverview = ({
   const availableCredit = Math.max(0, creditLimit - accountSummary.pending_total);
 
   const stats = [
-    { icon: ClipboardList, label: "إجمالي الطلبات", value: ordersCount.toString(), sub: "كل الفترات", tab: "orders" },
-    { icon: Package, label: "الأصناف المتاحة", value: "+5,000", sub: "في الكتالوج", tab: "quotes" },
     { icon: Search, label: "عروض الأسعار اليوم", value: `${dailyQuotes}/20`, sub: "الحد اليومي", tab: "quotes" },
+    { icon: Package, label: "الأصناف المتاحة", value: "+5,000", sub: "في الكتالوج", tab: "quotes" },
+    { icon: ClipboardList, label: "إجمالي الطلبات", value: ordersCount.toString(), sub: "كل الفترات", tab: "orders" },
     { icon: Clock, label: "طلبات قيد التنفيذ", value: pendingOrders.toString(), sub: "جاري المعالجة", tab: "orders" },
   ];
 
