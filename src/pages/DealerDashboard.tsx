@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { LogOut, Loader2 } from "lucide-react";
+import dealerLogo from "@/assets/logo.png";
 import DealerSidebar, { type DealerTab } from "@/components/dealer/DealerSidebar";
 import DealerMobileNav from "@/components/dealer/DealerMobileNav";
 import DealerOverview from "@/components/dealer/DealerOverview";
