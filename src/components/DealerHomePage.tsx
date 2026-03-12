@@ -76,6 +76,7 @@ const DealerHomePage = () => {
   const [offers, setOffers] = useState<OfferProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [popularProducts, setPopularProducts] = useState<OfferProduct[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<OfferProduct[]>([]);
   const [searching, setSearching] = useState(false);
