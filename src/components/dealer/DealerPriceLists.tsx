@@ -316,17 +316,19 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
 
   const downloadQuotePdf = () => {
     if (!createdQuote) return;
-    const lines = createdQuote.items.map((i, idx) =>
-      `${idx + 1}. ${i.product.name_ar} (${i.product.sku}) - الكمية: ${i.quantity} - السعر: ${i.price.toLocaleString("ar-EG")} ج.م - الإجمالي: ${(i.price * i.quantity).toLocaleString("ar-EG")} ج.م`
-    ).join("\n");
-    const text = `عرض أسعار - المصرية جروب\nرقم العرض: ${createdQuote.quoteNumber}\nالتاريخ: ${createdQuote.createdAt.toLocaleDateString("ar-EG")}\nمن كشف: ${createdQuote.priceListTitle}\n${"─".repeat(50)}\n\n${lines}\n\n${"─".repeat(50)}\nإجمالي العرض: ${createdQuote.totalAmount.toLocaleString("ar-EG")} ج.م\nعدد الأصناف: ${createdQuote.items.length}`;
-    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `عرض-اسعار-${createdQuote.quoteNumber}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+    generateQuotePdf({
+      quoteNumber: createdQuote.quoteNumber,
+      date: createdQuote.createdAt.toLocaleDateString("ar-EG"),
+      priceListTitle: createdQuote.priceListTitle || undefined,
+      items: createdQuote.items.map(i => ({
+        name: i.product.name_ar,
+        sku: i.product.sku,
+        quantity: i.quantity,
+        unitPrice: i.price,
+        totalPrice: i.price * i.quantity,
+      })),
+      totalAmount: createdQuote.totalAmount,
+    });
   };
 
   const remainingToday = Math.max(0, DAILY_LIMIT - dailyViews - selectedProducts.reduce((s, p) => s + p.quantity, 0));
