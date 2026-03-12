@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Bell, Volume2 } from "lucide-react";
+import { Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import {
   Popover,
   PopoverContent,
@@ -19,11 +20,33 @@ interface Notification {
   created_at: string;
 }
 
+/** Determine where a notification should navigate */
+const getNotificationTarget = (n: Notification): { path: string; tab?: string } | null => {
+  const msg = (n.message + " " + n.title).toLowerCase();
+
+  if (n.type === "order" || n.type === "order_edit") {
+    return { path: "/dealer", tab: "orders" };
+  }
+  if (msg.includes("كشف أسعار") || msg.includes("price")) {
+    return { path: "/dealer", tab: "price-lists" };
+  }
+  if (msg.includes("عرض") && msg.includes("سعر")) {
+    return { path: "/dealer", tab: "quote-builder" };
+  }
+  if (msg.includes("فاتورة") || msg.includes("invoice")) {
+    return { path: "/dealer", tab: "invoices" };
+  }
+  if (n.type === "info" || n.type === "success" || n.type === "warning") {
+    return { path: "/dealer", tab: "notifications" };
+  }
+  return null;
+};
+
 const NotificationBell = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
-  const prevCountRef = useRef(0);
 
   const playNotificationSound = useCallback(() => {
     try {
@@ -38,9 +61,7 @@ const NotificationBell = () => {
       gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
       oscillator.start(ctx.currentTime);
       oscillator.stop(ctx.currentTime + 0.5);
-    } catch (e) {
-      // Audio not available
-    }
+    } catch (e) {}
   }, []);
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
@@ -92,6 +113,25 @@ const NotificationBell = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
   };
 
+  const handleNotificationClick = async (n: Notification) => {
+    // Mark as read
+    if (!n.is_read) {
+      await supabase.from("notifications").update({ is_read: true }).eq("id", n.id);
+      setNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, is_read: true } : x)));
+    }
+
+    // Navigate
+    const target = getNotificationTarget(n);
+    if (target) {
+      setOpen(false);
+      // Use query param to set the active tab
+      const params = target.tab ? `?tab=${target.tab}` : "";
+      navigate(`${target.path}${params}`);
+    }
+  };
+
+  const getDisplayMessage = (msg: string) => msg.replace(/\[order_edit:[a-f0-9-]+\]\n?/, "");
+
   if (!user) return null;
 
   return (
@@ -120,21 +160,22 @@ const NotificationBell = () => {
             <p className="text-center text-muted-foreground text-sm py-8">لا توجد إشعارات</p>
           ) : (
             notifications.map((n) => (
-              <div
+              <button
                 key={n.id}
-                className={`p-3 border-b border-border last:border-0 ${
+                onClick={() => handleNotificationClick(n)}
+                className={`w-full text-right p-3 border-b border-border last:border-0 hover:bg-muted/50 transition-colors ${
                   !n.is_read ? "bg-accent/30" : ""
                 }`}
               >
                 <div className="flex items-start gap-2">
                   <div
                     className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
-                      n.type === "success" ? "bg-green-500" : n.type === "error" ? "bg-destructive" : "bg-primary"
+                      n.type === "success" ? "bg-emerald-500" : n.type === "order_edit" ? "bg-amber-500" : n.type === "order" ? "bg-primary" : n.type === "warning" ? "bg-amber-500" : "bg-primary"
                     }`}
                   />
                   <div>
                     <p className="text-sm font-medium text-foreground">{n.title}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{n.message}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{getDisplayMessage(n.message)}</p>
                     <p className="text-[10px] text-muted-foreground mt-1">
                       {new Date(n.created_at).toLocaleDateString("ar-EG", {
                         day: "numeric",
@@ -145,7 +186,7 @@ const NotificationBell = () => {
                     </p>
                   </div>
                 </div>
-              </div>
+              </button>
             ))
           )}
         </ScrollArea>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,8 @@ import DealerStatement from "@/components/dealer/DealerStatement";
 const DealerDashboard = () => {
   const { user, dealerAccount, isDealer, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<DealerTab>("overview");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<DealerTab>((searchParams.get("tab") as DealerTab) || "overview");
   const [priceListQuoteData, setPriceListQuoteData] = useState<PriceListQuoteData | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
@@ -34,6 +35,17 @@ const DealerDashboard = () => {
     if (!authLoading && user && !isDealer) { navigate("/"); return; }
     if (user && isDealer) fetchData();
   }, [user, authLoading, isDealer]);
+
+  // Respond to tab query param changes (from notification clicks)
+  useEffect(() => {
+    const tab = searchParams.get("tab") as DealerTab;
+    if (tab && tab !== activeTab) {
+      setActiveTab(tab);
+      // Clean up the URL
+      searchParams.delete("tab");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams]);
 
   const fetchData = async () => {
     const [profileRes, ordersRes, notifRes] = await Promise.all([
@@ -102,7 +114,7 @@ const DealerDashboard = () => {
       case "invoices": return <DealerInvoices userId={user!.id} />;
       case "price_lists": return <DealerPriceLists onNavigateToQuotes={() => setActiveTab("quotes")} editingQuoteData={priceListQuoteData} onClearEditingQuote={() => setPriceListQuoteData(null)} />;
       case "favorites": return <DealerFavorites />;
-      case "notifications": return <DealerNotificationsList userId={user!.id} />;
+      case "notifications": return <DealerNotificationsList userId={user!.id} onNavigate={(tab) => setActiveTab(tab as DealerTab)} />;
       case "offers": return <DealerOffers />;
       case "statement": return <DealerStatement userId={user!.id} />;
       case "settings": return <DealerAccountSettings />;
