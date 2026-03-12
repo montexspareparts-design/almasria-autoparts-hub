@@ -869,6 +869,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_dealer_application_exists: {
+        Args: { _email?: string; _phone?: string }
+        Returns: Json
+      }
       get_daily_view_count: { Args: { _user_id: string }; Returns: number }
       has_role: {
         Args: {
