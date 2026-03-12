@@ -50,7 +50,7 @@ const DealerDashboard = () => {
       <div className="min-h-screen bg-secondary flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <p className="text-xs text-secondary-foreground/60">Loading portal...</p>
+          <p className="text-xs text-secondary-foreground/60">جاري تحميل البوابة...</p>
         </div>
       </div>
     );
@@ -62,6 +62,20 @@ const DealerDashboard = () => {
   const pendingOrders = orders.filter((o: any) => o.status === "pending" || o.status === "confirmed" || o.status === "processing").length;
 
   const handleSignOut = () => { signOut(); navigate("/"); };
+
+  const pageTitles: Record<DealerTab, string> = {
+    overview: "لوحة التحكم",
+    quotes: "بحث القطع وعروض الأسعار",
+    quick_order: "طلب سريع — رفع Excel",
+    orders: "سجل الطلبات",
+    invoices: "الفواتير",
+    price_lists: "كشوفات الأسعار",
+    favorites: "المفضلة",
+    notifications: "الإشعارات",
+    offers: "العروض الخاصة",
+    catalogs: "الكتالوجات",
+    settings: "إعدادات الحساب",
+  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -79,22 +93,14 @@ const DealerDashboard = () => {
             onNavigate={(tab) => setActiveTab(tab as DealerTab)}
           />
         );
-      case "quotes":
-        return <DealerQuoteBuilder />;
-      case "quick_order":
-        return <DealerQuickOrder />;
-      case "orders":
-        return <DealerOrdersList userId={user!.id} />;
-      case "invoices":
-        return <DealerInvoices userId={user!.id} />;
-      case "price_lists":
-        return <DealerPriceLists />;
-      case "favorites":
-        return <DealerFavorites />;
-      case "notifications":
-        return <DealerNotificationsList userId={user!.id} />;
-      case "offers":
-        return <DealerOffers />;
+      case "quotes": return <DealerQuoteBuilder />;
+      case "quick_order": return <DealerQuickOrder />;
+      case "orders": return <DealerOrdersList userId={user!.id} />;
+      case "invoices": return <DealerInvoices userId={user!.id} />;
+      case "price_lists": return <DealerPriceLists />;
+      case "favorites": return <DealerFavorites />;
+      case "notifications": return <DealerNotificationsList userId={user!.id} />;
+      case "offers": return <DealerOffers />;
       case "catalogs":
         return (
           <DealerCatalogs
@@ -105,46 +111,29 @@ const DealerDashboard = () => {
             }
           />
         );
-      case "settings":
-        return <DealerAccountSettings />;
-      default:
-        return null;
+      case "settings": return <DealerAccountSettings />;
+      default: return null;
     }
   };
 
-  // Page titles
-  const pageTitles: Record<DealerTab, string> = {
-    overview: "Dashboard",
-    quotes: "Search Parts & Quotations",
-    quick_order: "Quick Order — Excel Upload",
-    orders: "Order History",
-    invoices: "Invoices",
-    price_lists: "Price Lists",
-    favorites: "Favorites",
-    notifications: "Notifications",
-    offers: "Special Offers",
-    catalogs: "Catalogs",
-    settings: "Account Settings",
-  };
-
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col" dir="rtl">
       {/* Top Bar */}
       <header className="bg-secondary border-b border-secondary/80 sticky top-0 z-40">
-        <div className="flex items-center justify-between h-12 px-4">
-          <a href="/" className="flex items-center gap-2.5 shrink-0">
-            <div className="w-7 h-7 rounded bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-black text-xs">M</span>
+        <div className="flex items-center justify-between h-14 px-4 lg:px-6">
+          <a href="/" className="flex items-center gap-3 shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+              <span className="text-primary-foreground font-black text-sm">M</span>
             </div>
             <div className="hidden sm:block leading-none">
-              <p className="text-xs font-bold text-secondary-foreground tracking-wide">AL MASRIA GROUP</p>
-              <p className="text-[9px] text-secondary-foreground/50 uppercase tracking-widest">Distribution B2B Portal</p>
+              <p className="text-sm font-bold text-secondary-foreground tracking-wide">المصرية جروب</p>
+              <p className="text-[10px] text-secondary-foreground/40 font-medium">بوابة التوزيع B2B</p>
             </div>
           </a>
 
           {/* Current Page Title - Desktop */}
           <div className="hidden lg:block">
-            <p className="text-xs font-medium text-secondary-foreground/70">{pageTitles[activeTab]}</p>
+            <p className="text-sm font-semibold text-secondary-foreground/70">{pageTitles[activeTab]}</p>
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
@@ -153,19 +142,19 @@ const DealerDashboard = () => {
                 onClick={() => setActiveTab("notifications")}
                 className="relative text-secondary-foreground/60 hover:text-secondary-foreground transition-colors"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
-                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[8px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[8px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
                   {unreadCount}
                 </span>
               </button>
             )}
-            <span className="text-[10px] text-secondary-foreground/40 hidden md:inline truncate max-w-[160px]">
-              {user?.email}
+            <span className="text-[11px] text-secondary-foreground/40 hidden md:inline truncate max-w-[180px]">
+              {dealerName}
             </span>
-            <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-secondary-foreground/40 hover:text-secondary-foreground h-7 px-2 lg:hidden">
-              <LogOut className="w-3.5 h-3.5" />
+            <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-secondary-foreground/40 hover:text-secondary-foreground h-8 px-2 lg:hidden">
+              <LogOut className="w-4 h-4" />
             </Button>
           </div>
         </div>
