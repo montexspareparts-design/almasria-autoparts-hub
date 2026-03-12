@@ -22,7 +22,8 @@ import DealerStatement from "@/components/dealer/DealerStatement";
 const DealerDashboard = () => {
   const { user, dealerAccount, isDealer, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<DealerTab>("overview");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<DealerTab>((searchParams.get("tab") as DealerTab) || "overview");
   const [priceListQuoteData, setPriceListQuoteData] = useState<PriceListQuoteData | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
