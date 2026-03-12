@@ -114,7 +114,7 @@ const CheckoutPage = () => {
 
       clearCart();
       toast({ title: "تم تقديم طلبك بنجاح! ✅", description: `رقم الطلب: ${orderNumber}` });
-      navigate("/dealer");
+      navigate(`/my-orders?highlight=${order.id}`);
     } catch (err: any) {
       console.error(err);
       toast({ title: "حدث خطأ أثناء تقديم الطلب", description: err.message, variant: "destructive" });

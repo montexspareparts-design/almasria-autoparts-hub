@@ -22,6 +22,7 @@ const DealerLogin = lazy(() => import("./pages/DealerLogin"));
 const ProductsPage = lazy(() => import("./pages/ProductsPage"));
 const CartPage = lazy(() => import("./pages/CartPage"));
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
+const MyOrdersPage = lazy(() => import("./pages/MyOrdersPage"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
 const WhatSetsUsApartPage = lazy(() => import("./pages/WhatSetsUsApartPage"));
@@ -84,6 +85,7 @@ const App = () => (
                     <Route path="/dealer-login" element={<DealerLogin />} />
                     <Route path="/cart" element={<CartPage />} />
                     <Route path="/checkout" element={<CheckoutPage />} />
+                    <Route path="/my-orders" element={<MyOrdersPage />} />
                     <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/catalogs" element={<CatalogsPage />} />
                     <Route path="/install" element={<InstallApp />} />
