@@ -20,7 +20,6 @@ import DealerAccountSettings from "@/components/dealer/DealerAccountSettings";
 import DealerStatement from "@/components/dealer/DealerStatement";
 import DealerPayment from "@/components/dealer/DealerPayment";
 import DealerStockAlerts from "@/components/dealer/DealerStockAlerts";
-import DealerOnboarding from "@/components/dealer/DealerOnboarding";
 
 const DealerDashboard = () => {
   const { user, dealerAccount, isDealer, loading: authLoading, signOut } = useAuth();
@@ -32,7 +31,6 @@ const DealerDashboard = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loadingData, setLoadingData] = useState(true);
-  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) { navigate("/auth"); return; }
@@ -61,12 +59,6 @@ const DealerDashboard = () => {
     setOrders(ordersRes.data || []);
     setUnreadCount(notifRes.data?.length || 0);
     setLoadingData(false);
-
-    // Show onboarding for new dealers (no orders yet, never dismissed)
-    const dismissed = localStorage.getItem("dealer_onboarding_done");
-    if (!dismissed && (!ordersRes.data || ordersRes.data.length === 0)) {
-      setShowOnboarding(true);
-    }
   };
 
   if (authLoading || loadingData) {
@@ -138,15 +130,6 @@ const DealerDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col" dir="rtl">
-      {showOnboarding && (
-        <DealerOnboarding
-          dealerName={dealerName}
-          onComplete={() => {
-            setShowOnboarding(false);
-            localStorage.setItem("dealer_onboarding_done", "1");
-          }}
-        />
-      )}
       {/* Top Bar */}
       <header className="bg-secondary border-b border-secondary/80 sticky top-0 z-40">
         <div className="flex items-center justify-between h-14 px-4 lg:px-6">

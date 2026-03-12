@@ -16,21 +16,9 @@ const LOCKOUT_DURATION = 60_000; // 1 minute
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [authMethod, setAuthMethod] = useState<AuthMethod>(() => {
-    const saved = localStorage.getItem("remembered_auth");
-    if (saved) { try { return JSON.parse(saved).method || "phone"; } catch { return "phone"; } }
-    return "phone";
-  });
-  const [phone, setPhone] = useState(() => {
-    const saved = localStorage.getItem("remembered_auth");
-    if (saved) { try { return JSON.parse(saved).phone || ""; } catch { return ""; } }
-    return "";
-  });
-  const [email, setEmail] = useState(() => {
-    const saved = localStorage.getItem("remembered_auth");
-    if (saved) { try { return JSON.parse(saved).email || ""; } catch { return ""; } }
-    return "";
-  });
+  const [authMethod, setAuthMethod] = useState<AuthMethod>("phone");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -38,7 +26,6 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [rememberMe, setRememberMe] = useState(() => !!localStorage.getItem("remembered_auth"));
   const [forgotMode, setForgotMode] = useState(false);
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [lockedUntil, setLockedUntil] = useState<number | null>(null);
@@ -97,11 +84,6 @@ const Auth = () => {
       } else {
         setLoginAttempts(0);
         setLockedUntil(null);
-        if (rememberMe) {
-          localStorage.setItem("remembered_auth", JSON.stringify({ method: authMethod, phone, email: authMethod === "email" ? email : "" }));
-        } else {
-          localStorage.removeItem("remembered_auth");
-        }
         toast({ title: "تم تسجيل الدخول بنجاح" });
         navigate("/");
       }
@@ -245,19 +227,6 @@ const Auth = () => {
                   </button>
                 </div>
               </div>
-
-              {isLogin && (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="rememberMe"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="h-4 w-4 rounded border-input accent-primary cursor-pointer"
-                  />
-                  <Label htmlFor="rememberMe" className="text-card-foreground cursor-pointer text-sm">تذكرني</Label>
-                </div>
-              )}
 
               {!isLogin && (
                 <div className="space-y-2">

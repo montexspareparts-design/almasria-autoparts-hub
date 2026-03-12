@@ -20,122 +20,49 @@ interface Notification {
   created_at: string;
 }
 
-/** Determine where a notification should navigate based on user role */
-const getNotificationTarget = (n: Notification, isAdmin: boolean): { path: string; tab?: string; section?: string } | null => {
-  const msg = (n.message + " " + n.title);
+/** Determine where a notification should navigate */
+const getNotificationTarget = (n: Notification): { path: string; tab?: string } | null => {
+  const msg = (n.message + " " + n.title).toLowerCase();
 
-  // Admin-specific routing
-  if (isAdmin) {
-    // Dealer registration requests
-    if (msg.includes("طلب تسجيل") || msg.includes("تاجر جديد") || n.type === "dealer_application") {
-      return { path: "/admin", section: "dealers" };
-    }
-    // Orders (new order, status change, edit approval)
-    if (n.type === "order" || n.type === "order_edit" || msg.includes("طلب جديد") || msg.includes("طلب رقم") || msg.includes("ORD-")) {
-      return { path: "/admin", section: "orders" };
-    }
-    // Price lists
-    if (msg.includes("كشف أسعار") || n.type === "price_list") {
-      return { path: "/admin", section: "price-lists" };
-    }
-    // Products / offers
-    if (msg.includes("عرض خاص") || msg.includes("عرض جديد") || n.type === "offer" || n.type === "product") {
-      return { path: "/admin", section: "products" };
-    }
-    // Stock alerts
-    if (n.type === "stock_alert" || msg.includes("متوفر الآن")) {
-      return { path: "/admin", section: "products" };
-    }
-    // Customer reviews
-    if (msg.includes("تقييم") || n.type === "review") {
-      return { path: "/admin", section: "products" };
-    }
-    // Fallback for admin
-    return { path: "/admin", section: "analytics" };
-  }
-
-  // Dealer routing
-  // Orders
-  if (n.type === "order" || n.type === "order_edit" || msg.includes("طلبك") || msg.includes("طلب رقم") || msg.includes("ORD-")) {
+  if (n.type === "order" || n.type === "order_edit") {
     return { path: "/dealer", tab: "orders" };
   }
-  // Price lists  
-  if (msg.includes("كشف أسعار") || n.type === "price_list") {
-    return { path: "/dealer", tab: "price_lists" };
+  if (msg.includes("كشف أسعار") || msg.includes("price")) {
+    return { path: "/dealer", tab: "price-lists" };
   }
-  // Offers & stock alerts
-  if (n.type === "stock_alert" || n.type === "offer" || msg.includes("عرض خاص") || msg.includes("عرض جديد") || msg.includes("متوفر الآن")) {
-    return { path: "/dealer", tab: "offers" };
+  if (msg.includes("عرض") && msg.includes("سعر")) {
+    return { path: "/dealer", tab: "quote-builder" };
   }
-  // Invoices
-  if (msg.includes("فاتورة") || msg.includes("invoice") || n.type === "invoice") {
+  if (msg.includes("فاتورة") || msg.includes("invoice")) {
     return { path: "/dealer", tab: "invoices" };
   }
-  // Payment
-  if (msg.includes("دفع") || msg.includes("تحويل") || msg.includes("payment")) {
-    return { path: "/dealer", tab: "payment" };
+  if (n.type === "info" || n.type === "success" || n.type === "warning") {
+    return { path: "/dealer", tab: "notifications" };
   }
-  // Quotes
-  if (msg.includes("عرض سعر") || msg.includes("quote")) {
-    return { path: "/dealer", tab: "quotes" };
-  }
-  // Fallback
-  return { path: "/dealer", tab: "notifications" };
+  return null;
 };
 
 const NotificationBell = () => {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
 
-  const audioCtxRef = useRef<AudioContext | null>(null);
-
-  const getAudioContext = useCallback(() => {
-    if (!audioCtxRef.current || audioCtxRef.current.state === "closed") {
-      audioCtxRef.current = new AudioContext();
-    }
-    return audioCtxRef.current;
-  }, []);
-
-  const playNotificationSound = useCallback((type?: string) => {
+  const playNotificationSound = useCallback(() => {
     try {
-      const ctx = getAudioContext();
-      if (ctx.state === "suspended") ctx.resume();
-
-      const isOrder = type === "order" || type === "order_edit";
-
-      if (isOrder) {
-        // Urgent double-ding for orders
-        [0, 0.25].forEach((delay) => {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.frequency.value = 1200;
-          osc.type = "sine";
-          gain.gain.setValueAtTime(0.4, ctx.currentTime + delay);
-          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + delay + 0.3);
-          osc.start(ctx.currentTime + delay);
-          osc.stop(ctx.currentTime + delay + 0.3);
-        });
-      } else {
-        // Pleasant ding for regular notifications
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.frequency.value = 880;
-        osc.type = "sine";
-        gain.gain.setValueAtTime(0.3, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6);
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.6);
-      }
-    } catch (e) {
-      // Audio not supported
-    }
-  }, [getAudioContext]);
+      const ctx = new AudioContext();
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      oscillator.connect(gain);
+      gain.connect(ctx.destination);
+      oscillator.frequency.value = 800;
+      oscillator.type = "sine";
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+      oscillator.start(ctx.currentTime);
+      oscillator.stop(ctx.currentTime + 0.5);
+    } catch (e) {}
+  }, []);
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
@@ -165,9 +92,8 @@ const NotificationBell = () => {
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
-          const newNotif = payload.new as Notification;
-          setNotifications((prev) => [newNotif, ...prev]);
-          playNotificationSound(newNotif.type);
+          setNotifications((prev) => [payload.new as Notification, ...prev]);
+          playNotificationSound();
         }
       )
       .subscribe();
@@ -195,15 +121,12 @@ const NotificationBell = () => {
     }
 
     // Navigate
-    const target = getNotificationTarget(n, isAdmin);
+    const target = getNotificationTarget(n);
     if (target) {
       setOpen(false);
-      if (target.section) {
-        navigate(`${target.path}?section=${target.section}`);
-      } else {
-        const params = target.tab ? `?tab=${target.tab}` : "";
-        navigate(`${target.path}${params}`);
-      }
+      // Use query param to set the active tab
+      const params = target.tab ? `?tab=${target.tab}` : "";
+      navigate(`${target.path}${params}`);
     }
   };
 
@@ -245,17 +168,12 @@ const NotificationBell = () => {
                 }`}
               >
                 <div className="flex items-start gap-2">
-                  {!n.is_read && (
-                    <span className="shrink-0 mt-0.5 text-[9px] font-black bg-primary text-primary-foreground px-1.5 py-0.5 rounded-md leading-none">
-                      NEW
-                    </span>
-                  )}
                   <div
                     className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
                       n.type === "success" ? "bg-emerald-500" : n.type === "order_edit" ? "bg-amber-500" : n.type === "order" ? "bg-primary" : n.type === "warning" ? "bg-amber-500" : "bg-primary"
                     }`}
                   />
-                  <div className="flex-1 min-w-0">
+                  <div>
                     <p className="text-sm font-medium text-foreground">{n.title}</p>
                     <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{getDisplayMessage(n.message)}</p>
                     <p className="text-[10px] text-muted-foreground mt-1">
