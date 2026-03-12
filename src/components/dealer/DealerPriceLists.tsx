@@ -7,10 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { generateQuotePdf } from "@/lib/generateQuotePdf";
+import { shareQuoteWhatsApp, shareQuoteEmail } from "@/lib/shareQuote";
 import {
   FileText, Download, Clock, RefreshCw, Eye, Search,
   Plus, X, ShoppingCart, ArrowLeft, Loader2, AlertTriangle, ChevronRight,
-  CheckCircle2, Printer
+  CheckCircle2, Printer, MessageCircle, Mail
 } from "lucide-react";
 
 interface PriceList {
@@ -299,10 +300,7 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
       await supabase.from("dealer_price_views").insert({ user_id: user.id, product_id: sp.product.id });
     }
 
-    toast({ title: "تم إنشاء عرض السعر وتحميل PDF ✓", description: `رقم العرض: ${quoteNumber}` });
-
-    // Generate PDF automatically
-    generateQuotePdf({
+    const quoteShareData = {
       quoteNumber,
       date: new Date().toLocaleDateString("ar-EG"),
       priceListTitle: viewingList?.title || undefined,
@@ -314,10 +312,40 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
         totalPrice: i.price * i.quantity,
       })),
       totalAmount,
+    };
+
+    toast({
+      title: "تم إنشاء عرض السعر ✓",
+      description: (
+        <div className="flex flex-col gap-2 mt-1">
+          <span>رقم العرض: {quoteNumber}</span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => generateQuotePdf(quoteShareData)}
+              className="flex items-center gap-1 text-xs bg-primary/10 text-primary px-2 py-1 rounded hover:bg-primary/20 transition-colors"
+            >
+              <Download className="w-3 h-3" /> PDF
+            </button>
+            <button
+              onClick={() => shareQuoteWhatsApp(quoteShareData)}
+              className="flex items-center gap-1 text-xs bg-[#25D366]/10 text-[#25D366] px-2 py-1 rounded hover:bg-[#25D366]/20 transition-colors"
+            >
+              <MessageCircle className="w-3 h-3" /> واتساب
+            </button>
+            <button
+              onClick={() => shareQuoteEmail(quoteShareData)}
+              className="flex items-center gap-1 text-xs bg-blue-500/10 text-blue-600 px-2 py-1 rounded hover:bg-blue-500/20 transition-colors"
+            >
+              <Mail className="w-3 h-3" /> إيميل
+            </button>
+          </div>
+        </div>
+      ) as any,
     });
 
-    // Stay on the price list viewer — don't switch to summary
-    // User can continue searching and adding items
+    // Also auto-download PDF
+    generateQuotePdf(quoteShareData);
+
     setSelectedProducts([]);
     setSavingQuote(false);
   };
@@ -424,7 +452,7 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
           <Button variant="outline" onClick={() => { setCreatedQuote(null); }}>
             <ArrowLeft className="w-4 h-4 ml-1" />
             عودة للكشف
@@ -437,7 +465,49 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
           )}
           <Button variant="default" onClick={downloadQuotePdf}>
             <Download className="w-4 h-4 ml-1" />
-            تحميل PDF مرة أخرى
+            تحميل PDF
+          </Button>
+          <Button
+            variant="outline"
+            className="border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/10"
+            onClick={() => {
+              if (!createdQuote) return;
+              shareQuoteWhatsApp({
+                quoteNumber: createdQuote.quoteNumber,
+                date: createdQuote.createdAt.toLocaleDateString("ar-EG"),
+                priceListTitle: createdQuote.priceListTitle || undefined,
+                items: createdQuote.items.map(i => ({
+                  name: i.product.name_ar, sku: i.product.sku,
+                  quantity: i.quantity, unitPrice: i.price,
+                  totalPrice: i.price * i.quantity,
+                })),
+                totalAmount: createdQuote.totalAmount,
+              });
+            }}
+          >
+            <MessageCircle className="w-4 h-4 ml-1" />
+            واتساب
+          </Button>
+          <Button
+            variant="outline"
+            className="border-blue-400/30 text-blue-600 hover:bg-blue-500/10"
+            onClick={() => {
+              if (!createdQuote) return;
+              shareQuoteEmail({
+                quoteNumber: createdQuote.quoteNumber,
+                date: createdQuote.createdAt.toLocaleDateString("ar-EG"),
+                priceListTitle: createdQuote.priceListTitle || undefined,
+                items: createdQuote.items.map(i => ({
+                  name: i.product.name_ar, sku: i.product.sku,
+                  quantity: i.quantity, unitPrice: i.price,
+                  totalPrice: i.price * i.quantity,
+                })),
+                totalAmount: createdQuote.totalAmount,
+              });
+            }}
+          >
+            <Mail className="w-4 h-4 ml-1" />
+            إيميل
           </Button>
         </div>
       </div>
