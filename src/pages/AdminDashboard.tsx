@@ -383,6 +383,11 @@ const AdminDashboard = () => {
         <div className="mt-8">
           <AdminImageVerifier />
         </div>
+
+        {/* ERP Integration */}
+        <div className="mt-8">
+          <AdminERPSync />
+        </div>
       </div>
     </div>
   );
