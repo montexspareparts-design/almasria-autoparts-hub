@@ -33,6 +33,7 @@ const AdminPriceLists = () => {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: "", description: "", version: "" });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [parsingPdf, setParsingPdf] = useState(false);
 
   // Product association
   const [managingList, setManagingList] = useState<PriceListRow | null>(null);
