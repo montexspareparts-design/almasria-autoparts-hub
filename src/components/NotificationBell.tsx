@@ -176,12 +176,15 @@ const NotificationBell = () => {
     }
 
     // Navigate
-    const target = getNotificationTarget(n);
+    const target = getNotificationTarget(n, isAdmin);
     if (target) {
       setOpen(false);
-      // Use query param to set the active tab
-      const params = target.tab ? `?tab=${target.tab}` : "";
-      navigate(`${target.path}${params}`);
+      if (target.section) {
+        navigate(`${target.path}?section=${target.section}`);
+      } else {
+        const params = target.tab ? `?tab=${target.tab}` : "";
+        navigate(`${target.path}${params}`);
+      }
     }
   };
 
