@@ -17,6 +17,7 @@ import DealerFavorites from "@/components/dealer/DealerFavorites";
 import DealerQuickOrder from "@/components/dealer/DealerQuickOrder";
 import DealerInvoices from "@/components/dealer/DealerInvoices";
 import DealerAccountSettings from "@/components/dealer/DealerAccountSettings";
+import DealerStatement from "@/components/dealer/DealerStatement";
 
 const DealerDashboard = () => {
   const { user, dealerAccount, isDealer, loading: authLoading, signOut } = useAuth();
