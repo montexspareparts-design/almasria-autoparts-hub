@@ -226,12 +226,17 @@ const NotificationBell = () => {
                 }`}
               >
                 <div className="flex items-start gap-2">
+                  {!n.is_read && (
+                    <span className="shrink-0 mt-0.5 text-[9px] font-black bg-primary text-primary-foreground px-1.5 py-0.5 rounded-md leading-none">
+                      NEW
+                    </span>
+                  )}
                   <div
                     className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
                       n.type === "success" ? "bg-emerald-500" : n.type === "order_edit" ? "bg-amber-500" : n.type === "order" ? "bg-primary" : n.type === "warning" ? "bg-amber-500" : "bg-primary"
                     }`}
                   />
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground">{n.title}</p>
                     <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{getDisplayMessage(n.message)}</p>
                     <p className="text-[10px] text-muted-foreground mt-1">
