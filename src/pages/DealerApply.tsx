@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Shield, TrendingUp, Users, Award, CheckCircle, ArrowLeft, FileText, UserCheck, Clock, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import DealerAuthDialog from "@/components/DealerAuthDialog";
 
 const benefits = [
 { icon: TrendingUp, title: "أسعار جملة تنافسية", desc: "احصل على تسعير خاص حسب فئتك كتاجر معتمد" },
