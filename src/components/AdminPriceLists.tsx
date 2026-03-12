@@ -259,15 +259,22 @@ const AdminPriceLists = () => {
     // Link products from Excel
     if (newList && selectedExcel) {
       try {
-        const skus = await extractSkusFromExcel(selectedExcel);
+        const excelRows = await extractSkusFromExcel(selectedExcel);
+        const skuStrings = excelRows.map(r => r.sku);
+        // Build a price map from Excel: sku -> price
+        const priceMap = new Map<string, number | null>();
+        for (const row of excelRows) {
+          priceMap.set(row.sku, row.price);
+          priceMap.set(row.sku.replace(/[-\s]/g, "").toUpperCase(), row.price);
+        }
 
-        if (skus.length > 0) {
+        if (skuStrings.length > 0) {
           // Get matching product IDs
           const batchSize = 50;
-          const matchedProductIds: string[] = [];
+          const matchedProducts: { id: string; sku: string }[] = [];
 
-          for (let i = 0; i < skus.length; i += batchSize) {
-            const batch = skus.slice(i, i + batchSize);
+          for (let i = 0; i < skuStrings.length; i += batchSize) {
+            const batch = skuStrings.slice(i, i + batchSize);
             const { data: products } = await supabase
               .from("products")
               .select("id, sku")
@@ -275,7 +282,7 @@ const AdminPriceLists = () => {
               .in("sku", batch);
 
             if (products) {
-              matchedProductIds.push(...products.map(p => p.id));
+              matchedProducts.push(...products);
             }
           }
 
@@ -286,29 +293,45 @@ const AdminPriceLists = () => {
             .eq("is_active", true);
 
           if (allProducts) {
-            const normalizedExcelSkus = skus.map(s => s.replace(/[-\s]/g, "").toUpperCase());
+            const normalizedExcelSkus = skuStrings.map(s => s.replace(/[-\s]/g, "").toUpperCase());
+            const matchedIds = new Set(matchedProducts.map(p => p.id));
             for (const product of allProducts) {
               const normalizedDbSku = product.sku.replace(/[-\s]/g, "").toUpperCase();
-              if (normalizedExcelSkus.includes(normalizedDbSku) && !matchedProductIds.includes(product.id)) {
-                matchedProductIds.push(product.id);
+              if (normalizedExcelSkus.includes(normalizedDbSku) && !matchedIds.has(product.id)) {
+                matchedProducts.push(product);
               }
             }
           }
 
-          // Insert links
-          const uniqueIds = [...new Set(matchedProductIds)];
-          if (uniqueIds.length > 0) {
-            for (let i = 0; i < uniqueIds.length; i += batchSize) {
-              const batch = uniqueIds.slice(i, i + batchSize).map(productId => ({
-                price_list_id: (newList as any).id,
-                product_id: productId,
-              }));
+          // Insert links with prices
+          const seenIds = new Set<string>();
+          const uniqueProducts = matchedProducts.filter(p => {
+            if (seenIds.has(p.id)) return false;
+            seenIds.add(p.id);
+            return true;
+          });
+
+          if (uniqueProducts.length > 0) {
+            for (let i = 0; i < uniqueProducts.length; i += batchSize) {
+              const batch = uniqueProducts.slice(i, i + batchSize).map(product => {
+                const normalizedSku = product.sku.replace(/[-\s]/g, "").toUpperCase();
+                const price = priceMap.get(product.sku) ?? priceMap.get(normalizedSku) ?? null;
+                return {
+                  price_list_id: (newList as any).id,
+                  product_id: product.id,
+                  price,
+                };
+              });
               await supabase.from("price_list_products").upsert(batch as any, {
                 onConflict: "price_list_id,product_id",
                 ignoreDuplicates: true,
               });
             }
-            toast({ title: `✅ تم ربط ${uniqueIds.length} صنف بالكشف تلقائياً` });
+            const withPrices = uniqueProducts.filter(p => {
+              const ns = p.sku.replace(/[-\s]/g, "").toUpperCase();
+              return (priceMap.get(p.sku) ?? priceMap.get(ns)) != null;
+            }).length;
+            toast({ title: `✅ تم ربط ${uniqueProducts.length} صنف بالكشف (${withPrices} بسعر من الكشف)` });
           } else {
             toast({ title: "⚠️ لم يتم مطابقة أي صنف", description: "تأكد من أن أرقام القطع في الملف مطابقة للمنتجات", variant: "destructive" });
           }
