@@ -195,13 +195,46 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
 
   const remainingToday = Math.max(0, DAILY_LIMIT - dailyViews - selectedProducts.reduce((s, p) => s + p.quantity, 0));
 
+  // Get signed URL for PDF viewing
+  const openPriceList = async (list: PriceList) => {
+    setViewingList(list);
+    setPdfSignedUrl(null);
+    if (list.file_url) {
+      setPdfLoading(true);
+      // Try signed URL first (for files stored as paths in price-lists bucket)
+      const filePath = list.file_url;
+      // Check if it's already a full URL (legacy) or a path
+      if (filePath.startsWith("http")) {
+        setPdfSignedUrl(filePath);
+      } else {
+        const { data, error } = await supabase.storage
+          .from("price-lists")
+          .createSignedUrl(filePath, 3600); // 1 hour
+        if (data?.signedUrl) {
+          setPdfSignedUrl(data.signedUrl);
+        } else {
+          // Fallback: try catalogs bucket (legacy uploads)
+          const { data: fallback } = await supabase.storage
+            .from("catalogs")
+            .createSignedUrl(filePath, 3600);
+          setPdfSignedUrl(fallback?.signedUrl || null);
+        }
+      }
+      setPdfLoading(false);
+    }
+  };
+
   // ─── PDF VIEWER MODE ───
   if (viewingList) {
+    const downloadPdf = () => {
+      if (pdfSignedUrl) window.open(pdfSignedUrl, "_blank");
+    };
+
     return (
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => { setViewingList(null); setSelectedProducts([]); setSearchQuery(""); }}>
+          <Button variant="ghost" size="sm" onClick={() => { setViewingList(null); setSelectedProducts([]); setSearchQuery(""); setPdfSignedUrl(null); }}>
             <ArrowLeft className="w-4 h-4 ml-1" />
             رجوع
           </Button>
@@ -209,8 +242,8 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
             <h2 className="text-sm font-bold text-foreground truncate">{viewingList.title}</h2>
             {viewingList.version && <p className="text-[10px] text-muted-foreground">{viewingList.version}</p>}
           </div>
-          {viewingList.file_url && (
-            <Button variant="outline" size="sm" onClick={() => window.open(viewingList.file_url!, "_blank")}>
+          {pdfSignedUrl && (
+            <Button variant="outline" size="sm" onClick={downloadPdf}>
               <Download className="w-4 h-4 ml-1" />
               تحميل
             </Button>
@@ -220,10 +253,14 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
         <div className="flex flex-col lg:flex-row gap-4">
           {/* PDF Viewer */}
           <div className="flex-1 min-w-0">
-            {viewingList.file_url ? (
+            {pdfLoading ? (
+              <div className="border border-border rounded-lg bg-muted/30 flex items-center justify-center" style={{ height: "70vh" }}>
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : pdfSignedUrl ? (
               <div className="border border-border rounded-lg overflow-hidden bg-muted/30" style={{ height: "70vh" }}>
                 <iframe
-                  src={`${viewingList.file_url}#toolbar=1`}
+                  src={`${pdfSignedUrl}#toolbar=1`}
                   className="w-full h-full"
                   title={viewingList.title}
                 />
