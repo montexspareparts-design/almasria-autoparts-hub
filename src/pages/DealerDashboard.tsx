@@ -47,10 +47,10 @@ const DealerDashboard = () => {
 
   if (authLoading || loadingData) {
     return (
-      <div className="min-h-screen bg-secondary flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <p className="text-xs text-secondary-foreground/60">جاري تحميل البوابة...</p>
+      <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          <p className="text-xs text-muted-foreground">جاري التحميل...</p>
         </div>
       </div>
     );
