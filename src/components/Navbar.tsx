@@ -300,19 +300,19 @@ const Navbar = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => openAuthDialog("login")}
+                  onClick={() => navigate("/auth")}
                   className="text-secondary-foreground/60 hover:text-secondary-foreground text-[13px] font-semibold h-8 px-2.5"
                 >
-                  {t("nav.login")}
+                  {lang === "ar" ? "تسجيل الدخول" : "Login"}
                 </Button>
                 <Button
                   variant="default"
                   size="sm"
                   className="gap-1.5 text-[13px] font-semibold h-8 px-3"
-                  onClick={() => openAuthDialog("register")}
+                  onClick={() => navigate("/dealer-login")}
                 >
                   <Briefcase className="w-3.5 h-3.5" />
-                  {t("nav.register_dealer")}
+                  {lang === "ar" ? "التسجيل كتاجر" : "Dealer Portal"}
                 </Button>
               </>
             )}
