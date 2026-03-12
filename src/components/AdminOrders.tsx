@@ -69,14 +69,10 @@ const AdminOrders = () => {
   const fetchOrders = useCallback(async () => {
     setLoading(true);
 
-    // Single query with joins - no N+1
+    // Single query with order_items join + batch profiles
     let query = supabase
       .from("orders")
-      .select(`
-        *,
-        order_items(*, product:products(name_ar, sku, image_url)),
-        profile:profiles!orders_user_id_fkey(full_name, phone, email)
-      `, { count: "exact" })
+      .select("*, order_items(*, product:products(name_ar, sku, image_url))", { count: "exact" })
       .order("created_at", { ascending: false });
 
     if (filterStatus !== "all") {
@@ -86,19 +82,28 @@ const AdminOrders = () => {
       query = query.or(`order_number.ilike.%${searchQuery.trim()}%`);
     }
 
-    const { data, count, error } = await query.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+    const { data, count } = await query.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
-    if (error) {
-      // Fallback: if FK hint fails, fetch without profile join
-      console.warn("Join query failed, using fallback:", error.message);
-      await fetchOrdersFallback();
+    if (!data || data.length === 0) {
+      setOrders([]);
+      setTotalCount(count || 0);
+      setLoading(false);
       return;
     }
 
-    const enriched: OrderWithItems[] = (data || []).map((order: any) => ({
+    // Batch fetch profiles for this page only (1 query instead of N)
+    const userIds = [...new Set(data.map((o: any) => o.user_id))];
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("user_id, full_name, phone, email")
+      .in("user_id", userIds);
+
+    const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));
+
+    const enriched: OrderWithItems[] = data.map((order: any) => ({
       ...order,
       items: order.order_items || [],
-      profile: Array.isArray(order.profile) ? order.profile[0] : order.profile,
+      profile: profileMap.get(order.user_id) || undefined,
     }));
 
     setOrders(enriched);
