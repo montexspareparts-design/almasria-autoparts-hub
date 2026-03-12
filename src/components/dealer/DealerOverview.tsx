@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft } from "lucide-react";
 import DealerRecommendations from "./DealerRecommendations";
+import { requestPushPermission, isPushSubscribed } from "@/lib/pushNotifications";
 
 interface DealerAccount {
   id: string;
@@ -79,6 +80,7 @@ const DealerOverview = ({
   const [accountSummary, setAccountSummary] = useState<OrderSummary>({
     delivered_total: 0, pending_total: 0,
   });
+  const [showPushBanner, setShowPushBanner] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -98,6 +100,15 @@ const DealerOverview = ({
         pending_total: pending.reduce((s, o) => s + Number(o.total_amount), 0),
       });
     });
+
+    // Check if push notifications are supported but not subscribed
+    if ("Notification" in window && "serviceWorker" in navigator) {
+      isPushSubscribed().then((subscribed) => {
+        if (!subscribed && Notification.permission !== "denied") {
+          setShowPushBanner(true);
+        }
+      });
+    }
   }, [userId]);
 
   const firstName = dealerName?.split(" ")[0] || "تاجر";
@@ -115,6 +126,21 @@ const DealerOverview = ({
           </p>
         )}
       </div>
+
+      {/* Push notification banner */}
+      {showPushBanner && (
+        <button
+          onClick={async () => {
+            const granted = await requestPushPermission();
+            if (granted) setShowPushBanner(false);
+          }}
+          className="w-full bg-primary/10 border border-primary/20 text-foreground rounded-2xl p-4 text-center active:scale-[0.97] transition-transform"
+        >
+          <span className="text-2xl block mb-1">🔔</span>
+          <p className="text-sm font-bold">فعّل الإشعارات</p>
+          <p className="text-xs text-muted-foreground mt-0.5">عشان توصلك تحديثات طلباتك والعروض فوراً</p>
+        </button>
+      )}
 
       {/* Big CTA — اطلب قطع غيار */}
       <button
