@@ -410,11 +410,11 @@ const Navbar = () => {
                   </>
                 ) : (
                   <>
-                    <Button variant="ghost" size="sm" className="w-full font-semibold" onClick={() => openAuthDialog("login")}>
-                      {t("nav.login")}
+                    <Button variant="ghost" size="sm" className="w-full font-semibold" onClick={() => { navigate("/auth"); setIsOpen(false); }}>
+                      {lang === "ar" ? "تسجيل الدخول" : "Login"}
                     </Button>
-                    <Button variant="default" size="sm" className="w-full gap-2 font-semibold" onClick={() => openAuthDialog("register")}>
-                      <Briefcase className="w-4 h-4" /> {t("nav.register_dealer")}
+                    <Button variant="default" size="sm" className="w-full gap-2 font-semibold" onClick={() => { navigate("/dealer-login"); setIsOpen(false); }}>
+                      <Briefcase className="w-4 h-4" /> {lang === "ar" ? "التسجيل كتاجر" : "Dealer Portal"}
                     </Button>
                   </>
                 )}
