@@ -224,6 +224,11 @@ const Auth = () => {
                 </Link>
               </Button>
             </div>
+
+            {/* Back to home */}
+            <div className="text-center">
+              <Link to="/" className="text-xs text-muted-foreground hover:text-primary transition-colors">← العودة للرئيسية</Link>
+            </div>
           </div>
         )}
       </div>
