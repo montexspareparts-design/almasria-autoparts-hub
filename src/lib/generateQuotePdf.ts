@@ -40,8 +40,8 @@ function buildQuoteHtml(data: QuoteData): string {
     <div id="quote-pdf-content" style="width:780px;font-family:'Segoe UI',Tahoma,Arial,sans-serif;direction:rtl;background:#fff;padding:0">
       <!-- Header -->
       <div style="background:#fff;padding:24px 30px 18px;text-align:center;border-radius:6px 6px 0 0;border-bottom:none">
-        <img src="/images/toyota-quote-logo.png" style="height:90px;margin-bottom:8px" crossorigin="anonymous" />
-        <div style="color:#333;font-size:17px;font-weight:700;margin-top:6px;letter-spacing:0.5px">عرض أسعار</div>
+        <img src="/images/toyota-quote-logo.png" style="height:140px;margin-bottom:8px" crossorigin="anonymous" />
+        <div style="color:#333;font-size:17px;font-weight:700;margin-top:6px;letter-spacing:0.5px">عرض سعر</div>
       </div>
       <div style="height:4px;background:linear-gradient(90deg,#dc2626,#ef4444,#dc2626)"></div>
 
@@ -60,11 +60,6 @@ function buildQuoteHtml(data: QuoteData): string {
       <div style="display:flex;justify-content:space-between;padding:8px 30px;border-bottom:1px solid #eee;background:#fef2f2">
         ${data.dealerName ? `<div><span style="color:#888;font-size:12px">العميل:</span> <span style="color:#222;font-size:13px;font-weight:600;margin-right:6px">${data.dealerName}</span></div>` : ""}
         ${data.dealerPhone ? `<div><span style="color:#888;font-size:12px">هاتف:</span> <span style="color:#222;font-size:13px;font-weight:600;margin-right:6px;direction:ltr;unicode-bidi:embed">${data.dealerPhone}</span></div>` : ""}
-      </div>` : ""}
-      ${data.priceListTitle ? `
-      <div style="padding:8px 30px;border-bottom:1px solid #eee">
-        <span style="color:#888;font-size:12px">من كشف:</span>
-        <span style="color:#444;font-size:13px;font-weight:600;margin-right:6px">${data.priceListTitle}</span>
       </div>` : ""}
 
       <!-- Table -->
