@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ClipboardList, TrendingUp, TrendingDown, FileText, CreditCard, Package,
-  Clock, Search, Bell, ChevronLeft, Receipt
+  Clock, Search, Bell, Receipt, Download, ChevronLeft
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 interface DealerAccount {
   id: string;
@@ -36,6 +37,23 @@ interface Notification {
   created_at: string;
 }
 
+interface RecentOrder {
+  id: string;
+  order_number: string;
+  status: string;
+  total_amount: number;
+  created_at: string;
+  invoice_url: string | null;
+}
+
+interface RecentQuote {
+  id: string;
+  quote_number: string;
+  status: string;
+  total_amount: number;
+  created_at: string;
+}
+
 interface OrderSummary {
   delivered_total: number;
   delivered_count: number;
@@ -58,12 +76,31 @@ const typeIcons: Record<string, string> = {
   order: "📦",
 };
 
+const orderStatusLabels: Record<string, { text: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+  pending: { text: "قيد المراجعة", variant: "secondary" },
+  confirmed: { text: "تم التأكيد", variant: "outline" },
+  processing: { text: "جاري التجهيز", variant: "outline" },
+  shipped: { text: "تم الشحن", variant: "default" },
+  delivered: { text: "تم التسليم", variant: "default" },
+  cancelled: { text: "ملغي", variant: "destructive" },
+};
+
+const quoteStatusLabels: Record<string, { text: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+  draft: { text: "مسودة", variant: "secondary" },
+  sent: { text: "مرسل", variant: "outline" },
+  accepted: { text: "مقبول", variant: "default" },
+  rejected: { text: "مرفوض", variant: "destructive" },
+};
+
 const DealerOverview = ({
   dealerAccount, dealerName, email, ordersCount,
   totalSpent, invoicesCount, pendingOrders, userId, onNavigate
 }: DealerOverviewProps) => {
   const [recentNotifications, setRecentNotifications] = useState<Notification[]>([]);
   const [dailyQuotes, setDailyQuotes] = useState(0);
+  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
+  const [recentQuotes, setRecentQuotes] = useState<RecentQuote[]>([]);
+  const [recentInvoices, setRecentInvoices] = useState<RecentOrder[]>([]);
   const [accountSummary, setAccountSummary] = useState<OrderSummary>({
     delivered_total: 0, delivered_count: 0, pending_total: 0, pending_count: 0, cancelled_total: 0,
   });
@@ -78,12 +115,41 @@ const DealerOverview = ({
       .limit(5)
       .then(({ data }) => setRecentNotifications((data as Notification[]) || []));
 
-    // Fetch daily quotes
+    // Fetch daily quotes count
     supabase
       .rpc("get_daily_view_count", { _user_id: userId })
       .then(({ data }) => setDailyQuotes(data || 0));
 
-    // Fetch account summary from orders
+    // Fetch recent orders (non-cancelled)
+    supabase
+      .from("orders")
+      .select("id, order_number, status, total_amount, created_at, invoice_url")
+      .eq("user_id", userId)
+      .neq("status", "cancelled")
+      .order("created_at", { ascending: false })
+      .limit(5)
+      .then(({ data }) => setRecentOrders((data as RecentOrder[]) || []));
+
+    // Fetch recent quotes
+    supabase
+      .from("dealer_quotes")
+      .select("id, quote_number, status, total_amount, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(5)
+      .then(({ data }) => setRecentQuotes((data as RecentQuote[]) || []));
+
+    // Fetch recent invoices (orders with invoice_url)
+    supabase
+      .from("orders")
+      .select("id, order_number, status, total_amount, created_at, invoice_url")
+      .eq("user_id", userId)
+      .not("invoice_url", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(5)
+      .then(({ data }) => setRecentInvoices((data as RecentOrder[]) || []));
+
+    // Fetch account summary
     supabase
       .from("orders")
       .select("status, total_amount")
@@ -165,7 +231,6 @@ const DealerOverview = ({
             <p className="text-[11px] text-muted-foreground">ج.م — المشتريات</p>
             <p className="text-[10px] text-muted-foreground/60">{accountSummary.delivered_count} طلب مكتمل</p>
           </div>
-
           <div className="bg-card border border-border rounded-lg p-3.5">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center">
@@ -176,7 +241,6 @@ const DealerOverview = ({
             <p className="text-[11px] text-muted-foreground">ج.م — معلقة</p>
             <p className="text-[10px] text-muted-foreground/60">{accountSummary.pending_count} طلب</p>
           </div>
-
           <div className="bg-card border border-border rounded-lg p-3.5">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -187,7 +251,6 @@ const DealerOverview = ({
             <p className="text-[11px] text-muted-foreground">ج.م — حد الائتمان</p>
             <p className="text-[10px] text-muted-foreground/60">{creditLimit > 0 ? `متاح: ${availableCredit.toLocaleString("ar-EG")}` : "غير محدد"}</p>
           </div>
-
           <div className="bg-card border border-border rounded-lg p-3.5">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-7 h-7 rounded-lg bg-destructive/10 flex items-center justify-center">
@@ -196,6 +259,118 @@ const DealerOverview = ({
             </div>
             <p className="text-lg font-bold text-foreground">{accountSummary.cancelled_total.toLocaleString("ar-EG")}</p>
             <p className="text-[11px] text-muted-foreground">ج.م — ملغاة</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Quotes, Orders, Invoices — 3 columns */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Recent Quotes */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-foreground">عروض الأسعار</h3>
+            <button onClick={() => onNavigate?.("quotes")} className="text-[11px] text-primary hover:underline font-medium">
+              عرض الكل
+            </button>
+          </div>
+          <div className="bg-card border border-border rounded-lg divide-y divide-border">
+            {recentQuotes.length === 0 ? (
+              <div className="p-6 text-center">
+                <Search className="w-7 h-7 mx-auto text-muted-foreground/30 mb-1.5" />
+                <p className="text-xs text-muted-foreground">لا توجد عروض أسعار</p>
+              </div>
+            ) : (
+              recentQuotes.map(q => {
+                const st = quoteStatusLabels[q.status] || quoteStatusLabels.draft;
+                return (
+                  <div key={q.id} className="p-3 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => onNavigate?.("quotes")}>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-medium text-foreground">{q.quote_number}</span>
+                      <Badge variant={st.variant} className="text-[9px] px-1.5 py-0">{st.text}</Badge>
+                    </div>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-[10px] text-muted-foreground">
+                        {new Date(q.created_at).toLocaleDateString("ar-EG", { month: "short", day: "numeric" })}
+                      </span>
+                      <span className="text-xs font-bold text-foreground">{Number(q.total_amount).toLocaleString("ar-EG")} ج.م</span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {/* Recent Orders */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-foreground">الطلبية</h3>
+            <button onClick={() => onNavigate?.("orders")} className="text-[11px] text-primary hover:underline font-medium">
+              عرض الكل
+            </button>
+          </div>
+          <div className="bg-card border border-border rounded-lg divide-y divide-border">
+            {recentOrders.length === 0 ? (
+              <div className="p-6 text-center">
+                <ClipboardList className="w-7 h-7 mx-auto text-muted-foreground/30 mb-1.5" />
+                <p className="text-xs text-muted-foreground">لا توجد طلبات</p>
+              </div>
+            ) : (
+              recentOrders.map(o => {
+                const st = orderStatusLabels[o.status] || orderStatusLabels.pending;
+                return (
+                  <div key={o.id} className="p-3 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => onNavigate?.("orders")}>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-medium text-foreground">{o.order_number}</span>
+                      <Badge variant={st.variant} className="text-[9px] px-1.5 py-0">{st.text}</Badge>
+                    </div>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-[10px] text-muted-foreground">
+                        {new Date(o.created_at).toLocaleDateString("ar-EG", { month: "short", day: "numeric" })}
+                      </span>
+                      <span className="text-xs font-bold text-foreground">{Number(o.total_amount).toLocaleString("ar-EG")} ج.م</span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {/* Recent Invoices */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-foreground">الفواتير</h3>
+            <button onClick={() => onNavigate?.("invoices")} className="text-[11px] text-primary hover:underline font-medium">
+              عرض الكل
+            </button>
+          </div>
+          <div className="bg-card border border-border rounded-lg divide-y divide-border">
+            {recentInvoices.length === 0 ? (
+              <div className="p-6 text-center">
+                <FileText className="w-7 h-7 mx-auto text-muted-foreground/30 mb-1.5" />
+                <p className="text-xs text-muted-foreground">لا توجد فواتير</p>
+              </div>
+            ) : (
+              recentInvoices.map(inv => (
+                <div key={inv.id} className="p-3 hover:bg-muted/30 transition-colors">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-medium text-foreground">{inv.order_number}</span>
+                    {inv.invoice_url && (
+                      <a href={inv.invoice_url} target="_blank" rel="noreferrer" className="text-primary hover:text-primary/80" onClick={e => e.stopPropagation()}>
+                        <Download className="w-3.5 h-3.5" />
+                      </a>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-[10px] text-muted-foreground">
+                      {new Date(inv.created_at).toLocaleDateString("ar-EG", { month: "short", day: "numeric" })}
+                    </span>
+                    <span className="text-xs font-bold text-foreground">{Number(inv.total_amount).toLocaleString("ar-EG")} ج.م</span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
