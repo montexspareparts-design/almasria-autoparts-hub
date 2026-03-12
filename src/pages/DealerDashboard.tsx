@@ -11,7 +11,7 @@ import DealerOrdersList from "@/components/dealer/DealerOrdersList";
 import DealerNotificationsList from "@/components/dealer/DealerNotificationsList";
 import DealerOffers from "@/components/dealer/DealerOffers";
 
-import DealerQuoteBuilder from "@/components/dealer/DealerQuoteBuilder";
+import DealerQuoteBuilder, { type PriceListQuoteData } from "@/components/dealer/DealerQuoteBuilder";
 import DealerPriceLists from "@/components/dealer/DealerPriceLists";
 import DealerFavorites from "@/components/dealer/DealerFavorites";
 import DealerQuickOrder from "@/components/dealer/DealerQuickOrder";
@@ -23,6 +23,7 @@ const DealerDashboard = () => {
   const { user, dealerAccount, isDealer, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<DealerTab>("overview");
+  const [priceListQuoteData, setPriceListQuoteData] = useState<PriceListQuoteData | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -95,11 +96,11 @@ const DealerDashboard = () => {
             onNavigate={(tab) => setActiveTab(tab as DealerTab)}
           />
         );
-      case "quotes": return <DealerQuoteBuilder onNavigateToPriceLists={() => setActiveTab("price_lists")} />;
+      case "quotes": return <DealerQuoteBuilder onNavigateToPriceLists={(data) => { setPriceListQuoteData(data || null); setActiveTab("price_lists"); }} />;
       case "quick_order": return <DealerQuickOrder />;
       case "orders": return <DealerOrdersList userId={user!.id} />;
       case "invoices": return <DealerInvoices userId={user!.id} />;
-      case "price_lists": return <DealerPriceLists onNavigateToQuotes={() => setActiveTab("quotes")} />;
+      case "price_lists": return <DealerPriceLists onNavigateToQuotes={() => setActiveTab("quotes")} editingQuoteData={priceListQuoteData} onClearEditingQuote={() => setPriceListQuoteData(null)} />;
       case "favorites": return <DealerFavorites />;
       case "notifications": return <DealerNotificationsList userId={user!.id} />;
       case "offers": return <DealerOffers />;

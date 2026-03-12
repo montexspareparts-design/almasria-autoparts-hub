@@ -50,9 +50,19 @@ interface SavedQuoteItem {
 
 const DAILY_LIMIT = 20;
 
-interface DealerQuoteBuilderProps {
-  onNavigateToPriceLists?: () => void;
+interface PriceListQuoteData {
+  priceListTitle: string;
+  quoteId: string;
+  quoteNumber: string;
+  items: { productId: string; quantity: number; unitPrice: number }[];
+  notes: string;
 }
+
+interface DealerQuoteBuilderProps {
+  onNavigateToPriceLists?: (quoteData?: PriceListQuoteData) => void;
+}
+
+export type { PriceListQuoteData };
 
 const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps) => {
   const { user, dealerAccount } = useAuth();
@@ -339,9 +349,21 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
     setIsFromPriceList(fromPriceList);
 
     if (fromPriceList && onNavigateToPriceLists) {
-      // Redirect to price lists tab for editing price-list quotes
+      // Extract price list title from notes
+      const priceListTitle = quote.notes?.replace("من كشف الأسعار: ", "") || "";
+      const quoteData: PriceListQuoteData = {
+        priceListTitle,
+        quoteId: quote.id,
+        quoteNumber: quote.quote_number,
+        items: loadedItems.map(i => ({
+          productId: i.product.id,
+          quantity: i.quantity,
+          unitPrice: i.unit_price,
+        })),
+        notes: quote.notes || "",
+      };
       setLoadingQuote(false);
-      onNavigateToPriceLists();
+      onNavigateToPriceLists(quoteData);
       return;
     }
 

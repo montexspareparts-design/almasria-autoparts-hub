@@ -37,11 +37,21 @@ interface Product {
 
 const DAILY_LIMIT = 20;
 
-interface DealerPriceListsProps {
-  onNavigateToQuotes?: () => void;
+interface PriceListQuoteData {
+  priceListTitle: string;
+  quoteId: string;
+  quoteNumber: string;
+  items: { productId: string; quantity: number; unitPrice: number }[];
+  notes: string;
 }
 
-const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
+interface DealerPriceListsProps {
+  onNavigateToQuotes?: () => void;
+  editingQuoteData?: PriceListQuoteData | null;
+  onClearEditingQuote?: () => void;
+}
+
+const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditingQuote }: DealerPriceListsProps) => {
   const { user, dealerAccount } = useAuth();
   const [lists, setLists] = useState<PriceList[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,6 +71,8 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
   const [priceListPrices, setPriceListPrices] = useState<Record<string, number | null>>({});
   const [savingQuote, setSavingQuote] = useState(false);
   const [dealerInfo, setDealerInfo] = useState<{ name: string; phone: string } | null>(null);
+  const [editingQuoteId, setEditingQuoteId] = useState<string | null>(null);
+  const [editingQuoteNumber, setEditingQuoteNumber] = useState<string | null>(null);
 
   // Quote summary state
   const [createdQuote, setCreatedQuote] = useState<{
@@ -78,6 +90,44 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
       fetchDealerInfo();
     }
   }, []);
+
+  // Auto-open price list when editing a quote from price list
+  useEffect(() => {
+    if (!editingQuoteData || lists.length === 0) return;
+    
+    const matchingList = lists.find(l => l.title === editingQuoteData.priceListTitle);
+    if (matchingList) {
+      setEditingQuoteId(editingQuoteData.quoteId);
+      setEditingQuoteNumber(editingQuoteData.quoteNumber);
+      
+      // Load the selected items
+      const loadItems = async () => {
+        const productIds = editingQuoteData.items.map(i => i.productId);
+        const { data: products } = await supabase
+          .from("products")
+          .select("id, name_ar, sku, base_price, sale_price, is_on_sale, image_url, stock_quantity")
+          .in("id", productIds);
+        
+        if (products) {
+          const productMap = new Map(products.map(p => [p.id, p as Product]));
+          const loaded: { product: Product; quantity: number }[] = [];
+          for (const item of editingQuoteData.items) {
+            const product = productMap.get(item.productId);
+            if (product) {
+              loaded.push({ product, quantity: item.quantity });
+              setTierPrices(prev => ({ ...prev, [product.id]: item.unitPrice }));
+            }
+          }
+          setSelectedProducts(loaded);
+        }
+
+        // Open the price list
+        openPriceList(matchingList);
+        onClearEditingQuote?.();
+      };
+      loadItems();
+    }
+  }, [editingQuoteData, lists]);
 
   const fetchDealerInfo = async () => {
     if (!user) return;
@@ -272,7 +322,7 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
     if (selectedProducts.length === 0 || !user) return;
     setSavingQuote(true);
 
-    const quoteNumber = `Q-${Date.now().toString(36).toUpperCase()}`;
+    const quoteNumber = editingQuoteNumber || `Q-${Date.now().toString(36).toUpperCase()}`;
     const items = await Promise.all(
       selectedProducts.map(async (sp) => {
         const price = await getProductPrice(sp.product);
@@ -282,34 +332,61 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
 
     const totalAmount = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
-    const { data: quote, error } = await supabase
-      .from("dealer_quotes")
-      .insert({
-        user_id: user.id,
-        quote_number: quoteNumber,
+    let quoteId = editingQuoteId;
+
+    if (editingQuoteId) {
+      // Update existing quote
+      await supabase.from("dealer_quotes").update({
         total_amount: totalAmount,
         notes: viewingList ? `من كشف الأسعار: ${viewingList.title}` : null,
-      })
-      .select()
-      .single();
+      }).eq("id", editingQuoteId);
+      
+      await supabase.from("dealer_quote_items").delete().eq("quote_id", editingQuoteId);
+      
+      await supabase.from("dealer_quote_items").insert(
+        items.map(i => ({
+          quote_id: editingQuoteId!,
+          product_id: i.product.id,
+          quantity: i.quantity,
+          unit_price: i.price,
+          total_price: i.price * i.quantity,
+        }))
+      );
+      
+      toast({ title: "تم تحديث العرض ✓", description: `رقم العرض: ${quoteNumber}` });
+    } else {
+      // Create new quote
+      const { data: quote, error } = await supabase
+        .from("dealer_quotes")
+        .insert({
+          user_id: user.id,
+          quote_number: quoteNumber,
+          total_amount: totalAmount,
+          notes: viewingList ? `من كشف الأسعار: ${viewingList.title}` : null,
+        })
+        .select()
+        .single();
 
-    if (error || !quote) {
-      toast({ title: "خطأ في حفظ العرض", variant: "destructive" });
-      setSavingQuote(false);
-      return;
+      if (error || !quote) {
+        toast({ title: "خطأ في حفظ العرض", variant: "destructive" });
+        setSavingQuote(false);
+        return;
+      }
+
+      quoteId = (quote as any).id;
+
+      await supabase.from("dealer_quote_items").insert(
+        items.map(i => ({
+          quote_id: quoteId!,
+          product_id: i.product.id,
+          quantity: i.quantity,
+          unit_price: i.price,
+          total_price: i.price * i.quantity,
+        }))
+      );
     }
 
-    await supabase.from("dealer_quote_items").insert(
-      items.map(i => ({
-        quote_id: (quote as any).id,
-        product_id: i.product.id,
-        quantity: i.quantity,
-        unit_price: i.price,
-        total_price: i.price * i.quantity,
-      }))
-    );
-
-    // Record price views
+    // Record price views for new items only
     for (const sp of selectedProducts) {
       await supabase.from("dealer_price_views").insert({ user_id: user.id, product_id: sp.product.id });
     }
@@ -362,6 +439,8 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
     // No auto-download — user clicks the PDF button in toast or summary
 
     setSelectedProducts([]);
+    setEditingQuoteId(null);
+    setEditingQuoteNumber(null);
     setSavingQuote(false);
   };
 
@@ -541,7 +620,7 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => { setViewingList(null); setSelectedProducts([]); setSearchQuery(""); setPdfSignedUrl(null); }}>
+          <Button variant="ghost" size="sm" onClick={() => { setViewingList(null); setSelectedProducts([]); setSearchQuery(""); setPdfSignedUrl(null); setEditingQuoteId(null); setEditingQuoteNumber(null); }}>
             <ArrowLeft className="w-4 h-4 ml-1" />
             رجوع
           </Button>
@@ -549,6 +628,11 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
             <h2 className="text-sm font-bold text-foreground truncate">{viewingList.title}</h2>
             {viewingList.version && <p className="text-[10px] text-muted-foreground">{viewingList.version}</p>}
           </div>
+          {editingQuoteId && (
+            <Badge variant="secondary" className="text-xs">
+              تعديل العرض: {editingQuoteNumber}
+            </Badge>
+          )}
           {pdfSignedUrl && (
             <Button variant="outline" size="sm" onClick={downloadPdf}>
               <Download className="w-4 h-4 ml-1" />
@@ -685,7 +769,7 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
                     ) : (
                       <ShoppingCart className="w-3.5 h-3.5" />
                     )}
-                    إرسال كعرض سعر ({selectedProducts.length} صنف)
+                    {editingQuoteId ? `تحديث العرض (${selectedProducts.length} صنف)` : `إرسال كعرض سعر (${selectedProducts.length} صنف)`}
                   </Button>
                   <Button
                     size="sm"
