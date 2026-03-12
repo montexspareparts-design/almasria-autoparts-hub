@@ -16,6 +16,8 @@ interface QuoteData {
   items: QuoteItem[];
   totalAmount: number;
   priceListTitle?: string;
+  dealerName?: string;
+  dealerPhone?: string;
 }
 
 function formatNum(n: number): string {
