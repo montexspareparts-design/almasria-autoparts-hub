@@ -22,7 +22,7 @@ const paymentMethods = [
     label: "فودافون كاش",
     icon: Wallet,
     accountName: "Ahmed Kamal Abdalaziz",
-    accountNumber: "01153961008",
+    accountNumber: "01020412358",
     instructions: "حوّل المبلغ المطلوب على رقم المحفظة التالي ثم أرسل إيصال التحويل عبر واتساب",
     color: "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800",
     iconColor: "text-red-600",
