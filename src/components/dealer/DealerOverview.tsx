@@ -144,79 +144,70 @@ const DealerOverview = ({
   ];
 
   return (
-    <div className="space-y-5 max-w-5xl mx-auto">
+    <div className="space-y-4 sm:space-y-5 max-w-5xl mx-auto">
       {/* Header: Name + Tier */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black text-foreground leading-tight">
+          <h1 className="text-lg sm:text-2xl font-black text-foreground leading-tight">
             مرحباً {dealerName} 👋
           </h1>
           {dealerAccount && (
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">
               {tierLabels[dealerAccount.tier] || dealerAccount.tier}
             </p>
           )}
         </div>
       </div>
 
-      {/* 1. Stats — الأهم: نظرة سريعة على الأرقام */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {/* 1. Stats — نظرة سريعة */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
         {stats.map((s, i) => (
           <button
             key={i}
             onClick={() => onNavigate?.(s.tab)}
-            className={`relative bg-gradient-to-br ${s.color} border border-border/60 rounded-2xl p-4 text-right transition-all hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.97] group overflow-hidden`}
+            className={`relative bg-gradient-to-br ${s.color} border border-border/60 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-right transition-all hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.97] group overflow-hidden`}
           >
             {s.highlight && (
-              <span className="absolute top-2 left-2 w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
+              <span className="absolute top-2 left-2 w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-amber-500 animate-pulse" />
             )}
-            <s.icon className={`w-5 h-5 ${s.iconColor} mb-2 opacity-70 group-hover:opacity-100 transition-opacity`} />
-            <p className="text-2xl font-black text-foreground leading-none">
+            <s.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${s.iconColor} mb-1 sm:mb-2 opacity-70`} />
+            <p className="text-xl sm:text-2xl font-black text-foreground leading-none">
               {s.value}
-              {s.suffix && <span className="text-xs font-medium text-muted-foreground mr-1">{s.suffix}</span>}
+              {s.suffix && <span className="text-[10px] sm:text-xs font-medium text-muted-foreground mr-1">{s.suffix}</span>}
             </p>
-            <p className="text-[11px] text-muted-foreground font-medium mt-1.5">{s.label}</p>
+            <p className="text-[10px] sm:text-[11px] text-muted-foreground font-medium mt-1">{s.label}</p>
           </button>
         ))}
       </div>
 
-      {/* 2. Quick Actions — الإجراءات السريعة */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      {/* 2. Quick Actions — مضغوطة على الموبايل */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         <button
           onClick={() => onNavigate?.("quotes")}
-          className="bg-primary text-primary-foreground rounded-2xl p-5 text-right hover:brightness-110 transition-all shadow-lg shadow-primary/20 active:scale-[0.98] group"
+          className="bg-primary text-primary-foreground rounded-xl sm:rounded-2xl p-3 sm:p-5 text-center sm:text-right hover:brightness-110 transition-all shadow-md shadow-primary/20 active:scale-[0.98] group"
         >
-          <div className="flex items-center justify-between">
-            <ArrowLeft className="w-5 h-5 opacity-60 group-hover:opacity-100 group-hover:-translate-x-1 transition-all" />
-            <span className="text-3xl">🔍</span>
-          </div>
-          <p className="text-base font-bold mt-3">اطلب قطع غيار</p>
-          <p className="text-xs opacity-75 mt-0.5">ابحث واطلب عرض سعر</p>
+          <span className="text-2xl sm:text-3xl block">🔍</span>
+          <p className="text-xs sm:text-base font-bold mt-1.5 sm:mt-3 leading-tight">اطلب قطع غيار</p>
+          <p className="text-[9px] sm:text-xs opacity-75 mt-0.5 hidden sm:block">ابحث واطلب عرض سعر</p>
         </button>
 
         <button
           onClick={() => onNavigate?.("price_lists")}
-          className="bg-card border-2 border-border rounded-2xl p-5 text-right hover:border-primary/40 hover:shadow-md transition-all active:scale-[0.98] group"
+          className="bg-card border border-border rounded-xl sm:rounded-2xl p-3 sm:p-5 text-center sm:text-right hover:border-primary/40 hover:shadow-md transition-all active:scale-[0.98] group"
         >
-          <div className="flex items-center justify-between">
-            <ArrowLeft className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-60 group-hover:-translate-x-1 transition-all" />
-            <span className="text-3xl">📋</span>
-          </div>
-          <p className="text-base font-bold text-foreground mt-3">كشوفات الأسعار</p>
-          <p className="text-xs text-muted-foreground mt-0.5">اطلع على الأسعار المحدثة</p>
+          <span className="text-2xl sm:text-3xl block">📋</span>
+          <p className="text-xs sm:text-base font-bold text-foreground mt-1.5 sm:mt-3 leading-tight">كشوفات الأسعار</p>
+          <p className="text-[9px] sm:text-xs text-muted-foreground mt-0.5 hidden sm:block">الأسعار المحدثة</p>
         </button>
 
         <button
           onClick={() => onNavigate?.("orders")}
-          className="bg-card border-2 border-border rounded-2xl p-5 text-right hover:border-primary/40 hover:shadow-md transition-all active:scale-[0.98] group"
+          className="bg-card border border-border rounded-xl sm:rounded-2xl p-3 sm:p-5 text-center sm:text-right hover:border-primary/40 hover:shadow-md transition-all active:scale-[0.98] group"
         >
-          <div className="flex items-center justify-between">
-            <ArrowLeft className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-60 group-hover:-translate-x-1 transition-all" />
-            <span className="text-3xl">📦</span>
-          </div>
-          <p className="text-base font-bold text-foreground mt-3">تابع طلباتك</p>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {pendingOrders > 0 ? `${pendingOrders} طلب قيد التنفيذ` : "حالة الطلبات"}
+          <span className="text-2xl sm:text-3xl block">📦</span>
+          <p className="text-xs sm:text-base font-bold text-foreground mt-1.5 sm:mt-3 leading-tight">تابع طلباتك</p>
+          <p className="text-[9px] sm:text-xs text-muted-foreground mt-0.5 hidden sm:block">
+            {pendingOrders > 0 ? `${pendingOrders} قيد التنفيذ` : "حالة الطلبات"}
           </p>
         </button>
       </div>
