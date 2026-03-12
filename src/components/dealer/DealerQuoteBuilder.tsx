@@ -66,13 +66,25 @@ const DealerQuoteBuilder = () => {
   const [editingQuoteNumber, setEditingQuoteNumber] = useState("");
   const [loadingQuote, setLoadingQuote] = useState(false);
   const [isFromPriceList, setIsFromPriceList] = useState(false);
+  const [dealerInfo, setDealerInfo] = useState<{ name: string; phone: string } | null>(null);
 
   useEffect(() => {
     if (user) {
       fetchDailyViews();
       fetchSavedQuotes();
+      fetchDealerInfo();
     }
   }, [user]);
+
+  const fetchDealerInfo = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("dealer_applications")
+      .select("business_name, phone")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (data) setDealerInfo({ name: data.business_name, phone: data.phone });
+  };
 
   const fetchDailyViews = async () => {
     const { data } = await supabase.rpc("get_daily_view_count", { _user_id: user!.id });
