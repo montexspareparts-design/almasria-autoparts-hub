@@ -400,14 +400,43 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
                       </div>
                     )}
 
-                    {/* Payment Instructions for electronic payments */}
+                    {/* Payment CTA for electronic payments */}
                     {["instapay", "wallet", "bank_transfer"].includes(order.payment_method || "") &&
-                      ["pending", "confirmed", "pending_approval"].includes(order.status) && (
-                      <PaymentInstructionsBanner
-                        paymentMethod={order.payment_method!}
-                        orderNumber={order.order_number}
-                        totalAmount={Number(order.total_amount)}
-                        compact
+                      ["pending", "confirmed", "awaiting_payment"].includes(order.status) && (
+                      <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-700 rounded-xl p-4 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center shrink-0">
+                            <Wallet className="w-5 h-5 text-amber-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="text-sm font-bold text-amber-800 dark:text-amber-300">💳 ادفع لاستكمال إجراءات الطلب</h4>
+                            <p className="text-[11px] text-amber-700 dark:text-amber-400 mt-0.5">حوّل المبلغ المطلوب واستكمل الخطوات من صفحة الدفع</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            className="flex-1 gap-2"
+                            onClick={() => onNavigateToPayment?.()}
+                          >
+                            <CreditCard className="w-4 h-4" />
+                            انتقل لوسائل الدفع
+                          </Button>
+                          <span className="text-sm font-black text-primary">{Number(order.total_amount).toLocaleString("ar-EG")} ج.م</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Pending Approval Banner */}
+                    {order.status === "pending_approval" && (
+                      <div className="bg-orange-50 dark:bg-orange-950/30 border border-orange-300 dark:border-orange-700 rounded-xl p-4 flex items-start gap-3">
+                        <AlertTriangle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-bold text-orange-800 dark:text-orange-300">بانتظار موافقتك على تعديلات الإدارة</p>
+                          <p className="text-xs text-orange-700 dark:text-orange-400 mt-1">راجع تفاصيل الطلب المحدّثة أدناه ووافق أو ارفض</p>
+                        </div>
+                      </div>
+                    )}
                       />
                     )}
 
