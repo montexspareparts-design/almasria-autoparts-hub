@@ -394,10 +394,7 @@ const DealerQuoteBuilder = () => {
                 <p className="text-sm font-medium text-foreground truncate">{product.name_ar}</p>
                 <p className="text-[11px] text-muted-foreground font-mono">{product.sku}</p>
               </div>
-              <div className="shrink-0 flex items-center gap-2">
-                <span className="text-xs font-bold text-primary">
-                  {(product.is_on_sale && product.sale_price ? product.sale_price : product.base_price).toLocaleString("ar-EG")} ج.م
-                </span>
+              <div className="shrink-0">
                 <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
                   <Plus className="w-3.5 h-3.5 text-primary" />
                 </div>
