@@ -231,12 +231,11 @@ const DealerLogin = () => {
   }
 
   const handleGoogleLogin = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/dealer-login` },
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: `${window.location.origin}/dealer-login`,
     });
-    if (error) {
-      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+    if (result.error) {
+      toast({ title: "خطأ", description: String(result.error), variant: "destructive" });
     }
   };
 
