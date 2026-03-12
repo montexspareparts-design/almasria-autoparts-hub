@@ -800,6 +800,20 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
                   </Button>
                   <Button
                     size="sm"
+                    variant="secondary"
+                    className="w-full h-9 text-xs gap-1 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20"
+                    onClick={convertDirectToOrder}
+                    disabled={savingQuote}
+                  >
+                    {savingQuote ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <ShoppingCart className="w-3.5 h-3.5" />
+                    )}
+                    تحويل لطلبية مباشرة ({selectedProducts.length} صنف)
+                  </Button>
+                  <Button
+                    size="sm"
                     variant="ghost"
                     className="w-full h-7 text-[10px] text-muted-foreground"
                     onClick={() => setSelectedProducts([])}
