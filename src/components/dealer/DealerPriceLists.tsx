@@ -73,8 +73,21 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
 
   useEffect(() => {
     fetchLists();
-    if (user) fetchDailyViews();
+    if (user) {
+      fetchDailyViews();
+      fetchDealerInfo();
+    }
   }, []);
+
+  const fetchDealerInfo = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("dealer_applications")
+      .select("business_name, phone")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (data) setDealerInfo({ name: data.business_name, phone: data.phone });
+  };
 
   const fetchLists = async () => {
     const { data } = await supabase
