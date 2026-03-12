@@ -1,19 +1,20 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles, ShoppingCart, Plus, Loader2 } from "lucide-react";
+import { TrendingUp, Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "@/hooks/use-toast";
 
-interface RecommendedProduct {
+interface PopularProduct {
   id: string;
   name_ar: string;
   sku: string;
   image_url: string | null;
   base_price: number;
   brand: string;
-  category_name?: string;
+  min_order_qty: number;
+  stock_quantity: number;
 }
 
 const brandLabels: Record<string, string> = {
@@ -25,81 +26,33 @@ const brandLabels: Record<string, string> = {
 };
 
 const DealerRecommendations = ({ userId, tier }: { userId: string; tier?: string }) => {
-  const [products, setProducts] = useState<RecommendedProduct[]>([]);
+  const [products, setProducts] = useState<PopularProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const { addItem } = useCart();
 
   useEffect(() => {
-    fetchRecommendations();
-  }, [userId]);
+    fetchPopular();
+  }, []);
 
-  const fetchRecommendations = async () => {
+  const fetchPopular = async () => {
     try {
-      // 1. Get all product IDs this dealer has ordered
-      const { data: orderItems } = await supabase
-        .from("order_items")
-        .select("product_id, orders!inner(user_id)")
-        .eq("orders.user_id", userId);
-
-      const orderedProductIds = [...new Set((orderItems || []).map(i => i.product_id))];
-
-      if (orderedProductIds.length === 0) {
-        // No purchase history — show featured/popular products instead
-        const { data: featured } = await supabase
-          .from("products")
-          .select("id, name_ar, sku, image_url, base_price, brand, category_id")
-          .eq("is_active", true)
-          .eq("is_featured", true)
-          .limit(8);
-        
-        setProducts((featured || []).map(p => ({
-          ...p,
-          brand: p.brand as string,
-        })));
-        setLoading(false);
-        return;
-      }
-
-      // 2. Get categories and brands from ordered products
-      const { data: orderedProducts } = await supabase
+      const { data } = await supabase
         .from("products")
-        .select("category_id, brand")
-        .in("id", orderedProductIds);
-
-      const categories = [...new Set((orderedProducts || []).map(p => p.category_id).filter(Boolean))] as string[];
-      const brands = [...new Set((orderedProducts || []).map(p => p.brand))];
-
-      // 3. Fetch products in same categories/brands, excluding already ordered
-      let query = supabase
-        .from("products")
-        .select("id, name_ar, sku, image_url, base_price, brand, category_id")
+        .select("id, name_ar, sku, image_url, base_price, brand, min_order_qty, stock_quantity")
         .eq("is_active", true)
-        .limit(12);
+        .gt("stock_quantity", 20)
+        .order("stock_quantity", { ascending: false })
+        .limit(8);
 
-      if (categories.length > 0) {
-        query = query.in("category_id", categories);
-      }
-
-      const { data: candidates } = await query;
-
-      // Filter out already-ordered products and shuffle
-      const filtered = (candidates || [])
-        .filter(p => !orderedProductIds.includes(p.id))
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 8);
-
-      setProducts(filtered.map(p => ({
-        ...p,
-        brand: p.brand as string,
-      })));
+      setProducts((data || []).sort(() => Math.random() - 0.5));
     } catch (err) {
-      console.error("Failed to fetch recommendations:", err);
+      console.error("Failed to fetch popular products:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAddToCart = (product: RecommendedProduct) => {
+  const handleAddToCart = (product: PopularProduct) => {
     addItem({
       id: product.id,
       name_ar: product.name_ar,
@@ -107,8 +60,8 @@ const DealerRecommendations = ({ userId, tier }: { userId: string; tier?: string
       image_url: product.image_url,
       unit_price: product.base_price,
       quantity: 1,
-      stock_quantity: 100,
-      min_order_qty: 1,
+      stock_quantity: product.stock_quantity,
+      min_order_qty: product.min_order_qty,
       brand: product.brand,
     });
     toast({
@@ -121,8 +74,8 @@ const DealerRecommendations = ({ userId, tier }: { userId: string; tier?: string
     return (
       <div className="space-y-2">
         <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5">
-          <Sparkles className="w-4 h-4 text-primary" />
-          مقترحات لك
+          <TrendingUp className="w-4 h-4 text-primary" />
+          الأكثر طلباً
         </h3>
         <div className="flex justify-center py-6">
           <Loader2 className="w-5 h-5 animate-spin text-primary" />
@@ -137,10 +90,10 @@ const DealerRecommendations = ({ userId, tier }: { userId: string; tier?: string
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5">
-          <Sparkles className="w-4 h-4 text-primary" />
-          مقترحات لك
+          <TrendingUp className="w-4 h-4 text-primary" />
+          الأكثر طلباً
         </h3>
-        <span className="text-[10px] text-muted-foreground">بناءً على مشترياتك</span>
+        <span className="text-[10px] text-muted-foreground">متوفر للطلب الفوري</span>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
@@ -149,7 +102,6 @@ const DealerRecommendations = ({ userId, tier }: { userId: string; tier?: string
             key={p.id}
             className="bg-card border border-border rounded-lg overflow-hidden hover:border-primary/30 hover:shadow-sm transition-all group"
           >
-            {/* Image */}
             <div className="aspect-square bg-muted/50 relative overflow-hidden">
               <img
                 src={p.image_url || "/placeholder.svg"}
@@ -162,7 +114,6 @@ const DealerRecommendations = ({ userId, tier }: { userId: string; tier?: string
               </Badge>
             </div>
 
-            {/* Info */}
             <div className="p-2.5">
               <p className="text-[11px] font-medium text-foreground line-clamp-2 leading-relaxed mb-1">
                 {p.name_ar}
