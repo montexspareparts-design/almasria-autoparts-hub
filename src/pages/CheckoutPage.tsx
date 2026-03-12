@@ -5,6 +5,7 @@ import {
   ArrowRight, Truck, Zap, Store, CreditCard, Banknote, Smartphone, Building2,
   Wallet, ShieldCheck, Package, Loader2
 } from "lucide-react";
+import PaymentInstructionsBanner from "@/components/PaymentInstructionsBanner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -239,6 +240,16 @@ const CheckoutPage = () => {
                     </label>
                   ))}
                 </RadioGroup>
+                {["instapay", "wallet", "bank_transfer"].includes(payment) && (
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-4">
+                    <PaymentInstructionsBanner
+                      paymentMethod={payment}
+                      orderNumber="(سيتم تحديده بعد التأكيد)"
+                      totalAmount={orderTotal}
+                      compact
+                    />
+                  </motion.div>
+                )}
               </motion.div>
             </div>
 

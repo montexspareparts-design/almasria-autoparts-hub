@@ -6,6 +6,7 @@ import {
   ChevronUp, ArrowRight, ShoppingCart, MapPin, CreditCard, CalendarDays,
   CircleDot, Phone
 } from "lucide-react";
+import PaymentInstructionsBanner from "@/components/PaymentInstructionsBanner";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -278,6 +279,16 @@ const MyOrdersPage = () => {
                                   <p className="text-xs text-blue-800 dark:text-blue-300">{order.notes}</p>
                                 </div>
                               </div>
+                            )}
+
+                            {/* Payment Instructions for electronic payments */}
+                            {["instapay", "wallet", "bank_transfer"].includes(order.payment_method || "") &&
+                              ["pending", "confirmed"].includes(order.status) && (
+                              <PaymentInstructionsBanner
+                                paymentMethod={order.payment_method!}
+                                orderNumber={order.order_number}
+                                totalAmount={Number(order.total_amount)}
+                              />
                             )}
 
                             {/* Order Items */}
