@@ -67,7 +67,19 @@ const Navbar = () => {
 
   const toggleLang = () => setLang(lang === "ar" ? "en" : "ar");
 
-  const links = [
+  const isDealer = !!dealerAccount;
+
+  // B2B links for dealers — simplified portal navigation
+  const dealerLinks = [
+    { label: lang === "ar" ? "الرئيسية" : "Home", href: "/", isRoute: true },
+    { label: lang === "ar" ? "لوحة التحكم" : "Dashboard", href: "/dealer", isRoute: true },
+    { label: lang === "ar" ? "المنتجات" : "Products", href: "/products", isRoute: true },
+    { label: lang === "ar" ? "طلباتي" : "My Orders", href: "/dealer?tab=orders", isRoute: true },
+    { label: lang === "ar" ? "كشوفات الأسعار" : "Price Lists", href: "/dealer?tab=prices", isRoute: true },
+  ];
+
+  // B2C links for regular visitors
+  const visitorLinks = [
     { label: t("nav.home"), href: "/#hero" },
     { label: t("nav.about"), href: "/about", isRoute: true },
     { label: t("nav.genuine_parts"), href: "/products/toyota-genuine", isRoute: true },
@@ -75,6 +87,8 @@ const Navbar = () => {
     { label: t("nav.mtx"), href: "/mtx", isRoute: true },
     { label: t("nav.contact"), href: "/contact", isRoute: true },
   ];
+
+  const links = isDealer ? dealerLinks : visitorLinks;
 
   const renderDesktopLink = (link: typeof links[0]) => {
     const active = isLinkActive(link.href, link.isRoute);
@@ -149,7 +163,7 @@ const Navbar = () => {
           {/* Desktop: Center Navigation */}
           <div className="hidden lg:flex items-center gap-5 xl:gap-7">
             {links.map(renderDesktopLink)}
-            {isWholesaleDealer && (
+            {!isDealer && isWholesaleDealer && (
               <Link
                 to="/catalogs"
                 className={`relative py-1.5 text-[13px] font-semibold tracking-wide transition-all duration-200 group flex items-center gap-1.5 ${
@@ -170,14 +184,16 @@ const Navbar = () => {
             <button onClick={toggleLang} className="text-secondary-foreground/70 hover:text-primary transition-colors p-2 touch-manipulation text-[11px] font-bold">
               {lang === "ar" ? "EN" : "عربي"}
             </button>
-            <button onClick={() => navigate("/cart")} className="text-secondary-foreground/70 hover:text-primary transition-colors p-2 touch-manipulation relative">
-              <ShoppingCart className="w-[18px] h-[18px]" />
-              {itemCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[9px] font-black min-w-[16px] h-[16px] rounded-full flex items-center justify-center leading-none">
-                  {itemCount}
-                </span>
-              )}
-            </button>
+            {!isDealer && (
+              <button onClick={() => navigate("/cart")} className="text-secondary-foreground/70 hover:text-primary transition-colors p-2 touch-manipulation relative">
+                <ShoppingCart className="w-[18px] h-[18px]" />
+                {itemCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[9px] font-black min-w-[16px] h-[16px] rounded-full flex items-center justify-center leading-none">
+                    {itemCount}
+                  </span>
+                )}
+              </button>
+            )}
             <NotificationBell />
             <button
               onClick={() => navigate(user ? (dealerAccount ? "/dealer" : "/dealer-apply") : "/auth")}
@@ -198,44 +214,28 @@ const Navbar = () => {
               {lang === "ar" ? "English" : "عربي"}
             </button>
 
-            {/* Separator */}
             <div className="w-px h-5 bg-secondary-foreground/10 mx-1" />
 
-            {/* Cart */}
-            <button
-              onClick={() => navigate("/cart")}
-              className="relative text-secondary-foreground/60 hover:text-secondary-foreground transition-colors p-2 rounded-lg hover:bg-secondary-foreground/5"
-            >
-              <ShoppingCart className="w-[18px] h-[18px]" />
-              {itemCount > 0 && (
-                <span className="absolute top-0.5 right-0.5 bg-primary text-primary-foreground text-[9px] font-black min-w-[15px] h-[15px] rounded-full flex items-center justify-center leading-none ring-2 ring-secondary">
-                  {itemCount}
-                </span>
-              )}
-            </button>
+            {/* Cart — B2C only */}
+            {!isDealer && (
+              <button
+                onClick={() => navigate("/cart")}
+                className="relative text-secondary-foreground/60 hover:text-secondary-foreground transition-colors p-2 rounded-lg hover:bg-secondary-foreground/5"
+              >
+                <ShoppingCart className="w-[18px] h-[18px]" />
+                {itemCount > 0 && (
+                  <span className="absolute top-0.5 right-0.5 bg-primary text-primary-foreground text-[9px] font-black min-w-[15px] h-[15px] rounded-full flex items-center justify-center leading-none ring-2 ring-secondary">
+                    {itemCount}
+                  </span>
+                )}
+              </button>
+            )}
 
             {/* Notifications */}
             <NotificationBell />
 
             {user ? (
               <>
-                {/* Separator */}
-                <div className="w-px h-5 bg-secondary-foreground/10 mx-1" />
-
-                {/* My Orders */}
-                <Link
-                  to="/my-orders"
-                  className={`flex items-center gap-1.5 text-[13px] font-semibold px-2.5 py-1.5 rounded-lg transition-colors ${
-                    location.pathname === "/my-orders"
-                      ? "text-primary bg-primary/10"
-                      : "text-secondary-foreground/60 hover:text-secondary-foreground hover:bg-secondary-foreground/5"
-                  }`}
-                >
-                  <ClipboardList className="w-3.5 h-3.5" />
-                  {lang === "ar" ? "طلباتي" : "My Orders"}
-                </Link>
-
-                {/* Separator */}
                 <div className="w-px h-5 bg-secondary-foreground/10 mx-1" />
 
                 {isAdmin && (
@@ -249,16 +249,32 @@ const Navbar = () => {
                   </Button>
                 )}
 
-                {/* Dealer Account Button */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5 text-[13px] font-semibold h-8 px-3 border-secondary-foreground/15 hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
-                  onClick={() => navigate(dealerAccount ? "/dealer" : "/dealer-apply")}
-                >
-                  <User className="w-3.5 h-3.5" />
-                  {dealerAccount ? t("nav.dealer_account") : (lang === "ar" ? "تقديم طلب اعتماد" : "Apply as Dealer")}
-                </Button>
+                {/* B2C: show orders + dealer apply */}
+                {!isDealer && (
+                  <>
+                    <Link
+                      to="/my-orders"
+                      className={`flex items-center gap-1.5 text-[13px] font-semibold px-2.5 py-1.5 rounded-lg transition-colors ${
+                        location.pathname === "/my-orders"
+                          ? "text-primary bg-primary/10"
+                          : "text-secondary-foreground/60 hover:text-secondary-foreground hover:bg-secondary-foreground/5"
+                      }`}
+                    >
+                      <ClipboardList className="w-3.5 h-3.5" />
+                      {lang === "ar" ? "طلباتي" : "My Orders"}
+                    </Link>
+                    <div className="w-px h-5 bg-secondary-foreground/10 mx-1" />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5 text-[13px] font-semibold h-8 px-3 border-secondary-foreground/15 hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
+                      onClick={() => navigate("/dealer-apply")}
+                    >
+                      <Briefcase className="w-3.5 h-3.5" />
+                      {lang === "ar" ? "تقديم طلب اعتماد" : "Apply as Dealer"}
+                    </Button>
+                  </>
+                )}
 
                 {/* Logout */}
                 <button
@@ -364,17 +380,21 @@ const Navbar = () => {
                         {t("nav.admin")}
                       </Button>
                     )}
-                    {isWholesaleDealer && (
+                    {!isDealer && isWholesaleDealer && (
                       <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-primary font-semibold" onClick={() => { navigate("/catalogs"); setIsOpen(false); }}>
                         <BookOpen className="w-4 h-4" /> {t("nav.catalogs")}
                       </Button>
                     )}
-                    <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-secondary-foreground/70 font-semibold" onClick={() => { navigate("/my-orders"); setIsOpen(false); }}>
-                      <ClipboardList className="w-4 h-4" /> {lang === "ar" ? "طلباتي" : "My Orders"}
-                    </Button>
-                    <Button variant="outline" size="sm" className="w-full gap-2 font-semibold" onClick={() => { navigate(dealerAccount ? "/dealer" : "/dealer-apply"); setIsOpen(false); }}>
-                      <User className="w-4 h-4" /> {dealerAccount ? t("nav.dealer_account") : (lang === "ar" ? "تقديم طلب اعتماد" : "Apply as Dealer")}
-                    </Button>
+                    {!isDealer && (
+                      <>
+                        <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-secondary-foreground/70 font-semibold" onClick={() => { navigate("/my-orders"); setIsOpen(false); }}>
+                          <ClipboardList className="w-4 h-4" /> {lang === "ar" ? "طلباتي" : "My Orders"}
+                        </Button>
+                        <Button variant="outline" size="sm" className="w-full gap-2 font-semibold" onClick={() => { navigate("/dealer-apply"); setIsOpen(false); }}>
+                          <Briefcase className="w-4 h-4" /> {lang === "ar" ? "تقديم طلب اعتماد" : "Apply as Dealer"}
+                        </Button>
+                      </>
+                    )}
                     <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-secondary-foreground/50 font-semibold" onClick={() => { signOut(); setIsOpen(false); }}>
                       <LogOut className="w-4 h-4" /> {t("nav.logout")}
                     </Button>
