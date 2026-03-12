@@ -20,14 +20,33 @@ interface Notification {
   created_at: string;
 }
 
-/** Determine where a notification should navigate */
-const getNotificationTarget = (n: Notification): { path: string; tab?: string } | null => {
+/** Determine where a notification should navigate based on user role */
+const getNotificationTarget = (n: Notification, isAdmin: boolean): { path: string; tab?: string; section?: string } | null => {
   const msg = (n.message + " " + n.title).toLowerCase();
 
+  // Admin-specific routing
+  if (isAdmin) {
+    if (msg.includes("طلب تسجيل") || msg.includes("تاجر جديد") || n.type === "dealer_application") {
+      return { path: "/admin", section: "dealers" };
+    }
+    if (n.type === "order" || msg.includes("طلب جديد")) {
+      return { path: "/admin", section: "orders" };
+    }
+    if (msg.includes("كشف أسعار") || n.type === "price_list") {
+      return { path: "/admin", section: "price-lists" };
+    }
+    if (msg.includes("منتج") || n.type === "product") {
+      return { path: "/admin", section: "products" };
+    }
+    // Fallback for admin
+    return { path: "/admin", section: "analytics" };
+  }
+
+  // Dealer routing
   if (n.type === "order" || n.type === "order_edit") {
     return { path: "/dealer", tab: "orders" };
   }
-  if (msg.includes("كشف أسعار") || msg.includes("price")) {
+  if (msg.includes("كشف أسعار") || msg.includes("price") || n.type === "price_list") {
     return { path: "/dealer", tab: "price-lists" };
   }
   if (msg.includes("عرض") && msg.includes("سعر")) {
@@ -35,6 +54,9 @@ const getNotificationTarget = (n: Notification): { path: string; tab?: string } 
   }
   if (msg.includes("فاتورة") || msg.includes("invoice")) {
     return { path: "/dealer", tab: "invoices" };
+  }
+  if (n.type === "stock_alert" || n.type === "offer") {
+    return { path: "/dealer", tab: "stock-alerts" };
   }
   if (n.type === "info" || n.type === "success" || n.type === "warning") {
     return { path: "/dealer", tab: "notifications" };
