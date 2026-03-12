@@ -7,7 +7,7 @@ const PAYMENT_ACCOUNTS = [
     method: "instapay",
     label: "InstaPay",
     accountName: "Ahmed Kamal Abdalaziz",
-    accountNumber: "01153961008",
+    accountNumber: "01020412358",
     payLink: "https://ipn.eg/S/drmado/instapay/08n56S",
     instructions: "ادفع مباشرة عبر رابط InstaPay أو حوّل على الرقم التالي ثم أرسل إيصال التحويل عبر واتساب",
   },
@@ -15,7 +15,7 @@ const PAYMENT_ACCOUNTS = [
     method: "wallet",
     label: "فودافون كاش / محفظة إلكترونية",
     accountName: "Ahmed Kamal Abdalaziz",
-    accountNumber: "01153961008",
+    accountNumber: "01020412358",
     instructions: "حوّل المبلغ المطلوب على رقم المحفظة التالي ثم أرسل إيصال التحويل عبر واتساب",
   },
   {
