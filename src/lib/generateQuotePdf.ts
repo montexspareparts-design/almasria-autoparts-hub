@@ -94,9 +94,9 @@ function buildQuoteHtml(data: QuoteData): string {
       </div>` : ""}
 
       <!-- Footer -->
-      <div style="text-align:center;padding:16px 30px;border-top:1px solid #eee;margin-top:16px">
-        <div style="color:#aaa;font-size:10px">Toyota Genuine Parts — قطع غيار تويوتا الأصلية</div>
-        <div style="color:#bbb;font-size:9px;margin-top:3px">هذا العرض ساري لمدة 7 أيام من تاريخ الإصدار</div>
+      <div style="text-align:center;padding:16px 30px;border-top:2px solid #dc2626;margin-top:16px">
+        <div style="color:#dc2626;font-size:11px;font-weight:600">Toyota Genuine Parts — قطع غيار تويوتا الأصلية</div>
+        <div style="color:#999;font-size:9px;margin-top:4px">هذا العرض ساري لمدة 7 أيام من تاريخ الإصدار</div>
       </div>
     </div>
   `;
