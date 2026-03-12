@@ -37,11 +37,21 @@ interface Product {
 
 const DAILY_LIMIT = 20;
 
-interface DealerPriceListsProps {
-  onNavigateToQuotes?: () => void;
+interface PriceListQuoteData {
+  priceListTitle: string;
+  quoteId: string;
+  quoteNumber: string;
+  items: { productId: string; quantity: number; unitPrice: number }[];
+  notes: string;
 }
 
-const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
+interface DealerPriceListsProps {
+  onNavigateToQuotes?: () => void;
+  editingQuoteData?: PriceListQuoteData | null;
+  onClearEditingQuote?: () => void;
+}
+
+const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditingQuote }: DealerPriceListsProps) => {
   const { user, dealerAccount } = useAuth();
   const [lists, setLists] = useState<PriceList[]>([]);
   const [loading, setLoading] = useState(true);
