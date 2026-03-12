@@ -61,6 +61,7 @@ const stageIndex = (status: string) => {
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   pending: { label: "تم استلام الطلب", variant: "secondary" },
   confirmed: { label: "قيد المراجعة", variant: "default" },
+  pending_approval: { label: "بانتظار موافقتك", variant: "outline" },
   processing: { label: "جاري التجهيز", variant: "default" },
   ready: { label: "جاهز للاستلام", variant: "default" },
   delivered: { label: "تم التسليم", variant: "default" },
