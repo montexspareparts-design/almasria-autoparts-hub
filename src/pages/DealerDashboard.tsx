@@ -20,6 +20,7 @@ import DealerAccountSettings from "@/components/dealer/DealerAccountSettings";
 import DealerStatement from "@/components/dealer/DealerStatement";
 import DealerPayment from "@/components/dealer/DealerPayment";
 import DealerStockAlerts from "@/components/dealer/DealerStockAlerts";
+import DealerOnboarding from "@/components/dealer/DealerOnboarding";
 
 const DealerDashboard = () => {
   const { user, dealerAccount, isDealer, loading: authLoading, signOut } = useAuth();
