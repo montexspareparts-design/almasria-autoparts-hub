@@ -15,6 +15,8 @@ import DealerQuoteBuilder from "@/components/dealer/DealerQuoteBuilder";
 import DealerPriceLists from "@/components/dealer/DealerPriceLists";
 import DealerFavorites from "@/components/dealer/DealerFavorites";
 import DealerQuickOrder from "@/components/dealer/DealerQuickOrder";
+import DealerInvoices from "@/components/dealer/DealerInvoices";
+import DealerAccountSettings from "@/components/dealer/DealerAccountSettings";
 
 const DealerDashboard = () => {
   const { user, dealerAccount, isDealer, loading: authLoading, signOut } = useAuth();
@@ -68,6 +70,7 @@ const DealerDashboard = () => {
             ordersCount={orders.length}
             totalSpent={totalSpent}
             invoicesCount={invoicesCount}
+            onNavigate={(tab) => setActiveTab(tab as DealerTab)}
           />
         );
       case "quotes":
@@ -76,6 +79,8 @@ const DealerDashboard = () => {
         return <DealerQuickOrder />;
       case "orders":
         return <DealerOrdersList userId={user!.id} />;
+      case "invoices":
+        return <DealerInvoices userId={user!.id} />;
       case "price_lists":
         return <DealerPriceLists />;
       case "favorites":
@@ -94,6 +99,8 @@ const DealerDashboard = () => {
             }
           />
         );
+      case "settings":
+        return <DealerAccountSettings />;
       default:
         return null;
     }
@@ -102,20 +109,26 @@ const DealerDashboard = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="bg-secondary border-b border-border sticky top-0 z-40">
+      <header className="bg-card border-b border-border sticky top-0 z-40">
         <div className="flex items-center justify-between h-14 px-4">
-          <a href="/" className="text-lg font-bold text-secondary-foreground shrink-0">
-            المصرية <span className="text-primary">جروب</span>
+          <a href="/" className="flex items-center gap-2 shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+              <span className="text-primary-foreground font-black text-sm">M</span>
+            </div>
+            <div className="hidden sm:block">
+              <p className="text-sm font-bold text-foreground leading-none">Al Masria Group</p>
+              <p className="text-[10px] text-muted-foreground">Distribution B2B Portal</p>
+            </div>
           </a>
-          <div className="hidden sm:flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-full px-4 py-1.5">
-            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            <span className="text-xs font-semibold text-primary">بوابة التوزيع B2B</span>
+          <div className="hidden md:flex items-center gap-2 bg-primary/5 border border-primary/20 rounded-lg px-3 py-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <span className="text-[11px] font-medium text-foreground">بوابة التوزيع B2B</span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <span className="text-xs text-secondary-foreground/60 hidden md:inline truncate max-w-[150px]">
+            <span className="text-[11px] text-muted-foreground hidden md:inline truncate max-w-[180px]">
               {user?.email}
             </span>
-            <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-secondary-foreground/60 lg:hidden">
+            <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-muted-foreground lg:hidden">
               <LogOut className="w-4 h-4" />
             </Button>
           </div>
@@ -132,7 +145,7 @@ const DealerDashboard = () => {
           onSignOut={handleSignOut}
           unreadCount={unreadCount}
         />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 pb-20 lg:pb-8">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 pb-20 lg:pb-8 bg-background">
           {renderContent()}
         </main>
       </div>

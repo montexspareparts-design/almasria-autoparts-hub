@@ -10,7 +10,7 @@ interface DealerMobileNavProps {
 
 const tabs: { id: DealerTab; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "overview", label: "الرئيسية", icon: LayoutDashboard },
-  { id: "quotes", label: "الأسعار", icon: Search },
+  { id: "quotes", label: "بحث", icon: Search },
   { id: "quick_order", label: "طلب سريع", icon: Upload },
   { id: "orders", label: "الطلبات", icon: ClipboardList },
   { id: "notifications", label: "إشعارات", icon: Bell },
@@ -18,7 +18,7 @@ const tabs: { id: DealerTab; label: string; icon: typeof LayoutDashboard }[] = [
 
 const DealerMobileNav = ({ activeTab, onTabChange, unreadCount }: DealerMobileNavProps) => {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg border-t border-border lg:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border lg:hidden">
       <div className="flex items-center justify-around h-14">
         {tabs.map((tab) => (
           <button
