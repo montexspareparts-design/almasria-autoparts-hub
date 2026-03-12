@@ -33,6 +33,14 @@ const AdminProducts = () => {
   const [brandFilter, setBrandFilter] = useState("all");
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [copiedSku, setCopiedSku] = useState<string | null>(null);
+
+  const handleCopySku = (sku: string) => {
+    navigator.clipboard.writeText(sku);
+    setCopiedSku(sku);
+    toast({ title: `تم نسخ رقم القطعة: ${sku}` });
+    setTimeout(() => setCopiedSku(null), 2000);
+  };
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
