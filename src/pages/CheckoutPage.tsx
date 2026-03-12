@@ -91,7 +91,7 @@ const CheckoutPage = () => {
           user_id: user.id,
           order_number: orderNumber,
           total_amount: orderTotal,
-          status: "pending",
+          status: payment !== "cod" ? "awaiting_payment" : "pending",
           payment_method: payment,
           shipping_governorate: form.governorate,
           shipping_address: `${form.name} - ${form.phone}\n${form.city}, ${form.governorate}\n${form.address}`,
