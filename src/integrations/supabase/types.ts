@@ -602,16 +602,19 @@ export type Database = {
       price_list_products: {
         Row: {
           id: string
+          price: number | null
           price_list_id: string
           product_id: string
         }
         Insert: {
           id?: string
+          price?: number | null
           price_list_id: string
           product_id: string
         }
         Update: {
           id?: string
+          price?: number | null
           price_list_id?: string
           product_id?: string
         }
