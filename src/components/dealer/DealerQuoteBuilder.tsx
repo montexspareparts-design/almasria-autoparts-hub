@@ -314,6 +314,7 @@ const DealerQuoteBuilder = () => {
     setNotes(quote.notes || "");
     setEditingQuoteId(quote.id);
     setEditingQuoteNumber(quote.quote_number);
+    setIsFromPriceList(!!quote.notes?.startsWith("من كشف الأسعار"));
     setActiveView("edit");
     setLoadingQuote(false);
   };
