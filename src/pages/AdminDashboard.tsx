@@ -21,6 +21,7 @@ const AdminProductImages = lazy(() => import("@/components/AdminProductImages"))
 const AdminImageVerifier = lazy(() => import("@/components/AdminImageVerifier"));
 const AdminERPSync = lazy(() => import("@/components/AdminERPSync"));
 const AdminPushNotifications = lazy(() => import("@/components/AdminPushNotifications"));
+const AdminProducts = lazy(() => import("@/components/AdminProducts"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];

@@ -42,7 +42,7 @@ const AdminProducts = () => {
       query = query.or(`sku.ilike.%${search.trim()}%,name_ar.ilike.%${search.trim()}%,name_en.ilike.%${search.trim()}%`);
     }
     if (brandFilter !== "all") {
-      query = query.eq("brand", brandFilter);
+      query = query.eq("brand", brandFilter as ProductBrand);
     }
 
     const { data, count } = await query
