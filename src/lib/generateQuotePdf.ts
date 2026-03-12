@@ -80,9 +80,9 @@ function buildQuoteHtml(data: QuoteData): string {
       </div>
 
       <!-- Total -->
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 30px;border-top:2px solid #e5e5e5;margin:0 24px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 30px;border-top:2px solid #fecaca;margin:0 24px">
         <div style="color:#888;font-size:13px">عدد الأصناف: <span style="color:#333;font-weight:700">${data.items.length}</span></div>
-        <div style="background:#dc2626;color:#fff;padding:10px 28px;border-radius:6px;font-size:18px;font-weight:800;direction:ltr">
+        <div style="background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;padding:12px 32px;border-radius:8px;font-size:18px;font-weight:800;direction:ltr;box-shadow:0 2px 8px rgba(220,38,38,0.3)">
           ${formatNum(data.totalAmount)} ج.م
         </div>
       </div>
