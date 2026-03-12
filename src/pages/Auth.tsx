@@ -97,6 +97,11 @@ const Auth = () => {
       } else {
         setLoginAttempts(0);
         setLockedUntil(null);
+        if (rememberMe) {
+          localStorage.setItem("remembered_auth", JSON.stringify({ method: authMethod, phone, email: authMethod === "email" ? email : "" }));
+        } else {
+          localStorage.removeItem("remembered_auth");
+        }
         toast({ title: "تم تسجيل الدخول بنجاح" });
         navigate("/");
       }
