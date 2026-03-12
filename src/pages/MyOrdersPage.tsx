@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Package, Clock, CheckCircle2, Truck, PackageCheck, ChevronDown,
   ChevronUp, ArrowRight, ShoppingCart, MapPin, CreditCard, CalendarDays,
-  CircleDot, Phone
+  CircleDot, Phone, Wallet
 } from "lucide-react";
 import PaymentInstructionsBanner from "@/components/PaymentInstructionsBanner";
 import { Button } from "@/components/ui/button";
