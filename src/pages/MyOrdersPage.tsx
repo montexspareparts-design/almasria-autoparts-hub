@@ -231,10 +231,10 @@ const MyOrdersPage = () => {
                                 <div className="absolute top-4 right-4 left-4 h-0.5 bg-border z-0" />
                                 <div
                                   className="absolute top-4 right-4 h-0.5 bg-primary z-0 transition-all duration-700"
-                                  style={{ width: `${(statusIdx / (ORDER_STATUSES.length - 1)) * 100}%`, maxWidth: "calc(100% - 2rem)" }}
+                                  style={{ width: `${(statusIdx / (orderStatuses.length - 1)) * 100}%`, maxWidth: "calc(100% - 2rem)" }}
                                 />
 
-                                {ORDER_STATUSES.map((s, idx) => {
+                                {orderStatuses.map((s, idx) => {
                                   const isCompleted = idx <= statusIdx;
                                   const isCurrent = idx === statusIdx;
                                   return (
