@@ -129,43 +129,44 @@ const DealerDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col" dir="rtl">
+    <div className="min-h-screen bg-muted/40 flex flex-col" dir="rtl">
       {/* Top Bar */}
-      <header className="bg-secondary border-b border-secondary/80 sticky top-0 z-40">
+      <header className="bg-card border-b border-border/50 sticky top-0 z-40 shadow-sm">
         <div className="flex items-center justify-between h-14 px-4 lg:px-6">
           <a href="/" className="flex items-center gap-3 shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-sm">
               <span className="text-primary-foreground font-black text-sm">M</span>
             </div>
             <div className="hidden sm:block leading-none">
-              <p className="text-sm font-bold text-secondary-foreground tracking-wide">المصرية جروب</p>
-              <p className="text-[10px] text-secondary-foreground/40 font-medium">بوابة التوزيع B2B</p>
+              <p className="text-sm font-bold text-foreground tracking-wide">المصرية جروب</p>
+              <p className="text-[10px] text-muted-foreground font-medium">بوابة التوزيع B2B</p>
             </div>
           </a>
 
           {/* Current Page Title - Desktop */}
-          <div className="hidden lg:block">
-            <p className="text-sm font-semibold text-secondary-foreground/70">{pageTitles[activeTab]}</p>
+          <div className="hidden lg:flex items-center gap-2">
+            <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+            <p className="text-sm font-semibold text-foreground">{pageTitles[activeTab]}</p>
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
             {unreadCount > 0 && (
               <button
                 onClick={() => setActiveTab("notifications")}
-                className="relative text-secondary-foreground/60 hover:text-secondary-foreground transition-colors"
+                className="relative text-muted-foreground hover:text-primary transition-colors"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
-                <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[8px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[8px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
                   {unreadCount}
                 </span>
               </button>
             )}
-            <span className="text-[11px] text-secondary-foreground/40 hidden md:inline truncate max-w-[180px]">
+            <span className="text-[11px] text-muted-foreground hidden md:inline truncate max-w-[180px]">
               {dealerName}
             </span>
-            <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-secondary-foreground/40 hover:text-secondary-foreground h-8 px-2 lg:hidden">
+            <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-muted-foreground hover:text-primary h-8 px-2 lg:hidden">
               <LogOut className="w-4 h-4" />
             </Button>
           </div>
