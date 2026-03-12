@@ -45,7 +45,7 @@ function buildQuoteHtml(data: QuoteData): string {
       </div>
       <div style="height:4px;background:linear-gradient(90deg,#dc2626,#ef4444,#dc2626)"></div>
 
-      <!-- Info -->
+      <!-- Dealer & Quote Info -->
       <div style="display:flex;justify-content:space-between;padding:18px 30px 10px;border-bottom:1px solid #e5e5e5">
         <div>
           <span style="color:#888;font-size:12px">رقم العرض:</span>
@@ -56,6 +56,11 @@ function buildQuoteHtml(data: QuoteData): string {
           <span style="color:#222;font-size:13px;font-weight:600;margin-right:6px">${data.date}</span>
         </div>
       </div>
+      ${data.dealerName || data.dealerPhone ? `
+      <div style="display:flex;justify-content:space-between;padding:8px 30px;border-bottom:1px solid #eee;background:#fef2f2">
+        ${data.dealerName ? `<div><span style="color:#888;font-size:12px">العميل:</span> <span style="color:#222;font-size:13px;font-weight:600;margin-right:6px">${data.dealerName}</span></div>` : ""}
+        ${data.dealerPhone ? `<div><span style="color:#888;font-size:12px">هاتف:</span> <span style="color:#222;font-size:13px;font-weight:600;margin-right:6px;direction:ltr;unicode-bidi:embed">${data.dealerPhone}</span></div>` : ""}
+      </div>` : ""}
       ${data.priceListTitle ? `
       <div style="padding:8px 30px;border-bottom:1px solid #eee">
         <span style="color:#888;font-size:12px">من كشف:</span>

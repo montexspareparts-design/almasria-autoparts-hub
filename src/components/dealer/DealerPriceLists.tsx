@@ -343,8 +343,7 @@ const DealerPriceLists = ({ onNavigateToQuotes }: DealerPriceListsProps) => {
       ) as any,
     });
 
-    // Also auto-download PDF
-    generateQuotePdf(quoteShareData);
+    // No auto-download — user clicks the PDF button in toast or summary
 
     setSelectedProducts([]);
     setSavingQuote(false);
