@@ -17,7 +17,29 @@ interface QuoteData {
   priceListTitle?: string;
 }
 
-export const generateQuotePdf = (data: QuoteData) => {
+// Load logo as base64 for embedding in PDF
+const loadLogoAsBase64 = (): Promise<string | null> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL("image/png"));
+      } else {
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = "/images/logo-pdf.png";
+  });
+};
+
+export const generateQuotePdf = async (data: QuoteData) => {
   const doc = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -25,27 +47,35 @@ export const generateQuotePdf = (data: QuoteData) => {
   const contentWidth = pageWidth - margin * 2;
   let y = margin;
 
+  // Load logo
+  const logoBase64 = await loadLogoAsBase64();
+
   // ─── Header Background ───
-  doc.setFillColor(23, 23, 23); // dark bg
-  doc.rect(0, 0, pageWidth, 52, "F");
+  doc.setFillColor(23, 23, 23);
+  doc.rect(0, 0, pageWidth, 56, "F");
 
   // Red accent line
   doc.setFillColor(220, 38, 38);
-  doc.rect(0, 52, pageWidth, 2, "F");
+  doc.rect(0, 56, pageWidth, 2.5, "F");
 
-  // Company name
+  // Add logo
+  if (logoBase64) {
+    doc.addImage(logoBase64, "PNG", pageWidth / 2 - 20, 4, 40, 28);
+  }
+
+  // Company name below logo
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(22);
-  doc.text("Al Masria Group", pageWidth / 2, 20, { align: "center" });
+  doc.setFontSize(11);
+  doc.text("Al Masria Group", pageWidth / 2, 38, { align: "center" });
 
-  doc.setFontSize(10);
+  doc.setFontSize(8);
   doc.setTextColor(180, 180, 180);
-  doc.text("Authorized Toyota Parts Distributor", pageWidth / 2, 28, { align: "center" });
+  doc.text("Authorized Toyota Parts & Oils Distributor", pageWidth / 2, 43, { align: "center" });
 
   // Quote title
-  doc.setFontSize(14);
+  doc.setFontSize(13);
   doc.setTextColor(255, 255, 255);
-  doc.text("Price Quotation", pageWidth / 2, 42, { align: "center" });
+  doc.text("Price Quotation", pageWidth / 2, 52, { align: "center" });
 
   y = 62;
 
