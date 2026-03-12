@@ -42,6 +42,7 @@ interface OfferProduct {
   base_price: number;
   sale_price: number | null;
   image_url: string | null;
+  brand?: string;
 }
 
 const statusMap: Record<string, { label_ar: string; label_en: string; color: string }> = {
@@ -51,6 +52,14 @@ const statusMap: Record<string, { label_ar: string; label_en: string; color: str
   shipped: { label_ar: "تم الشحن", label_en: "Shipped", color: "bg-purple-500/15 text-purple-600 border-purple-500/30" },
   delivered: { label_ar: "تم التسليم", label_en: "Delivered", color: "bg-green-500/15 text-green-600 border-green-500/30" },
   cancelled: { label_ar: "ملغى", label_en: "Cancelled", color: "bg-destructive/15 text-destructive border-destructive/30" },
+};
+
+const brandLabels: Record<string, string> = {
+  toyota_genuine: "تويوتا أصلي",
+  toyota_oils: "زيوت تويوتا",
+  mtx_aftermarket: "MTX",
+  denso: "DENSO",
+  aisin: "AISIN",
 };
 
 /* ─── Main Component ─── */
@@ -67,6 +76,7 @@ const DealerHomePage = () => {
   const [offers, setOffers] = useState<OfferProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [popularProducts, setPopularProducts] = useState<OfferProduct[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<OfferProduct[]>([]);
   const [searching, setSearching] = useState(false);
@@ -100,10 +110,11 @@ const DealerHomePage = () => {
     if (!user) return;
     const fetchData = async () => {
       setLoading(true);
-      const [ordersRes, notifsRes, offersRes] = await Promise.all([
+      const [ordersRes, notifsRes, offersRes, popularRes] = await Promise.all([
         supabase.from("orders").select("id, order_number, status, total_amount, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(5),
         supabase.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("is_read", false),
         supabase.from("products").select("id, name_ar, name_en, sku, base_price, sale_price, image_url").eq("is_active", true).eq("is_on_sale", true).limit(6),
+        supabase.from("products").select("id, name_ar, name_en, sku, base_price, sale_price, image_url, brand, stock_quantity").eq("is_active", true).gt("stock_quantity", 20).order("stock_quantity", { ascending: false }).limit(8),
       ]);
 
       const orders = ordersRes.data || [];
@@ -115,6 +126,11 @@ const DealerHomePage = () => {
         unreadNotifs: notifsRes.count || 0,
       });
       setOffers((offersRes.data as OfferProduct[]) || []);
+      setPopularProducts(
+        ((popularRes.data as any[]) || [])
+          .sort(() => Math.random() - 0.5)
+          .map((p) => ({ id: p.id, name_ar: p.name_ar, name_en: p.name_en, sku: p.sku, base_price: p.base_price, sale_price: p.sale_price, image_url: p.image_url, brand: p.brand }))
+      );
       setLoading(false);
     };
     fetchData();
@@ -407,6 +423,68 @@ const DealerHomePage = () => {
             </Card>
           )}
         </section>
+
+        {/* ─── Most Popular Products ─── */}
+        {popularProducts.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-black text-foreground flex items-center gap-1.5">
+                <TrendingUp className="w-4 h-4 text-primary" />
+                {isRTL ? "الأكثر طلباً" : "Most Popular"}
+              </h2>
+              <span className="text-[10px] text-muted-foreground">{isRTL ? "متوفر للطلب الفوري" : "Ready to order"}</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              {popularProducts.map((product, i) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 + i * 0.04 }}
+                >
+                  <Card className="border-border/30 hover:border-primary/20 transition-all duration-200 hover:shadow-md group overflow-hidden rounded-xl">
+                    <CardContent className="p-0">
+                      <div className="aspect-square bg-white relative overflow-hidden">
+                        {product.image_url ? (
+                          <img
+                            src={product.image_url}
+                            alt={isRTL ? product.name_ar : (product.name_en || product.name_ar)}
+                            className="w-full h-full object-contain p-2.5 group-hover:scale-105 transition-transform duration-300"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-muted/30">
+                            <Package className="w-6 h-6 text-muted-foreground/20" />
+                          </div>
+                        )}
+                        {product.brand && (
+                          <Badge className="absolute top-1.5 right-1.5 text-[8px] px-1.5 py-0 bg-secondary text-secondary-foreground border-0">
+                            {brandLabels[product.brand] || product.brand}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="p-2.5">
+                        <p className="text-[11px] font-bold text-foreground line-clamp-2 leading-relaxed mb-1">
+                          {isRTL ? product.name_ar : (product.name_en || product.name_ar)}
+                        </p>
+                        <p className="text-[9px] text-muted-foreground mb-2 font-mono">{product.sku}</p>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full gap-1 text-[10px] font-bold h-7 rounded-lg text-primary border-primary/30 hover:bg-primary/5"
+                          onClick={() => handleAddToQuote(product)}
+                        >
+                          <Search className="w-3 h-3" />
+                          {isRTL ? "طلب عرض سعر" : "Request Quote"}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* ─── Exclusive Offers ─── */}
         {offers.length > 0 && (
