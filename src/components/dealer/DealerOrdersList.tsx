@@ -47,22 +47,31 @@ interface OrderItem {
 
 const orderStages = [
   { key: "pending", label: "تم استلام الطلب", icon: Inbox },
-  { key: "confirmed", label: "قيد المراجعة", icon: Clock },
-  { key: "pending_approval", label: "بانتظار موافقتك", icon: AlertTriangle },
+  { key: "awaiting_payment", label: "بانتظار الدفع", icon: Wallet },
   { key: "processing", label: "جاري التجهيز", icon: Package },
   { key: "ready", label: "جاهز للاستلام", icon: PackageCheck },
   { key: "delivered", label: "تم التسليم", icon: CheckCircle },
 ];
 
-const stageIndex = (status: string) => {
+const stageIndex = (status: string, paymentMethod?: string | null) => {
   if (status === "cancelled") return -1;
-  const idx = orderStages.findIndex(s => s.key === status);
-  return idx >= 0 ? idx : 0;
+  // Map old statuses to new timeline
+  const statusMap: Record<string, number> = {
+    pending: 0,
+    confirmed: paymentMethod && ["instapay", "wallet", "bank_transfer"].includes(paymentMethod) ? 1 : 0,
+    awaiting_payment: 1,
+    pending_approval: 2, // treat as processing level
+    processing: 2,
+    ready: 3,
+    delivered: 4,
+  };
+  return statusMap[status] ?? 0;
 };
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   pending: { label: "تم استلام الطلب", variant: "secondary" },
-  confirmed: { label: "قيد المراجعة", variant: "default" },
+  confirmed: { label: "تم التأكيد", variant: "default" },
+  awaiting_payment: { label: "بانتظار الدفع", variant: "outline" },
   pending_approval: { label: "بانتظار موافقتك", variant: "outline" },
   processing: { label: "جاري التجهيز", variant: "default" },
   ready: { label: "جاهز للاستلام", variant: "default" },
