@@ -527,16 +527,39 @@ const AdminProductImages = () => {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
+          <div className="flex items-center justify-between mt-4 pt-4 border-t border-border flex-wrap gap-3">
             <p className="text-xs text-muted-foreground">
               {totalProducts} منتج • صفحة {page + 1} من {totalPages}
             </p>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(0)}>
+                الأولى
+              </Button>
               <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(p => p - 1)}>
                 السابق
               </Button>
+              <div className="flex items-center gap-1">
+                <Input
+                  type="number"
+                  min={1}
+                  max={totalPages}
+                  value={page + 1}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    if (!isNaN(val) && val >= 1 && val <= totalPages) {
+                      setPage(val - 1);
+                    }
+                  }}
+                  className="w-16 h-8 text-center text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  dir="ltr"
+                />
+                <span className="text-xs text-muted-foreground">/ {totalPages}</span>
+              </div>
               <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>
                 التالي
+              </Button>
+              <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage(totalPages - 1)}>
+                الأخيرة
               </Button>
             </div>
           </div>
