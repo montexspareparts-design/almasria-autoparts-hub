@@ -84,8 +84,8 @@ const AdminProductImages = () => {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast({ title: "حجم الصورة يجب أن يكون أقل من 5MB", variant: "destructive" });
+    if (file.size > 20 * 1024 * 1024) {
+      toast({ title: "حجم الصورة يجب أن يكون أقل من 20MB", variant: "destructive" });
       return;
     }
 
@@ -153,8 +153,8 @@ const AdminProductImages = () => {
   };
 
   const handleDropFile = async (productId: string, file: File) => {
-    if (file.size > 5 * 1024 * 1024) {
-      toast({ title: "حجم الصورة يجب أن يكون أقل من 5MB", variant: "destructive" });
+    if (file.size > 20 * 1024 * 1024) {
+      toast({ title: "حجم الصورة يجب أن يكون أقل من 20MB", variant: "destructive" });
       return;
     }
     setTargetProductId(productId);
