@@ -138,10 +138,10 @@ Deno.serve(async (req) => {
       throw new Error("Failed to generate payment key");
     }
 
-    // Build the iframe URL
-    const iframeUrl = `https://accept.paymob.com/api/acceptance/iframes/${paymobIntegrationId}?payment_token=${paymentKeyData.token}`;
+    // Build the iframe URL using the separate iframe ID
+    const iframeUrl = `https://accept.paymob.com/api/acceptance/iframes/${paymobIframeId}?payment_token=${paymentKeyData.token}`;
 
-    // Also return the payment token so frontend can use hosted checkout
+    // Return the payment token and iframe URL
     return new Response(
       JSON.stringify({
         payment_token: paymentKeyData.token,
