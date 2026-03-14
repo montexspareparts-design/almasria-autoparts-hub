@@ -14,6 +14,7 @@ Deno.serve(async (req) => {
   try {
     const paymobApiKey = Deno.env.get("PAYMOB_API_KEY");
     const paymobIntegrationId = Deno.env.get("PAYMOB_INTEGRATION_ID");
+    const paymobIframeId = Deno.env.get("PAYMOB_IFRAME_ID");
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -22,6 +23,9 @@ Deno.serve(async (req) => {
     }
     if (!paymobIntegrationId) {
       throw new Error("PAYMOB_INTEGRATION_ID is not configured");
+    }
+    if (!paymobIframeId) {
+      throw new Error("PAYMOB_IFRAME_ID is not configured");
     }
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
@@ -134,10 +138,10 @@ Deno.serve(async (req) => {
       throw new Error("Failed to generate payment key");
     }
 
-    // Build the iframe URL
-    const iframeUrl = `https://accept.paymob.com/api/acceptance/iframes/${paymobIntegrationId}?payment_token=${paymentKeyData.token}`;
+    // Build the iframe URL using the separate iframe ID
+    const iframeUrl = `https://accept.paymob.com/api/acceptance/iframes/${paymobIframeId}?payment_token=${paymentKeyData.token}`;
 
-    // Also return the payment token so frontend can use hosted checkout
+    // Return the payment token and iframe URL
     return new Response(
       JSON.stringify({
         payment_token: paymentKeyData.token,
