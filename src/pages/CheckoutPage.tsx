@@ -132,8 +132,8 @@ const CheckoutPage = () => {
             return;
           }
 
-          // Redirect to Paymob hosted checkout
-          window.location.href = `https://accept.paymob.com/api/acceptance/iframes/${paymobData.payment_token}?payment_token=${paymobData.payment_token}`;
+          // Redirect to Paymob hosted checkout using the iframe_url from edge function
+          window.location.href = paymobData.iframe_url;
           return;
         } catch (e: any) {
           console.error("Paymob redirect error:", e);
