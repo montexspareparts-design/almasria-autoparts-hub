@@ -14,6 +14,7 @@ Deno.serve(async (req) => {
   try {
     const paymobApiKey = Deno.env.get("PAYMOB_API_KEY");
     const paymobIntegrationId = Deno.env.get("PAYMOB_INTEGRATION_ID");
+    const paymobIframeId = Deno.env.get("PAYMOB_IFRAME_ID");
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -22,6 +23,9 @@ Deno.serve(async (req) => {
     }
     if (!paymobIntegrationId) {
       throw new Error("PAYMOB_INTEGRATION_ID is not configured");
+    }
+    if (!paymobIframeId) {
+      throw new Error("PAYMOB_IFRAME_ID is not configured");
     }
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
