@@ -36,6 +36,7 @@ const PartsByTypePage = lazy(() => import("./pages/PartsByTypePage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const CatalogsPage = lazy(() => import("./pages/CatalogsPage"));
 const InstallApp = lazy(() => import("./pages/InstallApp"));
+const PaymentCallback = lazy(() => import("./pages/PaymentCallback"));
 
 const queryClient = new QueryClient();
 
@@ -89,6 +90,7 @@ const App = () => (
                     <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/catalogs" element={<CatalogsPage />} />
                     <Route path="/install" element={<InstallApp />} />
+                    <Route path="/payment-callback" element={<PaymentCallback />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                </Suspense>

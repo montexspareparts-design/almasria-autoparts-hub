@@ -115,7 +115,33 @@ const CheckoutPage = () => {
 
       clearCart();
 
-      // Admin notifications are now handled automatically via DB trigger
+      // If payment is card or paymob, redirect to Paymob payment page
+      if (payment === "card" || payment === "paymob") {
+        try {
+          const { data: paymobData, error: paymobErr } = await supabase.functions.invoke("create-paymob-intention", {
+            body: {
+              order_id: order.id,
+              return_url: `${window.location.origin}/payment-callback`,
+            },
+          });
+
+          if (paymobErr || !paymobData?.payment_token) {
+            console.error("Paymob error:", paymobErr, paymobData);
+            toast({ title: "حدث خطأ في بوابة الدفع", description: "تم حفظ طلبك. يمكنك الدفع لاحقاً من صفحة الطلبات.", variant: "destructive" });
+            navigate(`/my-orders?highlight=${order.id}`);
+            return;
+          }
+
+          // Redirect to Paymob hosted checkout
+          window.location.href = `https://accept.paymob.com/api/acceptance/iframes/${paymobData.payment_token}?payment_token=${paymobData.payment_token}`;
+          return;
+        } catch (e: any) {
+          console.error("Paymob redirect error:", e);
+          toast({ title: "حدث خطأ في بوابة الدفع", description: "تم حفظ طلبك. يمكنك الدفع لاحقاً.", variant: "destructive" });
+          navigate(`/my-orders?highlight=${order.id}`);
+          return;
+        }
+      }
 
       toast({ title: "تم تقديم طلبك بنجاح! ✅", description: `رقم الطلب: ${orderNumber}` });
       navigate(`/my-orders?highlight=${order.id}`);
