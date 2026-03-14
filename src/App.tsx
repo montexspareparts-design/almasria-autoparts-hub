@@ -90,6 +90,7 @@ const App = () => (
                     <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/catalogs" element={<CatalogsPage />} />
                     <Route path="/install" element={<InstallApp />} />
+                    <Route path="/payment-callback" element={<PaymentCallback />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                </Suspense>
