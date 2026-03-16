@@ -363,6 +363,40 @@ const DealerHomePage = () => {
       <div className="container mx-auto px-4 py-5 space-y-6 max-w-3xl">
 
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            🔖 QUICK ACCESS — PRICE QUOTES
+            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+          <Link to="/dealer?tab=quotes">
+            <Card className="border-border/15 rounded-2xl hover:border-primary/30 hover:shadow-lg transition-all duration-200 group cursor-pointer overflow-hidden">
+              <CardContent className="p-4 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+                  <FileText className="w-6 h-6 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-foreground">{isRTL ? "عروض الأسعار" : "Price Quotes"}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {isRTL
+                      ? `الأصناف التي تم تسعيرها اليوم (${dailyViewCount})`
+                      : `Items priced today (${dailyViewCount})`}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {dailyViewCount > 0 && (
+                    <Badge className="text-[10px] font-black bg-primary/10 text-primary border-0 px-2.5 py-1 rounded-lg">
+                      {dailyViewCount}
+                    </Badge>
+                  )}
+                  {isRTL
+                    ? <ChevronLeft className="w-5 h-5 text-muted-foreground/30 group-hover:text-primary transition-colors" />
+                    : <ChevronRight className="w-5 h-5 text-muted-foreground/30 group-hover:text-primary transition-colors" />
+                  }
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </motion.div>
+
+        {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
             2️⃣ PRICE OFFERS — SECOND PRIORITY
             ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
         {loading ? (
