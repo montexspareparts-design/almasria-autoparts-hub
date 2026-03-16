@@ -736,13 +736,22 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
   return (
     <div className="space-y-4">
       {/* View Toggle */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        <Button
+          variant={activeView === "today" ? "default" : "outline"}
+          size="sm"
+          className="h-9 shrink-0"
+          onClick={() => { setActiveView("today"); fetchTodayPricedItems(); }}
+        >
+          <Eye className="w-4 h-4 ml-1.5" />
+          تم تسعيرها اليوم ({todayItems.length})
+        </Button>
         <Button
           variant={activeView === "builder" || activeView === "edit" ? "default" : "outline"}
           size="sm"
-          className="h-9"
+          className="h-9 shrink-0"
           onClick={() => {
-            if (activeView === "edit") return; // Stay in edit
+            if (activeView === "edit") return;
             setActiveView("builder");
             setEditingQuoteId(null);
             setEditingQuoteNumber("");
@@ -756,11 +765,11 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
         <Button
           variant={activeView === "saved" ? "default" : "outline"}
           size="sm"
-          className="h-9"
+          className="h-9 shrink-0"
           onClick={() => setActiveView("saved")}
         >
           <Save className="w-4 h-4 ml-1.5" />
-          العروض المحفوظة ({savedQuotes.length})
+          المحفوظة ({savedQuotes.length})
         </Button>
       </div>
 
