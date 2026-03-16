@@ -312,12 +312,24 @@ const DealerHomePage = () => {
                                     <StockBadge qty={stock} isRTL={isRTL} />
                                   </div>
                                 </div>
-                                <Button
-                                  size="sm"
-                                  className="h-9 px-3 text-xs font-bold gap-1 shrink-0 rounded-xl mt-1"
-                                  onClick={() => handleAddToQuote(p)}
-                                  disabled={stock === 0}
-                                >
+                                <div className="flex flex-col gap-1.5 shrink-0 mt-1">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-8 px-2.5 text-[11px] font-bold gap-1 rounded-lg border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground"
+                                    onClick={() => handlePriceItem(p)}
+                                  >
+                                    <Tag className="w-3 h-3" />{isRTL ? "تسعير" : "Price"}
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    className="h-8 px-2.5 text-[11px] font-bold gap-1 rounded-lg"
+                                    onClick={() => handleAddToOrder(p)}
+                                    disabled={stock === 0}
+                                  >
+                                    <Plus className="w-3 h-3" />{isRTL ? "أضف" : "Add"}
+                                  </Button>
+                                </div>
                                   <Plus className="w-3.5 h-3.5" />{isRTL ? "أضف" : "Add"}
                                 </Button>
                               </div>
