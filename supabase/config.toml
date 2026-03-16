@@ -18,8 +18,6 @@ verify_jwt = false
 [functions.notify-admin-new-application]
 verify_jwt = false
 
-[functions.notify-catalog-new]
-verify_jwt = false
 
 [functions.reset-password-by-phone]
 verify_jwt = false
