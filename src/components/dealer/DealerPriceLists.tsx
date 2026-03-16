@@ -74,6 +74,10 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
   const [editingQuoteId, setEditingQuoteId] = useState<string | null>(null);
   const [editingQuoteNumber, setEditingQuoteNumber] = useState<string | null>(null);
 
+  // Today's priced items
+  const [todayPricedItems, setTodayPricedItems] = useState<Product[]>([]);
+  const [loadingTodayItems, setLoadingTodayItems] = useState(false);
+
   // Quote summary state
   const [createdQuote, setCreatedQuote] = useState<{
     quoteNumber: string;
@@ -88,8 +92,38 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
     if (user) {
       fetchDailyViews();
       fetchDealerInfo();
+      fetchTodayPricedItems();
     }
   }, []);
+
+  const fetchTodayPricedItems = async () => {
+    if (!user) return;
+    setLoadingTodayItems(true);
+    const today = new Date().toISOString().split("T")[0];
+    const { data: views } = await supabase
+      .from("dealer_price_views")
+      .select("product_id, viewed_at")
+      .eq("user_id", user.id)
+      .eq("view_date", today)
+      .order("viewed_at", { ascending: false });
+
+    if (views && views.length > 0) {
+      const productIds = views.map(v => v.product_id);
+      const { data: products } = await supabase
+        .from("products")
+        .select("id, name_ar, sku, base_price, sale_price, is_on_sale, image_url, stock_quantity")
+        .in("id", productIds)
+        .eq("is_active", true);
+      
+      // Maintain order from views
+      const productMap = new Map((products || []).map(p => [p.id, p as Product]));
+      const ordered = productIds.map(id => productMap.get(id)).filter(Boolean) as Product[];
+      setTodayPricedItems(ordered);
+    } else {
+      setTodayPricedItems([]);
+    }
+    setLoadingTodayItems(false);
+  };
 
   // Auto-open price list when editing a quote from price list
   useEffect(() => {

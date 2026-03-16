@@ -130,14 +130,21 @@ const DealerHomePage = () => {
     : dealerAccount?.tier === "wholesale_tier2" ? (isRTL ? "جملة T2" : "Wholesale T2")
     : dealerAccount?.tier === "corporate" ? (isRTL ? "شركات" : "Corporate") : (isRTL ? "تجزئة" : "Retail");
 
-  const handleAddToQuote = useCallback((product: ProductItem) => {
+  const handleAddToQuote = useCallback(async (product: ProductItem) => {
+    if (!user) return;
     const existing = JSON.parse(sessionStorage.getItem("quote_pending_items") || "[]");
     if (!existing.find((p: any) => p.id === product.id)) {
       existing.push({ id: product.id, sku: product.sku, name_ar: product.name_ar, name_en: product.name_en });
       sessionStorage.setItem("quote_pending_items", JSON.stringify(existing));
     }
+    // Record price view for "today's priced items"
+    const today = new Date().toISOString().split("T")[0];
+    await supabase.from("dealer_price_views").upsert(
+      { user_id: user.id, product_id: product.id, view_date: today },
+      { onConflict: "user_id,product_id,view_date" }
+    );
     toast({ title: "✅", description: isRTL ? `تم إضافة ${product.name_ar}` : `Added ${product.name_ar}` });
-  }, [isRTL, toast]);
+  }, [isRTL, toast, user]);
 
   /* Quick Order Table: update row */
   const updateQuickRow = (idx: number, field: keyof QuickOrderRow, value: string) => {
