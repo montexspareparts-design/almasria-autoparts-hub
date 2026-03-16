@@ -82,6 +82,8 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
   const [isFromPriceList, setIsFromPriceList] = useState(false);
   const [dealerInfo, setDealerInfo] = useState<{ name: string; phone: string } | null>(null);
   const [alertedProducts, setAlertedProducts] = useState<Set<string>>(new Set());
+  const [todayItems, setTodayItems] = useState<QuoteItem[]>([]);
+  const [loadingToday, setLoadingToday] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -89,6 +91,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
       fetchSavedQuotes();
       fetchDealerInfo();
       fetchAlertedProducts();
+      fetchTodayPricedItems();
     }
   }, [user]);
 
