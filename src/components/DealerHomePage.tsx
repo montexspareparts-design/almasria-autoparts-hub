@@ -267,6 +267,14 @@ const DealerHomePage = () => {
                   {hint}
                 </button>
               ))}
+              </div>
+              <span className={`text-[10px] font-bold shrink-0 px-2 py-0.5 rounded-md ${
+                dailyViewCount >= DAILY_PRICE_LIMIT
+                  ? "text-destructive bg-destructive/10"
+                  : "text-secondary-foreground/50 bg-secondary-foreground/8"
+              }`}>
+                {dailyViewCount}/{DAILY_PRICE_LIMIT} {isRTL ? "تسعير" : "priced"}
+              </span>
             </div>
 
             {/* ━━━ Search Results Dropdown ━━━ */}
