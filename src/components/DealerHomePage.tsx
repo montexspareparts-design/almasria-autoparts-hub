@@ -332,7 +332,6 @@ const DealerHomePage = () => {
                                 </div>
                               </div>
                             );
-                            );
                           })}
                           <button
                             onClick={() => { navigate(`/products?search=${encodeURIComponent(searchQuery)}`); setShowResults(false); setSearchQuery(""); }}
