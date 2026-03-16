@@ -158,10 +158,11 @@ const DealerHomePage = () => {
   /* Quick Order: submit all rows */
   const handleQuickOrderSubmit = useCallback(async () => {
     const validRows = quickRows.filter(r => r.sku.trim());
-    if (validRows.length === 0) return;
+    if (validRows.length === 0 || !user) return;
     setQuickOrderLoading(true);
     let addedCount = 0;
     const existing = JSON.parse(sessionStorage.getItem("quote_pending_items") || "[]");
+    const today = new Date().toISOString().split("T")[0];
 
     for (const row of validRows) {
       const { data } = await supabase.from("products").select("id, name_ar, name_en, sku, base_price, sale_price, image_url")
@@ -175,6 +176,11 @@ const DealerHomePage = () => {
         } else {
           existing.push({ id: product.id, sku: product.sku, name_ar: product.name_ar, name_en: product.name_en, qty });
         }
+        // Record price view
+        await supabase.from("dealer_price_views").upsert(
+          { user_id: user.id, product_id: product.id, view_date: today },
+          { onConflict: "user_id,product_id,view_date" }
+        );
         addedCount++;
       }
     }
@@ -186,7 +192,7 @@ const DealerHomePage = () => {
       toast({ title: "⚠️", description: isRTL ? "لم يتم العثور على أي قطعة" : "No parts found", variant: "destructive" });
     }
     setQuickOrderLoading(false);
-  }, [quickRows, isRTL, toast]);
+  }, [quickRows, isRTL, toast, user]);
 
   const ArrowIcon = isRTL ? ChevronLeft : ChevronRight;
 
