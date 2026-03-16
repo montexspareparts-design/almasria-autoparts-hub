@@ -1044,7 +1044,44 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      product_reviews_public: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          id: string | null
+          is_approved: boolean | null
+          product_id: string | null
+          rating: number | null
+          reviewer_name: string | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_approved?: boolean | null
+          product_id?: string | null
+          rating?: number | null
+          reviewer_name?: string | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_approved?: boolean | null
+          product_id?: string | null
+          rating?: number | null
+          reviewer_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       check_dealer_application_exists: {
