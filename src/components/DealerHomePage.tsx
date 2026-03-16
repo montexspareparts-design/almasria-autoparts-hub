@@ -250,9 +250,10 @@ const DealerHomePage = () => {
               )}
             </div>
 
-            {/* Quick hint chips */}
-            <div className="flex items-center gap-2 mt-3 overflow-x-auto pb-1 scrollbar-hide">
-              <span className="text-secondary-foreground/40 text-[10px] shrink-0">💡</span>
+            {/* Daily limit + hint chips */}
+            <div className="flex items-center justify-between mt-3">
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                <span className="text-secondary-foreground/40 text-[10px] shrink-0">💡</span>
               {[
                 isRTL ? "رقم القطعة OEM" : "OEM Part #",
                 isRTL ? "فلتر زيت" : "Oil Filter",
