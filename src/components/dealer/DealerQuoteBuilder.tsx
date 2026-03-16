@@ -137,6 +137,45 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
     setDailyViews(data || 0);
   };
 
+  const fetchTodayPricedItems = async () => {
+    if (!user) return;
+    setLoadingToday(true);
+    const today = new Date().toISOString().split("T")[0];
+    const { data: views } = await supabase
+      .from("dealer_price_views")
+      .select("product_id")
+      .eq("user_id", user.id)
+      .eq("view_date", today);
+
+    if (!views || views.length === 0) { setTodayItems([]); setLoadingToday(false); return; }
+
+    const productIds = views.map(v => v.product_id);
+    const { data: products } = await supabase
+      .from("products")
+      .select("id, name_ar, sku, base_price, sale_price, is_on_sale, image_url, stock_quantity")
+      .in("id", productIds);
+
+    if (!products) { setTodayItems([]); setLoadingToday(false); return; }
+
+    // Get tier prices
+    const items: QuoteItem[] = [];
+    for (const product of products) {
+      let price = product.is_on_sale && product.sale_price ? product.sale_price : product.base_price;
+      if (dealerAccount?.tier) {
+        const { data: tp } = await supabase
+          .from("product_tier_prices")
+          .select("price")
+          .eq("product_id", product.id)
+          .eq("tier", dealerAccount.tier as any)
+          .maybeSingle();
+        if (tp?.price) price = Number(tp.price);
+      }
+      items.push({ product: product as Product, quantity: 1, unit_price: price });
+    }
+    setTodayItems(items);
+    setLoadingToday(false);
+  };
+
   const fetchSavedQuotes = async () => {
     const { data } = await supabase
       .from("dealer_quotes")
