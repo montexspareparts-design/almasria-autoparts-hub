@@ -110,6 +110,7 @@ const DealerHomePage = () => {
   const [recentOrders, setRecentOrders] = useState<OrderSummary[]>([]);
   const [offers, setOffers] = useState<ProductItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dailyViewCount, setDailyViewCount] = useState(0);
 
   // Search
   const [searchQuery, setSearchQuery] = useState("");
@@ -117,6 +118,8 @@ const DealerHomePage = () => {
   const [searching, setSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
+
+  const DAILY_PRICE_LIMIT = 20;
 
   /* Search handler — includes stock_quantity + price */
   const handleSearch = useCallback(async (q: string) => {
@@ -134,6 +137,13 @@ const DealerHomePage = () => {
 
   useEffect(() => { const t = setTimeout(() => handleSearch(searchQuery), 300); return () => clearTimeout(t); }, [searchQuery, handleSearch]);
 
+  /* Fetch daily view count */
+  const refreshDailyCount = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase.rpc("get_daily_view_count", { _user_id: user.id });
+    setDailyViewCount(typeof data === "number" ? data : 0);
+  }, [user]);
+
   /* Fetch data */
   useEffect(() => {
     if (!user) return;
@@ -149,27 +159,45 @@ const DealerHomePage = () => {
       setRecentOrders(ordersRes.data || []);
       setOffers((offersRes.data as ProductItem[]) || []);
       setLoading(false);
+      refreshDailyCount();
     })();
-  }, [user]);
+  }, [user, refreshDailyCount]);
 
   const tierLabel = dealerAccount?.tier === "wholesale_tier1" ? (isRTL ? "جملة T1" : "Wholesale T1")
     : dealerAccount?.tier === "wholesale_tier2" ? (isRTL ? "جملة T2" : "Wholesale T2")
     : dealerAccount?.tier === "corporate" ? (isRTL ? "شركات" : "Corporate") : (isRTL ? "تجزئة" : "Retail");
 
-  const handleAddToQuote = useCallback(async (product: ProductItem) => {
+  /* Price a product — records in dealer_price_views with 20 daily limit */
+  const handlePriceItem = useCallback(async (product: ProductItem) => {
     if (!user) return;
+    if (dailyViewCount >= DAILY_PRICE_LIMIT) {
+      toast({
+        title: isRTL ? "⚠️ تم الوصول للحد اليومي" : "⚠️ Daily limit reached",
+        description: isRTL ? `الحد الأقصى ${DAILY_PRICE_LIMIT} صنف يومياً` : `Maximum ${DAILY_PRICE_LIMIT} items per day`,
+        variant: "destructive",
+      });
+      return;
+    }
+    const today = new Date().toISOString().split("T")[0];
+    const { error } = await supabase.from("dealer_price_views").upsert(
+      { user_id: user.id, product_id: product.id, view_date: today },
+      { onConflict: "user_id,product_id,view_date" }
+    );
+    if (!error) {
+      await refreshDailyCount();
+      toast({ title: "✅", description: isRTL ? `تم تسعير ${product.name_ar}` : `Priced ${product.name_ar}` });
+    }
+  }, [isRTL, toast, user, dailyViewCount, refreshDailyCount]);
+
+  /* Add to order (quote session) */
+  const handleAddToOrder = useCallback((product: ProductItem) => {
     const existing = JSON.parse(sessionStorage.getItem("quote_pending_items") || "[]");
     if (!existing.find((p: any) => p.id === product.id)) {
       existing.push({ id: product.id, sku: product.sku, name_ar: product.name_ar, name_en: product.name_en });
       sessionStorage.setItem("quote_pending_items", JSON.stringify(existing));
     }
-    const today = new Date().toISOString().split("T")[0];
-    await supabase.from("dealer_price_views").upsert(
-      { user_id: user.id, product_id: product.id, view_date: today },
-      { onConflict: "user_id,product_id,view_date" }
-    );
-    toast({ title: "✅", description: isRTL ? `تم إضافة ${product.name_ar}` : `Added ${product.name_ar}` });
-  }, [isRTL, toast, user]);
+    toast({ title: "✅", description: isRTL ? `تم إضافة ${product.name_ar} للطلب` : `Added ${product.name_ar} to order` });
+  }, [isRTL, toast]);
 
   const getDiscount = (p: ProductItem) => {
     if (!p.sale_price || p.sale_price >= p.base_price) return null;
