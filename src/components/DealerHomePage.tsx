@@ -330,9 +330,8 @@ const DealerHomePage = () => {
                                     <Plus className="w-3 h-3" />{isRTL ? "أضف" : "Add"}
                                   </Button>
                                 </div>
-                                  <Plus className="w-3.5 h-3.5" />{isRTL ? "أضف" : "Add"}
-                                </Button>
                               </div>
+                            );
                             );
                           })}
                           <button
