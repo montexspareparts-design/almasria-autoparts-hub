@@ -2,9 +2,10 @@ import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ShoppingCart, ClipboardList, FileText, TrendingUp, Package, Clock,
-  Bell, Search, X, ChevronLeft, ChevronRight, Plus, ArrowRight,
-  CreditCard, Zap, BarChart3, Eye, Home, Tag, User, Send, RefreshCw,
+  ShoppingCart, ClipboardList, FileText, Package, Clock,
+  Search, X, ChevronLeft, ChevronRight, Plus, ArrowRight,
+  CreditCard, Home, Tag, User, RefreshCw, Percent, Receipt,
+  Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -21,12 +22,12 @@ interface OrderSummary { id: string; order_number: string; status: string; total
 interface ProductItem { id: string; name_ar: string; name_en: string | null; sku: string; base_price: number; sale_price: number | null; image_url: string | null; brand?: string; }
 
 const statusConfig: Record<string, { ar: string; en: string; cls: string }> = {
-  pending:    { ar: "قيد الانتظار", en: "Pending",    cls: "bg-amber-100 text-amber-800" },
-  confirmed:  { ar: "مؤكد",        en: "Confirmed",  cls: "bg-blue-100 text-blue-800" },
-  processing: { ar: "جاري التجهيز", en: "Processing", cls: "bg-primary/10 text-primary" },
-  shipped:    { ar: "تم الشحن",    en: "Shipped",    cls: "bg-violet-100 text-violet-800" },
-  delivered:  { ar: "تم التسليم",  en: "Delivered",  cls: "bg-emerald-100 text-emerald-800" },
-  cancelled:  { ar: "ملغى",        en: "Cancelled",  cls: "bg-red-100 text-red-700" },
+  pending:    { ar: "قيد الانتظار", en: "Pending",    cls: "bg-amber-500/10 text-amber-700 border border-amber-200" },
+  confirmed:  { ar: "مؤكد",        en: "Confirmed",  cls: "bg-blue-500/10 text-blue-700 border border-blue-200" },
+  processing: { ar: "جاري التجهيز", en: "Processing", cls: "bg-primary/10 text-primary border border-primary/20" },
+  shipped:    { ar: "تم الشحن",    en: "Shipped",    cls: "bg-violet-500/10 text-violet-700 border border-violet-200" },
+  delivered:  { ar: "تم التسليم",  en: "Delivered",  cls: "bg-emerald-500/10 text-emerald-700 border border-emerald-200" },
+  cancelled:  { ar: "ملغى",        en: "Cancelled",  cls: "bg-destructive/10 text-destructive border border-destructive/20" },
 };
 
 /* ─── Bottom Nav ─── */
@@ -41,7 +42,7 @@ const DealerHomeBottomNav = ({ isRTL }: { isRTL: boolean }) => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border/50 lg:hidden shadow-[0_-1px_12px_rgba(0,0,0,0.06)]">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-lg border-t border-border/40 lg:hidden">
       <div className="flex items-center justify-around h-16 px-1 max-w-lg mx-auto">
         {tabs.map((tab) => (
           <button
@@ -60,10 +61,27 @@ const DealerHomeBottomNav = ({ isRTL }: { isRTL: boolean }) => {
   );
 };
 
+/* ─── Section Header ─── */
+const SectionHeader = ({ title, linkTo, linkLabel, icon: Icon, isRTL }: { title: string; linkTo?: string; linkLabel?: string; icon?: any; isRTL: boolean }) => {
+  const ArrowIcon = isRTL ? ChevronLeft : ChevronRight;
+  return (
+    <div className="flex items-center justify-between mb-3">
+      <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
+        {Icon && <Icon className="w-4 h-4 text-primary" />}
+        {title}
+      </h2>
+      {linkTo && (
+        <Link to={linkTo}>
+          <Button variant="ghost" size="sm" className="text-primary text-xs font-semibold h-7 px-2 gap-1 hover:bg-primary/5">
+            {linkLabel || (isRTL ? "عرض الكل" : "View All")}<ArrowIcon className="w-3.5 h-3.5" />
+          </Button>
+        </Link>
+      )}
+    </div>
+  );
+};
 
-
-
-/* ─── Component ─── */
+/* ─── Main Component ─── */
 const DealerHomePage = () => {
   const { user, dealerAccount } = useAuth();
   const { lang } = useLanguage();
@@ -71,7 +89,6 @@ const DealerHomePage = () => {
   const { toast } = useToast();
   const isRTL = lang === "ar";
 
-  const [stats, setStats] = useState({ totalOrders: 0, pendingOrders: 0, totalSpent: 0, unreadNotifs: 0 });
   const [recentOrders, setRecentOrders] = useState<OrderSummary[]>([]);
   const [offers, setOffers] = useState<ProductItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,9 +99,6 @@ const DealerHomePage = () => {
   const [searching, setSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
-
-
-
 
   /* Search handler */
   const handleSearch = useCallback(async (q: string) => {
@@ -102,20 +116,14 @@ const DealerHomePage = () => {
     if (!user) return;
     (async () => {
       setLoading(true);
-      const [ordersRes, notifsRes, offersRes] = await Promise.all([
-        supabase.from("orders").select("id, order_number, status, total_amount, created_at").eq("user_id", user.id).neq("status", "cancelled").order("created_at", { ascending: false }).limit(5),
-        supabase.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("is_read", false),
-        supabase.from("products").select("id, name_ar, name_en, sku, base_price, sale_price, image_url").eq("is_active", true).eq("is_on_sale", true).limit(6),
+      const [ordersRes, offersRes] = await Promise.all([
+        supabase.from("orders").select("id, order_number, status, total_amount, created_at")
+          .eq("user_id", user.id).neq("status", "cancelled")
+          .order("created_at", { ascending: false }).limit(5),
+        supabase.from("products").select("id, name_ar, name_en, sku, base_price, sale_price, image_url")
+          .eq("is_active", true).eq("is_on_sale", true).limit(6),
       ]);
-      const orders = ordersRes.data || [];
-      setRecentOrders(orders.slice(0, 5));
-      const { data: allOrders } = await supabase.from("orders").select("total_amount, status").eq("user_id", user.id).neq("status", "cancelled");
-      setStats({
-        totalOrders: (allOrders || []).length,
-        pendingOrders: (allOrders || []).filter(o => ["pending", "confirmed"].includes(o.status)).length,
-        totalSpent: (allOrders || []).reduce((s, o) => s + (o.total_amount || 0), 0),
-        unreadNotifs: notifsRes.count || 0,
-      });
+      setRecentOrders(ordersRes.data || []);
       setOffers((offersRes.data as ProductItem[]) || []);
       setLoading(false);
     })();
@@ -132,7 +140,6 @@ const DealerHomePage = () => {
       existing.push({ id: product.id, sku: product.sku, name_ar: product.name_ar, name_en: product.name_en });
       sessionStorage.setItem("quote_pending_items", JSON.stringify(existing));
     }
-    // Record price view for "today's priced items"
     const today = new Date().toISOString().split("T")[0];
     await supabase.from("dealer_price_views").upsert(
       { user_id: user.id, product_id: product.id, view_date: today },
@@ -141,39 +148,44 @@ const DealerHomePage = () => {
     toast({ title: "✅", description: isRTL ? `تم إضافة ${product.name_ar}` : `Added ${product.name_ar}` });
   }, [isRTL, toast, user]);
 
-
-
-
-  const ArrowIcon = isRTL ? ChevronLeft : ChevronRight;
-
   return (
-    <div className="pt-14 md:pt-16 pb-24 lg:pb-6 min-h-screen bg-muted/20" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="pt-14 md:pt-16 pb-24 lg:pb-6 min-h-screen bg-background" dir={isRTL ? "rtl" : "ltr"}>
 
-      {/* ━━━ SEARCH HERO ━━━ */}
-      <div className="bg-card border-b border-border/30">
-        <div className="container mx-auto px-4 pt-5 pb-5 md:pt-8 md:pb-6 max-w-3xl">
-          {/* Welcome compact */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-between mb-4">
+      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          1️⃣ SEARCH — TOP PRIORITY
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <div className="bg-gradient-to-b from-secondary to-secondary/95">
+        <div className="container mx-auto px-4 pt-6 pb-7 md:pt-10 md:pb-8 max-w-3xl">
+          {/* Welcome row */}
+          <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between mb-5">
             <div>
-              <p className="text-[11px] text-muted-foreground font-medium tracking-wide uppercase">{isRTL ? "بوابة التجار" : "Dealer Portal"}</p>
-              <h1 className="text-xl md:text-2xl font-black text-foreground">{isRTL ? "ابحث واطلب بسرعة" : "Search & Order Fast"}</h1>
+              <p className="text-secondary-foreground/60 text-[11px] font-medium tracking-widest uppercase mb-0.5">
+                {isRTL ? "بوابة التجار" : "Dealer Portal"}
+              </p>
+              <h1 className="text-xl md:text-2xl font-black text-secondary-foreground">
+                {isRTL ? "ابحث واطلب بسرعة" : "Search & Order Fast"}
+              </h1>
             </div>
-            <Badge className="text-[10px] font-bold bg-primary/10 text-primary border-primary/20 px-2.5 py-1 shrink-0">{tierLabel}</Badge>
+            <Badge className="text-[10px] font-bold bg-primary text-primary-foreground border-0 px-3 py-1.5 rounded-lg shadow-lg shadow-primary/30">
+              {tierLabel}
+            </Badge>
           </motion.div>
 
-          {/* ━━━ LARGE SEARCH BAR ━━━ */}
+          {/* SEARCH BAR */}
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="relative">
-            <div className={`relative flex items-center rounded-2xl border-2 transition-all duration-200 ${
-              searchFocused ? "border-primary bg-background shadow-xl shadow-primary/8" : "border-border bg-background hover:border-primary/40"
+            <div className={`relative flex items-center rounded-2xl transition-all duration-200 ${
+              searchFocused
+                ? "bg-background shadow-2xl shadow-primary/10 ring-2 ring-primary/40"
+                : "bg-background/95 shadow-lg hover:shadow-xl"
             }`}>
-              <Search className={`absolute w-5 h-5 transition-colors ${searchFocused ? "text-primary" : "text-muted-foreground/40"} ${isRTL ? 'right-4' : 'left-4'}`} />
+              <Search className={`absolute w-5 h-5 transition-colors ${searchFocused ? "text-primary" : "text-muted-foreground/50"} ${isRTL ? 'right-4' : 'left-4'}`} />
               <Input
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 onFocus={() => { setSearchFocused(true); searchQuery.trim().length >= 2 && setShowResults(true); }}
                 onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
                 placeholder={isRTL ? "ابحث برقم القطعة أو اسم المنتج..." : "Search by Part Number or Product Name..."}
-                className={`h-14 md:h-16 border-0 bg-transparent text-base md:text-lg shadow-none focus-visible:ring-0 font-medium ${isRTL ? 'pr-12 pl-10' : 'pl-12 pr-10'}`}
+                className={`h-14 md:h-16 border-0 bg-transparent text-base md:text-lg shadow-none focus-visible:ring-0 font-medium placeholder:text-muted-foreground/40 ${isRTL ? 'pr-12 pl-10' : 'pl-12 pr-10'}`}
               />
               {searchQuery && (
                 <button onClick={() => { setSearchQuery(""); setShowResults(false); }} className={`absolute p-1.5 rounded-full hover:bg-muted ${isRTL ? 'left-3' : 'right-3'}`}>
@@ -181,44 +193,69 @@ const DealerHomePage = () => {
                 </button>
               )}
             </div>
-            <p className="text-[10px] text-muted-foreground mt-2 px-1">
-              {isRTL ? "💡 ابحث برقم القطعة OEM للحصول على نتائج دقيقة وسريعة" : "💡 Search by OEM part number for fastest results"}
-            </p>
+
+            {/* Quick hint chips */}
+            <div className="flex items-center gap-2 mt-3 overflow-x-auto pb-1 scrollbar-hide">
+              <span className="text-secondary-foreground/40 text-[10px] shrink-0">💡</span>
+              {[
+                isRTL ? "رقم القطعة OEM" : "OEM Part #",
+                isRTL ? "فلتر زيت" : "Oil Filter",
+                isRTL ? "بواجي" : "Spark Plugs",
+              ].map((hint) => (
+                <button
+                  key={hint}
+                  onClick={() => setSearchQuery(hint)}
+                  className="text-[10px] text-secondary-foreground/50 bg-secondary-foreground/8 hover:bg-secondary-foreground/15 px-2.5 py-1 rounded-full whitespace-nowrap transition-colors font-medium"
+                >
+                  {hint}
+                </button>
+              ))}
+            </div>
 
             {/* Search Results Dropdown */}
             <AnimatePresence>
               {showResults && (
-                <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} className="absolute z-50 w-full mt-1">
-                  <Card className="shadow-2xl border-border/50 rounded-xl overflow-hidden">
+                <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} className="absolute z-50 w-full mt-2">
+                  <Card className="shadow-2xl border-0 rounded-2xl overflow-hidden">
                     <CardContent className="p-0">
                       {searching ? (
-                        <div className="p-4 space-y-2">{[1,2,3].map(i => <Skeleton key={i} className="h-12 rounded-lg" />)}</div>
+                        <div className="p-4 space-y-2">{[1,2,3].map(i => <Skeleton key={i} className="h-14 rounded-xl" />)}</div>
                       ) : searchResults.length === 0 ? (
-                        <div className="p-8 text-center">
-                          <Package className="w-8 h-8 text-muted-foreground/15 mx-auto mb-2" />
+                        <div className="p-10 text-center">
+                          <Search className="w-8 h-8 text-muted-foreground/10 mx-auto mb-2" />
                           <p className="text-sm text-muted-foreground">{isRTL ? "لا توجد نتائج" : "No results found"}</p>
                         </div>
                       ) : (
-                        <div className="max-h-80 overflow-y-auto divide-y divide-border/10">
-                          {searchResults.map(p => (
-                            <div key={p.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/40 transition-colors cursor-pointer">
-                              <div className="w-10 h-10 rounded-lg bg-muted/60 shrink-0 overflow-hidden flex items-center justify-center">
-                                {p.image_url ? <img src={p.image_url} alt="" className="w-full h-full object-contain p-0.5" /> : <Package className="w-4 h-4 text-muted-foreground/30" />}
+                        <div className="max-h-80 overflow-y-auto">
+                          {searchResults.map((p, idx) => (
+                            <div
+                              key={p.id}
+                              className={`flex items-center gap-3 px-4 py-3.5 hover:bg-muted/50 transition-colors cursor-pointer ${
+                                idx !== searchResults.length - 1 ? "border-b border-border/10" : ""
+                              }`}
+                            >
+                              <div className="w-11 h-11 rounded-xl bg-muted/50 shrink-0 overflow-hidden flex items-center justify-center">
+                                {p.image_url
+                                  ? <img src={p.image_url} alt="" className="w-full h-full object-contain p-1" />
+                                  : <Package className="w-4 h-4 text-muted-foreground/20" />}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-foreground truncate">{isRTL ? p.name_ar : (p.name_en || p.name_ar)}</p>
-                                <p className="text-xs text-muted-foreground font-mono">{p.sku}</p>
+                                <p className="text-sm font-semibold text-foreground truncate">
+                                  {isRTL ? p.name_ar : (p.name_en || p.name_ar)}
+                                </p>
+                                <p className="text-xs text-muted-foreground font-mono mt-0.5">{p.sku}</p>
                               </div>
-                              <Button size="sm" className="h-8 px-3 text-xs font-bold gap-1 shrink-0" onClick={() => handleAddToQuote(p)}>
-                                <Plus className="w-3 h-3" />{isRTL ? "أضف" : "Add"}
+                              <Button size="sm" className="h-9 px-3.5 text-xs font-bold gap-1.5 shrink-0 rounded-xl" onClick={() => handleAddToQuote(p)}>
+                                <Plus className="w-3.5 h-3.5" />{isRTL ? "تسعير" : "Price"}
                               </Button>
                             </div>
                           ))}
                           <button
                             onClick={() => { navigate(`/products?search=${encodeURIComponent(searchQuery)}`); setShowResults(false); setSearchQuery(""); }}
-                            className="w-full py-3 text-sm font-bold text-primary hover:bg-primary/5 transition-colors"
+                            className="w-full py-3.5 text-sm font-bold text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-1.5"
                           >
-                            {isRTL ? "عرض كل النتائج ←" : "View all results →"}
+                            {isRTL ? "عرض كل النتائج" : "View all results"}
+                            <ArrowRight className={`w-3.5 h-3.5 ${isRTL ? "rotate-180" : ""}`} />
                           </button>
                         </div>
                       )}
@@ -231,29 +268,82 @@ const DealerHomePage = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-5 space-y-5 max-w-3xl">
+      <div className="container mx-auto px-4 py-5 space-y-6 max-w-3xl">
 
-
-
-        {/* ━━━ RECENT ORDERS ━━━ */}
-        <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold text-foreground">{isRTL ? "آخر الطلبات" : "Recent Orders"}</h2>
-            <Link to="/dealer?tab=orders">
-              <Button variant="ghost" size="sm" className="text-primary text-xs font-semibold h-7 px-2 gap-1 hover:bg-primary/5">
-                {isRTL ? "عرض الكل" : "View All"}<ArrowIcon className="w-3.5 h-3.5" />
-              </Button>
-            </Link>
+        {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            2️⃣ OFFERS — SECOND PRIORITY
+            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+        {loading ? (
+          <div>
+            <Skeleton className="h-5 w-32 mb-3 rounded" />
+            <div className="grid grid-cols-2 gap-2.5">
+              {[1,2,3,4].map(i => <Skeleton key={i} className="h-52 rounded-2xl" />)}
+            </div>
           </div>
+        ) : offers.length > 0 ? (
+          <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+            <SectionHeader
+              title={isRTL ? "عروض حصرية" : "Exclusive Offers"}
+              linkTo="/dealer?tab=offers"
+              linkLabel={isRTL ? "الكل" : "All"}
+              icon={Sparkles}
+              isRTL={isRTL}
+            />
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+              {offers.slice(0, 6).map((p, i) => (
+                <motion.div key={p.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.04 }}>
+                  <Card className="border-border/15 rounded-2xl overflow-hidden group hover:border-primary/20 hover:shadow-lg transition-all duration-300">
+                    <CardContent className="p-0">
+                      <div className="aspect-square bg-muted/20 relative overflow-hidden flex items-center justify-center">
+                        {p.image_url
+                          ? <img src={p.image_url} alt={p.name_ar} className="w-full h-full object-contain p-4 group-hover:scale-110 transition-transform duration-500" loading="lazy" />
+                          : <Package className="w-10 h-10 text-muted-foreground/10" />}
+                        {p.sale_price && (
+                          <span className="absolute top-2 left-2 text-[9px] font-black bg-destructive text-destructive-foreground px-2 py-1 rounded-lg flex items-center gap-0.5">
+                            <Percent className="w-2.5 h-2.5" />
+                            {isRTL ? "خصم" : "SALE"}
+                          </span>
+                        )}
+                      </div>
+                      <div className="p-3 border-t border-border/10">
+                        <p className="text-xs font-bold text-foreground line-clamp-1 mb-0.5">{isRTL ? p.name_ar : (p.name_en || p.name_ar)}</p>
+                        <p className="text-[10px] text-muted-foreground font-mono mb-2.5">{p.sku}</p>
+                        <Button size="sm" className="w-full h-8 text-xs font-bold gap-1 rounded-lg" onClick={() => handleAddToQuote(p)}>
+                          <Plus className="w-3 h-3" />{isRTL ? "تسعير" : "Price It"}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </motion.section>
+        ) : null}
+
+        {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            3️⃣ RECENT ORDERS — THIRD PRIORITY
+            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+        <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <SectionHeader
+            title={isRTL ? "آخر الطلبات" : "Recent Orders"}
+            linkTo="/dealer?tab=orders"
+            icon={ClipboardList}
+            isRTL={isRTL}
+          />
           {loading ? (
-            <div className="space-y-2">{[1,2,3].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>
+            <div className="space-y-2">{[1,2,3].map(i => <Skeleton key={i} className="h-[72px] rounded-2xl" />)}</div>
           ) : recentOrders.length === 0 ? (
-            <Card className="border-border/30 rounded-xl">
+            <Card className="border-border/15 rounded-2xl border-dashed">
               <CardContent className="p-8 text-center">
-                <Package className="w-10 h-10 text-muted-foreground/10 mx-auto mb-3" />
-                <p className="text-sm text-muted-foreground mb-4">{isRTL ? "لا توجد طلبات بعد" : "No orders yet"}</p>
-                <Link to="/dealer?tab=quotes">
-                  <Button className="gap-2 h-10"><ShoppingCart className="w-4 h-4" />{isRTL ? "اطلب الآن" : "Order Now"}</Button>
+                <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                  <ShoppingCart className="w-6 h-6 text-muted-foreground/20" />
+                </div>
+                <p className="text-sm font-medium text-muted-foreground mb-1">{isRTL ? "لا توجد طلبات بعد" : "No orders yet"}</p>
+                <p className="text-xs text-muted-foreground/60 mb-4">{isRTL ? "ابدأ بالبحث عن قطع الغيار أعلاه" : "Start by searching for parts above"}</p>
+                <Link to="/products">
+                  <Button className="gap-2 h-10 rounded-xl font-bold">
+                    <Package className="w-4 h-4" />{isRTL ? "تصفح المنتجات" : "Browse Products"}
+                  </Button>
                 </Link>
               </CardContent>
             </Card>
@@ -262,22 +352,33 @@ const DealerHomePage = () => {
               {recentOrders.map((order, i) => {
                 const st = statusConfig[order.status] || statusConfig.pending;
                 return (
-                  <motion.div key={order.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 + i * 0.04 }}>
-                    <Card className="border-border/20 rounded-xl overflow-hidden hover:border-primary/15 transition-all hover:shadow-sm">
-                      <CardContent className="px-4 py-3 flex items-center gap-3">
+                  <motion.div key={order.id} initial={{ opacity: 0, x: isRTL ? 10 : -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 + i * 0.04 }}>
+                    <Card className="border-border/15 rounded-2xl overflow-hidden hover:shadow-md transition-all duration-200 group">
+                      <CardContent className="px-4 py-3.5 flex items-center gap-3">
+                        {/* Order info */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <p className="text-sm font-bold text-foreground">#{order.order_number}</p>
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${st.cls}`}>{isRTL ? st.ar : st.en}</span>
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <p className="text-sm font-bold text-foreground font-mono">#{order.order_number}</p>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${st.cls}`}>
+                              {isRTL ? st.ar : st.en}
+                            </span>
                           </div>
-                          <p className="text-xs text-muted-foreground">{new Date(order.created_at).toLocaleDateString(isRTL ? "ar-EG" : "en-US", { day: "numeric", month: "short", year: "numeric" })}</p>
+                          <p className="text-[11px] text-muted-foreground">
+                            {new Date(order.created_at).toLocaleDateString(isRTL ? "ar-EG" : "en-US", { day: "numeric", month: "short", year: "numeric" })}
+                          </p>
                         </div>
-                        <div className="text-left shrink-0">
-                          <p className="text-sm font-black text-foreground">{order.total_amount.toLocaleString()}</p>
-                          <p className="text-[10px] text-muted-foreground">{isRTL ? "ج.م" : "EGP"}</p>
+                        {/* Amount */}
+                        <div className={`shrink-0 ${isRTL ? "text-left" : "text-right"}`}>
+                          <p className="text-base font-black text-foreground tabular-nums">{order.total_amount.toLocaleString()}</p>
+                          <p className="text-[10px] text-muted-foreground font-medium">{isRTL ? "ج.م" : "EGP"}</p>
                         </div>
-                        <Button variant="outline" size="sm" className="h-8 px-2.5 text-xs gap-1 shrink-0 border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground">
-                          <RefreshCw className="w-3 h-3" />{isRTL ? "أعد" : "Reorder"}
+                        {/* Reorder */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 px-3 text-xs gap-1.5 shrink-0 rounded-xl border-border/30 text-muted-foreground hover:text-primary hover:border-primary/30 hover:bg-primary/5"
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" />{isRTL ? "أعد" : "Reorder"}
                         </Button>
                       </CardContent>
                     </Card>
@@ -288,69 +389,57 @@ const DealerHomePage = () => {
           )}
         </motion.section>
 
-        {/* ━━━ OFFERS ━━━ */}
-        {offers.length > 0 && (
-          <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
-                <Tag className="w-4 h-4 text-primary" />
-                {isRTL ? "عروض حصرية" : "Exclusive Offers"}
-              </h2>
-              <Link to="/dealer?tab=offers">
-                <Button variant="ghost" size="sm" className="text-primary text-xs font-semibold h-7 px-2 gap-1 hover:bg-primary/5">
-                  {isRTL ? "الكل" : "All"}<ArrowIcon className="w-3.5 h-3.5" />
-                </Button>
-              </Link>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-              {offers.slice(0, 6).map((p, i) => (
-                <motion.div key={p.id} initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 + i * 0.03 }}>
-                  <Card className="border-border/20 rounded-xl overflow-hidden group hover:border-primary/20 hover:shadow-md transition-all">
-                    <CardContent className="p-0">
-                      <div className="aspect-square bg-background relative overflow-hidden flex items-center justify-center">
-                        {p.image_url ? <img src={p.image_url} alt={p.name_ar} className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-300" loading="lazy" />
-                        : <Package className="w-8 h-8 text-muted-foreground/10" />}
-                        {p.sale_price && (
-                          <span className="absolute top-2 left-2 text-[9px] font-bold bg-destructive text-destructive-foreground px-2 py-0.5 rounded-md">
-                            {isRTL ? "عرض" : "SALE"}
-                          </span>
-                        )}
+        {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            4️⃣ STATEMENTS & QUICK ACCESS — FOURTH PRIORITY
+            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+        <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          <SectionHeader
+            title={isRTL ? "الحساب والمدفوعات" : "Account & Payments"}
+            isRTL={isRTL}
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            {[
+              {
+                icon: Receipt,
+                label: isRTL ? "كشف الحساب" : "Statement",
+                desc: isRTL ? "عرض تفاصيل حسابك" : "View account details",
+                href: "/dealer?tab=statement",
+              },
+              {
+                icon: FileText,
+                label: isRTL ? "كشوفات الأسعار" : "Price Lists",
+                desc: isRTL ? "قوائم أسعار محدثة" : "Updated price lists",
+                href: "/dealer?tab=price_lists",
+              },
+              {
+                icon: CreditCard,
+                label: isRTL ? "الدفع الإلكتروني" : "Payment",
+                desc: isRTL ? "سدد مستحقاتك" : "Pay your invoices",
+                href: "/dealer?tab=payment",
+              },
+            ].map((item, i) => (
+              <Link key={item.href} to={item.href}>
+                <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.04 }}>
+                  <Card className="border-border/15 rounded-2xl hover:border-primary/20 hover:shadow-md transition-all duration-200 group cursor-pointer h-full">
+                    <CardContent className="p-4 flex items-center gap-3.5">
+                      <div className="w-11 h-11 rounded-xl bg-primary/8 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-colors">
+                        <item.icon className="w-5 h-5 text-primary" />
                       </div>
-                      <div className="p-3 border-t border-border/15">
-                        <p className="text-xs font-semibold text-foreground line-clamp-1 mb-0.5">{p.name_ar}</p>
-                        <p className="text-[10px] text-muted-foreground font-mono mb-2">{p.sku}</p>
-                        <Button size="sm" className="w-full h-8 text-xs font-bold gap-1" onClick={() => handleAddToQuote(p)}>
-                          <Plus className="w-3 h-3" />{isRTL ? "أضف للطلب" : "Add to Cart"}
-                        </Button>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-foreground">{item.label}</p>
+                        <p className="text-[11px] text-muted-foreground">{item.desc}</p>
                       </div>
+                      {isRTL
+                        ? <ChevronLeft className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary transition-colors shrink-0" />
+                        : <ChevronRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary transition-colors shrink-0" />
+                      }
                     </CardContent>
                   </Card>
                 </motion.div>
-              ))}
-            </div>
-          </motion.section>
-        )}
-
-
-        {/* ━━━ QUICK ACCESS ━━━ */}
-        <section className="grid grid-cols-2 gap-2.5">
-          {[
-            { icon: FileText, label: isRTL ? "كشوفات الأسعار" : "Price Lists", href: "/dealer?tab=price_lists" },
-            { icon: CreditCard, label: isRTL ? "الدفع الإلكتروني" : "Payment", href: "/dealer?tab=payment" },
-          ].map((a) => (
-            <Link key={a.href} to={a.href}>
-              <Card className="border-border/20 rounded-xl hover:border-primary/20 hover:shadow-sm transition-all">
-                <CardContent className="p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/8 flex items-center justify-center shrink-0">
-                    <a.icon className="w-5 h-5 text-primary" />
-                  </div>
-                  <span className="text-sm font-semibold text-foreground">{a.label}</span>
-                  <ArrowIcon className="w-4 h-4 text-muted-foreground ms-auto" />
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </section>
+              </Link>
+            ))}
+          </div>
+        </motion.section>
       </div>
 
       {/* ━━━ BOTTOM NAVIGATION ━━━ */}
