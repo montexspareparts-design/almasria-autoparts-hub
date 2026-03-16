@@ -233,64 +233,7 @@ const DealerHomePage = () => {
 
       <div className="container mx-auto px-4 py-5 space-y-5 max-w-3xl">
 
-        {/* ━━━ QUICK ORDER TABLE ━━━ */}
-        <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <Card className="border-border/40 rounded-xl overflow-hidden shadow-sm">
-            <div className="flex items-center justify-between px-4 py-3 bg-primary/5 border-b border-border/20">
-              <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-primary" />
-                <h2 className="text-sm font-bold text-foreground">{isRTL ? "طلب سريع" : "Quick Order"}</h2>
-              </div>
-              <Button variant="ghost" size="sm" onClick={addQuickRow} className="h-7 text-xs text-primary hover:bg-primary/10 gap-1">
-                <Plus className="w-3 h-3" />{isRTL ? "سطر" : "Row"}
-              </Button>
-            </div>
-            <CardContent className="p-0">
-              {/* Table Header */}
-              <div className="grid grid-cols-[1fr_80px_52px] gap-2 px-4 py-2 bg-muted/30 border-b border-border/15 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-                <span>{isRTL ? "رقم القطعة" : "Part Number"}</span>
-                <span className="text-center">{isRTL ? "الكمية" : "Qty"}</span>
-                <span></span>
-              </div>
-              {/* Rows */}
-              <div className="divide-y divide-border/10">
-                {quickRows.map((row, idx) => (
-                  <div key={idx} className="grid grid-cols-[1fr_80px_52px] gap-2 px-4 py-2 items-center">
-                    <Input
-                      value={row.sku}
-                      onChange={e => updateQuickRow(idx, "sku", e.target.value)}
-                      placeholder={isRTL ? "مثال: 04152-YZZA1" : "e.g. 04152-YZZA1"}
-                      className="h-10 text-sm font-mono bg-muted/20 border-border/40"
-                      onKeyDown={e => e.key === "Enter" && handleQuickOrderSubmit()}
-                    />
-                    <Input
-                      type="number"
-                      value={row.qty}
-                      onChange={e => updateQuickRow(idx, "qty", e.target.value)}
-                      className="h-10 text-sm text-center bg-muted/20 border-border/40"
-                      min="1"
-                    />
-                    {row.sku.trim() ? (
-                      <button onClick={() => setQuickRows(prev => prev.filter((_, i) => i !== idx))} className="text-muted-foreground hover:text-destructive transition-colors p-1">
-                        <X className="w-4 h-4" />
-                      </button>
-                    ) : <div />}
-                  </div>
-                ))}
-              </div>
-              {/* Submit */}
-              <div className="px-4 py-3 bg-muted/20 border-t border-border/20 flex items-center justify-between gap-3">
-                <button onClick={() => navigate("/dealer?tab=quotes")} className="text-xs text-primary font-semibold hover:underline">
-                  {isRTL ? "فتح منشئ عروض الأسعار ←" : "Open Quote Builder →"}
-                </button>
-                <Button onClick={handleQuickOrderSubmit} disabled={quickOrderLoading || !quickRows.some(r => r.sku.trim())} className="h-10 px-5 gap-2 font-bold text-sm">
-                  {quickOrderLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                  {isRTL ? "إضافة للطلب" : "Add to Cart"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.section>
+
 
         {/* ━━━ RECENT ORDERS ━━━ */}
         <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
