@@ -17,15 +17,15 @@ const primaryTabs: { id: DealerTab; label: string; Icon: typeof LayoutDashboard 
 ];
 
 const moreTabs: { id: DealerTab; label: string; Icon: typeof LayoutDashboard }[] = [
+  { id: "price_lists", label: "الأسعار", Icon: FileText },
   { id: "payment", label: "الدفع", Icon: CreditCard },
   { id: "invoices", label: "الفواتير", Icon: Receipt },
   { id: "statement", label: "كشف الحساب", Icon: CreditCard },
   { id: "favorites", label: "المفضلة", Icon: Heart },
   { id: "stock_alerts", label: "تنبيهات المخزون", Icon: Bell },
   { id: "notifications", label: "الإشعارات", Icon: Bell },
-  { id: "offers", label: "العروض", Icon: Tag },
   { id: "quick_order", label: "طلب سريع", Icon: Upload },
-  { id: "settings", label: "الإعدادات", Icon: Settings },
+  { id: "settings", label: "حسابي", Icon: Settings },
 ];
 
 const DealerMobileNav = ({ activeTab, onTabChange, unreadCount }: DealerMobileNavProps) => {
