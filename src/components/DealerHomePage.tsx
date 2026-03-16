@@ -83,13 +83,8 @@ const DealerHomePage = () => {
   const [showResults, setShowResults] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
 
-  // Quick Order Table
-  const [quickRows, setQuickRows] = useState<QuickOrderRow[]>([
-    { sku: "", qty: "1" },
-    { sku: "", qty: "1" },
-    { sku: "", qty: "1" },
-  ]);
-  const [quickOrderLoading, setQuickOrderLoading] = useState(false);
+
+
 
   /* Search handler */
   const handleSearch = useCallback(async (q: string) => {
