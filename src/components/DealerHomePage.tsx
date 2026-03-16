@@ -60,8 +60,8 @@ const DealerHomeBottomNav = ({ isRTL }: { isRTL: boolean }) => {
   );
 };
 
-/* ─── Quick Order Row ─── */
-interface QuickOrderRow { sku: string; qty: string; }
+
+
 
 /* ─── Component ─── */
 const DealerHomePage = () => {
