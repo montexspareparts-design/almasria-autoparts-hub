@@ -2,10 +2,10 @@ import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ShoppingCart, ClipboardList, FileText, Package, Clock,
+  ShoppingCart, ClipboardList, FileText, Package,
   Search, X, ChevronLeft, ChevronRight, Plus, ArrowRight,
   CreditCard, Home, Tag, User, RefreshCw, Percent, Receipt,
-  Sparkles,
+  Sparkles, CheckCircle2, XCircle, Download,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -19,7 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 
 /* ─── Types ─── */
 interface OrderSummary { id: string; order_number: string; status: string; total_amount: number; created_at: string; }
-interface ProductItem { id: string; name_ar: string; name_en: string | null; sku: string; base_price: number; sale_price: number | null; image_url: string | null; brand?: string; }
+interface ProductItem { id: string; name_ar: string; name_en: string | null; sku: string; base_price: number; sale_price: number | null; image_url: string | null; stock_quantity?: number; brand?: string; }
 
 const statusConfig: Record<string, { ar: string; en: string; cls: string }> = {
   pending:    { ar: "قيد الانتظار", en: "Pending",    cls: "bg-amber-500/10 text-amber-700 border border-amber-200" },
@@ -37,7 +37,7 @@ const DealerHomeBottomNav = ({ isRTL }: { isRTL: boolean }) => {
     { id: "home", label: isRTL ? "الرئيسية" : "Home", icon: Home, href: "/", active: true },
     { id: "products", label: isRTL ? "المنتجات" : "Products", icon: Package, href: "/products" },
     { id: "orders", label: isRTL ? "طلباتي" : "Orders", icon: ClipboardList, href: "/dealer?tab=orders" },
-    { id: "offers", label: isRTL ? "العروض" : "Offers", icon: Tag, href: "/dealer?tab=offers" },
+    { id: "statements", label: isRTL ? "الحساب" : "Statements", icon: Receipt, href: "/dealer?tab=statement" },
     { id: "account", label: isRTL ? "حسابي" : "Account", icon: User, href: "/dealer?tab=settings" },
   ];
 
@@ -48,7 +48,7 @@ const DealerHomeBottomNav = ({ isRTL }: { isRTL: boolean }) => {
           <button
             key={tab.id}
             onClick={() => navigate(tab.href)}
-            className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all min-w-[52px] ${
+            className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl transition-all min-w-[48px] ${
               tab.active ? "text-primary" : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -81,6 +81,24 @@ const SectionHeader = ({ title, linkTo, linkLabel, icon: Icon, isRTL }: { title:
   );
 };
 
+/* ─── Stock Badge ─── */
+const StockBadge = ({ qty, isRTL }: { qty: number; isRTL: boolean }) => {
+  if (qty > 0) {
+    return (
+      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-500/10 px-2 py-0.5 rounded-md">
+        <CheckCircle2 className="w-3 h-3" />
+        {isRTL ? "متوفر" : "In Stock"}
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-destructive bg-destructive/10 px-2 py-0.5 rounded-md">
+      <XCircle className="w-3 h-3" />
+      {isRTL ? "غير متوفر" : "Out of Stock"}
+    </span>
+  );
+};
+
 /* ─── Main Component ─── */
 const DealerHomePage = () => {
   const { user, dealerAccount } = useAuth();
@@ -100,13 +118,18 @@ const DealerHomePage = () => {
   const [showResults, setShowResults] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
 
-  /* Search handler */
+  /* Search handler — includes stock_quantity + price */
   const handleSearch = useCallback(async (q: string) => {
     if (q.trim().length < 2) { setSearchResults([]); setShowResults(false); return; }
     setSearching(true); setShowResults(true);
-    const { data } = await supabase.from("products").select("id, name_ar, name_en, sku, base_price, sale_price, image_url")
-      .eq("is_active", true).or(`name_ar.ilike.%${q.trim()}%,name_en.ilike.%${q.trim()}%,sku.ilike.%${q.trim()}%`).limit(8);
-    setSearchResults((data as ProductItem[]) || []); setSearching(false);
+    const { data } = await supabase
+      .from("products")
+      .select("id, name_ar, name_en, sku, base_price, sale_price, image_url, stock_quantity")
+      .eq("is_active", true)
+      .or(`name_ar.ilike.%${q.trim()}%,name_en.ilike.%${q.trim()}%,sku.ilike.%${q.trim()}%`)
+      .limit(8);
+    setSearchResults((data as ProductItem[]) || []);
+    setSearching(false);
   }, []);
 
   useEffect(() => { const t = setTimeout(() => handleSearch(searchQuery), 300); return () => clearTimeout(t); }, [searchQuery, handleSearch]);
@@ -120,7 +143,7 @@ const DealerHomePage = () => {
         supabase.from("orders").select("id, order_number, status, total_amount, created_at")
           .eq("user_id", user.id).neq("status", "cancelled")
           .order("created_at", { ascending: false }).limit(5),
-        supabase.from("products").select("id, name_ar, name_en, sku, base_price, sale_price, image_url")
+        supabase.from("products").select("id, name_ar, name_en, sku, base_price, sale_price, image_url, stock_quantity")
           .eq("is_active", true).eq("is_on_sale", true).limit(6),
       ]);
       setRecentOrders(ordersRes.data || []);
@@ -147,6 +170,11 @@ const DealerHomePage = () => {
     );
     toast({ title: "✅", description: isRTL ? `تم إضافة ${product.name_ar}` : `Added ${product.name_ar}` });
   }, [isRTL, toast, user]);
+
+  const getDiscount = (p: ProductItem) => {
+    if (!p.sale_price || p.sale_price >= p.base_price) return null;
+    return Math.round(((p.base_price - p.sale_price) / p.base_price) * 100);
+  };
 
   return (
     <div className="pt-14 md:pt-16 pb-24 lg:pb-6 min-h-screen bg-background" dir={isRTL ? "rtl" : "ltr"}>
@@ -212,44 +240,61 @@ const DealerHomePage = () => {
               ))}
             </div>
 
-            {/* Search Results Dropdown */}
+            {/* ━━━ Search Results Dropdown ━━━ */}
             <AnimatePresence>
               {showResults && (
                 <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} className="absolute z-50 w-full mt-2">
                   <Card className="shadow-2xl border-0 rounded-2xl overflow-hidden">
                     <CardContent className="p-0">
                       {searching ? (
-                        <div className="p-4 space-y-2">{[1,2,3].map(i => <Skeleton key={i} className="h-14 rounded-xl" />)}</div>
+                        <div className="p-4 space-y-2">{[1,2,3].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>
                       ) : searchResults.length === 0 ? (
                         <div className="p-10 text-center">
                           <Search className="w-8 h-8 text-muted-foreground/10 mx-auto mb-2" />
                           <p className="text-sm text-muted-foreground">{isRTL ? "لا توجد نتائج" : "No results found"}</p>
                         </div>
                       ) : (
-                        <div className="max-h-80 overflow-y-auto">
-                          {searchResults.map((p, idx) => (
-                            <div
-                              key={p.id}
-                              className={`flex items-center gap-3 px-4 py-3.5 hover:bg-muted/50 transition-colors cursor-pointer ${
-                                idx !== searchResults.length - 1 ? "border-b border-border/10" : ""
-                              }`}
-                            >
-                              <div className="w-11 h-11 rounded-xl bg-muted/50 shrink-0 overflow-hidden flex items-center justify-center">
-                                {p.image_url
-                                  ? <img src={p.image_url} alt="" className="w-full h-full object-contain p-1" />
-                                  : <Package className="w-4 h-4 text-muted-foreground/20" />}
+                        <div className="max-h-[400px] overflow-y-auto">
+                          {searchResults.map((p, idx) => {
+                            const stock = p.stock_quantity ?? 0;
+                            return (
+                              <div
+                                key={p.id}
+                                className={`flex items-start gap-3 px-4 py-3.5 hover:bg-muted/50 transition-colors cursor-pointer ${
+                                  idx !== searchResults.length - 1 ? "border-b border-border/10" : ""
+                                }`}
+                              >
+                                <div className="w-12 h-12 rounded-xl bg-muted/50 shrink-0 overflow-hidden flex items-center justify-center">
+                                  {p.image_url
+                                    ? <img src={p.image_url} alt="" className="w-full h-full object-contain p-1" />
+                                    : <Package className="w-5 h-5 text-muted-foreground/20" />}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-semibold text-foreground truncate">
+                                    {isRTL ? p.name_ar : (p.name_en || p.name_ar)}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground font-mono mt-0.5">{p.sku}</p>
+                                  <div className="flex items-center gap-2 mt-1.5">
+                                    <span className="text-xs font-black text-foreground">
+                                      {(p.sale_price || p.base_price).toLocaleString()} <span className="text-[10px] font-medium text-muted-foreground">{isRTL ? "ج.م" : "EGP"}</span>
+                                    </span>
+                                    {p.sale_price && p.sale_price < p.base_price && (
+                                      <span className="text-[10px] text-muted-foreground line-through">{p.base_price.toLocaleString()}</span>
+                                    )}
+                                    <StockBadge qty={stock} isRTL={isRTL} />
+                                  </div>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  className="h-9 px-3 text-xs font-bold gap-1 shrink-0 rounded-xl mt-1"
+                                  onClick={() => handleAddToQuote(p)}
+                                  disabled={stock === 0}
+                                >
+                                  <Plus className="w-3.5 h-3.5" />{isRTL ? "أضف" : "Add"}
+                                </Button>
                               </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-foreground truncate">
-                                  {isRTL ? p.name_ar : (p.name_en || p.name_ar)}
-                                </p>
-                                <p className="text-xs text-muted-foreground font-mono mt-0.5">{p.sku}</p>
-                              </div>
-                              <Button size="sm" className="h-9 px-3.5 text-xs font-bold gap-1.5 shrink-0 rounded-xl" onClick={() => handleAddToQuote(p)}>
-                                <Plus className="w-3.5 h-3.5" />{isRTL ? "تسعير" : "Price"}
-                              </Button>
-                            </div>
-                          ))}
+                            );
+                          })}
                           <button
                             onClick={() => { navigate(`/products?search=${encodeURIComponent(searchQuery)}`); setShowResults(false); setSearchQuery(""); }}
                             className="w-full py-3.5 text-sm font-bold text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-1.5"
@@ -271,51 +316,72 @@ const DealerHomePage = () => {
       <div className="container mx-auto px-4 py-5 space-y-6 max-w-3xl">
 
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            2️⃣ OFFERS — SECOND PRIORITY
+            2️⃣ PRICE OFFERS — SECOND PRIORITY
             ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
         {loading ? (
           <div>
             <Skeleton className="h-5 w-32 mb-3 rounded" />
             <div className="grid grid-cols-2 gap-2.5">
-              {[1,2,3,4].map(i => <Skeleton key={i} className="h-52 rounded-2xl" />)}
+              {[1,2,3,4].map(i => <Skeleton key={i} className="h-56 rounded-2xl" />)}
             </div>
           </div>
         ) : offers.length > 0 ? (
           <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
             <SectionHeader
-              title={isRTL ? "عروض حصرية" : "Exclusive Offers"}
+              title={isRTL ? "عروض الأسعار" : "Price Offers"}
               linkTo="/dealer?tab=offers"
-              linkLabel={isRTL ? "الكل" : "All"}
+              linkLabel={isRTL ? "كل العروض" : "All Offers"}
               icon={Sparkles}
               isRTL={isRTL}
             />
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-              {offers.slice(0, 6).map((p, i) => (
-                <motion.div key={p.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.04 }}>
-                  <Card className="border-border/15 rounded-2xl overflow-hidden group hover:border-primary/20 hover:shadow-lg transition-all duration-300">
-                    <CardContent className="p-0">
-                      <div className="aspect-square bg-muted/20 relative overflow-hidden flex items-center justify-center">
-                        {p.image_url
-                          ? <img src={p.image_url} alt={p.name_ar} className="w-full h-full object-contain p-4 group-hover:scale-110 transition-transform duration-500" loading="lazy" />
-                          : <Package className="w-10 h-10 text-muted-foreground/10" />}
-                        {p.sale_price && (
-                          <span className="absolute top-2 left-2 text-[9px] font-black bg-destructive text-destructive-foreground px-2 py-1 rounded-lg flex items-center gap-0.5">
-                            <Percent className="w-2.5 h-2.5" />
-                            {isRTL ? "خصم" : "SALE"}
-                          </span>
-                        )}
-                      </div>
-                      <div className="p-3 border-t border-border/10">
-                        <p className="text-xs font-bold text-foreground line-clamp-1 mb-0.5">{isRTL ? p.name_ar : (p.name_en || p.name_ar)}</p>
-                        <p className="text-[10px] text-muted-foreground font-mono mb-2.5">{p.sku}</p>
-                        <Button size="sm" className="w-full h-8 text-xs font-bold gap-1 rounded-lg" onClick={() => handleAddToQuote(p)}>
-                          <Plus className="w-3 h-3" />{isRTL ? "تسعير" : "Price It"}
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
+              {offers.slice(0, 6).map((p, i) => {
+                const discount = getDiscount(p);
+                const stock = p.stock_quantity ?? 0;
+                return (
+                  <motion.div key={p.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.04 }}>
+                    <Card className="border-border/15 rounded-2xl overflow-hidden group hover:border-primary/20 hover:shadow-lg transition-all duration-300">
+                      <CardContent className="p-0">
+                        <div className="aspect-square bg-muted/20 relative overflow-hidden flex items-center justify-center">
+                          {p.image_url
+                            ? <img src={p.image_url} alt={p.name_ar} className="w-full h-full object-contain p-4 group-hover:scale-110 transition-transform duration-500" loading="lazy" />
+                            : <Package className="w-10 h-10 text-muted-foreground/10" />}
+                          {discount && (
+                            <span className="absolute top-2 left-2 text-[10px] font-black bg-destructive text-destructive-foreground px-2 py-1 rounded-lg">
+                              -{discount}%
+                            </span>
+                          )}
+                          {stock > 0 ? (
+                            <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-card" title={isRTL ? "متوفر" : "In Stock"} />
+                          ) : (
+                            <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-destructive/60 ring-2 ring-card" title={isRTL ? "غير متوفر" : "Out of Stock"} />
+                          )}
+                        </div>
+                        <div className="p-3 border-t border-border/10">
+                          <p className="text-xs font-bold text-foreground line-clamp-1 mb-0.5">{isRTL ? p.name_ar : (p.name_en || p.name_ar)}</p>
+                          <p className="text-[10px] text-muted-foreground font-mono mb-1.5">{p.sku}</p>
+                          {/* Price row */}
+                          <div className="flex items-baseline gap-1.5 mb-2.5">
+                            <span className="text-sm font-black text-foreground">{(p.sale_price || p.base_price).toLocaleString()}</span>
+                            {p.sale_price && p.sale_price < p.base_price && (
+                              <span className="text-[10px] text-muted-foreground line-through">{p.base_price.toLocaleString()}</span>
+                            )}
+                            <span className="text-[9px] text-muted-foreground">{isRTL ? "ج.م" : "EGP"}</span>
+                          </div>
+                          <Button
+                            size="sm"
+                            className="w-full h-8 text-xs font-bold gap-1 rounded-lg"
+                            onClick={() => handleAddToQuote(p)}
+                            disabled={stock === 0}
+                          >
+                            <Plus className="w-3 h-3" />{isRTL ? "أضف للطلب" : "Add to Order"}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
             </div>
           </motion.section>
         ) : null}
@@ -355,7 +421,6 @@ const DealerHomePage = () => {
                   <motion.div key={order.id} initial={{ opacity: 0, x: isRTL ? 10 : -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 + i * 0.04 }}>
                     <Card className="border-border/15 rounded-2xl overflow-hidden hover:shadow-md transition-all duration-200 group">
                       <CardContent className="px-4 py-3.5 flex items-center gap-3">
-                        {/* Order info */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1.5">
                             <p className="text-sm font-bold text-foreground font-mono">#{order.order_number}</p>
@@ -367,12 +432,10 @@ const DealerHomePage = () => {
                             {new Date(order.created_at).toLocaleDateString(isRTL ? "ar-EG" : "en-US", { day: "numeric", month: "short", year: "numeric" })}
                           </p>
                         </div>
-                        {/* Amount */}
                         <div className={`shrink-0 ${isRTL ? "text-left" : "text-right"}`}>
                           <p className="text-base font-black text-foreground tabular-nums">{order.total_amount.toLocaleString()}</p>
                           <p className="text-[10px] text-muted-foreground font-medium">{isRTL ? "ج.م" : "EGP"}</p>
                         </div>
-                        {/* Reorder */}
                         <Button
                           variant="outline"
                           size="sm"
@@ -390,35 +453,35 @@ const DealerHomePage = () => {
         </motion.section>
 
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            4️⃣ STATEMENTS & QUICK ACCESS — FOURTH PRIORITY
+            4️⃣ STATEMENTS — FOURTH PRIORITY
             ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
         <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
           <SectionHeader
-            title={isRTL ? "الحساب والمدفوعات" : "Account & Payments"}
+            title={isRTL ? "كشف الحساب والمدفوعات" : "Statements & Payments"}
             isRTL={isRTL}
           />
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             {[
               {
                 icon: Receipt,
-                label: isRTL ? "كشف الحساب" : "Statement",
-                desc: isRTL ? "عرض تفاصيل حسابك" : "View account details",
+                label: isRTL ? "كشف الحساب" : "Account Statement",
+                desc: isRTL ? "رصيدك وحركات الحساب" : "Balance & transactions",
                 href: "/dealer?tab=statement",
               },
               {
                 icon: FileText,
-                label: isRTL ? "كشوفات الأسعار" : "Price Lists",
-                desc: isRTL ? "قوائم أسعار محدثة" : "Updated price lists",
-                href: "/dealer?tab=price_lists",
+                label: isRTL ? "الفواتير" : "Invoices",
+                desc: isRTL ? "عرض وتحميل الفواتير" : "View & download invoices",
+                href: "/dealer?tab=orders",
               },
               {
                 icon: CreditCard,
-                label: isRTL ? "الدفع الإلكتروني" : "Payment",
-                desc: isRTL ? "سدد مستحقاتك" : "Pay your invoices",
+                label: isRTL ? "الدفع الإلكتروني" : "Make Payment",
+                desc: isRTL ? "سدد مستحقاتك أونلاين" : "Pay invoices online",
                 href: "/dealer?tab=payment",
               },
             ].map((item, i) => (
-              <Link key={item.href} to={item.href}>
+              <Link key={item.href + item.label} to={item.href}>
                 <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.04 }}>
                   <Card className="border-border/15 rounded-2xl hover:border-primary/20 hover:shadow-md transition-all duration-200 group cursor-pointer h-full">
                     <CardContent className="p-4 flex items-center gap-3.5">
