@@ -110,6 +110,7 @@ const DealerHomePage = () => {
   const [recentOrders, setRecentOrders] = useState<OrderSummary[]>([]);
   const [offers, setOffers] = useState<ProductItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dailyViewCount, setDailyViewCount] = useState(0);
 
   // Search
   const [searchQuery, setSearchQuery] = useState("");
@@ -117,6 +118,8 @@ const DealerHomePage = () => {
   const [searching, setSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
+
+  const DAILY_PRICE_LIMIT = 20;
 
   /* Search handler — includes stock_quantity + price */
   const handleSearch = useCallback(async (q: string) => {
@@ -134,6 +137,13 @@ const DealerHomePage = () => {
 
   useEffect(() => { const t = setTimeout(() => handleSearch(searchQuery), 300); return () => clearTimeout(t); }, [searchQuery, handleSearch]);
 
+  /* Fetch daily view count */
+  const refreshDailyCount = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase.rpc("get_daily_view_count", { _user_id: user.id });
+    setDailyViewCount(typeof data === "number" ? data : 0);
+  }, [user]);
+
   /* Fetch data */
   useEffect(() => {
     if (!user) return;
@@ -149,27 +159,45 @@ const DealerHomePage = () => {
       setRecentOrders(ordersRes.data || []);
       setOffers((offersRes.data as ProductItem[]) || []);
       setLoading(false);
+      refreshDailyCount();
     })();
-  }, [user]);
+  }, [user, refreshDailyCount]);
 
   const tierLabel = dealerAccount?.tier === "wholesale_tier1" ? (isRTL ? "جملة T1" : "Wholesale T1")
     : dealerAccount?.tier === "wholesale_tier2" ? (isRTL ? "جملة T2" : "Wholesale T2")
     : dealerAccount?.tier === "corporate" ? (isRTL ? "شركات" : "Corporate") : (isRTL ? "تجزئة" : "Retail");
 
-  const handleAddToQuote = useCallback(async (product: ProductItem) => {
+  /* Price a product — records in dealer_price_views with 20 daily limit */
+  const handlePriceItem = useCallback(async (product: ProductItem) => {
     if (!user) return;
+    if (dailyViewCount >= DAILY_PRICE_LIMIT) {
+      toast({
+        title: isRTL ? "⚠️ تم الوصول للحد اليومي" : "⚠️ Daily limit reached",
+        description: isRTL ? `الحد الأقصى ${DAILY_PRICE_LIMIT} صنف يومياً` : `Maximum ${DAILY_PRICE_LIMIT} items per day`,
+        variant: "destructive",
+      });
+      return;
+    }
+    const today = new Date().toISOString().split("T")[0];
+    const { error } = await supabase.from("dealer_price_views").upsert(
+      { user_id: user.id, product_id: product.id, view_date: today },
+      { onConflict: "user_id,product_id,view_date" }
+    );
+    if (!error) {
+      await refreshDailyCount();
+      toast({ title: "✅", description: isRTL ? `تم تسعير ${product.name_ar}` : `Priced ${product.name_ar}` });
+    }
+  }, [isRTL, toast, user, dailyViewCount, refreshDailyCount]);
+
+  /* Add to order (quote session) */
+  const handleAddToOrder = useCallback((product: ProductItem) => {
     const existing = JSON.parse(sessionStorage.getItem("quote_pending_items") || "[]");
     if (!existing.find((p: any) => p.id === product.id)) {
       existing.push({ id: product.id, sku: product.sku, name_ar: product.name_ar, name_en: product.name_en });
       sessionStorage.setItem("quote_pending_items", JSON.stringify(existing));
     }
-    const today = new Date().toISOString().split("T")[0];
-    await supabase.from("dealer_price_views").upsert(
-      { user_id: user.id, product_id: product.id, view_date: today },
-      { onConflict: "user_id,product_id,view_date" }
-    );
-    toast({ title: "✅", description: isRTL ? `تم إضافة ${product.name_ar}` : `Added ${product.name_ar}` });
-  }, [isRTL, toast, user]);
+    toast({ title: "✅", description: isRTL ? `تم إضافة ${product.name_ar} للطلب` : `Added ${product.name_ar} to order` });
+  }, [isRTL, toast]);
 
   const getDiscount = (p: ProductItem) => {
     if (!p.sale_price || p.sale_price >= p.base_price) return null;
@@ -222,9 +250,10 @@ const DealerHomePage = () => {
               )}
             </div>
 
-            {/* Quick hint chips */}
-            <div className="flex items-center gap-2 mt-3 overflow-x-auto pb-1 scrollbar-hide">
-              <span className="text-secondary-foreground/40 text-[10px] shrink-0">💡</span>
+            {/* Daily limit + hint chips */}
+            <div className="flex items-center justify-between mt-3">
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                <span className="text-secondary-foreground/40 text-[10px] shrink-0">💡</span>
               {[
                 isRTL ? "رقم القطعة OEM" : "OEM Part #",
                 isRTL ? "فلتر زيت" : "Oil Filter",
@@ -238,6 +267,14 @@ const DealerHomePage = () => {
                   {hint}
                 </button>
               ))}
+              </div>
+              <span className={`text-[10px] font-bold shrink-0 px-2 py-0.5 rounded-md ${
+                dailyViewCount >= DAILY_PRICE_LIMIT
+                  ? "text-destructive bg-destructive/10"
+                  : "text-secondary-foreground/50 bg-secondary-foreground/8"
+              }`}>
+                {dailyViewCount}/{DAILY_PRICE_LIMIT} {isRTL ? "تسعير" : "priced"}
+              </span>
             </div>
 
             {/* ━━━ Search Results Dropdown ━━━ */}
@@ -284,14 +321,24 @@ const DealerHomePage = () => {
                                     <StockBadge qty={stock} isRTL={isRTL} />
                                   </div>
                                 </div>
-                                <Button
-                                  size="sm"
-                                  className="h-9 px-3 text-xs font-bold gap-1 shrink-0 rounded-xl mt-1"
-                                  onClick={() => handleAddToQuote(p)}
-                                  disabled={stock === 0}
-                                >
-                                  <Plus className="w-3.5 h-3.5" />{isRTL ? "أضف" : "Add"}
-                                </Button>
+                                <div className="flex flex-col gap-1.5 shrink-0 mt-1">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-8 px-2.5 text-[11px] font-bold gap-1 rounded-lg border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground"
+                                    onClick={() => handlePriceItem(p)}
+                                  >
+                                    <Tag className="w-3 h-3" />{isRTL ? "تسعير" : "Price"}
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    className="h-8 px-2.5 text-[11px] font-bold gap-1 rounded-lg"
+                                    onClick={() => handleAddToOrder(p)}
+                                    disabled={stock === 0}
+                                  >
+                                    <Plus className="w-3 h-3" />{isRTL ? "أضف" : "Add"}
+                                  </Button>
+                                </div>
                               </div>
                             );
                           })}
@@ -368,14 +415,24 @@ const DealerHomePage = () => {
                             )}
                             <span className="text-[9px] text-muted-foreground">{isRTL ? "ج.م" : "EGP"}</span>
                           </div>
-                          <Button
-                            size="sm"
-                            className="w-full h-8 text-xs font-bold gap-1 rounded-lg"
-                            onClick={() => handleAddToQuote(p)}
-                            disabled={stock === 0}
-                          >
-                            <Plus className="w-3 h-3" />{isRTL ? "أضف للطلب" : "Add to Order"}
-                          </Button>
+                          <div className="flex gap-1.5">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex-1 h-8 text-[11px] font-bold gap-1 rounded-lg border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground"
+                              onClick={() => handlePriceItem(p)}
+                            >
+                              <Tag className="w-3 h-3" />{isRTL ? "تسعير" : "Price"}
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="flex-1 h-8 text-[11px] font-bold gap-1 rounded-lg"
+                              onClick={() => handleAddToOrder(p)}
+                              disabled={stock === 0}
+                            >
+                              <Plus className="w-3 h-3" />{isRTL ? "أضف" : "Add"}
+                            </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
