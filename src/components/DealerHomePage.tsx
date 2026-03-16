@@ -141,53 +141,8 @@ const DealerHomePage = () => {
     toast({ title: "✅", description: isRTL ? `تم إضافة ${product.name_ar}` : `Added ${product.name_ar}` });
   }, [isRTL, toast, user]);
 
-  /* Quick Order Table: update row */
-  const updateQuickRow = (idx: number, field: keyof QuickOrderRow, value: string) => {
-    setQuickRows(prev => prev.map((r, i) => i === idx ? { ...r, [field]: value } : r));
-  };
 
-  const addQuickRow = () => {
-    setQuickRows(prev => [...prev, { sku: "", qty: "1" }]);
-  };
 
-  /* Quick Order: submit all rows */
-  const handleQuickOrderSubmit = useCallback(async () => {
-    const validRows = quickRows.filter(r => r.sku.trim());
-    if (validRows.length === 0 || !user) return;
-    setQuickOrderLoading(true);
-    let addedCount = 0;
-    const existing = JSON.parse(sessionStorage.getItem("quote_pending_items") || "[]");
-    const today = new Date().toISOString().split("T")[0];
-
-    for (const row of validRows) {
-      const { data } = await supabase.from("products").select("id, name_ar, name_en, sku, base_price, sale_price, image_url")
-        .eq("is_active", true).ilike("sku", `%${row.sku.trim()}%`).limit(1);
-      if (data && data.length > 0) {
-        const product = data[0];
-        const qty = parseInt(row.qty) || 1;
-        const existingIdx = existing.findIndex((p: any) => p.id === product.id);
-        if (existingIdx >= 0) {
-          existing[existingIdx].qty = (existing[existingIdx].qty || 1) + qty;
-        } else {
-          existing.push({ id: product.id, sku: product.sku, name_ar: product.name_ar, name_en: product.name_en, qty });
-        }
-        // Record price view
-        await supabase.from("dealer_price_views").upsert(
-          { user_id: user.id, product_id: product.id, view_date: today },
-          { onConflict: "user_id,product_id,view_date" }
-        );
-        addedCount++;
-      }
-    }
-    sessionStorage.setItem("quote_pending_items", JSON.stringify(existing));
-    if (addedCount > 0) {
-      toast({ title: "✅", description: isRTL ? `تم إضافة ${addedCount} قطعة` : `${addedCount} items added` });
-      setQuickRows([{ sku: "", qty: "1" }, { sku: "", qty: "1" }, { sku: "", qty: "1" }]);
-    } else {
-      toast({ title: "⚠️", description: isRTL ? "لم يتم العثور على أي قطعة" : "No parts found", variant: "destructive" });
-    }
-    setQuickOrderLoading(false);
-  }, [quickRows, isRTL, toast, user]);
 
   const ArrowIcon = isRTL ? ChevronLeft : ChevronRight;
 
