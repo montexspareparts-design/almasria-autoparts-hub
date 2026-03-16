@@ -331,30 +331,6 @@ const DealerHomePage = () => {
           </motion.section>
         )}
 
-        {/* ━━━ STATISTICS — Below main actions ━━━ */}
-        <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }}>
-          <h2 className="text-sm font-bold text-foreground mb-3">{isRTL ? "نظرة عامة" : "Overview"}</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-            {[
-              { label: isRTL ? "إجمالي الطلبات" : "Total Orders", value: stats.totalOrders, icon: BarChart3, color: "text-primary" },
-              { label: isRTL ? "طلبات معلّقة" : "Pending", value: stats.pendingOrders, icon: Clock, color: "text-amber-600" },
-              { label: isRTL ? "إجمالي المشتريات" : "Total Spent", value: `${(stats.totalSpent / 1000).toFixed(0)}K`, icon: TrendingUp, color: "text-emerald-600" },
-              { label: isRTL ? "إشعارات" : "Notifications", value: stats.unreadNotifs, icon: Bell, color: "text-blue-600" },
-            ].map((s, i) => (
-              <Card key={i} className="border-border/20 rounded-xl">
-                <CardContent className="p-4 text-center">
-                  {loading ? <Skeleton className="h-14 rounded" /> : (
-                    <>
-                      <s.icon className={`w-5 h-5 mx-auto mb-2 ${s.color}`} />
-                      <p className="text-xl font-black text-foreground leading-none">{s.value}</p>
-                      <p className="text-[11px] text-muted-foreground mt-1">{s.label}</p>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </motion.section>
 
         {/* ━━━ QUICK ACCESS ━━━ */}
         <section className="grid grid-cols-2 gap-2.5">
