@@ -408,14 +408,24 @@ const DealerHomePage = () => {
                             )}
                             <span className="text-[9px] text-muted-foreground">{isRTL ? "ج.م" : "EGP"}</span>
                           </div>
-                          <Button
-                            size="sm"
-                            className="w-full h-8 text-xs font-bold gap-1 rounded-lg"
-                            onClick={() => handleAddToQuote(p)}
-                            disabled={stock === 0}
-                          >
-                            <Plus className="w-3 h-3" />{isRTL ? "أضف للطلب" : "Add to Order"}
-                          </Button>
+                          <div className="flex gap-1.5">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex-1 h-8 text-[11px] font-bold gap-1 rounded-lg border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground"
+                              onClick={() => handlePriceItem(p)}
+                            >
+                              <Tag className="w-3 h-3" />{isRTL ? "تسعير" : "Price"}
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="flex-1 h-8 text-[11px] font-bold gap-1 rounded-lg"
+                              onClick={() => handleAddToOrder(p)}
+                              disabled={stock === 0}
+                            >
+                              <Plus className="w-3 h-3" />{isRTL ? "أضف" : "Add"}
+                            </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
