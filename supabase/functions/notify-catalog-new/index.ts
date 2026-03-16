@@ -16,6 +16,38 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+    // ─── Admin Authentication Check ─────────────────────────────────────
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const { data: isAdmin } = await supabase.rpc("has_role", {
+      _user_id: user.id,
+      _role: "admin",
+    });
+
+    if (!isAdmin) {
+      return new Response(
+        JSON.stringify({ error: "Forbidden — admin only" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    // ─── End Auth Check ─────────────────────────────────────────────────
+
     const { catalogTitle, catalogCategory } = await req.json();
 
     if (!catalogTitle) {
@@ -56,7 +88,7 @@ Deno.serve(async (req) => {
       (profiles || []).map((p) => [p.user_id, p])
     );
 
-    // ─── In-app notifications ───────────────────────────────────────────────
+    // ─── In-app notifications ───────────────────────────────────────────
     const notifications = userIds.map((userId) => ({
       user_id: userId,
       title: "📄 كتالوج جديد متاح!",
@@ -74,7 +106,7 @@ Deno.serve(async (req) => {
       console.log(`Inserted ${notifications.length} in-app notifications`);
     }
 
-    // ─── WhatsApp via Twilio ────────────────────────────────────────────────
+    // ─── WhatsApp via Twilio ────────────────────────────────────────────
     const twilioSid = Deno.env.get("TWILIO_ACCOUNT_SID");
     const twilioToken = Deno.env.get("TWILIO_AUTH_TOKEN");
     const twilioPhone = Deno.env.get("TWILIO_PHONE_NUMBER");
@@ -92,9 +124,8 @@ Deno.serve(async (req) => {
         const profile = profileMap.get(dealer.user_id);
         if (!profile?.phone) continue;
 
-        // Normalize Egyptian phone number to E.164
         let phone = profile.phone.replace(/\D/g, "");
-        if (phone.startsWith("0")) phone = "2" + phone; // 01xxxxxxxxx → 201xxxxxxxxx
+        if (phone.startsWith("0")) phone = "2" + phone;
         if (!phone.startsWith("+")) phone = "+" + phone;
 
         try {

@@ -24,37 +24,72 @@ Deno.serve(async (req) => {
     const orderId = transaction.order?.merchant_order_id || transaction.merchant_order_id;
     const success = transaction.success === true || transaction.success === "true";
     const isPending = transaction.pending === true || transaction.pending === "true";
-    const amountCents = transaction.amount_cents;
 
-    // Verify HMAC if secret key is available
-    if (paymobSecretKey && body.hmac) {
-      // Paymob HMAC verification
-      const hmacData = [
-        transaction.amount_cents,
-        transaction.created_at,
-        transaction.currency,
-        transaction.error_occured,
-        transaction.has_parent_transaction,
-        transaction.id,
-        transaction.integration_id,
-        transaction.is_3d_secure,
-        transaction.is_auth,
-        transaction.is_capture,
-        transaction.is_refunded,
-        transaction.is_standalone_payment,
-        transaction.is_voided,
-        transaction.order?.id,
-        transaction.owner,
-        transaction.pending,
-        transaction.source_data?.pan,
-        transaction.source_data?.sub_type,
-        transaction.source_data?.type,
-        transaction.success,
-      ].join("");
-
-      // Log for debugging
-      console.log("Paymob callback received for order:", orderId, "success:", success);
+    // ─── HMAC Verification (REQUIRED) ───────────────────────────────────
+    if (!paymobSecretKey) {
+      console.error("PAYMOB_SECRET_KEY not configured");
+      return new Response(
+        JSON.stringify({ error: "Webhook secret not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
+
+    if (!body.hmac) {
+      console.error("Missing HMAC in Paymob callback");
+      return new Response(
+        JSON.stringify({ error: "Missing HMAC" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Build HMAC data string from transaction fields (Paymob's specified order)
+    const hmacData = [
+      transaction.amount_cents,
+      transaction.created_at,
+      transaction.currency,
+      transaction.error_occured,
+      transaction.has_parent_transaction,
+      transaction.id,
+      transaction.integration_id,
+      transaction.is_3d_secure,
+      transaction.is_auth,
+      transaction.is_capture,
+      transaction.is_refunded,
+      transaction.is_standalone_payment,
+      transaction.is_voided,
+      transaction.order?.id,
+      transaction.owner,
+      transaction.pending,
+      transaction.source_data?.pan,
+      transaction.source_data?.sub_type,
+      transaction.source_data?.type,
+      transaction.success,
+    ].join("");
+
+    // Compute HMAC-SHA512 and compare
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(paymobSecretKey),
+      { name: "HMAC", hash: "SHA-512" },
+      false,
+      ["sign"]
+    );
+    const sig = await crypto.subtle.sign("HMAC", key, encoder.encode(hmacData));
+    const computedHmac = Array.from(new Uint8Array(sig))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    if (computedHmac !== body.hmac) {
+      console.error("HMAC mismatch — possible forged callback");
+      return new Response(
+        JSON.stringify({ error: "Invalid HMAC" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log("HMAC verified for order:", orderId, "success:", success);
+    // ─── End HMAC Verification ──────────────────────────────────────────
 
     if (!orderId) {
       console.error("No order ID in Paymob callback");
@@ -64,11 +99,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Extract order number from merchant_order_id
     const orderNumber = orderId;
 
     if (success && !isPending) {
-      // Payment successful — move order to processing
       const { data: order, error: fetchErr } = await supabase
         .from("orders")
         .select("id, status, user_id")
@@ -83,7 +116,6 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Only update if order is awaiting payment or confirmed
       if (["awaiting_payment", "confirmed", "pending"].includes(order.status)) {
         await supabase
           .from("orders")

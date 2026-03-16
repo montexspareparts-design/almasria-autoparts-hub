@@ -31,13 +31,46 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Generate 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-    // Store OTP in Supabase (with expiry)
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
+
+    // ─── Rate Limiting: 60-second cooldown ──────────────────────────────
+    const { data: recentOtp } = await supabase
+      .from("otp_codes")
+      .select("created_at")
+      .eq("phone", phone)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (recentOtp?.[0]) {
+      const age = Date.now() - new Date(recentOtp[0].created_at).getTime();
+      if (age < 60_000) {
+        return new Response(
+          JSON.stringify({ error: "يرجى الانتظار 60 ثانية قبل إعادة الإرسال" }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    // ─── Rate Limiting: Max 5 OTPs per phone per hour ───────────────────
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { count: hourlyCount } = await supabase
+      .from("otp_codes")
+      .select("id", { count: "exact", head: true })
+      .eq("phone", phone)
+      .gte("created_at", oneHourAgo);
+
+    if ((hourlyCount ?? 0) >= 5) {
+      return new Response(
+        JSON.stringify({ error: "تم تجاوز الحد الأقصى للمحاولات. حاول بعد ساعة." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    // ─── End Rate Limiting ──────────────────────────────────────────────
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     // Delete any existing OTP for this phone
     await supabase.from("otp_codes").delete().eq("phone", phone);
@@ -58,10 +91,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Format phone number for Twilio (add Egypt country code if needed)
+    // Format phone number for Twilio
     let formattedPhone = phone.replace(/\D/g, "");
     if (formattedPhone.startsWith("0")) {
-      // Egyptian numbers: 01xxxxxxxxx -> +201xxxxxxxxx
       formattedPhone = "+20" + formattedPhone.substring(1);
     } else if (formattedPhone.startsWith("20")) {
       formattedPhone = "+" + formattedPhone;
@@ -69,7 +101,6 @@ Deno.serve(async (req) => {
       formattedPhone = "+20" + formattedPhone;
     }
 
-    // Format Twilio sender number
     let formattedTwilioPhone = twilioPhone.replace(/\D/g, "");
     if (formattedTwilioPhone.startsWith("0")) {
       formattedTwilioPhone = "+20" + formattedTwilioPhone.substring(1);
@@ -77,17 +108,14 @@ Deno.serve(async (req) => {
       formattedTwilioPhone = "+" + formattedTwilioPhone;
     }
 
-    // Send via Twilio (SMS or WhatsApp)
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
-    
-    // For WhatsApp, use Twilio Sandbox number
     const TWILIO_WHATSAPP_SANDBOX = "+14155238886";
-    
-    const fromNumber = channel === "whatsapp" 
-      ? `whatsapp:${TWILIO_WHATSAPP_SANDBOX}` 
+
+    const fromNumber = channel === "whatsapp"
+      ? `whatsapp:${TWILIO_WHATSAPP_SANDBOX}`
       : formattedTwilioPhone;
-    const toNumber = channel === "whatsapp" 
-      ? `whatsapp:${formattedPhone}` 
+    const toNumber = channel === "whatsapp"
+      ? `whatsapp:${formattedPhone}`
       : formattedPhone;
 
     const body = new URLSearchParams({
