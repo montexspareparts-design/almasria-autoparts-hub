@@ -74,7 +74,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
   const [dailyViews, setDailyViews] = useState(0);
   const [savedQuotes, setSavedQuotes] = useState<SavedQuote[]>([]);
   const [saving, setSaving] = useState(false);
-  const [activeView, setActiveView] = useState<"builder" | "saved" | "edit">("builder");
+  const [activeView, setActiveView] = useState<"builder" | "saved" | "edit" | "today">("today");
   const [tierPrices, setTierPrices] = useState<Record<string, number>>({});
   const [editingQuoteId, setEditingQuoteId] = useState<string | null>(null);
   const [editingQuoteNumber, setEditingQuoteNumber] = useState("");
@@ -82,6 +82,8 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
   const [isFromPriceList, setIsFromPriceList] = useState(false);
   const [dealerInfo, setDealerInfo] = useState<{ name: string; phone: string } | null>(null);
   const [alertedProducts, setAlertedProducts] = useState<Set<string>>(new Set());
+  const [todayItems, setTodayItems] = useState<QuoteItem[]>([]);
+  const [loadingToday, setLoadingToday] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -89,6 +91,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
       fetchSavedQuotes();
       fetchDealerInfo();
       fetchAlertedProducts();
+      fetchTodayPricedItems();
     }
   }, [user]);
 
@@ -132,6 +135,45 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
   const fetchDailyViews = async () => {
     const { data } = await supabase.rpc("get_daily_view_count", { _user_id: user!.id });
     setDailyViews(data || 0);
+  };
+
+  const fetchTodayPricedItems = async () => {
+    if (!user) return;
+    setLoadingToday(true);
+    const today = new Date().toISOString().split("T")[0];
+    const { data: views } = await supabase
+      .from("dealer_price_views")
+      .select("product_id")
+      .eq("user_id", user.id)
+      .eq("view_date", today);
+
+    if (!views || views.length === 0) { setTodayItems([]); setLoadingToday(false); return; }
+
+    const productIds = views.map(v => v.product_id);
+    const { data: products } = await supabase
+      .from("products")
+      .select("id, name_ar, sku, base_price, sale_price, is_on_sale, image_url, stock_quantity")
+      .in("id", productIds);
+
+    if (!products) { setTodayItems([]); setLoadingToday(false); return; }
+
+    // Get tier prices
+    const items: QuoteItem[] = [];
+    for (const product of products) {
+      let price = product.is_on_sale && product.sale_price ? product.sale_price : product.base_price;
+      if (dealerAccount?.tier) {
+        const { data: tp } = await supabase
+          .from("product_tier_prices")
+          .select("price")
+          .eq("product_id", product.id)
+          .eq("tier", dealerAccount.tier as any)
+          .maybeSingle();
+        if (tp?.price) price = Number(tp.price);
+      }
+      items.push({ product: product as Product, quantity: 1, unit_price: price });
+    }
+    setTodayItems(items);
+    setLoadingToday(false);
   };
 
   const fetchSavedQuotes = async () => {
@@ -694,13 +736,22 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
   return (
     <div className="space-y-4">
       {/* View Toggle */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        <Button
+          variant={activeView === "today" ? "default" : "outline"}
+          size="sm"
+          className="h-9 shrink-0"
+          onClick={() => { setActiveView("today"); fetchTodayPricedItems(); }}
+        >
+          <Eye className="w-4 h-4 ml-1.5" />
+          تم تسعيرها اليوم ({todayItems.length})
+        </Button>
         <Button
           variant={activeView === "builder" || activeView === "edit" ? "default" : "outline"}
           size="sm"
-          className="h-9"
+          className="h-9 shrink-0"
           onClick={() => {
-            if (activeView === "edit") return; // Stay in edit
+            if (activeView === "edit") return;
             setActiveView("builder");
             setEditingQuoteId(null);
             setEditingQuoteNumber("");
@@ -714,15 +765,157 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
         <Button
           variant={activeView === "saved" ? "default" : "outline"}
           size="sm"
-          className="h-9"
+          className="h-9 shrink-0"
           onClick={() => setActiveView("saved")}
         >
           <Save className="w-4 h-4 ml-1.5" />
-          العروض المحفوظة ({savedQuotes.length})
+          المحفوظة ({savedQuotes.length})
         </Button>
       </div>
 
-      {activeView === "saved" ? (
+      {activeView === "today" ? (
+        <div className="space-y-3">
+          {loadingToday ? (
+            <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+          ) : todayItems.length === 0 ? (
+            <div className="bg-card border border-dashed border-border rounded-lg p-10 text-center">
+              <Eye className="w-10 h-10 mx-auto text-muted-foreground/30 mb-3" />
+              <p className="text-sm text-muted-foreground font-medium">لم يتم تسعير أصناف اليوم بعد</p>
+              <p className="text-xs text-muted-foreground/60 mt-1">ابحث عن الأصناف واضغط "تسعير" لتظهر هنا</p>
+            </div>
+          ) : (
+            <>
+              {/* Today's items as a quote view */}
+              <div className="bg-card border border-border rounded-lg">
+                <div className="flex items-center justify-between p-3 border-b border-border">
+                  <div className="flex items-center gap-2">
+                    <Eye className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-bold text-foreground">أصناف تم تسعيرها اليوم ({todayItems.length})</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    إجمالي: <span className="font-bold text-foreground">{todayItems.reduce((s, i) => s + i.unit_price * i.quantity, 0).toLocaleString("ar-EG")} ج.م</span>
+                  </span>
+                </div>
+
+                <div className="divide-y divide-border">
+                  {todayItems.map(item => (
+                    <div key={item.product.id} className="flex items-center gap-3 p-3">
+                      <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                        {item.product.image_url ? (
+                          <img src={item.product.image_url} alt="" className="w-11 h-11 rounded bg-card object-contain p-0.5 shrink-0 border border-border" />
+                        ) : (
+                          <div className="w-11 h-11 rounded bg-muted flex items-center justify-center shrink-0">
+                            <FileText className="w-4 h-4 text-muted-foreground/30" />
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <p className="text-xs sm:text-sm font-medium text-foreground truncate">{item.product.name_ar}</p>
+                          <p className="text-[10px] text-muted-foreground font-mono">{item.product.sku}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-xs font-bold text-primary">{item.unit_price.toLocaleString("ar-EG")} ج.م</span>
+                            {item.product.stock_quantity > 0 ? (
+                              <span className="text-[9px] font-bold text-emerald-700 bg-emerald-500/10 px-1.5 py-0.5 rounded">متوفر</span>
+                            ) : (
+                              <span className="text-[9px] font-bold text-destructive bg-destructive/10 px-1.5 py-0.5 rounded">غير متوفر</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-sm font-bold text-foreground shrink-0">{item.unit_price.toLocaleString("ar-EG")} ج.م</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Actions */}
+                <div className="p-3 border-t border-border bg-muted/30">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-medium text-muted-foreground">الإجمالي</span>
+                    <span className="text-lg font-bold text-foreground">{todayItems.reduce((s, i) => s + i.unit_price * i.quantity, 0).toLocaleString("ar-EG")} ج.م</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <Button
+                      variant="outline"
+                      className="h-10"
+                      onClick={() => {
+                        const data = {
+                          quoteNumber: `تسعير-${new Date().toLocaleDateString("ar-EG")}`,
+                          date: new Date().toLocaleDateString("ar-EG"),
+                          dealerName: dealerInfo?.name,
+                          dealerPhone: dealerInfo?.phone,
+                          items: todayItems.map(i => ({ name: i.product.name_ar, sku: i.product.sku, quantity: i.quantity, unitPrice: i.unit_price, totalPrice: i.unit_price * i.quantity })),
+                          totalAmount: todayItems.reduce((s, i) => s + i.unit_price * i.quantity, 0),
+                        };
+                        generateQuotePdf(data);
+                      }}
+                    >
+                      <Download className="w-4 h-4 ml-1.5" />
+                      تحميل PDF
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-10 border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/10"
+                      onClick={() => {
+                        shareQuoteWhatsApp({
+                          quoteNumber: `تسعير-${new Date().toLocaleDateString("ar-EG")}`,
+                          date: new Date().toLocaleDateString("ar-EG"),
+                          items: todayItems.map(i => ({ name: i.product.name_ar, sku: i.product.sku, quantity: i.quantity, unitPrice: i.unit_price, totalPrice: i.unit_price * i.quantity })),
+                          totalAmount: todayItems.reduce((s, i) => s + i.unit_price * i.quantity, 0),
+                        });
+                      }}
+                    >
+                      <MessageCircle className="w-4 h-4 ml-1.5" />
+                      واتساب
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      className="h-10"
+                      onClick={() => {
+                        setQuoteItems([...todayItems]);
+                        setActiveView("builder");
+                        toast({ title: "✅", description: "تم نقل الأصناف لمنشئ عرض الأسعار" });
+                      }}
+                    >
+                      <Edit3 className="w-4 h-4 ml-1.5" />
+                      تعديل كعرض
+                    </Button>
+                    <Button
+                      className="h-10"
+                      onClick={async () => {
+                        setSaving(true);
+                        const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
+                        const total = todayItems.reduce((s, i) => s + i.unit_price * i.quantity, 0);
+                        const { data: order, error } = await supabase
+                          .from("orders")
+                          .insert({ user_id: user!.id, order_number: orderNumber, total_amount: total, status: "pending" })
+                          .select().single();
+                        if (!error && order) {
+                          await supabase.from("order_items").insert(
+                            todayItems.map(i => ({
+                              order_id: (order as any).id,
+                              product_id: i.product.id,
+                              quantity: i.quantity,
+                              unit_price: i.unit_price,
+                              total_price: i.unit_price * i.quantity,
+                            }))
+                          );
+                          toast({ title: "تم إرسال الطلب ✓", description: `رقم الطلب: ${orderNumber}` });
+                        } else {
+                          toast({ title: "خطأ", variant: "destructive" });
+                        }
+                        setSaving(false);
+                      }}
+                      disabled={saving || todayItems.every(i => i.product.stock_quantity === 0)}
+                    >
+                      {saving ? <Loader2 className="w-4 h-4 ml-1.5 animate-spin" /> : <ShoppingCart className="w-4 h-4 ml-1.5" />}
+                      تحويل لطلب
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      ) : activeView === "saved" ? (
         <div className="space-y-2">
           {savedQuotes.length === 0 ? (
             <div className="bg-card border border-dashed border-border rounded-lg p-10 text-center">
