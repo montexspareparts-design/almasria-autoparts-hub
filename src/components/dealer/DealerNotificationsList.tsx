@@ -213,7 +213,16 @@ const DealerNotificationsList = ({ userId, onNavigate }: { userId: string; onNav
                 key={n.id}
                 onClick={() => {
                   if (!n.is_read) markRead(n.id);
-                  if (!isOrderEdit && onNavigate) {
+                  if (isOrderEdit) return;
+
+                  // Contact request — extract phone and open WhatsApp
+                  const contactPhone = n.message.match(/الرقم:\s*([\d+]+)/)?.[1];
+                  if ((n.title.includes("تواصل") || n.message.includes("تواصل")) && contactPhone) {
+                    window.open(`https://wa.me/${contactPhone.replace(/^0/, "20")}`, "_blank");
+                    return;
+                  }
+
+                  if (onNavigate) {
                     const msg = (n.message + " " + n.title).toLowerCase();
                     if (n.type === "order" || msg.includes("طلب") || msg.includes("order")) {
                       onNavigate("orders");
@@ -224,7 +233,6 @@ const DealerNotificationsList = ({ userId, onNavigate }: { userId: string; onNav
                     } else if (msg.includes("فاتورة")) {
                       onNavigate("invoices");
                     } else {
-                      // Default: go to overview
                       onNavigate("overview");
                     }
                   }
