@@ -29,12 +29,11 @@ const markSessionActive = () => sessionStorage.setItem(SESSION_FLAG, "true");
 const isSessionActive = () => sessionStorage.getItem(SESSION_FLAG) === "true";
 
 const Auth = () => {
-  const savedCreds = useRef(getSavedCredentials());
   const [mode, setMode] = useState<AuthMode>("login");
-  const [authMethod, setAuthMethod] = useState<AuthMethod>(savedCreds.current?.method || "phone");
-  const [phone, setPhone] = useState(savedCreds.current?.method === "phone" ? savedCreds.current.identifier : "");
-  const [email, setEmail] = useState(savedCreds.current?.method === "email" ? savedCreds.current.identifier : "");
-  const [password, setPassword] = useState(savedCreds.current?.password || "");
+  const [authMethod, setAuthMethod] = useState<AuthMethod>("phone");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [address, setAddress] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -43,7 +42,7 @@ const Auth = () => {
   const [forgotMode, setForgotMode] = useState(false);
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [lockedUntil, setLockedUntil] = useState<number | null>(null);
-  const [rememberMe, setRememberMe] = useState(!!savedCreds.current);
+  const [rememberMe, setRememberMe] = useState(isRemembered());
   const autoLoginAttempted = useRef(false);
   const navigate = useNavigate();
   const { toast } = useToast();
