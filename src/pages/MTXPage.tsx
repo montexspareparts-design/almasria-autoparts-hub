@@ -556,7 +556,7 @@ const MTXPage = () => {
               </div>
               <h3 className="text-lg font-bold text-foreground mb-2">لا توجد منتجات</h3>
               <p className="text-muted-foreground text-sm mb-4">جرب تغيير كلمة البحث أو الفلتر</p>
-              <Button variant="outline" size="sm" onClick={() => setFilters({ search: "", model: null, year: null, chassisNumber: "", partNumber: "", categoryId: null, priceMin: "", priceMax: "", sortBy: "newest" })}>
+              <Button variant="outline" size="sm" onClick={() => setFilters({ search: "", model: null, year: null, chassisNumber: "", partNumber: "", categoryId: null, brandKey: null, priceMin: "", priceMax: "", sortBy: "newest" })}>
                 مسح جميع الفلاتر
               </Button>
             </div>

@@ -88,6 +88,7 @@ const AdvancedProductFilter = ({ filters, onFiltersChange, categories, showCateg
       chassisNumber: "",
       partNumber: "",
       categoryId: null,
+      brandKey: null,
       priceMin: "",
       priceMax: "",
       sortBy: filters.sortBy,
