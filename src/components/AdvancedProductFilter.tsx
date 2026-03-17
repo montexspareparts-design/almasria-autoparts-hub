@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Filter, X, Search, ChevronDown, ChevronUp, SlidersHorizontal, Hash, Car, Calendar, DollarSign, Tag, RotateCcw } from "lucide-react";
+import { Filter, X, Search, ChevronDown, ChevronUp, SlidersHorizontal, Hash, Car, Calendar, DollarSign, Tag, RotateCcw, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,10 +13,20 @@ export interface ProductFilters {
   chassisNumber: string;
   partNumber: string;
   categoryId: string | null;
+  brandKey: string | null;
   priceMin: string;
   priceMax: string;
   sortBy: string;
 }
+
+export const BRAND_OPTIONS = [
+  { value: "toyota_genuine", label: "قطع غيار أصلية" },
+  { value: "toyota_oils", label: "زيوت تويوتا" },
+  { value: "mtx_aftermarket", label: "MTX Aftermarket" },
+  { value: "denso", label: "DENSO" },
+  { value: "aisin", label: "AISIN" },
+  { value: "fbk", label: "تيل فرامل" },
+];
 
 const TOYOTA_MODELS = [
   { value: "كورولا", label: "كورولا - Corolla" },
@@ -46,11 +56,12 @@ interface Props {
   onFiltersChange: (filters: ProductFilters) => void;
   categories?: { id: string; name_ar: string }[];
   showCategories?: boolean;
+  showBrands?: boolean;
   totalResults: number;
   isLoading: boolean;
 }
 
-const AdvancedProductFilter = ({ filters, onFiltersChange, categories, showCategories = true, totalResults, isLoading }: Props) => {
+const AdvancedProductFilter = ({ filters, onFiltersChange, categories, showCategories = true, showBrands = false, totalResults, isLoading }: Props) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const activeFilterCount = useMemo(() => {
@@ -60,6 +71,7 @@ const AdvancedProductFilter = ({ filters, onFiltersChange, categories, showCateg
     if (filters.chassisNumber) count++;
     if (filters.partNumber) count++;
     if (filters.categoryId) count++;
+    if (filters.brandKey) count++;
     if (filters.priceMin) count++;
     if (filters.priceMax) count++;
     return count;
@@ -77,6 +89,7 @@ const AdvancedProductFilter = ({ filters, onFiltersChange, categories, showCateg
       chassisNumber: "",
       partNumber: "",
       categoryId: null,
+      brandKey: null,
       priceMin: "",
       priceMax: "",
       sortBy: filters.sortBy,
@@ -288,6 +301,37 @@ const AdvancedProductFilter = ({ filters, onFiltersChange, categories, showCateg
                   </div>
                 </div>
               )}
+
+              {/* Brand chips */}
+              {showBrands && (
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+                    <Layers className="w-3.5 h-3.5" />
+                    الماركة
+                  </label>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button
+                      variant={filters.brandKey === null ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => updateFilter("brandKey", null)}
+                      className="text-xs h-8 rounded-full px-4"
+                    >
+                      الكل
+                    </Button>
+                    {BRAND_OPTIONS.map((b) => (
+                      <Button
+                        key={b.value}
+                        variant={filters.brandKey === b.value ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => updateFilter("brandKey", filters.brandKey === b.value ? null : b.value)}
+                        className="text-xs h-8 rounded-full px-4"
+                      >
+                        {b.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
@@ -328,6 +372,12 @@ const AdvancedProductFilter = ({ filters, onFiltersChange, categories, showCateg
               {filters.categoryId && (
                 <Badge variant="secondary" className="gap-1 text-[11px] bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 cursor-pointer" onClick={() => updateFilter("categoryId", null)}>
                   فئة
+                  <X className="w-3 h-3" />
+                </Badge>
+              )}
+              {filters.brandKey && (
+                <Badge variant="secondary" className="gap-1 text-[11px] bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 cursor-pointer" onClick={() => updateFilter("brandKey", null)}>
+                  {BRAND_OPTIONS.find(b => b.value === filters.brandKey)?.label || "ماركة"}
                   <X className="w-3 h-3" />
                 </Badge>
               )}

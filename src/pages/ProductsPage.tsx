@@ -112,6 +112,7 @@ const ProductsPage = () => {
     chassisNumber: "",
     partNumber: "",
     categoryId: null,
+    brandKey: null,
     priceMin: "",
     priceMax: "",
     sortBy: "newest",
@@ -232,15 +233,19 @@ const ProductsPage = () => {
     }
   }, [categories, searchParams]);
 
+  // Set brand filter from URL config on mount
+  useEffect(() => {
+    if (config?.brandKey && !filters.brandKey) {
+      setFilters(prev => ({ ...prev, brandKey: config.brandKey }));
+    }
+  }, [config?.brandKey]);
+
   const { data: products, isLoading } = useQuery({
-    queryKey: ["products", config?.brandKey, config?.extraBrands],
+    queryKey: ["products_all_brands"],
     queryFn: async () => {
-      if (!config) return [];
-      const brandsToQuery = [config.brandKey, ...(config.extraBrands || [])];
       const { data, error } = await supabase
         .from("products")
         .select("*, product_categories(name_ar)")
-        .in("brand", brandsToQuery as any)
         .eq("is_active", true)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -252,6 +257,7 @@ const ProductsPage = () => {
   const filteredProducts = useMemo(() => {
     if (!products) return [];
     let result = products.filter((p) => {
+      const matchesBrand = !filters.brandKey || p.brand === filters.brandKey;
       const matchesSearch =
         !filters.search ||
         p.name_ar.toLowerCase().includes(filters.search.toLowerCase()) ||
@@ -263,7 +269,7 @@ const ProductsPage = () => {
       const price = p.base_price;
       const matchesPriceMin = !filters.priceMin || price >= Number(filters.priceMin);
       const matchesPriceMax = !filters.priceMax || price <= Number(filters.priceMax);
-      return matchesSearch && matchesCategory && matchesModel && matchesYear && matchesPartNumber && matchesPriceMin && matchesPriceMax;
+      return matchesBrand && matchesSearch && matchesCategory && matchesModel && matchesYear && matchesPartNumber && matchesPriceMin && matchesPriceMax;
     });
 
     // Sort
@@ -518,6 +524,7 @@ const ProductsPage = () => {
             onFiltersChange={setFilters}
             categories={categories}
             showCategories={config.brandKey !== "toyota_oils"}
+            showBrands={true}
             totalResults={filteredProducts.length}
             isLoading={isLoading}
           />
@@ -578,7 +585,7 @@ const ProductsPage = () => {
               <h3 className="text-lg font-bold text-foreground mb-2">لا توجد منتجات</h3>
               <p className="text-muted-foreground text-sm mb-4">جرب تغيير كلمة البحث أو الفلتر</p>
               <Button variant="outline" size="sm" onClick={() => setFilters({
-                search: "", model: null, year: null, chassisNumber: "", partNumber: "", categoryId: null, priceMin: "", priceMax: "", sortBy: "newest"
+                search: "", model: null, year: null, chassisNumber: "", partNumber: "", categoryId: null, brandKey: null, priceMin: "", priceMax: "", sortBy: "newest"
               })}>
                 مسح جميع الفلاتر
               </Button>
