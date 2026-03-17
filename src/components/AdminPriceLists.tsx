@@ -602,7 +602,7 @@ const AdminPriceLists = () => {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-lg">إدارة عروض الأسعار</CardTitle>
+        <CardTitle className="text-lg">إدارة كشوفات المصرية</CardTitle>
         <Button size="sm" onClick={() => setShowForm(!showForm)}>
           <Plus className="w-4 h-4 ml-1" />
           رفع كشف جديد
