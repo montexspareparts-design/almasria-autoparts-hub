@@ -12,20 +12,16 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const paymobApiKey = Deno.env.get("PAYMOB_API_KEY");
+    const paymobSecretKey = Deno.env.get("PAYMOB_SECRET_KEY");
     const paymobIntegrationId = Deno.env.get("PAYMOB_INTEGRATION_ID");
-    const paymobIframeId = Deno.env.get("PAYMOB_IFRAME_ID");
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    if (!paymobApiKey) {
-      throw new Error("PAYMOB_API_KEY is not configured");
+    if (!paymobSecretKey) {
+      throw new Error("PAYMOB_SECRET_KEY is not configured");
     }
     if (!paymobIntegrationId) {
       throw new Error("PAYMOB_INTEGRATION_ID is not configured");
-    }
-    if (!paymobIframeId) {
-      throw new Error("PAYMOB_IFRAME_ID is not configured");
     }
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
@@ -60,59 +56,31 @@ Deno.serve(async (req) => {
       .eq("user_id", order.user_id)
       .single();
 
-    // Step 1: Auth request to get token
-    const authRes = await fetch("https://accept.paymob.com/api/auth/tokens", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ api_key: paymobApiKey }),
-    });
-    const authData = await authRes.json();
-    if (!authRes.ok || !authData.token) {
-      console.error("Paymob auth failed:", authData);
-      throw new Error("Failed to authenticate with Paymob");
-    }
-    const token = authData.token;
-
-    // Step 2: Register order
+    // Build items array
     const amountCents = Math.round(order.total_amount * 100);
     const items = (order.order_items || []).map((item: any) => ({
       name: item.products?.name_ar || item.products?.sku || "منتج",
-      amount_cents: Math.round(item.unit_price * 100).toString(),
-      quantity: item.quantity.toString(),
+      amount: Math.round(item.unit_price * 100),
+      quantity: item.quantity,
       description: item.products?.sku || "",
     }));
 
-    const orderRegRes = await fetch("https://accept.paymob.com/api/ecommerce/orders", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        auth_token: token,
-        delivery_needed: false,
-        amount_cents: amountCents,
-        currency: "EGP",
-        merchant_order_id: order.order_number,
-        items,
-      }),
-    });
-    const orderRegData = await orderRegRes.json();
-    if (!orderRegRes.ok || !orderRegData.id) {
-      console.error("Paymob order registration failed:", orderRegData);
-      throw new Error("Failed to register order with Paymob");
-    }
-
-    // Step 3: Payment key request
+    // Build billing data
     const nameParts = (profile?.full_name || "Customer").split(" ");
     const firstName = nameParts[0] || "Customer";
     const lastName = nameParts.slice(1).join(" ") || "User";
 
-    const paymentKeyRes = await fetch("https://accept.paymob.com/api/acceptance/payment_keys", {
+    // Create intention using Paymob v1 Intention API
+    const intentionRes = await fetch("https://accept.paymob.com/v1/intention/", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Token ${paymobSecretKey}`,
+      },
       body: JSON.stringify({
-        auth_token: token,
-        amount_cents: amountCents,
-        expiration: 3600,
-        order_id: orderRegData.id,
+        amount: amountCents,
+        currency: "EGP",
+        payment_methods: [parseInt(paymobIntegrationId)],
         billing_data: {
           first_name: firstName,
           last_name: lastName,
@@ -128,25 +96,27 @@ Deno.serve(async (req) => {
           country: "EG",
           state: order.shipping_governorate || "Cairo",
         },
-        currency: "EGP",
-        integration_id: parseInt(paymobIntegrationId),
+        items,
+        extras: {
+          order_id: order.id,
+          order_number: order.order_number,
+        },
+        redirection_url: return_url || "",
+        notification_url: `${supabaseUrl}/functions/v1/paymob-webhook`,
       }),
     });
-    const paymentKeyData = await paymentKeyRes.json();
-    if (!paymentKeyRes.ok || !paymentKeyData.token) {
-      console.error("Paymob payment key failed:", paymentKeyData);
-      throw new Error("Failed to generate payment key");
+
+    const intentionData = await intentionRes.json();
+
+    if (!intentionRes.ok || !intentionData.client_secret) {
+      console.error("Paymob intention creation failed:", intentionData);
+      throw new Error("Failed to create Paymob intention");
     }
 
-    // Build the iframe URL using the separate iframe ID
-    const iframeUrl = `https://accept.paymob.com/api/acceptance/iframes/${paymobIframeId}?payment_token=${paymentKeyData.token}`;
-
-    // Return the payment token and iframe URL
     return new Response(
       JSON.stringify({
-        payment_token: paymentKeyData.token,
-        iframe_url: iframeUrl,
-        paymob_order_id: orderRegData.id,
+        client_secret: intentionData.client_secret,
+        intention_id: intentionData.id,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

@@ -5,6 +5,7 @@ import {
   ArrowRight, Truck, Zap, Store, CreditCard, Banknote, Smartphone, Building2,
   Wallet, ShieldCheck, Package, Loader2
 } from "lucide-react";
+import PaymobCheckout from "@/components/PaymobCheckout";
 import PaymentInstructionsBanner from "@/components/PaymentInstructionsBanner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,6 +51,10 @@ const CheckoutPage = () => {
   const [shipping, setShipping] = useState("standard");
   const [payment, setPayment] = useState("cod");
   const [submitting, setSubmitting] = useState(false);
+  const [paymobClientSecret, setPaymobClientSecret] = useState<string | null>(null);
+
+  // TODO: Replace with your Paymob public key (starts with pk_ or pkt_)
+  const PAYMOB_PUBLIC_KEY = "pkt_ocyiPARECljo1duevlMSKpn3beCz9z5h";
 
   const [form, setForm] = useState({
     name: "",
@@ -115,7 +120,7 @@ const CheckoutPage = () => {
 
       clearCart();
 
-      // If payment is card or paymob, redirect to Paymob payment page
+      // If payment is card or paymob, create intention and show Flash Checkout
       if (payment === "card" || payment === "paymob") {
         try {
           const { data: paymobData, error: paymobErr } = await supabase.functions.invoke("create-paymob-intention", {
@@ -125,18 +130,19 @@ const CheckoutPage = () => {
             },
           });
 
-          if (paymobErr || !paymobData?.payment_token) {
+          if (paymobErr || !paymobData?.client_secret) {
             console.error("Paymob error:", paymobErr, paymobData);
             toast({ title: "حدث خطأ في بوابة الدفع", description: "تم حفظ طلبك. يمكنك الدفع لاحقاً من صفحة الطلبات.", variant: "destructive" });
             navigate(`/my-orders?highlight=${order.id}`);
             return;
           }
 
-          // Redirect to Paymob hosted checkout using the iframe_url from edge function
-          window.location.href = paymobData.iframe_url;
+          // Show inline Paymob Flash Checkout
+          setPaymobClientSecret(paymobData.client_secret);
+          setSubmitting(false);
           return;
         } catch (e: any) {
-          console.error("Paymob redirect error:", e);
+          console.error("Paymob error:", e);
           toast({ title: "حدث خطأ في بوابة الدفع", description: "تم حفظ طلبك. يمكنك الدفع لاحقاً.", variant: "destructive" });
           navigate(`/my-orders?highlight=${order.id}`);
           return;
@@ -153,9 +159,28 @@ const CheckoutPage = () => {
     }
   };
 
-  if (items.length === 0) {
+  if (items.length === 0 && !paymobClientSecret) {
     navigate("/cart");
     return null;
+  }
+
+  // Show Paymob Flash Checkout if client_secret is available
+  if (paymobClientSecret) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="pt-24 pb-12">
+          <div className="container mx-auto px-4 max-w-lg text-center">
+            <h1 className="text-2xl font-black text-foreground mb-6">💳 إتمام الدفع</h1>
+            <div className="bg-card border border-border rounded-lg p-6">
+              <PaymobCheckout clientSecret={paymobClientSecret} publicKey={PAYMOB_PUBLIC_KEY} />
+            </div>
+            <p className="text-xs text-muted-foreground mt-4">سيتم تحويلك تلقائياً بعد إتمام الدفع</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
   }
 
   return (
