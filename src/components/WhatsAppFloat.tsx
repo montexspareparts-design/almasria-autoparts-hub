@@ -1,9 +1,10 @@
+import { forwardRef } from "react";
 import { motion } from "framer-motion";
 import { trackClickWhatsApp } from "@/lib/analytics";
 
 const defaultMsg = "مرحبًا، عايز قطعة غيار لتويوتا [الموديل/السنة/رقم الشاسيه]";
 
-const WhatsAppFloat = () => {
+const WhatsAppFloat = forwardRef<HTMLDivElement>((_, ref) => {
   const handleClick = () => {
     trackClickWhatsApp("floating_button");
   };
