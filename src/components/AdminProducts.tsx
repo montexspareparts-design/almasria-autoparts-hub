@@ -19,6 +19,7 @@ const brandLabels: Record<ProductBrand, string> = {
   mtx_aftermarket: "MTX",
   denso: "DENSO",
   aisin: "AISIN",
+  fbk: "FBK Brake Pads",
 };
 
 const PAGE_SIZE = 20;
