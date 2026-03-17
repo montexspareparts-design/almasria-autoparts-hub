@@ -695,6 +695,35 @@ export type Database = {
           },
         ]
       }
+      price_list_views: {
+        Row: {
+          id: string
+          price_list_id: string
+          user_id: string
+          viewed_at: string
+        }
+        Insert: {
+          id?: string
+          price_list_id: string
+          user_id: string
+          viewed_at?: string
+        }
+        Update: {
+          id?: string
+          price_list_id?: string
+          user_id?: string
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_list_views_price_list_id_fkey"
+            columns: ["price_list_id"]
+            isOneToOne: false
+            referencedRelation: "price_lists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       price_lists: {
         Row: {
           created_at: string
