@@ -876,7 +876,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-lg font-bold text-foreground">عروض الأسعار</h2>
+        <h2 className="text-lg font-bold text-foreground">كشوفات الأسعار</h2>
         <div className="flex items-center gap-2">
           {onNavigateToQuotes && (
             <Button variant="outline" size="sm" onClick={onNavigateToQuotes}>
@@ -890,40 +890,6 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
           </Button>
         </div>
       </div>
-
-      {/* Today's Priced Items */}
-      {loadingTodayItems ? (
-        <div className="h-16 rounded-lg bg-muted/50 animate-pulse" />
-      ) : todayPricedItems.length > 0 && (
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Clock className="w-4 h-4 text-primary" />
-              <h3 className="text-sm font-bold text-foreground">أصناف تم تسعيرها اليوم ({todayPricedItems.length})</h3>
-            </div>
-            <div className="space-y-2">
-              {todayPricedItems.map(product => (
-                <div key={product.id} className="flex items-center gap-3 bg-card rounded-lg border border-border/30 p-2.5">
-                  <div className="w-9 h-9 rounded-lg bg-muted/60 shrink-0 overflow-hidden flex items-center justify-center">
-                    {product.image_url ? (
-                      <img src={product.image_url} alt="" className="w-full h-full object-contain p-0.5" />
-                    ) : (
-                      <FileText className="w-4 h-4 text-muted-foreground/30" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-foreground truncate">{product.name_ar}</p>
-                    <p className="text-[10px] text-muted-foreground font-mono">{product.sku}</p>
-                  </div>
-                  <Badge variant="secondary" className="text-[9px] shrink-0">
-                    {product.stock_quantity > 0 ? "متوفر" : "غير متوفر"}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {lists.length === 0 ? (
         <Card className="border-dashed">
