@@ -336,8 +336,9 @@ const AIChatBot = () => {
     });
 
     if (!resp.ok) {
-      const err = await resp.json().catch(() => ({ error: "حدث خطأ" }));
-      throw new Error(err.error || "حدث خطأ في الاتصال");
+      const fallbackMsg = "عذراً، المساعد الذكي غير متاح حالياً 😊\n\nلكن فريق المبيعات موجود لخدمتك! تواصل معانا مباشرة:\n\n📞 **فرع القاهرة (التوفيقية)**: 01032104861\n📞 **فرع الجيزة (أوسيم)**: 01153961008\n📞 **فرع الأقصر**: 01016177204\n📱 **واتساب**: [اضغط هنا](https://wa.me/201032104861)\n\n⏰ مواعيد العمل: من 9 صباحاً لـ 7 مساءً\n\n_يمكنك المحاولة مرة تانية بعد دقيقة_ 🔄";
+      setMessages((prev) => [...prev, { role: "assistant", content: fallbackMsg }]);
+      return;
     }
     if (!resp.body) throw new Error("No response body");
 
