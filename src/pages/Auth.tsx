@@ -51,23 +51,19 @@ const Auth = () => {
   const phoneToEmail = (p: string) => `${p.replace(/\D/g, "")}@phone.almasria.app`;
   const getAuthEmail = () => authMethod === "email" ? email.trim() : phoneToEmail(phone);
 
-  // Auto-login with saved credentials
+  // On mount: if not remembered and no active session, clear stale session
   useEffect(() => {
-    if (savedCreds.current && !autoLoginAttempted.current) {
+    if (!autoLoginAttempted.current) {
       autoLoginAttempted.current = true;
-      handleAutoLogin();
+      if (!isRemembered() && !isSessionActive()) {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session) supabase.auth.signOut();
+        });
+      } else if (isSessionActive() || isRemembered()) {
+        markSessionActive();
+      }
     }
   }, []);
-
-  const handleAutoLogin = async () => {
-    const creds = savedCreds.current; if (!creds) return;
-    setLoading(true);
-    const authEmail = creds.method === "email" ? creds.identifier : phoneToEmail(creds.identifier);
-    const { data, error } = await supabase.auth.signInWithPassword({ email: authEmail, password: creds.password });
-    if (error) { clearCredentials(); savedCreds.current = null; setRememberMe(false); setPassword(""); }
-    else if (data.user) { toast({ title: "تم تسجيل الدخول تلقائياً ✅" }); navigate("/"); }
-    setLoading(false);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
