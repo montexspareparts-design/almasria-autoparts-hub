@@ -59,7 +59,7 @@ const brandConfig: Record<string, { title: string; subtitle: string; description
   "fbk-brakes": {
     title: "تيل فرامل",
     subtitle: "FBK Brake Pads",
-    description: "تيل فرامل FBK ماليزي عالي الجودة لجميع موديلات تويوتا. أداء ممتاز وعمر افتراضي طويل.",
+    description: "تشكيلة كبيرة من تيل فرامل عالية الجودة لجميع موديلات تويوتا تضمن أداء ممتاز وعمر افتراضي أطول.",
     badge: "جودة ماليزية",
     brandKey: "fbk",
     logo: brandFbkBrakes,
