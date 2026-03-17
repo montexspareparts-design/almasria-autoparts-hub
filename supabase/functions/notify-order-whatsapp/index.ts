@@ -19,6 +19,42 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, serviceRoleKey);
+
+    // ─── Admin Authentication Check ─────────────────────────────────────
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const { data: isAdmin } = await supabase.rpc("has_role", {
+      _user_id: user.id,
+      _role: "admin",
+    });
+
+    if (!isAdmin) {
+      return new Response(
+        JSON.stringify({ error: "Forbidden — admin only" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    // ─── End Auth Check ─────────────────────────────────────────────────
+
     const { orderNumber, newStatus, customerPhone, customerName } = await req.json();
 
     if (!orderNumber || !newStatus || !customerPhone) {
@@ -52,12 +88,12 @@ Deno.serve(async (req) => {
 
     // Send via Twilio WhatsApp API
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`;
-    const authHeader = btoa(`${twilioAccountSid}:${twilioAuthToken}`);
+    const twilioAuthHeader = btoa(`${twilioAccountSid}:${twilioAuthToken}`);
 
     const response = await fetch(twilioUrl, {
       method: "POST",
       headers: {
-        "Authorization": `Basic ${authHeader}`,
+        "Authorization": `Basic ${twilioAuthHeader}`,
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: new URLSearchParams({

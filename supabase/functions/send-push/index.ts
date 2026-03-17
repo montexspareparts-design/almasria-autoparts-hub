@@ -3,28 +3,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
-
-// Web Push crypto utilities for Deno
-async function generatePushPayload(
-  subscription: { endpoint: string; keys: { p256dh: string; auth: string } },
-  payload: string,
-  vapidPublicKey: string,
-  vapidPrivateKey: string
-) {
-  // For simplicity, we'll use fetch to send via a web push compatible endpoint
-  // The actual encryption is handled by the push service
-  const response = await fetch(subscription.endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      TTL: "86400",
-    },
-    body: payload,
-  });
-  return response;
-}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -36,6 +16,38 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
+
+    // ─── Admin Authentication Check ─────────────────────────────────────
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const { data: isAdmin } = await supabase.rpc("has_role", {
+      _user_id: user.id,
+      _role: "admin",
+    });
+
+    if (!isAdmin) {
+      return new Response(
+        JSON.stringify({ error: "Forbidden — admin only" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    // ─── End Auth Check ─────────────────────────────────────────────────
 
     const { title, body, url, user_id } = await req.json();
 
