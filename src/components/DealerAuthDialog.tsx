@@ -78,12 +78,7 @@ const DealerAuthDialog = ({ open, onOpenChange, defaultTab = "login" }: DealerAu
         variant: "destructive",
       });
     } else if (data.user) {
-      if (rememberMe) {
-        const identifier = authMethod === "phone" ? phone : email;
-        saveCredentials(authMethod, identifier, password);
-      } else {
-        clearCredentials();
-      }
+      setRememberedFlag(rememberMe);
       toast({ title: "تم تسجيل الدخول بنجاح ✅" });
       resetForm();
       onOpenChange(false);
