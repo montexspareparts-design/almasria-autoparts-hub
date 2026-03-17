@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, forwardRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bot, X, Send, Loader2, Trash2, Share2, ImagePlus, Mic, MicOff, Volume2, VolumeX, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -88,7 +88,7 @@ const findNearestBranch = (userLat: number, userLng: number) => {
 // Speech Recognition setup
 const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
-const AIChatBot = () => {
+const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
   const { user } = useAuth();
   const { consent, interests, getTopCategories, getTopBrands } = usePersonalization();
   const [isOpen, setIsOpen] = useState(false);
@@ -671,6 +671,8 @@ const AIChatBot = () => {
       </AnimatePresence>
     </>
   );
-};
+});
+
+AIChatBot.displayName = "AIChatBot";
 
 export default AIChatBot;

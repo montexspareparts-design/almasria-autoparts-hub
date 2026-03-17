@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Download, X, Share, PlusSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ interface BeforeInstallPromptEvent extends Event {
 
 const DISMISS_KEY = "pwa-banner-dismissed";
 
-const InstallBanner = () => {
+const InstallBanner = forwardRef<HTMLDivElement>((_, ref) => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [show, setShow] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
@@ -177,6 +177,8 @@ const InstallBanner = () => {
       )}
     </AnimatePresence>
   );
-};
+});
+
+InstallBanner.displayName = "InstallBanner";
 
 export default InstallBanner;
