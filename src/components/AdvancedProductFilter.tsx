@@ -56,6 +56,7 @@ interface Props {
   onFiltersChange: (filters: ProductFilters) => void;
   categories?: { id: string; name_ar: string }[];
   showCategories?: boolean;
+  showBrands?: boolean;
   totalResults: number;
   isLoading: boolean;
 }
