@@ -4,7 +4,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Zap, Plus, Trash2, Minus, Search, CheckCircle } from "lucide-react";
+import { Loader2, Zap, Plus, Trash2, Minus, Search, CheckCircle, ShoppingCart } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface MatchedProduct {
   id: string;
@@ -26,6 +30,7 @@ const DealerQuickOrder = () => {
   const [qty, setQty] = useState(1);
   const [lines, setLines] = useState<OrderLine[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   // Auto-search state
   const [searching, setSearching] = useState(false);
@@ -167,6 +172,7 @@ const DealerQuickOrder = () => {
     toast({ title: "تم إرسال الطلب ✓", description: `رقم الطلب: ${orderNumber}` });
     setLines([]);
     setSubmitting(false);
+    setShowConfirm(false);
   };
 
   return (
@@ -272,12 +278,57 @@ const DealerQuickOrder = () => {
             </div>
           )}
 
-          <Button className="w-full h-12 text-base mt-2" onClick={submitOrder} disabled={submitting}>
-            {submitting ? <Loader2 className="w-5 h-5 ml-2 animate-spin" /> : <Zap className="w-5 h-5 ml-2" />}
+          <Button className="w-full h-12 text-base mt-2" onClick={() => setShowConfirm(true)} disabled={submitting}>
+            <ShoppingCart className="w-5 h-5 ml-2" />
             اطلب الآن ({lines.length} صنف)
           </Button>
         </div>
       )}
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <AlertDialogContent className="max-w-sm" dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-base">
+              <ShoppingCart className="w-5 h-5 text-primary" />
+              تأكيد الطلب
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 pt-2">
+                <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                  {lines.map((line, idx) => (
+                    <div key={idx} className="flex items-center justify-between text-sm">
+                      <div className="flex-1 min-w-0">
+                        <span className="font-mono text-foreground">{line.sku}</span>
+                        {line.product && (
+                          <p className="text-[10px] text-muted-foreground truncate">{line.product.name_ar}</p>
+                        )}
+                      </div>
+                      <span className="text-muted-foreground shrink-0 mx-2">×{line.quantity}</span>
+                      {line.product && (
+                        <span className="font-bold text-foreground shrink-0">
+                          {(line.product.base_price * line.quantity).toLocaleString("ar-EG")} ج.م
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <div className="border-t border-border pt-2 flex items-center justify-between">
+                  <span className="font-medium text-foreground">الإجمالي</span>
+                  <span className="text-lg font-bold text-primary">{totalAmount.toLocaleString("ar-EG")} ج.م</span>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex gap-2 mt-2">
+            <AlertDialogCancel className="flex-1">تراجع</AlertDialogCancel>
+            <AlertDialogAction className="flex-1" onClick={submitOrder} disabled={submitting}>
+              {submitting ? <Loader2 className="w-4 h-4 ml-1 animate-spin" /> : <Zap className="w-4 h-4 ml-1" />}
+              تأكيد وإرسال
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
