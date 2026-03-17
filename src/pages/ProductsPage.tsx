@@ -519,6 +519,7 @@ const ProductsPage = () => {
             onFiltersChange={setFilters}
             categories={categories}
             showCategories={config.brandKey !== "toyota_oils"}
+            showBrands={true}
             totalResults={filteredProducts.length}
             isLoading={isLoading}
           />
