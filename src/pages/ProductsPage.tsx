@@ -89,7 +89,7 @@ const allBrands = [
   { label: "MTX Aftermarket", labelEn: "MTX Aftermarket", image: brandMtx, to: "/products/mtx-aftermarket", scale: "scale-150" },
   { label: "DENSO", labelEn: "DENSO", image: brandDenso, to: "/products/denso", scale: "scale-100" },
   { label: "AISIN", labelEn: "AISIN", image: brandAisin, to: "/products/aisin", scale: "scale-100" },
-  { label: "تيل فرامل FBK", labelEn: "FBK Brake Pads", image: brandMtx, to: "/products/fbk-brakes", scale: "scale-100" },
+  { label: "تيل فرامل", labelEn: "FBK Brake Pads", image: brandMtx, to: "/products/fbk-brakes", scale: "scale-[2.5]" },
 ];
 
 const ITEMS_PER_PAGE = 24;
