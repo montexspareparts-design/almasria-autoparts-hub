@@ -57,12 +57,13 @@ const brandConfig: Record<string, { title: string; subtitle: string; description
     logo: brandMtx,
   },
   "fbk-brakes": {
-    title: "تيل فرامل FBK",
+    title: "تيل فرامل",
     subtitle: "FBK Brake Pads",
     description: "تيل فرامل FBK ماليزي عالي الجودة لجميع موديلات تويوتا. أداء ممتاز وعمر افتراضي طويل.",
     badge: "جودة ماليزية",
     brandKey: "fbk",
     logo: brandMtx,
+    logoScale: 500,
   },
   "denso": {
     title: "DENSO",
