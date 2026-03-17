@@ -112,6 +112,7 @@ const ProductsPage = () => {
     chassisNumber: "",
     partNumber: "",
     categoryId: null,
+    brandKey: null,
     priceMin: "",
     priceMax: "",
     sortBy: "newest",
