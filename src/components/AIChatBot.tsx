@@ -336,8 +336,9 @@ const AIChatBot = () => {
     });
 
     if (!resp.ok) {
-      const err = await resp.json().catch(() => ({ error: "حدث خطأ" }));
-      throw new Error(err.error || "حدث خطأ في الاتصال");
+      const fallbackMsg = "عذراً، المساعد الذكي غير متاح حالياً 😊\n\nلكن فريق المبيعات موجود لخدمتك! تواصل معانا مباشرة:\n\n📞 **فرع القاهرة (التوفيقية)**: 01032104861\n📞 **فرع الجيزة (أوسيم)**: 01153961008\n📞 **فرع الأقصر**: 01016177204\n📱 **واتساب**: [اضغط هنا](https://wa.me/201032104861)\n\n⏰ مواعيد العمل: من 9 صباحاً لـ 7 مساءً\n\n_يمكنك المحاولة مرة تانية بعد دقيقة_ 🔄";
+      setMessages((prev) => [...prev, { role: "assistant", content: fallbackMsg }]);
+      return;
     }
     if (!resp.body) throw new Error("No response body");
 
@@ -421,7 +422,9 @@ const AIChatBot = () => {
     try {
       await streamChat(updatedMessages);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "حدث خطأ");
+      console.error("Chat error:", e);
+      const errorMsg = "حصل مشكلة في الاتصال 😅\n\nممكن تكون مشكلة مؤقتة — جرب تاني بعد شوية.\n\nأو تواصل مع فريق المبيعات مباشرة:\n📞 01032104861\n📱 [واتساب](https://wa.me/201032104861)";
+      setMessages((prev) => [...prev, { role: "assistant", content: errorMsg }]);
     } finally {
       setIsLoading(false);
     }
