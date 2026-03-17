@@ -27,6 +27,7 @@ const brandLabels: Record<string, string> = {
   mtx_aftermarket: "MTX Aftermarket",
   denso: "DENSO",
   aisin: "AISIN",
+  fbk: "تيل فرامل FBK",
 };
 
 const ProductCompare = () => {

@@ -347,6 +347,7 @@ const AdminProductImages = () => {
     mtx_aftermarket: "MTX",
     denso: "DENSO",
     aisin: "AISIN",
+    fbk: "تيل فرامل FBK",
   };
 
   return (

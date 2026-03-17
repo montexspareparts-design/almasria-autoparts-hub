@@ -53,7 +53,7 @@ const PersonalizedProducts = () => {
   if (!consent || !hasInterests || !recommended || recommended.length === 0) return null;
 
   const brandLabel = (b: string) =>
-    b === "toyota_genuine" ? "تويوتا أصلي" : b === "toyota_oils" ? "زيوت تويوتا" : b === "denso" ? "DENSO" : b === "aisin" ? "AISIN" : "MTX";
+    b === "toyota_genuine" ? "تويوتا أصلي" : b === "toyota_oils" ? "زيوت تويوتا" : b === "denso" ? "DENSO" : b === "aisin" ? "AISIN" : b === "fbk" ? "تيل فرامل FBK" : "MTX";
 
   return (
     <motion.div
