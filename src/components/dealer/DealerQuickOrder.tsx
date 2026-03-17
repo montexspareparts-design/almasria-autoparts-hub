@@ -212,9 +212,8 @@ const DealerQuickOrder = () => {
                     <p className="text-[10px] text-muted-foreground font-mono">{product.sku}</p>
                   </div>
                   <div className="text-left shrink-0">
-                    <p className="text-xs font-bold text-foreground">{product.base_price.toLocaleString("ar-EG")} ج.م</p>
                     <p className={`text-[10px] ${product.stock_quantity > 0 ? "text-emerald-600" : "text-destructive"}`}>
-                      {product.stock_quantity > 0 ? `متوفر (${product.stock_quantity})` : "نفذ"}
+                      {product.stock_quantity > 0 ? `متوفر` : "نفذ"}
                     </p>
                   </div>
                   <Plus className="w-4 h-4 text-primary shrink-0" />
