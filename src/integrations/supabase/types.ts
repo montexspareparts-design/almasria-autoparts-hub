@@ -1141,6 +1141,7 @@ export type Database = {
         | "mtx_aftermarket"
         | "denso"
         | "aisin"
+        | "fbk"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1283,6 +1284,7 @@ export const Constants = {
         "mtx_aftermarket",
         "denso",
         "aisin",
+        "fbk",
       ],
     },
   },
