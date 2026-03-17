@@ -16,6 +16,38 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
+    // ─── Admin Authentication Check ─────────────────────────────────────
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const { data: isAdmin } = await supabase.rpc("has_role", {
+      _user_id: user.id,
+      _role: "admin",
+    });
+
+    if (!isAdmin) {
+      return new Response(
+        JSON.stringify({ error: "Forbidden — admin only" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    // ─── End Auth Check ─────────────────────────────────────────────────
+
     const { action, data } = await req.json();
 
     // Fetch ERP config
@@ -56,7 +88,6 @@ Deno.serve(async (req) => {
       };
 
       if (isMock) {
-        // Mock response
         result = {
           success: true,
           erp_quote_id: `ERP-Q-${Date.now()}`,
@@ -76,7 +107,6 @@ Deno.serve(async (req) => {
           throw new Error(`ERP API error [${res.status}]: ${JSON.stringify(result)}`);
       }
 
-      // Log sync
       await supabase.from("erp_sync_logs").insert({
         sync_type: syncType,
         direction: "outbound",
@@ -148,7 +178,6 @@ Deno.serve(async (req) => {
       syncType = "stock_update";
 
       if (isMock) {
-        // Mock: generate random stock updates for some products
         const { data: products } = await supabase
           .from("products")
           .select("id, sku, stock_quantity")
@@ -161,7 +190,6 @@ Deno.serve(async (req) => {
           new_qty: Math.floor(Math.random() * 100) + 5,
         }));
 
-        // Apply mock updates
         for (const u of updates) {
           await supabase
             .from("products")
@@ -182,7 +210,6 @@ Deno.serve(async (req) => {
         const erpStock = await res.json();
         if (!res.ok) throw new Error(`ERP API error: ${JSON.stringify(erpStock)}`);
 
-        // Update local products
         let updated = 0;
         for (const item of erpStock.items || []) {
           const { error } = await supabase
