@@ -43,6 +43,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (orderErr || !order) {
+      console.error("Order fetch error:", orderErr);
       return new Response(
         JSON.stringify({ error: "Order not found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -70,47 +71,75 @@ Deno.serve(async (req) => {
     const firstName = nameParts[0] || "Customer";
     const lastName = nameParts.slice(1).join(" ") || "User";
 
+    // Determine the correct API endpoint based on key prefix
+    // egy_sk_test_ or egy_sk_live_ → Egypt endpoint
+    // pak_sk_ → Pakistan endpoint
+    // Default to Egypt
+    let apiBase = "https://egypt.paymob.com";
+    if (paymobSecretKey.startsWith("pak_sk")) {
+      apiBase = "https://pakistan.paymob.com";
+    } else if (!paymobSecretKey.startsWith("egy_sk")) {
+      // Fallback for older keys
+      apiBase = "https://accept.paymob.com";
+    }
+
+    const intentionUrl = `${apiBase}/v1/intention/`;
+
+    const requestBody = {
+      amount: amountCents,
+      currency: "EGP",
+      payment_methods: [parseInt(paymobIntegrationId)],
+      billing_data: {
+        first_name: firstName,
+        last_name: lastName,
+        email: profile?.email || "customer@example.com",
+        phone_number: profile?.phone || "01000000000",
+        apartment: "NA",
+        floor: "NA",
+        street: order.shipping_address || "NA",
+        building: "NA",
+        shipping_method: "NA",
+        postal_code: "NA",
+        city: order.shipping_governorate || "Cairo",
+        country: "EG",
+        state: order.shipping_governorate || "Cairo",
+      },
+      items,
+      extras: {
+        order_id: order.id,
+        order_number: order.order_number,
+      },
+      redirection_url: return_url || "",
+      notification_url: `${supabaseUrl}/functions/v1/paymob-webhook`,
+    };
+
+    console.log("Creating Paymob intention at:", intentionUrl);
+    console.log("Request body:", JSON.stringify(requestBody));
+
     // Create intention using Paymob v1 Intention API
-    const intentionRes = await fetch("https://accept.paymob.com/v1/intention/", {
+    const intentionRes = await fetch(intentionUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Token ${paymobSecretKey}`,
       },
-      body: JSON.stringify({
-        amount: amountCents,
-        currency: "EGP",
-        payment_methods: [parseInt(paymobIntegrationId)],
-        billing_data: {
-          first_name: firstName,
-          last_name: lastName,
-          email: profile?.email || "customer@example.com",
-          phone_number: profile?.phone || "01000000000",
-          apartment: "NA",
-          floor: "NA",
-          street: order.shipping_address || "NA",
-          building: "NA",
-          shipping_method: "NA",
-          postal_code: "NA",
-          city: order.shipping_governorate || "Cairo",
-          country: "EG",
-          state: order.shipping_governorate || "Cairo",
-        },
-        items,
-        extras: {
-          order_id: order.id,
-          order_number: order.order_number,
-        },
-        redirection_url: return_url || "",
-        notification_url: `${supabaseUrl}/functions/v1/paymob-webhook`,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
-    const intentionData = await intentionRes.json();
+    const intentionText = await intentionRes.text();
+    console.log("Paymob response status:", intentionRes.status);
+    console.log("Paymob response body:", intentionText);
+
+    let intentionData;
+    try {
+      intentionData = JSON.parse(intentionText);
+    } catch {
+      throw new Error(`Paymob returned non-JSON response: ${intentionText.slice(0, 500)}`);
+    }
 
     if (!intentionRes.ok || !intentionData.client_secret) {
       console.error("Paymob intention creation failed:", intentionData);
-      throw new Error("Failed to create Paymob intention");
+      throw new Error(`Failed to create Paymob intention: ${JSON.stringify(intentionData).slice(0, 500)}`);
     }
 
     return new Response(
@@ -121,7 +150,7 @@ Deno.serve(async (req) => {
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
-    console.error("Create Paymob intention error:", error);
+    console.error("Create Paymob intention error:", error.message);
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
