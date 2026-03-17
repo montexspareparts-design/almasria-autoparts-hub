@@ -63,6 +63,39 @@ const AdminPriceLists = () => {
     setLoading(false);
   };
 
+  const fetchViews = async (listId: string) => {
+    setLoadingViews(true);
+    const { data: views } = await supabase
+      .from("price_list_views")
+      .select("user_id, viewed_at")
+      .eq("price_list_id", listId)
+      .order("viewed_at", { ascending: false });
+
+    if (!views || views.length === 0) {
+      setViewsData([]);
+      setLoadingViews(false);
+      return;
+    }
+
+    const userIds = [...new Set(views.map((v: any) => v.user_id))];
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("user_id, full_name, phone")
+      .in("user_id", userIds);
+
+    const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+
+    setViewsData(views.map((v: any) => {
+      const profile = profileMap.get(v.user_id);
+      return {
+        user_name: profile?.full_name || "بدون اسم",
+        phone: profile?.phone || "—",
+        viewed_at: v.viewed_at,
+      };
+    }));
+    setLoadingViews(false);
+  };
+
   const notifyDealers = async (title: string) => {
     const { data: dealers } = await supabase
       .from("dealer_accounts")
