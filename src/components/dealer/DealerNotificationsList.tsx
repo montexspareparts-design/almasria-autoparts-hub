@@ -206,16 +206,18 @@ const DealerNotificationsList = ({ userId, onNavigate }: { userId: string; onNav
                 onClick={() => {
                   if (!n.is_read) markRead(n.id);
                   if (!isOrderEdit && onNavigate) {
-                    // Navigate to relevant tab based on notification type
                     const msg = (n.message + " " + n.title).toLowerCase();
-                    if (n.type === "order") {
+                    if (n.type === "order" || msg.includes("طلب") || msg.includes("order")) {
                       onNavigate("orders");
-                    } else if (msg.includes("كشف أسعار") || msg.includes("price")) {
+                    } else if (n.type === "price_list" || msg.includes("كشف أسعار") || msg.includes("price")) {
                       onNavigate("price-lists");
-                    } else if (msg.includes("عرض") && msg.includes("سعر")) {
-                      onNavigate("quote-builder");
+                    } else if (n.type === "offer" || n.type === "stock_alert" || msg.includes("عرض") || msg.includes("متوفر") || msg.includes("منتج")) {
+                      onNavigate("quick-order");
                     } else if (msg.includes("فاتورة")) {
                       onNavigate("invoices");
+                    } else {
+                      // Default: go to overview
+                      onNavigate("overview");
                     }
                   }
                 }}
