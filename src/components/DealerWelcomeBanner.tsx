@@ -42,7 +42,7 @@ const DealerWelcomeBanner = () => {
     { label: "لوحة التحكم", icon: LayoutDashboard, to: "/dealer", color: "from-primary to-primary/80" },
     { label: "اطلب قطع غيار", icon: ShoppingCart, to: "/products", color: "from-emerald-600 to-emerald-500" },
     { label: "طلباتي", icon: ClipboardList, to: "/dealer?tab=orders", color: "from-blue-600 to-blue-500" },
-    { label: "كشوفات الأسعار", icon: FileText, to: "/dealer?tab=prices", color: "from-amber-600 to-amber-500" },
+    { label: "عروض الأسعار", icon: FileText, to: "/dealer?tab=prices", color: "from-amber-600 to-amber-500" },
   ];
 
   return (
