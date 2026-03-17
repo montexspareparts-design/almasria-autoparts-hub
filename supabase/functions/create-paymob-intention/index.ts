@@ -71,17 +71,8 @@ Deno.serve(async (req) => {
     const firstName = nameParts[0] || "Customer";
     const lastName = nameParts.slice(1).join(" ") || "User";
 
-    // Determine the correct API endpoint based on key prefix
-    // egy_sk_test_ or egy_sk_live_ → Egypt endpoint
-    // pak_sk_ → Pakistan endpoint
-    // Default to Egypt
-    let apiBase = "https://egypt.paymob.com";
-    if (paymobSecretKey.startsWith("pak_sk")) {
-      apiBase = "https://pakistan.paymob.com";
-    } else if (!paymobSecretKey.startsWith("egy_sk")) {
-      // Fallback for older keys
-      apiBase = "https://accept.paymob.com";
-    }
+    // Use accept.paymob.com as the unified API endpoint
+    const apiBase = "https://accept.paymob.com";
 
     const intentionUrl = `${apiBase}/v1/intention/`;
 
