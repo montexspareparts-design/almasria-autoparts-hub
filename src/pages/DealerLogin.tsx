@@ -16,12 +16,20 @@ import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 
 type AuthMethod = "phone" | "email";
 const REMEMBER_KEY = "almasria_remember_me";
+const SESSION_FLAG = "almasria_session_active";
 
-const getSavedCredentials = () => {
-  try { const s = localStorage.getItem(REMEMBER_KEY); if (s) return JSON.parse(s) as { method: AuthMethod; identifier: string; password: string }; } catch {} return null;
+// Only check if user opted into "remember me" — no credentials stored
+const isRemembered = () => localStorage.getItem(REMEMBER_KEY) === "true";
+const setRemembered = (val: boolean) => {
+  if (val) {
+    localStorage.setItem(REMEMBER_KEY, "true");
+  } else {
+    localStorage.removeItem(REMEMBER_KEY);
+  }
 };
-const saveCredentials = (method: AuthMethod, identifier: string, password: string) => localStorage.setItem(REMEMBER_KEY, JSON.stringify({ method, identifier, password }));
-const clearCredentials = () => localStorage.removeItem(REMEMBER_KEY);
+// Session flag: set on login, cleared on browser close (via sessionStorage)
+const markSessionActive = () => sessionStorage.setItem(SESSION_FLAG, "true");
+const isSessionActive = () => sessionStorage.getItem(SESSION_FLAG) === "true";
 
 const statusConfig = {
   pending: { label: "قيد المراجعة", icon: Clock, color: "text-amber-700", bg: "bg-amber-50 border-amber-200" },
