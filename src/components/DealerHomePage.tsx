@@ -257,9 +257,10 @@ const DealerHomePage = () => {
               <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
                 <span className="text-secondary-foreground/40 text-[10px] shrink-0">💡</span>
               {[
-                isRTL ? "رقم القطعة OEM" : "OEM Part #",
-                isRTL ? "فلتر زيت" : "Oil Filter",
-                isRTL ? "بواجي" : "Spark Plugs",
+                isRTL ? "قطع المحرك" : "Engine Parts",
+                isRTL ? "الفلاتر" : "Filters",
+                isRTL ? "العفشة والتعليق" : "Suspension",
+                isRTL ? "الكهرباء" : "Electrical",
               ].map((hint) => (
                 <button
                   key={hint}
