@@ -17,12 +17,16 @@ type AuthMode = "login" | "register";
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 60_000;
 const REMEMBER_KEY = "almasria_remember_client";
+const SESSION_FLAG = "almasria_client_session_active";
 
-const getSavedCredentials = () => {
-  try { const s = localStorage.getItem(REMEMBER_KEY); if (s) return JSON.parse(s) as { method: AuthMethod; identifier: string; password: string }; } catch {} return null;
+// Session-based: no credentials stored, just a flag
+const isRemembered = () => localStorage.getItem(REMEMBER_KEY) === "true";
+const setRememberedFlag = (val: boolean) => {
+  if (val) localStorage.setItem(REMEMBER_KEY, "true");
+  else localStorage.removeItem(REMEMBER_KEY);
 };
-const saveCredentials = (method: AuthMethod, identifier: string, password: string) => localStorage.setItem(REMEMBER_KEY, JSON.stringify({ method, identifier, password }));
-const clearCredentials = () => localStorage.removeItem(REMEMBER_KEY);
+const markSessionActive = () => sessionStorage.setItem(SESSION_FLAG, "true");
+const isSessionActive = () => sessionStorage.getItem(SESSION_FLAG) === "true";
 
 const Auth = () => {
   const savedCreds = useRef(getSavedCredentials());
