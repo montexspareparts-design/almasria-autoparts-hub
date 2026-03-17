@@ -712,9 +712,10 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
             ) : pdfSignedUrl ? (
               <div className="border border-border rounded-lg overflow-hidden bg-muted/30" style={{ height: "70vh" }}>
                 <iframe
-                  src={`${pdfSignedUrl}#toolbar=1`}
+                  src={`https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(pdfSignedUrl)}`}
                   className="w-full h-full"
                   title={viewingList.title}
+                  allow="autoplay"
                 />
               </div>
             ) : (
