@@ -53,6 +53,15 @@ const brandConfig: Record<string, { title: string; subtitle: string; description
     description: "MTX هي علامتنا التجارية المسجلة لقطع الغيار المستوردة عالية الجودة بأفضل الأسعار.",
     badge: "علامة تجارية مسجلة",
     brandKey: "mtx_aftermarket",
+    extraBrands: ["fbk"],
+    logo: brandMtx,
+  },
+  "fbk-brakes": {
+    title: "تيل فرامل FBK",
+    subtitle: "FBK Brake Pads",
+    description: "تيل فرامل FBK ماليزي عالي الجودة لجميع موديلات تويوتا. أداء ممتاز وعمر افتراضي طويل.",
+    badge: "جودة ماليزية",
+    brandKey: "fbk",
     logo: brandMtx,
   },
   "denso": {
