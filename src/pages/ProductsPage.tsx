@@ -233,15 +233,19 @@ const ProductsPage = () => {
     }
   }, [categories, searchParams]);
 
+  // Set brand filter from URL config on mount
+  useEffect(() => {
+    if (config?.brandKey && !filters.brandKey) {
+      setFilters(prev => ({ ...prev, brandKey: config.brandKey }));
+    }
+  }, [config?.brandKey]);
+
   const { data: products, isLoading } = useQuery({
-    queryKey: ["products", config?.brandKey, config?.extraBrands],
+    queryKey: ["products_all_brands"],
     queryFn: async () => {
-      if (!config) return [];
-      const brandsToQuery = [config.brandKey, ...(config.extraBrands || [])];
       const { data, error } = await supabase
         .from("products")
         .select("*, product_categories(name_ar)")
-        .in("brand", brandsToQuery as any)
         .eq("is_active", true)
         .order("created_at", { ascending: false });
       if (error) throw error;
