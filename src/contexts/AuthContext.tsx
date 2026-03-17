@@ -99,12 +99,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        // On password change, clear remember-me and sign out
-        if (event === "PASSWORD_RECOVERY" || event === "USER_UPDATED") {
-          if (event === "USER_UPDATED") {
-            localStorage.removeItem("almasria_remember_client");
-            localStorage.removeItem("almasria_remember_me");
-          }
+        // On password change, clear remember-me flag
+        if (event === "USER_UPDATED") {
+          localStorage.removeItem("almasria_remember_me");
         }
 
         setSession(session);
