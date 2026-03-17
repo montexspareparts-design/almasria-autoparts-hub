@@ -28,19 +28,21 @@ const Footer = () => {
             <img src={logo} alt="المصرية جروب" className="h-14 mb-4" />
             <p className="text-secondary-foreground/45 text-sm leading-7 max-w-sm">{t("footer.desc")}</p>
           </div>
-          <div className="md:col-span-3">
-            <h4 className="font-bold text-sm text-secondary-foreground/70 mb-4">{t("footer.quick_links")}</h4>
-            <ul className="space-y-2.5">
-              {quickLinks.map((l) => (
-                <li key={l.href}>
-                  <Link to={l.href} className={`text-sm transition-colors duration-200 flex items-center gap-1.5 ${l.icon ? "text-primary hover:text-primary/80 font-bold" : "text-secondary-foreground/40 hover:text-primary"}`}>
-                    {l.icon && <l.icon className="w-4 h-4" />}
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {!isDealer && (
+            <div className="md:col-span-3">
+              <h4 className="font-bold text-sm text-secondary-foreground/70 mb-4">{t("footer.quick_links")}</h4>
+              <ul className="space-y-2.5">
+                {quickLinks.map((l) => (
+                  <li key={l.href}>
+                    <Link to={l.href} className={`text-sm transition-colors duration-200 flex items-center gap-1.5 ${l.icon ? "text-primary hover:text-primary/80 font-bold" : "text-secondary-foreground/40 hover:text-primary"}`}>
+                      {l.icon && <l.icon className="w-4 h-4" />}
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           <div className="md:col-span-4">
             <h4 className="font-bold text-sm text-secondary-foreground/70 mb-4">{t("footer.contact_us")}</h4>
             <ul className="space-y-3">
