@@ -257,6 +257,7 @@ const ProductsPage = () => {
   const filteredProducts = useMemo(() => {
     if (!products) return [];
     let result = products.filter((p) => {
+      const matchesBrand = !filters.brandKey || p.brand === filters.brandKey;
       const matchesSearch =
         !filters.search ||
         p.name_ar.toLowerCase().includes(filters.search.toLowerCase()) ||
@@ -268,7 +269,7 @@ const ProductsPage = () => {
       const price = p.base_price;
       const matchesPriceMin = !filters.priceMin || price >= Number(filters.priceMin);
       const matchesPriceMax = !filters.priceMax || price <= Number(filters.priceMax);
-      return matchesSearch && matchesCategory && matchesModel && matchesYear && matchesPartNumber && matchesPriceMin && matchesPriceMax;
+      return matchesBrand && matchesSearch && matchesCategory && matchesModel && matchesYear && matchesPartNumber && matchesPriceMin && matchesPriceMax;
     });
 
     // Sort
