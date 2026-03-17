@@ -16,12 +16,20 @@ import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 
 type AuthMethod = "phone" | "email";
 const REMEMBER_KEY = "almasria_remember_me";
+const SESSION_FLAG = "almasria_session_active";
 
-const getSavedCredentials = () => {
-  try { const s = localStorage.getItem(REMEMBER_KEY); if (s) return JSON.parse(s) as { method: AuthMethod; identifier: string; password: string }; } catch {} return null;
+// Only check if user opted into "remember me" — no credentials stored
+const isRemembered = () => localStorage.getItem(REMEMBER_KEY) === "true";
+const setRemembered = (val: boolean) => {
+  if (val) {
+    localStorage.setItem(REMEMBER_KEY, "true");
+  } else {
+    localStorage.removeItem(REMEMBER_KEY);
+  }
 };
-const saveCredentials = (method: AuthMethod, identifier: string, password: string) => localStorage.setItem(REMEMBER_KEY, JSON.stringify({ method, identifier, password }));
-const clearCredentials = () => localStorage.removeItem(REMEMBER_KEY);
+// Session flag: set on login, cleared on browser close (via sessionStorage)
+const markSessionActive = () => sessionStorage.setItem(SESSION_FLAG, "true");
+const isSessionActive = () => sessionStorage.getItem(SESSION_FLAG) === "true";
 
 const statusConfig = {
   pending: { label: "قيد المراجعة", icon: Clock, color: "text-amber-700", bg: "bg-amber-50 border-amber-200" },
@@ -34,21 +42,35 @@ const DealerLogin = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const savedCreds = useRef(getSavedCredentials());
-  const [authMethod, setAuthMethod] = useState<AuthMethod>(savedCreds.current?.method || "phone");
-  const [phone, setPhone] = useState(savedCreds.current?.method === "phone" ? savedCreds.current.identifier : "");
-  const [email, setEmail] = useState(savedCreds.current?.method === "email" ? savedCreds.current.identifier : "");
-  const [password, setPassword] = useState(savedCreds.current?.password || "");
+  const [authMethod, setAuthMethod] = useState<AuthMethod>("phone");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
   const [applicationStatus, setApplicationStatus] = useState<any>(null);
   const [checkingStatus, setCheckingStatus] = useState(false);
-  const [rememberMe, setRememberMe] = useState(!!savedCreds.current);
+  const [rememberMe, setRememberMe] = useState(isRemembered());
   const autoLoginAttempted = useRef(false);
 
+  // On mount: if "remember me" was NOT checked and there's no active session flag,
+  // sign out to prevent stale sessions from persisting across browser restarts
   useEffect(() => {
-    if (!user && savedCreds.current && !autoLoginAttempted.current) { autoLoginAttempted.current = true; handleAutoLogin(); }
+    if (!autoLoginAttempted.current) {
+      autoLoginAttempted.current = true;
+      if (!isRemembered() && !isSessionActive()) {
+        // User didn't want to be remembered and browser was restarted — clear session
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session) {
+            supabase.auth.signOut();
+          }
+        });
+      } else if (isSessionActive() || isRemembered()) {
+        // Mark session as active for this browser tab
+        markSessionActive();
+      }
+    }
   }, []);
 
   useEffect(() => { if (user) checkDealerStatus(user.id); }, [user]);
@@ -68,30 +90,21 @@ const DealerLogin = () => {
 
   const performLogin = async (authEmail: string, pwd: string) => supabase.auth.signInWithPassword({ email: authEmail, password: pwd });
 
-  const handleAutoLogin = async () => {
-    const creds = savedCreds.current; if (!creds) return;
-    setLoading(true);
-    const authEmail = creds.method === "email" ? creds.identifier : phoneToEmail(creds.identifier);
-    const { data, error } = await performLogin(authEmail, creds.password);
-    if (error) { clearCredentials(); savedCreds.current = null; setRememberMe(false); }
-    else if (data.user) { toast({ title: "تم تسجيل الدخول تلقائياً ✅" }); checkDealerStatus(data.user.id); }
-    setLoading(false);
-  };
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault(); setLoading(true);
     const authEmail = getAuthEmail();
     const { data, error } = await performLogin(authEmail, password);
     if (error) { toast({ title: "بيانات غير صحيحة", description: authMethod === "phone" ? "رقم الهاتف أو كلمة المرور خطأ" : "البريد أو كلمة المرور خطأ", variant: "destructive" }); }
     else if (data.user) {
-      if (rememberMe) saveCredentials(authMethod, authMethod === "phone" ? phone : email, password); else clearCredentials();
+      setRemembered(rememberMe);
+      markSessionActive();
       toast({ title: "تم تسجيل الدخول بنجاح ✅" });
       checkDealerStatus(data.user.id);
     }
     setLoading(false);
   };
 
-  const handleLogout = async () => { clearCredentials(); await supabase.auth.signOut(); setApplicationStatus(null); };
+  const handleLogout = async () => { setRemembered(false); await supabase.auth.signOut(); setApplicationStatus(null); };
 
   const handleGoogleLogin = async () => {
     const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: `${window.location.origin}/dealer-login` });
