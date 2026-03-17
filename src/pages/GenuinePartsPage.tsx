@@ -53,7 +53,7 @@ const GenuinePartsPage = () => {
   const { addItem } = useCart();
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState<ProductFilters>({
-    search: "", model: null, year: null, chassisNumber: "", partNumber: "", categoryId: null, priceMin: "", priceMax: "", sortBy: "newest",
+    search: "", model: null, year: null, chassisNumber: "", partNumber: "", categoryId: null, brandKey: null, priceMin: "", priceMax: "", sortBy: "newest",
   });
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [currentPage, setCurrentPage] = useState(1);
