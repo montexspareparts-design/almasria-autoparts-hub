@@ -232,13 +232,14 @@ const ProductsPage = () => {
   }, [categories, searchParams]);
 
   const { data: products, isLoading } = useQuery({
-    queryKey: ["products", config?.brandKey],
+    queryKey: ["products", config?.brandKey, config?.extraBrands],
     queryFn: async () => {
       if (!config) return [];
+      const brandsToQuery = [config.brandKey, ...(config.extraBrands || [])];
       const { data, error } = await supabase
         .from("products")
         .select("*, product_categories(name_ar)")
-        .eq("brand", config.brandKey as any)
+        .in("brand", brandsToQuery as any)
         .eq("is_active", true)
         .order("created_at", { ascending: false });
       if (error) throw error;
