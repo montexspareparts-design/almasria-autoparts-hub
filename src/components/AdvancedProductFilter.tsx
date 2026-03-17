@@ -70,6 +70,7 @@ const AdvancedProductFilter = ({ filters, onFiltersChange, categories, showCateg
     if (filters.chassisNumber) count++;
     if (filters.partNumber) count++;
     if (filters.categoryId) count++;
+    if (filters.brandKey) count++;
     if (filters.priceMin) count++;
     if (filters.priceMax) count++;
     return count;
