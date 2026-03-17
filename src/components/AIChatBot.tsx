@@ -88,7 +88,7 @@ const findNearestBranch = (userLat: number, userLng: number) => {
 // Speech Recognition setup
 const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
-const AIChatBot = () => {
+const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
   const { user } = useAuth();
   const { consent, interests, getTopCategories, getTopBrands } = usePersonalization();
   const [isOpen, setIsOpen] = useState(false);
