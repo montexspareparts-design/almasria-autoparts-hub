@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -55,6 +55,38 @@ const DealerNotificationsList = ({ userId, onNavigate }: { userId: string; onNav
   const [loading, setLoading] = useState(true);
   const [respondingId, setRespondingId] = useState<string | null>(null);
 
+  const playSound = useCallback((type: "normal" | "contact") => {
+    try {
+      const ctx = new AudioContext();
+      if (type === "contact") {
+        // Urgent triple-beep rising tone for contact requests
+        [0, 0.2, 0.4].forEach((offset, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.frequency.value = 600 + i * 200; // 600, 800, 1000 Hz rising
+          osc.type = "triangle";
+          gain.gain.setValueAtTime(0.35, ctx.currentTime + offset);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + offset + 0.18);
+          osc.start(ctx.currentTime + offset);
+          osc.stop(ctx.currentTime + offset + 0.18);
+        });
+      } else {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 880;
+        osc.type = "sine";
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.5);
+      }
+    } catch (e) {}
+  }, []);
+
   useEffect(() => {
     fetchNotifications();
 
@@ -71,6 +103,8 @@ const DealerNotificationsList = ({ userId, onNavigate }: { userId: string; onNav
         (payload) => {
           const newNotif = payload.new as Notification;
           setNotifications((prev) => [newNotif, ...prev]);
+          const isContactNotif = newNotif.title?.includes("تواصل") || newNotif.message?.includes("تواصل") || newNotif.type === "contact";
+          playSound(isContactNotif ? "contact" : "normal");
           toast({ title: newNotif.title, description: getDisplayMessage(newNotif.message) });
         }
       )
