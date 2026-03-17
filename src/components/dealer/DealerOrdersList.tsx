@@ -132,7 +132,19 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
       .eq("user_id", userId)
       .neq("status", "cancelled")
       .order("created_at", { ascending: false });
-    setOrders(data || []);
+    const ordersList = data || [];
+    setOrders(ordersList);
+    // Auto-expand first active order to show timeline
+    const firstActive = ordersList.find((o: Order) => !["delivered", "cancelled"].includes(o.status));
+    if (firstActive && !expandedOrder) {
+      setExpandedOrder(firstActive.id);
+      // Pre-fetch items
+      const { data: items } = await supabase
+        .from("order_items")
+        .select("*, products(name_ar, sku, image_url)")
+        .eq("order_id", firstActive.id);
+      setOrderItems(prev => ({ ...prev, [firstActive.id]: (items as OrderItem[]) || [] }));
+    }
     setLoading(false);
   };
 
