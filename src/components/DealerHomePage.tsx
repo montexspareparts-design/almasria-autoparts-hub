@@ -314,12 +314,6 @@ const DealerHomePage = () => {
                                   </p>
                                   <p className="text-xs text-muted-foreground font-mono mt-0.5">{p.sku}</p>
                                   <div className="flex items-center gap-2 mt-1.5">
-                                    <span className="text-xs font-black text-foreground">
-                                      {(p.sale_price || p.base_price).toLocaleString()} <span className="text-[10px] font-medium text-muted-foreground">{isRTL ? "ج.م" : "EGP"}</span>
-                                    </span>
-                                    {p.sale_price && p.sale_price < p.base_price && (
-                                      <span className="text-[10px] text-muted-foreground line-through">{p.base_price.toLocaleString()}</span>
-                                    )}
                                     <StockBadge qty={stock} isRTL={isRTL} />
                                   </div>
                                 </div>
