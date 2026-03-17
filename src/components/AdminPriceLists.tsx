@@ -47,6 +47,11 @@ const AdminPriceLists = () => {
   const [searchingProducts, setSearchingProducts] = useState(false);
   const [loadingLinked, setLoadingLinked] = useState(false);
 
+  // Views report
+  const [viewingReport, setViewingReport] = useState<PriceListRow | null>(null);
+  const [viewsData, setViewsData] = useState<{ user_name: string; phone: string; viewed_at: string }[]>([]);
+  const [loadingViews, setLoadingViews] = useState(false);
+
   useEffect(() => { fetchLists(); }, []);
 
   const fetchLists = async () => {
