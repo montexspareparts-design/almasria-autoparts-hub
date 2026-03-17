@@ -5,7 +5,7 @@ import {
   ShoppingCart, ClipboardList, FileText, Package,
   Search, X, ChevronLeft, ChevronRight, Plus, ArrowRight,
   CreditCard, Home, Tag, User, RefreshCw, Percent, Receipt,
-  Sparkles, CheckCircle2, XCircle, Download, Truck, Upload,
+  Sparkles, CheckCircle2, XCircle, Download, Truck, Upload, Zap,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -39,7 +39,7 @@ const DealerHomeBottomNav = ({ isRTL }: { isRTL: boolean }) => {
     { id: "home", label: isRTL ? "الرئيسية" : "Home", icon: Home, href: "/", active: true },
     { id: "products", label: isRTL ? "المنتجات" : "Products", icon: Package, href: "/products" },
     { id: "orders", label: isRTL ? "طلباتي" : "Orders", icon: ClipboardList, href: "/dealer?tab=orders" },
-    { id: "quick_order", label: isRTL ? "طلب سريع" : "Quick Order", icon: Upload, href: "/dealer?tab=quick_order" },
+    { id: "quick_order", label: isRTL ? "طلب سريع" : "Quick Order", icon: Zap, href: "/dealer?tab=quick_order" },
     { id: "account", label: isRTL ? "حسابي" : "Account", icon: User, href: "/dealer?tab=settings" },
   ];
 
