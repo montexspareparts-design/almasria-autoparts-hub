@@ -172,6 +172,7 @@ const DealerQuickOrder = () => {
     toast({ title: "تم إرسال الطلب ✓", description: `رقم الطلب: ${orderNumber}` });
     setLines([]);
     setSubmitting(false);
+    setShowConfirm(false);
   };
 
   return (
