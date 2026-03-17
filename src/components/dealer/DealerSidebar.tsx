@@ -75,7 +75,7 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
         <p className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-[0.15em] px-3 pt-3 pb-1.5">الرئيسية</p>
         {renderItem("overview", "لوحة التحكم", LayoutDashboard)}
         {renderItem("quotes", "اطلب قطع غيار", Search)}
-        {renderItem("price_lists", "عروض الأسعار", FileText, { highlight: true })}
+        {renderItem("price_lists", "كشوفات المصرية", FileText, { highlight: true })}
 
         <div className="h-px bg-border/30 my-2" />
         <p className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-[0.15em] px-3 pt-1 pb-1.5">طلباتي</p>

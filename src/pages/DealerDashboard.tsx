@@ -88,7 +88,7 @@ const DealerDashboard = () => {
     payment: "الدفع الإلكتروني",
     invoices: "الفواتير",
     statement: "كشف الحساب",
-    price_lists: "عروض الأسعار",
+    price_lists: "كشوفات المصرية",
     favorites: "المفضلة",
     stock_alerts: "تنبيهات المخزون",
     notifications: "الإشعارات",
