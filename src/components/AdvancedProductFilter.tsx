@@ -301,6 +301,37 @@ const AdvancedProductFilter = ({ filters, onFiltersChange, categories, showCateg
                   </div>
                 </div>
               )}
+
+              {/* Brand chips */}
+              {showBrands && (
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+                    <Layers className="w-3.5 h-3.5" />
+                    الماركة
+                  </label>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button
+                      variant={filters.brandKey === null ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => updateFilter("brandKey", null)}
+                      className="text-xs h-8 rounded-full px-4"
+                    >
+                      الكل
+                    </Button>
+                    {BRAND_OPTIONS.map((b) => (
+                      <Button
+                        key={b.value}
+                        variant={filters.brandKey === b.value ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => updateFilter("brandKey", filters.brandKey === b.value ? null : b.value)}
+                        className="text-xs h-8 rounded-full px-4"
+                      >
+                        {b.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
