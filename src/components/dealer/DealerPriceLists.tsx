@@ -875,7 +875,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-lg font-bold text-foreground">كشوفات الأسعار</h2>
+        <h2 className="text-lg font-bold text-foreground">عروض الأسعار</h2>
         <div className="flex items-center gap-2">
           {onNavigateToQuotes && (
             <Button variant="outline" size="sm" onClick={onNavigateToQuotes}>

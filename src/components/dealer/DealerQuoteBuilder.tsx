@@ -564,7 +564,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
       {isFromPriceList && editingQuoteId && (
         <div className="rounded-lg border border-amber-300/30 bg-amber-50 dark:bg-amber-950/20 p-3 flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
           <FileText className="w-4 h-4 shrink-0" />
-          <span>هذا العرض تم إنشاؤه من كشف أسعار. لإضافة أصناف جديدة، ارجع إلى <strong>كشوفات الأسعار</strong>.</span>
+          <span>هذا العرض تم إنشاؤه من كشف أسعار. لإضافة أصناف جديدة، ارجع إلى <strong>عروض الأسعار</strong>.</span>
         </div>
       )}
 

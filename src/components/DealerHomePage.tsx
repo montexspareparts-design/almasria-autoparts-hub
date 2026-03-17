@@ -371,7 +371,7 @@ const DealerHomePage = () => {
             <Card className="border-border/15 rounded-2xl hover:border-primary/30 hover:shadow-lg transition-all duration-200 group cursor-pointer overflow-hidden">
               <CardContent className="p-4 flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-primary/5 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
-                  <img src={dealerQuotesIcon} alt="كشوفات الأسعار" className="w-9 h-9 object-contain" />
+                  <img src={dealerQuotesIcon} alt="عروض الأسعار" className="w-9 h-9 object-contain" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-foreground">{isRTL ? "عروض الأسعار" : "Price Sheets"}</p>
