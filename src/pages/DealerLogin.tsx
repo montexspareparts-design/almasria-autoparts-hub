@@ -42,21 +42,35 @@ const DealerLogin = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const savedCreds = useRef(getSavedCredentials());
-  const [authMethod, setAuthMethod] = useState<AuthMethod>(savedCreds.current?.method || "phone");
-  const [phone, setPhone] = useState(savedCreds.current?.method === "phone" ? savedCreds.current.identifier : "");
-  const [email, setEmail] = useState(savedCreds.current?.method === "email" ? savedCreds.current.identifier : "");
-  const [password, setPassword] = useState(savedCreds.current?.password || "");
+  const [authMethod, setAuthMethod] = useState<AuthMethod>("phone");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
   const [applicationStatus, setApplicationStatus] = useState<any>(null);
   const [checkingStatus, setCheckingStatus] = useState(false);
-  const [rememberMe, setRememberMe] = useState(!!savedCreds.current);
+  const [rememberMe, setRememberMe] = useState(isRemembered());
   const autoLoginAttempted = useRef(false);
 
+  // On mount: if "remember me" was NOT checked and there's no active session flag,
+  // sign out to prevent stale sessions from persisting across browser restarts
   useEffect(() => {
-    if (!user && savedCreds.current && !autoLoginAttempted.current) { autoLoginAttempted.current = true; handleAutoLogin(); }
+    if (!autoLoginAttempted.current) {
+      autoLoginAttempted.current = true;
+      if (!isRemembered() && !isSessionActive()) {
+        // User didn't want to be remembered and browser was restarted — clear session
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session) {
+            supabase.auth.signOut();
+          }
+        });
+      } else if (isSessionActive() || isRemembered()) {
+        // Mark session as active for this browser tab
+        markSessionActive();
+      }
+    }
   }, []);
 
   useEffect(() => { if (user) checkDealerStatus(user.id); }, [user]);
