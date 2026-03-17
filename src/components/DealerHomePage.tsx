@@ -538,9 +538,7 @@ const DealerHomePage = () => {
                 label: isRTL ? "كشف الحساب" : "Account Statement",
                 desc: isRTL ? "رصيدك وحركات الحساب" : "Balance & transactions",
                 href: "/dealer?tab=statement",
-              },
-                href: "/dealer?tab=payment",
-              },
+            ]
             ].map((item, i) => (
               <Link key={item.href + item.label} to={item.href}>
                 <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.04 }}>
