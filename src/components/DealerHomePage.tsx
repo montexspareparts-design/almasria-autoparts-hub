@@ -362,77 +362,61 @@ const DealerHomePage = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-5 space-y-6 max-w-3xl">
+      <div className="container mx-auto px-4 py-6 space-y-5 max-w-3xl">
 
-        {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            🔖 QUICK ACCESS — PRICE QUOTES
-            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
-          <Link to="/dealer?tab=quotes">
-            <Card className="border-border/15 rounded-2xl hover:border-primary/30 hover:shadow-lg transition-all duration-200 group cursor-pointer overflow-hidden">
-              <CardContent className="p-4 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-primary/5 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
-                  <img src={dealerQuotesIcon} alt="عروض الأسعار" className="w-9 h-9 object-contain" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-foreground">{isRTL ? "عروض الأسعار" : "Price Sheets"}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
-                    {isRTL ? "الأسعار المحدثة" : "Updated prices"}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  {dailyViewCount > 0 && (
-                    <Badge className="text-[10px] font-black bg-primary/10 text-primary border-0 px-2.5 py-1 rounded-lg">
-                      {dailyViewCount}
-                    </Badge>
-                  )}
-                  {isRTL
-                    ? <ChevronLeft className="w-5 h-5 text-muted-foreground/30 group-hover:text-primary transition-colors" />
-                    : <ChevronRight className="w-5 h-5 text-muted-foreground/30 group-hover:text-primary transition-colors" />
-                  }
-                </div>
-              </CardContent>
-            </Card>
+        {/* ━━━ Quick Actions Grid — 3 equal cards ━━━ */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="grid grid-cols-3 gap-3">
+          {/* عروض الأسعار */}
+          <Link to="/dealer?tab=quotes" className="block">
+            <div className="bg-card border border-border/40 rounded-2xl p-4 flex flex-col items-center text-center gap-3 h-full hover:border-primary/30 hover:shadow-md active:scale-[0.97] transition-all duration-200 group">
+              <div className="w-14 h-14 rounded-2xl bg-primary/8 flex items-center justify-center group-hover:bg-primary/12 transition-colors">
+                <img src={dealerQuotesIcon} alt="عروض الأسعار" className="w-10 h-10 object-contain" />
+              </div>
+              <div>
+                <p className="text-[13px] font-extrabold text-foreground leading-tight">{isRTL ? "عروض الأسعار" : "Quotes"}</p>
+                {dailyViewCount > 0 && (
+                  <Badge className="mt-1.5 text-[9px] font-bold bg-primary/10 text-primary border-0 px-2 py-0.5 rounded-md">
+                    {dailyViewCount} {isRTL ? "تسعير" : "priced"}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </Link>
+
+          {/* كشوفات المصرية */}
+          <Link to="/dealer?tab=price_lists" className="block">
+            <div className="bg-card border border-border/40 rounded-2xl p-4 flex flex-col items-center text-center gap-3 h-full hover:border-primary/30 hover:shadow-md active:scale-[0.97] transition-all duration-200 group">
+              <div className="w-14 h-14 rounded-2xl bg-amber-500/8 flex items-center justify-center group-hover:bg-amber-500/12 transition-colors">
+                <FileText className="w-7 h-7 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-[13px] font-extrabold text-foreground leading-tight">{isRTL ? "كشوفات المصرية" : "Price Lists"}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{isRTL ? "الأسعار المحدثة" : "Updated"}</p>
+              </div>
+            </div>
+          </Link>
+
+          {/* طلباتي */}
+          <Link to="/dealer?tab=orders" className="block">
+            <div className="bg-card border border-border/40 rounded-2xl p-4 flex flex-col items-center text-center gap-3 h-full hover:border-primary/30 hover:shadow-md active:scale-[0.97] transition-all duration-200 group">
+              <div className="w-14 h-14 rounded-2xl bg-blue-500/8 flex items-center justify-center group-hover:bg-blue-500/12 transition-colors">
+                <img src={dealerOrdersIcon} alt="طلباتي" className="w-10 h-10 object-contain" />
+              </div>
+              <div>
+                <p className="text-[13px] font-extrabold text-foreground leading-tight">{isRTL ? "طلباتي" : "Orders"}</p>
+                {recentOrders.filter(o => !["delivered","cancelled"].includes(o.status)).length > 0 ? (
+                  <Badge className="mt-1.5 text-[9px] font-bold bg-amber-100 text-amber-700 border-0 px-2 py-0.5 rounded-md">
+                    {recentOrders.filter(o => !["delivered","cancelled"].includes(o.status)).length} {isRTL ? "جارية" : "active"}
+                  </Badge>
+                ) : (
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{isRTL ? "تتبع طلباتك" : "Track orders"}</p>
+                )}
+              </div>
+            </div>
           </Link>
         </motion.div>
 
-        {/* ━━━ كشوفات المصرية + طلباتي ━━━ */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="grid grid-cols-2 gap-3">
-          <Link to="/dealer?tab=price_lists">
-            <Card className="border-border/15 rounded-2xl hover:border-primary/30 hover:shadow-lg transition-all duration-200 group cursor-pointer h-full">
-              <CardContent className="p-4 flex flex-col items-center text-center gap-2">
-                <div className="w-12 h-12 rounded-xl bg-primary/5 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
-                  <img src={dealerQuotesIcon} alt="كشوفات المصرية" className="w-9 h-9 object-contain" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-foreground">{isRTL ? "كشوفات المصرية" : "Price Lists"}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{isRTL ? "الأسعار المحدثة" : "Updated prices"}</p>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-          <Link to="/dealer?tab=orders">
-            <Card className="border-border/15 rounded-2xl hover:border-primary/30 hover:shadow-lg transition-all duration-200 group cursor-pointer h-full">
-              <CardContent className="p-4 flex flex-col items-center text-center gap-2">
-                <div className="w-12 h-12 rounded-xl bg-primary/5 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
-                  <img src={dealerOrdersIcon} alt="طلباتي" className="w-9 h-9 object-contain" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-foreground">{isRTL ? "طلباتي" : "My Orders"}</p>
-                  {recentOrders.filter(o => !["delivered","cancelled"].includes(o.status)).length > 0 && (
-                    <Badge className="mt-1 text-[10px] font-bold bg-amber-100 text-amber-700 border-0 px-2 py-0.5 rounded-full">
-                      {recentOrders.filter(o => !["delivered","cancelled"].includes(o.status)).length} {isRTL ? "جارية" : "active"}
-                    </Badge>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        </motion.div>
-
-        {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            2️⃣ PRICE OFFERS — SECOND PRIORITY
-            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+        {/* ━━━ Price Offers ━━━ */}
         {loading ? (
           <div>
             <Skeleton className="h-5 w-32 mb-3 rounded" />
@@ -455,7 +439,7 @@ const DealerHomePage = () => {
                 const stock = p.stock_quantity ?? 0;
                 return (
                   <motion.div key={p.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.04 }}>
-                    <Card className="border-border/15 rounded-2xl overflow-hidden group hover:border-primary/20 hover:shadow-lg transition-all duration-300">
+                    <Card className="border-border/40 rounded-2xl overflow-hidden group hover:border-primary/20 hover:shadow-lg transition-all duration-300">
                       <CardContent className="p-0">
                         <div className="aspect-square bg-muted/20 relative overflow-hidden flex items-center justify-center">
                           {p.image_url
@@ -475,7 +459,6 @@ const DealerHomePage = () => {
                         <div className="p-3 border-t border-border/10">
                           <p className="text-xs font-bold text-foreground line-clamp-1 mb-0.5">{isRTL ? p.name_ar : (p.name_en || p.name_ar)}</p>
                           <p className="text-[10px] text-muted-foreground font-mono mb-1.5">{p.sku}</p>
-                          {/* Price row */}
                           <div className="flex items-baseline gap-1.5 mb-2.5">
                             <span className="text-sm font-black text-foreground">{(p.sale_price || p.base_price).toLocaleString()}</span>
                             {p.sale_price && p.sale_price < p.base_price && (
@@ -511,53 +494,54 @@ const DealerHomePage = () => {
           </motion.section>
         ) : null}
 
-
-        {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            4️⃣ STATEMENTS — FOURTH PRIORITY
-            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+        {/* ━━━ Statements & Payments ━━━ */}
         <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
           <SectionHeader
-            title={isRTL ? "كشف الحساب والمدفوعات" : "Statements & Payments"}
+            title={isRTL ? "الحساب والمدفوعات" : "Account & Payments"}
             isRTL={isRTL}
           />
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <div className="space-y-2">
             {[
               {
                 icon: CreditCard,
                 label: isRTL ? "الدفع الإلكتروني" : "Make Payment",
                 desc: isRTL ? "سدد مستحقاتك أونلاين" : "Pay invoices online",
                 href: "/dealer?tab=payment",
+                iconColor: "text-emerald-600",
+                iconBg: "bg-emerald-500/8",
               },
               {
                 icon: FileText,
                 label: isRTL ? "الفواتير" : "Invoices",
                 desc: isRTL ? "عرض وتحميل الفواتير" : "View & download invoices",
                 href: "/dealer?tab=orders",
+                iconColor: "text-blue-600",
+                iconBg: "bg-blue-500/8",
               },
               {
                 icon: Receipt,
                 label: isRTL ? "كشف الحساب" : "Account Statement",
                 desc: isRTL ? "رصيدك وحركات الحساب" : "Balance & transactions",
                 href: "/dealer?tab=statement",
+                iconColor: "text-violet-600",
+                iconBg: "bg-violet-500/8",
               },
             ].map((item, i) => (
               <Link key={item.href + item.label} to={item.href}>
                 <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.04 }}>
-                  <Card className="border-border/15 rounded-2xl hover:border-primary/20 hover:shadow-md transition-all duration-200 group cursor-pointer h-full">
-                    <CardContent className="p-4 flex items-center gap-3.5">
-                      <div className="w-11 h-11 rounded-xl bg-primary/8 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-colors">
-                        <item.icon className="w-5 h-5 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-foreground">{item.label}</p>
-                        <p className="text-[11px] text-muted-foreground">{item.desc}</p>
-                      </div>
-                      {isRTL
-                        ? <ChevronLeft className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary transition-colors shrink-0" />
-                        : <ChevronRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary transition-colors shrink-0" />
-                      }
-                    </CardContent>
-                  </Card>
+                  <div className="bg-card border border-border/40 rounded-2xl p-4 flex items-center gap-4 hover:border-primary/20 hover:shadow-md active:scale-[0.98] transition-all duration-200 group">
+                    <div className={`w-12 h-12 rounded-2xl ${item.iconBg} flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform`}>
+                      <item.icon className={`w-6 h-6 ${item.iconColor}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-bold text-foreground">{item.label}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">{item.desc}</p>
+                    </div>
+                    {isRTL
+                      ? <ChevronLeft className="w-5 h-5 text-muted-foreground/20 group-hover:text-primary transition-colors shrink-0" />
+                      : <ChevronRight className="w-5 h-5 text-muted-foreground/20 group-hover:text-primary transition-colors shrink-0" />
+                    }
+                  </div>
                 </motion.div>
               </Link>
             ))}
