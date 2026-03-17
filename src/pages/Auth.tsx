@@ -17,20 +17,23 @@ type AuthMode = "login" | "register";
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 60_000;
 const REMEMBER_KEY = "almasria_remember_client";
+const SESSION_FLAG = "almasria_client_session_active";
 
-const getSavedCredentials = () => {
-  try { const s = localStorage.getItem(REMEMBER_KEY); if (s) return JSON.parse(s) as { method: AuthMethod; identifier: string; password: string }; } catch {} return null;
+// Session-based: no credentials stored, just a flag
+const isRemembered = () => localStorage.getItem(REMEMBER_KEY) === "true";
+const setRememberedFlag = (val: boolean) => {
+  if (val) localStorage.setItem(REMEMBER_KEY, "true");
+  else localStorage.removeItem(REMEMBER_KEY);
 };
-const saveCredentials = (method: AuthMethod, identifier: string, password: string) => localStorage.setItem(REMEMBER_KEY, JSON.stringify({ method, identifier, password }));
-const clearCredentials = () => localStorage.removeItem(REMEMBER_KEY);
+const markSessionActive = () => sessionStorage.setItem(SESSION_FLAG, "true");
+const isSessionActive = () => sessionStorage.getItem(SESSION_FLAG) === "true";
 
 const Auth = () => {
-  const savedCreds = useRef(getSavedCredentials());
   const [mode, setMode] = useState<AuthMode>("login");
-  const [authMethod, setAuthMethod] = useState<AuthMethod>(savedCreds.current?.method || "phone");
-  const [phone, setPhone] = useState(savedCreds.current?.method === "phone" ? savedCreds.current.identifier : "");
-  const [email, setEmail] = useState(savedCreds.current?.method === "email" ? savedCreds.current.identifier : "");
-  const [password, setPassword] = useState(savedCreds.current?.password || "");
+  const [authMethod, setAuthMethod] = useState<AuthMethod>("phone");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [address, setAddress] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -39,7 +42,7 @@ const Auth = () => {
   const [forgotMode, setForgotMode] = useState(false);
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [lockedUntil, setLockedUntil] = useState<number | null>(null);
-  const [rememberMe, setRememberMe] = useState(!!savedCreds.current);
+  const [rememberMe, setRememberMe] = useState(isRemembered());
   const autoLoginAttempted = useRef(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -48,23 +51,19 @@ const Auth = () => {
   const phoneToEmail = (p: string) => `${p.replace(/\D/g, "")}@phone.almasria.app`;
   const getAuthEmail = () => authMethod === "email" ? email.trim() : phoneToEmail(phone);
 
-  // Auto-login with saved credentials
+  // On mount: if not remembered and no active session, clear stale session
   useEffect(() => {
-    if (savedCreds.current && !autoLoginAttempted.current) {
+    if (!autoLoginAttempted.current) {
       autoLoginAttempted.current = true;
-      handleAutoLogin();
+      if (!isRemembered() && !isSessionActive()) {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session) supabase.auth.signOut();
+        });
+      } else if (isSessionActive() || isRemembered()) {
+        markSessionActive();
+      }
     }
   }, []);
-
-  const handleAutoLogin = async () => {
-    const creds = savedCreds.current; if (!creds) return;
-    setLoading(true);
-    const authEmail = creds.method === "email" ? creds.identifier : phoneToEmail(creds.identifier);
-    const { data, error } = await supabase.auth.signInWithPassword({ email: authEmail, password: creds.password });
-    if (error) { clearCredentials(); savedCreds.current = null; setRememberMe(false); setPassword(""); }
-    else if (data.user) { toast({ title: "تم تسجيل الدخول تلقائياً ✅" }); navigate("/"); }
-    setLoading(false);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,7 +88,8 @@ const Auth = () => {
         }
       } else {
         setLoginAttempts(0); setLockedUntil(null);
-        if (rememberMe) saveCredentials(authMethod, authMethod === "phone" ? phone : email, password); else clearCredentials();
+        setRememberedFlag(rememberMe);
+        markSessionActive();
         toast({ title: "تم تسجيل الدخول بنجاح ✅" });
         navigate("/");
       }

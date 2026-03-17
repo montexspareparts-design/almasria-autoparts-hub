@@ -48,6 +48,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const sessionCheckRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { toast } = useToast();
 
+  // Central cleanup for ALL auth-related localStorage keys
+  const clearAllAuthStorage = useCallback(() => {
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem("almasria_remember_me");
+    localStorage.removeItem("almasria_remember_client");
+    sessionStorage.removeItem("almasria_session_active");
+  }, []);
+
   const clearSessionCheck = useCallback(() => {
     if (sessionCheckRef.current) {
       clearInterval(sessionCheckRef.current);
@@ -85,7 +93,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (data && (data as any).active_session_id && (data as any).active_session_id !== localSessionId) {
         // Another device logged in — force logout
         clearSessionCheck();
-        localStorage.removeItem(SESSION_KEY);
+        clearAllAuthStorage();
         toast({
           title: "تم تسجيل الدخول من جهاز آخر",
           description: "تم تسجيل خروجك تلقائياً لأن حسابك مفتوح على جهاز آخر.",
@@ -134,7 +142,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setDealerAccount(null);
           setIsAdmin(false);
           clearSessionCheck();
-          localStorage.removeItem(SESSION_KEY);
+          clearAllAuthStorage();
         }
 
         setLoading(false);
@@ -153,8 +161,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     clearSessionCheck();
-    localStorage.removeItem(SESSION_KEY);
-    localStorage.removeItem("almasria_remember_me");
+    clearAllAuthStorage();
     await supabase.auth.signOut();
     setDealerAccount(null);
     setIsAdmin(false);

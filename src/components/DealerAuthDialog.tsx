@@ -17,12 +17,10 @@ type AuthMethod = "phone" | "email";
 
 const REMEMBER_KEY = "almasria_remember_me";
 
-const saveCredentials = (method: AuthMethod, identifier: string, password: string) => {
-  localStorage.setItem(REMEMBER_KEY, JSON.stringify({ method, identifier, password }));
-};
-
-const clearCredentials = () => {
-  localStorage.removeItem(REMEMBER_KEY);
+// Session-based: no credentials stored, just a flag
+const setRememberedFlag = (val: boolean) => {
+  if (val) localStorage.setItem(REMEMBER_KEY, "true");
+  else localStorage.removeItem(REMEMBER_KEY);
 };
 
 interface DealerAuthDialogProps {
@@ -80,12 +78,7 @@ const DealerAuthDialog = ({ open, onOpenChange, defaultTab = "login" }: DealerAu
         variant: "destructive",
       });
     } else if (data.user) {
-      if (rememberMe) {
-        const identifier = authMethod === "phone" ? phone : email;
-        saveCredentials(authMethod, identifier, password);
-      } else {
-        clearCredentials();
-      }
+      setRememberedFlag(rememberMe);
       toast({ title: "تم تسجيل الدخول بنجاح ✅" });
       resetForm();
       onOpenChange(false);
