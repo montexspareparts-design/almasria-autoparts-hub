@@ -215,10 +215,30 @@ const DealerNotificationsList = ({ userId, onNavigate }: { userId: string; onNav
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
+  const getNotifCategory = (n: Notification): "orders" | "contact" | "offers" | "other" => {
+    const msg = (n.title + " " + n.message).toLowerCase();
+    if (n.title.includes("تواصل") || n.message.includes("تواصل") || n.type === "contact") return "contact";
+    if (n.type === "order" || n.type === "order_edit" || msg.includes("طلب") || msg.includes("order")) return "orders";
+    if (n.type === "offer" || n.type === "stock_alert" || msg.includes("عرض") || msg.includes("متوفر")) return "offers";
+    return "other";
+  };
+
+  const filteredNotifications = filter === "all"
+    ? notifications
+    : notifications.filter((n) => getNotifCategory(n) === filter);
+
+  const filterButtons: { id: typeof filter; label: string; count: number }[] = [
+    { id: "all", label: "الكل", count: notifications.length },
+    { id: "orders", label: "طلبات", count: notifications.filter(n => getNotifCategory(n) === "orders").length },
+    { id: "contact", label: "تواصل", count: notifications.filter(n => getNotifCategory(n) === "contact").length },
+    { id: "offers", label: "عروض", count: notifications.filter(n => getNotifCategory(n) === "offers").length },
+    { id: "other", label: "أخرى", count: notifications.filter(n => getNotifCategory(n) === "other").length },
+  ];
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-foreground">الإشعارات ({notifications.length})</h2>
+        <h2 className="text-lg font-bold text-foreground">الإشعارات ({filteredNotifications.length})</h2>
         {unreadCount > 0 && (
           <Button variant="ghost" size="sm" onClick={markAllRead} className="text-xs text-primary">
             <CheckCheck className="w-3.5 h-3.5 ml-1" />
@@ -227,7 +247,25 @@ const DealerNotificationsList = ({ userId, onNavigate }: { userId: string; onNav
         )}
       </div>
 
-      {notifications.length === 0 ? (
+      {/* Filter tabs */}
+      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+        {filterButtons.filter(f => f.count > 0 || f.id === "all").map((f) => (
+          <button
+            key={f.id}
+            onClick={() => setFilter(f.id)}
+            className={cn(
+              "shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all border",
+              filter === f.id
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-muted/50 text-muted-foreground border-border/50 hover:bg-muted"
+            )}
+          >
+            {f.label} ({f.count})
+          </button>
+        ))}
+      </div>
+
+      {filteredNotifications.length === 0 ? (
         <Card className="border-dashed">
           <CardContent className="p-10 text-center">
             <Bell className="w-12 h-12 mx-auto text-muted-foreground/40 mb-3" />
@@ -236,7 +274,7 @@ const DealerNotificationsList = ({ userId, onNavigate }: { userId: string; onNav
         </Card>
       ) : (
         <div className="space-y-2">
-          {notifications.map((n) => {
+          {filteredNotifications.map((n) => {
             const Icon = typeIcons[n.type] || Info;
             const colorClass = typeColors[n.type] || typeColors.info;
             const isOrderEdit = n.type === "order_edit";
