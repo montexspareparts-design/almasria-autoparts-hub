@@ -154,7 +154,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     clearSessionCheck();
     localStorage.removeItem(SESSION_KEY);
-    localStorage.removeItem("almasria_remember_client");
     localStorage.removeItem("almasria_remember_me");
     await supabase.auth.signOut();
     setDealerAccount(null);
