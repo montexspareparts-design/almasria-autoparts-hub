@@ -259,8 +259,7 @@ const DealerHomePage = () => {
               {[
                 isRTL ? "قطع المحرك" : "Engine Parts",
                 isRTL ? "الفلاتر" : "Filters",
-                isRTL ? "العفشة والتعليق" : "Suspension",
-                isRTL ? "الكهرباء" : "Electrical",
+                isRTL ? "العفشة" : "Suspension",
               ].map((hint) => (
                 <button
                   key={hint}
