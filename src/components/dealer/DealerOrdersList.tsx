@@ -130,7 +130,7 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
       .from("orders")
       .select("*")
       .eq("user_id", userId)
-      .neq("status", "cancelled")
+      .not("status", "in", '("cancelled","delivered")')
       .order("created_at", { ascending: false });
     const ordersList = data || [];
     setOrders(ordersList);
