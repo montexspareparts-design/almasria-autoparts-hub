@@ -85,7 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (data && (data as any).active_session_id && (data as any).active_session_id !== localSessionId) {
         // Another device logged in — force logout
         clearSessionCheck();
-        localStorage.removeItem(SESSION_KEY);
+        clearAllAuthStorage();
         toast({
           title: "تم تسجيل الدخول من جهاز آخر",
           description: "تم تسجيل خروجك تلقائياً لأن حسابك مفتوح على جهاز آخر.",
