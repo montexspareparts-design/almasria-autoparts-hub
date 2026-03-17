@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, FileText, Trash2, Eye, EyeOff, Plus, Search, X, Package, Table2, CheckCircle2 } from "lucide-react";
+import { Loader2, Upload, FileText, Trash2, Eye, EyeOff, Plus, Search, X, Package, Table2, CheckCircle2, Users } from "lucide-react";
 import * as XLSX from "xlsx";
 
 interface PriceListRow {
@@ -47,6 +47,11 @@ const AdminPriceLists = () => {
   const [searchingProducts, setSearchingProducts] = useState(false);
   const [loadingLinked, setLoadingLinked] = useState(false);
 
+  // Views report
+  const [viewingReport, setViewingReport] = useState<PriceListRow | null>(null);
+  const [viewsData, setViewsData] = useState<{ user_name: string; phone: string; viewed_at: string }[]>([]);
+  const [loadingViews, setLoadingViews] = useState(false);
+
   useEffect(() => { fetchLists(); }, []);
 
   const fetchLists = async () => {
@@ -56,6 +61,39 @@ const AdminPriceLists = () => {
       .order("created_at", { ascending: false });
     setLists((data as PriceListRow[]) || []);
     setLoading(false);
+  };
+
+  const fetchViews = async (listId: string) => {
+    setLoadingViews(true);
+    const { data: views } = await supabase
+      .from("price_list_views")
+      .select("user_id, viewed_at")
+      .eq("price_list_id", listId)
+      .order("viewed_at", { ascending: false });
+
+    if (!views || views.length === 0) {
+      setViewsData([]);
+      setLoadingViews(false);
+      return;
+    }
+
+    const userIds = [...new Set(views.map((v: any) => v.user_id))];
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("user_id, full_name, phone")
+      .in("user_id", userIds);
+
+    const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+
+    setViewsData(views.map((v: any) => {
+      const profile = profileMap.get(v.user_id);
+      return {
+        user_name: profile?.full_name || "بدون اسم",
+        phone: profile?.phone || "—",
+        viewed_at: v.viewed_at,
+      };
+    }));
+    setLoadingViews(false);
   };
 
   const notifyDealers = async (title: string) => {
@@ -424,6 +462,52 @@ const AdminPriceLists = () => {
 
   if (loading) return <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
 
+  // Views report for a specific list
+  if (viewingReport) {
+    return (
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Users className="w-5 h-5 text-primary" />
+            تقرير الاطلاع: {viewingReport.title}
+          </CardTitle>
+          <Button variant="ghost" size="sm" onClick={() => setViewingReport(null)}>
+            ✕ إغلاق
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {loadingViews ? (
+            <div className="flex justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>
+          ) : viewsData.length === 0 ? (
+            <p className="text-center text-muted-foreground text-sm py-6">لم يطّلع أحد على هذا الكشف بعد</p>
+          ) : (
+            <div className="border border-border rounded-lg overflow-hidden">
+              <div className="grid grid-cols-3 gap-2 p-3 bg-muted/50 text-xs font-bold text-foreground border-b border-border">
+                <span>الاسم</span>
+                <span>رقم التليفون</span>
+                <span>التاريخ والوقت</span>
+              </div>
+              <div className="divide-y divide-border max-h-96 overflow-y-auto">
+                {viewsData.map((v, i) => (
+                  <div key={i} className="grid grid-cols-3 gap-2 p-3 text-xs text-foreground">
+                    <span className="font-medium truncate">{v.user_name}</span>
+                    <span className="font-mono text-muted-foreground" dir="ltr">{v.phone}</span>
+                    <span className="text-muted-foreground">
+                      {new Date(v.viewed_at).toLocaleString("ar-EG", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="p-3 bg-muted/30 border-t border-border text-xs text-muted-foreground">
+                إجمالي المشاهدات: <strong className="text-foreground">{viewsData.length}</strong>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
   // Managing products for a specific list
   if (managingList) {
     return (
@@ -518,7 +602,7 @@ const AdminPriceLists = () => {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-lg">إدارة عروض الأسعار</CardTitle>
+        <CardTitle className="text-lg">إدارة كشوفات المصرية</CardTitle>
         <Button size="sm" onClick={() => setShowForm(!showForm)}>
           <Plus className="w-4 h-4 ml-1" />
           رفع كشف جديد
@@ -626,6 +710,10 @@ const AdminPriceLists = () => {
                 <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={() => { setManagingList(list); fetchLinkedProducts(list.id); }}>
                   <Package className="w-3.5 h-3.5" />
                   الأصناف
+                </Button>
+                <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={() => { setViewingReport(list); fetchViews(list.id); }}>
+                  <Users className="w-3.5 h-3.5" />
+                  المشاهدات
                 </Button>
                 <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => toggleActive(list.id, list.is_active)}>
                   {list.is_active ? <Eye className="w-4 h-4 text-emerald-500" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
