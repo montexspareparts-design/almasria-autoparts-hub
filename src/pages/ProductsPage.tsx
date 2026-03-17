@@ -27,7 +27,7 @@ import brandDenso from "@/assets/brand-denso.png";
 import brandAisin from "@/assets/brand-aisin.png";
 import oilBg from "@/assets/oil-hero-bg.jpg";
 
-const brandConfig: Record<string, { title: string; subtitle: string; description: string; badge: string; brandKey: string; logo: string; backgroundImage?: string; logoScale?: number }> = {
+const brandConfig: Record<string, { title: string; subtitle: string; description: string; badge: string; brandKey: string; logo: string; backgroundImage?: string; logoScale?: number; extraBrands?: string[] }> = {
   "toyota-genuine": {
     title: "قطع غيار تويوتا الأصلية",
     subtitle: "Toyota Genuine Parts",
