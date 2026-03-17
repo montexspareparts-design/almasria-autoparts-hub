@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
       .eq("key", "webhook_secret")
       .maybeSingle();
 
-    if (secretConfig && webhookSecret !== secretConfig.value) {
+    if (!secretConfig || webhookSecret !== secretConfig.value) {
       return new Response(JSON.stringify({ error: "Invalid webhook secret" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
