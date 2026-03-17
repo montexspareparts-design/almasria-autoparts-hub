@@ -311,6 +311,7 @@ const ProductsPage = () => {
         <section className="min-h-screen pt-24 pb-20 relative overflow-hidden flex flex-col">
           {/* Background effects */}
           <div className="absolute inset-0">
+            <AutoPartsBackground count={22} />
             <motion.div className="absolute top-20 right-[5%] w-[600px] h-[600px] rounded-full bg-primary/[0.05] blur-[180px]" animate={{ scale: [1, 1.3, 1], x: [0, 40, 0] }} transition={{ duration: 10, repeat: Infinity }} />
             <motion.div className="absolute bottom-20 left-[5%] w-[400px] h-[400px] rounded-full bg-[hsl(var(--gold-accent))]/[0.04] blur-[140px]" animate={{ scale: [1.2, 1, 1.2] }} transition={{ duration: 12, repeat: Infinity }} />
           </div>
