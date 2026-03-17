@@ -4,7 +4,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Zap, Plus, Trash2, Minus, Search, CheckCircle } from "lucide-react";
+import { Loader2, Zap, Plus, Trash2, Minus, Search, CheckCircle, ShoppingCart } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface MatchedProduct {
   id: string;
