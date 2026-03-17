@@ -90,7 +90,7 @@ const HeroSection = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const videoSrc = heroVideoUrl || "/videos/hero-bg.mp4";
+  const videoSrc = heroVideoUrl || "/__l5e/assets-v1/c1bc9111-e74c-4ffd-b1b4-e98896f0827b/hero-bg.mp4";
 
   const stats = [
     { value: 25, suffix: "+", label: t("hero.stat_years") },
