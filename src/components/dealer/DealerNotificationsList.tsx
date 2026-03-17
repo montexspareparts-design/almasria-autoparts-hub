@@ -54,6 +54,7 @@ const DealerNotificationsList = ({ userId, onNavigate }: { userId: string; onNav
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [respondingId, setRespondingId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"all" | "orders" | "contact" | "offers" | "other">("all");
 
   const playSound = useCallback((type: "normal" | "contact") => {
     try {
