@@ -51,6 +51,10 @@ const CheckoutPage = () => {
   const [shipping, setShipping] = useState("standard");
   const [payment, setPayment] = useState("cod");
   const [submitting, setSubmitting] = useState(false);
+  const [paymobClientSecret, setPaymobClientSecret] = useState<string | null>(null);
+
+  // TODO: Replace with your Paymob public key (starts with pk_ or pkt_)
+  const PAYMOB_PUBLIC_KEY = "pkt_ocyiPARECljo1duevlMSKpn3beCz9z5h";
 
   const [form, setForm] = useState({
     name: "",
