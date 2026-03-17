@@ -325,20 +325,30 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
                           const isActive = idx <= currentStage;
                           const isCurrent = idx === currentStage;
                           const isLast = idx === stages.length - 1;
+                          const isPaymentStage = stage.key === "awaiting_payment";
+                          const canClickPayment = isPaymentStage && (order.status === "awaiting_payment" || order.status === "confirmed");
                           return (
                             <div key={stage.key} className="flex items-center flex-1 min-w-0">
-                              <div className="flex flex-col items-center gap-1 min-w-[52px]">
+                              <div
+                                className={cn("flex flex-col items-center gap-1 min-w-[52px]", canClickPayment && "cursor-pointer")}
+                                onClick={canClickPayment ? () => onNavigateToPayment?.() : undefined}
+                              >
                                 <div className={cn(
                                   "w-9 h-9 rounded-full flex items-center justify-center transition-all border-2",
                                   isCurrent ? "bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/30" :
-                                  isActive ? "bg-primary/15 text-primary border-primary/40" : "bg-muted text-muted-foreground/40 border-border"
+                                  isActive ? "bg-primary/15 text-primary border-primary/40" : "bg-muted text-muted-foreground/40 border-border",
+                                  canClickPayment && "ring-2 ring-primary/20 hover:ring-primary/40"
                                 )}>
                                   <StageIcon className="w-4 h-4" />
                                 </div>
                                 <span className={cn(
                                   "text-[9px] text-center leading-tight whitespace-nowrap",
-                                  isCurrent ? "text-primary font-bold" : isActive ? "text-primary/70 font-medium" : "text-muted-foreground/50"
+                                  isCurrent ? "text-primary font-bold" : isActive ? "text-primary/70 font-medium" : "text-muted-foreground/50",
+                                  canClickPayment && "underline decoration-primary/40"
                                 )}>{stage.label}</span>
+                                {canClickPayment && (
+                                  <span className="text-[8px] text-primary font-bold animate-pulse">ادفع الآن</span>
+                                )}
                               </div>
                               {!isLast && (
                                 <div className={cn(
