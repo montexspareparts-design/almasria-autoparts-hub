@@ -5,7 +5,7 @@ import {
   ShoppingCart, ClipboardList, FileText, Package,
   Search, X, ChevronLeft, ChevronRight, Plus, ArrowRight,
   CreditCard, Home, Tag, User, RefreshCw, Percent, Receipt,
-  Sparkles, CheckCircle2, XCircle, Download,
+  Sparkles, CheckCircle2, XCircle, Download, Truck,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -514,9 +514,17 @@ const DealerHomePage = () => {
                 icon: FileText,
                 label: isRTL ? "الفواتير" : "Invoices",
                 desc: isRTL ? "عرض وتحميل الفواتير" : "View & download invoices",
-                href: "/dealer?tab=orders",
+                href: "/dealer?tab=invoices",
                 iconColor: "text-blue-600",
                 iconBg: "bg-blue-500/8",
+              },
+              {
+                icon: Truck,
+                label: isRTL ? "تتبع الشحنات" : "Track Shipments",
+                desc: isRTL ? "تتبع حالة شحناتك" : "Track your shipments",
+                href: "/dealer?tab=orders",
+                iconColor: "text-orange-600",
+                iconBg: "bg-orange-500/8",
               },
               {
                 icon: Receipt,
