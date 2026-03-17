@@ -5,7 +5,7 @@ import {
   ShoppingCart, ClipboardList, FileText, Package,
   Search, X, ChevronLeft, ChevronRight, Plus, ArrowRight,
   CreditCard, Home, Tag, User, RefreshCw, Percent, Receipt,
-  Sparkles, CheckCircle2, XCircle, Download,
+  Sparkles, CheckCircle2, XCircle, Download, Truck,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
