@@ -671,6 +671,8 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
       </AnimatePresence>
     </>
   );
-};
+});
+
+AIChatBot.displayName = "AIChatBot";
 
 export default AIChatBot;
