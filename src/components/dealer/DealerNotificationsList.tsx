@@ -206,6 +206,7 @@ const DealerNotificationsList = ({ userId, onNavigate }: { userId: string; onNav
             const colorClass = typeColors[n.type] || typeColors.info;
             const isOrderEdit = n.type === "order_edit";
             const orderId = isOrderEdit ? extractOrderId(n.message) : null;
+            const displayMessage = getDisplayMessage(n.message);
             const isContact = n.title.includes("تواصل") || n.message.includes("تواصل") || n.type === "contact";
 
             return (
@@ -217,7 +218,7 @@ const DealerNotificationsList = ({ userId, onNavigate }: { userId: string; onNav
 
                   // Contact request — extract phone and open WhatsApp
                   const contactPhone = n.message.match(/الرقم:\s*([\d+]+)/)?.[1];
-                  if ((n.title.includes("تواصل") || n.message.includes("تواصل")) && contactPhone) {
+                  if (isContact && contactPhone) {
                     window.open(`https://wa.me/${contactPhone.replace(/^0/, "20")}`, "_blank");
                     return;
                   }
@@ -239,11 +240,13 @@ const DealerNotificationsList = ({ userId, onNavigate }: { userId: string; onNav
                 }}
                 className={cn(
                   "w-full text-right rounded-lg border p-3.5 transition-all cursor-pointer hover:bg-muted/30",
-                  isOrderEdit && !n.is_read
-                    ? "bg-orange-50 dark:bg-orange-950/20 border-orange-300 dark:border-orange-700 shadow-md"
-                    : n.is_read
-                      ? "bg-background border-border/50 opacity-70"
-                      : "bg-card border-primary/20 shadow-sm"
+                  isContact && !n.is_read
+                    ? "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-400 dark:border-emerald-700 shadow-md"
+                    : isOrderEdit && !n.is_read
+                      ? "bg-orange-50 dark:bg-orange-950/20 border-orange-300 dark:border-orange-700 shadow-md"
+                      : n.is_read
+                        ? "bg-background border-border/50 opacity-70"
+                        : "bg-card border-primary/20 shadow-sm"
                 )}
               >
                 <div className="flex items-start gap-3">
