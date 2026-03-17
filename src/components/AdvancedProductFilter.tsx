@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Filter, X, Search, ChevronDown, ChevronUp, SlidersHorizontal, Hash, Car, Calendar, DollarSign, Tag, RotateCcw } from "lucide-react";
+import { Filter, X, Search, ChevronDown, ChevronUp, SlidersHorizontal, Hash, Car, Calendar, DollarSign, Tag, RotateCcw, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,10 +13,20 @@ export interface ProductFilters {
   chassisNumber: string;
   partNumber: string;
   categoryId: string | null;
+  brandKey: string | null;
   priceMin: string;
   priceMax: string;
   sortBy: string;
 }
+
+export const BRAND_OPTIONS = [
+  { value: "toyota_genuine", label: "قطع غيار أصلية" },
+  { value: "toyota_oils", label: "زيوت تويوتا" },
+  { value: "mtx_aftermarket", label: "MTX Aftermarket" },
+  { value: "denso", label: "DENSO" },
+  { value: "aisin", label: "AISIN" },
+  { value: "fbk", label: "تيل فرامل" },
+];
 
 const TOYOTA_MODELS = [
   { value: "كورولا", label: "كورولا - Corolla" },
