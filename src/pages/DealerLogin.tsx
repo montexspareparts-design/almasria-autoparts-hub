@@ -90,30 +90,21 @@ const DealerLogin = () => {
 
   const performLogin = async (authEmail: string, pwd: string) => supabase.auth.signInWithPassword({ email: authEmail, password: pwd });
 
-  const handleAutoLogin = async () => {
-    const creds = savedCreds.current; if (!creds) return;
-    setLoading(true);
-    const authEmail = creds.method === "email" ? creds.identifier : phoneToEmail(creds.identifier);
-    const { data, error } = await performLogin(authEmail, creds.password);
-    if (error) { clearCredentials(); savedCreds.current = null; setRememberMe(false); }
-    else if (data.user) { toast({ title: "تم تسجيل الدخول تلقائياً ✅" }); checkDealerStatus(data.user.id); }
-    setLoading(false);
-  };
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault(); setLoading(true);
     const authEmail = getAuthEmail();
     const { data, error } = await performLogin(authEmail, password);
     if (error) { toast({ title: "بيانات غير صحيحة", description: authMethod === "phone" ? "رقم الهاتف أو كلمة المرور خطأ" : "البريد أو كلمة المرور خطأ", variant: "destructive" }); }
     else if (data.user) {
-      if (rememberMe) saveCredentials(authMethod, authMethod === "phone" ? phone : email, password); else clearCredentials();
+      setRemembered(rememberMe);
+      markSessionActive();
       toast({ title: "تم تسجيل الدخول بنجاح ✅" });
       checkDealerStatus(data.user.id);
     }
     setLoading(false);
   };
 
-  const handleLogout = async () => { clearCredentials(); await supabase.auth.signOut(); setApplicationStatus(null); };
+  const handleLogout = async () => { setRemembered(false); await supabase.auth.signOut(); setApplicationStatus(null); };
 
   const handleGoogleLogin = async () => {
     const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: `${window.location.origin}/dealer-login` });
