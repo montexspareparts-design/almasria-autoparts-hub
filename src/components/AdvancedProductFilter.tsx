@@ -375,6 +375,12 @@ const AdvancedProductFilter = ({ filters, onFiltersChange, categories, showCateg
                   <X className="w-3 h-3" />
                 </Badge>
               )}
+              {filters.brandKey && (
+                <Badge variant="secondary" className="gap-1 text-[11px] bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 cursor-pointer" onClick={() => updateFilter("brandKey", null)}>
+                  {BRAND_OPTIONS.find(b => b.value === filters.brandKey)?.label || "ماركة"}
+                  <X className="w-3 h-3" />
+                </Badge>
+              )}
               {(filters.priceMin || filters.priceMax) && (
                 <Badge variant="secondary" className="gap-1 text-[11px] bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 cursor-pointer" onClick={() => { updateFilter("priceMin", ""); updateFilter("priceMax", ""); }}>
                   {filters.priceMin || "0"} - {filters.priceMax || "∞"} ج.م
