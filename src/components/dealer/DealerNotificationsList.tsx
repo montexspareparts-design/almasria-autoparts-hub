@@ -21,6 +21,10 @@ const typeIcons: Record<string, typeof Info> = {
   warning: AlertTriangle,
   order: Package,
   order_edit: AlertTriangle,
+  offer: Package,
+  stock_alert: Package,
+  price_list: Info,
+  contact: Phone,
 };
 
 const typeColors: Record<string, string> = {
@@ -29,6 +33,10 @@ const typeColors: Record<string, string> = {
   warning: "text-amber-500 bg-amber-500/10",
   order: "text-primary bg-primary/10",
   order_edit: "text-orange-500 bg-orange-500/10",
+  offer: "text-primary bg-primary/10",
+  stock_alert: "text-emerald-500 bg-emerald-500/10",
+  price_list: "text-blue-500 bg-blue-500/10",
+  contact: "text-pink-500 bg-pink-500/10",
 };
 
 /** Extract order ID from order_edit notification message */
