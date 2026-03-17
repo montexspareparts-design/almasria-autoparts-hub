@@ -502,6 +502,14 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
     setViewingList(list);
     setPdfSignedUrl(null);
 
+    // Record the view
+    if (user) {
+      supabase.from("price_list_views").insert({
+        price_list_id: list.id,
+        user_id: user.id,
+      }).then(() => {});
+    }
+
     if (!list.file_url) return;
 
     setPdfLoading(true);
