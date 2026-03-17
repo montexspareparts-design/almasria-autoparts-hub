@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import dealerQuotesIcon from "@/assets/dealer-quotes-icon.png";
+import dealerOrdersIcon from "@/assets/dealer-orders-icon.png";
 
 /* ─── Types ─── */
 interface OrderSummary { id: string; order_number: string; status: string; total_amount: number; created_at: string; }
