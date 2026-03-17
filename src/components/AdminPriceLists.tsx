@@ -462,6 +462,52 @@ const AdminPriceLists = () => {
 
   if (loading) return <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
 
+  // Views report for a specific list
+  if (viewingReport) {
+    return (
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Users className="w-5 h-5 text-primary" />
+            تقرير الاطلاع: {viewingReport.title}
+          </CardTitle>
+          <Button variant="ghost" size="sm" onClick={() => setViewingReport(null)}>
+            ✕ إغلاق
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {loadingViews ? (
+            <div className="flex justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>
+          ) : viewsData.length === 0 ? (
+            <p className="text-center text-muted-foreground text-sm py-6">لم يطّلع أحد على هذا الكشف بعد</p>
+          ) : (
+            <div className="border border-border rounded-lg overflow-hidden">
+              <div className="grid grid-cols-3 gap-2 p-3 bg-muted/50 text-xs font-bold text-foreground border-b border-border">
+                <span>الاسم</span>
+                <span>رقم التليفون</span>
+                <span>التاريخ والوقت</span>
+              </div>
+              <div className="divide-y divide-border max-h-96 overflow-y-auto">
+                {viewsData.map((v, i) => (
+                  <div key={i} className="grid grid-cols-3 gap-2 p-3 text-xs text-foreground">
+                    <span className="font-medium truncate">{v.user_name}</span>
+                    <span className="font-mono text-muted-foreground" dir="ltr">{v.phone}</span>
+                    <span className="text-muted-foreground">
+                      {new Date(v.viewed_at).toLocaleString("ar-EG", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="p-3 bg-muted/30 border-t border-border text-xs text-muted-foreground">
+                إجمالي المشاهدات: <strong className="text-foreground">{viewsData.length}</strong>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
   // Managing products for a specific list
   if (managingList) {
     return (
