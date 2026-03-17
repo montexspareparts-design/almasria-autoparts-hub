@@ -16,7 +16,7 @@ interface PaymobCheckoutProps {
   publicKey: string;
 }
 
-const PAYMOB_SDK_URL = "https://nextstagingenv.s3.amazonaws.com/js/v1/paymob.js";
+const PAYMOB_SDK_URL = "https://egypt.paymob.com/unifiedcheckout/sdk/latest/paymob.min.js";
 
 const PaymobCheckout = ({ clientSecret, publicKey }: PaymobCheckoutProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
