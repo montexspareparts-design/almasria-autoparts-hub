@@ -63,7 +63,7 @@ const brandConfig: Record<string, { title: string; subtitle: string; description
     badge: "جودة ماليزية",
     brandKey: "fbk",
     logo: brandMtx,
-    logoScale: 500,
+    logoScale: 350,
   },
   "denso": {
     title: "DENSO",
