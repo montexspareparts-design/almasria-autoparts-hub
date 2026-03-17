@@ -146,7 +146,7 @@ const DealerOverview = ({
           className="bg-card border-2 border-border rounded-2xl p-4 text-center active:scale-[0.97] transition-transform hover:border-primary/30"
         >
           <span className="text-3xl block mb-2">📋</span>
-          <p className="text-sm font-bold text-foreground">عروض الأسعار</p>
+          <p className="text-sm font-bold text-foreground">كشوفات المصرية</p>
           <span className="inline-block mt-1.5 text-[11px] text-muted-foreground">الأسعار المحدثة</span>
         </button>
       </div>
