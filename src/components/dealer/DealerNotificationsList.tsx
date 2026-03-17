@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bell, CheckCheck, Info, AlertTriangle, CheckCircle, Package, ThumbsUp, ThumbsDown, Loader2 } from "lucide-react";
+import { Bell, CheckCheck, Info, AlertTriangle, CheckCircle, Package, ThumbsUp, ThumbsDown, Loader2, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
@@ -21,6 +21,10 @@ const typeIcons: Record<string, typeof Info> = {
   warning: AlertTriangle,
   order: Package,
   order_edit: AlertTriangle,
+  offer: Package,
+  stock_alert: Package,
+  price_list: Info,
+  contact: Phone,
 };
 
 const typeColors: Record<string, string> = {
@@ -29,6 +33,10 @@ const typeColors: Record<string, string> = {
   warning: "text-amber-500 bg-amber-500/10",
   order: "text-primary bg-primary/10",
   order_edit: "text-orange-500 bg-orange-500/10",
+  offer: "text-primary bg-primary/10",
+  stock_alert: "text-emerald-500 bg-emerald-500/10",
+  price_list: "text-blue-500 bg-blue-500/10",
+  contact: "text-pink-500 bg-pink-500/10",
 };
 
 /** Extract order ID from order_edit notification message */
@@ -205,7 +213,16 @@ const DealerNotificationsList = ({ userId, onNavigate }: { userId: string; onNav
                 key={n.id}
                 onClick={() => {
                   if (!n.is_read) markRead(n.id);
-                  if (!isOrderEdit && onNavigate) {
+                  if (isOrderEdit) return;
+
+                  // Contact request — extract phone and open WhatsApp
+                  const contactPhone = n.message.match(/الرقم:\s*([\d+]+)/)?.[1];
+                  if ((n.title.includes("تواصل") || n.message.includes("تواصل")) && contactPhone) {
+                    window.open(`https://wa.me/${contactPhone.replace(/^0/, "20")}`, "_blank");
+                    return;
+                  }
+
+                  if (onNavigate) {
                     const msg = (n.message + " " + n.title).toLowerCase();
                     if (n.type === "order" || msg.includes("طلب") || msg.includes("order")) {
                       onNavigate("orders");
@@ -216,7 +233,6 @@ const DealerNotificationsList = ({ userId, onNavigate }: { userId: string; onNav
                     } else if (msg.includes("فاتورة")) {
                       onNavigate("invoices");
                     } else {
-                      // Default: go to overview
                       onNavigate("overview");
                     }
                   }
