@@ -1,0 +1,1 @@
+UPDATE products SET image_url = 'https://hcpfjhcfhfjqusbjnkfa.supabase.co/storage/v1/object/public/product-images/fbk-brake-pads-default.png' WHERE brand = 'fbk' AND (image_url IS NULL OR image_url = '');
