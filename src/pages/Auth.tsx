@@ -267,8 +267,12 @@ const Auth = () => {
               </Button>
 
               {isLogin && (
-                <div className="text-center pt-1">
-                  <button type="button" onClick={() => setForgotMode(true)} className="text-xs text-muted-foreground/60 hover:text-primary transition-colors">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Checkbox id="remember-client" checked={rememberMe} onCheckedChange={c => setRememberMe(!!c)} className="w-3.5 h-3.5" />
+                    <Label htmlFor="remember-client" className="text-[11px] text-muted-foreground cursor-pointer">تذكرني</Label>
+                  </div>
+                  <button type="button" onClick={() => setForgotMode(true)} className="text-[11px] text-primary hover:underline">
                     نسيت كلمة المرور؟
                   </button>
                 </div>
