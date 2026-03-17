@@ -3,10 +3,13 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { trackClickCall, trackClickWhatsApp } from "@/lib/analytics";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 import logo from "@/assets/logo.png";
 
 const Footer = () => {
   const { t } = useLanguage();
+  const { dealerAccount } = useAuth();
+  const isDealer = !!dealerAccount;
 
   const quickLinks = [
     { label: t("footer.home"), href: "/" },

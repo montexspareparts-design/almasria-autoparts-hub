@@ -522,10 +522,10 @@ const DealerHomePage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             {[
               {
-                icon: Receipt,
-                label: isRTL ? "كشف الحساب" : "Account Statement",
-                desc: isRTL ? "رصيدك وحركات الحساب" : "Balance & transactions",
-                href: "/dealer?tab=statement",
+                icon: CreditCard,
+                label: isRTL ? "الدفع الإلكتروني" : "Make Payment",
+                desc: isRTL ? "سدد مستحقاتك أونلاين" : "Pay invoices online",
+                href: "/dealer?tab=payment",
               },
               {
                 icon: FileText,
@@ -534,9 +534,11 @@ const DealerHomePage = () => {
                 href: "/dealer?tab=orders",
               },
               {
-                icon: CreditCard,
-                label: isRTL ? "الدفع الإلكتروني" : "Make Payment",
-                desc: isRTL ? "سدد مستحقاتك أونلاين" : "Pay invoices online",
+                icon: Receipt,
+                label: isRTL ? "كشف الحساب" : "Account Statement",
+                desc: isRTL ? "رصيدك وحركات الحساب" : "Balance & transactions",
+                href: "/dealer?tab=statement",
+              },
                 href: "/dealer?tab=payment",
               },
             ].map((item, i) => (
