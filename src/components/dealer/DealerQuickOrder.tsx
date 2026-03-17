@@ -30,6 +30,7 @@ const DealerQuickOrder = () => {
   const [qty, setQty] = useState(1);
   const [lines, setLines] = useState<OrderLine[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   // Auto-search state
   const [searching, setSearching] = useState(false);
