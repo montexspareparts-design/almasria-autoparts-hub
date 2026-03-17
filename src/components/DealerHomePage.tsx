@@ -39,7 +39,7 @@ const DealerHomeBottomNav = ({ isRTL }: { isRTL: boolean }) => {
     { id: "home", label: isRTL ? "الرئيسية" : "Home", icon: Home, href: "/", active: true },
     { id: "products", label: isRTL ? "المنتجات" : "Products", icon: Package, href: "/products" },
     { id: "orders", label: isRTL ? "طلباتي" : "Orders", icon: ClipboardList, href: "/dealer?tab=orders" },
-    { id: "quick_order", label: isRTL ? "طلب سريع" : "Quick Order", icon: Upload, href: "/dealer?tab=quick_order" },
+    { id: "quick_order", label: isRTL ? "طلب سريع" : "Quick Order", icon: Zap, href: "/dealer?tab=quick_order" },
     { id: "account", label: isRTL ? "حسابي" : "Account", icon: User, href: "/dealer?tab=settings" },
   ];
 
