@@ -177,6 +177,8 @@ const InstallBanner = forwardRef<HTMLDivElement>((_, ref) => {
       )}
     </AnimatePresence>
   );
-};
+});
+
+InstallBanner.displayName = "InstallBanner";
 
 export default InstallBanner;
