@@ -48,6 +48,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const sessionCheckRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { toast } = useToast();
 
+  // Central cleanup for ALL auth-related localStorage keys
+  const clearAllAuthStorage = useCallback(() => {
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem("almasria_remember_me");
+    localStorage.removeItem("almasria_remember_client");
+    sessionStorage.removeItem("almasria_session_active");
+  }, []);
+
   const clearSessionCheck = useCallback(() => {
     if (sessionCheckRef.current) {
       clearInterval(sessionCheckRef.current);
