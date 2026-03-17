@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import dealerQuotesIcon from "@/assets/dealer-quotes-icon.png";
+import dealerOrdersIcon from "@/assets/dealer-orders-icon.png";
 
 /* ─── Types ─── */
 interface OrderSummary { id: string; order_number: string; status: string; total_amount: number; created_at: string; }
@@ -414,7 +415,7 @@ const DealerHomePage = () => {
             <Card className="border-border/15 rounded-2xl hover:border-primary/30 hover:shadow-lg transition-all duration-200 group cursor-pointer h-full">
               <CardContent className="p-4 flex flex-col items-center text-center gap-2">
                 <div className="w-12 h-12 rounded-xl bg-primary/5 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
-                  <Package className="w-7 h-7 text-primary/70" />
+                  <img src={dealerOrdersIcon} alt="طلباتي" className="w-9 h-9 object-contain" />
                 </div>
                 <div>
                   <p className="text-sm font-bold text-foreground">{isRTL ? "طلباتي" : "My Orders"}</p>
