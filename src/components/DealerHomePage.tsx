@@ -374,7 +374,7 @@ const DealerHomePage = () => {
                   <img src={dealerQuotesIcon} alt="كشوفات الأسعار" className="w-9 h-9 object-contain" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-foreground">{isRTL ? "كشوفات الأسعار" : "Price Sheets"}</p>
+                  <p className="text-sm font-bold text-foreground">{isRTL ? "عروض الأسعار" : "Price Sheets"}</p>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
                     {isRTL ? "الأسعار المحدثة" : "Updated prices"}
                   </p>
