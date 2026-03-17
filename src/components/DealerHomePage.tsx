@@ -395,6 +395,40 @@ const DealerHomePage = () => {
           </Link>
         </motion.div>
 
+        {/* ━━━ كشوفات المصرية + طلباتي ━━━ */}
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="grid grid-cols-2 gap-3">
+          <Link to="/dealer?tab=price_lists">
+            <Card className="border-border/15 rounded-2xl hover:border-primary/30 hover:shadow-lg transition-all duration-200 group cursor-pointer h-full">
+              <CardContent className="p-4 flex flex-col items-center text-center gap-2">
+                <div className="w-12 h-12 rounded-xl bg-primary/5 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
+                  <img src={dealerQuotesIcon} alt="كشوفات المصرية" className="w-9 h-9 object-contain" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground">{isRTL ? "كشوفات المصرية" : "Price Lists"}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{isRTL ? "الأسعار المحدثة" : "Updated prices"}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link to="/dealer?tab=orders">
+            <Card className="border-border/15 rounded-2xl hover:border-primary/30 hover:shadow-lg transition-all duration-200 group cursor-pointer h-full">
+              <CardContent className="p-4 flex flex-col items-center text-center gap-2">
+                <div className="w-12 h-12 rounded-xl bg-primary/5 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
+                  <Package className="w-7 h-7 text-primary/70" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground">{isRTL ? "طلباتي" : "My Orders"}</p>
+                  {recentOrders.filter(o => !["delivered","cancelled"].includes(o.status)).length > 0 && (
+                    <Badge className="mt-1 text-[10px] font-bold bg-amber-100 text-amber-700 border-0 px-2 py-0.5 rounded-full">
+                      {recentOrders.filter(o => !["delivered","cancelled"].includes(o.status)).length} {isRTL ? "جارية" : "active"}
+                    </Badge>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </motion.div>
+
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
             2️⃣ PRICE OFFERS — SECOND PRIORITY
             ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
