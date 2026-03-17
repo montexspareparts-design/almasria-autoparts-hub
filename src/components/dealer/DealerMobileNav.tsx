@@ -13,7 +13,7 @@ const primaryTabs: { id: DealerTab; label: string; Icon: typeof LayoutDashboard 
   { id: "overview", label: "الرئيسية", Icon: LayoutDashboard },
   { id: "quotes", label: "المنتجات", Icon: Search },
   { id: "orders", label: "طلباتي", Icon: ClipboardList },
-  { id: "offers", label: "العروض", Icon: Tag },
+  { id: "quick_order", label: "طلب سريع", Icon: Upload },
 ];
 
 const moreTabs: { id: DealerTab; label: string; Icon: typeof LayoutDashboard }[] = [
@@ -24,7 +24,7 @@ const moreTabs: { id: DealerTab; label: string; Icon: typeof LayoutDashboard }[]
   { id: "favorites", label: "المفضلة", Icon: Heart },
   { id: "stock_alerts", label: "تنبيهات المخزون", Icon: Bell },
   { id: "notifications", label: "الإشعارات", Icon: Bell },
-  { id: "quick_order", label: "طلب سريع", Icon: Upload },
+  { id: "offers", label: "العروض", Icon: Tag },
   { id: "settings", label: "حسابي", Icon: Settings },
 ];
 
