@@ -159,9 +159,28 @@ const CheckoutPage = () => {
     }
   };
 
-  if (items.length === 0) {
+  if (items.length === 0 && !paymobClientSecret) {
     navigate("/cart");
     return null;
+  }
+
+  // Show Paymob Flash Checkout if client_secret is available
+  if (paymobClientSecret) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="pt-24 pb-12">
+          <div className="container mx-auto px-4 max-w-lg text-center">
+            <h1 className="text-2xl font-black text-foreground mb-6">💳 إتمام الدفع</h1>
+            <div className="bg-card border border-border rounded-lg p-6">
+              <PaymobCheckout clientSecret={paymobClientSecret} publicKey={PAYMOB_PUBLIC_KEY} />
+            </div>
+            <p className="text-xs text-muted-foreground mt-4">سيتم تحويلك تلقائياً بعد إتمام الدفع</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
   }
 
   return (
