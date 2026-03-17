@@ -284,11 +284,13 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
       <h2 className="text-lg font-bold text-foreground">الطلبات ({orders.length})</h2>
 
       {orders.length === 0 ? (
-        <Card className="border-dashed">
+        <Card className="border-dashed border-border/60">
           <CardContent className="p-10 text-center">
-            <Package className="w-12 h-12 mx-auto text-muted-foreground/40 mb-3" />
-            <p className="text-muted-foreground font-medium">لا توجد طلبات بعد</p>
-            <p className="text-xs text-muted-foreground/60 mt-1">أنشئ عرض سعر وحوّله لطلب</p>
+            <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-3">
+              <Package className="w-8 h-8 text-muted-foreground/30" />
+            </div>
+            <p className="text-foreground font-bold">لا توجد طلبات بعد</p>
+            <p className="text-xs text-muted-foreground mt-1">أنشئ عرض سعر وحوّله لطلب</p>
           </CardContent>
         </Card>
       ) : (
@@ -302,233 +304,261 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
             const editable = canEdit(order.status);
 
             return (
-              <Card key={order.id} className="border-border/50 overflow-hidden">
+              <Card key={order.id} className="border-border/40 rounded-2xl overflow-hidden shadow-sm">
+                {/* ─── Order Header ─── */}
                 <button onClick={() => toggleOrder(order.id)} className="w-full text-right">
-                  <CardContent className="p-4 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                        <Package className="w-4 h-4 text-primary" />
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-xl bg-primary/8 flex items-center justify-center shrink-0">
+                      <Package className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <p className="font-bold text-foreground text-sm">{order.order_number}</p>
+                        <Badge variant={config.variant} className="text-[10px] h-5 rounded-md shrink-0">{config.label}</Badge>
                       </div>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-foreground text-sm truncate">{order.order_number}</p>
+                      <div className="flex items-center gap-2">
                         <p className="text-xs text-muted-foreground">
                           {new Date(order.created_at).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric" })}
                         </p>
+                        <span className="text-xs text-muted-foreground/30">|</span>
+                        <p className="text-xs font-bold text-foreground">{Number(order.total_amount).toLocaleString("ar-EG")} ج.م</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      <div className="text-left">
-                        <p className="font-bold text-foreground text-sm">{Number(order.total_amount).toLocaleString("ar-EG")} ج.م</p>
-                        <Badge variant={config.variant} className="text-[10px] h-5">{config.label}</Badge>
-                      </div>
-                      {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                    <div className={cn(
+                      "w-8 h-8 rounded-lg flex items-center justify-center transition-all shrink-0",
+                      isExpanded ? "bg-primary/10 rotate-180" : "bg-muted/50"
+                    )}>
+                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
                     </div>
                   </CardContent>
                 </button>
 
                 {isExpanded && (
-                  <div className="border-t border-border bg-muted/30 p-4 space-y-4">
-                    {/* Order Timeline */}
+                  <div className="border-t border-border/30 bg-muted/20 p-4 space-y-4">
+
+                    {/* ─── Timeline Stepper ─── */}
                     {order.status !== "cancelled" && (
-                      <div className="flex items-center gap-0 px-1 overflow-x-auto">
-                        {getVisibleStages(order.payment_method).map((stage, idx) => {
-                          const StageIcon = stage.icon;
-                          const stages = getVisibleStages(order.payment_method);
-                          const isActive = idx <= currentStage;
-                          const isCurrent = idx === currentStage;
-                          const isLast = idx === stages.length - 1;
-                          const isPaymentStage = stage.key === "awaiting_payment";
-                          const canClickPayment = isPaymentStage && (order.status === "awaiting_payment" || order.status === "confirmed");
-                          return (
-                            <div key={stage.key} className="flex items-center flex-1 min-w-0">
-                              <div
-                                className={cn("flex flex-col items-center gap-1 min-w-[52px]", canClickPayment && "cursor-pointer")}
-                                onClick={canClickPayment ? () => onNavigateToPayment?.() : undefined}
-                              >
-                                <div className={cn(
-                                  "w-9 h-9 rounded-full flex items-center justify-center transition-all border-2",
-                                  isCurrent ? "bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/30" :
-                                  isActive ? "bg-primary/15 text-primary border-primary/40" : "bg-muted text-muted-foreground/40 border-border",
-                                  canClickPayment && "ring-2 ring-primary/20 hover:ring-primary/40"
-                                )}>
-                                  <StageIcon className="w-4 h-4" />
+                      <div className="bg-card rounded-xl border border-border/30 p-4">
+                        <p className="text-[11px] font-bold text-muted-foreground mb-3">حالة الطلب</p>
+                        <div className="flex items-start gap-0">
+                          {getVisibleStages(order.payment_method).map((stage, idx) => {
+                            const StageIcon = stage.icon;
+                            const stages = getVisibleStages(order.payment_method);
+                            const isActive = idx <= currentStage;
+                            const isCurrent = idx === currentStage;
+                            const isLast = idx === stages.length - 1;
+                            const isPaymentStage = stage.key === "awaiting_payment";
+                            const canClickPayment = isPaymentStage && (order.status === "awaiting_payment" || order.status === "confirmed");
+                            return (
+                              <div key={stage.key} className="flex items-center flex-1 min-w-0">
+                                <div
+                                  className={cn("flex flex-col items-center gap-1.5 min-w-[48px]", canClickPayment && "cursor-pointer group")}
+                                  onClick={canClickPayment ? () => onNavigateToPayment?.() : undefined}
+                                >
+                                  <div className={cn(
+                                    "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
+                                    isCurrent
+                                      ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
+                                      : isActive
+                                        ? "bg-primary/15 text-primary"
+                                        : "bg-muted/80 text-muted-foreground/30",
+                                    canClickPayment && "ring-2 ring-primary/30 group-hover:ring-primary/60 group-hover:scale-105"
+                                  )}>
+                                    <StageIcon className="w-4.5 h-4.5" />
+                                  </div>
+                                  <span className={cn(
+                                    "text-[9px] text-center leading-tight max-w-[56px]",
+                                    isCurrent ? "text-primary font-extrabold" : isActive ? "text-primary/70 font-semibold" : "text-muted-foreground/40 font-medium"
+                                  )}>{stage.label}</span>
+                                  {canClickPayment && (
+                                    <span className="text-[8px] text-primary font-bold bg-primary/10 px-1.5 py-0.5 rounded-md animate-pulse">ادفع الآن</span>
+                                  )}
                                 </div>
-                                <span className={cn(
-                                  "text-[9px] text-center leading-tight whitespace-nowrap",
-                                  isCurrent ? "text-primary font-bold" : isActive ? "text-primary/70 font-medium" : "text-muted-foreground/50",
-                                  canClickPayment && "underline decoration-primary/40"
-                                )}>{stage.label}</span>
-                                {canClickPayment && (
-                                  <span className="text-[8px] text-primary font-bold animate-pulse">ادفع الآن</span>
+                                {!isLast && (
+                                  <div className={cn(
+                                    "h-[3px] flex-1 mx-1 rounded-full min-w-[8px] mt-[-20px]",
+                                    idx < currentStage ? "bg-primary/30" : "bg-border/60"
+                                  )} />
                                 )}
                               </div>
-                              {!isLast && (
-                                <div className={cn(
-                                  "h-0.5 flex-1 mx-0.5 rounded-full min-w-[12px]",
-                                  idx < currentStage ? "bg-primary/40" : "bg-border"
-                                )} />
-                              )}
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
 
                     {order.status === "cancelled" && (
-                      <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10">
-                        <XCircle className="w-5 h-5 text-destructive" />
-                        <span className="text-sm text-destructive font-medium">تم إلغاء الطلب</span>
+                      <div className="flex items-center gap-2.5 p-3.5 rounded-xl bg-destructive/8 border border-destructive/15">
+                        <XCircle className="w-5 h-5 text-destructive shrink-0" />
+                        <span className="text-sm text-destructive font-bold">تم إلغاء الطلب</span>
                       </div>
                     )}
 
-                    {/* Edit/Cancel Actions Bar */}
+                    {/* ─── Edit/Cancel Actions ─── */}
                     {editable && !isEditing && (
-                      <div className="flex items-center gap-2 p-2.5 rounded-lg bg-primary/5 border border-primary/10">
-                        <AlertTriangle className="w-4 h-4 text-primary shrink-0" />
-                        <span className="text-xs text-muted-foreground flex-1">يمكنك تعديل أو إلغاء هذا الطلب قبل بدء التجهيز</span>
-                        <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => startEditing(order)}>
-                          <Pencil className="w-3.5 h-3.5 ml-1" />
-                          تعديل
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="outline" size="sm" className="text-xs h-7 text-destructive border-destructive/30 hover:bg-destructive/10">
-                              <Trash2 className="w-3.5 h-3.5 ml-1" />
-                              إلغاء الطلب
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>تأكيد إلغاء الطلب</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                هل أنت متأكد من إلغاء الطلب رقم {order.order_number}؟ سيتم إبلاغ الإدارة بالإلغاء. لا يمكن التراجع عن هذا الإجراء.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>تراجع</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => cancelOrder(order)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                تأكيد الإلغاء
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                      <div className="flex items-center gap-3 p-3.5 rounded-xl bg-primary/5 border border-primary/10">
+                        <AlertTriangle className="w-5 h-5 text-primary shrink-0" />
+                        <span className="text-xs text-muted-foreground flex-1 leading-relaxed">
+                          يمكنك تعديل أو إلغاء هذا الطلب قبل بدء التجهيز
+                        </span>
+                        <div className="flex gap-1.5 shrink-0">
+                          <Button variant="outline" size="sm" className="text-xs h-8 gap-1 rounded-lg" onClick={() => startEditing(order)}>
+                            <Pencil className="w-3.5 h-3.5" />
+                            تعديل
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="outline" size="sm" className="text-xs h-8 gap-1 rounded-lg text-destructive border-destructive/30 hover:bg-destructive/10">
+                                <Trash2 className="w-3.5 h-3.5" />
+                                إلغاء
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>تأكيد إلغاء الطلب</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  هل أنت متأكد من إلغاء الطلب رقم {order.order_number}؟ سيتم إبلاغ الإدارة بالإلغاء. لا يمكن التراجع عن هذا الإجراء.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>تراجع</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => cancelOrder(order)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                  تأكيد الإلغاء
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
                       </div>
                     )}
 
-                    {/* Editing Mode Header */}
+                    {/* ─── Editing Mode Header ─── */}
                     {isEditing && (
-                      <div className="flex items-center justify-between p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                      <div className="flex items-center justify-between p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
                         <div className="flex items-center gap-2">
                           <Pencil className="w-4 h-4 text-amber-600" />
-                          <span className="text-xs font-semibold text-amber-700">وضع التعديل — سيتم إبلاغ الإدارة بأي تغيير</span>
+                          <span className="text-xs font-bold text-amber-700">وضع التعديل</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="sm" className="text-xs h-7" onClick={cancelEditing} disabled={saving}>
+                        <div className="flex items-center gap-1.5">
+                          <Button variant="ghost" size="sm" className="text-xs h-7 rounded-lg" onClick={cancelEditing} disabled={saving}>
                             <X className="w-3.5 h-3.5 ml-1" />
                             إلغاء
                           </Button>
-                          <Button size="sm" className="text-xs h-7" onClick={() => saveEdits(order)} disabled={saving}>
+                          <Button size="sm" className="text-xs h-7 rounded-lg" onClick={() => saveEdits(order)} disabled={saving}>
                             {saving ? <Loader2 className="w-3.5 h-3.5 ml-1 animate-spin" /> : <Save className="w-3.5 h-3.5 ml-1" />}
-                            حفظ التعديلات
+                            حفظ
                           </Button>
                         </div>
                       </div>
                     )}
 
-                    {/* Payment CTA for electronic payments - only after admin approval */}
+                    {/* ─── Payment CTA ─── */}
                     {isElectronicPayment(order.payment_method) &&
                       ["confirmed", "awaiting_payment"].includes(order.status) && (
-                      <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-700 rounded-xl p-4 space-y-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center shrink-0">
-                            <Wallet className="w-5 h-5 text-amber-600" />
+                      <div className="rounded-xl overflow-hidden border border-amber-300/50">
+                        <div className="bg-gradient-to-l from-amber-50 to-amber-100/50 dark:from-amber-950/30 dark:to-amber-900/20 p-4 space-y-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-amber-200/60 dark:bg-amber-800/40 flex items-center justify-center shrink-0">
+                              <Wallet className="w-5 h-5 text-amber-700 dark:text-amber-300" />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="text-sm font-bold text-amber-800 dark:text-amber-200">ادفع لاستكمال الطلب</h4>
+                              <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-0.5">حوّل المبلغ المطلوب واستكمل الخطوات</p>
+                            </div>
                           </div>
-                          <div className="flex-1">
-                            <h4 className="text-sm font-bold text-amber-800 dark:text-amber-300">💳 ادفع لاستكمال إجراءات الطلب</h4>
-                            <p className="text-[11px] text-amber-700 dark:text-amber-400 mt-0.5">حوّل المبلغ المطلوب واستكمل الخطوات من صفحة الدفع</p>
+                          <div className="flex items-center gap-2">
+                            <Button size="sm" className="flex-1 gap-2 rounded-lg h-9" onClick={() => onNavigateToPayment?.()}>
+                              <CreditCard className="w-4 h-4" />
+                              انتقل لوسائل الدفع
+                            </Button>
+                            <span className="text-sm font-black text-primary px-2">{Number(order.total_amount).toLocaleString("ar-EG")} ج.م</span>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            className="flex-1 gap-2"
-                            onClick={() => onNavigateToPayment?.()}
-                          >
-                            <CreditCard className="w-4 h-4" />
-                            انتقل لوسائل الدفع
-                          </Button>
-                          <span className="text-sm font-black text-primary">{Number(order.total_amount).toLocaleString("ar-EG")} ج.م</span>
                         </div>
                       </div>
                     )}
 
-                    {/* Pending Approval Banner */}
+                    {/* ─── Pending Approval Banner ─── */}
                     {order.status === "pending_approval" && (
-                      <div className="bg-orange-50 dark:bg-orange-950/30 border border-orange-300 dark:border-orange-700 rounded-xl p-4 space-y-3">
-                        <div className="flex items-start gap-3">
-                          <AlertTriangle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
-                          <div>
-                            <p className="text-sm font-bold text-orange-800 dark:text-orange-300">بانتظار موافقتك على تعديلات الإدارة</p>
-                            <p className="text-xs text-orange-700 dark:text-orange-400 mt-1">راجع تفاصيل الطلب المحدّثة أدناه ووافق أو ارفض</p>
+                      <div className="rounded-xl overflow-hidden border border-orange-300/50">
+                        <div className="bg-gradient-to-l from-orange-50 to-orange-100/50 dark:from-orange-950/30 dark:to-orange-900/20 p-4 space-y-3">
+                          <div className="flex items-start gap-3">
+                            <AlertTriangle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-sm font-bold text-orange-800 dark:text-orange-200">بانتظار موافقتك على التعديلات</p>
+                              <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">راجع تفاصيل الطلب المحدّثة ووافق أو ارفض</p>
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex gap-2 mr-8">
-                          <Button
-                            size="sm"
-                            className="h-8 text-xs gap-1"
-                            onClick={async () => {
-                              await supabase.from("orders").update({ status: "confirmed" }).eq("id", order.id);
-                              toast({ title: "تم قبول التعديلات ✓" });
-                              fetchOrders();
-                            }}
-                          >
-                            <CheckCircle className="w-3.5 h-3.5" />
-                            موافق على التعديل
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-8 text-xs gap-1 border-destructive/30 text-destructive hover:bg-destructive/10"
-                            onClick={async () => {
-                              await supabase.from("orders").update({ status: "cancelled" }).eq("id", order.id);
-                              toast({ title: "تم رفض الطلب" });
-                              fetchOrders();
-                            }}
-                          >
-                            <XCircle className="w-3.5 h-3.5" />
-                            رفض
-                          </Button>
+                          <div className="flex gap-2 mr-8">
+                            <Button
+                              size="sm"
+                              className="h-8 text-xs gap-1 rounded-lg"
+                              onClick={async () => {
+                                await supabase.from("orders").update({ status: "confirmed" }).eq("id", order.id);
+                                toast({ title: "تم قبول التعديلات ✓" });
+                                fetchOrders();
+                              }}
+                            >
+                              <CheckCircle className="w-3.5 h-3.5" />
+                              موافق
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 text-xs gap-1 rounded-lg border-destructive/30 text-destructive hover:bg-destructive/10"
+                              onClick={async () => {
+                                await supabase.from("orders").update({ status: "cancelled" }).eq("id", order.id);
+                                toast({ title: "تم رفض الطلب" });
+                                fetchOrders();
+                              }}
+                            >
+                              <XCircle className="w-3.5 h-3.5" />
+                              رفض
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     )}
 
-                    {order.shipping_governorate && (
-                      <p className="text-xs text-muted-foreground">📍 {order.shipping_governorate} — {order.shipping_address}</p>
-                    )}
-                    {order.payment_method && (
-                      <p className="text-xs text-muted-foreground">💳 {order.payment_method}</p>
+                    {/* ─── Shipping & Payment Info ─── */}
+                    {(order.shipping_governorate || order.payment_method) && (
+                      <div className="flex flex-wrap gap-2">
+                        {order.shipping_governorate && (
+                          <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-lg">
+                            📍 {order.shipping_governorate} — {order.shipping_address}
+                          </span>
+                        )}
+                        {order.payment_method && (
+                          <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-lg">
+                            💳 {order.payment_method}
+                          </span>
+                        )}
+                      </div>
                     )}
 
-                    {/* Order Items */}
+                    {/* ─── Order Items ─── */}
                     {items ? (
-                      <div className="space-y-2">
+                      <div className="space-y-1.5">
                         {items.map((item) => (
-                          <div key={item.id} className="flex items-center gap-3 bg-background rounded-lg p-2.5">
-                            {item.products?.image_url && (
-                              <img src={item.products.image_url} alt="" className="w-10 h-10 rounded object-contain bg-white shrink-0" />
+                          <div key={item.id} className="flex items-center gap-3 bg-card rounded-xl p-3 border border-border/20">
+                            {item.products?.image_url ? (
+                              <img src={item.products.image_url} alt="" className="w-12 h-12 rounded-lg object-contain bg-muted/30 shrink-0 p-1" />
+                            ) : (
+                              <div className="w-12 h-12 rounded-lg bg-muted/30 flex items-center justify-center shrink-0">
+                                <Package className="w-5 h-5 text-muted-foreground/20" />
+                              </div>
                             )}
                             <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium text-foreground truncate">{item.products?.name_ar}</p>
-                              <p className="text-[10px] text-muted-foreground">{item.products?.sku}</p>
+                              <p className="text-xs font-bold text-foreground truncate">{item.products?.name_ar}</p>
+                              <p className="text-[10px] text-muted-foreground font-mono">{item.products?.sku}</p>
                             </div>
 
                             {isEditing ? (
                               <>
-                                <div className="flex items-center gap-1.5 shrink-0">
+                                <div className="flex items-center gap-1 shrink-0">
                                   <Button
                                     variant="outline"
                                     size="icon"
-                                    className="w-7 h-7"
+                                    className="w-7 h-7 rounded-lg"
                                     onClick={() => setEditQuantities(prev => ({ ...prev, [item.id]: Math.max(1, (prev[item.id] ?? item.quantity) - 1) }))}
                                   >
                                     <span className="text-sm font-bold">−</span>
@@ -538,18 +568,18 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
                                     min={1}
                                     value={editQuantities[item.id] ?? item.quantity}
                                     onChange={(e) => setEditQuantities(prev => ({ ...prev, [item.id]: Math.max(1, parseInt(e.target.value) || 1) }))}
-                                    className="w-14 h-7 text-center text-sm font-bold px-1"
+                                    className="w-12 h-7 text-center text-sm font-bold px-1 rounded-lg"
                                   />
                                   <Button
                                     variant="outline"
                                     size="icon"
-                                    className="w-7 h-7"
+                                    className="w-7 h-7 rounded-lg"
                                     onClick={() => setEditQuantities(prev => ({ ...prev, [item.id]: (prev[item.id] ?? item.quantity) + 1 }))}
                                   >
                                     <span className="text-sm font-bold">+</span>
                                   </Button>
                                 </div>
-                                <p className="text-xs font-bold text-foreground shrink-0 w-20 text-left">
+                                <p className="text-xs font-bold text-foreground shrink-0 w-16 text-left">
                                   {(item.unit_price * (editQuantities[item.id] ?? item.quantity)).toLocaleString("ar-EG")} ج.م
                                 </p>
                                 <AlertDialog>
@@ -562,7 +592,7 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
                                     <AlertDialogHeader>
                                       <AlertDialogTitle>حذف الصنف</AlertDialogTitle>
                                       <AlertDialogDescription>
-                                        هل أنت متأكد من حذف "{item.products?.name_ar}" من الطلب؟ سيتم إبلاغ الإدارة.
+                                        هل أنت متأكد من حذف "{item.products?.name_ar}" من الطلب؟
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
@@ -575,57 +605,58 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
                                 </AlertDialog>
                               </>
                             ) : (
-                              <>
-                                <p className="text-[10px] text-muted-foreground shrink-0">× {item.quantity}</p>
-                                <p className="text-xs font-bold text-foreground shrink-0">{Number(item.total_price).toLocaleString("ar-EG")} ج.م</p>
-                              </>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className="text-[11px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded">× {item.quantity}</span>
+                                <p className="text-xs font-bold text-foreground">{Number(item.total_price).toLocaleString("ar-EG")} ج.م</p>
+                              </div>
                             )}
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <div className="h-8 animate-pulse bg-muted rounded" />
+                      <div className="h-10 animate-pulse bg-muted/50 rounded-xl" />
                     )}
 
-                    {/* Edit Notes */}
+                    {/* ─── Edit Notes ─── */}
                     {isEditing && (
                       <div className="space-y-2">
-                        <label className="text-xs font-medium text-foreground">ملاحظات الطلب</label>
+                        <label className="text-xs font-bold text-foreground">ملاحظات الطلب</label>
                         <Textarea
                           placeholder="أضف ملاحظات للإدارة..."
                           value={editNotes}
                           onChange={(e) => setEditNotes(e.target.value)}
-                          className="text-sm min-h-[60px]"
+                          className="text-sm min-h-[60px] rounded-xl"
                         />
                       </div>
                     )}
 
-                    {/* Existing notes (non-edit mode) */}
+                    {/* ─── Notes (view mode) ─── */}
                     {!isEditing && order.notes && (
-                      <div className="p-2.5 rounded-lg bg-muted/50">
-                        <p className="text-[10px] text-muted-foreground/70 mb-0.5">ملاحظات:</p>
+                      <div className="p-3 rounded-xl bg-muted/30 border border-border/20">
+                        <p className="text-[10px] text-muted-foreground/60 mb-0.5 font-bold">ملاحظات:</p>
                         <p className="text-xs text-foreground">{order.notes}</p>
                       </div>
                     )}
 
-                    {/* Edit mode total */}
+                    {/* ─── Edit Total ─── */}
                     {isEditing && items && (
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 border border-border">
+                      <div className="flex items-center justify-between p-3.5 rounded-xl bg-secondary/50 border border-border">
                         <span className="text-sm font-medium text-muted-foreground">الإجمالي بعد التعديل</span>
-                        <span className="text-lg font-bold text-foreground">
+                        <span className="text-lg font-black text-foreground">
                           {items.reduce((sum, i) => sum + i.unit_price * (editQuantities[i.id] ?? i.quantity), 0).toLocaleString("ar-EG")} ج.م
                         </span>
                       </div>
                     )}
 
+                    {/* ─── WhatsApp ─── */}
                     {!isEditing && (
                       <Button
                         variant="outline"
                         size="sm"
-                        className="w-full text-xs"
+                        className="w-full text-xs rounded-xl h-9 gap-1.5 border-border/40"
                         onClick={() => window.open(`https://wa.me/201000000000?text=استفسار عن الطلب رقم ${order.order_number}`, "_blank")}
                       >
-                        <MessageCircle className="w-3.5 h-3.5 ml-1.5" />
+                        <MessageCircle className="w-3.5 h-3.5" />
                         استفسار عن الطلب
                       </Button>
                     )}
