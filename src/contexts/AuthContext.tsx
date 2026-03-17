@@ -142,7 +142,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setDealerAccount(null);
           setIsAdmin(false);
           clearSessionCheck();
-          localStorage.removeItem(SESSION_KEY);
+          clearAllAuthStorage();
         }
 
         setLoading(false);
