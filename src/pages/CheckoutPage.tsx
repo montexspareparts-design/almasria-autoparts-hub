@@ -5,6 +5,7 @@ import {
   ArrowRight, Truck, Zap, Store, CreditCard, Banknote, Smartphone, Building2,
   Wallet, ShieldCheck, Package, Loader2
 } from "lucide-react";
+import PaymobCheckout from "@/components/PaymobCheckout";
 import PaymentInstructionsBanner from "@/components/PaymentInstructionsBanner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
