@@ -53,7 +53,6 @@ const brandConfig: Record<string, { title: string; subtitle: string; description
     description: "MTX هي علامتنا التجارية المسجلة لقطع الغيار المستوردة عالية الجودة بأفضل الأسعار.",
     badge: "علامة تجارية مسجلة",
     brandKey: "mtx_aftermarket",
-    extraBrands: ["fbk"],
     logo: brandMtx,
   },
   "fbk-brakes": {
