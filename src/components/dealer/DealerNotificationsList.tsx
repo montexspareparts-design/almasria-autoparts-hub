@@ -206,7 +206,7 @@ const DealerNotificationsList = ({ userId, onNavigate }: { userId: string; onNav
             const colorClass = typeColors[n.type] || typeColors.info;
             const isOrderEdit = n.type === "order_edit";
             const orderId = isOrderEdit ? extractOrderId(n.message) : null;
-            const displayMessage = getDisplayMessage(n.message);
+            const isContact = n.title.includes("تواصل") || n.message.includes("تواصل") || n.type === "contact";
 
             return (
               <div
