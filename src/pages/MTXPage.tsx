@@ -204,12 +204,12 @@ const MTXPage = () => {
   }, [dbCategories, searchParams]);
 
   const { data: products, isLoading } = useQuery({
-    queryKey: ["products", "mtx_aftermarket"],
+    queryKey: ["products", "mtx_aftermarket", "fbk"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
         .select("*, product_categories(name_ar)")
-        .eq("brand", "mtx_aftermarket" as any)
+        .in("brand", ["mtx_aftermarket", "fbk"] as any)
         .eq("is_active", true)
         .order("created_at", { ascending: false });
       if (error) throw error;

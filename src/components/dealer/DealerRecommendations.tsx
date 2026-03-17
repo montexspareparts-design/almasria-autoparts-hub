@@ -18,6 +18,7 @@ const brandLabels: Record<string, string> = {
   mtx_aftermarket: "MTX",
   denso: "DENSO",
   aisin: "AISIN",
+  fbk: "تيل فرامل FBK",
 };
 
 const DealerRecommendations = ({ userId, tier, onNavigateToQuotes }: { userId: string; tier?: string; onNavigateToQuotes?: () => void }) => {

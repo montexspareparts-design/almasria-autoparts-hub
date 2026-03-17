@@ -27,7 +27,7 @@ import brandDenso from "@/assets/brand-denso.png";
 import brandAisin from "@/assets/brand-aisin.png";
 import oilBg from "@/assets/oil-hero-bg.jpg";
 
-const brandConfig: Record<string, { title: string; subtitle: string; description: string; badge: string; brandKey: string; logo: string; backgroundImage?: string; logoScale?: number }> = {
+const brandConfig: Record<string, { title: string; subtitle: string; description: string; badge: string; brandKey: string; logo: string; backgroundImage?: string; logoScale?: number; extraBrands?: string[] }> = {
   "toyota-genuine": {
     title: "قطع غيار تويوتا الأصلية",
     subtitle: "Toyota Genuine Parts",
@@ -53,6 +53,15 @@ const brandConfig: Record<string, { title: string; subtitle: string; description
     description: "MTX هي علامتنا التجارية المسجلة لقطع الغيار المستوردة عالية الجودة بأفضل الأسعار.",
     badge: "علامة تجارية مسجلة",
     brandKey: "mtx_aftermarket",
+    extraBrands: ["fbk"],
+    logo: brandMtx,
+  },
+  "fbk-brakes": {
+    title: "تيل فرامل FBK",
+    subtitle: "FBK Brake Pads",
+    description: "تيل فرامل FBK ماليزي عالي الجودة لجميع موديلات تويوتا. أداء ممتاز وعمر افتراضي طويل.",
+    badge: "جودة ماليزية",
+    brandKey: "fbk",
     logo: brandMtx,
   },
   "denso": {
@@ -79,6 +88,7 @@ const allBrands = [
   { label: "MTX Aftermarket", labelEn: "MTX Aftermarket", image: brandMtx, to: "/products/mtx-aftermarket", scale: "scale-150" },
   { label: "DENSO", labelEn: "DENSO", image: brandDenso, to: "/products/denso", scale: "scale-100" },
   { label: "AISIN", labelEn: "AISIN", image: brandAisin, to: "/products/aisin", scale: "scale-100" },
+  { label: "تيل فرامل FBK", labelEn: "FBK Brake Pads", image: brandMtx, to: "/products/fbk-brakes", scale: "scale-100" },
 ];
 
 const ITEMS_PER_PAGE = 24;
@@ -222,13 +232,14 @@ const ProductsPage = () => {
   }, [categories, searchParams]);
 
   const { data: products, isLoading } = useQuery({
-    queryKey: ["products", config?.brandKey],
+    queryKey: ["products", config?.brandKey, config?.extraBrands],
     queryFn: async () => {
       if (!config) return [];
+      const brandsToQuery = [config.brandKey, ...(config.extraBrands || [])];
       const { data, error } = await supabase
         .from("products")
         .select("*, product_categories(name_ar)")
-        .eq("brand", config.brandKey as any)
+        .in("brand", brandsToQuery as any)
         .eq("is_active", true)
         .order("created_at", { ascending: false });
       if (error) throw error;
