@@ -62,7 +62,7 @@ const brandConfig: Record<string, { title: string; subtitle: string; description
     description: "تيل فرامل FBK ماليزي عالي الجودة لجميع موديلات تويوتا. أداء ممتاز وعمر افتراضي طويل.",
     badge: "جودة ماليزية",
     brandKey: "fbk",
-    logo: brandMtx,
+    logo: brandFbkBrakes,
     logoScale: 350,
   },
   "denso": {
