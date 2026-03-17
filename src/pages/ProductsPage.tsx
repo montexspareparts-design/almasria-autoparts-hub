@@ -57,12 +57,13 @@ const brandConfig: Record<string, { title: string; subtitle: string; description
     logo: brandMtx,
   },
   "fbk-brakes": {
-    title: "تيل فرامل FBK",
+    title: "تيل فرامل",
     subtitle: "FBK Brake Pads",
     description: "تيل فرامل FBK ماليزي عالي الجودة لجميع موديلات تويوتا. أداء ممتاز وعمر افتراضي طويل.",
     badge: "جودة ماليزية",
     brandKey: "fbk",
     logo: brandMtx,
+    logoScale: 350,
   },
   "denso": {
     title: "DENSO",
@@ -88,7 +89,7 @@ const allBrands = [
   { label: "MTX Aftermarket", labelEn: "MTX Aftermarket", image: brandMtx, to: "/products/mtx-aftermarket", scale: "scale-150" },
   { label: "DENSO", labelEn: "DENSO", image: brandDenso, to: "/products/denso", scale: "scale-100" },
   { label: "AISIN", labelEn: "AISIN", image: brandAisin, to: "/products/aisin", scale: "scale-100" },
-  { label: "تيل فرامل FBK", labelEn: "FBK Brake Pads", image: brandMtx, to: "/products/fbk-brakes", scale: "scale-100" },
+  { label: "تيل فرامل", labelEn: "FBK Brake Pads", image: brandMtx, to: "/products/fbk-brakes", scale: "scale-[2.5]" },
 ];
 
 const ITEMS_PER_PAGE = 24;
