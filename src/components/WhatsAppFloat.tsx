@@ -35,6 +35,8 @@ const WhatsAppFloat = forwardRef<HTMLDivElement>((_, ref) => {
       </motion.a>
     </div>
   );
-};
+});
+
+WhatsAppFloat.displayName = "WhatsAppFloat";
 
 export default WhatsAppFloat;
