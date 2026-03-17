@@ -181,3 +181,16 @@
   animation: float-particle linear infinite;
   will-change: transform, opacity;
 }
+
+@keyframes auto-part-drift {
+  0%, 100% { transform: translateY(0) translateX(0) scale(1); opacity: 0.3; }
+  20% { transform: translateY(-18px) translateX(12px) scale(1.05); opacity: 0.6; }
+  40% { transform: translateY(8px) translateX(-10px) scale(0.95); opacity: 0.35; }
+  60% { transform: translateY(-12px) translateX(6px) scale(1.02); opacity: 0.55; }
+  80% { transform: translateY(4px) translateX(-5px) scale(0.98); opacity: 0.4; }
+}
+
+.animate-auto-part {
+  animation: auto-part-drift ease-in-out infinite;
+  will-change: transform, opacity;
+}

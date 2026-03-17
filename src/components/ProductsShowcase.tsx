@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
-import { ArrowLeft, Cog, Wrench, Settings, Droplets } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
+import AutoPartsBackground from "./AutoPartsBackground";
 
 // Brand logos
 import brandGenuine from "@/assets/brand-genuine-parts.png";
