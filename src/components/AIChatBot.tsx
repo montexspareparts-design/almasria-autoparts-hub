@@ -422,7 +422,9 @@ const AIChatBot = () => {
     try {
       await streamChat(updatedMessages);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "حدث خطأ");
+      console.error("Chat error:", e);
+      const errorMsg = "حصل مشكلة في الاتصال 😅\n\nممكن تكون مشكلة مؤقتة — جرب تاني بعد شوية.\n\nأو تواصل مع فريق المبيعات مباشرة:\n📞 01032104861\n📱 [واتساب](https://wa.me/201032104861)";
+      setMessages((prev) => [...prev, { role: "assistant", content: errorMsg }]);
     } finally {
       setIsLoading(false);
     }
