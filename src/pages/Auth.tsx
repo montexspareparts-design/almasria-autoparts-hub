@@ -88,7 +88,8 @@ const Auth = () => {
         }
       } else {
         setLoginAttempts(0); setLockedUntil(null);
-        if (rememberMe) saveCredentials(authMethod, authMethod === "phone" ? phone : email, password); else clearCredentials();
+        setRememberedFlag(rememberMe);
+        markSessionActive();
         toast({ title: "تم تسجيل الدخول بنجاح ✅" });
         navigate("/");
       }
