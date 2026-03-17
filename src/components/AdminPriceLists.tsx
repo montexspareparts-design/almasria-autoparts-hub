@@ -711,6 +711,10 @@ const AdminPriceLists = () => {
                   <Package className="w-3.5 h-3.5" />
                   الأصناف
                 </Button>
+                <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={() => { setViewingReport(list); fetchViews(list.id); }}>
+                  <Users className="w-3.5 h-3.5" />
+                  المشاهدات
+                </Button>
                 <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => toggleActive(list.id, list.is_active)}>
                   {list.is_active ? <Eye className="w-4 h-4 text-emerald-500" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
                 </Button>
