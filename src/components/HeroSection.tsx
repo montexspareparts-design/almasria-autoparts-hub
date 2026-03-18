@@ -90,7 +90,7 @@ const HeroSection = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const videoSrc = heroVideoUrl || "/__l5e/assets-v1/96f504f6-5ae9-494b-b254-1d91f6639fb3/hero-toyota-parts.mp4";
+  const videoSrc = heroVideoUrl || "/__l5e/assets-v1/df3ec665-cc3c-4de1-ae1d-1afb966e6eaf/hero-toyota-parts.mp4";
 
   const stats = [
     { value: 25, suffix: "+", label: t("hero.stat_years") },
