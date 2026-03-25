@@ -496,6 +496,9 @@ const AdminOrders = () => {
                             <Badge variant="outline" className={`${status.color} ${status.bg} border-0 text-xs`}>
                               {status.label}
                             </Badge>
+                            <Badge variant="outline" className={`text-[10px] font-bold border-0 ${order.isDealer ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"}`}>
+                              {order.isDealer ? "🏢 جملة" : "🛒 قطاعي"}
+                            </Badge>
                           </div>
                           <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1 flex-wrap">
                             <span>{order.profile?.full_name || "عميل"}</span>
