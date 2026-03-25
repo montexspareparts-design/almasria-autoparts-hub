@@ -2,11 +2,11 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import brandGenuineParts from "@/assets/brand-genuine-parts.png";
-import brandToyotaOil from "@/assets/brand-toyota-oil.png";
-import brandMtx from "@/assets/brand-mtx.jpg";
-import brandDenso from "@/assets/brand-denso.png";
-import brandAisin from "@/assets/brand-aisin.png";
+import brandGenuineParts from "@/assets/brand-genuine-parts.webp";
+import brandToyotaOil from "@/assets/brand-toyota-oil.webp";
+import brandMtx from "@/assets/brand-mtx.webp";
+import brandDenso from "@/assets/brand-denso.webp";
+import brandAisin from "@/assets/brand-aisin.webp";
 
 const brands = [
   { label: "Toyota Genuine Parts", labelAr: "قطع غيار تويوتا", labelEn: "Toyota Genuine Parts", image: brandGenuineParts, to: "/products/toyota-genuine", scale: "scale-100" },

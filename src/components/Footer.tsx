@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { trackClickCall, trackClickWhatsApp } from "@/lib/analytics";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/logo.webp";
 
 const Footer = forwardRef<HTMLElement>((_, ref) => {
   const { t } = useLanguage();

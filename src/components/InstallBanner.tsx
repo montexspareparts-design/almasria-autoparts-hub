@@ -4,7 +4,7 @@ import { Download, X, Share, PlusSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { requestPushPermission } from "@/lib/pushNotifications";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/logo.webp";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;

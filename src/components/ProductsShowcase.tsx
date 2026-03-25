@@ -4,11 +4,11 @@ import { Link } from "react-router-dom";
 import AutoPartsBackground from "./AutoPartsBackground";
 
 // Brand logos
-import brandGenuine from "@/assets/brand-genuine-parts.png";
-import brandOil from "@/assets/brand-toyota-oil.png";
-import brandMtx from "@/assets/brand-mtx.jpg";
-import brandDenso from "@/assets/brand-denso.png";
-import brandAisin from "@/assets/brand-aisin.png";
+import brandGenuine from "@/assets/brand-genuine-parts.webp";
+import brandOil from "@/assets/brand-toyota-oil.webp";
+import brandMtx from "@/assets/brand-mtx.webp";
+import brandDenso from "@/assets/brand-denso.webp";
+import brandAisin from "@/assets/brand-aisin.webp";
 
 const brands = [
   { id: "toyota_genuine", nameAr: "قطع غيار تويوتا الأصلية", nameEn: "Toyota Genuine Parts", logo: brandGenuine, href: "/products/toyota-genuine", scale: 1 },
