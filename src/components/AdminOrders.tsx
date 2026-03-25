@@ -155,7 +155,7 @@ const AdminOrders = () => {
 
   useEffect(() => { fetchStats(); }, [fetchStats]);
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
-  useEffect(() => { setPage(0); }, [filterStatus, searchQuery]);
+  useEffect(() => { setPage(0); }, [filterStatus, searchQuery, orderTypeFilter]);
 
   const handleStatClick = (status: string) => {
     setFilterStatus(status);
