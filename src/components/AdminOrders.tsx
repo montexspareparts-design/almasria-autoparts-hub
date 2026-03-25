@@ -21,6 +21,8 @@ type OrderItem = Database["public"]["Tables"]["order_items"]["Row"];
 interface OrderWithItems extends Order {
   items?: (OrderItem & { product?: { name_ar: string; sku: string; image_url: string | null } })[];
   profile?: { full_name: string | null; phone: string | null; email: string | null };
+  isDealer?: boolean;
+  dealerTier?: string;
 }
 
 const statusConfig: Record<string, { label: string; color: string; bg: string; icon: typeof Clock }> = {
