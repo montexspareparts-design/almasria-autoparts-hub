@@ -241,7 +241,7 @@ const DealerHomePage = () => {
                 onFocus={() => { setSearchFocused(true); searchQuery.trim().length >= 2 && setShowResults(true); }}
                 onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
                 placeholder={isRTL ? "ابحث برقم القطعة أو اسم المنتج..." : "Search by Part Number or Product Name..."}
-                className={`h-14 md:h-[60px] border-0 bg-transparent text-base md:text-lg shadow-none focus-visible:ring-0 font-medium placeholder:text-muted-foreground/30 ${isRTL ? 'pr-13 pl-10' : 'pl-13 pr-10'}`}
+                className={`h-14 md:h-[60px] border-0 bg-transparent text-base md:text-lg shadow-none focus-visible:ring-0 font-medium placeholder:text-muted-foreground/30 ${isRTL ? 'pr-14 pl-12' : 'pl-14 pr-12'}`}
               />
               {searchQuery && (
                 <button onClick={() => { setSearchQuery(""); setShowResults(false); }} className={`absolute p-2 rounded-xl hover:bg-muted/50 transition-colors ${isRTL ? 'left-3' : 'right-3'}`}>
