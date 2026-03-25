@@ -93,10 +93,14 @@ Deno.serve(async (req) => {
 
     // Format phone number for Twilio
     let formattedPhone = phone.replace(/\D/g, "");
-    if (formattedPhone.startsWith("0")) {
-      formattedPhone = "+20" + formattedPhone.substring(1);
-    } else if (formattedPhone.startsWith("20")) {
+    // Handle international prefix 002 or 0020
+    if (formattedPhone.startsWith("002")) {
+      formattedPhone = formattedPhone.substring(2); // Remove "00", keep "20..."
+    }
+    if (formattedPhone.startsWith("20") && formattedPhone.length >= 11) {
       formattedPhone = "+" + formattedPhone;
+    } else if (formattedPhone.startsWith("0")) {
+      formattedPhone = "+20" + formattedPhone.substring(1);
     } else if (!formattedPhone.startsWith("+")) {
       formattedPhone = "+20" + formattedPhone;
     }

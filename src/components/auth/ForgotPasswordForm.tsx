@@ -46,10 +46,14 @@ const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
   };
 
   const formatPhone = (raw: string) => {
-    const cleaned = raw.replace(/\D/g, "");
-    if (cleaned.startsWith("0")) return `+2${cleaned}`;
-    if (cleaned.startsWith("2")) return `+${cleaned}`;
-    return `+2${cleaned}`;
+    let cleaned = raw.replace(/\D/g, "");
+    // Handle international prefix 002 or 0020
+    if (cleaned.startsWith("002")) {
+      cleaned = cleaned.substring(2); // Remove leading "00", keep "20..."
+    }
+    if (cleaned.startsWith("20") && cleaned.length >= 11) return `+${cleaned}`;
+    if (cleaned.startsWith("0")) return `+20${cleaned.substring(1)}`;
+    return `+20${cleaned}`;
   };
 
   const handleSendOTP = async (channel: "sms" | "whatsapp" = method === "whatsapp" ? "whatsapp" : "sms") => {
