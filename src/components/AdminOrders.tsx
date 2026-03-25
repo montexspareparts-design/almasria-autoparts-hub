@@ -21,6 +21,8 @@ type OrderItem = Database["public"]["Tables"]["order_items"]["Row"];
 interface OrderWithItems extends Order {
   items?: (OrderItem & { product?: { name_ar: string; sku: string; image_url: string | null } })[];
   profile?: { full_name: string | null; phone: string | null; email: string | null };
+  isDealer?: boolean;
+  dealerTier?: string;
 }
 
 const statusConfig: Record<string, { label: string; color: string; bg: string; icon: typeof Clock }> = {
@@ -47,6 +49,7 @@ const AdminOrders = () => {
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [orderTypeFilter, setOrderTypeFilter] = useState<"all" | "wholesale" | "retail">("all");
   const [adminNotes, setAdminNotes] = useState<Record<string, string>>({});
   const [editingOrder, setEditingOrder] = useState<string | null>(null);
   const [editedItems, setEditedItems] = useState<Record<string, { id: string; quantity: number; unit_price: number; total_price: number; product_id: string; product?: any }[]>>({});
@@ -104,23 +107,36 @@ const AdminOrders = () => {
       return;
     }
 
-    // Batch fetch profiles for this page only (1 query instead of N)
+    // Batch fetch profiles and dealer accounts for this page only
     const userIds = [...new Set(data.map((o: any) => o.user_id))];
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("user_id, full_name, phone, email")
-      .in("user_id", userIds);
+    const [{ data: profiles }, { data: dealerAccounts }] = await Promise.all([
+      supabase.from("profiles").select("user_id, full_name, phone, email").in("user_id", userIds),
+      supabase.from("dealer_accounts").select("user_id, tier, is_active").in("user_id", userIds),
+    ]);
 
     const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));
+    const dealerMap = new Map((dealerAccounts || []).map(d => [d.user_id, d]));
 
-    const enriched: OrderWithItems[] = data.map((order: any) => ({
-      ...order,
-      items: order.order_items || [],
-      profile: profileMap.get(order.user_id) || undefined,
-    }));
+    let enriched: OrderWithItems[] = data.map((order: any) => {
+      const dealer = dealerMap.get(order.user_id);
+      return {
+        ...order,
+        items: order.order_items || [],
+        profile: profileMap.get(order.user_id) || undefined,
+        isDealer: !!dealer?.is_active,
+        dealerTier: dealer?.tier || undefined,
+      };
+    });
+
+    // Client-side filter by order type
+    if (orderTypeFilter === "wholesale") {
+      enriched = enriched.filter(o => o.isDealer);
+    } else if (orderTypeFilter === "retail") {
+      enriched = enriched.filter(o => !o.isDealer);
+    }
 
     setOrders(enriched);
-    setTotalCount(count || 0);
+    setTotalCount(orderTypeFilter === "all" ? (count || 0) : enriched.length);
     setLoading(false);
 
     // Auto-expand first order if triggered by stat card click
@@ -132,14 +148,14 @@ const AdminOrders = () => {
         ordersListRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 100);
     }
-  }, [page, filterStatus, searchQuery, autoExpandFirst]);
+  }, [page, filterStatus, searchQuery, autoExpandFirst, orderTypeFilter]);
 
 
 
 
   useEffect(() => { fetchStats(); }, [fetchStats]);
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
-  useEffect(() => { setPage(0); }, [filterStatus, searchQuery]);
+  useEffect(() => { setPage(0); }, [filterStatus, searchQuery, orderTypeFilter]);
 
   const handleStatClick = (status: string) => {
     setFilterStatus(status);
@@ -397,6 +413,27 @@ const AdminOrders = () => {
             </div>
           </div>
 
+          {/* Order Type Tabs */}
+          <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-lg mb-4 w-fit">
+            {([
+              { value: "all" as const, label: "الكل" },
+              { value: "wholesale" as const, label: "🏢 جملة (B2B)" },
+              { value: "retail" as const, label: "🛒 قطاعي (B2C)" },
+            ]).map(tab => (
+              <button
+                key={tab.value}
+                onClick={() => setOrderTypeFilter(tab.value)}
+                className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${
+                  orderTypeFilter === tab.value
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
           {/* Filters */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-4">
             <div className="relative flex-1 w-full sm:w-auto">
@@ -443,7 +480,7 @@ const AdminOrders = () => {
                 const canEdit = ["pending", "confirmed", "processing"].includes(order.status);
 
                 return (
-                  <div key={order.id} className="border border-border rounded-xl overflow-hidden transition-all">
+                  <div key={order.id} className={`border rounded-xl overflow-hidden transition-all ${order.isDealer ? "border-blue-200 dark:border-blue-800/50" : "border-border"}`}>
                     {/* Order Header */}
                     <div
                       className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/30 transition-colors"
@@ -458,6 +495,9 @@ const AdminOrders = () => {
                             <span className="font-bold text-foreground">#{order.order_number}</span>
                             <Badge variant="outline" className={`${status.color} ${status.bg} border-0 text-xs`}>
                               {status.label}
+                            </Badge>
+                            <Badge variant="outline" className={`text-[10px] font-bold border-0 ${order.isDealer ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"}`}>
+                              {order.isDealer ? "🏢 جملة" : "🛒 قطاعي"}
                             </Badge>
                           </div>
                           <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1 flex-wrap">
