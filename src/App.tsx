@@ -71,8 +71,8 @@ const App = () => (
           <LanguageProvider>
           <AuthProvider>
             <CartProvider>
-              <InstallBanner />
-              <DeferredChatBot />
+              <DeferredComponent delay={2000}><InstallBannerLazy /></DeferredComponent>
+              <DeferredComponent delay={4000}><AIChatBot /></DeferredComponent>
                <Suspense fallback={<PageLoader />}>
                   <Routes>
                     <Route path="/" element={<Index />} />
