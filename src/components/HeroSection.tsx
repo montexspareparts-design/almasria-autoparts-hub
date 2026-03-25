@@ -119,7 +119,7 @@ const HeroSection = () => {
           muted
           loop
           playsInline
-          preload="auto"
+          preload="none"
           onLoadedData={() => setVideoLoaded(true)}
           onCanPlay={(e) => {
             const vid = e.currentTarget;
