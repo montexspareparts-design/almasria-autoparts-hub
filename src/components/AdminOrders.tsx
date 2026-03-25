@@ -148,7 +148,7 @@ const AdminOrders = () => {
         ordersListRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 100);
     }
-  }, [page, filterStatus, searchQuery, autoExpandFirst]);
+  }, [page, filterStatus, searchQuery, autoExpandFirst, orderTypeFilter]);
 
 
 
