@@ -46,6 +46,21 @@ const PageLoader = () => (
   </div>
 );
 
+const DeferredChatBot = () => {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const id = typeof requestIdleCallback !== 'undefined'
+      ? requestIdleCallback(() => setShow(true), { timeout: 4000 })
+      : setTimeout(() => setShow(true), 3000) as unknown as number;
+    return () => {
+      if (typeof cancelIdleCallback !== 'undefined') cancelIdleCallback(id);
+      else clearTimeout(id);
+    };
+  }, []);
+  if (!show) return null;
+  return <Suspense fallback={null}><AIChatBot /></Suspense>;
+};
+
 const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
@@ -57,7 +72,7 @@ const App = () => (
           <AuthProvider>
             <CartProvider>
               <InstallBanner />
-              <Suspense fallback={null}><AIChatBot /></Suspense>
+              <DeferredChatBot />
                <Suspense fallback={<PageLoader />}>
                   <Routes>
                     <Route path="/" element={<Index />} />
