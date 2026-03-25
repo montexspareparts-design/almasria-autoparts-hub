@@ -172,9 +172,9 @@ const DealerHomePage = () => {
 
   /* ─── Quick Action Items ─── */
   const quickActions = [
-    { label: isRTL ? "عروض الأسعار" : "Quotes", icon: dealerQuotesIcon, href: "/dealer?tab=quotes", isImage: true, badge: dailyViewCount > 0 ? `${dailyViewCount} ${isRTL ? "تسعير" : "priced"}` : null, badgeColor: "bg-primary/8 text-primary" },
+    { label: isRTL ? "عروض الأسعار" : "Quotes", icon: Tag, href: "/dealer?tab=quotes", isImage: false, badge: dailyViewCount > 0 ? `${dailyViewCount} ${isRTL ? "تسعير" : "priced"}` : null, badgeColor: "bg-primary/8 text-primary", iconColor: "text-primary", iconBg: "bg-primary/8" },
     { label: isRTL ? "كشوفات المصرية" : "Price Lists", icon: FileText, href: "/dealer?tab=price_lists", isImage: false, sub: isRTL ? "الأسعار المحدثة" : "Updated prices", iconColor: "text-amber-600", iconBg: "bg-amber-50 dark:bg-amber-500/10" },
-    { label: isRTL ? "طلباتي" : "Orders", icon: dealerOrdersIcon, href: "/dealer?tab=orders", isImage: true, badge: activeOrders > 0 ? `${activeOrders} ${isRTL ? "جارية" : "active"}` : null, badgeColor: "bg-amber-50 text-amber-700 dark:bg-amber-500/10" },
+    { label: isRTL ? "طلباتي" : "Orders", icon: ClipboardList, href: "/dealer?tab=orders", isImage: false, badge: activeOrders > 0 ? `${activeOrders} ${isRTL ? "جارية" : "active"}` : null, badgeColor: "bg-amber-50 text-amber-700 dark:bg-amber-500/10", iconColor: "text-blue-600", iconBg: "bg-blue-50 dark:bg-blue-500/10" },
   ];
 
   const accountLinks = [
@@ -352,16 +352,8 @@ const DealerHomePage = () => {
                 {/* Subtle gradient overlay on hover */}
                 <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                <div className={`relative w-16 h-16 rounded-[18px] flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:shadow-lg ${
-                  item.isImage
-                    ? "bg-gradient-to-br from-muted/40 to-muted/20 group-hover:from-primary/10 group-hover:to-primary/5"
-                    : `${item.iconBg} group-hover:shadow-amber-500/10`
-                }`}>
-                  {item.isImage ? (
-                    <img src={item.icon as string} alt="" className="w-10 h-10 object-contain drop-shadow-sm" />
-                  ) : (
-                    <item.icon className={`w-7 h-7 ${item.iconColor}`} />
-                  )}
+                <div className={`relative w-16 h-16 rounded-[18px] flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:shadow-lg ${item.iconBg}`}>
+                  <item.icon className={`w-7 h-7 ${item.iconColor}`} />
                 </div>
 
                 <div className="relative">
