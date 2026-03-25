@@ -2,10 +2,11 @@ import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ShoppingCart, ClipboardList, FileText, Package,
+  ClipboardList, FileText, Package,
   Search, X, ChevronLeft, ChevronRight, Plus, ArrowRight,
-  CreditCard, Home, Tag, User, RefreshCw, Percent, Receipt,
-  Sparkles, CheckCircle2, XCircle, Download, Truck, Upload, Zap,
+  CreditCard, Home, Tag, User, Receipt,
+  Sparkles, CheckCircle2, XCircle, Truck, Zap,
+  BarChart3, TrendingUp, Clock, ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -17,41 +18,26 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import dealerQuotesIcon from "@/assets/dealer-quotes-icon.png";
 import dealerOrdersIcon from "@/assets/dealer-orders-icon.png";
+import dealerLogo from "@/assets/logo.webp";
 
 /* ─── Types ─── */
 interface OrderSummary { id: string; order_number: string; status: string; total_amount: number; created_at: string; }
 interface ProductItem { id: string; name_ar: string; name_en: string | null; sku: string; base_price: number; sale_price: number | null; image_url: string | null; stock_quantity?: number; brand?: string; }
 
-const statusConfig: Record<string, { ar: string; en: string; cls: string }> = {
-  pending:    { ar: "قيد الانتظار", en: "Pending",    cls: "bg-amber-500/10 text-amber-700 border border-amber-200" },
-  confirmed:  { ar: "مؤكد",        en: "Confirmed",  cls: "bg-blue-500/10 text-blue-700 border border-blue-200" },
-  processing: { ar: "جاري التجهيز", en: "Processing", cls: "bg-primary/10 text-primary border border-primary/20" },
-  shipped:    { ar: "تم الشحن",    en: "Shipped",    cls: "bg-violet-500/10 text-violet-700 border border-violet-200" },
-  delivered:  { ar: "تم التسليم",  en: "Delivered",  cls: "bg-emerald-500/10 text-emerald-700 border border-emerald-200" },
-  cancelled:  { ar: "ملغى",        en: "Cancelled",  cls: "bg-destructive/10 text-destructive border border-destructive/20" },
-};
+/* ─── Easing ─── */
+const spring = { type: "spring", stiffness: 300, damping: 30 } as const;
+const ease = [0.22, 1, 0.36, 1] as const;
 
-/* ─── Glass Card Wrapper ─── */
-const GlassCard = ({ children, className = "", onClick, as: Tag = "div" }: {
-  children: React.ReactNode; className?: string; onClick?: () => void; as?: any;
-}) => (
-  <Tag
-    onClick={onClick}
-    className={`
-      relative overflow-hidden rounded-[20px]
-      bg-white/[0.55] dark:bg-white/[0.08]
-      backdrop-blur-xl
-      border border-white/30 dark:border-white/10
-      shadow-[0_8px_32px_rgba(0,0,0,0.06)]
-      transition-all duration-300
-      hover:shadow-[0_12px_40px_rgba(0,0,0,0.1)]
-      hover:scale-[1.02]
-      active:scale-[0.98]
-      ${className}
-    `}
-  >
-    {children}
-  </Tag>
+/* ─── Stock Badge ─── */
+const StockBadge = ({ qty, isRTL }: { qty: number; isRTL: boolean }) => (
+  <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+    qty > 0
+      ? "text-emerald-700 bg-emerald-500/10"
+      : "text-destructive bg-destructive/10"
+  }`}>
+    {qty > 0 ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+    {qty > 0 ? (isRTL ? "متوفر" : "In Stock") : (isRTL ? "غير متوفر" : "Out of Stock")}
+  </span>
 );
 
 /* ─── Bottom Nav ─── */
@@ -67,43 +53,30 @@ const DealerHomeBottomNav = ({ isRTL }: { isRTL: boolean }) => {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden">
-      <div className="mx-3 mb-3 rounded-2xl bg-white/70 dark:bg-black/50 backdrop-blur-2xl border border-white/30 dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
-        <div className="flex items-center justify-around h-16 px-1 max-w-lg mx-auto">
+      <div className="mx-2 mb-2 rounded-[18px] bg-card/90 backdrop-blur-2xl border border-border/30 shadow-[0_-4px_30px_rgba(0,0,0,0.08)]">
+        <div className="flex items-center justify-around h-[62px] px-1 max-w-lg mx-auto">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => navigate(tab.href)}
-              className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-2xl transition-all duration-200 min-w-[52px] ${
+              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-2xl transition-all duration-300 min-w-[50px] ${
                 tab.active
-                  ? "text-primary bg-primary/10 shadow-sm"
+                  ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <tab.icon className="w-5 h-5" strokeWidth={tab.active ? 2.5 : 1.8} />
-              <span className={`text-[10px] leading-tight ${tab.active ? "font-bold" : "font-medium"}`}>{tab.label}</span>
+              <div className={`relative ${tab.active ? "" : ""}`}>
+                <tab.icon className="w-[22px] h-[22px]" strokeWidth={tab.active ? 2.5 : 1.8} />
+                {tab.active && (
+                  <motion.div layoutId="bottomNavDot" className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
+                )}
+              </div>
+              <span className={`text-[9px] leading-tight mt-0.5 ${tab.active ? "font-bold" : "font-medium"}`}>{tab.label}</span>
             </button>
           ))}
         </div>
       </div>
     </nav>
-  );
-};
-
-/* ─── Stock Badge ─── */
-const StockBadge = ({ qty, isRTL }: { qty: number; isRTL: boolean }) => {
-  if (qty > 0) {
-    return (
-      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-500/10 backdrop-blur-sm px-2 py-0.5 rounded-full">
-        <CheckCircle2 className="w-3 h-3" />
-        {isRTL ? "متوفر" : "In Stock"}
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-destructive bg-destructive/10 backdrop-blur-sm px-2 py-0.5 rounded-full">
-      <XCircle className="w-3 h-3" />
-      {isRTL ? "غير متوفر" : "Out of Stock"}
-    </span>
   );
 };
 
@@ -119,7 +92,6 @@ const DealerHomePage = () => {
   const [offers, setOffers] = useState<ProductItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [dailyViewCount, setDailyViewCount] = useState(0);
-
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<ProductItem[]>([]);
   const [searching, setSearching] = useState(false);
@@ -174,22 +146,12 @@ const DealerHomePage = () => {
   const handlePriceItem = useCallback(async (product: ProductItem) => {
     if (!user) return;
     if (dailyViewCount >= DAILY_PRICE_LIMIT) {
-      toast({
-        title: isRTL ? "⚠️ تم الوصول للحد اليومي" : "⚠️ Daily limit reached",
-        description: isRTL ? `الحد الأقصى ${DAILY_PRICE_LIMIT} صنف يومياً` : `Maximum ${DAILY_PRICE_LIMIT} items per day`,
-        variant: "destructive",
-      });
+      toast({ title: isRTL ? "⚠️ تم الوصول للحد اليومي" : "⚠️ Daily limit reached", description: isRTL ? `الحد الأقصى ${DAILY_PRICE_LIMIT} صنف يومياً` : `Maximum ${DAILY_PRICE_LIMIT} items per day`, variant: "destructive" });
       return;
     }
     const today = new Date().toISOString().split("T")[0];
-    const { error } = await supabase.from("dealer_price_views").upsert(
-      { user_id: user.id, product_id: product.id, view_date: today },
-      { onConflict: "user_id,product_id,view_date" }
-    );
-    if (!error) {
-      await refreshDailyCount();
-      toast({ title: "✅", description: isRTL ? `تم تسعير ${product.name_ar}` : `Priced ${product.name_ar}` });
-    }
+    const { error } = await supabase.from("dealer_price_views").upsert({ user_id: user.id, product_id: product.id, view_date: today }, { onConflict: "user_id,product_id,view_date" });
+    if (!error) { await refreshDailyCount(); toast({ title: "✅", description: isRTL ? `تم تسعير ${product.name_ar}` : `Priced ${product.name_ar}` }); }
   }, [isRTL, toast, user, dailyViewCount, refreshDailyCount]);
 
   const handleAddToOrder = useCallback((product: ProductItem) => {
@@ -208,86 +170,89 @@ const DealerHomePage = () => {
 
   const activeOrders = recentOrders.filter(o => !["delivered","cancelled"].includes(o.status)).length;
 
+  /* ─── Quick Action Items ─── */
+  const quickActions = [
+    { label: isRTL ? "عروض الأسعار" : "Quotes", icon: dealerQuotesIcon, href: "/dealer?tab=quotes", isImage: true, badge: dailyViewCount > 0 ? `${dailyViewCount} ${isRTL ? "تسعير" : "priced"}` : null, badgeColor: "bg-primary/8 text-primary" },
+    { label: isRTL ? "كشوفات المصرية" : "Price Lists", icon: FileText, href: "/dealer?tab=price_lists", isImage: false, sub: isRTL ? "الأسعار المحدثة" : "Updated prices", iconColor: "text-amber-600", iconBg: "bg-amber-50 dark:bg-amber-500/10" },
+    { label: isRTL ? "طلباتي" : "Orders", icon: dealerOrdersIcon, href: "/dealer?tab=orders", isImage: true, badge: activeOrders > 0 ? `${activeOrders} ${isRTL ? "جارية" : "active"}` : null, badgeColor: "bg-amber-50 text-amber-700 dark:bg-amber-500/10" },
+  ];
+
+  const accountLinks = [
+    { icon: CreditCard, label: isRTL ? "الدفع الإلكتروني" : "Make Payment", desc: isRTL ? "سدد مستحقاتك أونلاين" : "Pay invoices online", href: "/dealer?tab=payment", color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-500/10" },
+    { icon: FileText, label: isRTL ? "الفواتير" : "Invoices", desc: isRTL ? "عرض وتحميل الفواتير" : "View & download invoices", href: "/dealer?tab=invoices", color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-500/10" },
+    { icon: Truck, label: isRTL ? "تتبع الشحنات" : "Track Shipments", desc: isRTL ? "تتبع حالة شحناتك" : "Track your shipments", href: "/dealer?tab=orders", color: "text-orange-600", bg: "bg-orange-50 dark:bg-orange-500/10" },
+    { icon: Receipt, label: isRTL ? "كشف الحساب" : "Account Statement", desc: isRTL ? "رصيدك وحركات الحساب" : "Balance & transactions", href: "/dealer?tab=statement", color: "text-violet-600", bg: "bg-violet-50 dark:bg-violet-500/10" },
+  ];
+
   return (
-    <div className="pt-14 md:pt-16 pb-28 lg:pb-6 min-h-screen relative overflow-hidden" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="pt-14 md:pt-16 pb-24 lg:pb-6 min-h-screen bg-background" dir={isRTL ? "rtl" : "ltr"}>
 
-      {/* ━━━ Ambient Background ━━━ */}
-      <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 dark:from-slate-950 dark:via-blue-950/20 dark:to-slate-900" />
-        {/* Floating orbs */}
-        <div className="absolute top-20 -right-20 w-[500px] h-[500px] rounded-full bg-primary/[0.04] blur-[100px] animate-pulse" />
-        <div className="absolute bottom-40 -left-20 w-[400px] h-[400px] rounded-full bg-blue-400/[0.05] blur-[80px]" />
-        <div className="absolute top-1/2 right-1/3 w-[300px] h-[300px] rounded-full bg-violet-300/[0.04] blur-[60px]" />
-      </div>
+      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          HERO — Dark premium header
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <section className="relative overflow-hidden bg-secondary">
+        {/* Subtle grid pattern */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23fff' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E\")" }} />
+        {/* Red glow accent */}
+        <div className="absolute -bottom-20 left-1/2 -translate-x-1/2 w-[600px] h-[200px] rounded-full bg-primary/8 blur-[80px]" />
 
-      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-          1️⃣ HERO SEARCH SECTION
-          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <div className="relative">
-        {/* Glass header bg */}
-        <div className="absolute inset-0 bg-gradient-to-b from-secondary/90 via-secondary/70 to-transparent backdrop-blur-sm" />
-        
-        <div className="relative container mx-auto px-4 pt-6 pb-10 md:pt-10 md:pb-12 max-w-3xl">
-          {/* Welcome */}
+        <div className="relative container mx-auto px-4 pt-8 pb-12 md:pt-12 md:pb-16 max-w-3xl">
+          {/* Top row */}
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="flex items-center justify-between mb-6"
+            transition={{ duration: 0.6, ease }}
+            className="flex items-start justify-between mb-8"
           >
-            <div>
-              <p className="text-secondary-foreground/50 text-[10px] font-semibold tracking-[0.2em] uppercase mb-1">
-                {isRTL ? "بوابة التجار" : "Dealer Portal"}
-              </p>
-              <h1 className="text-2xl md:text-3xl font-black text-secondary-foreground">
-                {isRTL ? "ابحث واطلب بسرعة" : "Search & Order Fast"}
-              </h1>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 flex items-center justify-center overflow-hidden">
+                <img src={dealerLogo} alt="" className="w-7 h-7 object-contain" />
+              </div>
+              <div>
+                <p className="text-secondary-foreground/40 text-[10px] font-semibold tracking-[0.25em] uppercase">
+                  {isRTL ? "بوابة التجار" : "Dealer Portal"}
+                </p>
+                <h1 className="text-xl md:text-2xl font-black text-secondary-foreground leading-tight mt-0.5">
+                  {isRTL ? "ابحث واطلب بسرعة" : "Search & Order Fast"}
+                </h1>
+              </div>
             </div>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Badge className="text-[10px] font-bold bg-primary text-primary-foreground border-0 px-3.5 py-1.5 rounded-xl shadow-lg shadow-primary/25">
-                {tierLabel}
-              </Badge>
-            </motion.div>
+            <Badge className="text-[10px] font-bold bg-primary text-primary-foreground border-0 px-3 py-1.5 rounded-lg shadow-lg shadow-primary/30 shrink-0 mt-1">
+              {tierLabel}
+            </Badge>
           </motion.div>
 
-          {/* GLASS SEARCH BAR */}
+          {/* ─── SEARCH BAR ─── */}
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.08, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ delay: 0.1, duration: 0.5, ease }}
             className="relative"
           >
-            <div className={`
-              relative flex items-center rounded-2xl transition-all duration-300
-              bg-white/60 dark:bg-white/10
-              backdrop-blur-2xl
-              border border-white/40 dark:border-white/15
-              ${searchFocused
-                ? "shadow-[0_16px_48px_rgba(0,0,0,0.1),0_0_0_2px_hsl(var(--primary)/0.3)] scale-[1.01]"
-                : "shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)]"
-              }
-            `}>
-              <Search className={`absolute w-5 h-5 transition-all duration-200 ${
-                searchFocused ? "text-primary scale-110" : "text-muted-foreground/40"
-              } ${isRTL ? 'right-5' : 'left-5'}`} />
+            <div className={`relative flex items-center rounded-2xl transition-all duration-300 bg-white dark:bg-white/10 ${
+              searchFocused
+                ? "shadow-[0_0_0_3px_hsl(var(--primary)/0.15),0_20px_40px_rgba(0,0,0,0.12)] ring-1 ring-primary/20"
+                : "shadow-[0_4px_24px_rgba(0,0,0,0.08)]"
+            }`}>
+              <Search className={`absolute w-5 h-5 transition-colors ${searchFocused ? "text-primary" : "text-muted-foreground/30"} ${isRTL ? 'right-5' : 'left-5'}`} />
               <Input
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 onFocus={() => { setSearchFocused(true); searchQuery.trim().length >= 2 && setShowResults(true); }}
                 onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
                 placeholder={isRTL ? "ابحث برقم القطعة أو اسم المنتج..." : "Search by Part Number or Product Name..."}
-                className={`h-14 md:h-16 border-0 bg-transparent text-base md:text-lg shadow-none focus-visible:ring-0 font-medium placeholder:text-muted-foreground/35 ${isRTL ? 'pr-13 pl-10' : 'pl-13 pr-10'}`}
+                className={`h-14 md:h-[60px] border-0 bg-transparent text-base md:text-lg shadow-none focus-visible:ring-0 font-medium placeholder:text-muted-foreground/30 ${isRTL ? 'pr-13 pl-10' : 'pl-13 pr-10'}`}
               />
               {searchQuery && (
-                <button onClick={() => { setSearchQuery(""); setShowResults(false); }} className={`absolute p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition-colors ${isRTL ? 'left-3' : 'right-3'}`}>
+                <button onClick={() => { setSearchQuery(""); setShowResults(false); }} className={`absolute p-2 rounded-xl hover:bg-muted/50 transition-colors ${isRTL ? 'left-3' : 'right-3'}`}>
                   <X className="w-4 h-4 text-muted-foreground" />
                 </button>
               )}
             </div>
 
-            {/* Chips + counter */}
-            <div className="flex items-center justify-between mt-3 px-1">
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            {/* Hint chips */}
+            <div className="flex items-center justify-between mt-3.5 px-1">
+              <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
                 {[
                   isRTL ? "قطع المحرك" : "Engine Parts",
                   isRTL ? "الفلاتر" : "Filters",
@@ -296,61 +261,41 @@ const DealerHomePage = () => {
                   <button
                     key={hint}
                     onClick={() => setSearchQuery(hint)}
-                    className="text-[10px] text-secondary-foreground/50 bg-white/30 dark:bg-white/10 backdrop-blur-sm hover:bg-white/50 dark:hover:bg-white/15 px-3 py-1.5 rounded-full whitespace-nowrap transition-all font-semibold border border-white/20"
+                    className="text-[10px] text-secondary-foreground/40 bg-white/[0.07] hover:bg-white/[0.12] px-3 py-1.5 rounded-full whitespace-nowrap transition-colors font-semibold border border-white/[0.06]"
                   >
                     {hint}
                   </button>
                 ))}
               </div>
-              <span className={`text-[10px] font-bold shrink-0 px-2.5 py-1 rounded-full backdrop-blur-sm ${
+              <span className={`text-[10px] font-bold shrink-0 px-2.5 py-1 rounded-full ${
                 dailyViewCount >= DAILY_PRICE_LIMIT
-                  ? "text-destructive bg-destructive/10 border border-destructive/20"
-                  : "text-secondary-foreground/50 bg-white/20 border border-white/20"
+                  ? "text-destructive bg-destructive/15"
+                  : "text-secondary-foreground/40 bg-white/[0.07]"
               }`}>
                 {dailyViewCount}/{DAILY_PRICE_LIMIT} {isRTL ? "تسعير" : "priced"}
               </span>
             </div>
 
-            {/* Search Results — Glass Dropdown */}
+            {/* ─── Search Dropdown ─── */}
             <AnimatePresence>
               {showResults && (
-                <motion.div
-                  initial={{ opacity: 0, y: -8, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -8, scale: 0.98 }}
-                  transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-                  className="absolute z-50 w-full mt-3"
-                >
-                  <div className="rounded-2xl bg-white/80 dark:bg-black/60 backdrop-blur-2xl border border-white/30 dark:border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.15)] overflow-hidden">
+                <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }} className="absolute z-50 w-full mt-2">
+                  <div className="rounded-2xl bg-card border border-border shadow-2xl overflow-hidden">
                     {searching ? (
-                      <div className="p-4 space-y-2.5">
-                        {[1,2,3].map(i => <Skeleton key={i} className="h-16 rounded-xl bg-black/[0.04]" />)}
-                      </div>
+                      <div className="p-4 space-y-2">{[1,2,3].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>
                     ) : searchResults.length === 0 ? (
                       <div className="p-12 text-center">
-                        <div className="w-14 h-14 rounded-2xl bg-muted/30 flex items-center justify-center mx-auto mb-3">
-                          <Search className="w-6 h-6 text-muted-foreground/20" />
-                        </div>
-                        <p className="text-sm text-muted-foreground font-medium">{isRTL ? "لا توجد نتائج" : "No results found"}</p>
+                        <Search className="w-8 h-8 text-muted-foreground/10 mx-auto mb-2" />
+                        <p className="text-sm text-muted-foreground">{isRTL ? "لا توجد نتائج" : "No results found"}</p>
                       </div>
                     ) : (
-                      <div className="max-h-[420px] overflow-y-auto">
-                        {searchResults.map((p, idx) => {
+                      <div className="max-h-[400px] overflow-y-auto divide-y divide-border/50">
+                        {searchResults.map((p) => {
                           const stock = p.stock_quantity ?? 0;
                           return (
-                            <motion.div
-                              key={p.id}
-                              initial={{ opacity: 0, x: isRTL ? 10 : -10 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: idx * 0.03 }}
-                              className={`flex items-start gap-3 px-4 py-3.5 hover:bg-black/[0.03] dark:hover:bg-white/[0.05] transition-colors cursor-pointer ${
-                                idx !== searchResults.length - 1 ? "border-b border-black/[0.04] dark:border-white/[0.06]" : ""
-                              }`}
-                            >
-                              <div className="w-12 h-12 rounded-xl bg-white/60 dark:bg-white/10 backdrop-blur-sm shrink-0 overflow-hidden flex items-center justify-center border border-white/20">
-                                {p.image_url
-                                  ? <img src={p.image_url} alt="" className="w-full h-full object-contain p-1" />
-                                  : <Package className="w-5 h-5 text-muted-foreground/20" />}
+                            <div key={p.id} className="flex items-start gap-3 px-4 py-3.5 hover:bg-muted/30 transition-colors cursor-pointer">
+                              <div className="w-12 h-12 rounded-xl bg-muted/30 shrink-0 overflow-hidden flex items-center justify-center">
+                                {p.image_url ? <img src={p.image_url} alt="" className="w-full h-full object-contain p-1" /> : <Package className="w-5 h-5 text-muted-foreground/20" />}
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-semibold text-foreground truncate">{isRTL ? p.name_ar : (p.name_en || p.name_ar)}</p>
@@ -358,20 +303,17 @@ const DealerHomePage = () => {
                                 <div className="mt-1.5"><StockBadge qty={stock} isRTL={isRTL} /></div>
                               </div>
                               <div className="flex flex-col gap-1.5 shrink-0 mt-1">
-                                <Button size="sm" variant="outline" className="h-8 px-2.5 text-[11px] font-bold gap-1 rounded-xl border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground backdrop-blur-sm" onClick={() => handlePriceItem(p)}>
+                                <Button size="sm" variant="outline" className="h-8 px-2.5 text-[11px] font-bold gap-1 rounded-lg border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground" onClick={() => handlePriceItem(p)}>
                                   <Tag className="w-3 h-3" />{isRTL ? "تسعير" : "Price"}
                                 </Button>
-                                <Button size="sm" className="h-8 px-2.5 text-[11px] font-bold gap-1 rounded-xl shadow-sm" onClick={() => handleAddToOrder(p)} disabled={stock === 0}>
+                                <Button size="sm" className="h-8 px-2.5 text-[11px] font-bold gap-1 rounded-lg" onClick={() => handleAddToOrder(p)} disabled={stock === 0}>
                                   <Plus className="w-3 h-3" />{isRTL ? "أضف" : "Add"}
                                 </Button>
                               </div>
-                            </motion.div>
+                            </div>
                           );
                         })}
-                        <button
-                          onClick={() => { navigate(`/products?search=${encodeURIComponent(searchQuery)}`); setShowResults(false); setSearchQuery(""); }}
-                          className="w-full py-4 text-sm font-bold text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-1.5 border-t border-black/[0.04]"
-                        >
+                        <button onClick={() => { navigate(`/products?search=${encodeURIComponent(searchQuery)}`); setShowResults(false); setSearchQuery(""); }} className="w-full py-3.5 text-sm font-bold text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-1.5">
                           {isRTL ? "عرض كل النتائج" : "View all results"}
                           <ArrowRight className={`w-3.5 h-3.5 ${isRTL ? "rotate-180" : ""}`} />
                         </button>
@@ -383,91 +325,69 @@ const DealerHomePage = () => {
             </AnimatePresence>
           </motion.div>
         </div>
-      </div>
+      </section>
 
-      {/* ━━━ Content ━━━ */}
-      <div className="container mx-auto px-4 py-6 space-y-5 max-w-3xl">
+      {/* ━━━ CONTENT ━━━ */}
+      <div className="container mx-auto px-4 max-w-3xl -mt-1">
 
-        {/* ━━━ Quick Actions — 3 Glass Cards ━━━ */}
+        {/* ─── Quick Actions ─── */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.12, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          className="grid grid-cols-3 gap-3"
+          transition={{ delay: 0.15, duration: 0.5, ease }}
+          className="grid grid-cols-3 gap-3 pt-6"
         >
-          {/* عروض الأسعار */}
-          <Link to="/dealer?tab=quotes" className="block">
-            <GlassCard className="p-4 md:p-5 flex flex-col items-center text-center gap-3 h-full group cursor-pointer">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <img src={dealerQuotesIcon} alt="عروض الأسعار" className="w-10 h-10 object-contain" />
-              </div>
-              <div>
-                <p className="text-[13px] font-extrabold text-foreground leading-tight">{isRTL ? "عروض الأسعار" : "Quotes"}</p>
-                {dailyViewCount > 0 && (
-                  <span className="inline-block mt-1.5 text-[9px] font-bold bg-primary/10 text-primary backdrop-blur-sm px-2 py-0.5 rounded-full">
-                    {dailyViewCount} {isRTL ? "تسعير" : "priced"}
-                  </span>
-                )}
-              </div>
-            </GlassCard>
-          </Link>
-
-          {/* كشوفات المصرية */}
-          <Link to="/dealer?tab=price_lists" className="block">
-            <GlassCard className="p-4 md:p-5 flex flex-col items-center text-center gap-3 h-full group cursor-pointer">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500/10 to-amber-500/5 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <FileText className="w-7 h-7 text-amber-600" />
-              </div>
-              <div>
-                <p className="text-[13px] font-extrabold text-foreground leading-tight">{isRTL ? "كشوفات المصرية" : "Price Lists"}</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{isRTL ? "الأسعار المحدثة" : "Updated"}</p>
-              </div>
-            </GlassCard>
-          </Link>
-
-          {/* طلباتي */}
-          <Link to="/dealer?tab=orders" className="block">
-            <GlassCard className="p-4 md:p-5 flex flex-col items-center text-center gap-3 h-full group cursor-pointer">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500/10 to-blue-500/5 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <img src={dealerOrdersIcon} alt="طلباتي" className="w-10 h-10 object-contain" />
-              </div>
-              <div>
-                <p className="text-[13px] font-extrabold text-foreground leading-tight">{isRTL ? "طلباتي" : "Orders"}</p>
-                {activeOrders > 0 ? (
-                  <span className="inline-block mt-1.5 text-[9px] font-bold bg-amber-100/80 text-amber-700 backdrop-blur-sm px-2 py-0.5 rounded-full">
-                    {activeOrders} {isRTL ? "جارية" : "active"}
-                  </span>
-                ) : (
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{isRTL ? "تتبع طلباتك" : "Track orders"}</p>
-                )}
-              </div>
-            </GlassCard>
-          </Link>
+          {quickActions.map((item, i) => (
+            <Link key={item.href} to={item.href} className="block">
+              <motion.div
+                whileHover={{ y: -4, boxShadow: "0 12px 32px rgba(0,0,0,0.08)" }}
+                whileTap={{ scale: 0.97 }}
+                className="bg-card border border-border/50 rounded-2xl p-4 md:p-5 flex flex-col items-center text-center gap-2.5 h-full transition-all duration-300 group"
+              >
+                <div className={`w-14 h-14 rounded-2xl ${item.isImage ? "bg-muted/30" : item.iconBg} flex items-center justify-center group-hover:scale-105 transition-transform duration-300`}>
+                  {item.isImage ? (
+                    <img src={item.icon as string} alt="" className="w-9 h-9 object-contain" />
+                  ) : (
+                    <item.icon className={`w-7 h-7 ${item.iconColor}`} />
+                  )}
+                </div>
+                <div>
+                  <p className="text-[13px] font-extrabold text-foreground leading-tight">{item.label}</p>
+                  {item.badge && (
+                    <span className={`inline-block mt-1.5 text-[9px] font-bold ${item.badgeColor} px-2 py-0.5 rounded-md`}>
+                      {item.badge}
+                    </span>
+                  )}
+                  {item.sub && <p className="text-[10px] text-muted-foreground mt-0.5">{item.sub}</p>}
+                </div>
+              </motion.div>
+            </Link>
+          ))}
         </motion.div>
 
-        {/* ━━━ Offers Section ━━━ */}
+        {/* ─── Offers Section ─── */}
         {loading ? (
-          <div>
-            <Skeleton className="h-5 w-32 mb-3 rounded-xl" />
-            <div className="grid grid-cols-2 gap-3">
-              {[1,2,3,4].map(i => <Skeleton key={i} className="h-56 rounded-[20px]" />)}
-            </div>
+          <div className="mt-7">
+            <Skeleton className="h-5 w-32 mb-3 rounded" />
+            <div className="grid grid-cols-2 gap-3">{[1,2,3,4].map(i => <Skeleton key={i} className="h-56 rounded-2xl" />)}</div>
           </div>
         ) : offers.length > 0 ? (
           <motion.section
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.18, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ delay: 0.22, duration: 0.5, ease }}
+            className="mt-7"
           >
-            <div className="flex items-center justify-between mb-3 px-1">
-              <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-primary" />
-                {isRTL ? "عروض الأسعار" : "Price Offers"}
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-[15px] font-bold text-foreground flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-primary/8 flex items-center justify-center">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                </div>
+                {isRTL ? "العروض المتاحة" : "Available Offers"}
               </h2>
               <Link to="/dealer?tab=offers">
-                <Button variant="ghost" size="sm" className="text-primary text-xs font-semibold h-7 px-2 gap-1 hover:bg-primary/5 rounded-xl">
-                  {isRTL ? "كل العروض" : "All Offers"}
-                  {isRTL ? <ChevronLeft className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                <Button variant="ghost" size="sm" className="text-primary text-xs font-semibold h-7 px-2 gap-0.5 hover:bg-primary/5">
+                  {isRTL ? "الكل" : "All"}{isRTL ? <ChevronLeft className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
                 </Button>
               </Link>
             </div>
@@ -478,39 +398,38 @@ const DealerHomePage = () => {
                 return (
                   <motion.div
                     key={p.id}
-                    initial={{ opacity: 0, y: 12 }}
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.18 + i * 0.05, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    transition={{ delay: 0.22 + i * 0.04, duration: 0.4, ease }}
                   >
-                    <GlassCard className="overflow-hidden group cursor-pointer">
-                      <div className="aspect-square bg-gradient-to-br from-white/40 to-white/10 dark:from-white/5 dark:to-transparent relative overflow-hidden flex items-center justify-center">
+                    <motion.div
+                      whileHover={{ y: -4, boxShadow: "0 12px 32px rgba(0,0,0,0.08)" }}
+                      className="bg-card border border-border/50 rounded-2xl overflow-hidden group transition-all duration-300"
+                    >
+                      <div className="aspect-square bg-muted/20 relative overflow-hidden flex items-center justify-center">
                         {p.image_url
-                          ? <img src={p.image_url} alt={p.name_ar} className="w-full h-full object-contain p-4 group-hover:scale-110 transition-transform duration-500" loading="lazy" />
+                          ? <img src={p.image_url} alt={p.name_ar} className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                           : <Package className="w-10 h-10 text-muted-foreground/10" />}
                         {discount && (
-                          <span className="absolute top-2.5 left-2.5 text-[10px] font-black bg-destructive/90 text-destructive-foreground px-2 py-1 rounded-xl backdrop-blur-sm shadow-sm">
+                          <span className="absolute top-2 left-2 text-[10px] font-black bg-primary text-primary-foreground px-2 py-1 rounded-lg shadow-sm">
                             -{discount}%
                           </span>
                         )}
-                        {stock > 0 ? (
-                          <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white/50 shadow-sm shadow-emerald-500/30" />
-                        ) : (
-                          <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 rounded-full bg-destructive/60 ring-2 ring-white/50" />
-                        )}
+                        <span className={`absolute top-2.5 right-2.5 w-2 h-2 rounded-full ring-2 ring-card ${stock > 0 ? "bg-emerald-500" : "bg-muted-foreground/30"}`} />
                       </div>
-                      <div className="p-3 border-t border-white/10">
+                      <div className="p-3 border-t border-border/30">
                         <p className="text-xs font-bold text-foreground line-clamp-1 mb-0.5">{isRTL ? p.name_ar : (p.name_en || p.name_ar)}</p>
-                        <p className="text-[10px] text-muted-foreground font-mono mb-2">{p.sku}</p>
+                        <p className="text-[10px] text-muted-foreground font-mono mb-2.5">{p.sku}</p>
                         <div className="flex gap-1.5">
-                          <Button size="sm" variant="outline" className="flex-1 h-8 text-[11px] font-bold gap-1 rounded-xl border-white/20 text-primary hover:bg-primary hover:text-primary-foreground backdrop-blur-sm" onClick={() => handlePriceItem(p)}>
+                          <Button size="sm" variant="outline" className="flex-1 h-8 text-[11px] font-bold gap-1 rounded-lg border-border/50 text-primary hover:bg-primary hover:text-primary-foreground hover:border-primary" onClick={() => handlePriceItem(p)}>
                             <Tag className="w-3 h-3" />{isRTL ? "تسعير" : "Price"}
                           </Button>
-                          <Button size="sm" className="flex-1 h-8 text-[11px] font-bold gap-1 rounded-xl shadow-sm shadow-primary/20" onClick={() => handleAddToOrder(p)} disabled={stock === 0}>
+                          <Button size="sm" className="flex-1 h-8 text-[11px] font-bold gap-1 rounded-lg" onClick={() => handleAddToOrder(p)} disabled={stock === 0}>
                             <Plus className="w-3 h-3" />{isRTL ? "أضف" : "Add"}
                           </Button>
                         </div>
                       </div>
-                    </GlassCard>
+                    </motion.div>
                   </motion.div>
                 );
               })}
@@ -518,76 +437,66 @@ const DealerHomePage = () => {
           </motion.section>
         ) : null}
 
-        {/* ━━━ Account & Payments — Glass List ━━━ */}
+        {/* ─── Account & Payments ─── */}
         <motion.section
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ delay: 0.28, duration: 0.5, ease }}
+          className="mt-7 mb-4"
         >
-          <h2 className="text-sm font-bold text-foreground mb-3 px-1">
+          <h2 className="text-[15px] font-bold text-foreground mb-4 flex items-center gap-2">
+            <div className="w-6 h-6 rounded-lg bg-primary/8 flex items-center justify-center">
+              <BarChart3 className="w-3.5 h-3.5 text-primary" />
+            </div>
             {isRTL ? "الحساب والمدفوعات" : "Account & Payments"}
           </h2>
-          <GlassCard className="divide-y divide-white/10 dark:divide-white/5">
-            {[
-              {
-                icon: CreditCard,
-                label: isRTL ? "الدفع الإلكتروني" : "Make Payment",
-                desc: isRTL ? "سدد مستحقاتك أونلاين" : "Pay invoices online",
-                href: "/dealer?tab=payment",
-                gradient: "from-emerald-500/15 to-emerald-500/5",
-                iconColor: "text-emerald-600",
-              },
-              {
-                icon: FileText,
-                label: isRTL ? "الفواتير" : "Invoices",
-                desc: isRTL ? "عرض وتحميل الفواتير" : "View & download invoices",
-                href: "/dealer?tab=invoices",
-                gradient: "from-blue-500/15 to-blue-500/5",
-                iconColor: "text-blue-600",
-              },
-              {
-                icon: Truck,
-                label: isRTL ? "تتبع الشحنات" : "Track Shipments",
-                desc: isRTL ? "تتبع حالة شحناتك" : "Track your shipments",
-                href: "/dealer?tab=orders",
-                gradient: "from-orange-500/15 to-orange-500/5",
-                iconColor: "text-orange-600",
-              },
-              {
-                icon: Receipt,
-                label: isRTL ? "كشف الحساب" : "Account Statement",
-                desc: isRTL ? "رصيدك وحركات الحساب" : "Balance & transactions",
-                href: "/dealer?tab=statement",
-                gradient: "from-violet-500/15 to-violet-500/5",
-                iconColor: "text-violet-600",
-              },
-            ].map((item, i) => (
+
+          <div className="bg-card border border-border/50 rounded-2xl overflow-hidden divide-y divide-border/30">
+            {accountLinks.map((item, i) => (
               <Link key={item.href + item.label} to={item.href}>
                 <motion.div
-                  initial={{ opacity: 0, x: isRTL ? 10 : -10 }}
+                  initial={{ opacity: 0, x: isRTL ? 8 : -8 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.28 + i * 0.05 }}
-                  className="flex items-center gap-4 p-4 hover:bg-white/20 dark:hover:bg-white/[0.03] transition-all duration-200 group cursor-pointer"
+                  transition={{ delay: 0.3 + i * 0.04, ease }}
+                  className="flex items-center gap-4 p-4 hover:bg-muted/30 active:bg-muted/50 transition-colors group"
                 >
-                  <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${item.gradient} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300`}>
-                    <item.icon className={`w-5.5 h-5.5 ${item.iconColor}`} />
+                  <div className={`w-11 h-11 rounded-xl ${item.bg} flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-200`}>
+                    <item.icon className={`w-5 h-5 ${item.color}`} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] font-bold text-foreground">{item.label}</p>
                     <p className="text-[11px] text-muted-foreground mt-0.5">{item.desc}</p>
                   </div>
                   {isRTL
-                    ? <ChevronLeft className="w-5 h-5 text-muted-foreground/15 group-hover:text-primary group-hover:translate-x-[-4px] transition-all duration-200 shrink-0" />
-                    : <ChevronRight className="w-5 h-5 text-muted-foreground/15 group-hover:text-primary group-hover:translate-x-[4px] transition-all duration-200 shrink-0" />
+                    ? <ChevronLeft className="w-4 h-4 text-muted-foreground/20 group-hover:text-primary group-hover:-translate-x-1 transition-all shrink-0" />
+                    : <ChevronRight className="w-4 h-4 text-muted-foreground/20 group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0" />
                   }
                 </motion.div>
               </Link>
             ))}
-          </GlassCard>
+          </div>
         </motion.section>
+
+        {/* ─── Trust strip ─── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="flex items-center justify-center gap-6 py-6 mb-2"
+        >
+          {[
+            { icon: ShieldCheck, text: isRTL ? "قطع أصلية" : "Genuine Parts" },
+            { icon: Truck, text: isRTL ? "شحن سريع" : "Fast Shipping" },
+            { icon: Clock, text: isRTL ? "دعم ٢٤/٧" : "24/7 Support" },
+          ].map((item) => (
+            <div key={item.text} className="flex items-center gap-1.5 text-muted-foreground/50">
+              <item.icon className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-semibold">{item.text}</span>
+            </div>
+          ))}
+        </motion.div>
       </div>
 
-      {/* ━━━ BOTTOM NAVIGATION ━━━ */}
       <DealerHomeBottomNav isRTL={isRTL} />
     </div>
   );
