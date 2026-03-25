@@ -49,6 +49,7 @@ const AdminOrders = () => {
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [orderTypeFilter, setOrderTypeFilter] = useState<"all" | "wholesale" | "retail">("all");
   const [adminNotes, setAdminNotes] = useState<Record<string, string>>({});
   const [editingOrder, setEditingOrder] = useState<string | null>(null);
   const [editedItems, setEditedItems] = useState<Record<string, { id: string; quantity: number; unit_price: number; total_price: number; product_id: string; product?: any }[]>>({});
