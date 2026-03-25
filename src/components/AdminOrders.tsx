@@ -107,23 +107,36 @@ const AdminOrders = () => {
       return;
     }
 
-    // Batch fetch profiles for this page only (1 query instead of N)
+    // Batch fetch profiles and dealer accounts for this page only
     const userIds = [...new Set(data.map((o: any) => o.user_id))];
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("user_id, full_name, phone, email")
-      .in("user_id", userIds);
+    const [{ data: profiles }, { data: dealerAccounts }] = await Promise.all([
+      supabase.from("profiles").select("user_id, full_name, phone, email").in("user_id", userIds),
+      supabase.from("dealer_accounts").select("user_id, tier, is_active").in("user_id", userIds),
+    ]);
 
     const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));
+    const dealerMap = new Map((dealerAccounts || []).map(d => [d.user_id, d]));
 
-    const enriched: OrderWithItems[] = data.map((order: any) => ({
-      ...order,
-      items: order.order_items || [],
-      profile: profileMap.get(order.user_id) || undefined,
-    }));
+    let enriched: OrderWithItems[] = data.map((order: any) => {
+      const dealer = dealerMap.get(order.user_id);
+      return {
+        ...order,
+        items: order.order_items || [],
+        profile: profileMap.get(order.user_id) || undefined,
+        isDealer: !!dealer?.is_active,
+        dealerTier: dealer?.tier || undefined,
+      };
+    });
+
+    // Client-side filter by order type
+    if (orderTypeFilter === "wholesale") {
+      enriched = enriched.filter(o => o.isDealer);
+    } else if (orderTypeFilter === "retail") {
+      enriched = enriched.filter(o => !o.isDealer);
+    }
 
     setOrders(enriched);
-    setTotalCount(count || 0);
+    setTotalCount(orderTypeFilter === "all" ? (count || 0) : enriched.length);
     setLoading(false);
 
     // Auto-expand first order if triggered by stat card click
