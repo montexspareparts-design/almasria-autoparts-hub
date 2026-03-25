@@ -328,37 +328,56 @@ const DealerHomePage = () => {
       </section>
 
       {/* ━━━ CONTENT ━━━ */}
-      <div className="container mx-auto px-4 max-w-3xl -mt-1">
+      <div className="container mx-auto px-4 max-w-3xl">
 
-        {/* ─── Quick Actions ─── */}
+        {/* ─── Quick Actions — Premium Bento Grid ─── */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15, duration: 0.5, ease }}
-          className="grid grid-cols-3 gap-3 pt-6"
+          transition={{ delay: 0.15, duration: 0.6, ease }}
+          className="grid grid-cols-3 gap-4 pt-8"
         >
           {quickActions.map((item, i) => (
-            <Link key={item.href} to={item.href} className="block">
+            <Link key={item.href} to={item.href} className="block group">
               <motion.div
-                whileHover={{ y: -4, boxShadow: "0 12px 32px rgba(0,0,0,0.08)" }}
-                whileTap={{ scale: 0.97 }}
-                className="bg-card border border-border/50 rounded-2xl p-4 md:p-5 flex flex-col items-center text-center gap-2.5 h-full transition-all duration-300 group"
+                whileHover={{ y: -6 }}
+                whileTap={{ scale: 0.96 }}
+                transition={spring}
+                className="relative bg-card rounded-[20px] border border-border/40 p-5 md:p-6 flex flex-col items-center text-center gap-3 h-full overflow-hidden
+                  shadow-[0_1px_3px_rgba(0,0,0,0.04)]
+                  hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.12)]
+                  hover:border-primary/20
+                  transition-all duration-500"
               >
-                <div className={`w-14 h-14 rounded-2xl ${item.isImage ? "bg-muted/30" : item.iconBg} flex items-center justify-center group-hover:scale-105 transition-transform duration-300`}>
+                {/* Subtle gradient overlay on hover */}
+                <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                <div className={`relative w-16 h-16 rounded-[18px] flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:shadow-lg ${
+                  item.isImage
+                    ? "bg-gradient-to-br from-muted/40 to-muted/20 group-hover:from-primary/10 group-hover:to-primary/5"
+                    : `${item.iconBg} group-hover:shadow-amber-500/10`
+                }`}>
                   {item.isImage ? (
-                    <img src={item.icon as string} alt="" className="w-9 h-9 object-contain" />
+                    <img src={item.icon as string} alt="" className="w-10 h-10 object-contain drop-shadow-sm" />
                   ) : (
                     <item.icon className={`w-7 h-7 ${item.iconColor}`} />
                   )}
                 </div>
-                <div>
-                  <p className="text-[13px] font-extrabold text-foreground leading-tight">{item.label}</p>
+
+                <div className="relative">
+                  <p className="text-sm font-extrabold text-foreground leading-tight tracking-tight">{item.label}</p>
                   {item.badge && (
-                    <span className={`inline-block mt-1.5 text-[9px] font-bold ${item.badgeColor} px-2 py-0.5 rounded-md`}>
+                    <motion.span
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.3 + i * 0.1 }}
+                      className={`inline-flex items-center gap-1 mt-2 text-[10px] font-bold ${item.badgeColor} px-2.5 py-1 rounded-full`}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-current opacity-60" />
                       {item.badge}
-                    </span>
+                    </motion.span>
                   )}
-                  {item.sub && <p className="text-[10px] text-muted-foreground mt-0.5">{item.sub}</p>}
+                  {item.sub && <p className="text-[11px] text-muted-foreground mt-1 font-medium">{item.sub}</p>}
                 </div>
               </motion.div>
             </Link>
@@ -367,8 +386,8 @@ const DealerHomePage = () => {
 
         {/* ─── Offers Section ─── */}
         {loading ? (
-          <div className="mt-7">
-            <Skeleton className="h-5 w-32 mb-3 rounded" />
+          <div className="mt-8">
+            <Skeleton className="h-5 w-32 mb-4 rounded" />
             <div className="grid grid-cols-2 gap-3">{[1,2,3,4].map(i => <Skeleton key={i} className="h-56 rounded-2xl" />)}</div>
           </div>
         ) : offers.length > 0 ? (
@@ -376,18 +395,18 @@ const DealerHomePage = () => {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.22, duration: 0.5, ease }}
-            className="mt-7"
+            className="mt-8"
           >
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-[15px] font-bold text-foreground flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-primary/8 flex items-center justify-center">
-                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-base font-bold text-foreground flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-[10px] bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-primary" />
                 </div>
                 {isRTL ? "العروض المتاحة" : "Available Offers"}
               </h2>
               <Link to="/dealer?tab=offers">
-                <Button variant="ghost" size="sm" className="text-primary text-xs font-semibold h-7 px-2 gap-0.5 hover:bg-primary/5">
-                  {isRTL ? "الكل" : "All"}{isRTL ? <ChevronLeft className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                <Button variant="ghost" size="sm" className="text-primary text-xs font-semibold h-8 px-3 gap-1 hover:bg-primary/5 rounded-xl">
+                  {isRTL ? "عرض الكل" : "View All"}{isRTL ? <ChevronLeft className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
                 </Button>
               </Link>
             </div>
@@ -398,34 +417,39 @@ const DealerHomePage = () => {
                 return (
                   <motion.div
                     key={p.id}
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.22 + i * 0.04, duration: 0.4, ease }}
+                    transition={{ delay: 0.22 + i * 0.05, duration: 0.4, ease }}
                   >
                     <motion.div
-                      whileHover={{ y: -4, boxShadow: "0 12px 32px rgba(0,0,0,0.08)" }}
-                      className="bg-card border border-border/50 rounded-2xl overflow-hidden group transition-all duration-300"
+                      whileHover={{ y: -4 }}
+                      transition={spring}
+                      className="bg-card border border-border/40 rounded-2xl overflow-hidden group
+                        shadow-[0_1px_3px_rgba(0,0,0,0.04)]
+                        hover:shadow-[0_16px_40px_-12px_rgba(0,0,0,0.1)]
+                        hover:border-primary/15
+                        transition-all duration-500"
                     >
-                      <div className="aspect-square bg-muted/20 relative overflow-hidden flex items-center justify-center">
+                      <div className="aspect-square bg-gradient-to-br from-muted/10 to-muted/30 relative overflow-hidden flex items-center justify-center">
                         {p.image_url
-                          ? <img src={p.image_url} alt={p.name_ar} className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                          ? <img src={p.image_url} alt={p.name_ar} className="w-full h-full object-contain p-4 group-hover:scale-110 transition-transform duration-700 ease-out" loading="lazy" />
                           : <Package className="w-10 h-10 text-muted-foreground/10" />}
                         {discount && (
-                          <span className="absolute top-2 left-2 text-[10px] font-black bg-primary text-primary-foreground px-2 py-1 rounded-lg shadow-sm">
+                          <span className="absolute top-2.5 left-2.5 text-[10px] font-black bg-primary text-primary-foreground px-2.5 py-1 rounded-lg shadow-md shadow-primary/20">
                             -{discount}%
                           </span>
                         )}
-                        <span className={`absolute top-2.5 right-2.5 w-2 h-2 rounded-full ring-2 ring-card ${stock > 0 ? "bg-emerald-500" : "bg-muted-foreground/30"}`} />
+                        <span className={`absolute top-3 right-3 w-2 h-2 rounded-full ring-[2.5px] ring-card ${stock > 0 ? "bg-emerald-500 shadow-sm shadow-emerald-500/40" : "bg-muted-foreground/25"}`} />
                       </div>
-                      <div className="p-3 border-t border-border/30">
+                      <div className="p-3.5 border-t border-border/20">
                         <p className="text-xs font-bold text-foreground line-clamp-1 mb-0.5">{isRTL ? p.name_ar : (p.name_en || p.name_ar)}</p>
-                        <p className="text-[10px] text-muted-foreground font-mono mb-2.5">{p.sku}</p>
-                        <div className="flex gap-1.5">
-                          <Button size="sm" variant="outline" className="flex-1 h-8 text-[11px] font-bold gap-1 rounded-lg border-border/50 text-primary hover:bg-primary hover:text-primary-foreground hover:border-primary" onClick={() => handlePriceItem(p)}>
-                            <Tag className="w-3 h-3" />{isRTL ? "تسعير" : "Price"}
+                        <p className="text-[10px] text-muted-foreground font-mono mb-3">{p.sku}</p>
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" className="flex-1 h-9 text-[11px] font-bold gap-1 rounded-xl border-border/50 text-primary hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-300" onClick={() => handlePriceItem(p)}>
+                            <Tag className="w-3.5 h-3.5" />{isRTL ? "تسعير" : "Price"}
                           </Button>
-                          <Button size="sm" className="flex-1 h-8 text-[11px] font-bold gap-1 rounded-lg" onClick={() => handleAddToOrder(p)} disabled={stock === 0}>
-                            <Plus className="w-3 h-3" />{isRTL ? "أضف" : "Add"}
+                          <Button size="sm" className="flex-1 h-9 text-[11px] font-bold gap-1 rounded-xl shadow-sm shadow-primary/15" onClick={() => handleAddToOrder(p)} disabled={stock === 0}>
+                            <Plus className="w-3.5 h-3.5" />{isRTL ? "أضف" : "Add"}
                           </Button>
                         </div>
                       </div>
@@ -437,40 +461,51 @@ const DealerHomePage = () => {
           </motion.section>
         ) : null}
 
-        {/* ─── Account & Payments ─── */}
+        {/* ─── Account & Payments — Premium Section ─── */}
         <motion.section
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.28, duration: 0.5, ease }}
-          className="mt-7 mb-4"
+          transition={{ delay: 0.3, duration: 0.6, ease }}
+          className="mt-10 mb-6"
         >
-          <h2 className="text-[15px] font-bold text-foreground mb-4 flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-primary/8 flex items-center justify-center">
-              <BarChart3 className="w-3.5 h-3.5 text-primary" />
+          <h2 className="text-base font-bold text-foreground mb-5 flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-[10px] bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+              <BarChart3 className="w-4 h-4 text-primary" />
             </div>
             {isRTL ? "الحساب والمدفوعات" : "Account & Payments"}
           </h2>
 
-          <div className="bg-card border border-border/50 rounded-2xl overflow-hidden divide-y divide-border/30">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {accountLinks.map((item, i) => (
               <Link key={item.href + item.label} to={item.href}>
                 <motion.div
-                  initial={{ opacity: 0, x: isRTL ? 8 : -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 + i * 0.04, ease }}
-                  className="flex items-center gap-4 p-4 hover:bg-muted/30 active:bg-muted/50 transition-colors group"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.35 + i * 0.06, ease }}
+                  whileHover={{ y: -4 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="relative bg-card rounded-[18px] border border-border/40 p-5 flex items-center gap-4 overflow-hidden
+                    shadow-[0_1px_3px_rgba(0,0,0,0.04)]
+                    hover:shadow-[0_16px_40px_-12px_rgba(0,0,0,0.1)]
+                    hover:border-primary/15
+                    transition-all duration-500 group cursor-pointer"
                 >
-                  <div className={`w-11 h-11 rounded-xl ${item.bg} flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-200`}>
-                    <item.icon className={`w-5 h-5 ${item.color}`} />
+                  {/* Decorative corner accent */}
+                  <div className={`absolute -top-8 -right-8 w-20 h-20 rounded-full ${item.bg} opacity-40 blur-xl group-hover:opacity-60 transition-opacity duration-500`} />
+
+                  <div className={`relative w-12 h-12 rounded-[14px] ${item.bg} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 shadow-sm`}>
+                    <item.icon className={`w-[22px] h-[22px] ${item.color}`} />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-bold text-foreground">{item.label}</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">{item.desc}</p>
+                  <div className="flex-1 min-w-0 relative">
+                    <p className="text-[14px] font-bold text-foreground">{item.label}</p>
+                    <p className="text-[12px] text-muted-foreground mt-0.5 font-medium">{item.desc}</p>
                   </div>
-                  {isRTL
-                    ? <ChevronLeft className="w-4 h-4 text-muted-foreground/20 group-hover:text-primary group-hover:-translate-x-1 transition-all shrink-0" />
-                    : <ChevronRight className="w-4 h-4 text-muted-foreground/20 group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0" />
-                  }
+                  <div className="relative shrink-0">
+                    {isRTL
+                      ? <ChevronLeft className="w-5 h-5 text-muted-foreground/15 group-hover:text-primary group-hover:-translate-x-1.5 transition-all duration-300" />
+                      : <ChevronRight className="w-5 h-5 text-muted-foreground/15 group-hover:text-primary group-hover:translate-x-1.5 transition-all duration-300" />
+                    }
+                  </div>
                 </motion.div>
               </Link>
             ))}
@@ -481,18 +516,24 @@ const DealerHomePage = () => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="flex items-center justify-center gap-6 py-6 mb-2"
+          transition={{ delay: 0.5 }}
+          className="flex items-center justify-center gap-8 py-8 mb-2"
         >
           {[
-            { icon: ShieldCheck, text: isRTL ? "قطع أصلية" : "Genuine Parts" },
+            { icon: ShieldCheck, text: isRTL ? "قطع أصلية ١٠٠٪" : "100% Genuine" },
             { icon: Truck, text: isRTL ? "شحن سريع" : "Fast Shipping" },
             { icon: Clock, text: isRTL ? "دعم ٢٤/٧" : "24/7 Support" },
-          ].map((item) => (
-            <div key={item.text} className="flex items-center gap-1.5 text-muted-foreground/50">
-              <item.icon className="w-3.5 h-3.5" />
-              <span className="text-[10px] font-semibold">{item.text}</span>
-            </div>
+          ].map((item, i) => (
+            <motion.div
+              key={item.text}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.55 + i * 0.08 }}
+              className="flex items-center gap-2 text-muted-foreground/40"
+            >
+              <item.icon className="w-4 h-4" strokeWidth={1.5} />
+              <span className="text-[11px] font-semibold tracking-wide">{item.text}</span>
+            </motion.div>
           ))}
         </motion.div>
       </div>
