@@ -46,19 +46,19 @@ const PageLoader = () => (
   </div>
 );
 
-const DeferredChatBot = () => {
+const DeferredComponent = ({ delay, children }: { delay: number; children: React.ReactNode }) => {
   const [show, setShow] = useState(false);
   useEffect(() => {
     const id = typeof requestIdleCallback !== 'undefined'
-      ? requestIdleCallback(() => setShow(true), { timeout: 4000 })
-      : setTimeout(() => setShow(true), 3000) as unknown as number;
+      ? requestIdleCallback(() => setShow(true), { timeout: delay })
+      : setTimeout(() => setShow(true), delay - 1000) as unknown as number;
     return () => {
       if (typeof cancelIdleCallback !== 'undefined') cancelIdleCallback(id);
       else clearTimeout(id);
     };
-  }, []);
+  }, [delay]);
   if (!show) return null;
-  return <Suspense fallback={null}><AIChatBot /></Suspense>;
+  return <Suspense fallback={null}>{children}</Suspense>;
 };
 
 const App = () => (
