@@ -102,7 +102,7 @@ const HeroSection = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const videoSrc = heroVideoUrl || "/__l5e/assets-v1/5c39edf4-c379-40c1-a6e5-ef5982cf04f4/hero-toyota-parts.mp4";
+  const videoSrc = heroVideoUrl || "/videos/hero-video.mp4";
 
   const stats = [
     { value: 25, suffix: "+", label: t("hero.stat_years") },
