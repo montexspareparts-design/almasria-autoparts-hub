@@ -279,11 +279,11 @@ const AdminAnalytics = () => {
             {topProducts.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">لا توجد بيانات</p>
             ) : (
-              <ResponsiveContainer width="100%" height={350}>
-                <BarChart data={topProducts} layout="vertical" margin={{ left: 10, right: 10 }}>
+              <ResponsiveContainer width="100%" height={Math.max(350, topProducts.length * 40)}>
+                <BarChart data={topProducts} layout="vertical" margin={{ left: 20, right: 20, top: 5, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis type="number" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                  <YAxis type="category" dataKey="name" width={140} tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                  <YAxis type="category" dataKey="name" width={200} tick={{ fontSize: 11, fill: "hsl(var(--foreground))" }} stroke="hsl(var(--muted-foreground))" />
                   <Tooltip
                     contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, direction: "rtl" }}
                     formatter={(value: number, name: string) => [
