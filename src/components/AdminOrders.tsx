@@ -480,7 +480,7 @@ const AdminOrders = () => {
                 const canEdit = ["pending", "confirmed", "processing"].includes(order.status);
 
                 return (
-                  <div key={order.id} className="border border-border rounded-xl overflow-hidden transition-all">
+                  <div key={order.id} className={`border rounded-xl overflow-hidden transition-all ${order.isDealer ? "border-blue-200 dark:border-blue-800/50" : "border-border"}`}>
                     {/* Order Header */}
                     <div
                       className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/30 transition-colors"
