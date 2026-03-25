@@ -21,11 +21,11 @@ import MaintenanceBundles from "@/components/MaintenanceBundles";
 import SpecialOffers from "@/components/SpecialOffers";
 import PersonalizedProducts from "@/components/PersonalizedProducts";
 import { usePersonalization } from "@/hooks/usePersonalization";
-import brandGenuineParts from "@/assets/brand-genuine-parts.png";
-import brandToyotaOil from "@/assets/brand-toyota-oil.png";
-import brandMtx from "@/assets/brand-mtx.jpg";
-import brandDenso from "@/assets/brand-denso.png";
-import brandAisin from "@/assets/brand-aisin.png";
+import brandGenuineParts from "@/assets/brand-genuine-parts.webp";
+import brandToyotaOil from "@/assets/brand-toyota-oil.webp";
+import brandMtx from "@/assets/brand-mtx.webp";
+import brandDenso from "@/assets/brand-denso.webp";
+import brandAisin from "@/assets/brand-aisin.webp";
 import brandFbkBrakes from "@/assets/brand-fbk-logo.png";
 import oilBg from "@/assets/oil-hero-bg.jpg";
 

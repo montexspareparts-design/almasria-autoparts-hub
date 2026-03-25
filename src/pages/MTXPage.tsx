@@ -20,9 +20,9 @@ import AdvancedProductFilter, { ProductFilters } from "@/components/AdvancedProd
 import ProductDetailDialog from "@/components/ProductDetailDialog";
 
 // Brand logos
-import brandMtx from "@/assets/brand-mtx.jpg";
-import brandDenso from "@/assets/brand-denso.png";
-import brandAisin from "@/assets/brand-aisin.png";
+import brandMtx from "@/assets/brand-mtx.webp";
+import brandDenso from "@/assets/brand-denso.webp";
+import brandAisin from "@/assets/brand-aisin.webp";
 
 // Hero & backgrounds
 import mtxHeroBg from "@/assets/mtx-hero-bg.jpg";

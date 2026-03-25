@@ -15,7 +15,7 @@ import warehouseLogistics from "@/assets/warehouse-logistics.jpg";
 import partnershipToyota from "@/assets/partnership-toyota.jpg";
 import distributionMap from "@/assets/distribution-map.jpg";
 import erpSystem from "@/assets/erp-system.jpg";
-import brandMtx from "@/assets/brand-mtx.jpg";
+import brandMtx from "@/assets/brand-mtx.webp";
 import dubaiOffice from "@/assets/dubai-office.jpg";
 import autotechExhibition from "@/assets/autotech-exhibition.jpg";
 

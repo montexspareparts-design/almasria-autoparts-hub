@@ -2,9 +2,9 @@ import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import brandGenuineParts from "@/assets/brand-genuine-parts.png";
-import brandToyotaOil from "@/assets/brand-toyota-oil.png";
-import brandMtx from "@/assets/brand-mtx.jpg";
+import brandGenuineParts from "@/assets/brand-genuine-parts.webp";
+import brandToyotaOil from "@/assets/brand-toyota-oil.webp";
+import brandMtx from "@/assets/brand-mtx.webp";
 
 const segments = [
   {

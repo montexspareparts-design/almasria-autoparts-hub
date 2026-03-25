@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Phone, Mail, User, MapPin, ArrowLeft, ArrowRight, Home } from "lucide-react";
 import { motion } from "framer-motion";
 import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/logo.webp";
 
 type AuthMethod = "phone" | "email";
 type AuthMode = "login" | "register";
