@@ -1,7 +1,7 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ShieldCheck, Package, MapPin, Cog, Wrench, Droplets, ChevronDown, LayoutDashboard, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -76,6 +76,18 @@ const HeroSection = () => {
   const contentY = useTransform(scrollYProgress, [0, 0.5], [0, -50]);
   const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.15]);
   const [videoLoaded, setVideoLoaded] = useState(false);
+  const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
+
+  // Defer video loading until after LCP paint
+  useEffect(() => {
+    const id = typeof requestIdleCallback !== 'undefined'
+      ? requestIdleCallback(() => setShouldLoadVideo(true), { timeout: 2000 })
+      : setTimeout(() => setShouldLoadVideo(true), 1500) as unknown as number;
+    return () => {
+      if (typeof cancelIdleCallback !== 'undefined') cancelIdleCallback(id);
+      else clearTimeout(id);
+    };
+  }, []);
 
   const { data: heroVideoUrl } = useQuery({
     queryKey: ["site-setting", "hero_video_url"],
@@ -112,25 +124,27 @@ const HeroSection = () => {
           decoding="async"
           fetchPriority="high"
         />
-        <video
-          key={videoSrc}
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 pointer-events-none ${videoLoaded ? "opacity-100" : "opacity-0"}`}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          onLoadedData={() => setVideoLoaded(true)}
-          onCanPlay={(e) => {
-            const vid = e.currentTarget;
-            if (vid.paused) vid.play().catch(() => {});
-          }}
-          webkit-playsinline="true"
-          x-webkit-airplay="deny"
-          disablePictureInPicture
-          disableRemotePlayback
-          src={videoSrc}
-        />
+        {shouldLoadVideo && (
+          <video
+            key={videoSrc}
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 pointer-events-none ${videoLoaded ? "opacity-100" : "opacity-0"}`}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="none"
+            onLoadedData={() => setVideoLoaded(true)}
+            onCanPlay={(e) => {
+              const vid = e.currentTarget;
+              if (vid.paused) vid.play().catch(() => {});
+            }}
+            webkit-playsinline="true"
+            x-webkit-airplay="deny"
+            disablePictureInPicture
+            disableRemotePlayback
+            src={videoSrc}
+          />
+        )}
       </motion.div>
 
       {/* Cinematic Overlays */}
