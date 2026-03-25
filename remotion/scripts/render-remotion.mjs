@@ -26,11 +26,10 @@ await renderMedia({
   composition,
   serveUrl: bundled,
   codec: "h264",
-  outputLocation: "/mnt/documents/hero-video-4k.mp4",
+  outputLocation: "/mnt/documents/hero-video.mp4",
   puppeteerInstance: browser,
   muted: true,
   concurrency: 1,
-  crf: 18,
 });
 
 await browser.close({ silent: false });
