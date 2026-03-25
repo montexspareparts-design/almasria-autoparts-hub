@@ -196,22 +196,14 @@ const HeroSection = () => {
             <ShieldCheck className="w-4 h-4 text-primary" />
           </motion.div>
 
-          {/* Title */}
-          <motion.h1
-            initial={{ opacity: 0, y: 35 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.45, ease: [0.22, 1, 0.36, 1] }}
+          {/* Title - no initial hidden state to avoid LCP render delay */}
+          <h1
             className="text-[1.75rem] sm:text-[2rem] md:text-[2.75rem] lg:text-[3.5rem] font-black text-white leading-[1.45] md:leading-[1.4] tracking-tight mb-6"
           >
             <span className="inline-block">{t("hero.title1")}</span>
             <br />
             <span className="inline-block">{t("hero.title2")} </span>
-            <motion.span
-              className="inline-block relative"
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.9 }}
-            >
+            <span className="inline-block relative">
               <span className="relative z-10 text-primary drop-shadow-[0_0_20px_hsl(var(--primary)/0.3)]">
                 {t("hero.title3")}
               </span>
@@ -222,9 +214,9 @@ const HeroSection = () => {
                 transition={{ duration: 0.6, delay: 1.3, ease: [0.22, 1, 0.36, 1] }}
                 style={{ originX: 0 }}
               />
-            </motion.span>
+            </span>
             <span className="inline-block"> {t("hero.title4")}</span>
-          </motion.h1>
+          </h1>
 
           {/* Description */}
           <motion.p
