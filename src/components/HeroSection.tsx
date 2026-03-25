@@ -75,6 +75,7 @@ const HeroSection = () => {
   const contentOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
   const contentY = useTransform(scrollYProgress, [0, 0.5], [0, -50]);
   const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.15]);
+  const [videoLoaded, setVideoLoaded] = useState(false);
   const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
 
   // Defer video loading until after LCP paint
