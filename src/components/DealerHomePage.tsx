@@ -172,9 +172,9 @@ const DealerHomePage = () => {
 
   /* ─── Quick Action Items ─── */
   const quickActions = [
-    { label: isRTL ? "عروض الأسعار" : "Quotes", icon: dealerQuotesIcon, href: "/dealer?tab=quotes", isImage: true, badge: dailyViewCount > 0 ? `${dailyViewCount} ${isRTL ? "تسعير" : "priced"}` : null, badgeColor: "bg-primary/8 text-primary" },
+    { label: isRTL ? "عروض الأسعار" : "Quotes", icon: Tag, href: "/dealer?tab=quotes", isImage: false, badge: dailyViewCount > 0 ? `${dailyViewCount} ${isRTL ? "تسعير" : "priced"}` : null, badgeColor: "bg-primary/8 text-primary", iconColor: "text-primary", iconBg: "bg-primary/8" },
     { label: isRTL ? "كشوفات المصرية" : "Price Lists", icon: FileText, href: "/dealer?tab=price_lists", isImage: false, sub: isRTL ? "الأسعار المحدثة" : "Updated prices", iconColor: "text-amber-600", iconBg: "bg-amber-50 dark:bg-amber-500/10" },
-    { label: isRTL ? "طلباتي" : "Orders", icon: dealerOrdersIcon, href: "/dealer?tab=orders", isImage: true, badge: activeOrders > 0 ? `${activeOrders} ${isRTL ? "جارية" : "active"}` : null, badgeColor: "bg-amber-50 text-amber-700 dark:bg-amber-500/10" },
+    { label: isRTL ? "طلباتي" : "Orders", icon: ClipboardList, href: "/dealer?tab=orders", isImage: false, badge: activeOrders > 0 ? `${activeOrders} ${isRTL ? "جارية" : "active"}` : null, badgeColor: "bg-amber-50 text-amber-700 dark:bg-amber-500/10", iconColor: "text-blue-600", iconBg: "bg-blue-50 dark:bg-blue-500/10" },
   ];
 
   const accountLinks = [
