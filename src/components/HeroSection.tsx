@@ -75,7 +75,18 @@ const HeroSection = () => {
   const contentOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
   const contentY = useTransform(scrollYProgress, [0, 0.5], [0, -50]);
   const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.15]);
-  const [videoLoaded, setVideoLoaded] = useState(false);
+  const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
+
+  // Defer video loading until after LCP paint
+  useEffect(() => {
+    const id = typeof requestIdleCallback !== 'undefined'
+      ? requestIdleCallback(() => setShouldLoadVideo(true), { timeout: 2000 })
+      : setTimeout(() => setShouldLoadVideo(true), 1500) as unknown as number;
+    return () => {
+      if (typeof cancelIdleCallback !== 'undefined') cancelIdleCallback(id);
+      else clearTimeout(id);
+    };
+  }, []);
 
   const { data: heroVideoUrl } = useQuery({
     queryKey: ["site-setting", "hero_video_url"],
