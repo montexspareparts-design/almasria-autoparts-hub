@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 const AIChatBot = lazy(() => import("@/components/AIChatBot"));
+const InstallBannerLazy = lazy(() => import("@/components/InstallBanner"));
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,7 +10,6 @@ import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
-import InstallBanner from "@/components/InstallBanner";
 const Index = lazy(() => import("./pages/Index"));
 
 const Auth = lazy(() => import("./pages/Auth"));
@@ -46,19 +46,19 @@ const PageLoader = () => (
   </div>
 );
 
-const DeferredChatBot = () => {
+const DeferredComponent = ({ delay, children }: { delay: number; children: React.ReactNode }) => {
   const [show, setShow] = useState(false);
   useEffect(() => {
     const id = typeof requestIdleCallback !== 'undefined'
-      ? requestIdleCallback(() => setShow(true), { timeout: 4000 })
-      : setTimeout(() => setShow(true), 3000) as unknown as number;
+      ? requestIdleCallback(() => setShow(true), { timeout: delay })
+      : setTimeout(() => setShow(true), delay - 1000) as unknown as number;
     return () => {
       if (typeof cancelIdleCallback !== 'undefined') cancelIdleCallback(id);
       else clearTimeout(id);
     };
-  }, []);
+  }, [delay]);
   if (!show) return null;
-  return <Suspense fallback={null}><AIChatBot /></Suspense>;
+  return <Suspense fallback={null}>{children}</Suspense>;
 };
 
 const App = () => (
@@ -71,8 +71,8 @@ const App = () => (
           <LanguageProvider>
           <AuthProvider>
             <CartProvider>
-              <InstallBanner />
-              <DeferredChatBot />
+              <DeferredComponent delay={2000}><InstallBannerLazy /></DeferredComponent>
+              <DeferredComponent delay={4000}><AIChatBot /></DeferredComponent>
                <Suspense fallback={<PageLoader />}>
                   <Routes>
                     <Route path="/" element={<Index />} />
