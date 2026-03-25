@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 const AIChatBot = lazy(() => import("@/components/AIChatBot"));
+const InstallBannerLazy = lazy(() => import("@/components/InstallBanner"));
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,7 +10,6 @@ import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
-import InstallBanner from "@/components/InstallBanner";
 const Index = lazy(() => import("./pages/Index"));
 
 const Auth = lazy(() => import("./pages/Auth"));
