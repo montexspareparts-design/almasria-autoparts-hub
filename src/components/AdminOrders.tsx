@@ -413,6 +413,27 @@ const AdminOrders = () => {
             </div>
           </div>
 
+          {/* Order Type Tabs */}
+          <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-lg mb-4 w-fit">
+            {([
+              { value: "all" as const, label: "الكل" },
+              { value: "wholesale" as const, label: "🏢 جملة (B2B)" },
+              { value: "retail" as const, label: "🛒 قطاعي (B2C)" },
+            ]).map(tab => (
+              <button
+                key={tab.value}
+                onClick={() => setOrderTypeFilter(tab.value)}
+                className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${
+                  orderTypeFilter === tab.value
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
           {/* Filters */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-4">
             <div className="relative flex-1 w-full sm:w-auto">
