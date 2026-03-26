@@ -38,6 +38,20 @@ Deno.serve(async (req) => {
 
     const { action, data } = await req.json();
 
+    // Admin-only actions
+    if (action === "sync_stock" || action === "sync_prices") {
+      const { data: isAdmin } = await supabase.rpc("has_role", {
+        _user_id: user.id,
+        _role: "admin",
+      });
+      if (!isAdmin) {
+        return new Response(
+          JSON.stringify({ error: "Forbidden — admin only" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     // Fetch ERP config
     const { data: configs } = await supabase
       .from("erp_config")
