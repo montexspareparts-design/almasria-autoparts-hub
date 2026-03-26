@@ -698,7 +698,7 @@ const ProductsPage = () => {
                 >
                   <div className="w-28 sm:w-36 shrink-0 bg-white flex items-center justify-center p-3">
                     {product.image_url ? (
-                      <img src={product.image_url} alt={product.name_ar} className="w-full h-full object-contain" loading="lazy" />
+                      <img src={product.image_url} alt={product.name_ar} className="w-full h-full object-contain mix-blend-multiply" loading="lazy" />
                     ) : (
                       <Package className="w-10 h-10 text-muted-foreground/20" />
                     )}
