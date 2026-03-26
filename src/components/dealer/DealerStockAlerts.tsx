@@ -5,6 +5,7 @@ import { Bell, BellOff, Loader2, Package, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
+import ProductImage from "@/components/ProductImage";
 
 interface StockAlert {
   id: string;
@@ -98,7 +99,9 @@ const DealerStockAlerts = () => {
                   return (
                     <div key={alert.id} className="flex items-center gap-3 p-3.5">
                       {alert.product?.image_url ? (
-                        <img src={alert.product.image_url} alt="" className="w-11 h-11 rounded-lg bg-white object-contain p-0.5 border border-border shrink-0" />
+                        <div className="w-11 h-11 rounded-lg bg-card border border-border shrink-0 overflow-hidden">
+                          <ProductImage src={alert.product.image_url} alt="" className="p-0.5" />
+                        </div>
                       ) : (
                         <div className="w-11 h-11 rounded-lg bg-muted flex items-center justify-center shrink-0">
                           <Package className="w-5 h-5 text-muted-foreground/40" />
