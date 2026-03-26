@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
+import { pushOrderToERP, pushQuoteToERP } from "@/lib/erpSync";
 import { generateQuotePdf } from "@/lib/generateQuotePdf";
 import { shareQuoteWhatsApp, shareQuoteEmail } from "@/lib/shareQuote";
 import {
@@ -303,6 +304,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
         }))
       );
       toast({ title: "تم الحفظ ✓", description: `عرض أسعار ${quoteNumber}` });
+      pushQuoteToERP((quote as any).id);
     }
 
     setQuoteItems([]);
@@ -347,6 +349,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
     }
 
     toast({ title: "تم إرسال الطلب ✓", description: `رقم الطلب: ${orderNumber}` });
+    pushOrderToERP((order as any).id);
     setQuoteItems([]);
     setNotes("");
     setEditingQuoteId(null);
@@ -498,6 +501,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
     await supabase.from("dealer_quotes").update({ status: "converted" }).eq("id", quote.id);
 
     toast({ title: "تم إرسال الطلبية ✓", description: `رقم الطلب: ${orderNumber}` });
+    pushOrderToERP((order as any).id);
     fetchSavedQuotes();
     setSaving(false);
   };
@@ -899,6 +903,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
                             }))
                           );
                           toast({ title: "تم إرسال الطلب ✓", description: `رقم الطلب: ${orderNumber}` });
+                          pushOrderToERP((order as any).id);
                         } else {
                           toast({ title: "خطأ", variant: "destructive" });
                         }

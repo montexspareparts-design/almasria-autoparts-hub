@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
+import { pushOrderToERP } from "@/lib/erpSync";
 import { Loader2, Zap, Plus, Trash2, Minus, Search, CheckCircle, ShoppingCart } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -168,6 +169,9 @@ const DealerQuickOrder = () => {
         };
       })
     );
+
+    // Push to Al Faisal ERP
+    pushOrderToERP((order as any).id);
 
     toast({ title: "تم إرسال الطلب ✓", description: `رقم الطلب: ${orderNumber}` });
     setLines([]);

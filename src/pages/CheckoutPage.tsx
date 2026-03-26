@@ -16,6 +16,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { pushOrderToERP } from "@/lib/erpSync";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -117,6 +118,9 @@ const CheckoutPage = () => {
 
       const { error: itemsErr } = await supabase.from("order_items").insert(orderItems);
       if (itemsErr) throw itemsErr;
+
+      // Push order to Al Faisal ERP (fire-and-forget)
+      pushOrderToERP(order.id);
 
       clearCart();
 

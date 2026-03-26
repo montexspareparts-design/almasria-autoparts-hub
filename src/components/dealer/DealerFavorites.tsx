@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Heart, ShoppingCart, Trash2, Package, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { pushOrderToERP } from "@/lib/erpSync";
 
 interface FavoriteProduct {
   id: string;
@@ -71,6 +72,7 @@ const DealerFavorites = () => {
         total_price: price,
       });
       toast({ title: "تم إرسال الطلب ✓", description: `رقم الطلب: ${orderNumber}` });
+      pushOrderToERP((order as any).id);
     }
     setAddingToOrder(null);
   };

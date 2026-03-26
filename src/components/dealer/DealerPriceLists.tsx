@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
+import { pushOrderToERP, pushQuoteToERP } from "@/lib/erpSync";
 import { generateQuotePdf } from "@/lib/generateQuotePdf";
 import { shareQuoteWhatsApp, shareQuoteEmail } from "@/lib/shareQuote";
 import {
@@ -397,6 +398,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
     }
 
     toast({ title: "تم إرسال الطلبية ✓", description: `رقم الطلب: ${orderNumber}` });
+    pushOrderToERP((order as any).id);
     setSelectedProducts([]);
     setSavingQuote(false);
     fetchDailyViews();
@@ -469,6 +471,9 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
         }))
       );
     }
+
+    // Push quote to ERP
+    pushQuoteToERP(quoteId!);
 
     // Record price views (upsert to avoid duplicate counting)
     const today = new Date().toISOString().split("T")[0];
@@ -583,6 +588,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
       );
 
       toast({ title: "تم إرسال الطلبية ✓", description: `رقم الطلب: ${orderNumber}` });
+      pushOrderToERP((order as any).id);
       setCreatedQuote(null);
       setSavingQuote(false);
     };
