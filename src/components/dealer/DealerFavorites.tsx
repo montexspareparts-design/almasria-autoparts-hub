@@ -72,6 +72,7 @@ const DealerFavorites = () => {
         total_price: price,
       });
       toast({ title: "تم إرسال الطلب ✓", description: `رقم الطلب: ${orderNumber}` });
+      pushOrderToERP((order as any).id);
     }
     setAddingToOrder(null);
   };
