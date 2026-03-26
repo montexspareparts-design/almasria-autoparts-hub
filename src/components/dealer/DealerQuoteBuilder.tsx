@@ -349,6 +349,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
     }
 
     toast({ title: "تم إرسال الطلب ✓", description: `رقم الطلب: ${orderNumber}` });
+    pushOrderToERP((order as any).id);
     setQuoteItems([]);
     setNotes("");
     setEditingQuoteId(null);
