@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
 
     const isMock = config.erp_mode === "mock";
     const baseUrl = config.erp_base_url || "";
-    const apiKey = config.erp_api_key || "";
+    const apiKey = Deno.env.get("ERP_FAISAL_API_KEY") || config.erp_api_key || "";
 
     let result: any = null;
     let syncType = "";
