@@ -170,6 +170,9 @@ const DealerQuickOrder = () => {
       })
     );
 
+    // Push to Al Faisal ERP
+    pushOrderToERP((order as any).id);
+
     toast({ title: "تم إرسال الطلب ✓", description: `رقم الطلب: ${orderNumber}` });
     setLines([]);
     setSubmitting(false);
