@@ -96,6 +96,7 @@ Deno.serve(async (req) => {
           message: "Quote created in ERP (MOCK MODE)",
         };
       } else {
+        if (!baseUrl) throw new Error("ERP base URL is not configured");
         const res = await fetch(`${baseUrl}/quotes`, {
           method: "POST",
           headers: {
@@ -104,7 +105,10 @@ Deno.serve(async (req) => {
           },
           body: JSON.stringify(payload),
         });
-        result = await res.json();
+        const text = await res.text();
+        try { result = JSON.parse(text); } catch {
+          throw new Error(`ERP returned non-JSON (status ${res.status}): ${text.substring(0, 200)}`);
+        }
         if (!res.ok)
           throw new Error(`ERP API error [${res.status}]: ${JSON.stringify(result)}`);
       }
