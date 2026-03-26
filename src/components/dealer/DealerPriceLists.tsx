@@ -472,6 +472,9 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
       );
     }
 
+    // Push quote to ERP
+    pushQuoteToERP(quoteId!);
+
     // Record price views (upsert to avoid duplicate counting)
     const today = new Date().toISOString().split("T")[0];
     for (const sp of selectedProducts) {
