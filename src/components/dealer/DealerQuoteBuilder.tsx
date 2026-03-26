@@ -501,6 +501,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
     await supabase.from("dealer_quotes").update({ status: "converted" }).eq("id", quote.id);
 
     toast({ title: "تم إرسال الطلبية ✓", description: `رقم الطلب: ${orderNumber}` });
+    pushOrderToERP((order as any).id);
     fetchSavedQuotes();
     setSaving(false);
   };
