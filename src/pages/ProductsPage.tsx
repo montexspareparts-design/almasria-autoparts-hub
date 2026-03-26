@@ -6,6 +6,7 @@ import { Lock, ShieldCheck, Package, ShoppingCart, Eye, AlertTriangle, Grid3X3, 
 import { BreadcrumbSchema } from "@/components/SEOSchemaMarkup";
 import AutoPartsBackground from "@/components/AutoPartsBackground";
 import ProductDetailDialog from "@/components/ProductDetailDialog";
+import ProductImage from "@/components/ProductImage";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart, CartItem } from "@/contexts/CartContext";
@@ -604,12 +605,12 @@ const ProductsPage = () => {
                   className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300 group cursor-pointer"
                   onClick={() => setSelectedProduct(product)}
                 >
-                  <div className="aspect-square bg-white relative overflow-hidden">
+                  <div className="aspect-square bg-card relative overflow-hidden">
                     {product.image_url ? (
-                      <img
+                      <ProductImage
                         src={product.image_url}
                         alt={product.name_ar}
-                        className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-500 mix-blend-multiply"
+                        className="p-3 group-hover:scale-105 transition-transform duration-500"
                         loading="lazy"
                       />
                     ) : (
@@ -696,9 +697,9 @@ const ProductsPage = () => {
                   className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/40 hover:shadow-lg transition-all duration-300 cursor-pointer flex"
                   onClick={() => setSelectedProduct(product)}
                 >
-                  <div className="w-28 sm:w-36 shrink-0 bg-white flex items-center justify-center p-3">
+                  <div className="w-28 sm:w-36 shrink-0 bg-card flex items-center justify-center p-3">
                     {product.image_url ? (
-                      <img src={product.image_url} alt={product.name_ar} className="w-full h-full object-contain mix-blend-multiply" loading="lazy" />
+                      <ProductImage src={product.image_url} alt={product.name_ar} loading="lazy" />
                     ) : (
                       <Package className="w-10 h-10 text-muted-foreground/20" />
                     )}
