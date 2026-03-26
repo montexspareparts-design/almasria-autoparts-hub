@@ -16,7 +16,7 @@ const AdminVideoSettings = () => {
   const { data: currentId, isLoading } = useQuery({
     queryKey: ["site-setting", "video_youtube_id"],
     queryFn: async () => {
-      const { data } = await (supabase as any)
+      const { data } = await supabase
         .from("site_settings")
         .select("value")
         .eq("key", "video_youtube_id")
