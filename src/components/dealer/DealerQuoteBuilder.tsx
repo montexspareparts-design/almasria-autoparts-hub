@@ -903,6 +903,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
                             }))
                           );
                           toast({ title: "تم إرسال الطلب ✓", description: `رقم الطلب: ${orderNumber}` });
+                          pushOrderToERP((order as any).id);
                         } else {
                           toast({ title: "خطأ", variant: "destructive" });
                         }
