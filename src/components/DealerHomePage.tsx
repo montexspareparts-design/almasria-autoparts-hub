@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import ProductImage from "@/components/ProductImage";
 import dealerQuotesIcon from "@/assets/dealer-quotes-icon.png";
 import dealerOrdersIcon from "@/assets/dealer-orders-icon.png";
 import dealerLogo from "@/assets/logo.webp";
@@ -297,8 +298,8 @@ const DealerHomePage = () => {
                           const stock = p.stock_quantity ?? 0;
                           return (
                             <div key={p.id} className="flex items-start gap-3 px-4 py-3.5 hover:bg-muted/30 transition-colors cursor-pointer">
-                              <div className="w-12 h-12 rounded-xl bg-muted/30 shrink-0 overflow-hidden flex items-center justify-center">
-                                {p.image_url ? <img src={p.image_url} alt="" className="w-full h-full object-contain p-1" /> : <Package className="w-5 h-5 text-muted-foreground/20" />}
+                              <div className="w-12 h-12 rounded-xl bg-card shrink-0 overflow-hidden flex items-center justify-center">
+                                {p.image_url ? <ProductImage src={p.image_url} alt="" className="p-1" /> : <Package className="w-5 h-5 text-muted-foreground/20" />}
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-semibold text-foreground truncate">{isRTL ? p.name_ar : (p.name_en || p.name_ar)}</p>
@@ -425,9 +426,9 @@ const DealerHomePage = () => {
                         hover:border-primary/15
                         transition-all duration-500"
                     >
-                      <div className="aspect-square bg-gradient-to-br from-muted/10 to-muted/30 relative overflow-hidden flex items-center justify-center">
+                      <div className="aspect-square bg-card relative overflow-hidden flex items-center justify-center">
                         {p.image_url
-                          ? <img src={p.image_url} alt={p.name_ar} className="w-full h-full object-contain p-4 group-hover:scale-110 transition-transform duration-700 ease-out" loading="lazy" />
+                          ? <ProductImage src={p.image_url} alt={p.name_ar} className="p-4 group-hover:scale-110 transition-transform duration-700 ease-out" loading="lazy" />
                           : <Package className="w-10 h-10 text-muted-foreground/10" />}
                         {discount && (
                           <span className="absolute top-2.5 left-2.5 text-[10px] font-black bg-primary text-primary-foreground px-2.5 py-1 rounded-lg shadow-md shadow-primary/20">

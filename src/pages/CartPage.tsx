@@ -6,6 +6,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import ProductImage from "@/components/ProductImage";
 
 const CartPage = () => {
   const { items, removeItem, updateQuantity, subtotal, vat, shippingCost, discount, total, itemCount } = useCart();
@@ -62,9 +63,9 @@ const CartPage = () => {
                   className="bg-card border border-border rounded-lg p-4 flex gap-4"
                 >
                   {/* Image */}
-                  <div className="w-20 h-20 rounded-md overflow-hidden bg-muted shrink-0">
+                  <div className="w-20 h-20 rounded-md overflow-hidden bg-card shrink-0">
                     {item.image_url ? (
-                      <img src={item.image_url} alt={item.name_ar} className="w-full h-full object-cover" />
+                      <ProductImage src={item.image_url} alt={item.name_ar} className="p-1.5" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <Package className="w-8 h-8 text-muted-foreground/20" />

@@ -7,6 +7,7 @@ import { useCart, CartItem } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import ProductImage from "@/components/ProductImage";
 import {
   Dialog,
   DialogContent,
@@ -798,9 +799,9 @@ const CatalogsPage = () => {
                       >
                         <div className="flex gap-4">
                           {/* Image */}
-                          <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted shrink-0">
+                          <div className="w-20 h-20 rounded-lg overflow-hidden bg-card shrink-0">
                             {product.image_url ? (
-                              <img src={product.image_url} alt={product.name_ar} className="w-full h-full object-cover" />
+                              <ProductImage src={product.image_url} alt={product.name_ar} className="p-1.5" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
                                 <Package className="w-8 h-8 text-muted-foreground/30" />

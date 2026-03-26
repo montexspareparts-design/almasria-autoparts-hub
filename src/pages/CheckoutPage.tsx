@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import ProductImage from "@/components/ProductImage";
 
 const governorates = [
   "القاهرة", "الجيزة", "الإسكندرية", "القليوبية", "الشرقية", "الدقهلية",
@@ -316,9 +317,9 @@ const CheckoutPage = () => {
                 <div className="space-y-3 max-h-60 overflow-y-auto mb-5">
                   {items.map((item) => (
                     <div key={item.id} className="flex gap-3 items-center">
-                      <div className="w-12 h-12 rounded bg-muted overflow-hidden shrink-0">
+                      <div className="w-12 h-12 rounded bg-card overflow-hidden shrink-0">
                         {item.image_url ? (
-                          <img src={item.image_url} alt={item.name_ar} className="w-full h-full object-cover" />
+                          <ProductImage src={item.image_url} alt={item.name_ar} className="p-1" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
                             <Package className="w-5 h-5 text-muted-foreground/20" />
