@@ -214,10 +214,15 @@ Deno.serve(async (req) => {
           message: "Stock synced from ERP (MOCK MODE)",
         };
       } else {
+        if (!baseUrl) throw new Error("ERP base URL is not configured");
         const res = await fetch(`${baseUrl}/stock`, {
           headers: { Authorization: `Bearer ${apiKey}` },
         });
-        const erpStock = await res.json();
+        const text = await res.text();
+        let erpStock: any;
+        try { erpStock = JSON.parse(text); } catch {
+          throw new Error(`ERP returned non-JSON (status ${res.status}): ${text.substring(0, 200)}`);
+        }
         if (!res.ok) throw new Error(`ERP API error: ${JSON.stringify(erpStock)}`);
 
         let updated = 0;
