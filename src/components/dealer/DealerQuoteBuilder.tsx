@@ -304,6 +304,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
         }))
       );
       toast({ title: "تم الحفظ ✓", description: `عرض أسعار ${quoteNumber}` });
+      pushQuoteToERP((quote as any).id);
     }
 
     setQuoteItems([]);
