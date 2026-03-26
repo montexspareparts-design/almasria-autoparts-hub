@@ -74,13 +74,19 @@ const AdminHeroVideo = () => {
 
     setSaving(true);
 
-    // Upsert the setting
-    const { error } = await supabase
+    // Upsert the setting — check if row exists first
+    const { data: existing } = await supabase
       .from("site_settings")
-      .update({ value: url, updated_at: new Date().toISOString() })
-      .eq("key", SETTING_KEY);
+      .select("id")
+      .eq("key", SETTING_KEY)
+      .maybeSingle();
 
-    if (error) {
+    if (existing) {
+      await supabase
+        .from("site_settings")
+        .update({ value: url, updated_at: new Date().toISOString() })
+        .eq("key", SETTING_KEY);
+    } else {
       await supabase
         .from("site_settings")
         .insert({ key: SETTING_KEY, value: url });
