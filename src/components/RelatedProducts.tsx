@@ -64,7 +64,7 @@ const RelatedProducts = ({ currentProduct, allProducts, currentCategoryId, onAdd
             >
               <div className="aspect-square bg-white relative overflow-hidden">
                 {product.image_url ? (
-                  <img src={product.image_url} alt={product.name_ar} className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform" loading="lazy" />
+                  <img src={product.image_url} alt={product.name_ar} className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform mix-blend-multiply" loading="lazy" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <Package className="w-8 h-8 text-muted-foreground/20" />
