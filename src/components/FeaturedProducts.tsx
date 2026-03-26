@@ -8,7 +8,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { useState } from "react";
 import ProductDetailDialog from "@/components/ProductDetailDialog";
-import ProductImage from "@/components/ProductImage";
 import { Link } from "react-router-dom";
 
 const FeaturedProducts = () => {
@@ -119,12 +118,12 @@ const FeaturedProducts = () => {
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
                 {/* Image */}
-                <div className="aspect-square bg-card relative overflow-hidden p-4">
+                <div className="aspect-square bg-white relative overflow-hidden p-4">
                   {product.image_url ? (
-                    <ProductImage
+                    <img
                       src={product.image_url}
                       alt={product.name_ar}
-                      className="group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 mix-blend-multiply"
                       loading="lazy"
                     />
                   ) : (

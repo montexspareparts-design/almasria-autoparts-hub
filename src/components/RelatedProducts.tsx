@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Package, ShoppingCart, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import ProductImage from "@/components/ProductImage";
 
 interface Product {
   id: string;
@@ -63,9 +62,9 @@ const RelatedProducts = ({ currentProduct, allProducts, currentCategoryId, onAdd
               transition={{ delay: i * 0.05 }}
               className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 transition-all duration-300 ease-out group"
             >
-              <div className="aspect-square bg-card relative overflow-hidden">
+              <div className="aspect-square bg-white relative overflow-hidden">
                 {product.image_url ? (
-                  <ProductImage src={product.image_url} alt={product.name_ar} className="p-2 group-hover:scale-105 transition-transform" loading="lazy" />
+                  <img src={product.image_url} alt={product.name_ar} className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform mix-blend-multiply" loading="lazy" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <Package className="w-8 h-8 text-muted-foreground/20" />

@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { generateQuotePdf } from "@/lib/generateQuotePdf";
 import { shareQuoteWhatsApp, shareQuoteEmail } from "@/lib/shareQuote";
-import ProductImage from "@/components/ProductImage";
 import {
   Search, Plus, Minus, Trash2, FileText, Save, ShoppingCart,
   Eye, Loader2, Download, X, ArrowRight, Edit3, ChevronLeft,
@@ -581,9 +580,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
               >
                 <button onClick={() => addToQuote(product)} className="flex items-center gap-3 flex-1 min-w-0 text-right">
                   {product.image_url ? (
-                    <div className="w-10 h-10 rounded bg-card shrink-0 border border-border overflow-hidden">
-                      <ProductImage src={product.image_url} alt="" className="p-0.5" />
-                    </div>
+                    <img src={product.image_url} alt="" className="w-10 h-10 rounded bg-white object-contain p-0.5 shrink-0 border border-border" />
                   ) : (
                     <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0">
                       <FileText className="w-4 h-4 text-muted-foreground/40" />
@@ -641,9 +638,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
                 {/* Product Info */}
                 <div className="flex items-center gap-2.5 flex-1 min-w-0">
                   {item.product.image_url ? (
-                    <div className="w-11 h-11 rounded bg-card shrink-0 border border-border overflow-hidden">
-                      <ProductImage src={item.product.image_url} alt="" className="p-0.5" />
-                    </div>
+                    <img src={item.product.image_url} alt="" className="w-11 h-11 rounded bg-white object-contain p-0.5 shrink-0 border border-border" />
                   ) : (
                     <div className="w-11 h-11 rounded bg-muted flex items-center justify-center shrink-0">
                       <FileText className="w-4 h-4 text-muted-foreground/30" />
@@ -807,9 +802,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
                     <div key={item.product.id} className="flex items-center gap-3 p-3">
                       <div className="flex items-center gap-2.5 flex-1 min-w-0">
                         {item.product.image_url ? (
-                          <div className="w-11 h-11 rounded bg-card shrink-0 border border-border overflow-hidden">
-                            <ProductImage src={item.product.image_url} alt="" className="p-0.5" />
-                          </div>
+                          <img src={item.product.image_url} alt="" className="w-11 h-11 rounded bg-card object-contain p-0.5 shrink-0 border border-border" />
                         ) : (
                           <div className="w-11 h-11 rounded bg-muted flex items-center justify-center shrink-0">
                             <FileText className="w-4 h-4 text-muted-foreground/30" />

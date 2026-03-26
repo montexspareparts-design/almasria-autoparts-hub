@@ -16,7 +16,6 @@ import { toast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import AdvancedProductFilter, { ProductFilters } from "@/components/AdvancedProductFilter";
 import ProductDetailDialog from "@/components/ProductDetailDialog";
-import ProductImage from "@/components/ProductImage";
 import { lazy, Suspense } from "react";
 import heroBg from "@/assets/parts-bg.jpg";
 
@@ -320,9 +319,9 @@ const GenuinePartsPage = () => {
                   className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300 group cursor-pointer"
                   onClick={() => setSelectedProduct(product)}
                 >
-                  <div className="aspect-square bg-card relative overflow-hidden">
+                  <div className="aspect-square bg-white relative overflow-hidden">
                     {product.image_url ? (
-                      <ProductImage src={product.image_url} alt={product.name_ar} className="p-3 group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                      <img src={product.image_url} alt={product.name_ar} className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center"><Package className="w-12 h-12 text-muted-foreground/20" /></div>
                     )}
@@ -377,8 +376,8 @@ const GenuinePartsPage = () => {
                   className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/40 hover:shadow-lg transition-all duration-300 cursor-pointer flex"
                   onClick={() => setSelectedProduct(product)}
                 >
-                  <div className="w-28 sm:w-36 shrink-0 bg-card flex items-center justify-center p-3">
-                    {product.image_url ? <ProductImage src={product.image_url} alt={product.name_ar} loading="lazy" /> : <Package className="w-10 h-10 text-muted-foreground/20" />}
+                  <div className="w-28 sm:w-36 shrink-0 bg-white flex items-center justify-center p-3">
+                    {product.image_url ? <img src={product.image_url} alt={product.name_ar} className="w-full h-full object-contain" loading="lazy" /> : <Package className="w-10 h-10 text-muted-foreground/20" />}
                   </div>
                   <div className="flex-1 p-3 sm:p-4 flex flex-col justify-center" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-2 mb-1.5 flex-wrap">

@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { TrendingUp, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import ProductImage from "@/components/ProductImage";
 
 interface PopularProduct {
   id: string;
@@ -86,11 +85,11 @@ const DealerRecommendations = ({ userId, tier, onNavigateToQuotes }: { userId: s
             key={p.id}
             className="bg-card border border-border rounded-lg overflow-hidden hover:border-primary/30 hover:shadow-sm transition-all group"
           >
-            <div className="aspect-square bg-card relative overflow-hidden">
-              <ProductImage
+            <div className="aspect-square bg-muted/50 relative overflow-hidden">
+              <img
                 src={p.image_url || "/placeholder.svg"}
                 alt={p.name_ar}
-                className="p-2"
+                className="w-full h-full object-contain p-2"
                 loading="lazy"
               />
               <Badge className="absolute top-1.5 right-1.5 text-[8px] px-1.5 py-0 bg-secondary text-secondary-foreground">

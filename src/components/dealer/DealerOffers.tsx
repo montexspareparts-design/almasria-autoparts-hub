@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tag, ShoppingCart, Percent } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
-import ProductImage from "@/components/ProductImage";
 
 interface Product {
   id: string;
@@ -71,9 +70,7 @@ const DealerOffers = () => {
               <Card key={product.id} className="border-border/50 overflow-hidden group">
                 <div className="relative">
                   {product.image_url ? (
-                    <div className="h-36 bg-card flex items-center justify-center p-3">
-                      <ProductImage src={product.image_url} alt={product.name_ar} />
-                    </div>
+                    <img src={product.image_url} alt={product.name_ar} className="w-full h-36 object-cover" />
                   ) : (
                     <div className="w-full h-36 bg-muted flex items-center justify-center">
                       <Tag className="w-8 h-8 text-muted-foreground/30" />

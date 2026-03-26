@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Package, ShoppingCart, ZoomIn, ZoomOut, Lock, Eye, Tag, Layers, Hash, Box, Info } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import ProductImage from "@/components/ProductImage";
 
 interface ProductDetailDialogProps {
   product: any | null;
@@ -76,16 +75,16 @@ const ProductDetailDialog = ({
         <div className="overflow-y-auto max-h-[90vh]">
         <div
           ref={imageRef}
-          className="relative bg-card aspect-[3/2] cursor-crosshair overflow-hidden rounded-t-lg shrink-0"
+          className="relative bg-white aspect-[3/2] cursor-crosshair overflow-hidden rounded-t-lg shrink-0"
           onClick={() => setZoomed(!zoomed)}
           onMouseMove={handleMouseMove}
           onMouseLeave={() => { if (zoomed) setZoomPosition({ x: 50, y: 50 }); }}
         >
           {product.image_url ? (
-            <ProductImage
+            <img
               src={product.image_url}
               alt={product.name_ar}
-              className="p-6 transition-transform duration-300"
+              className="w-full h-full object-contain p-6 transition-transform duration-300 mix-blend-multiply"
               style={
                 zoomed
                   ? {

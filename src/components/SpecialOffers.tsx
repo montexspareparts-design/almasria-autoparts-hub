@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart, CartItem } from "@/contexts/CartContext";
 import { toast } from "@/hooks/use-toast";
-import ProductImage from "@/components/ProductImage";
 
 interface Props {
   brandKey?: string;
@@ -80,9 +79,9 @@ const SpecialOffers = ({ brandKey }: Props) => {
                   {discount}%-
                 </div>
 
-                <div className="aspect-square bg-card relative overflow-hidden">
+                <div className="aspect-square bg-muted relative overflow-hidden">
                   {product.image_url ? (
-                    <ProductImage src={product.image_url} alt={product.name_ar} className="p-2 group-hover:scale-105 transition-transform" loading="lazy" />
+                    <img src={product.image_url} alt={product.name_ar} className="w-full h-full object-cover group-hover:scale-105 transition-transform" loading="lazy" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <Package className="w-10 h-10 text-muted-foreground/20" />
