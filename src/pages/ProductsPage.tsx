@@ -237,8 +237,12 @@ const ProductsPage = () => {
 
   // Set brand filter from URL config on mount
   useEffect(() => {
-    if (config?.brandKey && !filters.brandKey) {
-      setFilters(prev => ({ ...prev, brandKey: config.brandKey }));
+    if (config?.brandKey) {
+      setFilters(prev => prev.brandKey !== config.brandKey
+        ? { ...prev, brandKey: config.brandKey, search: "", categoryId: null, model: null, year: null, chassisNumber: "", partNumber: "", priceMin: "", priceMax: "", sortBy: "newest" }
+        : prev
+      );
+      setCurrentPage(1);
     }
   }, [config?.brandKey]);
 
