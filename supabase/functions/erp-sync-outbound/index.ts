@@ -96,6 +96,7 @@ Deno.serve(async (req) => {
           message: "Quote created in ERP (MOCK MODE)",
         };
       } else {
+        if (!baseUrl) throw new Error("ERP base URL is not configured");
         const res = await fetch(`${baseUrl}/quotes`, {
           method: "POST",
           headers: {
@@ -104,7 +105,10 @@ Deno.serve(async (req) => {
           },
           body: JSON.stringify(payload),
         });
-        result = await res.json();
+        const text = await res.text();
+        try { result = JSON.parse(text); } catch {
+          throw new Error(`ERP returned non-JSON (status ${res.status}): ${text.substring(0, 200)}`);
+        }
         if (!res.ok)
           throw new Error(`ERP API error [${res.status}]: ${JSON.stringify(result)}`);
       }
@@ -151,6 +155,7 @@ Deno.serve(async (req) => {
           message: "Order created in ERP (MOCK MODE)",
         };
       } else {
+        if (!baseUrl) throw new Error("ERP base URL is not configured");
         const res = await fetch(`${baseUrl}/orders`, {
           method: "POST",
           headers: {
@@ -159,7 +164,10 @@ Deno.serve(async (req) => {
           },
           body: JSON.stringify(payload),
         });
-        result = await res.json();
+        const text = await res.text();
+        try { result = JSON.parse(text); } catch {
+          throw new Error(`ERP returned non-JSON (status ${res.status}): ${text.substring(0, 200)}`);
+        }
         if (!res.ok)
           throw new Error(`ERP API error [${res.status}]: ${JSON.stringify(result)}`);
       }
@@ -206,10 +214,15 @@ Deno.serve(async (req) => {
           message: "Stock synced from ERP (MOCK MODE)",
         };
       } else {
+        if (!baseUrl) throw new Error("ERP base URL is not configured");
         const res = await fetch(`${baseUrl}/stock`, {
           headers: { Authorization: `Bearer ${apiKey}` },
         });
-        const erpStock = await res.json();
+        const text = await res.text();
+        let erpStock: any;
+        try { erpStock = JSON.parse(text); } catch {
+          throw new Error(`ERP returned non-JSON (status ${res.status}): ${text.substring(0, 200)}`);
+        }
         if (!res.ok) throw new Error(`ERP API error: ${JSON.stringify(erpStock)}`);
 
         let updated = 0;
@@ -263,10 +276,15 @@ Deno.serve(async (req) => {
           message: "Prices synced from ERP (MOCK MODE)",
         };
       } else {
+        if (!baseUrl) throw new Error("ERP base URL is not configured");
         const res = await fetch(`${baseUrl}/prices`, {
           headers: { Authorization: `Bearer ${apiKey}` },
         });
-        const erpPrices = await res.json();
+        const text = await res.text();
+        let erpPrices: any;
+        try { erpPrices = JSON.parse(text); } catch {
+          throw new Error(`ERP returned non-JSON (status ${res.status}): ${text.substring(0, 200)}`);
+        }
         if (!res.ok) throw new Error(`ERP API error: ${JSON.stringify(erpPrices)}`);
 
         let updated = 0;
