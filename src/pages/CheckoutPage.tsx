@@ -119,6 +119,9 @@ const CheckoutPage = () => {
       const { error: itemsErr } = await supabase.from("order_items").insert(orderItems);
       if (itemsErr) throw itemsErr;
 
+      // Push order to Al Faisal ERP (fire-and-forget)
+      pushOrderToERP(order.id);
+
       clearCart();
 
       // If payment is card or paymob, create intention and show Flash Checkout
