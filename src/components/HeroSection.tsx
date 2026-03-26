@@ -102,7 +102,7 @@ const HeroSection = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const videoSrc = heroVideoUrl || "/__l5e/assets-v1/9b7a1c07-d619-4503-adb5-2d02805cba30/hero-premium.mp4";
+  const videoSrc = heroVideoUrl || "/videos/hero-cinematic-v2.mp4";
 
   const stats = [
     { value: 25, suffix: "+", label: t("hero.stat_years") },
