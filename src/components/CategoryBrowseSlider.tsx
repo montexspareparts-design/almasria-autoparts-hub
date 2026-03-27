@@ -151,7 +151,7 @@ const CategoryBrowseSlider = () => {
                 className="snap-start"
               >
                 <Link
-                  to={`/products/toyota-genuine?search=${encodeURIComponent(cat.search)}`}
+                  to={`/products/${cat.brand}?search=${encodeURIComponent(cat.search)}`}
                   className="group/card block relative min-w-[150px] sm:min-w-[170px] rounded-2xl overflow-hidden shadow-md hover:shadow-[0_0_20px_hsl(var(--primary)/0.35),0_15px_35px_hsl(0_0%_0%/0.15)] transition-all duration-500"
                 >
                   <motion.div
