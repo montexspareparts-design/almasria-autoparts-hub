@@ -4,11 +4,12 @@ import { Trash2, Plus, Minus, ShoppingCart, ArrowRight, AlertTriangle, Package }
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
+import CouponInput from "@/components/CouponInput";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 const CartPage = () => {
-  const { items, removeItem, updateQuantity, subtotal, vat, shippingCost, discount, total, itemCount } = useCart();
+  const { items, removeItem, updateQuantity, subtotal, vat, shippingCost, discount, couponCode, couponDiscount, setCouponCode, setCouponDiscount, total, itemCount } = useCart();
   const { isDealer, dealerAccount } = useAuth();
   const navigate = useNavigate();
 
@@ -134,6 +135,12 @@ const CartPage = () => {
                       <span>- {discount.toLocaleString("ar-EG")} ج.م</span>
                     </div>
                   )}
+                  {couponDiscount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>خصم الكوبون</span>
+                      <span>- {couponDiscount.toLocaleString("ar-EG")} ج.م</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">ضريبة القيمة المضافة (14%)</span>
                     <span className="font-semibold">{vat.toLocaleString("ar-EG")} ج.م</span>
@@ -149,6 +156,23 @@ const CartPage = () => {
                       <span className="text-primary">{total.toLocaleString("ar-EG")} ج.م</span>
                     </div>
                   </div>
+                </div>
+
+                {/* Coupon Input */}
+                <div className="mt-4">
+                  <CouponInput
+                    subtotal={subtotal}
+                    appliedCode={couponCode}
+                    appliedDiscount={couponDiscount}
+                    onApply={(amount, code) => {
+                      setCouponDiscount(amount);
+                      setCouponCode(code);
+                    }}
+                    onRemove={() => {
+                      setCouponDiscount(0);
+                      setCouponCode(null);
+                    }}
+                  />
                 </div>
 
                 {/* Min order warning */}

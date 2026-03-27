@@ -89,6 +89,102 @@ export type Database = {
         }
         Relationships: []
       }
+      coupon_usage: {
+        Row: {
+          coupon_id: string
+          discount_applied: number
+          id: string
+          order_id: string | null
+          used_at: string
+          user_id: string
+        }
+        Insert: {
+          coupon_id: string
+          discount_applied?: number
+          id?: string
+          order_id?: string | null
+          used_at?: string
+          user_id: string
+        }
+        Update: {
+          coupon_id?: string
+          discount_applied?: number
+          id?: string
+          order_id?: string | null
+          used_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_usage_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_usage_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupons: {
+        Row: {
+          applies_to_brands: string[] | null
+          code: string
+          created_at: string
+          description: string | null
+          discount_type: string
+          discount_value: number
+          id: string
+          is_active: boolean
+          max_discount_amount: number | null
+          max_uses: number | null
+          min_order_amount: number | null
+          updated_at: string
+          used_count: number
+          valid_from: string | null
+          valid_to: string | null
+        }
+        Insert: {
+          applies_to_brands?: string[] | null
+          code: string
+          created_at?: string
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean
+          max_discount_amount?: number | null
+          max_uses?: number | null
+          min_order_amount?: number | null
+          updated_at?: string
+          used_count?: number
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Update: {
+          applies_to_brands?: string[] | null
+          code?: string
+          created_at?: string
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean
+          max_discount_amount?: number | null
+          max_uses?: number | null
+          min_order_amount?: number | null
+          updated_at?: string
+          used_count?: number
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Relationships: []
+      }
       dealer_accounts: {
         Row: {
           active_session_id: string | null
@@ -550,6 +646,8 @@ export type Database = {
       }
       orders: {
         Row: {
+          coupon_code: string | null
+          coupon_discount: number | null
           created_at: string
           id: string
           invoice_url: string | null
@@ -564,6 +662,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          coupon_code?: string | null
+          coupon_discount?: number | null
           created_at?: string
           id?: string
           invoice_url?: string | null
@@ -578,6 +678,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          coupon_code?: string | null
+          coupon_discount?: number | null
           created_at?: string
           id?: string
           invoice_url?: string | null
@@ -999,6 +1101,57 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      quantity_discounts: {
+        Row: {
+          brand: string | null
+          category_id: string | null
+          created_at: string
+          discount_type: string
+          discount_value: number
+          id: string
+          is_active: boolean
+          min_quantity: number
+          product_id: string | null
+        }
+        Insert: {
+          brand?: string | null
+          category_id?: string | null
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean
+          min_quantity?: number
+          product_id?: string | null
+        }
+        Update: {
+          brand?: string | null
+          category_id?: string | null
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean
+          min_quantity?: number
+          product_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quantity_discounts_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "product_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quantity_discounts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       site_settings: {
         Row: {

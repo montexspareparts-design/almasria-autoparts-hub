@@ -29,6 +29,10 @@ interface CartContextType {
   setShippingCost: (cost: number) => void;
   discount: number;
   setDiscount: (d: number) => void;
+  couponCode: string | null;
+  setCouponCode: (code: string | null) => void;
+  couponDiscount: number;
+  setCouponDiscount: (d: number) => void;
   total: number;
 }
 
@@ -46,6 +50,10 @@ const CartContext = createContext<CartContextType>({
   setShippingCost: () => {},
   discount: 0,
   setDiscount: () => {},
+  couponCode: null,
+  setCouponCode: () => {},
+  couponDiscount: 0,
+  setCouponDiscount: () => {},
   total: 0,
 });
 
@@ -66,6 +74,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   });
   const [shippingCost, setShippingCost] = useState(0);
   const [discount, setDiscount] = useState(0);
+  const [couponCode, setCouponCode] = useState<string | null>(null);
+  const [couponDiscount, setCouponDiscount] = useState(0);
 
   useEffect(() => {
     localStorage.setItem(CART_KEY, JSON.stringify(items));
@@ -114,13 +124,16 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setItems([]);
     setDiscount(0);
     setShippingCost(0);
+    setCouponCode(null);
+    setCouponDiscount(0);
   }, []);
 
   const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
   const subtotal = items.reduce((sum, i) => sum + i.unit_price * i.quantity, 0);
   const vatRate = 0.14;
-  const vat = (subtotal - discount) * vatRate;
-  const total = subtotal - discount + vat + shippingCost;
+  const totalDiscount = discount + couponDiscount;
+  const vat = (subtotal - totalDiscount) * vatRate;
+  const total = subtotal - totalDiscount + vat + shippingCost;
 
   return (
     <CartContext.Provider
@@ -138,6 +151,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         setShippingCost,
         discount,
         setDiscount,
+        couponCode,
+        setCouponCode,
+        couponDiscount,
+        setCouponDiscount,
         total,
       }}
     >

@@ -46,7 +46,7 @@ const paymentMethods = [
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
-  const { items, subtotal, vat, discount, total, clearCart, setShippingCost } = useCart();
+  const { items, subtotal, vat, discount, couponCode, couponDiscount, total, clearCart, setShippingCost } = useCart();
   const { user } = useAuth();
 
   const [shipping, setShipping] = useState("standard");
@@ -102,7 +102,9 @@ const CheckoutPage = () => {
           shipping_governorate: form.governorate,
           shipping_address: `${form.name} - ${form.phone}\n${form.city}, ${form.governorate}\n${form.address}`,
           notes: form.notes || null,
-        })
+          coupon_code: couponCode || null,
+          coupon_discount: couponDiscount || 0,
+        } as any)
         .select("id")
         .single();
 
@@ -121,6 +123,28 @@ const CheckoutPage = () => {
 
       // Push order to Al Faisal ERP (fire-and-forget)
       pushOrderToERP(order.id);
+
+      // Record coupon usage if applied
+      if (couponCode) {
+        const { data: couponData } = await supabase
+          .from("coupons")
+          .select("id")
+          .eq("code", couponCode)
+          .single();
+        if (couponData) {
+          await supabase.from("coupon_usage").insert({
+            coupon_id: couponData.id,
+            user_id: user.id,
+            order_id: order.id,
+            discount_applied: couponDiscount,
+          });
+          // Increment used_count manually
+          await supabase
+            .from("coupons")
+            .update({ used_count: (couponData as any).used_count + 1 } as any)
+            .eq("id", couponData.id);
+        }
+      }
 
       clearCart();
 
@@ -347,6 +371,12 @@ const CheckoutPage = () => {
                     <div className="flex justify-between text-green-600">
                       <span>الخصم</span>
                       <span>- {discount.toLocaleString("ar-EG")} ج.م</span>
+                    </div>
+                  )}
+                  {couponDiscount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>كوبون ({couponCode})</span>
+                      <span>- {couponDiscount.toLocaleString("ar-EG")} ج.م</span>
                     </div>
                   )}
                   <div className="flex justify-between">

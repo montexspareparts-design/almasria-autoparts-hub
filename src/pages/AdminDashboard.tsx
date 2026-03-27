@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, XCircle, Clock, Eye, LogOut, Trash2, Users, ShoppingBag, Video, FileText, Image, Brain, Zap, Bell, ListVideo, Menu, X, ChevronRight, Package, BarChart3 } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Clock, Eye, LogOut, Trash2, Users, ShoppingBag, Video, FileText, Image, Brain, Zap, Bell, ListVideo, Menu, X, ChevronRight, Package, BarChart3, Tag, Layers } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -24,6 +24,8 @@ const AdminPushNotifications = lazy(() => import("@/components/AdminPushNotifica
 const AdminProducts = lazy(() => import("@/components/AdminProducts"));
 const AdminAnalytics = lazy(() => import("@/components/AdminAnalytics"));
 const AdminCustomerProfile = lazy(() => import("@/components/AdminCustomerProfile"));
+const AdminCoupons = lazy(() => import("@/components/AdminCoupons"));
+const AdminQuantityDiscounts = lazy(() => import("@/components/AdminQuantityDiscounts"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];
@@ -48,6 +50,8 @@ const sidebarSections = [
   { id: "dealers", label: "طلبات التجار", icon: Users },
   { id: "products", label: "إدارة المنتجات", icon: Package },
   { id: "orders", label: "إدارة الطلبات", icon: ShoppingBag },
+  { id: "coupons", label: "الكوبونات", icon: Tag },
+  { id: "qty-discounts", label: "خصومات الكمية", icon: Layers },
   { id: "price-lists", label: "عروض الأسعار", icon: FileText },
   { id: "catalogs", label: "الكتالوجات", icon: FileText },
   { id: "hero-video", label: "فيديو الصفحة الرئيسية", icon: Video },
@@ -381,6 +385,10 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminProducts /></Suspense>;
       case "orders":
         return <Suspense fallback={<SectionLoader />}><AdminOrders /></Suspense>;
+      case "coupons":
+        return <Suspense fallback={<SectionLoader />}><AdminCoupons /></Suspense>;
+      case "qty-discounts":
+        return <Suspense fallback={<SectionLoader />}><AdminQuantityDiscounts /></Suspense>;
       case "price-lists":
         return <Suspense fallback={<SectionLoader />}><AdminPriceLists /></Suspense>;
       case "catalogs":
