@@ -62,7 +62,7 @@ interface Props {
   isLoading: boolean;
 }
 
-const AdvancedProductFilter = ({ filters, onFiltersChange, categories, showCategories = true, showBrands = false, totalResults, isLoading }: Props) => {
+const AdvancedProductFilter = ({ filters, onFiltersChange, categories, categoryCounts, showCategories = true, showBrands = false, totalResults, isLoading }: Props) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const activeFilterCount = useMemo(() => {
