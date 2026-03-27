@@ -170,12 +170,19 @@ const ProductCard = ({
 
       {/* ── Content Section ── */}
       <div className="p-3 sm:p-4 space-y-2" onClick={(e) => e.stopPropagation()}>
-        {/* SKU + Stock */}
-        <div className="flex items-center justify-between">
+        {/* SKU + Stock + Brand */}
+        <div className="flex items-center justify-between flex-wrap gap-1">
           <span className="text-[10px] sm:text-[11px] font-mono text-muted-foreground/70 tracking-tight">
             {product.sku}
           </span>
-          <StockBadge available={stockAvailable} />
+          <div className="flex items-center gap-1.5">
+            {brandLabelMap[product.brand] && (
+              <span className={`text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded ${brandLabelMap[product.brand].color}`}>
+                {brandLabelMap[product.brand].label}
+              </span>
+            )}
+            <StockBadge available={stockAvailable} />
+          </div>
         </div>
 
         {/* Name */}
