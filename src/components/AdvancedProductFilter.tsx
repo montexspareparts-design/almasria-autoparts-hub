@@ -55,6 +55,7 @@ interface Props {
   filters: ProductFilters;
   onFiltersChange: (filters: ProductFilters) => void;
   categories?: { id: string; name_ar: string; icon?: string | null }[];
+  categoryCounts?: Record<string, number>;
   showCategories?: boolean;
   showBrands?: boolean;
   totalResults: number;
