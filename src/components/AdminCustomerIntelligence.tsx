@@ -6,10 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { ar } from "date-fns/locale";
 import {
   Users, Search, Eye, ShoppingCart, Phone, Mail, Car,
   TrendingUp, Clock, ChevronDown, ChevronUp, BarChart3,
-  Package, Calendar,
+  Package, Calendar as CalendarIcon, Filter, X,
 } from "lucide-react";
 
 interface CustomerProfile {
@@ -22,9 +28,16 @@ interface CustomerProfile {
   created_at: string;
 }
 
+const CUSTOMER_TYPES = [
+  "عميل دائم", "عميل نشط", "مستكشف أسعار", "باحث متكرر", "زائر مهتم", "زائر جديد",
+] as const;
+
 const AdminCustomerIntelligence = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
+  const [dateFrom, setDateFrom] = useState<Date | undefined>();
+  const [dateTo, setDateTo] = useState<Date | undefined>();
+  const [customerTypeFilter, setCustomerTypeFilter] = useState<string>("all");
 
   // All profiles
   const { data: profiles, isLoading: loadingProfiles } = useQuery({
