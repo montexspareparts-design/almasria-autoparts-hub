@@ -211,12 +211,11 @@ const TrendingProducts = () => {
         </Tabs>
       </div>
 
-      {selectedProduct && (
-        <ProductDetailDialog
-          product={selectedProduct}
-          onClose={() => setSelectedProduct(null)}
-        />
-      )}
+      <ProductDetailDialog
+        product={selectedProduct}
+        open={!!selectedProduct}
+        onOpenChange={(open) => { if (!open) setSelectedProduct(null); }}
+      />
     </section>
   );
 };
