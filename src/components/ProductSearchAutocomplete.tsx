@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { Search, X, Package, Hash, Command, Lightbulb } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
-import { normalizeArabic } from "@/hooks/useProductListing";
+import { normalizeArabic, expandAliases } from "@/hooks/useProductListing";
 
 interface Product {
   id: string;
