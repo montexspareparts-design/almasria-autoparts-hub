@@ -143,6 +143,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         setShippingCost,
         discount,
         setDiscount,
+        couponCode,
+        setCouponCode,
+        couponDiscount,
+        setCouponDiscount,
         total,
       }}
     >
