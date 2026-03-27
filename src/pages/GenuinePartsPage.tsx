@@ -270,7 +270,7 @@ const GenuinePartsPage = () => {
           <AdvancedProductFilter
             filters={filters}
             onFiltersChange={setFilters}
-            categories={dbCategories}
+            categories={dbCategories?.filter(cat => products?.some(p => p.category_id === cat.id))}
             showCategories={true}
             totalResults={filteredProducts.length}
             isLoading={isLoading}
