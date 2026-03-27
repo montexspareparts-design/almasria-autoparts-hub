@@ -123,6 +123,8 @@ const ProductsPage = () => {
     sortBy: "newest",
   });
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const DAILY_LIMIT = 20;
 
   // Reset page when filters change
