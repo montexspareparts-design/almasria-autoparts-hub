@@ -7,6 +7,7 @@ import {
   ChevronLeft, Filter, MapPin, FileText, Users, Wrench,
   Lock, ShoppingCart, Eye, AlertTriangle, Grid3X3, List, ChevronRight, SlidersHorizontal
 } from "lucide-react";
+import ProductCard from "@/components/ProductCard";
 import { motion } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -366,96 +367,26 @@ const GenuinePartsPage = () => {
                     مسح جميع الفلاتر
                   </Button>
                 </div>
-              ) : viewMode === "grid" ? (
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                  {paginatedProducts.map((product, i) => (
-                    <motion.div key={product.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i * 0.02, 0.4) }}
-                      className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300 group cursor-pointer"
-                      onClick={() => setSelectedProduct(product)}
-                    >
-                      <div className="aspect-square bg-white relative overflow-hidden">
-                        {product.image_url ? (
-                          <img src={product.image_url} alt={product.name_ar} className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center"><Package className="w-12 h-12 text-muted-foreground/20" /></div>
-                        )}
-                        {product.is_on_sale && <span className="absolute top-2 left-2 bg-destructive text-destructive-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">تخفيض</span>}
-                      </div>
-                      <div className="p-3 sm:p-4" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-[10px] sm:text-[11px] font-mono bg-muted text-muted-foreground px-2 py-0.5 rounded">{product.sku}</span>
-                          {product.stock_quantity > 0 ? (
-                            <span className="text-[10px] sm:text-[11px] text-green-600 bg-green-50 px-2 py-0.5 rounded font-semibold">متوفر</span>
-                          ) : (
-                            <span className="text-[10px] sm:text-[11px] text-red-600 bg-red-50 px-2 py-0.5 rounded font-semibold">غير متوفر</span>
-                          )}
-                        </div>
-                        <h3 className="font-bold text-card-foreground text-xs sm:text-sm leading-relaxed mb-1.5 line-clamp-2 group-hover:text-primary transition-colors">{product.name_ar}</h3>
-                        {product.product_categories && <p className="text-[10px] sm:text-xs text-muted-foreground mb-3">{(product.product_categories as any).name_ar}</p>}
-                        {!user ? (
-                          <Button variant="outline" size="sm" className="w-full mt-1 gap-2 text-xs" onClick={() => { toast({ title: "يجب تسجيل الدخول أولاً", description: "سجل دخولك لتتمكن من عرض أسعار المنتجات" }); navigate("/auth"); }}>
-                            <Lock className="w-3.5 h-3.5" />سجل دخولك لعرض السعر
-                          </Button>
-                        ) : !isDealer ? (
-                          <>
-                            <div className="text-primary font-black text-base sm:text-lg">{product.base_price.toLocaleString("ar-EG")} ج.م</div>
-                            <p className="text-[10px] sm:text-[11px] text-muted-foreground">سعر قطاعي</p>
-                          </>
-                        ) : viewedProductIds.includes(product.id) ? (
-                          <>
-                            <div className="text-primary font-black text-base sm:text-lg">{getProductPrice(product).toLocaleString("ar-EG")} ج.م</div>
-                            <p className="text-[10px] sm:text-[11px] text-green-600 font-semibold">سعر الجملة الخاص بك</p>
-                          </>
-                        ) : !limitReached ? (
-                          <Button variant="outline" size="sm" className="w-full mt-1 gap-2 text-xs" onClick={() => recordView(product.id)}>
-                            <Eye className="w-3.5 h-3.5" />اعرض السعر ({DAILY_LIMIT - dailyViewCount} متبقي)
-                          </Button>
-                        ) : (
-                          <div className="flex items-center gap-2 text-muted-foreground text-xs py-1"><Lock className="w-3.5 h-3.5" /><span>استنفدت الحد اليومي</span></div>
-                        )}
-                        {product.min_order_qty > 1 && <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-2">الحد الأدنى: {product.min_order_qty} قطعة</p>}
-                        {product.stock_quantity > 0 && user && (!isDealer || viewedProductIds.includes(product.id)) && (
-                          <Button size="sm" className="w-full mt-3 gap-2 text-xs" onClick={() => handleAddToCart(product)}>
-                            <ShoppingCart className="w-3.5 h-3.5" />أضف للسلة
-                          </Button>
-                        )}
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
               ) : (
-                <div className="space-y-3">
+                <div className={viewMode === "grid" ? "grid grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}>
                   {paginatedProducts.map((product, i) => (
-                    <motion.div key={product.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: Math.min(i * 0.02, 0.3) }}
-                      className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/40 hover:shadow-lg transition-all duration-300 cursor-pointer flex"
-                      onClick={() => setSelectedProduct(product)}
-                    >
-                      <div className="w-28 sm:w-36 shrink-0 bg-white flex items-center justify-center p-3">
-                        {product.image_url ? <img src={product.image_url} alt={product.name_ar} className="w-full h-full object-contain" loading="lazy" /> : <Package className="w-10 h-10 text-muted-foreground/20" />}
-                      </div>
-                      <div className="flex-1 p-3 sm:p-4 flex flex-col justify-center" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                          <span className="text-[10px] font-mono bg-muted text-muted-foreground px-2 py-0.5 rounded">{product.sku}</span>
-                          {product.stock_quantity > 0 ? <span className="text-[10px] text-green-600 bg-green-50 px-2 py-0.5 rounded font-semibold">متوفر</span> : <span className="text-[10px] text-red-600 bg-red-50 px-2 py-0.5 rounded font-semibold">غير متوفر</span>}
-                        </div>
-                        <h3 className="font-bold text-card-foreground text-sm leading-relaxed mb-1">{product.name_ar}</h3>
-                        {product.product_categories && <p className="text-xs text-muted-foreground mb-2">{(product.product_categories as any).name_ar}</p>}
-                        <div className="flex items-center gap-3 flex-wrap">
-                          {!user ? (
-                            <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" onClick={() => navigate("/auth")}><Lock className="w-3 h-3" />سجل لعرض السعر</Button>
-                          ) : !isDealer ? (
-                            <span className="text-primary font-black text-lg">{product.base_price.toLocaleString("ar-EG")} ج.م</span>
-                          ) : viewedProductIds.includes(product.id) ? (
-                            <span className="text-primary font-black text-lg">{getProductPrice(product).toLocaleString("ar-EG")} ج.م</span>
-                          ) : !limitReached ? (
-                            <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" onClick={() => recordView(product.id)}><Eye className="w-3 h-3" />اعرض السعر</Button>
-                          ) : null}
-                          {product.stock_quantity > 0 && user && (!isDealer || viewedProductIds.includes(product.id)) && (
-                            <Button size="sm" className="gap-1.5 text-xs h-8" onClick={() => handleAddToCart(product)}><ShoppingCart className="w-3 h-3" />أضف للسلة</Button>
-                          )}
-                        </div>
-                      </div>
-                    </motion.div>
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      index={i}
+                      viewMode={viewMode}
+                      user={user}
+                      isDealer={isDealer}
+                      viewedProductIds={viewedProductIds}
+                      limitReached={limitReached}
+                      dailyViewCount={dailyViewCount}
+                      dailyLimit={DAILY_LIMIT}
+                      getProductPrice={getProductPrice}
+                      onProductClick={setSelectedProduct}
+                      onAddToCart={handleAddToCart}
+                      onRecordView={recordView}
+                      onLoginRequired={() => { toast({ title: "يجب تسجيل الدخول أولاً", description: "سجل دخولك لتتمكن من عرض أسعار المنتجات" }); navigate("/auth"); }}
+                    />
                   ))}
                 </div>
               )}
