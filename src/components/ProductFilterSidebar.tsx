@@ -155,7 +155,7 @@ const ProductFilterSidebar = ({
                     <div className="space-y-0.5 pb-3">
                       {/* All */}
                       <button
-                        onClick={() => updateFilter("categoryId", null)}
+                        onClick={() => handleFilterChange("categoryId", null)}
                         className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-all ${
                           !filters.categoryId
                             ? "bg-primary/10 text-primary font-bold border border-primary/20"
