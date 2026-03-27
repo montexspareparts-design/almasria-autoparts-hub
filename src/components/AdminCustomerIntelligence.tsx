@@ -196,16 +196,105 @@ const AdminCustomerIntelligence = () => {
   const hasActiveFilters = !!dateFrom || !!dateTo || (customerTypeFilter !== "all");
   const clearFilters = () => { setDateFrom(undefined); setDateTo(undefined); setCustomerTypeFilter("all"); };
 
+  const handleExportExcel = useCallback(() => {
+    if (!filteredProfiles || filteredProfiles.length === 0) {
+      toast({ title: "لا توجد بيانات للتصدير", variant: "destructive" });
+      return;
+    }
+
+    // Sheet 1: Customer profiles
+    const profileRows = filteredProfiles.map(p => {
+      const type = getCustomerType(p.user_id);
+      const orders = ordersMap?.[p.user_id];
+      const searches = userSearchMap[p.user_id] || [];
+      const views = userViewsMap[p.user_id] || [];
+      return {
+        "الاسم": p.full_name || "—",
+        "الهاتف": p.phone || "—",
+        "البريد الإلكتروني": p.email || "—",
+        "نوع السيارة": p.car_model || "—",
+        "سنة السيارة": p.car_year || "—",
+        "تاريخ التسجيل": format(new Date(p.created_at), "yyyy-MM-dd"),
+        "تصنيف العميل": type,
+        "عدد الطلبات": orders?.count || 0,
+        "إجمالي المشتريات (ج.م)": orders?.total || 0,
+        "عدد عمليات البحث": searches.length,
+        "عدد الأصناف المسعّرة": views.length,
+      };
+    });
+
+    // Sheet 2: Search activity detail
+    const searchRows: any[] = [];
+    filteredProfiles.forEach(p => {
+      const searches = userSearchMap[p.user_id] || [];
+      searches.forEach(s => {
+        searchRows.push({
+          "الاسم": p.full_name || "—",
+          "الهاتف": p.phone || "—",
+          "كلمة البحث": s.query,
+          "عدد المرات": s.count,
+          "آخر بحث": format(new Date(s.lastAt), "yyyy-MM-dd HH:mm"),
+        });
+      });
+    });
+
+    // Sheet 3: Price views detail
+    const viewRows: any[] = [];
+    filteredProfiles.forEach(p => {
+      const views = userViewsMap[p.user_id] || [];
+      views.slice(0, 50).forEach(pid => {
+        const product = productsMap?.[pid];
+        if (!product) return;
+        viewRows.push({
+          "الاسم": p.full_name || "—",
+          "الهاتف": p.phone || "—",
+          "اسم المنتج": product.name_ar,
+          "رقم القطعة": product.sku,
+          "الماركة": product.brand,
+        });
+      });
+    });
+
+    const wb = XLSX.utils.book_new();
+    const ws1 = XLSX.utils.json_to_sheet(profileRows);
+    const ws2 = XLSX.utils.json_to_sheet(searchRows.length > 0 ? searchRows : [{ "ملاحظة": "لا توجد بيانات بحث" }]);
+    const ws3 = XLSX.utils.json_to_sheet(viewRows.length > 0 ? viewRows : [{ "ملاحظة": "لا توجد بيانات تسعير" }]);
+
+    // Set RTL and column widths
+    [ws1, ws2, ws3].forEach(ws => {
+      ws["!dir"] = "rtl" as any;
+    });
+    ws1["!cols"] = [
+      { wch: 20 }, { wch: 15 }, { wch: 25 }, { wch: 15 }, { wch: 12 },
+      { wch: 14 }, { wch: 15 }, { wch: 12 }, { wch: 18 }, { wch: 15 }, { wch: 18 },
+    ];
+    ws2["!cols"] = [{ wch: 20 }, { wch: 15 }, { wch: 30 }, { wch: 12 }, { wch: 18 }];
+    ws3["!cols"] = [{ wch: 20 }, { wch: 15 }, { wch: 35 }, { wch: 18 }, { wch: 15 }];
+
+    XLSX.utils.book_append_sheet(wb, ws1, "ملف العملاء");
+    XLSX.utils.book_append_sheet(wb, ws2, "سجل البحث");
+    XLSX.utils.book_append_sheet(wb, ws3, "الأصناف المسعّرة");
+
+    XLSX.writeFile(wb, `تقرير_ذكاء_العملاء_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+    toast({ title: "تم تصدير التقرير بنجاح ✅" });
+  }, [filteredProfiles, ordersMap, userSearchMap, userViewsMap, productsMap, getCustomerType]);
+
   return (
     <div className="space-y-6" dir="rtl">
-      <div>
-        <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <BarChart3 className="w-6 h-6 text-primary" />
-          تقرير ذكاء العملاء
-        </h2>
-        <p className="text-muted-foreground text-sm mt-1">
-          تحليل شامل لسلوك العملاء: عمليات البحث، الأسعار المشاهدة، الطلبات
-        </p>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <BarChart3 className="w-6 h-6 text-primary" />
+            تقرير ذكاء العملاء
+          </h2>
+          <p className="text-muted-foreground text-sm mt-1">
+            تحليل شامل لسلوك العملاء: عمليات البحث، الأسعار المشاهدة، الطلبات
+          </p>
+        </div>
+        <Button onClick={handleExportExcel} className="gap-2 font-bold">
+          <Download className="w-4 h-4" />
+          تصدير Excel
+        </Button>
       </div>
 
       {/* KPIs */}
