@@ -164,13 +164,17 @@ const TrendingProducts = () => {
               )}
               <div className="flex items-center justify-between pt-1">
                 <div className="flex items-baseline gap-1">
-                  {product.is_on_sale && product.sale_price ? (
-                    <>
-                      <span className="text-sm font-black text-primary">{product.sale_price} ج.م</span>
-                      <span className="text-[10px] text-muted-foreground line-through">{product.base_price}</span>
-                    </>
+                  {user ? (
+                    product.is_on_sale && product.sale_price ? (
+                      <>
+                        <span className="text-sm font-black text-primary">{product.sale_price} ج.م</span>
+                        <span className="text-[10px] text-muted-foreground line-through">{product.base_price}</span>
+                      </>
+                    ) : (
+                      <span className="text-sm font-black text-primary">{product.base_price} ج.م</span>
+                    )
                   ) : (
-                    <span className="text-sm font-black text-primary">{product.base_price} ج.م</span>
+                    <span className="text-xs font-bold text-muted-foreground">سجّل لرؤية السعر</span>
                   )}
                 </div>
                 {user && (
