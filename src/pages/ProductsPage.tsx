@@ -185,6 +185,8 @@ const ProductsPage = () => {
         backgroundImage={config.backgroundImage} logoScale={config.logoScale}
       />
 
+      <div className="pt-6"><PromoBanner /></div>
+
       <ProductListingSection
         {...listing}
         dailyLimit={listing.DAILY_LIMIT}
