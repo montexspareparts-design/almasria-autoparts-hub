@@ -212,13 +212,18 @@ export function useProductListing(options: UseProductListingOptions = {}) {
         // If search contains a year, match text part separately
         const textToSearch = searchYear ? searchWithoutYear : filters.search;
         if (textToSearch) {
-          const variants = generateSearchVariants(textToSearch);
           const normalizedName = normalizeArabic(p.name_ar);
           const skuLower = p.sku.toLowerCase();
           const nameEnLower = (p.name_en || "").toLowerCase();
-          matchesSearch = variants.some(v =>
-            normalizedName.includes(v) || skuLower.includes(v) || nameEnLower.includes(v)
-          );
+          
+          // Split search into individual words and check ALL words exist (AND logic)
+          const searchWords = textToSearch.trim().split(/\s+/).filter(w => w.length > 0);
+          matchesSearch = searchWords.every(word => {
+            const wordVariants = generateSearchVariants(word);
+            return wordVariants.some(v =>
+              normalizedName.includes(v) || skuLower.includes(v) || nameEnLower.includes(v)
+            );
+          });
         }
       }
 
