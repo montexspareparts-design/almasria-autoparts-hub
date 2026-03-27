@@ -26,25 +26,25 @@ import catGaskets from "@/assets/categories/cat-gaskets.jpg";
 import catDynamo from "@/assets/categories/cat-dynamo.jpg";
 
 const categories = [
-  { name: "بوجيهات ومباين", image: catSparkPlugs, search: "بوجي", accent: "from-amber-500/80 to-orange-600/90" },
-  { name: "دورة تبريد مياه", image: catCooling, search: "مياه", accent: "from-blue-500/80 to-cyan-600/90" },
-  { name: "سيور وبلي", image: catBelts, search: "سير", accent: "from-gray-600/80 to-gray-800/90" },
-  { name: "عفشة", image: catSuspension, search: "مقص", accent: "from-green-600/80 to-emerald-700/90" },
-  { name: "دبرياج", image: catClutch, search: "دبرياج", accent: "from-red-500/80 to-rose-700/90" },
-  { name: "فلاتر", image: catFilters, search: "فلتر", accent: "from-purple-500/80 to-violet-700/90" },
-  { name: "فيبر", image: catBody, search: "فيبر", accent: "from-yellow-500/80 to-amber-600/90" },
-  { name: "اكصدامات", image: catBumpers, search: "اكصدام", accent: "from-stone-600/80 to-stone-800/90" },
-  { name: "اويل سيل", image: catOilSeals, search: "اويل سيل", accent: "from-orange-600/80 to-amber-800/90" },
-  { name: "كشافات", image: catHeadlights, search: "كشاف", accent: "from-sky-500/80 to-blue-700/90" },
-  { name: "كاوتشات", image: catRubber, search: "كاوتش", accent: "from-zinc-600/80 to-zinc-800/90" },
-  { name: "مرايات", image: catMirrors, search: "مراي", accent: "from-cyan-500/80 to-cyan-700/90" },
-  { name: "جوانات", image: catGaskets, search: "جوان", accent: "from-rose-500/80 to-red-700/90" },
-  { name: "مساعدين", image: catShocks, search: "مساعد", accent: "from-emerald-500/80 to-green-700/90" },
-  { name: "دينامو", image: catDynamo, search: "دينامو", accent: "from-violet-500/80 to-purple-700/90" },
-  { name: "زيوت بنزين", image: catOilGasoline, search: "زيت محرك بنزين", accent: "from-teal-500/80 to-teal-700/90" },
-  { name: "زيوت ديزل", image: catOilDiesel, search: "زيت محرك ديزل", accent: "from-slate-600/80 to-slate-800/90" },
-  { name: "زيوت فتيس", image: catOilTransmission, search: "زيت فتيس", accent: "from-indigo-500/80 to-indigo-700/90" },
-  { name: "تيل فرامل", image: catBrakePads, search: "طقم تيل", accent: "from-pink-500/80 to-rose-700/90" },
+  { name: "بوجيهات ومباين", image: catSparkPlugs, search: "بوجي", accent: "from-amber-500/80 to-orange-600/90", brand: "toyota-genuine" },
+  { name: "دورة تبريد مياه", image: catCooling, search: "مياه", accent: "from-blue-500/80 to-cyan-600/90", brand: "toyota-genuine" },
+  { name: "سيور وبلي", image: catBelts, search: "سير", accent: "from-gray-600/80 to-gray-800/90", brand: "toyota-genuine" },
+  { name: "عفشة", image: catSuspension, search: "مقص", accent: "from-green-600/80 to-emerald-700/90", brand: "toyota-genuine" },
+  { name: "دبرياج", image: catClutch, search: "دبرياج", accent: "from-red-500/80 to-rose-700/90", brand: "toyota-genuine" },
+  { name: "فلاتر", image: catFilters, search: "فلتر", accent: "from-purple-500/80 to-violet-700/90", brand: "toyota-genuine" },
+  { name: "فيبر", image: catBody, search: "فيبر", accent: "from-yellow-500/80 to-amber-600/90", brand: "toyota-genuine" },
+  { name: "اكصدامات", image: catBumpers, search: "اكصدام", accent: "from-stone-600/80 to-stone-800/90", brand: "toyota-genuine" },
+  { name: "اويل سيل", image: catOilSeals, search: "اويل سيل", accent: "from-orange-600/80 to-amber-800/90", brand: "toyota-genuine" },
+  { name: "كشافات", image: catHeadlights, search: "كشاف", accent: "from-sky-500/80 to-blue-700/90", brand: "toyota-genuine" },
+  { name: "كاوتشات", image: catRubber, search: "كاوتش", accent: "from-zinc-600/80 to-zinc-800/90", brand: "toyota-genuine" },
+  { name: "مرايات", image: catMirrors, search: "مراي", accent: "from-cyan-500/80 to-cyan-700/90", brand: "toyota-genuine" },
+  { name: "جوانات", image: catGaskets, search: "جوان", accent: "from-rose-500/80 to-red-700/90", brand: "toyota-genuine" },
+  { name: "مساعدين", image: catShocks, search: "مساعد", accent: "from-emerald-500/80 to-green-700/90", brand: "toyota-genuine" },
+  { name: "دينامو", image: catDynamo, search: "دينامو", accent: "from-violet-500/80 to-purple-700/90", brand: "toyota-genuine" },
+  { name: "زيوت بنزين", image: catOilGasoline, search: "زيت محرك بنزين", accent: "from-teal-500/80 to-teal-700/90", brand: "toyota-oils" },
+  { name: "زيوت ديزل", image: catOilDiesel, search: "زيت محرك ديزل", accent: "from-slate-600/80 to-slate-800/90", brand: "toyota-oils" },
+  { name: "زيوت فتيس", image: catOilTransmission, search: "زيت فتيس", accent: "from-indigo-500/80 to-indigo-700/90", brand: "toyota-oils" },
+  { name: "تيل فرامل", image: catBrakePads, search: "طقم تيل", accent: "from-pink-500/80 to-rose-700/90", brand: "fbk" },
 ];
 
 const CategoryBrowseSlider = () => {
@@ -151,7 +151,7 @@ const CategoryBrowseSlider = () => {
                 className="snap-start"
               >
                 <Link
-                  to={`/products/toyota-genuine?search=${encodeURIComponent(cat.search)}`}
+                  to={`/products/${cat.brand}?search=${encodeURIComponent(cat.search)}`}
                   className="group/card block relative min-w-[150px] sm:min-w-[170px] rounded-2xl overflow-hidden shadow-md hover:shadow-[0_0_20px_hsl(var(--primary)/0.35),0_15px_35px_hsl(0_0%_0%/0.15)] transition-all duration-500"
                 >
                   <motion.div
