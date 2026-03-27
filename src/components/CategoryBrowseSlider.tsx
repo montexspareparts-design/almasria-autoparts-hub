@@ -93,8 +93,13 @@ const CategoryBrowseSlider = () => {
   const checkScroll = () => {
     if (!scrollRef.current) return;
     const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-    setCanScrollLeft(scrollLeft > 10);
-    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+    // RTL: scrollLeft is 0 at start (right edge) and goes negative as you scroll left
+    const absScroll = Math.abs(scrollLeft);
+    const maxScroll = scrollWidth - clientWidth;
+    // "canScrollRight" in RTL visual = can go back toward start (scrollLeft closer to 0)
+    setCanScrollRight(absScroll > 10);
+    // "canScrollLeft" in RTL visual = can scroll further left (more negative)
+    setCanScrollLeft(absScroll < maxScroll - 10);
   };
 
   const scroll = (dir: "left" | "right") => {
