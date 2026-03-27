@@ -137,14 +137,39 @@ const AdminCustomerIntelligence = () => {
 
   // Filter profiles
   const filteredProfiles = profiles?.filter(p => {
-    if (!searchTerm) return true;
-    const term = searchTerm.toLowerCase();
-    return (
-      p.full_name?.toLowerCase().includes(term) ||
-      p.phone?.includes(term) ||
-      p.email?.toLowerCase().includes(term) ||
-      p.car_model?.toLowerCase().includes(term)
-    );
+    // Text search
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      const matchesText = (
+        p.full_name?.toLowerCase().includes(term) ||
+        p.phone?.includes(term) ||
+        p.email?.toLowerCase().includes(term) ||
+        p.car_model?.toLowerCase().includes(term)
+      );
+      if (!matchesText) return false;
+    }
+
+    // Date from
+    if (dateFrom) {
+      const profileDate = new Date(p.created_at);
+      if (profileDate < dateFrom) return false;
+    }
+
+    // Date to
+    if (dateTo) {
+      const profileDate = new Date(p.created_at);
+      const endOfDay = new Date(dateTo);
+      endOfDay.setHours(23, 59, 59, 999);
+      if (profileDate > endOfDay) return false;
+    }
+
+    // Customer type
+    if (customerTypeFilter && customerTypeFilter !== "all") {
+      const type = getCustomerType(p.user_id);
+      if (type !== customerTypeFilter) return false;
+    }
+
+    return true;
   });
 
   // Stats
