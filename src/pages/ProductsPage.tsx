@@ -201,8 +201,9 @@ const ProductsPage = () => {
 
       <CategoryBrowseSlider />
 
-      <div ref={productsRef} className="pt-6"><PromoBanner /></div>
+      <div className="pt-6"><PromoBanner /></div>
 
+      <div ref={productsRef} />
       <ProductListingSection
         {...listing}
         dailyLimit={listing.DAILY_LIMIT}
