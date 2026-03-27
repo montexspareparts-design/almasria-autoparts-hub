@@ -52,6 +52,7 @@ const CategoryBrowseSlider = () => {
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     const fetchCounts = async () => {
@@ -71,6 +72,23 @@ const CategoryBrowseSlider = () => {
     };
     fetchCounts();
   }, []);
+
+  // Auto-scroll when not hovered
+  useEffect(() => {
+    if (isHovered || !scrollRef.current) return;
+    const interval = setInterval(() => {
+      if (!scrollRef.current) return;
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      // RTL: scroll negatively (left), reset when reaching end
+      if (scrollLeft <= -(scrollWidth - clientWidth) + 10) {
+        scrollRef.current.scrollTo({ left: 0, behavior: "smooth" });
+      } else {
+        scrollRef.current.scrollBy({ left: -200, behavior: "smooth" });
+      }
+      setTimeout(checkScroll, 350);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [isHovered]);
 
   const checkScroll = () => {
     if (!scrollRef.current) return;
