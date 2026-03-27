@@ -22,6 +22,8 @@ const ContactSimple = lazy(() => import("@/components/ContactSimple"));
 const Footer = lazy(() => import("@/components/Footer"));
 const WhatsAppFloat = lazy(() => import("@/components/WhatsAppFloat"));
 const BackToTop = lazy(() => import("@/components/BackToTop"));
+const CarRecommendations = lazy(() => import("@/components/CarRecommendations"));
+const CarProfilePopup = lazy(() => import("@/components/CarProfilePopup"));
 
 
 const SectionFallback = () => (
