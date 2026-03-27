@@ -27,6 +27,12 @@ const generateSearchVariants = (term: string): string[] => {
   variants.add(normalized.replace(/ه/g, "ة"));
   variants.add(term.toLowerCase().replace(/ه/g, "ة"));
   variants.add(term.toLowerCase().replace(/ة/g, "ه"));
+  // Handle ى/ي/ا interchangeability (common in Egyptian Arabic)
+  variants.add(normalized.replace(/ي/g, "ا"));
+  variants.add(normalized.replace(/ا/g, "ي"));
+  // Handle final ى→ا (e.g., كورولى → كورولا)
+  variants.add(term.toLowerCase().replace(/ى$/g, "ا"));
+  variants.add(term.toLowerCase().replace(/ى/g, "ا"));
   return Array.from(variants);
 };
 
