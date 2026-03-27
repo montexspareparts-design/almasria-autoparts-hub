@@ -20,6 +20,17 @@ export const normalizeArabic = (text: string): string => {
     .toLowerCase();
 };
 
+/**
+ * Create a "consonant skeleton" by removing short vowel-like letters (ا و ي)
+ * so كورولا / كرولا / كارولا all become the same skeleton: كرل
+ * This enables fuzzy matching for Arabic transliterations of foreign words.
+ */
+const toConsonantSkeleton = (text: string): string => {
+  return text
+    .replace(/[اوي]/g, "")  // Remove Arabic vowel letters
+    .replace(/[aeiou]/gi, ""); // Remove Latin vowels too
+};
+
 const generateSearchVariants = (term: string): string[] => {
   const normalized = normalizeArabic(term);
   const variants = new Set<string>([term.toLowerCase(), normalized]);
@@ -34,6 +45,34 @@ const generateSearchVariants = (term: string): string[] => {
   variants.add(term.toLowerCase().replace(/ى$/g, "ا"));
   variants.add(term.toLowerCase().replace(/ى/g, "ا"));
   return Array.from(variants);
+};
+
+/**
+ * Check if a search word matches text using both exact variants AND fuzzy consonant skeleton.
+ * This handles cases like كورولا/كرولا/كارولا matching the same products.
+ */
+const fuzzyMatchWord = (word: string, ...texts: string[]): boolean => {
+  const wordVariants = generateSearchVariants(word);
+  const joined = texts.join(" ");
+
+  // 1) Exact variant match
+  if (wordVariants.some(v => joined.includes(v))) return true;
+
+  // 2) Consonant skeleton match (only for Arabic words >= 3 chars)
+  const normalizedWord = normalizeArabic(word);
+  if (normalizedWord.length >= 3 && /[\u0600-\u06FF]/.test(normalizedWord)) {
+    const wordSkeleton = toConsonantSkeleton(normalizedWord);
+    if (wordSkeleton.length >= 2) {
+      // Check each word in the target texts
+      const targetWords = joined.split(/\s+/);
+      return targetWords.some(tw => {
+        const twSkeleton = toConsonantSkeleton(normalizeArabic(tw));
+        return twSkeleton.length >= 2 && (twSkeleton.includes(wordSkeleton) || wordSkeleton.includes(twSkeleton));
+      });
+    }
+  }
+
+  return false;
 };
 
 const ITEMS_PER_PAGE = 24;
@@ -227,16 +266,11 @@ export function useProductListing(options: UseProductListingOptions = {}) {
           const nameEnLower = (p.name_en || "").toLowerCase();
           const descArNorm = normalizeArabic(p.description_ar || "");
           const modelsText = normalizeArabic((p.compatible_models || []).join(" "));
+          const allText = `${normalizedName} ${skuLower} ${nameEnLower} ${descArNorm} ${modelsText}`;
           
           // Split search into individual words and check ALL words exist (AND logic)
           const searchWords = textToSearch.trim().split(/\s+/).filter((w: string) => w.length > 0);
-          matchesSearch = searchWords.every((word: string) => {
-            const wordVariants = generateSearchVariants(word);
-            return wordVariants.some(v =>
-              normalizedName.includes(v) || skuLower.includes(v) || nameEnLower.includes(v) ||
-              descArNorm.includes(v) || modelsText.includes(v)
-            );
-          });
+          matchesSearch = searchWords.every((word: string) => fuzzyMatchWord(word, allText));
         }
         // If textToSearch is empty (year-only search like "2022"), match all products
       }
@@ -245,10 +279,9 @@ export function useProductListing(options: UseProductListingOptions = {}) {
 
       let matchesModel = true;
       if (filters.model) {
-        const modelVariants = generateSearchVariants(filters.model);
         const normalizedName = normalizeArabic(p.name_ar);
         const modelsText = normalizeArabic((p.compatible_models || []).join(" "));
-        matchesModel = modelVariants.some(v => normalizedName.includes(v) || modelsText.includes(v));
+        matchesModel = fuzzyMatchWord(filters.model, normalizedName, modelsText);
       }
 
       const matchesYear = !filters.year || p.name_ar.includes(filters.year);
