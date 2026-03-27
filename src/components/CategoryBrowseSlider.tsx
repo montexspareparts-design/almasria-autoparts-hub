@@ -192,31 +192,62 @@ const CategoryBrowseSlider = () => {
           </div>
         </div>
 
-        {/* Navigation Arrows - below slider */}
-        {(canScrollLeft || canScrollRight) && (
-          <div className="flex justify-center gap-3 mt-4">
-            {canScrollRight && (
-              <Button
-                size="icon"
-                variant="secondary"
-                className="rounded-full shadow-md w-10 h-10 bg-primary text-primary-foreground hover:bg-primary/90 border-2 border-white"
-                onClick={() => scroll("left")}
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </Button>
-            )}
-            {canScrollLeft && (
-              <Button
-                size="icon"
-                variant="secondary"
-                className="rounded-full shadow-md w-10 h-10 bg-primary text-primary-foreground hover:bg-primary/90 border-2 border-white"
-                onClick={() => scroll("right")}
-              >
-                <ChevronRight className="w-5 h-5" />
-              </Button>
-            )}
+        {/* Dots indicator + Navigation Arrows */}
+        <div className="flex flex-col items-center gap-3 mt-4">
+          {/* Dots */}
+          <div className="flex items-center gap-1.5">
+            {Array.from({ length: 5 }).map((_, i) => {
+              const dotPosition = i / 4;
+              const isActive = Math.abs(scrollProgress - dotPosition) < 0.15;
+              return (
+                <button
+                  key={i}
+                  onClick={() => {
+                    if (!scrollRef.current) return;
+                    const { scrollWidth, clientWidth } = scrollRef.current;
+                    const maxScroll = scrollWidth - clientWidth;
+                    scrollRef.current.scrollTo({
+                      left: -(maxScroll * dotPosition),
+                      behavior: "smooth",
+                    });
+                    setTimeout(checkScroll, 350);
+                  }}
+                  className={`rounded-full transition-all duration-300 ${
+                    isActive
+                      ? "w-6 h-2.5 bg-primary"
+                      : "w-2.5 h-2.5 bg-primary/25 hover:bg-primary/50"
+                  }`}
+                />
+              );
+            })}
           </div>
-        )}
+
+          {/* Arrows */}
+          {(canScrollLeft || canScrollRight) && (
+            <div className="flex justify-center gap-3">
+              {canScrollRight && (
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  className="rounded-full shadow-md w-10 h-10 bg-primary text-primary-foreground hover:bg-primary/90 border-2 border-white"
+                  onClick={() => scroll("left")}
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </Button>
+              )}
+              {canScrollLeft && (
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  className="rounded-full shadow-md w-10 h-10 bg-primary text-primary-foreground hover:bg-primary/90 border-2 border-white"
+                  onClick={() => scroll("right")}
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );
