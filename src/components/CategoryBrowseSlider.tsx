@@ -151,34 +151,39 @@ const CategoryBrowseSlider = () => {
               >
                 <Link
                   to={`/products/toyota-genuine?search=${encodeURIComponent(cat.search)}`}
-                  className="group/card block relative min-w-[150px] sm:min-w-[170px] rounded-2xl overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-400"
+                  className="group/card block relative min-w-[150px] sm:min-w-[170px] rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-shadow duration-400"
                 >
-                  {/* Product Image */}
-                  <div className="aspect-square bg-white p-3 relative overflow-hidden">
-                    <img
-                      src={cat.image}
-                      alt={cat.name}
-                      loading="lazy"
-                      width={512}
-                      height={512}
-                      className="w-full h-full object-contain group-hover/card:scale-110 transition-transform duration-500"
-                    />
-                    {/* Hover overlay */}
-                    <div className="absolute inset-0 bg-primary/0 group-hover/card:bg-primary/5 transition-colors duration-300" />
-                  </div>
+                  <motion.div
+                    whileHover={{ y: -8, scale: 1.03 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  >
+                    {/* Product Image */}
+                    <div className="aspect-square bg-white p-3 relative overflow-hidden">
+                      <img
+                        src={cat.image}
+                        alt={cat.name}
+                        loading="lazy"
+                        width={512}
+                        height={512}
+                        className="w-full h-full object-contain group-hover/card:scale-110 transition-transform duration-500"
+                      />
+                      {/* Hover overlay */}
+                      <div className="absolute inset-0 bg-primary/0 group-hover/card:bg-primary/5 transition-colors duration-300" />
+                    </div>
 
-                  {/* Label */}
-                  <div className={`relative bg-gradient-to-br ${cat.accent} px-4 py-3.5 text-center`}>
-                    <span className="text-white font-bold text-sm block leading-snug">
-                      {cat.name}
-                    </span>
-                    <span className="text-white/70 text-[11px] block mt-0.5">
-                      {categoryCounts[cat.search] !== undefined
-                        ? `${categoryCounts[cat.search]} صنف`
-                        : "..."}
-                    </span>
-                    <ChevronLeft className="w-4 h-4 text-white/70 mx-auto mt-1 group-hover/card:text-white group-hover/card:-translate-x-1 transition-all duration-300" />
-                  </div>
+                    {/* Label */}
+                    <div className={`relative bg-gradient-to-br ${cat.accent} px-4 py-3.5 text-center`}>
+                      <span className="text-white font-bold text-sm block leading-snug">
+                        {cat.name}
+                      </span>
+                      <span className="text-white/70 text-[11px] block mt-0.5">
+                        {categoryCounts[cat.search] !== undefined
+                          ? `${categoryCounts[cat.search]} صنف`
+                          : "..."}
+                      </span>
+                      <ChevronLeft className="w-4 h-4 text-white/70 mx-auto mt-1 group-hover/card:text-white group-hover/card:-translate-x-1 transition-all duration-300" />
+                    </div>
+                  </motion.div>
                 </Link>
               </motion.div>
             ))}
