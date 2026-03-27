@@ -21,41 +21,77 @@ export const normalizeArabic = (text: string): string => {
 };
 
 /**
+ * Compound word aliases — maps common misspellings/variants to canonical forms.
+ * Key: normalized alias, Value: array of canonical search terms to inject.
+ */
+const compoundAliases: Record<string, string[]> = {
+  // هاي اس variants
+  "هاياس": ["هاي اس"], "هايس": ["هاي اس"], "هاس": ["هاي اس"],
+  "هاى اس": ["هاي اس"], "هاى ايس": ["هاي اس"], "هاي ايس": ["هاي اس"],
+  // هاي لوكس variants
+  "هايلوكس": ["هاي لوكس"], "هايلكس": ["هاي لوكس"], "هيلوكس": ["هاي لوكس"],
+  "هيلكس": ["هاي لوكس"], "هايلاكس": ["هاي لوكس"],
+  // لاند كروزر variants
+  "لاندكروزر": ["لاند كروزر"], "لندكروزر": ["لاند كروزر"],
+  "لاندكرورز": ["لاند كروزر"], "لاند كرورز": ["لاند كروزر"],
+  // فورتشنر variants
+  "فورشنر": ["فورتشنر"], "فرتشنر": ["فورتشنر"], "فورتشينر": ["فورتشنر"],
+  // راف فور variants
+  "رافور": ["راف فور"], "رافو": ["راف فور"], "راففور": ["راف فور"],
+};
+
+/** Expand search query by replacing known aliases with canonical forms */
+export const expandAliases = (query: string): string => {
+  let expanded = normalizeArabic(query);
+  // Try full query first (for compound aliases)
+  if (compoundAliases[expanded]) {
+    return compoundAliases[expanded].join(" ");
+  }
+  // Try each word
+  const words = expanded.split(/\s+/);
+  const result = words.map(w => {
+    const alias = compoundAliases[w];
+    return alias ? alias.join(" ") : w;
+  });
+  return result.join(" ");
+};
+
+/**
  * Create a "consonant skeleton" by removing short vowel-like letters (ا و ي)
  * so كورولا / كرولا / كارولا all become the same skeleton: كرل
- * This enables fuzzy matching for Arabic transliterations of foreign words.
  */
 const toConsonantSkeleton = (text: string): string => {
   return text
-    .replace(/[اوي]/g, "")  // Remove Arabic vowel letters
-    .replace(/[aeiou]/gi, ""); // Remove Latin vowels too
+    .replace(/[اوي]/g, "")
+    .replace(/[aeiou]/gi, "");
 };
 
 const generateSearchVariants = (term: string): string[] => {
   const normalized = normalizeArabic(term);
   const variants = new Set<string>([term.toLowerCase(), normalized]);
+  // Expand aliases
+  const aliasExpanded = expandAliases(term);
+  if (aliasExpanded !== normalized) variants.add(aliasExpanded);
   // Add variant with ة instead of ه and vice versa
   variants.add(normalized.replace(/ه/g, "ة"));
   variants.add(term.toLowerCase().replace(/ه/g, "ة"));
   variants.add(term.toLowerCase().replace(/ة/g, "ه"));
-  // Handle ى/ي/ا interchangeability (common in Egyptian Arabic)
+  // Handle ى/ي/ا interchangeability
   variants.add(normalized.replace(/ي/g, "ا"));
   variants.add(normalized.replace(/ا/g, "ي"));
-  // Handle final ى→ا (e.g., كورولى → كورولا)
   variants.add(term.toLowerCase().replace(/ى$/g, "ا"));
   variants.add(term.toLowerCase().replace(/ى/g, "ا"));
   return Array.from(variants);
 };
 
 /**
- * Check if a search word matches text using both exact variants AND fuzzy consonant skeleton.
- * This handles cases like كورولا/كرولا/كارولا matching the same products.
+ * Check if a search word matches text using exact variants, aliases, AND fuzzy skeleton.
  */
 const fuzzyMatchWord = (word: string, ...texts: string[]): boolean => {
   const wordVariants = generateSearchVariants(word);
   const joined = texts.join(" ");
 
-  // 1) Exact variant match
+  // 1) Exact variant match (includes alias-expanded variants)
   if (wordVariants.some(v => joined.includes(v))) return true;
 
   // 2) Consonant skeleton match (only for Arabic words >= 3 chars)
@@ -63,7 +99,6 @@ const fuzzyMatchWord = (word: string, ...texts: string[]): boolean => {
   if (normalizedWord.length >= 3 && /[\u0600-\u06FF]/.test(normalizedWord)) {
     const wordSkeleton = toConsonantSkeleton(normalizedWord);
     if (wordSkeleton.length >= 2) {
-      // Check each word in the target texts
       const targetWords = joined.split(/\s+/);
       return targetWords.some(tw => {
         const twSkeleton = toConsonantSkeleton(normalizeArabic(tw));
