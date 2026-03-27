@@ -43,6 +43,8 @@ const ProductCard = ({
       >
         {/* Image */}
         <div className="w-28 sm:w-40 shrink-0 bg-white relative flex items-center justify-center p-3 overflow-hidden">
+          {/* Shimmer sweep on hover */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out z-10 pointer-events-none" />
           {product.image_url ? (
             <img
               src={product.image_url}
@@ -105,7 +107,7 @@ const ProductCard = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: Math.min(index * 0.025, 0.4), duration: 0.35 }}
       className="bg-card border border-border rounded-2xl overflow-hidden group cursor-pointer relative
-        hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/8 hover:-translate-y-1.5
+        hover:border-primary/30 hover:shadow-[0_0_20px_hsl(var(--primary)/0.15),0_15px_35px_hsl(0_0%_0%/0.1)] hover:-translate-y-1.5
         transition-all duration-400 ease-out"
       onClick={() => onProductClick(product)}
     >
@@ -113,6 +115,8 @@ const ProductCard = ({
       <div className="aspect-square bg-white relative overflow-hidden">
         {/* Gradient overlay on hover */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400 z-10 pointer-events-none" />
+        {/* Shimmer sweep on hover */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out z-10 pointer-events-none" />
 
         {product.image_url ? (
           <img
