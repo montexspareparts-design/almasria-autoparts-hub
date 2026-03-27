@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { Filter, X, Search, ChevronDown, ChevronUp, SlidersHorizontal, Hash, Car, Calendar, DollarSign, Tag, RotateCcw, Layers } from "lucide-react";
+import { useState, useMemo, lazy, Suspense } from "react";
+import { Filter, X, Search, ChevronDown, ChevronUp, SlidersHorizontal, Hash, Car, Calendar, DollarSign, Tag, RotateCcw, Layers, Zap, Droplets, CircleDot, Truck, Disc3, icons } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
