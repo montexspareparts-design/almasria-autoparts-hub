@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { Filter, X, Search, ChevronDown, ChevronUp, SlidersHorizontal, Hash, Car, Calendar, DollarSign, Tag, RotateCcw, Layers } from "lucide-react";
+import { useState, useMemo, lazy, Suspense } from "react";
+import { Filter, X, Search, ChevronDown, ChevronUp, SlidersHorizontal, Hash, Car, Calendar, DollarSign, Tag, RotateCcw, Layers, Zap, Droplets, CircleDot, Truck, Disc3, icons } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -54,7 +54,7 @@ const YEARS = Array.from({ length: 15 }, (_, i) => String(2015 + i));
 interface Props {
   filters: ProductFilters;
   onFiltersChange: (filters: ProductFilters) => void;
-  categories?: { id: string; name_ar: string }[];
+  categories?: { id: string; name_ar: string; icon?: string | null }[];
   showCategories?: boolean;
   showBrands?: boolean;
   totalResults: number;
@@ -147,19 +147,23 @@ const AdvancedProductFilter = ({ filters, onFiltersChange, categories, showCateg
           >
             الكل
           </button>
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => updateFilter("categoryId", filters.categoryId === cat.id ? null : cat.id)}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border whitespace-nowrap ${
-                filters.categoryId === cat.id
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground"
-              }`}
-            >
-              {cat.name_ar}
-            </button>
-          ))}
+          {categories.map((cat) => {
+            const IconComp = cat.icon && icons[cat.icon as keyof typeof icons] ? icons[cat.icon as keyof typeof icons] : null;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => updateFilter("categoryId", filters.categoryId === cat.id ? null : cat.id)}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border whitespace-nowrap flex items-center gap-1.5 ${
+                  filters.categoryId === cat.id
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground"
+                }`}
+              >
+                {IconComp && <IconComp className="w-3.5 h-3.5" />}
+                {cat.name_ar}
+              </button>
+            );
+          })}
         </div>
       )}
 
