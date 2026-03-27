@@ -125,26 +125,26 @@ const CategoryBrowseSlider = () => {
         </motion.div>
 
         {/* Slider */}
-        <div className="relative group">
-          {/* Navigation Arrows */}
+        <div className="relative group" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+          {/* Navigation Arrows - always visible */}
           {canScrollRight && (
             <Button
               size="icon"
               variant="secondary"
-              className="absolute left-[-16px] top-1/2 -translate-y-1/2 z-10 rounded-full shadow-xl w-10 h-10 opacity-0 group-hover:opacity-100 transition-opacity hidden md:flex bg-background/90 backdrop-blur-sm border border-border"
+              className="absolute left-[-20px] top-1/2 -translate-y-1/2 z-10 rounded-full shadow-lg w-12 h-12 hidden md:flex bg-primary text-primary-foreground hover:bg-primary/90 border-2 border-white"
               onClick={() => scroll("left")}
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft className="w-6 h-6" />
             </Button>
           )}
           {canScrollLeft && (
             <Button
               size="icon"
               variant="secondary"
-              className="absolute right-[-16px] top-1/2 -translate-y-1/2 z-10 rounded-full shadow-xl w-10 h-10 opacity-0 group-hover:opacity-100 transition-opacity hidden md:flex bg-background/90 backdrop-blur-sm border border-border"
+              className="absolute right-[-20px] top-1/2 -translate-y-1/2 z-10 rounded-full shadow-lg w-12 h-12 hidden md:flex bg-primary text-primary-foreground hover:bg-primary/90 border-2 border-white"
               onClick={() => scroll("right")}
             >
-              <ChevronRight className="w-5 h-5" />
+              <ChevronRight className="w-6 h-6" />
             </Button>
           )}
 
