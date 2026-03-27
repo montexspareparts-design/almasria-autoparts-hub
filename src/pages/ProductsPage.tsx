@@ -188,6 +188,8 @@ const ProductsPage = () => {
         backgroundImage={config.backgroundImage} logoScale={config.logoScale}
       />
 
+      <CategoryBrowseSlider />
+
       <div className="pt-6"><PromoBanner /></div>
 
       <ProductListingSection
@@ -198,7 +200,6 @@ const ProductsPage = () => {
         sectionClassName="py-8"
       />
       <TrendingProducts />
-      <CategoryBrowseSlider />
 
       <Footer />
     </div>
