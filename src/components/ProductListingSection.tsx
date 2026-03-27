@@ -94,17 +94,6 @@ const ProductListingSection = ({
           )}
 
           {/* Dealer banners */}
-          {!isDealer && (
-            <div className="bg-muted/50 border border-primary/15 rounded-xl p-3.5 mb-4 flex items-center justify-between flex-wrap gap-3">
-              <div className="flex items-center gap-2.5">
-                <ShieldCheck className="w-3 h-3 text-primary shrink-0" />
-                <p className="text-foreground text-sm"><strong>تاجر معتمد؟</strong> سجل دخولك للحصول على أسعار الجملة الخاصة.</p>
-              </div>
-              <Button size="sm" className="shrink-0 rounded-lg" asChild>
-                <Link to="/dealer-login">التسجيل كتاجر</Link>
-              </Button>
-            </div>
-          )}
 
           {isDealer && (
             <div className={`rounded-xl p-3.5 mb-4 flex items-center justify-between flex-wrap gap-3 border ${limitReached ? "bg-destructive/5 border-destructive/20" : "bg-muted/50 border-primary/15"}`}>
