@@ -208,33 +208,37 @@ export function useProductListing(options: UseProductListingOptions = {}) {
   const filteredProducts = useMemo(() => {
     if (!products) return [];
 
-    const searchYear = filters.search ? extractYearFromSearch(filters.search) : null;
-    const searchWithoutYear = filters.search ? removeYearFromSearch(filters.search) : "";
+    const rawSearch = filters.search?.trim() || "";
+    const searchYear = rawSearch ? extractYearFromSearch(rawSearch) : null;
+    const searchWithoutYear = rawSearch ? removeYearFromSearch(rawSearch) : "";
 
-    // Step 1: Base filtering (everything except year)
+    // Step 1: Base filtering (text match + other filters, NO year filtering yet)
     const baseFilter = (p: any) => {
       // When searching, show results from ALL brands (cross-brand search)
-      const hasActiveSearch = !!(filters.search?.trim());
+      const hasActiveSearch = !!rawSearch;
       const matchesBrand = hasActiveSearch || !filters.brandKey || p.brand === filters.brandKey;
 
       let matchesSearch = true;
-      if (filters.search) {
-        // If search contains a year, match text part separately
-        const textToSearch = searchYear ? searchWithoutYear : filters.search;
+      if (rawSearch) {
+        const textToSearch = searchYear ? searchWithoutYear : rawSearch;
         if (textToSearch) {
           const normalizedName = normalizeArabic(p.name_ar);
           const skuLower = p.sku.toLowerCase();
           const nameEnLower = (p.name_en || "").toLowerCase();
+          const descArNorm = normalizeArabic(p.description_ar || "");
+          const modelsText = normalizeArabic((p.compatible_models || []).join(" "));
           
           // Split search into individual words and check ALL words exist (AND logic)
-          const searchWords = textToSearch.trim().split(/\s+/).filter(w => w.length > 0);
-          matchesSearch = searchWords.every(word => {
+          const searchWords = textToSearch.trim().split(/\s+/).filter((w: string) => w.length > 0);
+          matchesSearch = searchWords.every((word: string) => {
             const wordVariants = generateSearchVariants(word);
             return wordVariants.some(v =>
-              normalizedName.includes(v) || skuLower.includes(v) || nameEnLower.includes(v)
+              normalizedName.includes(v) || skuLower.includes(v) || nameEnLower.includes(v) ||
+              descArNorm.includes(v) || modelsText.includes(v)
             );
           });
         }
+        // If textToSearch is empty (year-only search like "2022"), match all products
       }
 
       const matchesCategory = !filters.categoryId || p.category_id === filters.categoryId;
@@ -243,7 +247,8 @@ export function useProductListing(options: UseProductListingOptions = {}) {
       if (filters.model) {
         const modelVariants = generateSearchVariants(filters.model);
         const normalizedName = normalizeArabic(p.name_ar);
-        matchesModel = modelVariants.some(v => normalizedName.includes(v));
+        const modelsText = normalizeArabic((p.compatible_models || []).join(" "));
+        matchesModel = modelVariants.some(v => normalizedName.includes(v) || modelsText.includes(v));
       }
 
       const matchesYear = !filters.year || p.name_ar.includes(filters.year);
@@ -258,43 +263,54 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     let baseResults = products.filter(baseFilter);
 
     // Step 2: Smart year matching when search contains a year
-    if (searchYear && searchWithoutYear) {
+    if (searchYear) {
       // 2a: Exact year in name
       const exactYearMatch = baseResults.filter(p => p.name_ar.includes(String(searchYear)));
 
-      if (exactYearMatch.length > 0) {
-        baseResults = exactYearMatch;
-      } else {
-        // 2b: Match via year_from/year_to range
-        const rangeMatch = baseResults.filter(p =>
-          p.year_from && p.year_to && searchYear >= p.year_from && searchYear <= p.year_to
-        );
+      // 2b: Match via year_from/year_to range
+      const rangeMatch = baseResults.filter(p =>
+        p.year_from && p.year_to && searchYear >= p.year_from && searchYear <= p.year_to
+      );
 
-        if (rangeMatch.length > 0) {
-          baseResults = rangeMatch;
-        } else {
-          // 2c: Find closest year — extract all years from matching products' names
-          const productsWithYears = baseResults.map(p => {
-            const years = p.name_ar.match(/\b(19|20)\d{2}\b/g);
-            if (!years) return null;
-            const productYears = years.map(Number);
-            const closestYear = productYears.reduce((best, y) =>
-              Math.abs(y - searchYear) < Math.abs(best - searchYear) ? y : best
-            , productYears[0]);
-            return { product: p, closestYear, diff: Math.abs(closestYear - searchYear) };
-          }).filter(Boolean) as { product: any; closestYear: number; diff: number }[];
-
-          if (productsWithYears.length > 0) {
-            // Sort by closest year difference
-            productsWithYears.sort((a, b) => a.diff - b.diff);
-            const bestDiff = productsWithYears[0].diff;
-            // Take all products with the closest year
-            baseResults = productsWithYears
-              .filter(p => p.diff === bestDiff)
-              .map(p => p.product);
-          }
-          // If no products have years at all, keep baseResults as-is (text match only)
+      // Combine exact + range (deduplicated)
+      const combinedIds = new Set<string>();
+      const combined: any[] = [];
+      [...exactYearMatch, ...rangeMatch].forEach(p => {
+        if (!combinedIds.has(p.id)) {
+          combinedIds.add(p.id);
+          combined.push(p);
         }
+      });
+
+      if (combined.length > 0) {
+        baseResults = combined;
+      } else {
+        // 2c: Find closest year — from names + year_from/year_to
+        const productsWithYears = baseResults.map(p => {
+          const candidateYears: number[] = [];
+          // Extract years from product name
+          const nameYears = p.name_ar.match(/\b(19|20)\d{2}\b/g);
+          if (nameYears) candidateYears.push(...nameYears.map(Number));
+          // Also consider year_from and year_to
+          if (p.year_from) candidateYears.push(p.year_from);
+          if (p.year_to) candidateYears.push(p.year_to);
+
+          if (candidateYears.length === 0) return null;
+
+          const closestYear = candidateYears.reduce((best, y) =>
+            Math.abs(y - searchYear) < Math.abs(best - searchYear) ? y : best
+          , candidateYears[0]);
+          return { product: p, closestYear, diff: Math.abs(closestYear - searchYear) };
+        }).filter(Boolean) as { product: any; closestYear: number; diff: number }[];
+
+        if (productsWithYears.length > 0) {
+          productsWithYears.sort((a, b) => a.diff - b.diff);
+          const bestDiff = productsWithYears[0].diff;
+          baseResults = productsWithYears
+            .filter(p => p.diff === bestDiff)
+            .map(p => p.product);
+        }
+        // If no products have years at all, keep baseResults as-is
       }
     }
 
