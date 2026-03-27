@@ -29,6 +29,10 @@ interface CartContextType {
   setShippingCost: (cost: number) => void;
   discount: number;
   setDiscount: (d: number) => void;
+  couponCode: string | null;
+  setCouponCode: (code: string | null) => void;
+  couponDiscount: number;
+  setCouponDiscount: (d: number) => void;
   total: number;
 }
 
@@ -46,6 +50,10 @@ const CartContext = createContext<CartContextType>({
   setShippingCost: () => {},
   discount: 0,
   setDiscount: () => {},
+  couponCode: null,
+  setCouponCode: () => {},
+  couponDiscount: 0,
+  setCouponDiscount: () => {},
   total: 0,
 });
 
