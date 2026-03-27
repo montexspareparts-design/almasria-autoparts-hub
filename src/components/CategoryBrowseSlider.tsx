@@ -131,28 +131,6 @@ const CategoryBrowseSlider = () => {
 
         {/* Slider */}
         <div className="relative group" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
-          {/* Navigation Arrows - always visible */}
-          {canScrollRight && (
-            <Button
-              size="icon"
-              variant="secondary"
-              className="absolute left-[-20px] top-1/2 -translate-y-1/2 z-10 rounded-full shadow-lg w-12 h-12 hidden md:flex bg-primary text-primary-foreground hover:bg-primary/90 border-2 border-white"
-              onClick={() => scroll("left")}
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </Button>
-          )}
-          {canScrollLeft && (
-            <Button
-              size="icon"
-              variant="secondary"
-              className="absolute right-[-20px] top-1/2 -translate-y-1/2 z-10 rounded-full shadow-lg w-12 h-12 hidden md:flex bg-primary text-primary-foreground hover:bg-primary/90 border-2 border-white"
-              onClick={() => scroll("right")}
-            >
-              <ChevronRight className="w-6 h-6" />
-            </Button>
-          )}
-
           {/* Fade edges */}
           <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-[5] pointer-events-none" />
           <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-[5] pointer-events-none" />
