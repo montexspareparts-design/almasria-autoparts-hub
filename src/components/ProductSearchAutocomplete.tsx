@@ -55,6 +55,11 @@ const toSkeleton = (text: string): string =>
 /** Find the best known term that matches the user's fuzzy input */
 const findDidYouMean = (input: string): string | null => {
   const normalized = normalizeArabic(input);
+  
+  // Check compound aliases first (e.g., هاياس → هاي اس)
+  const expanded = expandAliases(input);
+  if (expanded !== normalized) return expanded;
+
   // Don't suggest if already an exact known term
   if (knownTerms.some(t => normalizeArabic(t) === normalized)) return null;
 
@@ -68,9 +73,7 @@ const findDidYouMean = (input: string): string | null => {
     const termSkeleton = toSkeleton(term);
     if (termSkeleton.length < 2) continue;
 
-    // Check skeleton match
     if (termSkeleton === inputSkeleton || termSkeleton.includes(inputSkeleton) || inputSkeleton.includes(termSkeleton)) {
-      // Prefer shorter edit distance (length difference as proxy)
       const score = Math.abs(termSkeleton.length - inputSkeleton.length);
       if (score < bestScore) {
         bestScore = score;
@@ -82,17 +85,19 @@ const findDidYouMean = (input: string): string | null => {
   return bestMatch;
 };
 
-/** Fuzzy product search using skeleton matching */
+/** Fuzzy product search using skeleton matching + aliases */
 const fuzzyProductMatch = (query: string, product: Product): boolean => {
   const q = normalizeArabic(query);
+  const expanded = expandAliases(query);
   const name = normalizeArabic(product.name_ar);
   const sku = product.sku.toLowerCase();
 
-  // Direct match
+  // Direct match or alias-expanded match
   if (name.includes(q) || sku.includes(q)) return true;
+  if (expanded !== q && name.includes(expanded)) return true;
 
   // Skeleton match per word
-  const queryWords = q.split(/\s+/).filter(w => w.length >= 2);
+  const queryWords = expanded.split(/\s+/).filter(w => w.length >= 2);
   if (queryWords.length === 0) return false;
 
   return queryWords.every(qw => {
