@@ -868,6 +868,7 @@ export type Database = {
           base_price: number
           brand: Database["public"]["Enums"]["product_brand"]
           category_id: string | null
+          compatible_models: string[] | null
           created_at: string
           description_ar: string | null
           description_en: string | null
@@ -883,11 +884,14 @@ export type Database = {
           sku: string
           stock_quantity: number
           updated_at: string
+          year_from: number | null
+          year_to: number | null
         }
         Insert: {
           base_price?: number
           brand: Database["public"]["Enums"]["product_brand"]
           category_id?: string | null
+          compatible_models?: string[] | null
           created_at?: string
           description_ar?: string | null
           description_en?: string | null
@@ -903,11 +907,14 @@ export type Database = {
           sku: string
           stock_quantity?: number
           updated_at?: string
+          year_from?: number | null
+          year_to?: number | null
         }
         Update: {
           base_price?: number
           brand?: Database["public"]["Enums"]["product_brand"]
           category_id?: string | null
+          compatible_models?: string[] | null
           created_at?: string
           description_ar?: string | null
           description_en?: string | null
@@ -923,6 +930,8 @@ export type Database = {
           sku?: string
           stock_quantity?: number
           updated_at?: string
+          year_from?: number | null
+          year_to?: number | null
         }
         Relationships: [
           {

@@ -1,31 +1,19 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
-import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { motion, AnimatePresence } from "framer-motion";
-import { Lock, ShieldCheck, Package, ShoppingCart, Eye, AlertTriangle, Grid3X3, List, ChevronLeft, ChevronRight, SlidersHorizontal } from "lucide-react";
-import ProductCard from "@/components/ProductCard";
+import { motion } from "framer-motion";
+import { Package, ChevronLeft, ShieldCheck } from "lucide-react";
 import { BreadcrumbSchema } from "@/components/SEOSchemaMarkup";
 import AutoPartsBackground from "@/components/AutoPartsBackground";
-import ProductDetailDialog from "@/components/ProductDetailDialog";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
-import { useCart, CartItem } from "@/contexts/CartContext";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BrandHeroBanner from "@/components/BrandHeroBanner";
-import { ProductFilters } from "@/components/AdvancedProductFilter";
-import RelatedProducts from "@/components/RelatedProducts";
-import MaintenanceBundles from "@/components/MaintenanceBundles";
-import SpecialOffers from "@/components/SpecialOffers";
+import ProductListingSection from "@/components/ProductListingSection";
 import PersonalizedProducts from "@/components/PersonalizedProducts";
+import { useProductListing } from "@/hooks/useProductListing";
 import { usePersonalization } from "@/hooks/usePersonalization";
-import ProductFilterSidebar from "@/components/ProductFilterSidebar";
-import ProductSearchAutocomplete from "@/components/ProductSearchAutocomplete";
-import ProductCommandPalette from "@/components/ProductCommandPalette";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 import brandGenuineParts from "@/assets/brand-genuine-parts.webp";
 import brandToyotaOil from "@/assets/brand-toyota-oil.webp";
 import brandMtx from "@/assets/brand-mtx.webp";
@@ -34,58 +22,36 @@ import brandAisin from "@/assets/brand-aisin.webp";
 import brandFbkBrakes from "@/assets/brand-fbk-logo.png";
 import oilBg from "@/assets/oil-hero-bg.jpg";
 
-const brandConfig: Record<string, { title: string; subtitle: string; description: string; badge: string; brandKey: string; logo: string; backgroundImage?: string; logoScale?: number; extraBrands?: string[] }> = {
+const brandConfig: Record<string, { title: string; subtitle: string; description: string; badge: string; brandKey: string; logo: string; backgroundImage?: string; logoScale?: number }> = {
   "toyota-genuine": {
-    title: "قطع غيار تويوتا الأصلية",
-    subtitle: "Toyota Genuine Parts",
+    title: "قطع غيار تويوتا الأصلية", subtitle: "Toyota Genuine Parts",
     description: "قطع غيار أصلية 100% من تويوتا اليابان. نحن موزع معتمد رسمي لجميع أنواع قطع غيار تويوتا الأصلية في مصر.",
-    badge: "موزع معتمد رسمي",
-    brandKey: "toyota_genuine",
-    logo: brandGenuineParts,
-    logoScale: 250,
+    badge: "موزع معتمد رسمي", brandKey: "toyota_genuine", logo: brandGenuineParts, logoScale: 250,
   },
   "toyota-oils": {
-    title: "زيوت تويوتا الأصلية",
-    subtitle: "Toyota Genuine Motor Oil",
+    title: "زيوت تويوتا الأصلية", subtitle: "Toyota Genuine Motor Oil",
     description: "زيوت تويوتا الأصلية بجميع درجات اللزوجة. زيوت المحرك، زيوت الفتيس، سوائل الفرامل، وجميع سوائل تويوتا الأصلية.",
-    badge: "موزع معتمد رسمي",
-    brandKey: "toyota_oils",
-    logo: brandToyotaOil,
-    backgroundImage: oilBg,
-    logoScale: 350,
+    badge: "موزع معتمد رسمي", brandKey: "toyota_oils", logo: brandToyotaOil, backgroundImage: oilBg, logoScale: 350,
   },
   "mtx-aftermarket": {
-    title: "MTX Aftermarket",
-    subtitle: "قطع غيار مستوردة بأعلى جودة",
+    title: "MTX Aftermarket", subtitle: "قطع غيار مستوردة بأعلى جودة",
     description: "MTX هي علامتنا التجارية المسجلة لقطع الغيار المستوردة عالية الجودة بأفضل الأسعار.",
-    badge: "علامة تجارية مسجلة",
-    brandKey: "mtx_aftermarket",
-    logo: brandMtx,
+    badge: "علامة تجارية مسجلة", brandKey: "mtx_aftermarket", logo: brandMtx,
   },
   "fbk-brakes": {
-    title: "تيل فرامل",
-    subtitle: "FBK Brake Pads",
+    title: "تيل فرامل", subtitle: "FBK Brake Pads",
     description: "تشكيلة كبيرة من تيل فرامل عالية الجودة لجميع موديلات تويوتا تضمن أداء ممتاز وعمر افتراضي أطول.",
-    badge: "جودة ماليزية",
-    brandKey: "fbk",
-    logo: brandFbkBrakes,
-    logoScale: 350,
+    badge: "جودة ماليزية", brandKey: "fbk", logo: brandFbkBrakes, logoScale: 350,
   },
   "denso": {
-    title: "DENSO",
-    subtitle: "قطع غيار دينسو اليابانية",
+    title: "DENSO", subtitle: "قطع غيار دينسو اليابانية",
     description: "قطع غيار دينسو الأصلية - الشركة اليابانية الرائدة في تصنيع مكونات السيارات عالية الجودة.",
-    badge: "وكيل معتمد",
-    brandKey: "denso",
-    logo: brandDenso,
+    badge: "وكيل معتمد", brandKey: "denso", logo: brandDenso,
   },
   "aisin": {
-    title: "AISIN",
-    subtitle: "قطع غيار أيسن اليابانية",
+    title: "AISIN", subtitle: "قطع غيار أيسن اليابانية",
     description: "قطع غيار أيسن الأصلية - من أكبر مصنعي قطع غيار السيارات في العالم، جودة يابانية معتمدة.",
-    badge: "وكيل معتمد",
-    brandKey: "aisin",
-    logo: brandAisin,
+    badge: "وكيل معتمد", brandKey: "aisin", logo: brandAisin,
   },
 };
 
@@ -98,212 +64,27 @@ const allBrands = [
   { label: "تيل فرامل", labelEn: "FBK Brake Pads", image: brandFbkBrakes, to: "/products/fbk-brakes", scale: "scale-150" },
 ];
 
-const ITEMS_PER_PAGE = 24;
-
 const ProductsPage = () => {
   const { brand } = useParams<{ brand: string }>();
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const { isDealer, user, dealerAccount } = useAuth();
-  const { addItem } = useCart();
-  const queryClient = useQueryClient();
-  const { trackBrand, trackCategory, trackSearch, trackProductView } = usePersonalization();
   const config = brand ? brandConfig[brand] : null;
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [filters, setFilters] = useState<ProductFilters>({
-    search: "",
-    model: null,
-    year: null,
-    chassisNumber: "",
-    partNumber: "",
-    categoryId: null,
-    brandKey: null,
-    priceMin: "",
-    priceMax: "",
-    sortBy: "newest",
+  const { trackBrand, trackCategory, trackSearch } = usePersonalization();
+
+  const listing = useProductListing({
+    brandFilter: config?.brandKey,
+    queryKeySuffix: brand,
   });
-  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-  const DAILY_LIMIT = 20;
 
-  // Reset page when filters change
-  useEffect(() => { setCurrentPage(1); }, [filters]);
-
-  // Track brand visit for personalization
+  // Track personalization
+  useEffect(() => { if (config?.brandKey) trackBrand(config.brandKey); }, [config?.brandKey, trackBrand]);
   useEffect(() => {
-    if (config?.brandKey) trackBrand(config.brandKey);
-  }, [config?.brandKey, trackBrand]);
-
-  // Track search terms
-  useEffect(() => {
-    if (filters.search) {
-      const timer = setTimeout(() => trackSearch(filters.search), 1000);
+    if (listing.filters.search) {
+      const timer = setTimeout(() => trackSearch(listing.filters.search), 1000);
       return () => clearTimeout(timer);
     }
-  }, [filters.search, trackSearch]);
+  }, [listing.filters.search, trackSearch]);
+  useEffect(() => { if (listing.filters.categoryId) trackCategory(listing.filters.categoryId); }, [listing.filters.categoryId, trackCategory]);
 
-  // Track category filter
-  useEffect(() => {
-    if (filters.categoryId) trackCategory(filters.categoryId);
-  }, [filters.categoryId, trackCategory]);
-
-  const { data: viewedProductIds = [] } = useQuery({
-    queryKey: ["dealer_views_today", user?.id],
-    queryFn: async () => {
-      const today = new Date().toISOString().split("T")[0];
-      const { data, error } = await supabase
-        .from("dealer_price_views")
-        .select("product_id")
-        .eq("user_id", user!.id)
-        .eq("view_date", today);
-      if (error) throw error;
-      return data.map((v) => v.product_id);
-    },
-    enabled: !!isDealer && !!user,
-  });
-
-  const dailyViewCount = viewedProductIds.length;
-  const limitReached = dailyViewCount >= DAILY_LIMIT;
-
-  const recordView = useCallback(async (productId: string) => {
-    if (!user || !isDealer) return;
-    if (viewedProductIds.includes(productId)) return;
-    if (limitReached) return;
-    await supabase.from("dealer_price_views").upsert(
-      { user_id: user.id, product_id: productId, view_date: new Date().toISOString().split("T")[0] },
-      { onConflict: "user_id,product_id,view_date" }
-    );
-    queryClient.invalidateQueries({ queryKey: ["dealer_views_today", user.id] });
-  }, [user, isDealer, viewedProductIds, limitReached, queryClient]);
-
-  const canSeePrice = (productId: string) => {
-    if (!user) return false;
-    if (!isDealer) return true;
-    return viewedProductIds.includes(productId) || !limitReached;
-  };
-
-  const { data: tierPrices } = useQuery({
-    queryKey: ["tier_prices", dealerAccount?.tier, config?.brandKey],
-    queryFn: async () => {
-      if (!dealerAccount) return {};
-      const { data, error } = await supabase
-        .from("product_tier_prices")
-        .select("product_id, price")
-        .eq("tier", dealerAccount.tier as any);
-      if (error) throw error;
-      const map: Record<string, number> = {};
-      data.forEach((tp) => { map[tp.product_id] = tp.price; });
-      return map;
-    },
-    enabled: !!dealerAccount,
-  });
-
-  const getProductPrice = (product: any) => {
-    if (isDealer && tierPrices && tierPrices[product.id]) return tierPrices[product.id];
-    return product.base_price;
-  };
-
-  const handleAddToCart = (product: any) => {
-    const cartItem: CartItem = {
-      id: product.id,
-      name_ar: product.name_ar,
-      sku: product.sku,
-      image_url: product.image_url,
-      unit_price: getProductPrice(product),
-      quantity: product.min_order_qty || 1,
-      stock_quantity: product.stock_quantity,
-      min_order_qty: product.min_order_qty,
-      brand: product.brand,
-    };
-    addItem(cartItem);
-    toast({ title: "تمت الإضافة للسلة ✅", description: product.name_ar });
-  };
-
-  const { data: categories } = useQuery({
-    queryKey: ["product_categories"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("product_categories")
-        .select("*")
-        .order("sort_order");
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  useEffect(() => {
-    const categorySlug = searchParams.get("category");
-    if (categorySlug && categories) {
-      const matched = categories.find((c) => c.slug === categorySlug);
-      if (matched) setFilters((prev) => ({ ...prev, categoryId: matched.id }));
-    }
-  }, [categories, searchParams]);
-
-  // Set brand filter from URL config on mount
-  useEffect(() => {
-    if (config?.brandKey && !filters.brandKey) {
-      setFilters(prev => ({ ...prev, brandKey: config.brandKey }));
-    }
-  }, [config?.brandKey]);
-
-  const { data: products, isLoading } = useQuery({
-    queryKey: ["products_all_brands"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*, product_categories(name_ar)")
-        .eq("is_active", true)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!config,
-  });
-
-  const filteredProducts = useMemo(() => {
-    if (!products) return [];
-    let result = products.filter((p) => {
-      const matchesBrand = !filters.brandKey || p.brand === filters.brandKey;
-      const matchesSearch =
-        !filters.search ||
-        p.name_ar.toLowerCase().includes(filters.search.toLowerCase()) ||
-        p.sku.toLowerCase().includes(filters.search.toLowerCase());
-      const matchesCategory = !filters.categoryId || p.category_id === filters.categoryId;
-      const matchesModel = !filters.model || p.name_ar.includes(filters.model);
-      const matchesYear = !filters.year || p.name_ar.includes(filters.year);
-      const matchesPartNumber = !filters.partNumber || p.sku.toLowerCase().includes(filters.partNumber.toLowerCase());
-      const price = p.base_price;
-      const matchesPriceMin = !filters.priceMin || price >= Number(filters.priceMin);
-      const matchesPriceMax = !filters.priceMax || price <= Number(filters.priceMax);
-      return matchesBrand && matchesSearch && matchesCategory && matchesModel && matchesYear && matchesPartNumber && matchesPriceMin && matchesPriceMax;
-    });
-
-    // Sort
-    switch (filters.sortBy) {
-      case "price_asc":
-        result.sort((a, b) => a.base_price - b.base_price);
-        break;
-      case "price_desc":
-        result.sort((a, b) => b.base_price - a.base_price);
-        break;
-      case "name_asc":
-        result.sort((a, b) => a.name_ar.localeCompare(b.name_ar, "ar"));
-        break;
-      default: // newest
-        break;
-    }
-
-    return result;
-  }, [products, filters]);
-
-  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
-  const paginatedProducts = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredProducts.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredProducts, currentPage]);
-
+  // Brand showcase page (no specific brand selected)
   if (!config) {
     return (
       <div className="min-h-screen bg-dark-section">
@@ -313,94 +94,41 @@ const ProductsPage = () => {
           <link rel="canonical" href="https://almasriaautoparts.com/products" />
         </Helmet>
         <Navbar />
-        
-        {/* Full-page brands showcase */}
         <section className="min-h-screen pt-24 pb-20 relative overflow-hidden flex flex-col">
-          {/* Background effects */}
           <div className="absolute inset-0">
             <AutoPartsBackground count={22} />
             <motion.div className="absolute top-20 right-[5%] w-[600px] h-[600px] rounded-full bg-primary/[0.05] blur-[180px]" animate={{ scale: [1, 1.3, 1], x: [0, 40, 0] }} transition={{ duration: 10, repeat: Infinity }} />
             <motion.div className="absolute bottom-20 left-[5%] w-[400px] h-[400px] rounded-full bg-[hsl(var(--gold-accent))]/[0.04] blur-[140px]" animate={{ scale: [1.2, 1, 1.2] }} transition={{ duration: 12, repeat: Infinity }} />
           </div>
-
           <div className="container mx-auto px-4 relative z-10 flex-1 flex flex-col justify-center">
-            {/* Header */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7 }}
-              className="text-center mb-8 md:mb-16"
-            >
-              <motion.span
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2 }}
-                className="inline-flex items-center gap-2 px-4 md:px-5 py-1.5 md:py-2 rounded-full bg-primary/12 border border-primary/20 text-primary text-xs md:text-sm font-bold mb-4 md:mb-6 backdrop-blur-sm"
-              >
-                <Package className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                5 علامات تجارية معتمدة
+            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="text-center mb-8 md:mb-16">
+              <motion.span initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }} className="inline-flex items-center gap-2 px-4 md:px-5 py-1.5 md:py-2 rounded-full bg-primary/12 border border-primary/20 text-primary text-xs md:text-sm font-bold mb-4 md:mb-6 backdrop-blur-sm">
+                <Package className="w-3.5 h-3.5 md:w-4 md:h-4" />5 علامات تجارية معتمدة
               </motion.span>
               <h1 className="text-3xl md:text-5xl lg:text-7xl font-black text-[hsl(var(--section-dark-foreground))] mb-3 md:mb-5 tracking-tight leading-[1.1]">
                 اكتشف <span className="shimmer-text">منتجاتنا</span>
               </h1>
-              <p className="text-[hsl(var(--section-dark-foreground))]/50 text-sm md:text-lg max-w-xl mx-auto leading-relaxed">
-                اختر العلامة التجارية وتصفح جميع المنتجات المتاحة
-              </p>
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: "6rem" }}
-                transition={{ duration: 1, delay: 0.5 }}
-                className="h-1 bg-gradient-to-l from-primary to-[hsl(var(--gold-accent))] mx-auto rounded-full mt-4 md:mt-6"
-              />
+              <p className="text-[hsl(var(--section-dark-foreground))]/50 text-sm md:text-lg max-w-xl mx-auto leading-relaxed">اختر العلامة التجارية وتصفح جميع المنتجات المتاحة</p>
+              <motion.div initial={{ width: 0 }} animate={{ width: "6rem" }} transition={{ duration: 1, delay: 0.5 }} className="h-1 bg-gradient-to-l from-primary to-[hsl(var(--gold-accent))] mx-auto rounded-full mt-4 md:mt-6" />
             </motion.div>
 
-            {/* Premium Brands Grid - Top row 3, bottom row 2 centered */}
             <div className="max-w-5xl mx-auto w-full">
-              {/* Top row - 3 brands */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
                 {allBrands.slice(0, 3).map((b, i) => (
-                  <motion.div
-                    key={b.to}
-                    initial={{ opacity: 0, y: 50, rotateX: -10 }}
-                    animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                    transition={{ delay: 0.3 + i * 0.12, type: "spring", stiffness: 70 }}
-                  >
-                    <Link
-                      to={b.to}
-                      className="group block relative rounded-2xl overflow-hidden transition-all duration-500 hover:-translate-y-3"
-                    >
-                      {/* Card with glass effect */}
+                  <motion.div key={b.to} initial={{ opacity: 0, y: 50, rotateX: -10 }} animate={{ opacity: 1, y: 0, rotateX: 0 }} transition={{ delay: 0.3 + i * 0.12, type: "spring", stiffness: 70 }}>
+                    <Link to={b.to} className="group block relative rounded-2xl overflow-hidden transition-all duration-500 hover:-translate-y-3">
                       <div className="bg-[hsl(var(--section-dark-foreground))]/[0.06] backdrop-blur-md border border-[hsl(var(--section-dark-foreground))]/10 hover:border-primary/40 rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20">
-                        {/* Top accent line */}
-                        <motion.div
-                          className="h-1 bg-gradient-to-r from-primary via-[hsl(var(--gold-accent))] to-primary"
-                          initial={{ scaleX: 0 }}
-                          animate={{ scaleX: 1 }}
-                          transition={{ delay: 0.6 + i * 0.15, duration: 0.8 }}
-                        />
-                        
-                        {/* Logo area */}
+                        <motion.div className="h-1 bg-gradient-to-r from-primary via-[hsl(var(--gold-accent))] to-primary" initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ delay: 0.6 + i * 0.15, duration: 0.8 }} />
                         <div className="bg-white/95 mx-4 mt-4 rounded-xl p-6 flex items-center justify-center aspect-[3/2] relative overflow-hidden group-hover:shadow-lg transition-shadow duration-500">
                           <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/0 group-hover:from-primary/5 group-hover:to-primary/8 transition-all duration-500" />
-                          <motion.div
-                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"
-                          />
-                          <motion.img
-                            src={b.image}
-                            alt={b.label}
-                            className={`relative z-10 max-h-20 w-auto object-contain ${b.scale}`}
-                            whileHover={{ scale: 1.08 }}
-                            transition={{ duration: 0.3 }}
-                          />
+                          <motion.div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                          <motion.img src={b.image} alt={b.label} className={`relative z-10 max-h-20 w-auto object-contain ${b.scale}`} whileHover={{ scale: 1.08 }} transition={{ duration: 0.3 }} />
                         </div>
-
-                        {/* Info */}
                         <div className="p-5 text-center">
                           <h3 className="font-bold text-[hsl(var(--section-dark-foreground))] text-base mb-1">{b.label}</h3>
                           <p className="text-xs text-[hsl(var(--section-dark-foreground))]/40 mb-3">{b.labelEn}</p>
                           <span className="inline-flex items-center gap-1.5 text-primary text-sm font-semibold group-hover:gap-3 transition-all duration-300">
-                            تصفح المنتجات
-                            <ChevronLeft className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1" />
+                            تصفح المنتجات<ChevronLeft className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1" />
                           </span>
                         </div>
                       </div>
@@ -408,44 +136,22 @@ const ProductsPage = () => {
                   </motion.div>
                 ))}
               </div>
-
-              {/* Bottom row - 2 brands centered */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:max-w-3xl mx-auto">
                 {allBrands.slice(3).map((b, i) => (
-                  <motion.div
-                    key={b.to}
-                    initial={{ opacity: 0, y: 50, rotateX: -10 }}
-                    animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                    transition={{ delay: 0.65 + i * 0.12, type: "spring", stiffness: 70 }}
-                  >
-                    <Link
-                      to={b.to}
-                      className="group block relative rounded-2xl overflow-hidden transition-all duration-500 hover:-translate-y-3"
-                    >
+                  <motion.div key={b.to} initial={{ opacity: 0, y: 50, rotateX: -10 }} animate={{ opacity: 1, y: 0, rotateX: 0 }} transition={{ delay: 0.65 + i * 0.12, type: "spring", stiffness: 70 }}>
+                    <Link to={b.to} className="group block relative rounded-2xl overflow-hidden transition-all duration-500 hover:-translate-y-3">
                       <div className="bg-[hsl(var(--section-dark-foreground))]/[0.06] backdrop-blur-md border border-[hsl(var(--section-dark-foreground))]/10 hover:border-primary/40 rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20">
-                        <motion.div
-                          className="h-1 bg-gradient-to-r from-primary via-[hsl(var(--gold-accent))] to-primary"
-                          initial={{ scaleX: 0 }}
-                          animate={{ scaleX: 1 }}
-                          transition={{ delay: 0.8 + i * 0.15, duration: 0.8 }}
-                        />
+                        <motion.div className="h-1 bg-gradient-to-r from-primary via-[hsl(var(--gold-accent))] to-primary" initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ delay: 0.8 + i * 0.15, duration: 0.8 }} />
                         <div className="bg-white/95 mx-4 mt-4 rounded-xl p-6 flex items-center justify-center aspect-[3/2] relative overflow-hidden group-hover:shadow-lg transition-shadow duration-500">
                           <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/0 group-hover:from-primary/5 group-hover:to-primary/8 transition-all duration-500" />
                           <motion.div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                          <motion.img
-                            src={b.image}
-                            alt={b.label}
-                            className={`relative z-10 max-h-20 w-auto object-contain ${b.scale}`}
-                            whileHover={{ scale: 1.08 }}
-                            transition={{ duration: 0.3 }}
-                          />
+                          <motion.img src={b.image} alt={b.label} className={`relative z-10 max-h-20 w-auto object-contain ${b.scale}`} whileHover={{ scale: 1.08 }} transition={{ duration: 0.3 }} />
                         </div>
                         <div className="p-5 text-center">
                           <h3 className="font-bold text-[hsl(var(--section-dark-foreground))] text-base mb-1">{b.label}</h3>
                           <p className="text-xs text-[hsl(var(--section-dark-foreground))]/40 mb-3">{b.labelEn}</p>
                           <span className="inline-flex items-center gap-1.5 text-primary text-sm font-semibold group-hover:gap-3 transition-all duration-300">
-                            تصفح المنتجات
-                            <ChevronLeft className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1" />
+                            تصفح المنتجات<ChevronLeft className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1" />
                           </span>
                         </div>
                       </div>
@@ -474,202 +180,17 @@ const ProductsPage = () => {
       ]} />
       <Navbar />
       <BrandHeroBanner
-        logo={config.logo}
-        title={config.title}
-        subtitle={config.subtitle}
-        description={config.description}
-        badge={config.badge}
-        backgroundImage={config.backgroundImage}
-        logoScale={config.logoScale}
+        logo={config.logo} title={config.title} subtitle={config.subtitle}
+        description={config.description} badge={config.badge}
+        backgroundImage={config.backgroundImage} logoScale={config.logoScale}
       />
 
-      {/* Command Palette */}
-      <ProductCommandPalette
-        open={commandPaletteOpen}
-        onOpenChange={setCommandPaletteOpen}
-        products={products as any}
-        onProductSelect={(p) => setSelectedProduct(p)}
-      />
-
-      {/* Products section with sidebar */}
-      <section className="py-8">
-        <div className="container mx-auto px-4">
-          {/* Dealer banners */}
-          {!isDealer && (
-            <div className="bg-muted/50 border border-primary/15 rounded-xl p-3.5 mb-4 flex items-center justify-between flex-wrap gap-3">
-              <div className="flex items-center gap-2.5">
-                <ShieldCheck className="w-3 h-3 text-primary shrink-0" />
-                <p className="text-foreground text-sm"><strong>تاجر معتمد؟</strong> سجل دخولك للحصول على أسعار الجملة الخاصة.</p>
-              </div>
-              <Button size="sm" className="shrink-0 rounded-lg" asChild><Link to="/dealer-login">التسجيل كتاجر</Link></Button>
-            </div>
-          )}
-
-          {isDealer && (
-            <div className={`rounded-xl p-3.5 mb-4 flex items-center justify-between flex-wrap gap-3 border ${limitReached ? "bg-destructive/5 border-destructive/20" : "bg-muted/50 border-primary/15"}`}>
-              <div className="flex items-center gap-2.5">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${limitReached ? "bg-destructive/10" : "bg-primary/10"}`}>
-                  <Eye className="w-4 h-4 text-primary" />
-                </div>
-                <p className="text-foreground text-sm">
-                  {limitReached ? <><strong>استنفدت الحد اليومي.</strong> يمكنك مشاهدة أسعار جديدة غداً.</> : <>شاهدت <strong>{dailyViewCount}</strong> من <strong>{DAILY_LIMIT}</strong> صنف اليوم</>}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Search bar + controls */}
-          <div className="flex items-center gap-2 mb-5">
-            <ProductSearchAutocomplete
-              value={filters.search}
-              onChange={(v) => setFilters(prev => ({ ...prev, search: v }))}
-              products={products as any}
-              onProductClick={(p) => setSelectedProduct(p)}
-              onCommandPaletteOpen={() => setCommandPaletteOpen(true)}
-            />
-            <Button variant="outline" className="lg:hidden gap-2 shrink-0 h-11" onClick={() => setSidebarOpen(true)}>
-              <SlidersHorizontal className="w-4 h-4" /><span className="hidden sm:inline">فلاتر</span>
-            </Button>
-            <Select value={filters.sortBy || "newest"} onValueChange={(v) => setFilters(prev => ({ ...prev, sortBy: v }))}>
-              <SelectTrigger className="w-[130px] h-11 text-xs bg-card shrink-0"><SelectValue placeholder="ترتيب" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">الأحدث</SelectItem>
-                <SelectItem value="price_asc">السعر: الأقل</SelectItem>
-                <SelectItem value="price_desc">السعر: الأعلى</SelectItem>
-                <SelectItem value="name_asc">الاسم: أ - ي</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Personalized recommendations */}
-          <div className="mb-6"><PersonalizedProducts /></div>
-
-          {/* Sidebar + Products Grid */}
-          <div className="flex gap-6 items-start">
-            <ProductFilterSidebar
-              filters={filters}
-              onFiltersChange={setFilters}
-              categories={categories?.filter(cat => products?.some(p => p.category_id === cat.id && (!config?.brandKey || p.brand === config.brandKey)))}
-              categoryCounts={products?.filter(p => !config?.brandKey || p.brand === config.brandKey).reduce((acc, p) => { if (p.category_id) acc[p.category_id] = (acc[p.category_id] || 0) + 1; return acc; }, {} as Record<string, number>)}
-              showBrands={true}
-              totalResults={filteredProducts.length}
-              isLoading={isLoading}
-              isOpen={sidebarOpen}
-              onToggle={() => setSidebarOpen(!sidebarOpen)}
-            />
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-sm text-muted-foreground font-medium">
-                  {isLoading ? "جاري التحميل..." : <><span className="text-foreground font-bold">{filteredProducts.length}</span> منتج</>}
-                </p>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
-                    <button onClick={() => setViewMode("grid")} className={`p-2 rounded-md transition-all ${viewMode === "grid" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}><Grid3X3 className="w-4 h-4" /></button>
-                    <button onClick={() => setViewMode("list")} className={`p-2 rounded-md transition-all ${viewMode === "list" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}><List className="w-4 h-4" /></button>
-                  </div>
-                  {totalPages > 1 && <p className="text-xs text-muted-foreground">صفحة {currentPage} من {totalPages}</p>}
-                </div>
-              </div>
-
-              {isLoading ? (
-                <div className={viewMode === "grid" ? "grid grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}>
-                  {Array.from({ length: 12 }).map((_, i) => (
-                    <div key={i} className="bg-card border border-border rounded-xl p-4 animate-pulse">
-                      <div className="h-4 bg-muted rounded w-3/4 mb-3" /><div className="h-3 bg-muted rounded w-1/2 mb-2" /><div className="h-3 bg-muted rounded w-1/3" />
-                    </div>
-                  ))}
-                </div>
-              ) : paginatedProducts.length === 0 ? (
-                <div className="text-center py-24">
-                  <div className="w-20 h-20 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-5"><Package className="w-10 h-10 text-muted-foreground/30" /></div>
-                  <h3 className="text-lg font-bold text-foreground mb-2">لا توجد منتجات</h3>
-                  <p className="text-muted-foreground text-sm mb-4">جرب تغيير كلمة البحث أو الفلتر</p>
-                  <Button variant="outline" size="sm" onClick={() => setFilters({ search: "", model: null, year: null, chassisNumber: "", partNumber: "", categoryId: null, brandKey: null, priceMin: "", priceMax: "", sortBy: "newest" })}>مسح جميع الفلاتر</Button>
-                </div>
-              ) : (
-                <div className={viewMode === "grid" ? "grid grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}>
-                  {paginatedProducts.map((product, i) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      index={i}
-                      viewMode={viewMode}
-                      user={user}
-                      isDealer={isDealer}
-                      viewedProductIds={viewedProductIds}
-                      limitReached={limitReached}
-                      dailyViewCount={dailyViewCount}
-                      dailyLimit={DAILY_LIMIT}
-                      getProductPrice={getProductPrice}
-                      onProductClick={setSelectedProduct}
-                      onAddToCart={handleAddToCart}
-                      onRecordView={recordView}
-                      onLoginRequired={() => { toast({ title: "يجب تسجيل الدخول أولاً" }); navigate("/auth"); }}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-10">
-                  <Button variant="outline" size="sm" disabled={currentPage <= 1} onClick={() => { setCurrentPage((p) => p - 1); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="gap-1">
-                    <ChevronRight className="w-4 h-4" />السابق
-                  </Button>
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                      let page: number;
-                      if (totalPages <= 7) page = i + 1;
-                      else if (currentPage <= 4) page = i + 1;
-                      else if (currentPage >= totalPages - 3) page = totalPages - 6 + i;
-                      else page = currentPage - 3 + i;
-                      return (
-                        <button key={page} onClick={() => { setCurrentPage(page); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                          className={`w-9 h-9 rounded-lg text-sm font-medium transition-all ${currentPage === page ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>{page}</button>
-                      );
-                    })}
-                  </div>
-                  <Button variant="outline" size="sm" disabled={currentPage >= totalPages} onClick={() => { setCurrentPage((p) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="gap-1">
-                    التالي<ChevronLeft className="w-4 h-4" />
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <ProductDetailDialog
-        product={selectedProduct}
-        open={!!selectedProduct}
-        onOpenChange={(open) => { if (!open) setSelectedProduct(null); }}
-        price={
-          selectedProduct
-            ? !user ? null
-            : !isDealer ? selectedProduct.base_price
-            : viewedProductIds.includes(selectedProduct.id) ? getProductPrice(selectedProduct)
-            : null
-            : null
-        }
-        priceLabel={
-          selectedProduct && user
-            ? isDealer && viewedProductIds.includes(selectedProduct.id)
-              ? "سعر الجملة الخاص بك"
-              : !isDealer ? "سعر قطاعي" : undefined
-            : undefined
-        }
-        canAddToCart={!!user && (!isDealer || (selectedProduct && viewedProductIds.includes(selectedProduct.id)))}
-        onAddToCart={handleAddToCart}
-        isLoggedIn={!!user}
-        isDealer={isDealer}
-        onLoginPrompt={() => {
-          toast({ title: "يجب تسجيل الدخول أولاً", description: "سجل دخولك لتتمكن من عرض أسعار المنتجات" });
-          navigate("/auth");
-        }}
-        onRevealPrice={(productId) => recordView(productId)}
-        remainingViews={DAILY_LIMIT - dailyViewCount}
-        limitReached={limitReached}
+      <ProductListingSection
+        {...listing}
+        dailyLimit={listing.DAILY_LIMIT}
+        showBrands={true}
+        beforeGrid={<div className="mb-6"><PersonalizedProducts /></div>}
+        sectionClassName="py-8"
       />
 
       <Footer />
