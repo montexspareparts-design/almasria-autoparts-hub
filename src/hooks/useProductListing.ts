@@ -303,7 +303,8 @@ export function useProductListing(options: UseProductListingOptions = {}) {
 
       let matchesSearch = true;
       if (rawSearch) {
-        const textToSearch = searchYear ? searchWithoutYear : rawSearch;
+        // Expand aliases before searching (e.g., هاياس → هاي اس)
+        const textToSearch = expandAliases(searchYear ? searchWithoutYear : rawSearch);
         if (textToSearch) {
           const normalizedName = normalizeArabic(p.name_ar);
           const skuLower = p.sku.toLowerCase();
