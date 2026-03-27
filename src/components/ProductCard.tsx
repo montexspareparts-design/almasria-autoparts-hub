@@ -3,6 +3,15 @@ import { Package, Lock, Eye, ShoppingCart, Heart, ExternalLink } from "lucide-re
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
+const brandLabelMap: Record<string, { label: string; color: string }> = {
+  toyota_genuine: { label: "تويوتا أصلي", color: "bg-red-500/90 text-white" },
+  toyota_oils: { label: "زيوت تويوتا", color: "bg-amber-500/90 text-white" },
+  mtx_aftermarket: { label: "MTX", color: "bg-blue-500/90 text-white" },
+  denso: { label: "DENSO", color: "bg-emerald-600/90 text-white" },
+  aisin: { label: "AISIN", color: "bg-purple-500/90 text-white" },
+  fbk: { label: "FBK", color: "bg-orange-500/90 text-white" },
+};
+
 interface ProductCardProps {
   product: any;
   index: number;
@@ -67,6 +76,11 @@ const ProductCard = ({
           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
             <span className="text-[10px] font-mono bg-muted text-muted-foreground px-2 py-0.5 rounded">{product.sku}</span>
             <StockBadge available={stockAvailable} />
+            {brandLabelMap[product.brand] && (
+              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${brandLabelMap[product.brand].color}`}>
+                {brandLabelMap[product.brand].label}
+              </span>
+            )}
           </div>
           <h3 className="font-bold text-card-foreground text-sm leading-relaxed mb-1 group-hover:text-primary transition-colors">
             {product.name_ar}
@@ -156,12 +170,19 @@ const ProductCard = ({
 
       {/* ── Content Section ── */}
       <div className="p-3 sm:p-4 space-y-2" onClick={(e) => e.stopPropagation()}>
-        {/* SKU + Stock */}
-        <div className="flex items-center justify-between">
+        {/* SKU + Stock + Brand */}
+        <div className="flex items-center justify-between flex-wrap gap-1">
           <span className="text-[10px] sm:text-[11px] font-mono text-muted-foreground/70 tracking-tight">
             {product.sku}
           </span>
-          <StockBadge available={stockAvailable} />
+          <div className="flex items-center gap-1.5">
+            {brandLabelMap[product.brand] && (
+              <span className={`text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded ${brandLabelMap[product.brand].color}`}>
+                {brandLabelMap[product.brand].label}
+              </span>
+            )}
+            <StockBadge available={stockAvailable} />
+          </div>
         </div>
 
         {/* Name */}

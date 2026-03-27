@@ -49,7 +49,8 @@ interface UseProductListingOptions {
 export function useProductListing(options: UseProductListingOptions = {}) {
   const { brandFilter, queryKeySuffix } = options;
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  
   const { isDealer, user, dealerAccount } = useAuth();
   const { addItem } = useCart();
   const queryClient = useQueryClient();
@@ -67,6 +68,19 @@ export function useProductListing(options: UseProductListingOptions = {}) {
 
   // Reset page when filters change
   useEffect(() => { setCurrentPage(1); }, [filters]);
+
+  // Clear URL search params on unmount so filters don't persist
+  useEffect(() => {
+    return () => {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has("search") || params.has("category")) {
+        params.delete("search");
+        params.delete("category");
+        const newUrl = window.location.pathname + (params.toString() ? `?${params}` : "");
+        window.history.replaceState(null, "", newUrl);
+      }
+    };
+  }, []);
 
   // Set brand filter from options
   useEffect(() => {
