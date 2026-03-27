@@ -265,6 +265,37 @@ const Auth = () => {
                 </div>
               )}
 
+              {!isLogin && (
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-foreground/80 flex items-center gap-1.5">
+                    <Car className="w-3.5 h-3.5 text-primary" />
+                    عربيتك إيه؟ <span className="text-muted-foreground/50 text-[10px]">(اختياري — هنقترحلك قطع غيار مناسبة)</span>
+                  </Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Select value={carModel} onValueChange={setCarModel}>
+                      <SelectTrigger className="bg-muted/40 border-border/40 h-11 text-sm">
+                        <SelectValue placeholder="الموديل" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {["هاي اس", "كوستر", "كورولا", "هاي لوكس", "فورتشنر", "لاند كروزر", "برادو", "كامري", "ياريس", "راش", "افانزا", "راف فور"].map(m => (
+                          <SelectItem key={m} value={m}>{m}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select value={carYear} onValueChange={setCarYear}>
+                      <SelectTrigger className="bg-muted/40 border-border/40 h-11 text-sm">
+                        <SelectValue placeholder="السنة" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 30 }, (_, i) => new Date().getFullYear() - i).map(y => (
+                          <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+
               <Button type="submit" className="w-full h-12 font-bold text-sm rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all duration-300" disabled={loading}>
                 {loading ? "جاري التحميل..." : isLogin ? "تسجيل الدخول" : "إنشاء الحساب"}
               </Button>
