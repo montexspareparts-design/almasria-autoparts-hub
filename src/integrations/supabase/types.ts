@@ -185,6 +185,33 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_search_logs: {
+        Row: {
+          created_at: string
+          filters: Json | null
+          id: string
+          results_count: number | null
+          search_query: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          filters?: Json | null
+          id?: string
+          results_count?: number | null
+          search_query: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          filters?: Json | null
+          id?: string
+          results_count?: number | null
+          search_query?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       dealer_accounts: {
         Row: {
           active_session_id: string | null

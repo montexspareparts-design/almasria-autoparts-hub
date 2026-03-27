@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -298,6 +298,28 @@ export function useProductListing(options: UseProductListingOptions = {}) {
 
     return result;
   }, [products, filters]);
+
+  /* ── Search logging (debounced) ── */
+  const lastLoggedSearch = useRef("");
+  useEffect(() => {
+    const searchQuery = filters.search?.trim();
+    if (!searchQuery || searchQuery.length < 2 || searchQuery === lastLoggedSearch.current) return;
+    const timer = setTimeout(() => {
+      lastLoggedSearch.current = searchQuery;
+      supabase.from("customer_search_logs").insert({
+        user_id: user?.id || null,
+        search_query: searchQuery,
+        filters: {
+          brand: filters.brandKey,
+          model: filters.model,
+          year: filters.year,
+          category: filters.categoryId,
+        },
+        results_count: filteredProducts.length,
+      } as any).then(() => {});
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [filters.search, filters.brandKey, filters.model, filters.year, filters.categoryId, user?.id, filteredProducts.length]);
 
   /* ── Pagination ── */
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);

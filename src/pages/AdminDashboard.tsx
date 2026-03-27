@@ -26,6 +26,7 @@ const AdminAnalytics = lazy(() => import("@/components/AdminAnalytics"));
 const AdminCustomerProfile = lazy(() => import("@/components/AdminCustomerProfile"));
 const AdminCoupons = lazy(() => import("@/components/AdminCoupons"));
 const AdminQuantityDiscounts = lazy(() => import("@/components/AdminQuantityDiscounts"));
+const AdminCustomerIntelligence = lazy(() => import("@/components/AdminCustomerIntelligence"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];
@@ -46,6 +47,7 @@ const clientTypeLabels: Record<string, string> = {
 
 const sidebarSections = [
   { id: "analytics", label: "التحليلات", icon: BarChart3 },
+  { id: "customer-intel", label: "ذكاء العملاء", icon: Eye },
   { id: "customers", label: "ملف العملاء", icon: Users },
   { id: "dealers", label: "طلبات التجار", icon: Users },
   { id: "products", label: "إدارة المنتجات", icon: Package },
@@ -377,6 +379,8 @@ const AdminDashboard = () => {
     switch (activeSection) {
       case "analytics":
         return <Suspense fallback={<SectionLoader />}><AdminAnalytics /></Suspense>;
+      case "customer-intel":
+        return <Suspense fallback={<SectionLoader />}><AdminCustomerIntelligence /></Suspense>;
       case "customers":
         return <Suspense fallback={<SectionLoader />}><AdminCustomerProfile /></Suspense>;
       case "dealers":
