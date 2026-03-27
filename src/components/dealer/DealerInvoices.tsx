@@ -4,7 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Download, Receipt, Calendar, Tag, Package, Printer } from "lucide-react";
+import { FileText, Download, Receipt, Calendar, Tag, Package, Printer, FileDown, Loader2 } from "lucide-react";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 interface Invoice {
   id: string;
@@ -27,6 +29,7 @@ const statusMap: Record<string, { label: string; color: string }> = {
 const DealerInvoices = ({ userId }: { userId: string }) => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchInvoices();
@@ -163,6 +166,126 @@ const DealerInvoices = ({ userId }: { userId: string }) => {
     printWindow.document.close();
   };
 
+  const buildInvoiceHTML = (inv: Invoice, items: any[]) => {
+    const discount = Number(inv.coupon_discount || 0);
+    const total = Number(inv.total_amount);
+    const subtotal = items.reduce((s: number, it: any) => s + Number(it.total_price), 0);
+
+    const itemsRows = items.map((item: any, idx: number) => `
+      <tr>
+        <td style="padding:8px 10px; border-bottom:1px solid #eee; text-align:center; color:#888; font-size:12px;">${idx + 1}</td>
+        <td style="padding:8px 10px; border-bottom:1px solid #eee;">
+          <div style="font-weight:700; font-size:12px;">${item.products?.name_ar || "—"}</div>
+          <div style="font-size:10px; color:#888; font-family:monospace;">${item.products?.sku || ""}</div>
+        </td>
+        <td style="padding:8px 10px; border-bottom:1px solid #eee; text-align:center; font-weight:600;">${item.quantity}</td>
+        <td style="padding:8px 10px; border-bottom:1px solid #eee; text-align:center;">${Number(item.unit_price).toLocaleString("ar-EG")} ج.م</td>
+        <td style="padding:8px 10px; border-bottom:1px solid #eee; text-align:center; font-weight:700;">${Number(item.total_price).toLocaleString("ar-EG")} ج.م</td>
+      </tr>
+    `).join("");
+
+    return `
+      <div style="font-family:'Segoe UI',Tahoma,sans-serif; padding:30px; color:#1a1a1a; direction:rtl; width:700px; background:white;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid #c41e3a; padding-bottom:16px; margin-bottom:24px;">
+          <div>
+            <div style="font-size:22px; font-weight:900; color:#c41e3a;">المصرية جروب</div>
+            <div style="font-size:11px; color:#666; margin-top:3px;">Al Masria Group — Auto Parts</div>
+          </div>
+          <div style="font-size:24px; font-weight:900; color:#333;">فاتورة</div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:24px;">
+          <div style="background:#f8f8f8; padding:12px; border-radius:6px;">
+            <div style="font-size:10px; color:#888; margin-bottom:3px;">رقم الطلب</div>
+            <div style="font-size:14px; font-weight:700;">${inv.order_number}</div>
+          </div>
+          <div style="background:#f8f8f8; padding:12px; border-radius:6px;">
+            <div style="font-size:10px; color:#888; margin-bottom:3px;">تاريخ الطلب</div>
+            <div style="font-size:14px; font-weight:700;">${new Date(inv.created_at).toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric" })}</div>
+          </div>
+          <div style="background:#f8f8f8; padding:12px; border-radius:6px;">
+            <div style="font-size:10px; color:#888; margin-bottom:3px;">طريقة الدفع</div>
+            <div style="font-size:14px; font-weight:700;">${inv.payment_method === "cash" ? "كاش" : inv.payment_method === "card" ? "بطاقة بنكية" : inv.payment_method === "bank_transfer" ? "تحويل بنكي" : inv.payment_method || "—"}</div>
+          </div>
+          <div style="background:#f8f8f8; padding:12px; border-radius:6px;">
+            <div style="font-size:10px; color:#888; margin-bottom:3px;">الحالة</div>
+            <div style="font-size:14px; font-weight:700; color:#16a34a;">✅ تم التسليم</div>
+          </div>
+        </div>
+
+        <table style="width:100%; border-collapse:collapse; margin-bottom:16px;">
+          <thead>
+            <tr>
+              <th style="text-align:center; width:40px; background:#f8f8f8; padding:10px; font-size:11px; color:#666; font-weight:700; border-bottom:2px solid #ddd;">#</th>
+              <th style="text-align:right; background:#f8f8f8; padding:10px; font-size:11px; color:#666; font-weight:700; border-bottom:2px solid #ddd;">الصنف</th>
+              <th style="text-align:center; width:70px; background:#f8f8f8; padding:10px; font-size:11px; color:#666; font-weight:700; border-bottom:2px solid #ddd;">الكمية</th>
+              <th style="text-align:center; width:100px; background:#f8f8f8; padding:10px; font-size:11px; color:#666; font-weight:700; border-bottom:2px solid #ddd;">سعر الوحدة</th>
+              <th style="text-align:center; width:100px; background:#f8f8f8; padding:10px; font-size:11px; color:#666; font-weight:700; border-bottom:2px solid #ddd;">الإجمالي</th>
+            </tr>
+          </thead>
+          <tbody>${itemsRows}</tbody>
+        </table>
+
+        <div style="margin-top:10px;">
+          <div style="display:flex; justify-content:space-between; padding:8px 14px; font-size:13px; font-weight:600;">
+            <span>المجموع الفرعي (${items.length} صنف)</span>
+            <span>${subtotal.toLocaleString("ar-EG")} ج.م</span>
+          </div>
+          ${discount > 0 ? `<div style="display:flex; justify-content:space-between; padding:8px 14px; font-size:13px; background:#fef3cd; border-radius:6px;"><span>خصم كوبون</span><span>- ${discount.toLocaleString("ar-EG")} ج.م</span></div>` : ""}
+          <div style="display:flex; justify-content:space-between; padding:14px 18px; font-size:18px; font-weight:900; background:#c41e3a; color:white; border-radius:8px; margin-top:8px;">
+            <span>إجمالي الفاتورة</span>
+            <span>${total.toLocaleString("ar-EG")} ج.م</span>
+          </div>
+        </div>
+
+        <div style="margin-top:30px; text-align:center; font-size:10px; color:#999; border-top:1px solid #eee; padding-top:14px;">
+          المصرية جروب لقطع غيار السيارات — جميع الحقوق محفوظة © ${new Date().getFullYear()}
+        </div>
+      </div>
+    `;
+  };
+
+  const handleDownloadPDF = async (inv: Invoice) => {
+    setDownloadingId(inv.id);
+    try {
+      const { data: items } = await supabase
+        .from("order_items")
+        .select("quantity, unit_price, total_price, product_id, products(name_ar, sku)")
+        .eq("order_id", inv.id);
+
+      // Create a hidden container
+      const container = document.createElement("div");
+      container.style.position = "fixed";
+      container.style.left = "-9999px";
+      container.style.top = "0";
+      container.innerHTML = buildInvoiceHTML(inv, items || []);
+      document.body.appendChild(container);
+
+      // Wait for render
+      await new Promise(r => setTimeout(r, 200));
+
+      const canvas = await html2canvas(container.firstElementChild as HTMLElement, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+      });
+
+      document.body.removeChild(container);
+
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`فاتورة-${inv.order_number}.pdf`);
+    } catch (err) {
+      console.error("PDF generation error:", err);
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
   const totalPaid = invoices
     .filter(i => i.status === "delivered")
     .reduce((sum, i) => sum + Number(i.total_amount), 0);
@@ -276,12 +399,30 @@ const DealerInvoices = ({ userId }: { userId: string }) => {
                         </Badge>
                       </div>
 
-                      {/* Print - only for delivered & paid */}
+                      {/* PDF Download - only for delivered & paid */}
                       {isDelivered && (
                         <Button
                           variant="ghost"
                           size="icon"
                           className="w-8 h-8 text-primary hover:bg-primary/10"
+                          title="تحميل PDF"
+                          disabled={downloadingId === inv.id}
+                          onClick={() => handleDownloadPDF(inv)}
+                        >
+                          {downloadingId === inv.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <FileDown className="w-4 h-4" />
+                          )}
+                        </Button>
+                      )}
+
+                      {/* Print - only for delivered & paid */}
+                      {isDelivered && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="w-8 h-8 text-muted-foreground hover:bg-muted"
                           title="طباعة الفاتورة"
                           onClick={() => handlePrint(inv)}
                         >
