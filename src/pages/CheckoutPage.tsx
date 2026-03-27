@@ -138,12 +138,12 @@ const CheckoutPage = () => {
             order_id: order.id,
             discount_applied: couponDiscount,
           });
-          // Increment used_count
-          await supabase.rpc("increment_coupon_usage" as any, { _coupon_id: couponData.id }).catch(() => {
-            // fallback: just ignore if function doesn't exist
-          });
+          // Increment used_count manually
+          await supabase
+            .from("coupons")
+            .update({ used_count: (couponData as any).used_count + 1 } as any)
+            .eq("id", couponData.id);
         }
-      }
 
       clearCart();
 
