@@ -140,7 +140,7 @@ const CategoryBrowseSlider = () => {
             className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory px-2"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
-            {categories.map((cat, i) => (
+            {[...categories].sort((a, b) => (categoryCounts[b.search] ?? 0) - (categoryCounts[a.search] ?? 0)).map((cat, i) => (
               <motion.div
                 key={cat.name}
                 initial={{ opacity: 0, y: 30 }}
