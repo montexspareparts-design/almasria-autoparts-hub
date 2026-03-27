@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
 import catSparkPlugs from "@/assets/categories/cat-spark-plugs.jpg";
 import catCooling from "@/assets/categories/cat-cooling.jpg";
@@ -34,6 +35,26 @@ const CategoryBrowseSlider = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("name_ar")
+        .eq("is_active", true);
+      if (error || !data) return;
+
+      const counts: Record<string, number> = {};
+      categories.forEach((cat) => {
+        counts[cat.search] = data.filter((p) =>
+          p.name_ar.includes(cat.search)
+        ).length;
+      });
+      setCategoryCounts(counts);
+    };
+    fetchCounts();
+  }, []);
 
   const checkScroll = () => {
     if (!scrollRef.current) return;
@@ -135,7 +156,12 @@ const CategoryBrowseSlider = () => {
                     <span className="text-white font-bold text-sm block leading-snug">
                       {cat.name}
                     </span>
-                    <ChevronLeft className="w-4 h-4 text-white/70 mx-auto mt-1.5 group-hover/card:text-white group-hover/card:-translate-x-1 transition-all duration-300" />
+                    <span className="text-white/70 text-[11px] block mt-0.5">
+                      {categoryCounts[cat.search] !== undefined
+                        ? `${categoryCounts[cat.search]} صنف`
+                        : "..."}
+                    </span>
+                    <ChevronLeft className="w-4 h-4 text-white/70 mx-auto mt-1 group-hover/card:text-white group-hover/card:-translate-x-1 transition-all duration-300" />
                   </div>
                 </Link>
               </motion.div>
