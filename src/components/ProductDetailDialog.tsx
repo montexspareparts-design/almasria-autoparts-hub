@@ -2,8 +2,12 @@ import { useState, useRef, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Package, ShoppingCart, ZoomIn, ZoomOut, Lock, Eye, Tag, Layers, Hash, Box, Info } from "lucide-react";
+import { Package, ShoppingCart, ZoomIn, ZoomOut, Lock, Eye, Tag, Layers, Hash, Box, Info, Car, Sparkles } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { Link } from "react-router-dom";
 
 interface ProductDetailDialogProps {
   product: any | null;
@@ -36,9 +40,55 @@ const ProductDetailDialog = ({
   remainingViews = 0,
   limitReached = false,
 }: ProductDetailDialogProps) => {
+  const { user } = useAuth();
   const [zoomed, setZoomed] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
   const imageRef = useRef<HTMLDivElement>(null);
+
+  const { data: profile } = useQuery({
+    queryKey: ["user_car_profile_detail", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("car_model, car_year")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const carModel = profile?.car_model;
+  const carYear = profile?.car_year;
+
+  const { data: carProducts } = useQuery({
+    queryKey: ["car_recs_detail", carModel, carYear, product?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("products")
+        .select("id, name_ar, sku, brand, image_url")
+        .eq("is_active", true)
+        .contains("compatible_models", [carModel!])
+        .neq("id", product!.id)
+        .limit(4);
+
+      // Fallback to name search if not enough
+      if (!data || data.length < 4) {
+        const existingIds = (data || []).map(p => p.id);
+        const { data: fallback } = await supabase
+          .from("products")
+          .select("id, name_ar, sku, brand, image_url")
+          .eq("is_active", true)
+          .ilike("name_ar", `%${carModel}%`)
+          .neq("id", product!.id)
+          .limit(4);
+        const extra = (fallback || []).filter(p => !existingIds.includes(p.id));
+        return [...(data || []), ...extra].slice(0, 4);
+      }
+      return data;
+    },
+    enabled: !!carModel && !!product,
+  });
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!zoomed || !imageRef.current) return;
@@ -54,6 +104,15 @@ const ProductDetailDialog = ({
   };
 
   if (!product) return null;
+
+  const brandMap: Record<string, string> = {
+    toyota_genuine: "toyota-genuine",
+    toyota_oils: "toyota-oils",
+    mtx_aftermarket: "mtx-aftermarket",
+    denso: "denso",
+    aisin: "aisin",
+    fbk: "fbk",
+  };
 
   const brandLabels: Record<string, string> = {
     toyota_genuine: "تويوتا الأصلية",
@@ -270,6 +329,44 @@ const ProductDetailDialog = ({
               <ShoppingCart className="w-4 h-4" />
               أضف للسلة
             </Button>
+          )}
+
+          {/* Car-based Recommendations */}
+          {carProducts && carProducts.length > 0 && (
+            <>
+              <Separator />
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <p className="text-sm font-bold text-foreground">
+                    قطع غيار لـ <span className="text-primary">{carModel}</span>
+                    {carYear && <span className="text-muted-foreground text-xs mr-1">({carYear})</span>}
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {carProducts.map((rec) => (
+                    <Link
+                      key={rec.id}
+                      to={`/products/${brandMap[rec.brand] || "toyota-genuine"}?search=${encodeURIComponent(rec.sku)}`}
+                      onClick={handleClose}
+                      className="group flex gap-2 p-2 rounded-lg border border-border hover:border-primary/30 hover:bg-primary/5 transition-all"
+                    >
+                      <div className="w-12 h-12 rounded-md bg-white shrink-0 overflow-hidden">
+                        {rec.image_url ? (
+                          <img src={rec.image_url} alt={rec.name_ar} className="w-full h-full object-contain" loading="lazy" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center"><Car className="w-5 h-5 text-muted-foreground/30" /></div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-mono text-muted-foreground">{rec.sku}</p>
+                        <p className="text-xs font-semibold text-card-foreground leading-tight line-clamp-2 group-hover:text-primary transition-colors">{rec.name_ar}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </>
           )}
         </div>
         </div>
