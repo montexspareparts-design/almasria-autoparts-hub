@@ -144,6 +144,7 @@ const CheckoutPage = () => {
             .update({ used_count: (couponData as any).used_count + 1 } as any)
             .eq("id", couponData.id);
         }
+      }
 
       clearCart();
 
