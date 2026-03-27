@@ -166,21 +166,15 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     });
   }, [searchParams]);
 
-  /* ── Products ── */
+  /* ── Products (always fetch all for cross-brand search) ── */
   const { data: products, isLoading } = useQuery({
-    queryKey: ["products", brandFilter || "all", queryKeySuffix].filter(Boolean),
+    queryKey: ["products", "all", queryKeySuffix].filter(Boolean),
     queryFn: async () => {
-      let query = supabase
+      const { data, error } = await supabase
         .from("products")
         .select("*, product_categories(name_ar)")
         .eq("is_active", true)
         .order("created_at", { ascending: false });
-
-      if (brandFilter) {
-        query = query.eq("brand", brandFilter as any);
-      }
-
-      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
