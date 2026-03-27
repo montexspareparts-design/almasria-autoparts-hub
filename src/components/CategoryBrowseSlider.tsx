@@ -117,10 +117,19 @@ const CategoryBrowseSlider = () => {
           viewport={{ once: true }}
           className="text-center mb-10"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold mb-4">
+          <button
+            onClick={() => {
+              const searchInput = document.querySelector<HTMLInputElement>('input[placeholder*="ابحث"]');
+              if (searchInput) {
+                searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setTimeout(() => searchInput.focus(), 500);
+              }
+            }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold mb-4 hover:bg-primary/20 transition-colors cursor-pointer"
+          >
             <Search className="w-3.5 h-3.5" />
             بتدوّر على إيه؟
-          </div>
+          </button>
           <h2 className="text-2xl md:text-4xl font-black text-foreground mb-3">
             تصفّح حسب <span className="text-primary">الفئة</span>
           </h2>
