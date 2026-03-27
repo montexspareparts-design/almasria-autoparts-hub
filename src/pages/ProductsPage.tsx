@@ -202,7 +202,7 @@ const ProductsPage = () => {
 
       <CategoryBrowseSlider />
 
-      <div className="pt-6"><PromoBanner /></div>
+      
 
       <div ref={productsRef} />
       <ProductListingSection

@@ -79,8 +79,6 @@ const GenuinePartsPage = () => {
         </div>
       </section>
 
-      {/* ═══ Promo Banner ═══ */}
-      <div className="pt-8"><PromoBanner /></div>
 
       {/* ═══ 3. تصفح المنتجات ═══ */}
       <ProductListingSection
