@@ -162,6 +162,15 @@ const AdvancedProductFilter = ({ filters, onFiltersChange, categories, categoryC
               >
                 {IconComp && <IconComp className="w-3.5 h-3.5" />}
                 {cat.name_ar}
+                {categoryCounts && categoryCounts[cat.id] !== undefined && (
+                  <span className={`text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 ${
+                    filters.categoryId === cat.id
+                      ? "bg-primary-foreground/20 text-primary-foreground"
+                      : "bg-muted text-muted-foreground"
+                  }`}>
+                    {categoryCounts[cat.id]}
+                  </span>
+                )}
               </button>
             );
           })}
