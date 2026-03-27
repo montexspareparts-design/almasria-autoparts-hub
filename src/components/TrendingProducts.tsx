@@ -16,19 +16,34 @@ const TrendingProducts = () => {
   const { user } = useAuth();
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
-  // Best sellers - most ordered (from order_items count)
+  // Best sellers - based on real order_items data
   const { data: bestSellers, isLoading: loadingBest } = useQuery({
     queryKey: ["best_sellers"],
     queryFn: async () => {
+      // Get top product IDs by sales volume
+      const { data: topIds, error: idsError } = await supabase.rpc("get_best_selling_products", { _limit: 8 });
+      if (idsError) throw idsError;
+      if (!topIds || topIds.length === 0) {
+        // Fallback to featured products if no orders yet
+        const { data, error } = await supabase
+          .from("products")
+          .select("*, product_categories(name_ar)")
+          .eq("is_active", true)
+          .eq("is_featured", true)
+          .limit(8);
+        if (error) throw error;
+        return data;
+      }
+      // Fetch full product details for the top sellers
       const { data, error } = await supabase
         .from("products")
         .select("*, product_categories(name_ar)")
-        .eq("is_active", true)
-        .eq("is_featured", true)
-        .order("stock_quantity", { ascending: true })
-        .limit(8);
+        .in("id", topIds as string[])
+        .eq("is_active", true);
       if (error) throw error;
-      return data;
+      // Preserve order from RPC
+      const orderMap = new Map((topIds as string[]).map((id, i) => [id, i]));
+      return (data || []).sort((a, b) => (orderMap.get(a.id) ?? 99) - (orderMap.get(b.id) ?? 99));
     },
   });
 
