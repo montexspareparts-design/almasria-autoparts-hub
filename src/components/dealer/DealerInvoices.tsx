@@ -29,6 +29,7 @@ const statusMap: Record<string, { label: string; color: string }> = {
 const DealerInvoices = ({ userId }: { userId: string }) => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchInvoices();
