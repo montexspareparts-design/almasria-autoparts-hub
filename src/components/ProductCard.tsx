@@ -142,7 +142,7 @@ const ProductCard = ({
         {/* Quick view overlay */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 z-20">
           <div className="bg-foreground/80 backdrop-blur-sm text-background text-xs font-semibold px-4 py-2 rounded-full flex items-center gap-1.5 shadow-xl
-            translate-y-3 group-hover:translate-y-0 transition-transform duration-300">
+            translate-y-3 group-hover:translate-y-0 group-hover:animate-[pulse_1.5s_ease-in-out_infinite] transition-transform duration-300">
             <ExternalLink className="w-3.5 h-3.5" />
             عرض التفاصيل
           </div>
