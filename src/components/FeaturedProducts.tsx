@@ -144,18 +144,24 @@ const FeaturedProducts = () => {
 
                   {/* Price */}
                   <div className="flex items-end gap-2 mb-3">
-                    {product.sale_price ? (
-                      <>
-                        <span className="text-primary font-black text-lg">
-                          {product.sale_price.toLocaleString("ar-EG")} ج.م
+                    {user ? (
+                      product.sale_price ? (
+                        <>
+                          <span className="text-primary font-black text-lg">
+                            {product.sale_price.toLocaleString("ar-EG")} ج.م
+                          </span>
+                          <span className="text-muted-foreground line-through text-xs mb-0.5">
+                            {product.base_price.toLocaleString("ar-EG")}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-foreground font-black text-lg">
+                          {product.base_price.toLocaleString("ar-EG")} ج.م
                         </span>
-                        <span className="text-muted-foreground line-through text-xs mb-0.5">
-                          {product.base_price.toLocaleString("ar-EG")}
-                        </span>
-                      </>
+                      )
                     ) : (
-                      <span className="text-foreground font-black text-lg">
-                        {user ? `${product.base_price.toLocaleString("ar-EG")} ج.م` : "سجّل لرؤية السعر"}
+                      <span className="text-muted-foreground font-bold text-sm">
+                        سجّل لرؤية السعر
                       </span>
                     )}
                   </div>
