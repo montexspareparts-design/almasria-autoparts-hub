@@ -186,29 +186,44 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     },
   });
 
-  /* ── Filtering with Arabic normalization ── */
+  /* ── Smart year extraction from search query ── */
+  const extractYearFromSearch = (search: string): number | null => {
+    const match = search.match(/\b(19|20)\d{2}\b/);
+    return match ? parseInt(match[0]) : null;
+  };
+
+  const removeYearFromSearch = (search: string): string => {
+    return search.replace(/\b(19|20)\d{2}\b/g, "").replace(/\s+/g, " ").trim();
+  };
+
+  /* ── Filtering with Arabic normalization + smart year matching ── */
   const filteredProducts = useMemo(() => {
     if (!products) return [];
-    let result = products.filter((p) => {
-      // Brand filter
+
+    const searchYear = filters.search ? extractYearFromSearch(filters.search) : null;
+    const searchWithoutYear = filters.search ? removeYearFromSearch(filters.search) : "";
+
+    // Step 1: Base filtering (everything except year)
+    const baseFilter = (p: any) => {
       const matchesBrand = !filters.brandKey || p.brand === filters.brandKey;
 
-      // Search with Arabic normalization
       let matchesSearch = true;
       if (filters.search) {
-        const variants = generateSearchVariants(filters.search);
-        const normalizedName = normalizeArabic(p.name_ar);
-        const skuLower = p.sku.toLowerCase();
-        const nameEnLower = (p.name_en || "").toLowerCase();
-        matchesSearch = variants.some(v =>
-          normalizedName.includes(v) || skuLower.includes(v) || nameEnLower.includes(v)
-        );
+        // If search contains a year, match text part separately
+        const textToSearch = searchYear ? searchWithoutYear : filters.search;
+        if (textToSearch) {
+          const variants = generateSearchVariants(textToSearch);
+          const normalizedName = normalizeArabic(p.name_ar);
+          const skuLower = p.sku.toLowerCase();
+          const nameEnLower = (p.name_en || "").toLowerCase();
+          matchesSearch = variants.some(v =>
+            normalizedName.includes(v) || skuLower.includes(v) || nameEnLower.includes(v)
+          );
+        }
       }
 
-      // Category
       const matchesCategory = !filters.categoryId || p.category_id === filters.categoryId;
 
-      // Model - search in product name (Arabic normalized)
       let matchesModel = true;
       if (filters.model) {
         const modelVariants = generateSearchVariants(filters.model);
@@ -216,21 +231,60 @@ export function useProductListing(options: UseProductListingOptions = {}) {
         matchesModel = modelVariants.some(v => normalizedName.includes(v));
       }
 
-      // Year
       const matchesYear = !filters.year || p.name_ar.includes(filters.year);
-
-      // Part number
       const matchesPartNumber = !filters.partNumber || p.sku.toLowerCase().includes(filters.partNumber.toLowerCase());
-
-      // Price range
       const price = p.base_price;
       const matchesPriceMin = !filters.priceMin || price >= Number(filters.priceMin);
       const matchesPriceMax = !filters.priceMax || price <= Number(filters.priceMax);
 
       return matchesBrand && matchesSearch && matchesCategory && matchesModel && matchesYear && matchesPartNumber && matchesPriceMin && matchesPriceMax;
-    });
+    };
+
+    let baseResults = products.filter(baseFilter);
+
+    // Step 2: Smart year matching when search contains a year
+    if (searchYear && searchWithoutYear) {
+      // 2a: Exact year in name
+      const exactYearMatch = baseResults.filter(p => p.name_ar.includes(String(searchYear)));
+
+      if (exactYearMatch.length > 0) {
+        baseResults = exactYearMatch;
+      } else {
+        // 2b: Match via year_from/year_to range
+        const rangeMatch = baseResults.filter(p =>
+          p.year_from && p.year_to && searchYear >= p.year_from && searchYear <= p.year_to
+        );
+
+        if (rangeMatch.length > 0) {
+          baseResults = rangeMatch;
+        } else {
+          // 2c: Find closest year — extract all years from matching products' names
+          const productsWithYears = baseResults.map(p => {
+            const years = p.name_ar.match(/\b(19|20)\d{2}\b/g);
+            if (!years) return null;
+            const productYears = years.map(Number);
+            const closestYear = productYears.reduce((best, y) =>
+              Math.abs(y - searchYear) < Math.abs(best - searchYear) ? y : best
+            , productYears[0]);
+            return { product: p, closestYear, diff: Math.abs(closestYear - searchYear) };
+          }).filter(Boolean) as { product: any; closestYear: number; diff: number }[];
+
+          if (productsWithYears.length > 0) {
+            // Sort by closest year difference
+            productsWithYears.sort((a, b) => a.diff - b.diff);
+            const bestDiff = productsWithYears[0].diff;
+            // Take all products with the closest year
+            baseResults = productsWithYears
+              .filter(p => p.diff === bestDiff)
+              .map(p => p.product);
+          }
+          // If no products have years at all, keep baseResults as-is (text match only)
+        }
+      }
+    }
 
     // Sort
+    let result = baseResults;
     switch (filters.sortBy) {
       case "price_asc": result.sort((a, b) => a.base_price - b.base_price); break;
       case "price_desc": result.sort((a, b) => b.base_price - a.base_price); break;
