@@ -53,6 +53,7 @@ const CategoryBrowseSlider = () => {
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
   const [isHovered, setIsHovered] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   useEffect(() => {
     const fetchCounts = async () => {
