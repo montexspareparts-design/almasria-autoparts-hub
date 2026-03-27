@@ -102,7 +102,9 @@ const CheckoutPage = () => {
           shipping_governorate: form.governorate,
           shipping_address: `${form.name} - ${form.phone}\n${form.city}, ${form.governorate}\n${form.address}`,
           notes: form.notes || null,
-        })
+          coupon_code: couponCode || null,
+          coupon_discount: couponDiscount || 0,
+        } as any)
         .select("id")
         .single();
 
