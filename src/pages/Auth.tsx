@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff, Phone, Mail, User, MapPin, ArrowLeft, ArrowRight, Home } from "lucide-react";
+import { Eye, EyeOff, Phone, Mail, User, MapPin, ArrowLeft, ArrowRight, Home, Car } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion } from "framer-motion";
 import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 import logo from "@/assets/logo.webp";
@@ -36,6 +37,8 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [address, setAddress] = useState("");
+  const [carModel, setCarModel] = useState("");
+  const [carYear, setCarYear] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -96,7 +99,7 @@ const Auth = () => {
     } else {
       const { error } = await supabase.auth.signUp({
         email: authEmail, password,
-        options: { data: { full_name: fullName, phone: authMethod === "phone" ? phone : "", address, email: authMethod === "email" ? email : "" } },
+        options: { data: { full_name: fullName, phone: authMethod === "phone" ? phone : "", address, email: authMethod === "email" ? email : "", car_model: carModel || null, car_year: carYear ? parseInt(carYear) : null } },
       });
       if (error) {
         toast({ title: error.message.includes("already registered") ? "الحساب مسجل بالفعل" : "خطأ", description: error.message.includes("already registered") ? "سجّل دخول بدلاً من ذلك" : error.message, variant: "destructive" });
@@ -258,6 +261,37 @@ const Auth = () => {
                   <div className="relative">
                     <Input value={address} onChange={e => setAddress(e.target.value)} placeholder="المحافظة — العنوان التفصيلي" className="bg-muted/40 border-border/40 h-11 text-sm pr-10 focus:border-primary/50 focus:ring-primary/20 transition-all" />
                     <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30" />
+                  </div>
+                </div>
+              )}
+
+              {!isLogin && (
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-foreground/80 flex items-center gap-1.5">
+                    <Car className="w-3.5 h-3.5 text-primary" />
+                    عربيتك إيه؟ <span className="text-muted-foreground/50 text-[10px]">(اختياري — هنقترحلك قطع غيار مناسبة)</span>
+                  </Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Select value={carModel} onValueChange={setCarModel}>
+                      <SelectTrigger className="bg-muted/40 border-border/40 h-11 text-sm">
+                        <SelectValue placeholder="الموديل" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {["هاي اس", "كوستر", "كورولا", "هاي لوكس", "فورتشنر", "لاند كروزر", "برادو", "كامري", "ياريس", "راش", "افانزا", "راف فور"].map(m => (
+                          <SelectItem key={m} value={m}>{m}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select value={carYear} onValueChange={setCarYear}>
+                      <SelectTrigger className="bg-muted/40 border-border/40 h-11 text-sm">
+                        <SelectValue placeholder="السنة" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 30 }, (_, i) => new Date().getFullYear() - i).map(y => (
+                          <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               )}

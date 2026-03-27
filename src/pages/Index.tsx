@@ -22,6 +22,8 @@ const ContactSimple = lazy(() => import("@/components/ContactSimple"));
 const Footer = lazy(() => import("@/components/Footer"));
 const WhatsAppFloat = lazy(() => import("@/components/WhatsAppFloat"));
 const BackToTop = lazy(() => import("@/components/BackToTop"));
+const CarRecommendations = lazy(() => import("@/components/CarRecommendations"));
+const CarProfilePopup = lazy(() => import("@/components/CarProfilePopup"));
 
 
 const SectionFallback = () => (
@@ -75,6 +77,7 @@ const Index = () => {
       <Suspense fallback={<SectionFallback />}><ProductsShowcase /></Suspense>
       <Suspense fallback={null}><SectionDivider variant="light" /></Suspense>
       <Suspense fallback={<SectionFallback />}><FeaturedProducts /></Suspense>
+      <Suspense fallback={null}><CarRecommendations /></Suspense>
       <Suspense fallback={<SectionFallback />}><WhyChooseUs /></Suspense>
       <Suspense fallback={null}><SectionDivider variant="light" /></Suspense>
       <Suspense fallback={<SectionFallback />}><WhoWeServe /></Suspense>
@@ -86,6 +89,7 @@ const Index = () => {
       <Suspense fallback={null}><Footer /></Suspense>
       <Suspense fallback={null}><WhatsAppFloat /></Suspense>
       <Suspense fallback={null}><BackToTop /></Suspense>
+      <Suspense fallback={null}><CarProfilePopup /></Suspense>
     </div>
   );
 };

@@ -1047,6 +1047,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          car_model: string | null
+          car_year: number | null
           created_at: string
           email: string | null
           full_name: string | null
@@ -1056,6 +1058,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          car_model?: string | null
+          car_year?: number | null
           created_at?: string
           email?: string | null
           full_name?: string | null
@@ -1065,6 +1069,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          car_model?: string | null
+          car_year?: number | null
           created_at?: string
           email?: string | null
           full_name?: string | null

@@ -16,6 +16,7 @@ import { usePersonalization } from "@/hooks/usePersonalization";
 import PromoBanner from "@/components/PromoBanner";
 import TrendingProducts from "@/components/TrendingProducts";
 import CategoryBrowseSlider from "@/components/CategoryBrowseSlider";
+import CarRecommendations from "@/components/CarRecommendations";
 
 import brandGenuineParts from "@/assets/brand-genuine-parts.webp";
 import brandToyotaOil from "@/assets/brand-toyota-oil.webp";
@@ -211,6 +212,7 @@ const ProductsPage = () => {
         beforeGrid={<div className="mb-6"><PersonalizedProducts /></div>}
         sectionClassName="py-8"
       />
+      <CarRecommendations />
       <TrendingProducts />
 
       <Footer />
