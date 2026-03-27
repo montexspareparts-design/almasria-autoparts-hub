@@ -26,9 +26,9 @@ import catGaskets from "@/assets/categories/cat-gaskets.jpg";
 import catDynamo from "@/assets/categories/cat-dynamo.jpg";
 
 const categories = [
-  { name: "بوجيهات ومباين", image: catSparkPlugs, search: "بوجيهات", accent: "from-amber-500/80 to-orange-600/90" },
-  { name: "دورة تبريد مياه", image: catCooling, search: "تبريد", accent: "from-blue-500/80 to-cyan-600/90" },
-  { name: "سيور وبلي", image: catBelts, search: "سيور", accent: "from-gray-600/80 to-gray-800/90" },
+  { name: "بوجيهات ومباين", image: catSparkPlugs, search: "بوجية", accent: "from-amber-500/80 to-orange-600/90" },
+  { name: "دورة تبريد مياه", image: catCooling, search: "مياه", accent: "from-blue-500/80 to-cyan-600/90" },
+  { name: "سيور وبلي", image: catBelts, search: "سير", accent: "from-gray-600/80 to-gray-800/90" },
   { name: "عفشة", image: catSuspension, search: "عفشة", accent: "from-green-600/80 to-emerald-700/90" },
   { name: "دبرياج", image: catClutch, search: "دبرياج", accent: "from-red-500/80 to-rose-700/90" },
   { name: "فلاتر", image: catFilters, search: "فلتر", accent: "from-purple-500/80 to-violet-700/90" },
@@ -41,10 +41,10 @@ const categories = [
   { name: "جوانات", image: catGaskets, search: "جوان", accent: "from-rose-500/80 to-red-700/90" },
   { name: "مساعدين", image: catShocks, search: "مساعد", accent: "from-emerald-500/80 to-green-700/90" },
   { name: "دينامو", image: catDynamo, search: "دينامو", accent: "from-violet-500/80 to-purple-700/90" },
-  { name: "زيوت بنزين", image: catOilGasoline, search: "زيت بنزين", accent: "from-teal-500/80 to-teal-700/90" },
-  { name: "زيوت ديزل", image: catOilDiesel, search: "زيت ديزل", accent: "from-slate-600/80 to-slate-800/90" },
+  { name: "زيوت بنزين", image: catOilGasoline, search: "زيت", accent: "from-teal-500/80 to-teal-700/90" },
+  { name: "زيوت ديزل", image: catOilDiesel, search: "ديزل", accent: "from-slate-600/80 to-slate-800/90" },
   { name: "زيوت فتيس", image: catOilTransmission, search: "فتيس", accent: "from-indigo-500/80 to-indigo-700/90" },
-  { name: "تيل فرامل", image: catBrakePads, search: "تيل فرامل", accent: "from-pink-500/80 to-rose-700/90" },
+  { name: "تيل فرامل", image: catBrakePads, search: "تيل", accent: "from-pink-500/80 to-rose-700/90" },
 ];
 
 const CategoryBrowseSlider = () => {
@@ -140,7 +140,7 @@ const CategoryBrowseSlider = () => {
             className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory px-2"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
-            {[...categories].sort((a, b) => (categoryCounts[b.search] ?? 0) - (categoryCounts[a.search] ?? 0)).map((cat, i) => (
+            {[...categories].sort((a, b) => (categoryCounts[a.search] ?? 0) - (categoryCounts[b.search] ?? 0)).map((cat, i) => (
               <motion.div
                 key={cat.name}
                 initial={{ opacity: 0, y: 30 }}
