@@ -6,6 +6,7 @@ import {
   BarChart3, BadgeCheck, ChevronLeft, Lock, Package, ShoppingCart, Eye,
   AlertTriangle, Grid3X3, List, ChevronRight, SlidersHorizontal
 } from "lucide-react";
+import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Helmet } from "react-helmet-async";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
