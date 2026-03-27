@@ -205,7 +205,9 @@ export function useProductListing(options: UseProductListingOptions = {}) {
 
     // Step 1: Base filtering (everything except year)
     const baseFilter = (p: any) => {
-      const matchesBrand = !filters.brandKey || p.brand === filters.brandKey;
+      // When searching, show results from ALL brands (cross-brand search)
+      const hasActiveSearch = !!(filters.search?.trim());
+      const matchesBrand = hasActiveSearch || !filters.brandKey || p.brand === filters.brandKey;
 
       let matchesSearch = true;
       if (filters.search) {
