@@ -95,10 +95,14 @@ export function useProductListing(options: UseProductListingOptions = {}) {
   const queryClient = useQueryClient();
 
   const initialSearch = searchParams.get("search") || "";
-  const [filters, setFilters] = useState<ProductFilters>({
+  const initialCategory = searchParams.get("category") || null;
+
+  const getDefaultFilters = (): ProductFilters => ({
     search: initialSearch, model: null, year: null, chassisNumber: "", partNumber: "",
     categoryId: null, brandKey: brandFilter || null, priceMin: "", priceMax: "", sortBy: "newest",
   });
+
+  const [filters, setFilters] = useState<ProductFilters>(getDefaultFilters);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
