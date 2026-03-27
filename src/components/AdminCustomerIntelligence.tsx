@@ -238,16 +238,105 @@ const AdminCustomerIntelligence = () => {
         </Card>
       </div>
 
-      {/* Search filter */}
-      <div className="relative">
-        <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder="ابحث بالاسم، الهاتف، الإيميل، أو نوع السيارة..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pr-10"
-        />
-      </div>
+      {/* Filters bar */}
+      <Card>
+        <CardContent className="p-4 space-y-3">
+          {/* Row 1: Text search */}
+          <div className="relative">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="ابحث بالاسم، الهاتف، الإيميل، أو نوع السيارة..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pr-10"
+            />
+          </div>
+
+          {/* Row 2: Date range + customer type */}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Date From */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "gap-1.5 text-xs h-9",
+                    !dateFrom && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="w-3.5 h-3.5" />
+                  {dateFrom ? format(dateFrom, "dd/MM/yyyy") : "من تاريخ"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dateFrom}
+                  onSelect={setDateFrom}
+                  disabled={(date) => date > new Date()}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+
+            {/* Date To */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "gap-1.5 text-xs h-9",
+                    !dateTo && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="w-3.5 h-3.5" />
+                  {dateTo ? format(dateTo, "dd/MM/yyyy") : "إلى تاريخ"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dateTo}
+                  onSelect={setDateTo}
+                  disabled={(date) => date > new Date()}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+
+            {/* Customer Type */}
+            <Select value={customerTypeFilter} onValueChange={setCustomerTypeFilter}>
+              <SelectTrigger className="w-[180px] h-9 text-xs">
+                <Filter className="w-3.5 h-3.5 ml-1.5" />
+                <SelectValue placeholder="نوع العميل" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل الأنواع</SelectItem>
+                {CUSTOMER_TYPES.map(type => (
+                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Clear filters */}
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" className="gap-1 text-xs h-9 text-destructive" onClick={clearFilters}>
+                <X className="w-3.5 h-3.5" />
+                مسح الفلاتر
+              </Button>
+            )}
+
+            {/* Results count */}
+            <span className="text-xs text-muted-foreground mr-auto">
+              {filteredProfiles?.length || 0} عميل
+            </span>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Customer list */}
       {loadingProfiles ? (
