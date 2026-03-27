@@ -156,6 +156,14 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     }
   }, [dbCategories, searchParams]);
 
+  // Deep link: set search from URL query (used by CategoryBrowseSlider)
+  useEffect(() => {
+    const searchTerm = searchParams.get("search");
+    if (searchTerm) {
+      setFilters((prev) => ({ ...prev, search: searchTerm }));
+    }
+  }, [searchParams]);
+
   /* ── Products ── */
   const { data: products, isLoading } = useQuery({
     queryKey: ["products", brandFilter || "all", queryKeySuffix].filter(Boolean),
