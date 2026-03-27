@@ -124,6 +124,27 @@ const CheckoutPage = () => {
       // Push order to Al Faisal ERP (fire-and-forget)
       pushOrderToERP(order.id);
 
+      // Record coupon usage if applied
+      if (couponCode) {
+        const { data: couponData } = await supabase
+          .from("coupons")
+          .select("id")
+          .eq("code", couponCode)
+          .single();
+        if (couponData) {
+          await supabase.from("coupon_usage").insert({
+            coupon_id: couponData.id,
+            user_id: user.id,
+            order_id: order.id,
+            discount_applied: couponDiscount,
+          });
+          // Increment used_count
+          await supabase.rpc("increment_coupon_usage" as any, { _coupon_id: couponData.id }).catch(() => {
+            // fallback: just ignore if function doesn't exist
+          });
+        }
+      }
+
       clearCart();
 
       // If payment is card or paymob, create intention and show Flash Checkout
