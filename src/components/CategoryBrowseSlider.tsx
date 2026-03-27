@@ -169,7 +169,7 @@ const CategoryBrowseSlider = () => {
               >
                 <Link
                   to={`/products/toyota-genuine?search=${encodeURIComponent(cat.search)}`}
-                  className="group/card block relative min-w-[150px] sm:min-w-[170px] rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-shadow duration-400"
+                  className="group/card block relative min-w-[150px] sm:min-w-[170px] rounded-2xl overflow-hidden shadow-md hover:shadow-[0_0_20px_hsl(var(--primary)/0.35),0_15px_35px_hsl(0_0%_0%/0.15)] transition-all duration-500"
                 >
                   <motion.div
                     whileHover={{ y: -8, scale: 1.03 }}
@@ -185,7 +185,8 @@ const CategoryBrowseSlider = () => {
                         height={512}
                         className="w-full h-full object-contain group-hover/card:scale-110 transition-transform duration-500"
                       />
-                      {/* Hover overlay */}
+                      {/* Shimmer overlay on hover */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover/card:translate-x-full transition-transform duration-700 ease-in-out" />
                       <div className="absolute inset-0 bg-primary/0 group-hover/card:bg-primary/5 transition-colors duration-300" />
                     </div>
 
