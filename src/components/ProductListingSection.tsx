@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
-import { ShieldCheck, Eye, Package, Grid3X3, List, ChevronLeft, ChevronRight, SlidersHorizontal } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
+import { ShieldCheck, Eye, Package, Grid3X3, List, ChevronLeft, ChevronRight, SlidersHorizontal, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ProductCard from "@/components/ProductCard";
