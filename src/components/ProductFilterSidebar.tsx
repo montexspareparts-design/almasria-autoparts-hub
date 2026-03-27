@@ -50,6 +50,14 @@ const ProductFilterSidebar = ({
   filters, onFiltersChange, categories, categoryCounts,
   showBrands = false, totalResults, isLoading, isOpen, onToggle
 }: Props) => {
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
+
+  const handleFilterChange = (key: keyof ProductFilters, value: any) => {
+    onFiltersChange({ ...filters, [key]: value });
+    if (isMobile && isOpen) {
+      setTimeout(() => onToggle(), 200);
+    }
+  };
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     categories: true,
     filters: true,
