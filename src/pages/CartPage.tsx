@@ -135,6 +135,12 @@ const CartPage = () => {
                       <span>- {discount.toLocaleString("ar-EG")} ج.م</span>
                     </div>
                   )}
+                  {couponDiscount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>خصم الكوبون</span>
+                      <span>- {couponDiscount.toLocaleString("ar-EG")} ج.م</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">ضريبة القيمة المضافة (14%)</span>
                     <span className="font-semibold">{vat.toLocaleString("ar-EG")} ج.م</span>
@@ -150,6 +156,23 @@ const CartPage = () => {
                       <span className="text-primary">{total.toLocaleString("ar-EG")} ج.م</span>
                     </div>
                   </div>
+                </div>
+
+                {/* Coupon Input */}
+                <div className="mt-4">
+                  <CouponInput
+                    subtotal={subtotal}
+                    appliedCode={couponCode}
+                    appliedDiscount={couponDiscount}
+                    onApply={(amount, code) => {
+                      setCouponDiscount(amount);
+                      setCouponCode(code);
+                    }}
+                    onRemove={() => {
+                      setCouponDiscount(0);
+                      setCouponCode(null);
+                    }}
+                  />
                 </div>
 
                 {/* Min order warning */}
