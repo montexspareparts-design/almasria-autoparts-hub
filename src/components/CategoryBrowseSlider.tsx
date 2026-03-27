@@ -1,25 +1,33 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
-import { 
-  Zap, Droplets, Settings, Car, Disc, Filter, Layers,
-  Fuel, CircleDot, Wrench, Gauge
-} from "lucide-react";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
+import catSparkPlugs from "@/assets/categories/cat-spark-plugs.jpg";
+import catCooling from "@/assets/categories/cat-cooling.jpg";
+import catBelts from "@/assets/categories/cat-belts.jpg";
+import catSuspension from "@/assets/categories/cat-suspension.jpg";
+import catClutch from "@/assets/categories/cat-clutch.jpg";
+import catFilters from "@/assets/categories/cat-filters.jpg";
+import catBody from "@/assets/categories/cat-body.jpg";
+import catOilGasoline from "@/assets/categories/cat-oil-gasoline.jpg";
+import catOilDiesel from "@/assets/categories/cat-oil-diesel.jpg";
+import catOilTransmission from "@/assets/categories/cat-oil-transmission.jpg";
+import catBrakePads from "@/assets/categories/cat-brake-pads.jpg";
+
 const categories = [
-  { name: "بوجيهات ومباين", icon: Zap, color: "from-amber-500 to-orange-500", search: "بوجيهات" },
-  { name: "دورة تبريد مياه", icon: Droplets, color: "from-blue-500 to-cyan-500", search: "تبريد" },
-  { name: "سيور وبلي", icon: Settings, color: "from-gray-600 to-gray-800", search: "سيور" },
-  { name: "عفشة", icon: Car, color: "from-green-500 to-emerald-600", search: "عفشة" },
-  { name: "دبرياج", icon: Disc, color: "from-red-500 to-rose-600", search: "دبرياج" },
-  { name: "فلاتر", icon: Filter, color: "from-purple-500 to-violet-600", search: "فلتر" },
-  { name: "فيبر", icon: Layers, color: "from-yellow-500 to-amber-600", search: "فيبر" },
-  { name: "زيوت بنزين", icon: Fuel, color: "from-teal-500 to-teal-700", search: "زيت بنزين" },
-  { name: "زيوت ديزل", icon: CircleDot, color: "from-slate-600 to-slate-800", search: "زيت ديزل" },
-  { name: "زيوت فتيس", icon: Wrench, color: "from-indigo-500 to-indigo-700", search: "فتيس" },
-  { name: "تيل فرامل", icon: Gauge, color: "from-pink-500 to-rose-600", search: "تيل فرامل" },
+  { name: "بوجيهات ومباين", image: catSparkPlugs, search: "بوجيهات", accent: "from-amber-500/80 to-orange-600/90" },
+  { name: "دورة تبريد مياه", image: catCooling, search: "تبريد", accent: "from-blue-500/80 to-cyan-600/90" },
+  { name: "سيور وبلي", image: catBelts, search: "سيور", accent: "from-gray-600/80 to-gray-800/90" },
+  { name: "عفشة", image: catSuspension, search: "عفشة", accent: "from-green-600/80 to-emerald-700/90" },
+  { name: "دبرياج", image: catClutch, search: "دبرياج", accent: "from-red-500/80 to-rose-700/90" },
+  { name: "فلاتر", image: catFilters, search: "فلتر", accent: "from-purple-500/80 to-violet-700/90" },
+  { name: "فيبر", image: catBody, search: "فيبر", accent: "from-yellow-500/80 to-amber-600/90" },
+  { name: "زيوت بنزين", image: catOilGasoline, search: "زيت بنزين", accent: "from-teal-500/80 to-teal-700/90" },
+  { name: "زيوت ديزل", image: catOilDiesel, search: "زيت ديزل", accent: "from-slate-600/80 to-slate-800/90" },
+  { name: "زيوت فتيس", image: catOilTransmission, search: "فتيس", accent: "from-indigo-500/80 to-indigo-700/90" },
+  { name: "تيل فرامل", image: catBrakePads, search: "تيل فرامل", accent: "from-pink-500/80 to-rose-700/90" },
 ];
 
 const CategoryBrowseSlider = () => {
@@ -41,19 +49,19 @@ const CategoryBrowseSlider = () => {
   };
 
   return (
-    <section className="py-12 bg-muted/30">
+    <section className="py-14 bg-gradient-to-b from-background to-muted/40">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-8"
+          className="text-center mb-10"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold mb-3">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold mb-4">
             <Search className="w-3.5 h-3.5" />
             بتدوّر على إيه؟
           </div>
-          <h2 className="text-2xl md:text-3xl font-black text-foreground mb-2">
+          <h2 className="text-2xl md:text-4xl font-black text-foreground mb-3">
             تصفّح حسب <span className="text-primary">الفئة</span>
           </h2>
           <p className="text-muted-foreground text-sm max-w-md mx-auto">
@@ -63,12 +71,12 @@ const CategoryBrowseSlider = () => {
 
         {/* Slider */}
         <div className="relative group">
-          {/* Arrows */}
+          {/* Navigation Arrows */}
           {canScrollRight && (
             <Button
               size="icon"
               variant="secondary"
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hidden md:flex"
+              className="absolute left-[-16px] top-1/2 -translate-y-1/2 z-10 rounded-full shadow-xl w-10 h-10 opacity-0 group-hover:opacity-100 transition-opacity hidden md:flex bg-background/90 backdrop-blur-sm border border-border"
               onClick={() => scroll("left")}
             >
               <ChevronLeft className="w-5 h-5" />
@@ -78,39 +86,57 @@ const CategoryBrowseSlider = () => {
             <Button
               size="icon"
               variant="secondary"
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hidden md:flex"
+              className="absolute right-[-16px] top-1/2 -translate-y-1/2 z-10 rounded-full shadow-xl w-10 h-10 opacity-0 group-hover:opacity-100 transition-opacity hidden md:flex bg-background/90 backdrop-blur-sm border border-border"
               onClick={() => scroll("right")}
             >
               <ChevronRight className="w-5 h-5" />
             </Button>
           )}
 
+          {/* Fade edges */}
+          <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-[5] pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-[5] pointer-events-none" />
+
           <div
             ref={scrollRef}
             onScroll={checkScroll}
-            className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 snap-x snap-mandatory px-1"
+            className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory px-2"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {categories.map((cat, i) => (
               <motion.div
                 key={cat.name}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.04 }}
+                transition={{ delay: i * 0.05, type: "spring", stiffness: 80 }}
                 className="snap-start"
               >
                 <Link
                   to={`/products/toyota-genuine?search=${encodeURIComponent(cat.search)}`}
-                  className="group/card flex flex-col items-center gap-3 min-w-[120px] sm:min-w-[140px] p-4 sm:p-5 rounded-2xl bg-card border border-border hover:border-primary/40 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+                  className="group/card block relative min-w-[150px] sm:min-w-[170px] rounded-2xl overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-400"
                 >
-                  <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br ${cat.color} flex items-center justify-center shadow-lg group-hover/card:scale-110 transition-transform duration-300`}>
-                    <cat.icon className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+                  {/* Product Image */}
+                  <div className="aspect-square bg-white p-3 relative overflow-hidden">
+                    <img
+                      src={cat.image}
+                      alt={cat.name}
+                      loading="lazy"
+                      width={512}
+                      height={512}
+                      className="w-full h-full object-contain group-hover/card:scale-110 transition-transform duration-500"
+                    />
+                    {/* Hover overlay */}
+                    <div className="absolute inset-0 bg-primary/0 group-hover/card:bg-primary/5 transition-colors duration-300" />
                   </div>
-                  <span className="text-xs sm:text-sm font-bold text-foreground text-center whitespace-nowrap">
-                    {cat.name}
-                  </span>
-                  <ChevronLeft className="w-4 h-4 text-muted-foreground group-hover/card:text-primary group-hover/card:-translate-x-1 transition-all duration-300" />
+
+                  {/* Label */}
+                  <div className={`relative bg-gradient-to-br ${cat.accent} px-4 py-3.5 text-center`}>
+                    <span className="text-white font-bold text-sm block leading-snug">
+                      {cat.name}
+                    </span>
+                    <ChevronLeft className="w-4 h-4 text-white/70 mx-auto mt-1.5 group-hover/card:text-white group-hover/card:-translate-x-1 transition-all duration-300" />
+                  </div>
                 </Link>
               </motion.div>
             ))}
