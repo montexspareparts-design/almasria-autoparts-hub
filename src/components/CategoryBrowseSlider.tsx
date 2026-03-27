@@ -16,6 +16,14 @@ import catOilGasoline from "@/assets/categories/cat-oil-gasoline.jpg";
 import catOilDiesel from "@/assets/categories/cat-oil-diesel.jpg";
 import catOilTransmission from "@/assets/categories/cat-oil-transmission.jpg";
 import catBrakePads from "@/assets/categories/cat-brake-pads.jpg";
+import catHeadlights from "@/assets/categories/cat-headlights.jpg";
+import catOilSeals from "@/assets/categories/cat-oil-seals.jpg";
+import catBumpers from "@/assets/categories/cat-bumpers.jpg";
+import catRubber from "@/assets/categories/cat-rubber.jpg";
+import catShocks from "@/assets/categories/cat-shocks.jpg";
+import catMirrors from "@/assets/categories/cat-mirrors.jpg";
+import catGaskets from "@/assets/categories/cat-gaskets.jpg";
+import catDynamo from "@/assets/categories/cat-dynamo.jpg";
 
 const categories = [
   { name: "بوجيهات ومباين", image: catSparkPlugs, search: "بوجيهات", accent: "from-amber-500/80 to-orange-600/90" },
@@ -25,6 +33,14 @@ const categories = [
   { name: "دبرياج", image: catClutch, search: "دبرياج", accent: "from-red-500/80 to-rose-700/90" },
   { name: "فلاتر", image: catFilters, search: "فلتر", accent: "from-purple-500/80 to-violet-700/90" },
   { name: "فيبر", image: catBody, search: "فيبر", accent: "from-yellow-500/80 to-amber-600/90" },
+  { name: "اكصدامات", image: catBumpers, search: "اكصدام", accent: "from-stone-600/80 to-stone-800/90" },
+  { name: "اويل سيل", image: catOilSeals, search: "اويل سيل", accent: "from-orange-600/80 to-amber-800/90" },
+  { name: "كشافات", image: catHeadlights, search: "كشاف", accent: "from-sky-500/80 to-blue-700/90" },
+  { name: "كاوتشات", image: catRubber, search: "كاوتش", accent: "from-zinc-600/80 to-zinc-800/90" },
+  { name: "مرايات", image: catMirrors, search: "مراي", accent: "from-cyan-500/80 to-cyan-700/90" },
+  { name: "جوانات", image: catGaskets, search: "جوان", accent: "from-rose-500/80 to-red-700/90" },
+  { name: "مساعدين", image: catShocks, search: "مساعد", accent: "from-emerald-500/80 to-green-700/90" },
+  { name: "دينامو", image: catDynamo, search: "دينامو", accent: "from-violet-500/80 to-purple-700/90" },
   { name: "زيوت بنزين", image: catOilGasoline, search: "زيت بنزين", accent: "from-teal-500/80 to-teal-700/90" },
   { name: "زيوت ديزل", image: catOilDiesel, search: "زيت ديزل", accent: "from-slate-600/80 to-slate-800/90" },
   { name: "زيوت فتيس", image: catOilTransmission, search: "فتيس", accent: "from-indigo-500/80 to-indigo-700/90" },
