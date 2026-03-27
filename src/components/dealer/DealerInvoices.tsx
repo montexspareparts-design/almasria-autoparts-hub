@@ -399,12 +399,30 @@ const DealerInvoices = ({ userId }: { userId: string }) => {
                         </Badge>
                       </div>
 
-                      {/* Print - only for delivered & paid */}
+                      {/* PDF Download - only for delivered & paid */}
                       {isDelivered && (
                         <Button
                           variant="ghost"
                           size="icon"
                           className="w-8 h-8 text-primary hover:bg-primary/10"
+                          title="تحميل PDF"
+                          disabled={downloadingId === inv.id}
+                          onClick={() => handleDownloadPDF(inv)}
+                        >
+                          {downloadingId === inv.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <FileDown className="w-4 h-4" />
+                          )}
+                        </Button>
+                      )}
+
+                      {/* Print - only for delivered & paid */}
+                      {isDelivered && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="w-8 h-8 text-muted-foreground hover:bg-muted"
                           title="طباعة الفاتورة"
                           onClick={() => handlePrint(inv)}
                         >
