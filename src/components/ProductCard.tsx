@@ -1,15 +1,16 @@
 import { motion } from "framer-motion";
 import { Package, Lock, Eye, ShoppingCart, Heart, ExternalLink } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-const brandLabelMap: Record<string, { label: string; color: string }> = {
-  toyota_genuine: { label: "تويوتا أصلي", color: "bg-red-500/90 text-white" },
-  toyota_oils: { label: "زيوت تويوتا", color: "bg-amber-500/90 text-white" },
-  mtx_aftermarket: { label: "MTX", color: "bg-blue-500/90 text-white" },
-  denso: { label: "DENSO", color: "bg-emerald-600/90 text-white" },
-  aisin: { label: "AISIN", color: "bg-purple-500/90 text-white" },
-  fbk: { label: "FBK", color: "bg-orange-500/90 text-white" },
+const brandRouteMap: Record<string, { label: string; color: string; path: string }> = {
+  toyota_genuine: { label: "تويوتا أصلي", color: "bg-red-500/90 text-white", path: "/products/toyota-genuine" },
+  toyota_oils: { label: "زيوت تويوتا", color: "bg-amber-500/90 text-white", path: "/products/toyota-oils" },
+  mtx_aftermarket: { label: "MTX", color: "bg-blue-500/90 text-white", path: "/products/mtx" },
+  denso: { label: "DENSO", color: "bg-emerald-600/90 text-white", path: "/products/denso" },
+  aisin: { label: "AISIN", color: "bg-purple-500/90 text-white", path: "/products/aisin" },
+  fbk: { label: "FBK", color: "bg-orange-500/90 text-white", path: "/products/fbk" },
 };
 
 interface ProductCardProps {
@@ -34,6 +35,7 @@ const ProductCard = ({
   limitReached, dailyViewCount, dailyLimit,
   getProductPrice, onProductClick, onAddToCart, onRecordView, onLoginRequired,
 }: ProductCardProps) => {
+  const navigate = useNavigate();
 
   const stockAvailable = product.stock_quantity > 0;
   const hasViewed = viewedProductIds.includes(product.id);
@@ -76,9 +78,12 @@ const ProductCard = ({
           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
             <span className="text-[10px] font-mono bg-muted text-muted-foreground px-2 py-0.5 rounded">{product.sku}</span>
             <StockBadge available={stockAvailable} />
-            {brandLabelMap[product.brand] && (
-              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${brandLabelMap[product.brand].color}`}>
-                {brandLabelMap[product.brand].label}
+            {brandRouteMap[product.brand] && (
+              <span
+                className={`text-[9px] font-bold px-1.5 py-0.5 rounded cursor-pointer hover:opacity-80 transition-opacity ${brandRouteMap[product.brand].color}`}
+                onClick={(e) => { e.stopPropagation(); navigate(brandRouteMap[product.brand].path); }}
+              >
+                {brandRouteMap[product.brand].label}
               </span>
             )}
           </div>
@@ -176,9 +181,12 @@ const ProductCard = ({
             {product.sku}
           </span>
           <div className="flex items-center gap-1.5">
-            {brandLabelMap[product.brand] && (
-              <span className={`text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded ${brandLabelMap[product.brand].color}`}>
-                {brandLabelMap[product.brand].label}
+            {brandRouteMap[product.brand] && (
+              <span
+                className={`text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded cursor-pointer hover:opacity-80 transition-opacity ${brandRouteMap[product.brand].color}`}
+                onClick={(e) => { e.stopPropagation(); navigate(brandRouteMap[product.brand].path); }}
+              >
+                {brandRouteMap[product.brand].label}
               </span>
             )}
             <StockBadge available={stockAvailable} />
