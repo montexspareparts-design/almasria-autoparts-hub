@@ -181,9 +181,12 @@ const ProductCard = ({
             {product.sku}
           </span>
           <div className="flex items-center gap-1.5">
-            {brandLabelMap[product.brand] && (
-              <span className={`text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded ${brandLabelMap[product.brand].color}`}>
-                {brandLabelMap[product.brand].label}
+            {brandRouteMap[product.brand] && (
+              <span
+                className={`text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded cursor-pointer hover:opacity-80 transition-opacity ${brandRouteMap[product.brand].color}`}
+                onClick={(e) => { e.stopPropagation(); navigate(brandRouteMap[product.brand].path); }}
+              >
+                {brandRouteMap[product.brand].label}
               </span>
             )}
             <StockBadge available={stockAvailable} />
