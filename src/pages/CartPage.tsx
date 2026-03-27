@@ -4,11 +4,12 @@ import { Trash2, Plus, Minus, ShoppingCart, ArrowRight, AlertTriangle, Package }
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
+import CouponInput from "@/components/CouponInput";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 const CartPage = () => {
-  const { items, removeItem, updateQuantity, subtotal, vat, shippingCost, discount, total, itemCount } = useCart();
+  const { items, removeItem, updateQuantity, subtotal, vat, shippingCost, discount, couponCode, couponDiscount, setCouponCode, setCouponDiscount, total, itemCount } = useCart();
   const { isDealer, dealerAccount } = useAuth();
   const navigate = useNavigate();
 
