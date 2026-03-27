@@ -385,6 +385,10 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminProducts /></Suspense>;
       case "orders":
         return <Suspense fallback={<SectionLoader />}><AdminOrders /></Suspense>;
+      case "coupons":
+        return <Suspense fallback={<SectionLoader />}><AdminCoupons /></Suspense>;
+      case "qty-discounts":
+        return <Suspense fallback={<SectionLoader />}><AdminQuantityDiscounts /></Suspense>;
       case "price-lists":
         return <Suspense fallback={<SectionLoader />}><AdminPriceLists /></Suspense>;
       case "catalogs":
