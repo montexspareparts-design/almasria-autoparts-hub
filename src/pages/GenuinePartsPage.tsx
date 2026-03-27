@@ -7,6 +7,7 @@ import {
   ChevronLeft, Filter, MapPin, FileText, Users, Wrench,
   Lock, ShoppingCart, Eye, AlertTriangle, Grid3X3, List, ChevronRight, SlidersHorizontal
 } from "lucide-react";
+import ProductCard from "@/components/ProductCard";
 import { motion } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
