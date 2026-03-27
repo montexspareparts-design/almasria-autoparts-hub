@@ -1279,6 +1279,10 @@ export type Database = {
         Args: { _email?: string; _phone?: string }
         Returns: Json
       }
+      get_best_selling_products: {
+        Args: { _limit?: number }
+        Returns: string[]
+      }
       get_daily_view_count: { Args: { _user_id: string }; Returns: number }
       has_role: {
         Args: {
