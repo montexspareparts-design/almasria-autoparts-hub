@@ -10,7 +10,7 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductListingSection from "@/components/ProductListingSection";
-import PromoBanner from "@/components/PromoBanner";
+
 import { useProductListing } from "@/hooks/useProductListing";
 
 import brandMtx from "@/assets/brand-mtx.webp";
