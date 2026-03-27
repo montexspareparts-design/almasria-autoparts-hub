@@ -35,6 +35,26 @@ const CategoryBrowseSlider = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("name_ar")
+        .eq("is_active", true);
+      if (error || !data) return;
+
+      const counts: Record<string, number> = {};
+      categories.forEach((cat) => {
+        counts[cat.search] = data.filter((p) =>
+          p.name_ar.includes(cat.search)
+        ).length;
+      });
+      setCategoryCounts(counts);
+    };
+    fetchCounts();
+  }, []);
 
   const checkScroll = () => {
     if (!scrollRef.current) return;
