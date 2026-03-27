@@ -40,9 +40,55 @@ const ProductDetailDialog = ({
   remainingViews = 0,
   limitReached = false,
 }: ProductDetailDialogProps) => {
+  const { user } = useAuth();
   const [zoomed, setZoomed] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
   const imageRef = useRef<HTMLDivElement>(null);
+
+  const { data: profile } = useQuery({
+    queryKey: ["user_car_profile_detail", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("car_model, car_year")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const carModel = profile?.car_model;
+  const carYear = profile?.car_year;
+
+  const { data: carProducts } = useQuery({
+    queryKey: ["car_recs_detail", carModel, carYear, product?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("products")
+        .select("id, name_ar, sku, brand, image_url")
+        .eq("is_active", true)
+        .contains("compatible_models", [carModel!])
+        .neq("id", product!.id)
+        .limit(4);
+
+      // Fallback to name search if not enough
+      if (!data || data.length < 4) {
+        const existingIds = (data || []).map(p => p.id);
+        const { data: fallback } = await supabase
+          .from("products")
+          .select("id, name_ar, sku, brand, image_url")
+          .eq("is_active", true)
+          .ilike("name_ar", `%${carModel}%`)
+          .neq("id", product!.id)
+          .limit(4);
+        const extra = (fallback || []).filter(p => !existingIds.includes(p.id));
+        return [...(data || []), ...extra].slice(0, 4);
+      }
+      return data;
+    },
+    enabled: !!carModel && !!product,
+  });
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!zoomed || !imageRef.current) return;
@@ -58,6 +104,15 @@ const ProductDetailDialog = ({
   };
 
   if (!product) return null;
+
+  const brandMap: Record<string, string> = {
+    toyota_genuine: "toyota-genuine",
+    toyota_oils: "toyota-oils",
+    mtx_aftermarket: "mtx-aftermarket",
+    denso: "denso",
+    aisin: "aisin",
+    fbk: "fbk",
+  };
 
   const brandLabels: Record<string, string> = {
     toyota_genuine: "تويوتا الأصلية",
