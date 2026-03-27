@@ -3,6 +3,7 @@ import { Package, Lock, Eye, ShoppingCart, Heart, ExternalLink } from "lucide-re
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const brandRouteMap: Record<string, { label: string; color: string; path: string }> = {
   toyota_genuine: { label: "تويوتا أصلي", color: "bg-red-500/90 text-white", path: "/products/toyota-genuine" },
@@ -79,12 +80,19 @@ const ProductCard = ({
             <span className="text-[10px] font-mono bg-muted text-muted-foreground px-2 py-0.5 rounded">{product.sku}</span>
             <StockBadge available={stockAvailable} />
             {brandRouteMap[product.brand] && (
-              <span
-                className={`text-[9px] font-bold px-1.5 py-0.5 rounded cursor-pointer hover:opacity-80 transition-opacity ${brandRouteMap[product.brand].color}`}
-                onClick={(e) => { e.stopPropagation(); navigate(brandRouteMap[product.brand].path); }}
-              >
-                {brandRouteMap[product.brand].label}
-              </span>
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span
+                      className={`text-[9px] font-bold px-1.5 py-0.5 rounded cursor-pointer hover:opacity-80 transition-opacity ${brandRouteMap[product.brand].color}`}
+                      onClick={(e) => { e.stopPropagation(); navigate(brandRouteMap[product.brand].path); }}
+                    >
+                      {brandRouteMap[product.brand].label}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="text-xs">انتقل لصفحة الماركة</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
           </div>
           <h3 className="font-bold text-card-foreground text-sm leading-relaxed mb-1 group-hover:text-primary transition-colors">
@@ -182,12 +190,19 @@ const ProductCard = ({
           </span>
           <div className="flex items-center gap-1.5">
             {brandRouteMap[product.brand] && (
-              <span
-                className={`text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded cursor-pointer hover:opacity-80 transition-opacity ${brandRouteMap[product.brand].color}`}
-                onClick={(e) => { e.stopPropagation(); navigate(brandRouteMap[product.brand].path); }}
-              >
-                {brandRouteMap[product.brand].label}
-              </span>
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span
+                      className={`text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded cursor-pointer hover:opacity-80 transition-opacity ${brandRouteMap[product.brand].color}`}
+                      onClick={(e) => { e.stopPropagation(); navigate(brandRouteMap[product.brand].path); }}
+                    >
+                      {brandRouteMap[product.brand].label}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="text-xs">انتقل لصفحة الماركة</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
             <StockBadge available={stockAvailable} />
           </div>
