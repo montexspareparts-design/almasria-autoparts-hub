@@ -156,7 +156,12 @@ const CategoryBrowseSlider = () => {
                     <span className="text-white font-bold text-sm block leading-snug">
                       {cat.name}
                     </span>
-                    <ChevronLeft className="w-4 h-4 text-white/70 mx-auto mt-1.5 group-hover/card:text-white group-hover/card:-translate-x-1 transition-all duration-300" />
+                    <span className="text-white/70 text-[11px] block mt-0.5">
+                      {categoryCounts[cat.search] !== undefined
+                        ? `${categoryCounts[cat.search]} صنف`
+                        : "..."}
+                    </span>
+                    <ChevronLeft className="w-4 h-4 text-white/70 mx-auto mt-1 group-hover/card:text-white group-hover/card:-translate-x-1 transition-all duration-300" />
                   </div>
                 </Link>
               </motion.div>
