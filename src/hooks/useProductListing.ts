@@ -157,12 +157,13 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     }
   }, [dbCategories, searchParams]);
 
-  // Deep link: set search from URL query (used by CategoryBrowseSlider)
+  // Deep link: sync search from URL query changes (used by CategoryBrowseSlider)
   useEffect(() => {
-    const searchTerm = searchParams.get("search");
-    if (searchTerm) {
-      setFilters((prev) => ({ ...prev, search: searchTerm }));
-    }
+    const searchTerm = searchParams.get("search") || "";
+    setFilters((prev) => {
+      if (prev.search === searchTerm) return prev;
+      return { ...prev, search: searchTerm };
+    });
   }, [searchParams]);
 
   /* ── Products ── */
