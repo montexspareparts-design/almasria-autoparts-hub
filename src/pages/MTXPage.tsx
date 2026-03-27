@@ -177,6 +177,9 @@ const MTXPage = () => {
         </div>
       </section>
 
+      {/* ═══ Promo Banner ═══ */}
+      <div className="pt-8"><PromoBanner /></div>
+
       {/* ═══ Section 4.5 — Product Browse ═══ */}
       <ProductListingSection
         {...listing}
