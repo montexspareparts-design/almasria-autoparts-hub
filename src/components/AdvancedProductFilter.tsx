@@ -134,6 +134,35 @@ const AdvancedProductFilter = ({ filters, onFiltersChange, categories, showCateg
         </Button>
       </div>
 
+      {/* Always-visible category strip */}
+      {showCategories && categories && categories.length > 0 && (
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
+          <button
+            onClick={() => updateFilter("categoryId", null)}
+            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${
+              !filters.categoryId
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground"
+            }`}
+          >
+            الكل
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => updateFilter("categoryId", filters.categoryId === cat.id ? null : cat.id)}
+              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border whitespace-nowrap ${
+                filters.categoryId === cat.id
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground"
+              }`}
+            >
+              {cat.name_ar}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Expandable filter panel */}
       <AnimatePresence>
         {isExpanded && (
