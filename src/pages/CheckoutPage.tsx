@@ -373,6 +373,12 @@ const CheckoutPage = () => {
                       <span>- {discount.toLocaleString("ar-EG")} ج.م</span>
                     </div>
                   )}
+                  {couponDiscount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>كوبون ({couponCode})</span>
+                      <span>- {couponDiscount.toLocaleString("ar-EG")} ج.م</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">الضريبة (14%)</span>
                     <span>{vat.toLocaleString("ar-EG")} ج.م</span>
