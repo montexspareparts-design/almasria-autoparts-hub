@@ -4,7 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Download, Receipt, Calendar, Tag, Package, Printer } from "lucide-react";
+import { FileText, Download, Receipt, Calendar, Tag, Package, Printer, FileDown, Loader2 } from "lucide-react";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 interface Invoice {
   id: string;
