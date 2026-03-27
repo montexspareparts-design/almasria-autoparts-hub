@@ -483,7 +483,7 @@ const ProductsPage = () => {
           {!isDealer && (
             <div className="bg-muted/50 border border-primary/15 rounded-xl p-3.5 mb-4 flex items-center justify-between flex-wrap gap-3">
               <div className="flex items-center gap-2.5">
-                <ShieldCheck className="w-4 h-4 text-primary shrink-0" />
+                <ShieldCheck className="w-3 h-3 text-primary shrink-0" />
                 <p className="text-foreground text-sm">
                   <strong>تاجر معتمد؟</strong> سجل دخولك للحصول على أسعار الجملة الخاصة.
                 </p>
