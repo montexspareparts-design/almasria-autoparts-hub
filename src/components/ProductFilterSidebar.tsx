@@ -5,6 +5,7 @@ import {
   SlidersHorizontal, icons, Layers, X
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -336,30 +337,38 @@ const ProductFilterSidebar = ({
                       />
                     </div>
 
-                    {/* Price Range */}
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-                        <DollarSign className="w-3.5 h-3.5" />نطاق السعر (ج.م)
-                      </label>
-                      <div className="flex gap-2">
-                        <Input
-                          type="number"
-                          placeholder="من"
-                          value={filters.priceMin}
-                          onChange={(e) => updateFilter("priceMin", e.target.value)}
-                          className="bg-background text-xs h-9"
-                          dir="ltr" min="0"
-                        />
-                        <Input
-                          type="number"
-                          placeholder="إلى"
-                          value={filters.priceMax}
-                          onChange={(e) => updateFilter("priceMax", e.target.value)}
-                          className="bg-background text-xs h-9"
-                          dir="ltr" min="0"
-                        />
-                      </div>
-                    </div>
+                     {/* Price Range Slider */}
+                     <div className="space-y-3">
+                       <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+                         <DollarSign className="w-3.5 h-3.5" />نطاق السعر (ج.م)
+                       </label>
+                       <Slider
+                         min={0}
+                         max={10000}
+                         step={50}
+                         value={[
+                           Number(filters.priceMin) || 0,
+                           Number(filters.priceMax) || 10000,
+                         ]}
+                         onValueChange={(vals) => {
+                           onFiltersChange({
+                             ...filters,
+                             priceMin: vals[0] === 0 ? "" : String(vals[0]),
+                             priceMax: vals[1] === 10000 ? "" : String(vals[1]),
+                           });
+                         }}
+                         className="w-full"
+                       />
+                       <div className="flex items-center justify-between text-[11px] text-muted-foreground" dir="ltr">
+                         <span className="bg-muted px-2 py-0.5 rounded font-mono">
+                           {Number(filters.priceMin) || 0} ج.م
+                         </span>
+                         <span className="text-muted-foreground/50">—</span>
+                         <span className="bg-muted px-2 py-0.5 rounded font-mono">
+                           {Number(filters.priceMax) || 10000} ج.م
+                         </span>
+                       </div>
+                     </div>
                   </div>
                 </motion.div>
               )}
