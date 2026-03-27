@@ -69,6 +69,8 @@ const allBrands = [
 
 const ProductsPage = () => {
   const { brand } = useParams<{ brand: string }>();
+  const [searchParams] = useSearchParams();
+  const productsRef = useRef<HTMLDivElement>(null);
   const config = brand ? brandConfig[brand] : null;
   const { trackBrand, trackCategory, trackSearch } = usePersonalization();
 
@@ -76,6 +78,15 @@ const ProductsPage = () => {
     brandFilter: config?.brandKey,
     queryKeySuffix: brand,
   });
+
+  // Auto-scroll to products when coming from category slider
+  useEffect(() => {
+    if (searchParams.get("search") && productsRef.current) {
+      setTimeout(() => {
+        productsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 500);
+    }
+  }, [searchParams]);
 
   // Track personalization
   useEffect(() => { if (config?.brandKey) trackBrand(config.brandKey); }, [config?.brandKey, trackBrand]);
