@@ -234,7 +234,9 @@ const TrendingProducts = () => {
         product={selectedProduct}
         open={!!selectedProduct}
         onOpenChange={(open) => { if (!open) setSelectedProduct(null); }}
-        price={selectedProduct?.sale_price || selectedProduct?.base_price || null}
+        price={user ? (selectedProduct?.sale_price || selectedProduct?.base_price) : null}
+        priceLabel={user ? undefined : "سجّل لرؤية السعر"}
+        isLoggedIn={!!user}
       />
     </section>
   );

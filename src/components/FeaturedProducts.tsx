@@ -227,7 +227,7 @@ const FeaturedProducts = () => {
           product={selectedProduct}
           open={!!selectedProduct}
           onOpenChange={(open) => !open && setSelectedProduct(null)}
-          price={selectedProduct.sale_price || selectedProduct.base_price}
+          price={user ? (selectedProduct.sale_price || selectedProduct.base_price) : null}
           priceLabel={user ? undefined : "سجّل لرؤية السعر"}
           onAddToCart={user ? (product) => {
             const cartItem: CartItem = {
