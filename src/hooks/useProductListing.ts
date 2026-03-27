@@ -49,7 +49,8 @@ interface UseProductListingOptions {
 export function useProductListing(options: UseProductListingOptions = {}) {
   const { brandFilter, queryKeySuffix } = options;
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  
   const { isDealer, user, dealerAccount } = useAuth();
   const { addItem } = useCart();
   const queryClient = useQueryClient();
