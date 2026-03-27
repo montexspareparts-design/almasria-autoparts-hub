@@ -75,7 +75,7 @@ const ProductFilterSidebar = ({
 
   const activeFilterCount = [
     filters.model, filters.year, filters.chassisNumber, filters.partNumber,
-    filters.categoryId, filters.brandKey, filters.priceMin, filters.priceMax
+    filters.categoryId, filters.priceMin, filters.priceMax
   ].filter(Boolean).length;
 
   const clearAllFilters = () => {
