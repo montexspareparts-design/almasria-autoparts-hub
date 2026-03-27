@@ -50,6 +50,14 @@ const ProductFilterSidebar = ({
   filters, onFiltersChange, categories, categoryCounts,
   showBrands = false, totalResults, isLoading, isOpen, onToggle
 }: Props) => {
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
+
+  const handleFilterChange = (key: keyof ProductFilters, value: any) => {
+    onFiltersChange({ ...filters, [key]: value });
+    if (isMobile && isOpen) {
+      setTimeout(() => onToggle(), 200);
+    }
+  };
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     categories: true,
     filters: true,
@@ -147,7 +155,7 @@ const ProductFilterSidebar = ({
                     <div className="space-y-0.5 pb-3">
                       {/* All */}
                       <button
-                        onClick={() => updateFilter("categoryId", null)}
+                        onClick={() => handleFilterChange("categoryId", null)}
                         className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-all ${
                           !filters.categoryId
                             ? "bg-primary/10 text-primary font-bold border border-primary/20"
@@ -163,7 +171,7 @@ const ProductFilterSidebar = ({
                         return (
                           <button
                             key={cat.id}
-                            onClick={() => updateFilter("categoryId", filters.categoryId === cat.id ? null : cat.id)}
+                            onClick={() => handleFilterChange("categoryId", filters.categoryId === cat.id ? null : cat.id)}
                             className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-all group ${
                               filters.categoryId === cat.id
                                 ? "bg-primary/10 text-primary font-bold border border-primary/20"
