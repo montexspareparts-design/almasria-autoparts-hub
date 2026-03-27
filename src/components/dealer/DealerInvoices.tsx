@@ -43,12 +43,32 @@ const DealerInvoices = ({ userId }: { userId: string }) => {
     setLoading(false);
   };
 
-  const handlePrint = (inv: Invoice) => {
+  const handlePrint = async (inv: Invoice) => {
+    // Fetch order items with product details
+    const { data: items } = await supabase
+      .from("order_items")
+      .select("quantity, unit_price, total_price, product_id, products(name_ar, sku)")
+      .eq("order_id", inv.id);
+
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
 
     const discount = Number(inv.coupon_discount || 0);
     const total = Number(inv.total_amount);
+    const subtotal = (items || []).reduce((s, it) => s + Number(it.total_price), 0);
+
+    const itemsRows = (items || []).map((item: any, idx: number) => `
+      <tr>
+        <td style="padding:10px 12px; border-bottom:1px solid #eee; text-align:center; color:#888; font-size:13px;">${idx + 1}</td>
+        <td style="padding:10px 12px; border-bottom:1px solid #eee;">
+          <div style="font-weight:700; font-size:13px;">${item.products?.name_ar || "—"}</div>
+          <div style="font-size:11px; color:#888; font-family:monospace;">${item.products?.sku || ""}</div>
+        </td>
+        <td style="padding:10px 12px; border-bottom:1px solid #eee; text-align:center; font-weight:600;">${item.quantity}</td>
+        <td style="padding:10px 12px; border-bottom:1px solid #eee; text-align:center;">${Number(item.unit_price).toLocaleString("ar-EG")} ج.م</td>
+        <td style="padding:10px 12px; border-bottom:1px solid #eee; text-align:center; font-weight:700;">${Number(item.total_price).toLocaleString("ar-EG")} ج.م</td>
+      </tr>
+    `).join("");
 
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -67,11 +87,13 @@ const DealerInvoices = ({ userId }: { userId: string }) => {
           .info-box { background: #f8f8f8; padding: 16px; border-radius: 8px; }
           .info-label { font-size: 11px; color: #888; margin-bottom: 4px; }
           .info-value { font-size: 15px; font-weight: 700; }
-          .total-section { background: #c41e3a; color: white; padding: 20px; border-radius: 10px; text-align: center; margin-top: 20px; }
-          .total-amount { font-size: 32px; font-weight: 900; }
-          .total-label { font-size: 13px; opacity: 0.9; margin-bottom: 6px; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+          thead th { background: #f8f8f8; padding: 12px; font-size: 12px; color: #666; font-weight: 700; border-bottom: 2px solid #ddd; }
+          .totals { margin-top: 10px; }
+          .totals-row { display: flex; justify-content: space-between; padding: 8px 16px; font-size: 14px; }
+          .totals-row.main { background: #c41e3a; color: white; border-radius: 10px; margin-top: 8px; padding: 16px 20px; font-size: 20px; font-weight: 900; }
+          .discount-row { background: #fef3cd; border-radius: 8px; }
           .footer { margin-top: 40px; text-align: center; font-size: 11px; color: #999; border-top: 1px solid #eee; padding-top: 16px; }
-          .discount { background: #fef3cd; padding: 10px 16px; border-radius: 8px; margin-top: 10px; display: flex; justify-content: space-between; }
           @media print { body { padding: 20px; } }
         </style>
       </head>
@@ -103,11 +125,31 @@ const DealerInvoices = ({ userId }: { userId: string }) => {
           </div>
         </div>
 
-        ${discount > 0 ? `<div class="discount"><span>خصم كوبون</span><span>- ${discount.toLocaleString("ar-EG")} ج.م</span></div>` : ""}
+        <table>
+          <thead>
+            <tr>
+              <th style="text-align:center; width:50px;">#</th>
+              <th style="text-align:right;">الصنف</th>
+              <th style="text-align:center; width:80px;">الكمية</th>
+              <th style="text-align:center; width:120px;">سعر الوحدة</th>
+              <th style="text-align:center; width:120px;">الإجمالي</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsRows}
+          </tbody>
+        </table>
 
-        <div class="total-section">
-          <div class="total-label">إجمالي الفاتورة</div>
-          <div class="total-amount">${total.toLocaleString("ar-EG")} ج.م</div>
+        <div class="totals">
+          <div class="totals-row" style="font-weight:600;">
+            <span>المجموع الفرعي (${(items || []).length} صنف)</span>
+            <span>${subtotal.toLocaleString("ar-EG")} ج.م</span>
+          </div>
+          ${discount > 0 ? `<div class="totals-row discount-row"><span>خصم كوبون</span><span>- ${discount.toLocaleString("ar-EG")} ج.م</span></div>` : ""}
+          <div class="totals-row main">
+            <span>إجمالي الفاتورة</span>
+            <span>${total.toLocaleString("ar-EG")} ج.م</span>
+          </div>
         </div>
 
         <div class="footer">
