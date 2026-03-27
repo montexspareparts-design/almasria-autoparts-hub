@@ -13,6 +13,7 @@ import ProductListingSection from "@/components/ProductListingSection";
 import PersonalizedProducts from "@/components/PersonalizedProducts";
 import { useProductListing } from "@/hooks/useProductListing";
 import { usePersonalization } from "@/hooks/usePersonalization";
+import PromoBanner from "@/components/PromoBanner";
 
 import brandGenuineParts from "@/assets/brand-genuine-parts.webp";
 import brandToyotaOil from "@/assets/brand-toyota-oil.webp";
@@ -184,6 +185,8 @@ const ProductsPage = () => {
         description={config.description} badge={config.badge}
         backgroundImage={config.backgroundImage} logoScale={config.logoScale}
       />
+
+      <div className="pt-6"><PromoBanner /></div>
 
       <ProductListingSection
         {...listing}

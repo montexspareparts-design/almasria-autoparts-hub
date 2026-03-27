@@ -10,6 +10,7 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductListingSection from "@/components/ProductListingSection";
+import PromoBanner from "@/components/PromoBanner";
 import { useProductListing } from "@/hooks/useProductListing";
 
 import brandMtx from "@/assets/brand-mtx.webp";
@@ -175,6 +176,9 @@ const MTXPage = () => {
           </div>
         </div>
       </section>
+
+      {/* ═══ Promo Banner ═══ */}
+      <div className="pt-8"><PromoBanner /></div>
 
       {/* ═══ Section 4.5 — Product Browse ═══ */}
       <ProductListingSection
