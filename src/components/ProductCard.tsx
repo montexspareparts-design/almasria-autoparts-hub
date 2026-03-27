@@ -190,12 +190,19 @@ const ProductCard = ({
           </span>
           <div className="flex items-center gap-1.5">
             {brandRouteMap[product.brand] && (
-              <span
-                className={`text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded cursor-pointer hover:opacity-80 transition-opacity ${brandRouteMap[product.brand].color}`}
-                onClick={(e) => { e.stopPropagation(); navigate(brandRouteMap[product.brand].path); }}
-              >
-                {brandRouteMap[product.brand].label}
-              </span>
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span
+                      className={`text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded cursor-pointer hover:opacity-80 transition-opacity ${brandRouteMap[product.brand].color}`}
+                      onClick={(e) => { e.stopPropagation(); navigate(brandRouteMap[product.brand].path); }}
+                    >
+                      {brandRouteMap[product.brand].label}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="text-xs">انتقل لصفحة الماركة</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
             <StockBadge available={stockAvailable} />
           </div>
