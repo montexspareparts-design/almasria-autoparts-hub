@@ -197,6 +197,8 @@ const ProductsPage = () => {
         beforeGrid={<div className="mb-6"><PersonalizedProducts /></div>}
         sectionClassName="py-8"
       />
+      <TrendingProducts />
+      <CategoryBrowseSlider />
 
       <Footer />
     </div>
