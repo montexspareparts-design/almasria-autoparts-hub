@@ -47,6 +47,7 @@ const clientTypeLabels: Record<string, string> = {
 
 const sidebarSections = [
   { id: "analytics", label: "التحليلات", icon: BarChart3 },
+  { id: "customer-intel", label: "ذكاء العملاء", icon: Eye },
   { id: "customers", label: "ملف العملاء", icon: Users },
   { id: "dealers", label: "طلبات التجار", icon: Users },
   { id: "products", label: "إدارة المنتجات", icon: Package },
