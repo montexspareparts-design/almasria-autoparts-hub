@@ -147,19 +147,23 @@ const AdvancedProductFilter = ({ filters, onFiltersChange, categories, showCateg
           >
             الكل
           </button>
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => updateFilter("categoryId", filters.categoryId === cat.id ? null : cat.id)}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border whitespace-nowrap ${
-                filters.categoryId === cat.id
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground"
-              }`}
-            >
-              {cat.name_ar}
-            </button>
-          ))}
+          {categories.map((cat) => {
+            const IconComp = cat.icon && icons[cat.icon as keyof typeof icons] ? icons[cat.icon as keyof typeof icons] : null;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => updateFilter("categoryId", filters.categoryId === cat.id ? null : cat.id)}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border whitespace-nowrap flex items-center gap-1.5 ${
+                  filters.categoryId === cat.id
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground"
+                }`}
+              >
+                {IconComp && <IconComp className="w-3.5 h-3.5" />}
+                {cat.name_ar}
+              </button>
+            );
+          })}
         </div>
       )}
 
