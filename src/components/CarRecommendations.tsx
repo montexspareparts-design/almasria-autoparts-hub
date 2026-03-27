@@ -27,26 +27,58 @@ const CarRecommendations = () => {
   const { data: products, isLoading } = useQuery({
     queryKey: ["car_recommendations", carModel, carYear],
     queryFn: async () => {
+      // 1. Primary: match via compatible_models array
       let query = supabase
         .from("products")
-        .select("id, name_ar, sku, brand, image_url, base_price, is_on_sale, sale_price")
+        .select("id, name_ar, sku, brand, image_url, base_price, is_on_sale, sale_price, compatible_models, year_from, year_to")
         .eq("is_active", true)
-        .ilike("name_ar", `%${carModel}%`)
-        .limit(8);
+        .contains("compatible_models", [carModel!]);
 
-      // If year is set, try to match year in name too, but fallback to model-only
-      const { data, error } = await query;
-      if (error) throw error;
-
-      // If year is set, prioritize products with matching year
-      if (carYear && data) {
-        const yearStr = String(carYear);
-        const withYear = data.filter(p => p.name_ar.includes(yearStr));
-        const withoutYear = data.filter(p => !p.name_ar.includes(yearStr));
-        return [...withYear, ...withoutYear].slice(0, 8);
+      // Filter by year range if available
+      if (carYear) {
+        query = query.or(`year_from.is.null,year_from.lte.${carYear}`)
+                     .or(`year_to.is.null,year_to.gte.${carYear}`);
       }
 
-      return data || [];
+      const { data: primaryResults, error: err1 } = await query.limit(16);
+      if (err1) throw err1;
+
+      // 2. Fallback: search in name if compatible_models didn't yield enough
+      let allResults = primaryResults || [];
+
+      if (allResults.length < 8) {
+        const existingIds = allResults.map(p => p.id);
+        const { data: fallback } = await supabase
+          .from("products")
+          .select("id, name_ar, sku, brand, image_url, base_price, is_on_sale, sale_price, compatible_models, year_from, year_to")
+          .eq("is_active", true)
+          .ilike("name_ar", `%${carModel}%`)
+          .limit(16);
+
+        if (fallback) {
+          const extra = fallback.filter(p => !existingIds.includes(p.id));
+          allResults = [...allResults, ...extra];
+        }
+      }
+
+      // Prioritize products with year match
+      if (carYear && allResults.length > 0) {
+        const scored = allResults.map(p => {
+          let score = 0;
+          // compatible_models match = highest priority
+          if (p.compatible_models?.includes(carModel!)) score += 10;
+          // Year range match
+          if (p.year_from && p.year_to && carYear >= p.year_from && carYear <= p.year_to) score += 5;
+          else if (!p.year_from && !p.year_to) score += 2;
+          // Name contains year
+          if (p.name_ar.includes(String(carYear))) score += 3;
+          return { ...p, score };
+        });
+        scored.sort((a, b) => b.score - a.score);
+        return scored.slice(0, 8);
+      }
+
+      return allResults.slice(0, 8);
     },
     enabled: !!carModel,
   });
