@@ -80,12 +80,19 @@ const ProductCard = ({
             <span className="text-[10px] font-mono bg-muted text-muted-foreground px-2 py-0.5 rounded">{product.sku}</span>
             <StockBadge available={stockAvailable} />
             {brandRouteMap[product.brand] && (
-              <span
-                className={`text-[9px] font-bold px-1.5 py-0.5 rounded cursor-pointer hover:opacity-80 transition-opacity ${brandRouteMap[product.brand].color}`}
-                onClick={(e) => { e.stopPropagation(); navigate(brandRouteMap[product.brand].path); }}
-              >
-                {brandRouteMap[product.brand].label}
-              </span>
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span
+                      className={`text-[9px] font-bold px-1.5 py-0.5 rounded cursor-pointer hover:opacity-80 transition-opacity ${brandRouteMap[product.brand].color}`}
+                      onClick={(e) => { e.stopPropagation(); navigate(brandRouteMap[product.brand].path); }}
+                    >
+                      {brandRouteMap[product.brand].label}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="text-xs">انتقل لصفحة الماركة</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
           </div>
           <h3 className="font-bold text-card-foreground text-sm leading-relaxed mb-1 group-hover:text-primary transition-colors">
