@@ -522,8 +522,8 @@ const ProductsPage = () => {
           <AdvancedProductFilter
             filters={filters}
             onFiltersChange={setFilters}
-            categories={categories}
-            showCategories={config.brandKey !== "toyota_oils"}
+            categories={categories?.filter(cat => products?.some(p => p.category_id === cat.id && (!config?.brandKey || p.brand === config.brandKey)))}
+            showCategories={true}
             showBrands={true}
             totalResults={filteredProducts.length}
             isLoading={isLoading}
