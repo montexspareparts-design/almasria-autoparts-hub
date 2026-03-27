@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Search, X, Package, Hash, Command } from "lucide-react";
+import { Search, X, Package, Hash, Command, Lightbulb } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
+import { normalizeArabic } from "@/hooks/useProductListing";
 
 interface Product {
   id: string;
@@ -21,6 +22,74 @@ interface Props {
   placeholder?: string;
 }
 
+/* ── Common model names for "did you mean?" ── */
+const knownTerms = [
+  "كورولا", "كامري", "يارس", "هايلكس", "لاندكروزر", "فورتشنر", "برادو",
+  "راف فور", "افالون", "اوريون", "هايس", "كوستر", "راش", "ايكو",
+  "بوجيه", "بوجيهات", "فلتر", "فلاتر", "تيل", "سير", "سيور",
+  "رديتر", "مساعد", "كلاتش", "دبرياج", "بطارية", "كشاف", "مرايا",
+  "زيت", "موتور", "مكينة", "جيربوكس", "فتيس", "بواجي",
+];
+
+/** Strip Arabic vowel letters to create consonant skeleton */
+const toSkeleton = (text: string): string =>
+  normalizeArabic(text).replace(/[اوي]/g, "");
+
+/** Find the best known term that matches the user's fuzzy input */
+const findDidYouMean = (input: string): string | null => {
+  const normalized = normalizeArabic(input);
+  // Don't suggest if already an exact known term
+  if (knownTerms.some(t => normalizeArabic(t) === normalized)) return null;
+
+  const inputSkeleton = toSkeleton(input);
+  if (inputSkeleton.length < 2) return null;
+
+  let bestMatch: string | null = null;
+  let bestScore = Infinity;
+
+  for (const term of knownTerms) {
+    const termSkeleton = toSkeleton(term);
+    if (termSkeleton.length < 2) continue;
+
+    // Check skeleton match
+    if (termSkeleton === inputSkeleton || termSkeleton.includes(inputSkeleton) || inputSkeleton.includes(termSkeleton)) {
+      // Prefer shorter edit distance (length difference as proxy)
+      const score = Math.abs(termSkeleton.length - inputSkeleton.length);
+      if (score < bestScore) {
+        bestScore = score;
+        bestMatch = term;
+      }
+    }
+  }
+
+  return bestMatch;
+};
+
+/** Fuzzy product search using skeleton matching */
+const fuzzyProductMatch = (query: string, product: Product): boolean => {
+  const q = normalizeArabic(query);
+  const name = normalizeArabic(product.name_ar);
+  const sku = product.sku.toLowerCase();
+
+  // Direct match
+  if (name.includes(q) || sku.includes(q)) return true;
+
+  // Skeleton match per word
+  const queryWords = q.split(/\s+/).filter(w => w.length >= 2);
+  if (queryWords.length === 0) return false;
+
+  return queryWords.every(qw => {
+    if (name.includes(qw) || sku.includes(qw)) return true;
+    const qwSkel = toSkeleton(qw);
+    if (qwSkel.length < 2) return name.includes(qw);
+    const nameWords = name.split(/\s+/);
+    return nameWords.some(nw => {
+      const nwSkel = toSkeleton(nw);
+      return nwSkel.length >= 2 && (nwSkel.includes(qwSkel) || qwSkel.includes(nwSkel));
+    });
+  });
+};
+
 const ProductSearchAutocomplete = ({
   value, onChange, products = [], onProductClick, onCommandPaletteOpen,
   placeholder = "ابحث بالاسم أو رقم القطعة..."
@@ -32,13 +101,25 @@ const ProductSearchAutocomplete = ({
 
   const suggestions = useMemo(() => {
     if (!value || value.length < 2) return [];
-    const s = value.toLowerCase();
     return products
-      .filter(p => p.name_ar.toLowerCase().includes(s) || p.sku.toLowerCase().includes(s))
+      .filter(p => fuzzyProductMatch(value, p))
       .slice(0, 6);
   }, [value, products]);
 
-  const showDropdown = isFocused && suggestions.length > 0;
+  // "Did you mean?" suggestion
+  const didYouMean = useMemo(() => {
+    if (!value || value.length < 2) return null;
+    // Check each word
+    const words = value.trim().split(/\s+/);
+    for (const word of words) {
+      if (word.length < 2) continue;
+      const suggestion = findDidYouMean(word);
+      if (suggestion) return { original: word, suggested: suggestion };
+    }
+    return null;
+  }, [value]);
+
+  const showDropdown = isFocused && (suggestions.length > 0 || didYouMean);
 
   useEffect(() => {
     setSelectedIndex(-1);
@@ -68,6 +149,12 @@ const ProductSearchAutocomplete = ({
     } else if (e.key === "Escape") {
       setIsFocused(false);
     }
+  };
+
+  const applyDidYouMean = () => {
+    if (!didYouMean) return;
+    const newValue = value.replace(didYouMean.original, didYouMean.suggested);
+    onChange(newValue);
   };
 
   return (
@@ -115,6 +202,21 @@ const ProductSearchAutocomplete = ({
             className="absolute top-full left-0 right-0 mt-1.5 bg-card border border-border rounded-xl shadow-xl shadow-black/10 overflow-hidden z-50"
           >
             <div className="p-1.5">
+              {/* "Did you mean?" hint */}
+              {didYouMean && (
+                <button
+                  onClick={applyDidYouMean}
+                  className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 transition-colors mb-1 text-right"
+                >
+                  <Lightbulb className="w-4 h-4 text-amber-500 shrink-0" />
+                  <p className="text-xs text-foreground">
+                    هل تقصد{" "}
+                    <span className="font-bold text-primary">{didYouMean.suggested}</span>
+                    ؟
+                  </p>
+                </button>
+              )}
+
               <p className="text-[10px] text-muted-foreground px-2.5 py-1.5 font-semibold">
                 {suggestions.length} نتيجة
               </p>
