@@ -330,6 +330,44 @@ const ProductDetailDialog = ({
               أضف للسلة
             </Button>
           )}
+
+          {/* Car-based Recommendations */}
+          {carProducts && carProducts.length > 0 && (
+            <>
+              <Separator />
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <p className="text-sm font-bold text-foreground">
+                    قطع غيار لـ <span className="text-primary">{carModel}</span>
+                    {carYear && <span className="text-muted-foreground text-xs mr-1">({carYear})</span>}
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {carProducts.map((rec) => (
+                    <Link
+                      key={rec.id}
+                      to={`/products/${brandMap[rec.brand] || "toyota-genuine"}?search=${encodeURIComponent(rec.sku)}`}
+                      onClick={handleClose}
+                      className="group flex gap-2 p-2 rounded-lg border border-border hover:border-primary/30 hover:bg-primary/5 transition-all"
+                    >
+                      <div className="w-12 h-12 rounded-md bg-white shrink-0 overflow-hidden">
+                        {rec.image_url ? (
+                          <img src={rec.image_url} alt={rec.name_ar} className="w-full h-full object-contain" loading="lazy" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center"><Car className="w-5 h-5 text-muted-foreground/30" /></div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-mono text-muted-foreground">{rec.sku}</p>
+                        <p className="text-xs font-semibold text-card-foreground leading-tight line-clamp-2 group-hover:text-primary transition-colors">{rec.name_ar}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </div>
         </div>
       </DialogContent>
