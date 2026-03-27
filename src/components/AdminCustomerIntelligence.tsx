@@ -135,43 +135,6 @@ const AdminCustomerIntelligence = () => {
     }
   });
 
-  // Filter profiles
-  const filteredProfiles = profiles?.filter(p => {
-    // Text search
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      const matchesText = (
-        p.full_name?.toLowerCase().includes(term) ||
-        p.phone?.includes(term) ||
-        p.email?.toLowerCase().includes(term) ||
-        p.car_model?.toLowerCase().includes(term)
-      );
-      if (!matchesText) return false;
-    }
-
-    // Date from
-    if (dateFrom) {
-      const profileDate = new Date(p.created_at);
-      if (profileDate < dateFrom) return false;
-    }
-
-    // Date to
-    if (dateTo) {
-      const profileDate = new Date(p.created_at);
-      const endOfDay = new Date(dateTo);
-      endOfDay.setHours(23, 59, 59, 999);
-      if (profileDate > endOfDay) return false;
-    }
-
-    // Customer type
-    if (customerTypeFilter && customerTypeFilter !== "all") {
-      const type = getCustomerType(p.user_id);
-      if (type !== customerTypeFilter) return false;
-    }
-
-    return true;
-  });
-
   // Stats
   const totalCustomers = profiles?.length || 0;
   const withCar = profiles?.filter(p => p.car_model).length || 0;
@@ -201,6 +164,35 @@ const AdminCustomerIntelligence = () => {
       default: return "bg-muted text-muted-foreground";
     }
   };
+
+  // Filter profiles
+  const filteredProfiles = profiles?.filter(p => {
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      const matchesText = (
+        p.full_name?.toLowerCase().includes(term) ||
+        p.phone?.includes(term) ||
+        p.email?.toLowerCase().includes(term) ||
+        p.car_model?.toLowerCase().includes(term)
+      );
+      if (!matchesText) return false;
+    }
+    if (dateFrom) {
+      if (new Date(p.created_at) < dateFrom) return false;
+    }
+    if (dateTo) {
+      const endOfDay = new Date(dateTo);
+      endOfDay.setHours(23, 59, 59, 999);
+      if (new Date(p.created_at) > endOfDay) return false;
+    }
+    if (customerTypeFilter && customerTypeFilter !== "all") {
+      if (getCustomerType(p.user_id) !== customerTypeFilter) return false;
+    }
+    return true;
+  });
+
+  const hasActiveFilters = !!dateFrom || !!dateTo || (customerTypeFilter !== "all");
+  const clearFilters = () => { setDateFrom(undefined); setDateTo(undefined); setCustomerTypeFilter("all"); };
 
   return (
     <div className="space-y-6" dir="rtl">
