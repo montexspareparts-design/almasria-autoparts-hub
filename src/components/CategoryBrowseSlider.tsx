@@ -224,25 +224,25 @@ const CategoryBrowseSlider = () => {
 
           {/* Arrows */}
           {(canScrollLeft || canScrollRight) && (
-            <div className="flex justify-center gap-3">
+            <div className="flex justify-center gap-2 sm:gap-3">
               {canScrollRight && (
                 <Button
                   size="icon"
                   variant="secondary"
-                  className="rounded-full shadow-md w-10 h-10 bg-primary text-primary-foreground hover:bg-primary/90 border-2 border-white"
+                  className="rounded-full shadow-md w-8 h-8 sm:w-10 sm:h-10 bg-primary text-primary-foreground hover:bg-primary/90 border-2 border-white"
                   onClick={() => scroll("left")}
                 >
-                  <ChevronLeft className="w-5 h-5" />
+                  <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
                 </Button>
               )}
               {canScrollLeft && (
                 <Button
                   size="icon"
                   variant="secondary"
-                  className="rounded-full shadow-md w-10 h-10 bg-primary text-primary-foreground hover:bg-primary/90 border-2 border-white"
+                  className="rounded-full shadow-md w-8 h-8 sm:w-10 sm:h-10 bg-primary text-primary-foreground hover:bg-primary/90 border-2 border-white"
                   onClick={() => scroll("right")}
                 >
-                  <ChevronRight className="w-5 h-5" />
+                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
                 </Button>
               )}
             </div>
