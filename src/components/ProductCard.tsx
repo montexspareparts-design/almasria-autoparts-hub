@@ -35,6 +35,7 @@ const ProductCard = ({
   limitReached, dailyViewCount, dailyLimit,
   getProductPrice, onProductClick, onAddToCart, onRecordView, onLoginRequired,
 }: ProductCardProps) => {
+  const navigate = useNavigate();
 
   const stockAvailable = product.stock_quantity > 0;
   const hasViewed = viewedProductIds.includes(product.id);
