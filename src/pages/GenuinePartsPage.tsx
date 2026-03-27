@@ -6,6 +6,7 @@ import { ShieldCheck, Clock, Cog, Truck, Package, MapPin, FileText, Users, Chevr
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import ProductListingSection from "@/components/ProductListingSection";
+import PromoBanner from "@/components/PromoBanner";
 import { useProductListing } from "@/hooks/useProductListing";
 import heroBg from "@/assets/parts-bg.jpg";
 
