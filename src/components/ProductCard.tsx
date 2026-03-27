@@ -1,15 +1,16 @@
 import { motion } from "framer-motion";
 import { Package, Lock, Eye, ShoppingCart, Heart, ExternalLink } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-const brandLabelMap: Record<string, { label: string; color: string }> = {
-  toyota_genuine: { label: "تويوتا أصلي", color: "bg-red-500/90 text-white" },
-  toyota_oils: { label: "زيوت تويوتا", color: "bg-amber-500/90 text-white" },
-  mtx_aftermarket: { label: "MTX", color: "bg-blue-500/90 text-white" },
-  denso: { label: "DENSO", color: "bg-emerald-600/90 text-white" },
-  aisin: { label: "AISIN", color: "bg-purple-500/90 text-white" },
-  fbk: { label: "FBK", color: "bg-orange-500/90 text-white" },
+const brandRouteMap: Record<string, { label: string; color: string; path: string }> = {
+  toyota_genuine: { label: "تويوتا أصلي", color: "bg-red-500/90 text-white", path: "/products/toyota-genuine" },
+  toyota_oils: { label: "زيوت تويوتا", color: "bg-amber-500/90 text-white", path: "/products/toyota-oils" },
+  mtx_aftermarket: { label: "MTX", color: "bg-blue-500/90 text-white", path: "/products/mtx" },
+  denso: { label: "DENSO", color: "bg-emerald-600/90 text-white", path: "/products/denso" },
+  aisin: { label: "AISIN", color: "bg-purple-500/90 text-white", path: "/products/aisin" },
+  fbk: { label: "FBK", color: "bg-orange-500/90 text-white", path: "/products/fbk" },
 };
 
 interface ProductCardProps {
