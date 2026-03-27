@@ -330,6 +330,66 @@ const AdminCustomerIntelligence = () => {
         </Card>
       </div>
 
+      {/* Customer Type Distribution Chart */}
+      {filteredProfiles && filteredProfiles.length > 0 && (() => {
+        const typeCounts: Record<string, number> = {};
+        filteredProfiles.forEach(p => {
+          const t = getCustomerType(p.user_id);
+          typeCounts[t] = (typeCounts[t] || 0) + 1;
+        });
+        const COLORS = [
+          "hsl(var(--chart-1, 142 71% 45%))",
+          "hsl(var(--chart-2, 217 91% 60%))",
+          "hsl(var(--chart-3, 48 96% 53%))",
+          "hsl(var(--chart-4, 280 65% 60%))",
+          "hsl(var(--chart-5, 25 95% 53%))",
+          "hsl(var(--muted-foreground, 215 16% 47%))",
+        ];
+        const typeColorMap: Record<string, string> = {};
+        CUSTOMER_TYPES.forEach((t, i) => { typeColorMap[t] = COLORS[i % COLORS.length]; });
+        const chartData = Object.entries(typeCounts).map(([name, value]) => ({ name, value }));
+
+        return (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-primary" />
+                توزيع أنواع العملاء
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[280px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={100}
+                      paddingAngle={3}
+                      dataKey="value"
+                      label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                    >
+                      {chartData.map((entry, index) => (
+                        <Cell key={entry.name} fill={typeColorMap[entry.name] || COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value: number) => [`${value} عميل`, "العدد"]}
+                      contentStyle={{ direction: "rtl", borderRadius: 8, fontSize: 13 }}
+                    />
+                    <Legend
+                      formatter={(value) => <span style={{ fontSize: 12 }}>{value}</span>}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
+
       {/* Filters bar */}
       <Card>
         <CardContent className="p-4 space-y-3">
