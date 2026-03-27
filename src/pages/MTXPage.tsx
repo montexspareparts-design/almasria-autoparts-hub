@@ -1,45 +1,26 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
-  ShieldCheck, Wrench, CheckCircle2, ArrowLeft, MessageCircle, Users,
+  ShieldCheck, Wrench, CheckCircle2, ArrowLeft, Users,
   Truck, Award, Target, Globe, DollarSign, Building2, Search, TestTube,
-  BarChart3, BadgeCheck, ChevronLeft, Lock, Package, ShoppingCart, Eye,
-  AlertTriangle, Grid3X3, List, ChevronRight, SlidersHorizontal
+  BarChart3, BadgeCheck, ChevronLeft
 } from "lucide-react";
-import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Helmet } from "react-helmet-async";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import { useCart, CartItem } from "@/contexts/CartContext";
-import { toast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { ProductFilters } from "@/components/AdvancedProductFilter";
-import ProductDetailDialog from "@/components/ProductDetailDialog";
-import ProductFilterSidebar from "@/components/ProductFilterSidebar";
-import ProductSearchAutocomplete from "@/components/ProductSearchAutocomplete";
-import ProductCommandPalette from "@/components/ProductCommandPalette";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ProductListingSection from "@/components/ProductListingSection";
+import { useProductListing } from "@/hooks/useProductListing";
 
-// Brand logos
 import brandMtx from "@/assets/brand-mtx.webp";
 import brandDenso from "@/assets/brand-denso.webp";
 import brandAisin from "@/assets/brand-aisin.webp";
-
-// Hero & backgrounds
 import mtxHeroBg from "@/assets/mtx-hero-bg.jpg";
-
-// Category images
 import catFilters from "@/assets/cat-mtx-filters.jpg";
 import catBrakes from "@/assets/cat-mtx-brakes.jpg";
 import catSuspension from "@/assets/cat-mtx-suspension.jpg";
 import catElectrical from "@/assets/cat-mtx-electrical.jpg";
 import catBelts from "@/assets/cat-mtx-belts.jpg";
-
-/* ─── Data ─── */
 
 const distributedBrands = [
   { logo: brandMtx, name: "MTX Aftermarket", desc: "علامتنا الخاصة — قطع غيار مستوردة بجودة تضاهي الأصلية وبسعر تنافسي.", to: "/products/mtx-aftermarket", scale: "scale-150" },
@@ -77,150 +58,14 @@ const audiences = [
   { icon: Award, label: "الباحثون عن جودة بسعر مناسب" },
 ];
 
-const fadeUp = {
-  initial: { opacity: 0, y: 30 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, amount: 0.05 },
-};
-
+const fadeUp = { initial: { opacity: 0, y: 30 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, amount: 0.05 } };
 const stagger = (i: number) => ({ delay: i * 0.1 });
 
-const ITEMS_PER_PAGE = 24;
-
 const MTXPage = () => {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const { isDealer, user, dealerAccount } = useAuth();
-  const { addItem } = useCart();
-  const queryClient = useQueryClient();
-  const [filters, setFilters] = useState<ProductFilters>({
-    search: "", model: null, year: null, chassisNumber: "", partNumber: "", categoryId: null, brandKey: null, priceMin: "", priceMax: "", sortBy: "newest",
+  const listing = useProductListing({
+    brandFilter: "mtx_aftermarket",
+    queryKeySuffix: "mtx",
   });
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-  const DAILY_LIMIT = 20;
-
-  useEffect(() => { setCurrentPage(1); }, [filters]);
-
-  const { data: viewedProductIds = [] } = useQuery({
-    queryKey: ["dealer_views_today", user?.id],
-    queryFn: async () => {
-      const today = new Date().toISOString().split("T")[0];
-      const { data, error } = await supabase.from("dealer_price_views").select("product_id").eq("user_id", user!.id).eq("view_date", today);
-      if (error) throw error;
-      return data.map((v) => v.product_id);
-    },
-    enabled: !!isDealer && !!user,
-  });
-  const dailyViewCount = viewedProductIds.length;
-  const limitReached = dailyViewCount >= DAILY_LIMIT;
-
-  const recordView = useCallback(async (productId: string) => {
-    if (!user || !isDealer || viewedProductIds.includes(productId) || limitReached) return;
-    await supabase.from("dealer_price_views").upsert(
-      { user_id: user.id, product_id: productId, view_date: new Date().toISOString().split("T")[0] },
-      { onConflict: "user_id,product_id,view_date" }
-    );
-    queryClient.invalidateQueries({ queryKey: ["dealer_views_today", user.id] });
-  }, [user, isDealer, viewedProductIds, limitReached, queryClient]);
-
-  const { data: tierPrices } = useQuery({
-    queryKey: ["tier_prices_mtx", dealerAccount?.tier],
-    queryFn: async () => {
-      if (!dealerAccount) return {};
-      const { data, error } = await supabase.from("product_tier_prices").select("product_id, price").eq("tier", dealerAccount.tier as any);
-      if (error) throw error;
-      const map: Record<string, number> = {};
-      data.forEach((tp) => { map[tp.product_id] = tp.price; });
-      return map;
-    },
-    enabled: !!dealerAccount,
-  });
-
-  const getProductPrice = (product: any) => {
-    if (isDealer && tierPrices && tierPrices[product.id]) return tierPrices[product.id];
-    return product.base_price;
-  };
-
-  const handleAddToCart = (product: any) => {
-    const cartItem: CartItem = {
-      id: product.id, name_ar: product.name_ar, sku: product.sku, image_url: product.image_url,
-      unit_price: getProductPrice(product), quantity: product.min_order_qty || 1,
-      stock_quantity: product.stock_quantity, min_order_qty: product.min_order_qty, brand: product.brand,
-    };
-    addItem(cartItem);
-    toast({ title: "تمت الإضافة للسلة ✅", description: product.name_ar });
-  };
-
-  const { data: dbCategories } = useQuery({
-    queryKey: ["product_categories"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("product_categories").select("*").order("sort_order");
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  useEffect(() => {
-    const categorySlug = searchParams.get("category");
-    if (categorySlug && dbCategories) {
-      const matched = dbCategories.find((c) => c.slug === categorySlug);
-      if (matched) setFilters((prev) => ({ ...prev, categoryId: matched.id }));
-    }
-  }, [dbCategories, searchParams]);
-
-  const { data: products, isLoading } = useQuery({
-    queryKey: ["products", "mtx_aftermarket"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*, product_categories(name_ar)")
-        .eq("brand", "mtx_aftermarket" as any)
-        .eq("is_active", true)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const filteredProducts = useMemo(() => {
-    if (!products) return [];
-    let result = products.filter((p) => {
-      const s = filters.search?.toLowerCase() || "";
-      const matchesSearch = !s || p.name_ar.toLowerCase().includes(s) || p.sku.toLowerCase().includes(s);
-      const matchesCategory = !filters.categoryId || p.category_id === filters.categoryId;
-      const matchesModel = !filters.model || p.name_ar.includes(filters.model);
-      const matchesYear = !filters.year || p.name_ar.includes(filters.year);
-      const matchesPartNumber = !filters.partNumber || p.sku.toLowerCase().includes(filters.partNumber.toLowerCase());
-      const matchesPriceMin = !filters.priceMin || p.base_price >= Number(filters.priceMin);
-      const matchesPriceMax = !filters.priceMax || p.base_price <= Number(filters.priceMax);
-      return matchesSearch && matchesCategory && matchesModel && matchesYear && matchesPartNumber && matchesPriceMin && matchesPriceMax;
-    });
-    switch (filters.sortBy) {
-      case "price_asc": result.sort((a, b) => a.base_price - b.base_price); break;
-      case "price_desc": result.sort((a, b) => b.base_price - a.base_price); break;
-      case "name_asc": result.sort((a, b) => a.name_ar.localeCompare(b.name_ar, "ar")); break;
-    }
-    return result;
-  }, [products, filters]);
-
-  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
-  const paginatedProducts = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredProducts.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredProducts, currentPage]);
-
-  const categoryCounts = useMemo(() => {
-    if (!products) return {};
-    return products.reduce((acc, p) => { if (p.category_id) acc[p.category_id] = (acc[p.category_id] || 0) + 1; return acc; }, {} as Record<string, number>);
-  }, [products]);
-
-  const visibleCategories = useMemo(() => {
-    return dbCategories?.filter(cat => products?.some(p => p.category_id === cat.id));
-  }, [dbCategories, products]);
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
@@ -232,26 +77,16 @@ const MTXPage = () => {
       </Helmet>
       <Navbar />
 
-      {/* Command Palette */}
-      <ProductCommandPalette
-        open={commandPaletteOpen}
-        onOpenChange={setCommandPaletteOpen}
-        products={products as any}
-        onProductSelect={(p) => setSelectedProduct(p)}
-      />
-
       {/* ═══ Section 1 — Hero ═══ */}
       <section className="relative pt-24 pb-20 md:pt-32 md:pb-28 overflow-hidden">
         <img src={mtxHeroBg} alt="" className="absolute inset-0 w-full h-full object-cover" loading="eager" />
         <div className="absolute inset-0 bg-secondary/80 backdrop-blur-[2px]" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-secondary/30 to-secondary" />
         <div className="absolute top-1/4 left-[10%] w-[500px] h-[500px] rounded-full bg-primary/8 blur-[180px]" />
-
         <div className="container mx-auto px-4 relative z-10">
           <Link to="/" className="inline-flex items-center gap-2 text-sm text-primary hover:underline mb-8 group">
             <ChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />العودة للرئيسية
           </Link>
-
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="text-center mb-14">
             <motion.span initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }} className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-primary/15 border border-primary/30 text-primary text-sm font-bold mb-6">
               <ShieldCheck className="w-4 h-4" />إحدى شركات المصرية جروب
@@ -263,7 +98,6 @@ const MTXPage = () => {
               MTX هي إحدى شركات المصرية جروب، متخصصة في استيراد وتوزيع قطع غيار تويوتا، وتركّز على تلبية احتياجات السوق المحلي من خلال توفير علامات تجارية عالمية بمعايير جودة تضاهي قطع الغيار الأصلية.
             </motion.p>
           </motion.div>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {distributedBrands.map((brand, i) => (
               <motion.div key={brand.name} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.15, type: "spring", stiffness: 80 }}>
@@ -273,9 +107,7 @@ const MTXPage = () => {
                   </div>
                   <h3 className="text-lg font-bold text-dark-section-foreground mb-2 group-hover:text-primary transition-colors">{brand.name}</h3>
                   <p className="text-dark-section-foreground/50 text-sm leading-relaxed mb-4">{brand.desc}</p>
-                  <span className="inline-flex items-center gap-2 text-primary text-sm font-bold group-hover:gap-3 transition-all">
-                    استعرض المنتجات<ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-                  </span>
+                  <span className="inline-flex items-center gap-2 text-primary text-sm font-bold group-hover:gap-3 transition-all">استعرض المنتجات<ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" /></span>
                 </Link>
               </motion.div>
             ))}
@@ -308,9 +140,7 @@ const MTXPage = () => {
               <motion.div key={item.title} {...fadeUp} transition={{ ...stagger(i), duration: 0.5 }} className="relative bg-dark-section-foreground/5 border border-dark-section-foreground/10 rounded-2xl p-7 hover:border-primary/30 transition-all duration-300 group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/0 group-hover:from-primary/5 group-hover:to-transparent transition-all duration-500 rounded-2xl" />
                 <div className="relative z-10 flex items-start gap-4">
-                  <div className="w-14 h-14 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/25 transition-colors">
-                    <item.icon className="w-7 h-7 text-primary" />
-                  </div>
+                  <div className="w-14 h-14 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/25 transition-colors"><item.icon className="w-7 h-7 text-primary" /></div>
                   <div>
                     <h3 className="font-bold text-dark-section-foreground text-lg mb-2">{item.title}</h3>
                     <p className="text-dark-section-foreground/55 text-sm leading-relaxed">{item.desc}</p>
@@ -333,9 +163,7 @@ const MTXPage = () => {
             {categories.map((cat, i) => (
               <motion.div key={cat.name} {...fadeUp} transition={{ ...stagger(i), duration: 0.5 }}>
                 <Link to={`/products/mtx-aftermarket?category=${cat.slug}`} className="bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300 group flex flex-col h-full">
-                  <div className="aspect-square overflow-hidden">
-                    <img src={cat.image} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
-                  </div>
+                  <div className="aspect-square overflow-hidden"><img src={cat.image} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" /></div>
                   <div className="p-4 text-center flex-1 flex flex-col">
                     <h3 className="font-bold text-foreground text-base mb-1.5">{cat.name}</h3>
                     <p className="text-muted-foreground text-xs leading-relaxed mb-4 flex-1">{cat.detail}</p>
@@ -348,170 +176,18 @@ const MTXPage = () => {
         </div>
       </section>
 
-      {/* ═══ Section 4.5 — Product Browse (Sidebar Layout) ═══ */}
-      <section id="mtx-products" className="py-12 md:py-16 bg-muted/30 border-y border-border">
-        <div className="container mx-auto px-4">
-          <motion.div {...fadeUp} className="text-center mb-10">
+      {/* ═══ Section 4.5 — Product Browse ═══ */}
+      <ProductListingSection
+        {...listing}
+        dailyLimit={listing.DAILY_LIMIT}
+        sectionId="mtx-products"
+        sectionClassName="py-12 md:py-16 bg-muted/30 border-y border-border"
+        sectionTitle={
+          <motion.div {...fadeUp}>
             <h2 className="text-3xl md:text-4xl font-black text-foreground mb-3">تصفح منتجات <span className="text-primary">MTX</span></h2>
             <motion.div initial={{ width: 0 }} whileInView={{ width: "4rem" }} viewport={{ once: true }} transition={{ duration: 0.8, delay: 0.3 }} className="h-1 bg-primary mx-auto rounded-full" />
           </motion.div>
-
-          {/* Dealer banners */}
-          {!isDealer && (
-            <div className="bg-muted/50 border border-primary/15 rounded-xl p-3.5 mb-4 flex items-center justify-between flex-wrap gap-3">
-              <div className="flex items-center gap-2.5">
-                <ShieldCheck className="w-3 h-3 text-primary shrink-0" />
-                <p className="text-foreground text-sm"><strong>تاجر معتمد؟</strong> سجل دخولك للحصول على أسعار الجملة الخاصة.</p>
-              </div>
-              <Button size="sm" className="shrink-0 rounded-lg" asChild><Link to="/dealer-login">التسجيل كتاجر</Link></Button>
-            </div>
-          )}
-
-          {isDealer && (
-            <div className={`rounded-xl p-3.5 mb-4 flex items-center justify-between flex-wrap gap-3 border ${limitReached ? "bg-destructive/5 border-destructive/20" : "bg-muted/50 border-primary/15"}`}>
-              <div className="flex items-center gap-2.5">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${limitReached ? "bg-destructive/10" : "bg-primary/10"}`}>
-                  <Eye className="w-4 h-4 text-primary" />
-                </div>
-                <p className="text-foreground text-sm">
-                  {limitReached ? <><strong>استنفدت الحد اليومي.</strong> يمكنك مشاهدة أسعار جديدة غداً.</> : <>شاهدت <strong>{dailyViewCount}</strong> من <strong>{DAILY_LIMIT}</strong> صنف اليوم</>}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Search bar + controls */}
-          <div className="flex items-center gap-2 mb-5">
-            <ProductSearchAutocomplete
-              value={filters.search}
-              onChange={(v) => setFilters(prev => ({ ...prev, search: v }))}
-              products={products as any}
-              onProductClick={(p) => setSelectedProduct(p)}
-              onCommandPaletteOpen={() => setCommandPaletteOpen(true)}
-            />
-            <Button variant="outline" className="lg:hidden gap-2 shrink-0 h-11" onClick={() => setSidebarOpen(true)}>
-              <SlidersHorizontal className="w-4 h-4" /><span className="hidden sm:inline">فلاتر</span>
-            </Button>
-            <Select value={filters.sortBy || "newest"} onValueChange={(v) => setFilters(prev => ({ ...prev, sortBy: v }))}>
-              <SelectTrigger className="w-[130px] h-11 text-xs bg-card shrink-0"><SelectValue placeholder="ترتيب" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">الأحدث</SelectItem>
-                <SelectItem value="price_asc">السعر: الأقل</SelectItem>
-                <SelectItem value="price_desc">السعر: الأعلى</SelectItem>
-                <SelectItem value="name_asc">الاسم: أ - ي</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Sidebar + Products Grid */}
-          <div className="flex gap-6 items-start">
-            <ProductFilterSidebar
-              filters={filters}
-              onFiltersChange={setFilters}
-              categories={visibleCategories}
-              categoryCounts={categoryCounts}
-              totalResults={filteredProducts.length}
-              isLoading={isLoading}
-              isOpen={sidebarOpen}
-              onToggle={() => setSidebarOpen(!sidebarOpen)}
-            />
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-sm text-muted-foreground font-medium">
-                  {isLoading ? "جاري التحميل..." : <><span className="text-foreground font-bold">{filteredProducts.length}</span> منتج</>}
-                </p>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
-                    <button onClick={() => setViewMode("grid")} className={`p-2 rounded-md transition-all ${viewMode === "grid" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}><Grid3X3 className="w-4 h-4" /></button>
-                    <button onClick={() => setViewMode("list")} className={`p-2 rounded-md transition-all ${viewMode === "list" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}><List className="w-4 h-4" /></button>
-                  </div>
-                  {totalPages > 1 && <p className="text-xs text-muted-foreground">صفحة {currentPage} من {totalPages}</p>}
-                </div>
-              </div>
-
-              {isLoading ? (
-                <div className={viewMode === "grid" ? "grid grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}>
-                  {Array.from({ length: 12 }).map((_, i) => (
-                    <div key={i} className="bg-card border border-border rounded-xl p-4 animate-pulse">
-                      <div className="h-4 bg-muted rounded w-3/4 mb-3" /><div className="h-3 bg-muted rounded w-1/2 mb-2" /><div className="h-3 bg-muted rounded w-1/3" />
-                    </div>
-                  ))}
-                </div>
-              ) : paginatedProducts.length === 0 ? (
-                <div className="text-center py-24">
-                  <div className="w-20 h-20 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-5"><Package className="w-10 h-10 text-muted-foreground/30" /></div>
-                  <h3 className="text-lg font-bold text-foreground mb-2">لا توجد منتجات</h3>
-                  <p className="text-muted-foreground text-sm mb-4">جرب تغيير كلمة البحث أو الفلتر</p>
-                  <Button variant="outline" size="sm" onClick={() => setFilters({ search: "", model: null, year: null, chassisNumber: "", partNumber: "", categoryId: null, brandKey: null, priceMin: "", priceMax: "", sortBy: "newest" })}>مسح جميع الفلاتر</Button>
-                </div>
-              ) : (
-                <div className={viewMode === "grid" ? "grid grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}>
-                  {paginatedProducts.map((product, i) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      index={i}
-                      viewMode={viewMode}
-                      user={user}
-                      isDealer={isDealer}
-                      viewedProductIds={viewedProductIds}
-                      limitReached={limitReached}
-                      dailyViewCount={dailyViewCount}
-                      dailyLimit={DAILY_LIMIT}
-                      getProductPrice={getProductPrice}
-                      onProductClick={setSelectedProduct}
-                      onAddToCart={handleAddToCart}
-                      onRecordView={recordView}
-                      onLoginRequired={() => { toast({ title: "يجب تسجيل الدخول أولاً" }); navigate("/auth"); }}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-10">
-                  <Button variant="outline" size="sm" disabled={currentPage <= 1} onClick={() => { setCurrentPage((p) => p - 1); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="gap-1">
-                    <ChevronRight className="w-4 h-4" />السابق
-                  </Button>
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                      let page: number;
-                      if (totalPages <= 7) page = i + 1;
-                      else if (currentPage <= 4) page = i + 1;
-                      else if (currentPage >= totalPages - 3) page = totalPages - 6 + i;
-                      else page = currentPage - 3 + i;
-                      return (
-                        <button key={page} onClick={() => { setCurrentPage(page); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                          className={`w-9 h-9 rounded-lg text-sm font-medium transition-all ${currentPage === page ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>{page}</button>
-                      );
-                    })}
-                  </div>
-                  <Button variant="outline" size="sm" disabled={currentPage >= totalPages} onClick={() => { setCurrentPage((p) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="gap-1">
-                    التالي<ChevronLeft className="w-4 h-4" />
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <ProductDetailDialog
-        product={selectedProduct}
-        open={!!selectedProduct}
-        onOpenChange={(open) => { if (!open) setSelectedProduct(null); }}
-        price={selectedProduct ? !user ? null : !isDealer ? selectedProduct.base_price : viewedProductIds.includes(selectedProduct.id) ? getProductPrice(selectedProduct) : null : null}
-        priceLabel={selectedProduct && user ? isDealer && viewedProductIds.includes(selectedProduct.id) ? "سعر الجملة الخاص بك" : !isDealer ? "سعر قطاعي" : undefined : undefined}
-        canAddToCart={!!user && (!isDealer || (selectedProduct && viewedProductIds.includes(selectedProduct.id)))}
-        onAddToCart={handleAddToCart}
-        isLoggedIn={!!user}
-        isDealer={isDealer}
-        onLoginPrompt={() => { toast({ title: "يجب تسجيل الدخول أولاً" }); navigate("/auth"); }}
-        onRevealPrice={(productId) => recordView(productId)}
-        remainingViews={DAILY_LIMIT - dailyViewCount}
-        limitReached={limitReached}
+        }
       />
 
       {/* ═══ Section 5 — Quality Process ═══ */}
@@ -568,29 +244,11 @@ const MTXPage = () => {
               <Button size="lg" className="gap-3 font-bold text-base px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl shadow-primary/20 group" asChild>
                 <a href="https://wa.me/201153961008?text=أريد كتالوج MTX" target="_blank" rel="noopener noreferrer">اطلب كتالوج MTX<ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" /></a>
               </Button>
-              <Button size="lg" variant="outline" className="gap-3 font-bold text-base px-8 py-6 border-2 border-dark-section-foreground/20 text-dark-section-foreground bg-transparent hover:bg-dark-section-foreground/10" asChild>
-                <a href="https://wa.me/201153961008?text=أريد التحدث مع قسم المبيعات" target="_blank" rel="noopener noreferrer"><MessageCircle className="w-5 h-5" />تواصل مع قسم المبيعات</a>
-              </Button>
-              <Button size="lg" variant="outline" className="gap-3 font-bold text-base px-8 py-6 border-2 border-dark-section-foreground/20 text-dark-section-foreground bg-transparent hover:bg-dark-section-foreground/10" asChild>
-                <Link to="/dealer-apply"><Users className="w-5 h-5" />انضم كموزع معتمد</Link>
+              <Button size="lg" variant="outline" className="gap-2 font-bold border-dark-section-foreground/20 text-dark-section-foreground hover:bg-dark-section-foreground/10" asChild>
+                <Link to="/dealer-apply">انضم كتاجر</Link>
               </Button>
             </div>
           </motion.div>
-        </div>
-      </section>
-
-      {/* Internal Links */}
-      <section className="py-10 bg-background border-t border-border">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-wrap justify-center gap-4 text-sm">
-            <Link to="/" className="text-muted-foreground hover:text-primary transition-colors font-medium">الرئيسية</Link>
-            <span className="text-border">|</span>
-            <Link to="/products/mtx-aftermarket" className="text-muted-foreground hover:text-primary transition-colors font-medium">منتجات MTX</Link>
-            <span className="text-border">|</span>
-            <Link to="/what-sets-us-apart" className="text-muted-foreground hover:text-primary transition-colors font-medium">ما يميزنا</Link>
-            <span className="text-border">|</span>
-            <Link to="/contact" className="text-muted-foreground hover:text-primary transition-colors font-medium">اتصل بنا</Link>
-          </div>
         </div>
       </section>
 
