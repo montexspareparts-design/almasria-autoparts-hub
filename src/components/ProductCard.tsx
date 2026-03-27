@@ -43,6 +43,8 @@ const ProductCard = ({
       >
         {/* Image */}
         <div className="w-28 sm:w-40 shrink-0 bg-white relative flex items-center justify-center p-3 overflow-hidden">
+          {/* Shimmer sweep on hover */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out z-10 pointer-events-none" />
           {product.image_url ? (
             <img
               src={product.image_url}
