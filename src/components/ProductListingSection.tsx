@@ -137,6 +137,36 @@ const ProductListingSection = ({
             </Select>
           </div>
 
+          {/* Active search filter banner */}
+          {filters.search && !isLoading && (
+            <div className="mb-5 rounded-xl bg-primary/5 border border-primary/20 px-4 py-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <Search className="w-4.5 h-4.5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground">
+                    نتائج البحث عن "<span className="text-primary">{filters.search}</span>"
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    تم العثور على <span className="font-bold text-primary">{filteredProducts.length}</span> منتج
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-destructive shrink-0 gap-1.5 text-xs"
+                onClick={() => {
+                  setFilters(prev => ({ ...prev, search: "" }));
+                }}
+              >
+                <X className="w-3.5 h-3.5" />
+                مسح
+              </Button>
+            </div>
+          )}
+
           {/* Extra content before grid */}
           {beforeGrid}
 
