@@ -171,7 +171,7 @@ const ProductFilterSidebar = ({
                         return (
                           <button
                             key={cat.id}
-                            onClick={() => updateFilter("categoryId", filters.categoryId === cat.id ? null : cat.id)}
+                            onClick={() => handleFilterChange("categoryId", filters.categoryId === cat.id ? null : cat.id)}
                             className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-all group ${
                               filters.categoryId === cat.id
                                 ? "bg-primary/10 text-primary font-bold border border-primary/20"
