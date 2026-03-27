@@ -46,7 +46,7 @@ const paymentMethods = [
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
-  const { items, subtotal, vat, discount, total, clearCart, setShippingCost } = useCart();
+  const { items, subtotal, vat, discount, couponCode, couponDiscount, total, clearCart, setShippingCost } = useCart();
   const { user } = useAuth();
 
   const [shipping, setShipping] = useState("standard");
