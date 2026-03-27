@@ -78,9 +78,12 @@ const ProductCard = ({
           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
             <span className="text-[10px] font-mono bg-muted text-muted-foreground px-2 py-0.5 rounded">{product.sku}</span>
             <StockBadge available={stockAvailable} />
-            {brandLabelMap[product.brand] && (
-              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${brandLabelMap[product.brand].color}`}>
-                {brandLabelMap[product.brand].label}
+            {brandRouteMap[product.brand] && (
+              <span
+                className={`text-[9px] font-bold px-1.5 py-0.5 rounded cursor-pointer hover:opacity-80 transition-opacity ${brandRouteMap[product.brand].color}`}
+                onClick={(e) => { e.stopPropagation(); navigate(brandRouteMap[product.brand].path); }}
+              >
+                {brandRouteMap[product.brand].label}
               </span>
             )}
           </div>
