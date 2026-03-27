@@ -379,6 +379,8 @@ const AdminDashboard = () => {
     switch (activeSection) {
       case "analytics":
         return <Suspense fallback={<SectionLoader />}><AdminAnalytics /></Suspense>;
+      case "customer-intel":
+        return <Suspense fallback={<SectionLoader />}><AdminCustomerIntelligence /></Suspense>;
       case "customers":
         return <Suspense fallback={<SectionLoader />}><AdminCustomerProfile /></Suspense>;
       case "dealers":
