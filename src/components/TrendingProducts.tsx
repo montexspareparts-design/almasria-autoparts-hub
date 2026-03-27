@@ -215,6 +215,7 @@ const TrendingProducts = () => {
         product={selectedProduct}
         open={!!selectedProduct}
         onOpenChange={(open) => { if (!open) setSelectedProduct(null); }}
+        price={selectedProduct?.sale_price || selectedProduct?.base_price || null}
       />
     </section>
   );
