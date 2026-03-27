@@ -523,6 +523,7 @@ const ProductsPage = () => {
             filters={filters}
             onFiltersChange={setFilters}
             categories={categories?.filter(cat => products?.some(p => p.category_id === cat.id && (!config?.brandKey || p.brand === config.brandKey)))}
+            categoryCounts={products?.filter(p => !config?.brandKey || p.brand === config.brandKey).reduce((acc, p) => { if (p.category_id) acc[p.category_id] = (acc[p.category_id] || 0) + 1; return acc; }, {} as Record<string, number>)}
             showCategories={true}
             showBrands={true}
             totalResults={filteredProducts.length}

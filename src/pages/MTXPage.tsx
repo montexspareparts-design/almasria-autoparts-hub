@@ -519,6 +519,7 @@ const MTXPage = () => {
             filters={filters}
             onFiltersChange={setFilters}
             categories={dbCategories?.filter(cat => products?.some(p => p.category_id === cat.id))}
+            categoryCounts={products?.reduce((acc, p) => { if (p.category_id) acc[p.category_id] = (acc[p.category_id] || 0) + 1; return acc; }, {} as Record<string, number>)}
             showCategories={true}
             totalResults={filteredProducts.length}
             isLoading={isLoading}
