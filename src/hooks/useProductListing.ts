@@ -266,16 +266,11 @@ export function useProductListing(options: UseProductListingOptions = {}) {
           const nameEnLower = (p.name_en || "").toLowerCase();
           const descArNorm = normalizeArabic(p.description_ar || "");
           const modelsText = normalizeArabic((p.compatible_models || []).join(" "));
+          const allText = `${normalizedName} ${skuLower} ${nameEnLower} ${descArNorm} ${modelsText}`;
           
           // Split search into individual words and check ALL words exist (AND logic)
           const searchWords = textToSearch.trim().split(/\s+/).filter((w: string) => w.length > 0);
-          matchesSearch = searchWords.every((word: string) => {
-            const wordVariants = generateSearchVariants(word);
-            return wordVariants.some(v =>
-              normalizedName.includes(v) || skuLower.includes(v) || nameEnLower.includes(v) ||
-              descArNorm.includes(v) || modelsText.includes(v)
-            );
-          });
+          matchesSearch = searchWords.every((word: string) => fuzzyMatchWord(word, allText));
         }
         // If textToSearch is empty (year-only search like "2022"), match all products
       }
@@ -284,10 +279,9 @@ export function useProductListing(options: UseProductListingOptions = {}) {
 
       let matchesModel = true;
       if (filters.model) {
-        const modelVariants = generateSearchVariants(filters.model);
         const normalizedName = normalizeArabic(p.name_ar);
         const modelsText = normalizeArabic((p.compatible_models || []).join(" "));
-        matchesModel = modelVariants.some(v => normalizedName.includes(v) || modelsText.includes(v));
+        matchesModel = fuzzyMatchWord(filters.model, normalizedName, modelsText);
       }
 
       const matchesYear = !filters.year || p.name_ar.includes(filters.year);
