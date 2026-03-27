@@ -20,6 +20,17 @@ export const normalizeArabic = (text: string): string => {
     .toLowerCase();
 };
 
+/**
+ * Create a "consonant skeleton" by removing short vowel-like letters (ا و ي)
+ * so كورولا / كرولا / كارولا all become the same skeleton: كرل
+ * This enables fuzzy matching for Arabic transliterations of foreign words.
+ */
+const toConsonantSkeleton = (text: string): string => {
+  return text
+    .replace(/[اوي]/g, "")  // Remove Arabic vowel letters
+    .replace(/[aeiou]/gi, ""); // Remove Latin vowels too
+};
+
 const generateSearchVariants = (term: string): string[] => {
   const normalized = normalizeArabic(term);
   const variants = new Set<string>([term.toLowerCase(), normalized]);
@@ -34,6 +45,34 @@ const generateSearchVariants = (term: string): string[] => {
   variants.add(term.toLowerCase().replace(/ى$/g, "ا"));
   variants.add(term.toLowerCase().replace(/ى/g, "ا"));
   return Array.from(variants);
+};
+
+/**
+ * Check if a search word matches text using both exact variants AND fuzzy consonant skeleton.
+ * This handles cases like كورولا/كرولا/كارولا matching the same products.
+ */
+const fuzzyMatchWord = (word: string, ...texts: string[]): boolean => {
+  const wordVariants = generateSearchVariants(word);
+  const joined = texts.join(" ");
+
+  // 1) Exact variant match
+  if (wordVariants.some(v => joined.includes(v))) return true;
+
+  // 2) Consonant skeleton match (only for Arabic words >= 3 chars)
+  const normalizedWord = normalizeArabic(word);
+  if (normalizedWord.length >= 3 && /[\u0600-\u06FF]/.test(normalizedWord)) {
+    const wordSkeleton = toConsonantSkeleton(normalizedWord);
+    if (wordSkeleton.length >= 2) {
+      // Check each word in the target texts
+      const targetWords = joined.split(/\s+/);
+      return targetWords.some(tw => {
+        const twSkeleton = toConsonantSkeleton(normalizeArabic(tw));
+        return twSkeleton.length >= 2 && (twSkeleton.includes(wordSkeleton) || wordSkeleton.includes(twSkeleton));
+      });
+    }
+  }
+
+  return false;
 };
 
 const ITEMS_PER_PAGE = 24;
