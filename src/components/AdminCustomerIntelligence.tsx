@@ -6,10 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { ar } from "date-fns/locale";
 import {
   Users, Search, Eye, ShoppingCart, Phone, Mail, Car,
   TrendingUp, Clock, ChevronDown, ChevronUp, BarChart3,
-  Package, Calendar,
+  Package, Calendar as CalendarIcon, Filter, X,
 } from "lucide-react";
 
 interface CustomerProfile {
@@ -22,9 +28,16 @@ interface CustomerProfile {
   created_at: string;
 }
 
+const CUSTOMER_TYPES = [
+  "عميل دائم", "عميل نشط", "مستكشف أسعار", "باحث متكرر", "زائر مهتم", "زائر جديد",
+] as const;
+
 const AdminCustomerIntelligence = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
+  const [dateFrom, setDateFrom] = useState<Date | undefined>();
+  const [dateTo, setDateTo] = useState<Date | undefined>();
+  const [customerTypeFilter, setCustomerTypeFilter] = useState<string>("all");
 
   // All profiles
   const { data: profiles, isLoading: loadingProfiles } = useQuery({
@@ -122,18 +135,6 @@ const AdminCustomerIntelligence = () => {
     }
   });
 
-  // Filter profiles
-  const filteredProfiles = profiles?.filter(p => {
-    if (!searchTerm) return true;
-    const term = searchTerm.toLowerCase();
-    return (
-      p.full_name?.toLowerCase().includes(term) ||
-      p.phone?.includes(term) ||
-      p.email?.toLowerCase().includes(term) ||
-      p.car_model?.toLowerCase().includes(term)
-    );
-  });
-
   // Stats
   const totalCustomers = profiles?.length || 0;
   const withCar = profiles?.filter(p => p.car_model).length || 0;
@@ -163,6 +164,35 @@ const AdminCustomerIntelligence = () => {
       default: return "bg-muted text-muted-foreground";
     }
   };
+
+  // Filter profiles
+  const filteredProfiles = profiles?.filter(p => {
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      const matchesText = (
+        p.full_name?.toLowerCase().includes(term) ||
+        p.phone?.includes(term) ||
+        p.email?.toLowerCase().includes(term) ||
+        p.car_model?.toLowerCase().includes(term)
+      );
+      if (!matchesText) return false;
+    }
+    if (dateFrom) {
+      if (new Date(p.created_at) < dateFrom) return false;
+    }
+    if (dateTo) {
+      const endOfDay = new Date(dateTo);
+      endOfDay.setHours(23, 59, 59, 999);
+      if (new Date(p.created_at) > endOfDay) return false;
+    }
+    if (customerTypeFilter && customerTypeFilter !== "all") {
+      if (getCustomerType(p.user_id) !== customerTypeFilter) return false;
+    }
+    return true;
+  });
+
+  const hasActiveFilters = !!dateFrom || !!dateTo || (customerTypeFilter !== "all");
+  const clearFilters = () => { setDateFrom(undefined); setDateTo(undefined); setCustomerTypeFilter("all"); };
 
   return (
     <div className="space-y-6" dir="rtl">
@@ -208,16 +238,105 @@ const AdminCustomerIntelligence = () => {
         </Card>
       </div>
 
-      {/* Search filter */}
-      <div className="relative">
-        <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder="ابحث بالاسم، الهاتف، الإيميل، أو نوع السيارة..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pr-10"
-        />
-      </div>
+      {/* Filters bar */}
+      <Card>
+        <CardContent className="p-4 space-y-3">
+          {/* Row 1: Text search */}
+          <div className="relative">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="ابحث بالاسم، الهاتف، الإيميل، أو نوع السيارة..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pr-10"
+            />
+          </div>
+
+          {/* Row 2: Date range + customer type */}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Date From */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "gap-1.5 text-xs h-9",
+                    !dateFrom && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="w-3.5 h-3.5" />
+                  {dateFrom ? format(dateFrom, "dd/MM/yyyy") : "من تاريخ"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dateFrom}
+                  onSelect={setDateFrom}
+                  disabled={(date) => date > new Date()}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+
+            {/* Date To */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "gap-1.5 text-xs h-9",
+                    !dateTo && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="w-3.5 h-3.5" />
+                  {dateTo ? format(dateTo, "dd/MM/yyyy") : "إلى تاريخ"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dateTo}
+                  onSelect={setDateTo}
+                  disabled={(date) => date > new Date()}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+
+            {/* Customer Type */}
+            <Select value={customerTypeFilter} onValueChange={setCustomerTypeFilter}>
+              <SelectTrigger className="w-[180px] h-9 text-xs">
+                <Filter className="w-3.5 h-3.5 ml-1.5" />
+                <SelectValue placeholder="نوع العميل" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل الأنواع</SelectItem>
+                {CUSTOMER_TYPES.map(type => (
+                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Clear filters */}
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" className="gap-1 text-xs h-9 text-destructive" onClick={clearFilters}>
+                <X className="w-3.5 h-3.5" />
+                مسح الفلاتر
+              </Button>
+            )}
+
+            {/* Results count */}
+            <span className="text-xs text-muted-foreground mr-auto">
+              {filteredProfiles?.length || 0} عميل
+            </span>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Customer list */}
       {loadingProfiles ? (
