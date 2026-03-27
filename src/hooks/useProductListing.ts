@@ -112,15 +112,20 @@ export function useProductListing(options: UseProductListingOptions = {}) {
   // Reset page when filters change
   useEffect(() => { setCurrentPage(1); }, [filters]);
 
-  // Clear URL search params on unmount so filters don't persist
+  // Reset all filters and clear URL params on unmount
   useEffect(() => {
     return () => {
-      const params = new URLSearchParams(window.location.search);
-      if (params.has("search") || params.has("category")) {
-        params.delete("search");
-        params.delete("category");
-        const newUrl = window.location.pathname + (params.toString() ? `?${params}` : "");
-        window.history.replaceState(null, "", newUrl);
+      // Clear URL search params so re-entering starts fresh
+      const url = new URL(window.location.href);
+      let changed = false;
+      for (const key of ["search", "category"]) {
+        if (url.searchParams.has(key)) {
+          url.searchParams.delete(key);
+          changed = true;
+        }
+      }
+      if (changed) {
+        window.history.replaceState(null, "", url.pathname + (url.search || ""));
       }
     };
   }, []);
