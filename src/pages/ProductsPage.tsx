@@ -14,6 +14,8 @@ import PersonalizedProducts from "@/components/PersonalizedProducts";
 import { useProductListing } from "@/hooks/useProductListing";
 import { usePersonalization } from "@/hooks/usePersonalization";
 import PromoBanner from "@/components/PromoBanner";
+import TrendingProducts from "@/components/TrendingProducts";
+import CategoryBrowseSlider from "@/components/CategoryBrowseSlider";
 
 import brandGenuineParts from "@/assets/brand-genuine-parts.webp";
 import brandToyotaOil from "@/assets/brand-toyota-oil.webp";
