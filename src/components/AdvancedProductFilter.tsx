@@ -55,13 +55,14 @@ interface Props {
   filters: ProductFilters;
   onFiltersChange: (filters: ProductFilters) => void;
   categories?: { id: string; name_ar: string; icon?: string | null }[];
+  categoryCounts?: Record<string, number>;
   showCategories?: boolean;
   showBrands?: boolean;
   totalResults: number;
   isLoading: boolean;
 }
 
-const AdvancedProductFilter = ({ filters, onFiltersChange, categories, showCategories = true, showBrands = false, totalResults, isLoading }: Props) => {
+const AdvancedProductFilter = ({ filters, onFiltersChange, categories, categoryCounts, showCategories = true, showBrands = false, totalResults, isLoading }: Props) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const activeFilterCount = useMemo(() => {
@@ -161,6 +162,15 @@ const AdvancedProductFilter = ({ filters, onFiltersChange, categories, showCateg
               >
                 {IconComp && <IconComp className="w-3.5 h-3.5" />}
                 {cat.name_ar}
+                {categoryCounts && categoryCounts[cat.id] !== undefined && (
+                  <span className={`text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 ${
+                    filters.categoryId === cat.id
+                      ? "bg-primary-foreground/20 text-primary-foreground"
+                      : "bg-muted text-muted-foreground"
+                  }`}>
+                    {categoryCounts[cat.id]}
+                  </span>
+                )}
               </button>
             );
           })}
