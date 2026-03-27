@@ -54,8 +54,9 @@ export function useProductListing(options: UseProductListingOptions = {}) {
   const { addItem } = useCart();
   const queryClient = useQueryClient();
 
+  const initialSearch = searchParams.get("search") || "";
   const [filters, setFilters] = useState<ProductFilters>({
-    search: "", model: null, year: null, chassisNumber: "", partNumber: "",
+    search: initialSearch, model: null, year: null, chassisNumber: "", partNumber: "",
     categoryId: null, brandKey: brandFilter || null, priceMin: "", priceMax: "", sortBy: "newest",
   });
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -156,12 +157,13 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     }
   }, [dbCategories, searchParams]);
 
-  // Deep link: set search from URL query (used by CategoryBrowseSlider)
+  // Deep link: sync search from URL query changes (used by CategoryBrowseSlider)
   useEffect(() => {
-    const searchTerm = searchParams.get("search");
-    if (searchTerm) {
-      setFilters((prev) => ({ ...prev, search: searchTerm }));
-    }
+    const searchTerm = searchParams.get("search") || "";
+    setFilters((prev) => {
+      if (prev.search === searchTerm) return prev;
+      return { ...prev, search: searchTerm };
+    });
   }, [searchParams]);
 
   /* ── Products ── */
