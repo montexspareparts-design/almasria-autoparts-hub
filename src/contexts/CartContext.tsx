@@ -66,6 +66,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   });
   const [shippingCost, setShippingCost] = useState(0);
   const [discount, setDiscount] = useState(0);
+  const [couponCode, setCouponCode] = useState<string | null>(null);
+  const [couponDiscount, setCouponDiscount] = useState(0);
 
   useEffect(() => {
     localStorage.setItem(CART_KEY, JSON.stringify(items));
