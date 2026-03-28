@@ -80,14 +80,13 @@ const CategoryBrowseSlider = () => {
     const interval = setInterval(() => {
       if (!scrollRef.current) return;
       const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-      // RTL: scroll negatively (left), reset when reaching end
       if (scrollLeft <= -(scrollWidth - clientWidth) + 10) {
         scrollRef.current.scrollTo({ left: 0, behavior: "smooth" });
       } else {
-        scrollRef.current.scrollBy({ left: -200, behavior: "smooth" });
+        scrollRef.current.scrollBy({ left: -220, behavior: "smooth" });
       }
-      setTimeout(checkScroll, 350);
-    }, 3000);
+      setTimeout(checkScroll, 300);
+    }, 2000);
     return () => clearInterval(interval);
   }, [isHovered]);
 
@@ -156,19 +155,19 @@ const CategoryBrowseSlider = () => {
             {[...categories].filter((cat) => (categoryCounts[cat.search] ?? 0) > 0).sort((a, b) => (categoryCounts[b.search] ?? 0) - (categoryCounts[a.search] ?? 0)).map((cat, i) => (
               <motion.div
                 key={cat.name}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05, type: "spring", stiffness: 80 }}
+                initial={{ opacity: 0, y: 25, scale: 0.92 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true, margin: "-30px" }}
+                transition={{ delay: i * 0.04, type: "spring", stiffness: 120, damping: 14 }}
                 className="snap-start"
               >
                 <Link
                   to={`/products/${cat.brand}?search=${encodeURIComponent(cat.search)}`}
-                  className="group/card block relative min-w-[150px] sm:min-w-[170px] rounded-2xl overflow-hidden shadow-md hover:shadow-[0_0_20px_hsl(var(--primary)/0.35),0_15px_35px_hsl(0_0%_0%/0.15)] transition-all duration-500"
+                  className="group/card block relative min-w-[150px] sm:min-w-[170px] rounded-2xl overflow-hidden shadow-md hover:shadow-[0_0_20px_hsl(var(--primary)/0.35),0_15px_35px_hsl(0_0%_0%/0.15)] transition-all duration-400"
                 >
                   <motion.div
-                    whileHover={{ y: -8, scale: 1.03 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    whileHover={{ y: -10, scale: 1.05, rotateZ: -1 }}
+                    transition={{ type: "spring", stiffness: 350, damping: 18 }}
                   >
                     {/* Product Image */}
                     <div className="aspect-square bg-white p-3 relative overflow-hidden">
@@ -178,11 +177,11 @@ const CategoryBrowseSlider = () => {
                         loading="lazy"
                         width={512}
                         height={512}
-                        className="w-full h-full object-contain group-hover/card:scale-110 transition-transform duration-500"
+                        className="w-full h-full object-contain group-hover/card:scale-115 transition-transform duration-400 ease-out"
                       />
                       {/* Shimmer overlay on hover */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover/card:translate-x-full transition-transform duration-700 ease-in-out" />
-                      <div className="absolute inset-0 bg-primary/0 group-hover/card:bg-primary/5 transition-colors duration-300" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover/card:translate-x-full transition-transform duration-500 ease-in-out" />
+                      <div className="absolute inset-0 bg-primary/0 group-hover/card:bg-primary/5 transition-colors duration-200" />
                     </div>
 
                     {/* Label */}
@@ -195,7 +194,7 @@ const CategoryBrowseSlider = () => {
                           ? `${categoryCounts[cat.search]} صنف`
                           : "..."}
                       </span>
-                      <ChevronLeft className="w-4 h-4 text-white/70 mx-auto mt-1 group-hover/card:text-white group-hover/card:-translate-x-1 transition-all duration-300" />
+                      <ChevronLeft className="w-4 h-4 text-white/70 mx-auto mt-1 group-hover/card:text-white group-hover/card:-translate-x-1.5 transition-all duration-250" />
                     </div>
                   </motion.div>
                 </Link>
