@@ -89,6 +89,8 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
         <div className="h-px bg-border/30 my-2" />
         <p className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-[0.15em] px-3 pt-1 pb-1.5">المزيد</p>
         {renderItem("favorites", "المفضلة", Heart)}
+        {renderItem("shopping_lists", "قوائم الشراء", ListPlus)}
+        {renderItem("compare", "مقارنة المنتجات", Scale)}
         {renderItem("stock_alerts", "تنبيهات المخزون", Bell)}
         {renderItem("notifications", "الإشعارات", Bell, { badge: unreadCount })}
         {renderItem("offers", "العروض الخاصة", Tag)}
