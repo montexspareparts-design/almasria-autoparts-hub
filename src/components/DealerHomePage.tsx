@@ -383,6 +383,35 @@ const DealerHomePage = () => {
           ))}
         </motion.div>
 
+        {/* ─── Active Order Tracking Card ─── */}
+        {(() => {
+          const activeOrder = recentOrders.find(o => !["delivered", "cancelled"].includes(o.status));
+          if (!activeOrder) return null;
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.18, duration: 0.5, ease }}
+              className="mt-6"
+            >
+              <Link to="/dealer?tab=orders">
+                <div className="bg-card border border-primary/10 rounded-2xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_-8px_rgba(0,0,0,0.1)] transition-all duration-500 group">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-primary/8 flex items-center justify-center">
+                        <Truck className="w-3.5 h-3.5 text-primary" />
+                      </div>
+                      <span className="text-xs font-bold text-foreground">{isRTL ? "تتبع طلبك" : "Track Your Order"}</span>
+                    </div>
+                    <span className="text-[10px] font-mono text-muted-foreground">{activeOrder.order_number}</span>
+                  </div>
+                  <DealerOrderTimeline status={activeOrder.status} isRTL={isRTL} compact />
+                </div>
+              </Link>
+            </motion.div>
+          );
+        })()}
+
         {/* ─── Offers Section ─── */}
         {loading ? (
           <div className="mt-8">
