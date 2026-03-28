@@ -204,7 +204,19 @@ const TrendingProducts = () => {
               )}
               <div className="flex items-center justify-between pt-1">
                 <div className="flex items-baseline gap-1">
-                  {user ? (
+                  {!user ? (
+                    <span className="text-xs font-bold text-muted-foreground">سجّل لرؤية السعر</span>
+                  ) : isDealer ? (
+                    viewedProductIds.includes(product.id) ? (
+                      <span className="text-sm font-black text-primary">{product.base_price} ج.م</span>
+                    ) : limitReached ? (
+                      <span className="text-[10px] text-muted-foreground flex items-center gap-1"><Lock className="w-3 h-3" />استنفدت الحد اليومي</span>
+                    ) : (
+                      <Button variant="outline" size="sm" className="gap-1 text-[10px] h-7 text-primary border-primary/30" onClick={(e) => recordView(product.id, e)}>
+                        <Tag className="w-3 h-3" />تسعير ({DAILY_LIMIT - dailyViewCount} متبقي)
+                      </Button>
+                    )
+                  ) : (
                     product.is_on_sale && product.sale_price ? (
                       <>
                         <span className="text-sm font-black text-primary">{product.sale_price} ج.م</span>
@@ -213,11 +225,9 @@ const TrendingProducts = () => {
                     ) : (
                       <span className="text-sm font-black text-primary">{product.base_price} ج.م</span>
                     )
-                  ) : (
-                    <span className="text-xs font-bold text-muted-foreground">سجّل لرؤية السعر</span>
                   )}
                 </div>
-                {user && (
+                {user && (!isDealer || viewedProductIds.includes(product.id)) && (
                   <Button
                     size="icon"
                     variant="ghost"
