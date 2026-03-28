@@ -184,31 +184,10 @@ const Auth = () => {
                 <div className="relative flex justify-center text-[11px]"><span className="bg-card px-3 text-muted-foreground/60">أو</span></div>
               </div>
 
-              {/* Auth Method Toggle */}
-              <div className="flex gap-2 mb-5">
-                <button 
-                  type="button" 
-                  onClick={() => setAuthMethod("phone")}
-                  className={`flex-1 flex items-center justify-center gap-2 text-xs font-bold h-10 rounded-lg border transition-all duration-200 ${
-                    authMethod === "phone" 
-                      ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20" 
-                      : "bg-transparent text-muted-foreground border-border/50 hover:border-border hover:text-foreground"
-                  }`}
-                >
-                  <Phone className="w-3.5 h-3.5" /> رقم الهاتف
-                </button>
-                <button 
-                  type="button" 
-                  onClick={() => setAuthMethod("email")}
-                  className={`flex-1 flex items-center justify-center gap-2 text-xs font-bold h-10 rounded-lg border transition-all duration-200 ${
-                    authMethod === "email" 
-                      ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20" 
-                      : "bg-transparent text-muted-foreground border-border/50 hover:border-border hover:text-foreground"
-                  }`}
-                >
-                  <Mail className="w-3.5 h-3.5" /> البريد الإلكتروني
-                </button>
-              </div>
+              {/* Unified credential hint */}
+              <p className="text-[11px] text-muted-foreground/50 text-center mb-5">
+                يمكنك الدخول برقم الهاتف أو البريد الإلكتروني
+              </p>
             </>
           )}
 
@@ -226,23 +205,24 @@ const Auth = () => {
                 </div>
               )}
 
-              {authMethod === "phone" ? (
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-foreground/80 text-right block">رقم الهاتف <span className="text-primary">*</span></Label>
-                  <div className="relative">
-                    <Input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="01xxxxxxxxx" required dir="ltr" className="bg-muted/40 border-border/40 h-11 text-sm pl-10 focus:border-primary/50 focus:ring-primary/20 transition-all" />
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-foreground/80 text-right block">رقم الهاتف أو البريد الإلكتروني <span className="text-primary">*</span></Label>
+                <div className="relative">
+                  <Input 
+                    value={credential} 
+                    onChange={e => setCredential(e.target.value)} 
+                    placeholder="01xxxxxxxxx أو example@email.com" 
+                    required 
+                    dir="ltr" 
+                    className="bg-muted/40 border-border/40 h-11 text-sm pl-10 focus:border-primary/50 focus:ring-primary/20 transition-all" 
+                  />
+                  {credIsPhone ? (
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30" />
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-foreground/80 text-right block">البريد الإلكتروني <span className="text-primary">*</span></Label>
-                  <div className="relative">
-                    <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="example@email.com" required dir="ltr" className="bg-muted/40 border-border/40 h-11 text-sm pl-10 focus:border-primary/50 focus:ring-primary/20 transition-all" />
+                  ) : (
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30" />
-                  </div>
+                  )}
                 </div>
-              )}
+              </div>
 
               <div className="space-y-2">
                 <Label className="text-xs font-semibold text-foreground/80 text-right block">كلمة المرور <span className="text-primary">*</span></Label>
