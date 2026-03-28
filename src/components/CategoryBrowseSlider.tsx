@@ -89,8 +89,9 @@ const CategoryBrowseSlider = () => {
       const delta = lastTime ? (time - lastTime) : 16;
       lastTime = time;
 
-      // Ease speed in/out based on hover
-      const target = isHovered ? 0 : targetSpeed;
+      // Ease speed in/out based on hover or manual pause
+      const paused = isHovered || Date.now() < pauseUntilRef.current;
+      const target = paused ? 0 : targetSpeed;
       speedRef.current += (target - speedRef.current) * 0.08;
 
       if (Math.abs(speedRef.current) > 0.01) {
