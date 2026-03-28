@@ -31,9 +31,7 @@ const isSessionActive = () => sessionStorage.getItem(SESSION_FLAG) === "true";
 
 const Auth = () => {
   const [mode, setMode] = useState<AuthMode>("login");
-  const [authMethod, setAuthMethod] = useState<AuthMethod>("phone");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
+  const [credential, setCredential] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [address, setAddress] = useState("");
