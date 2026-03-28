@@ -50,7 +50,8 @@ const Auth = () => {
 
   const isLogin = mode === "login";
   const phoneToEmail = (p: string) => `${p.replace(/\D/g, "")}@phone.almasria.app`;
-  const getAuthEmail = () => authMethod === "email" ? email.trim() : phoneToEmail(phone);
+  const credIsPhone = isPhone(credential);
+  const getAuthEmail = () => credIsPhone ? phoneToEmail(credential) : credential.trim();
 
   // On mount: if not remembered and no active session, clear stale session
   useEffect(() => {
