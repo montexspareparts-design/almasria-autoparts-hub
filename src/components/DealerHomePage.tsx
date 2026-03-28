@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 import dealerQuotesIcon from "@/assets/dealer-quotes-icon.png";
 import dealerOrdersIcon from "@/assets/dealer-orders-icon.png";
 import dealerLogo from "@/assets/logo.webp";
@@ -156,7 +157,14 @@ const DealerHomePage = () => {
     }
     const today = new Date().toISOString().split("T")[0];
     const { error } = await supabase.from("dealer_price_views").upsert({ user_id: user.id, product_id: product.id, view_date: today }, { onConflict: "user_id,product_id,view_date" });
-    if (!error) { await refreshDailyCount(); toast({ title: "✅", description: isRTL ? `تم تسعير ${product.name_ar}` : `Priced ${product.name_ar}` }); }
+    if (!error) {
+      await refreshDailyCount();
+      toast({
+        title: "✅",
+        description: isRTL ? `تم تسعير ${product.name_ar}` : `Priced ${product.name_ar}`,
+        action: <ToastAction altText="عرض الأسعار" onClick={() => navigate("/dealer?tab=quotes")} className="text-xs">عرض الأسعار</ToastAction>,
+      });
+    }
   }, [isRTL, toast, user, dailyViewCount, refreshDailyCount]);
 
   const handleAddToOrder = useCallback((product: ProductItem) => {
