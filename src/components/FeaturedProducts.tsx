@@ -281,6 +281,20 @@ const FeaturedProducts = () => {
           onOpenChange={(open) => !open && setSelectedProduct(null)}
           price={!user ? null : isDealer ? (viewedProductIds.includes(selectedProduct.id) ? selectedProduct.base_price : null) : (selectedProduct.sale_price || selectedProduct.base_price)}
           priceLabel={!user ? "سجّل لرؤية السعر" : isDealer && viewedProductIds.includes(selectedProduct.id) ? "سعر الجملة الخاص بك" : undefined}
+          isLoggedIn={!!user}
+          isDealer={isDealer}
+          onRevealPrice={(productId) => {
+            if (!user || !isDealer || viewedProductIds.includes(productId) || limitReached) return;
+            supabase.from("dealer_price_views").upsert(
+              { user_id: user.id, product_id: productId, view_date: new Date().toISOString().split("T")[0] },
+              { onConflict: "user_id,product_id,view_date" }
+            ).then(() => {
+              queryClient.invalidateQueries({ queryKey: ["dealer_views_today", user.id] });
+              queryClient.invalidateQueries({ queryKey: ["dealer_daily_count", user.id] });
+            });
+          }}
+          remainingViews={DAILY_LIMIT - dailyViewCount}
+          limitReached={limitReached}
           onAddToCart={user && (!isDealer || viewedProductIds.includes(selectedProduct.id)) ? (product) => {
             const cartItem: CartItem = {
               id: product.id,
@@ -297,7 +311,6 @@ const FeaturedProducts = () => {
             toast({ title: "تمت الإضافة للسلة ✅", description: product.name_ar });
           } : undefined}
           canAddToCart={!!user && (!isDealer || viewedProductIds.includes(selectedProduct.id)) && selectedProduct.stock_quantity > 0}
-          isLoggedIn={!!user}
         />
       )}
     </>

@@ -287,6 +287,20 @@ const TrendingProducts = () => {
         price={!user ? null : isDealer ? (selectedProduct && viewedProductIds.includes(selectedProduct.id) ? selectedProduct.base_price : null) : (selectedProduct?.sale_price || selectedProduct?.base_price)}
         priceLabel={!user ? "سجّل لرؤية السعر" : isDealer && selectedProduct && viewedProductIds.includes(selectedProduct.id) ? "سعر الجملة الخاص بك" : undefined}
         isLoggedIn={!!user}
+        isDealer={isDealer}
+        onRevealPrice={(productId) => {
+          if (!user || !isDealer || viewedProductIds.includes(productId) || limitReached) return;
+          supabase.from("dealer_price_views").upsert(
+            { user_id: user.id, product_id: productId, view_date: new Date().toISOString().split("T")[0] },
+            { onConflict: "user_id,product_id,view_date" }
+          ).then(() => {
+            queryClient.invalidateQueries({ queryKey: ["dealer_views_today", user.id] });
+            queryClient.invalidateQueries({ queryKey: ["dealer_daily_count", user.id] });
+          });
+        }}
+        remainingViews={DAILY_LIMIT - dailyViewCount}
+        limitReached={limitReached}
+        canAddToCart={!!user && (!isDealer || (selectedProduct && viewedProductIds.includes(selectedProduct.id))) && selectedProduct?.stock_quantity > 0}
       />
     </section>
   );
