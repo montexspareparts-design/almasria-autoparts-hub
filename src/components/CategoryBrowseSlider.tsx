@@ -77,6 +77,7 @@ const CategoryBrowseSlider = () => {
   // Smooth continuous auto-scroll (marquee-style)
   const rafRef = useRef<number>(0);
   const speedRef = useRef(0);
+  const pauseUntilRef = useRef(0);
   const targetSpeed = 1.2; // pixels per frame
 
   useEffect(() => {
@@ -88,8 +89,9 @@ const CategoryBrowseSlider = () => {
       const delta = lastTime ? (time - lastTime) : 16;
       lastTime = time;
 
-      // Ease speed in/out based on hover
-      const target = isHovered ? 0 : targetSpeed;
+      // Ease speed in/out based on hover or manual pause
+      const paused = isHovered || Date.now() < pauseUntilRef.current;
+      const target = paused ? 0 : targetSpeed;
       speedRef.current += (target - speedRef.current) * 0.08;
 
       if (Math.abs(speedRef.current) > 0.01) {
@@ -122,8 +124,9 @@ const CategoryBrowseSlider = () => {
 
   const scroll = (dir: "left" | "right") => {
     if (!scrollRef.current) return;
-    scrollRef.current.scrollBy({ left: dir === "left" ? -300 : 300, behavior: "smooth" });
-    setTimeout(checkScroll, 350);
+    pauseUntilRef.current = Date.now() + 1500; // pause auto-scroll for 1.5s
+    scrollRef.current.scrollBy({ left: dir === "left" ? -400 : 400, behavior: "smooth" });
+    setTimeout(checkScroll, 400);
   };
 
   return (
