@@ -413,6 +413,11 @@ const DealerHomePage = () => {
           );
         })()}
 
+        {/* ─── Category Browse Slider ─── */}
+        <div className="mt-8">
+          <CategoryBrowseSlider />
+        </div>
+
         {/* ─── Offers Section ─── */}
         {loading ? (
           <div className="mt-8">
