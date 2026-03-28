@@ -482,7 +482,7 @@ const DealerHomePage = () => {
         {/* ─── Best Sellers ─── */}
         <DealerBestSellers
           isRTL={isRTL}
-          onPriceItem={(p) => handlePriceItem(p as ProductItem)}
+          onPriceItem={(p) => handlePriceItem({ ...p, sale_price: null, brand: undefined } as ProductItem)}
           onAddToOrder={(p) => handleAddToOrder(p as ProductItem)}
         />
 
