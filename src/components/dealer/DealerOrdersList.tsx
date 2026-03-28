@@ -651,17 +651,39 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
                       </div>
                     )}
 
-                    {/* ─── WhatsApp ─── */}
+                    {/* ─── Reorder + WhatsApp ─── */}
                     {!isEditing && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full text-xs rounded-xl h-9 gap-1.5 border-border/40"
-                        onClick={() => window.open(`https://wa.me/201000000000?text=استفسار عن الطلب رقم ${order.order_number}`, "_blank")}
-                      >
-                        <MessageCircle className="w-3.5 h-3.5" />
-                        استفسار عن الطلب
-                      </Button>
+                      <div className="flex gap-2">
+                        {order.status === "delivered" && items && items.length > 0 && (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="flex-1 text-xs rounded-xl h-9 gap-1.5"
+                            disabled={reordering === order.id}
+                            onClick={async () => {
+                              setReordering(order.id);
+                              const orderItemsList = orderItems[order.id] || [];
+                              for (const item of orderItemsList) {
+                                await addItem(item.product_id, item.quantity);
+                              }
+                              setReordering(null);
+                              toast({ title: "✅ تم إضافة كل الأصناف للسلة", description: `${orderItemsList.length} صنف من الطلب ${order.order_number}` });
+                            }}
+                          >
+                            {reordering === order.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                            كرر هذا الطلب
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className={`text-xs rounded-xl h-9 gap-1.5 border-border/40 ${order.status === "delivered" && items && items.length > 0 ? "" : "flex-1 w-full"}`}
+                          onClick={() => window.open(`https://wa.me/201000000000?text=استفسار عن الطلب رقم ${order.order_number}`, "_blank")}
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          استفسار عن الطلب
+                        </Button>
+                      </div>
                     )}
                   </div>
                 )}
