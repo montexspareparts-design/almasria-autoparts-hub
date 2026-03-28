@@ -128,6 +128,8 @@ const DealerDashboard = () => {
       case "offers": return <DealerOffers />;
       case "statement": return <DealerStatement userId={user!.id} />;
       case "stock_alerts": return <DealerStockAlerts />;
+      case "shopping_lists": return <DealerShoppingLists />;
+      case "compare": return <DealerProductCompare />;
       case "settings": return <DealerAccountSettings />;
       default: return null;
     }
