@@ -93,7 +93,7 @@ const DealerLogin = () => {
     e.preventDefault(); setLoading(true);
     const authEmail = getAuthEmail();
     const { data, error } = await performLogin(authEmail, password);
-    if (error) { toast({ title: "بيانات غير صحيحة", description: authMethod === "phone" ? "رقم الهاتف أو كلمة المرور خطأ" : "البريد أو كلمة المرور خطأ", variant: "destructive" }); }
+    if (error) { toast({ title: "بيانات غير صحيحة", description: "رقم الهاتف/البريد أو كلمة المرور خطأ", variant: "destructive" }); }
     else if (data.user) {
       setRemembered(rememberMe);
       markSessionActive();
