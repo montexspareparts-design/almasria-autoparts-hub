@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Search, ClipboardList, FileText, Receipt,
-  Heart, Upload, Bell, Tag, Settings, LogOut, User, CreditCard, Star,
-  ListPlus, Scale
+  Heart, Upload, Bell, Tag, Settings, LogOut, User, CreditCard,
+  ListPlus, Scale, Package
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -29,25 +29,46 @@ const tierLabels: Record<string, string> = {
 
 const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, unreadCount }: DealerSidebarProps) => {
 
-  const renderItem = (id: DealerTab, label: string, Icon: typeof LayoutDashboard, options?: { badge?: number; highlight?: boolean }) => {
+  const renderItem = (
+    id: DealerTab,
+    label: string,
+    Icon: typeof LayoutDashboard,
+    options?: { badge?: number; highlight?: boolean }
+  ) => {
     const isActive = activeTab === id;
     return (
       <button
         key={id}
         onClick={() => onTabChange(id)}
         className={cn(
-          "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all duration-200",
+          "w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200",
           isActive
-            ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
+            ? "bg-foreground text-background font-bold"
             : options?.highlight
-              ? "text-primary bg-primary/5 hover:bg-primary/10 font-semibold"
-              : "text-foreground/60 hover:bg-muted hover:text-foreground"
+              ? "text-primary font-bold hover:bg-primary/5"
+              : "text-foreground/70 hover:bg-muted/60 hover:text-foreground"
         )}
       >
-        <Icon className={cn("w-4 h-4 shrink-0", isActive ? "text-primary-foreground" : options?.highlight ? "text-primary" : "text-muted-foreground")} />
+        <div className={cn(
+          "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+          isActive
+            ? "bg-background/20"
+            : options?.highlight
+              ? "bg-primary/10"
+              : "bg-transparent"
+        )}>
+          <Icon className={cn(
+            "w-[18px] h-[18px]",
+            isActive
+              ? "text-background"
+              : options?.highlight
+                ? "text-primary"
+                : "text-muted-foreground"
+          )} />
+        </div>
         <span className="truncate">{label}</span>
         {(options?.badge || 0) > 0 && (
-          <span className="mr-auto bg-primary text-primary-foreground text-[9px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+          <span className="mr-auto bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full min-w-[22px] h-[22px] flex items-center justify-center px-1.5">
             {options!.badge}
           </span>
         )}
@@ -56,38 +77,49 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
   };
 
   return (
-    <aside className="w-60 bg-card border-l border-border/40 flex flex-col h-full shrink-0 hidden lg:flex shadow-sm">
-      {/* Profile */}
-      <div className="p-4 border-b border-border/30">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-            <User className="w-4.5 h-4.5 text-primary" />
+    <aside className="w-64 bg-card border-l border-border/30 flex flex-col h-full shrink-0 hidden lg:flex">
+      {/* Brand */}
+      <div className="px-5 pt-5 pb-3 border-b border-border/20">
+        <div className="flex items-center gap-3 justify-end">
+          <div className="text-left">
+            <p className="text-base font-extrabold text-foreground tracking-wide">المصرية جروب</p>
+            <p className="text-[11px] text-muted-foreground font-medium">بوابة التوزيع B2B</p>
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="font-bold text-foreground text-sm truncate">{dealerName}</p>
-            <span className="text-[10px] text-muted-foreground font-medium">
+          <img src="/lovable-uploads/4e29e840-5e51-46a2-a42f-630e1e49386b.png" alt="Logo" className="h-10 w-10 object-contain rounded-lg" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+        </div>
+      </div>
+
+      {/* Profile */}
+      <div className="px-5 py-4 border-b border-border/20">
+        <div className="flex items-center gap-3 justify-end">
+          <div className="text-left min-w-0 flex-1">
+            <p className="font-bold text-foreground text-[15px] truncate">{dealerName}</p>
+            <span className="text-[11px] text-muted-foreground font-medium leading-tight">
               {tierLabels[tier] || tier}
             </span>
+          </div>
+          <div className="w-11 h-11 rounded-xl bg-muted/60 flex items-center justify-center shrink-0">
+            <User className="w-5 h-5 text-muted-foreground" />
           </div>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-2.5 space-y-0.5 overflow-y-auto">
-        <p className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-[0.15em] px-3 pt-3 pb-1.5">الرئيسية</p>
+      <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto scrollbar-thin">
+        <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.15em] px-3 pt-2 pb-2">الرئيسية</p>
         {renderItem("overview", "لوحة التحكم", LayoutDashboard)}
         {renderItem("quotes", "اطلب قطع غيار", Search)}
         {renderItem("price_lists", "كشوفات المصرية", FileText, { highlight: true })}
 
-        <div className="h-px bg-border/30 my-2" />
-        <p className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-[0.15em] px-3 pt-1 pb-1.5">طلباتي</p>
+        <div className="h-px bg-border/20 my-3 mx-2" />
+        <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.15em] px-3 pt-1 pb-2">طلباتي</p>
         {renderItem("orders", "الطلبية", ClipboardList)}
         {renderItem("payment", "الدفع الإلكتروني", CreditCard, { highlight: true })}
         {renderItem("invoices", "الفواتير", Receipt)}
         {renderItem("statement", "كشف الحساب", CreditCard)}
 
-        <div className="h-px bg-border/30 my-2" />
-        <p className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-[0.15em] px-3 pt-1 pb-1.5">المزيد</p>
+        <div className="h-px bg-border/20 my-3 mx-2" />
+        <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.15em] px-3 pt-1 pb-2">المزيد</p>
         {renderItem("favorites", "المفضلة", Heart)}
         {renderItem("shopping_lists", "قوائم الشراء", ListPlus)}
         {renderItem("compare", "مقارنة المنتجات", Scale)}
@@ -99,12 +131,14 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
       </nav>
 
       {/* Sign Out */}
-      <div className="p-2.5 border-t border-border/30">
+      <div className="p-3 border-t border-border/20">
         <button
           onClick={onSignOut}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] text-muted-foreground hover:bg-destructive/5 hover:text-destructive transition-all"
+          className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-muted-foreground hover:bg-destructive/5 hover:text-destructive transition-all"
         >
-          <LogOut className="w-4 h-4" />
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center">
+            <LogOut className="w-[18px] h-[18px]" />
+          </div>
           <span>تسجيل الخروج</span>
         </button>
       </div>
