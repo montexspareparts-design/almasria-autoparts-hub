@@ -243,24 +243,22 @@ const CategoryBrowseSlider = () => {
           </div>
 
           {/* Arrow buttons */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.15 }}
+              whileTap={{ scale: 0.85 }}
               onClick={() => scroll("right")}
-              disabled={!canScrollLeft}
-              className="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground disabled:opacity-20 disabled:cursor-default transition-all duration-300"
+              className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md shadow-primary/30 hover:shadow-lg hover:shadow-primary/40 transition-all duration-300"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-5 h-5" />
             </motion.button>
             <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.15 }}
+              whileTap={{ scale: 0.85 }}
               onClick={() => scroll("left")}
-              disabled={!canScrollRight}
-              className="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground disabled:opacity-20 disabled:cursor-default transition-all duration-300"
+              className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md shadow-primary/30 hover:shadow-lg hover:shadow-primary/40 transition-all duration-300"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-5 h-5" />
             </motion.button>
           </div>
         </div>
