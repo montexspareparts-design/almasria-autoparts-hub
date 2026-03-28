@@ -474,7 +474,7 @@ const DealerHomePage = () => {
           <DealerRecentlyViewed
             userId={user.id}
             isRTL={isRTL}
-            onPriceItem={(p) => handlePriceItem(p as ProductItem)}
+            onPriceItem={(p) => handlePriceItem({ ...p, sale_price: null, brand: undefined } as ProductItem)}
             onAddToOrder={(p) => handleAddToOrder(p as ProductItem)}
           />
         )}
