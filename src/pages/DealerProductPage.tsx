@@ -92,7 +92,7 @@ const DealerProductPage = () => {
 
     Promise.all([
       // Tier price
-      tier ? supabase.from("product_tier_prices").select("price, discount_price, min_qty_for_discount").eq("product_id", product.id).eq("tier", tier).maybeSingle() : null,
+      tier ? supabase.from("product_tier_prices").select("price, discount_price, min_qty_for_discount").eq("product_id", product.id).eq("tier", tier as any).maybeSingle() : null,
       // Reviews
       supabase.from("product_reviews_public").select("id, rating, comment, reviewer_name, created_at").eq("product_id", product.id).eq("is_approved", true).order("created_at", { ascending: false }).limit(10),
       // Related products (same category)
