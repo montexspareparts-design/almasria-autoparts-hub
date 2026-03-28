@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
-import { User, Phone, Mail, Building, Save, Loader2, Shield, Volume2, VolumeX } from "lucide-react";
+import { User, Phone, Save, Loader2, Shield, Volume2, VolumeX, Sun, Moon, Monitor, Type, Minus, Plus, Palette } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { isSoundEnabled, setSoundEnabled, playPricingSound } from "@/lib/pricingSound";
+import { useTheme } from "next-themes";
 
 const tierLabels: Record<string, string> = {
   wholesale_tier1: "تاجر جملة – درجة أولى",
@@ -18,12 +19,27 @@ const tierLabels: Record<string, string> = {
   retail: "عميل قطاعي",
 };
 
+const FONT_SIZE_KEY = "dealer_font_size";
+const getFontSize = (): number => Number(localStorage.getItem(FONT_SIZE_KEY) || "16");
+const setFontSizeStorage = (size: number) => {
+  localStorage.setItem(FONT_SIZE_KEY, String(size));
+  document.documentElement.style.fontSize = `${size}px`;
+};
+
 const DealerAccountSettings = () => {
   const { user, dealerAccount } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [profile, setProfile] = useState({ full_name: "", phone: "", email: "" });
   const [soundOn, setSoundOn] = useState(isSoundEnabled());
+  const [fontSize, setFontSize] = useState(getFontSize());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  // Apply saved font size on mount
+  useEffect(() => {
+    const saved = getFontSize();
+    if (saved !== 16) document.documentElement.style.fontSize = `${saved}px`;
+  }, []);
 
   useEffect(() => {
     if (user) fetchProfile();
@@ -63,6 +79,17 @@ const DealerAccountSettings = () => {
     setSaving(false);
   };
 
+  const adjustFontSize = (delta: number) => {
+    const newSize = Math.min(22, Math.max(12, fontSize + delta));
+    setFontSize(newSize);
+    setFontSizeStorage(newSize);
+  };
+
+  const resetFontSize = () => {
+    setFontSize(16);
+    setFontSizeStorage(16);
+  };
+
   if (loading) {
     return (
       <div className="space-y-3">
@@ -70,6 +97,12 @@ const DealerAccountSettings = () => {
       </div>
     );
   }
+
+  const themeOptions = [
+    { value: "light", label: "فاتح", icon: Sun },
+    { value: "dark", label: "داكن", icon: Moon },
+    { value: "system", label: "تلقائي", icon: Monitor },
+  ];
 
   return (
     <div className="space-y-5 max-w-2xl">
@@ -154,6 +187,76 @@ const DealerAccountSettings = () => {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Appearance Preferences */}
+      <Card className="border-border/50">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Palette className="w-4 h-4 text-primary" />
+            المظهر والعرض
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Theme */}
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-foreground">وضع الألوان</p>
+            <div className="grid grid-cols-3 gap-2">
+              {themeOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => {
+                    setTheme(opt.value);
+                    toast({ title: `تم التبديل إلى الوضع ${opt.label}` });
+                  }}
+                  className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all duration-200 ${
+                    theme === opt.value
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border/50 bg-muted/30 text-muted-foreground hover:border-primary/30 hover:bg-muted/50"
+                  }`}
+                >
+                  <opt.icon className="w-5 h-5" />
+                  <span className="text-[11px] font-bold">{opt.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Font Size */}
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-foreground">حجم الخط</p>
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+              <button
+                onClick={() => adjustFontSize(-1)}
+                disabled={fontSize <= 12}
+                className="w-8 h-8 rounded-lg border border-border/50 flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/30 disabled:opacity-30 transition-all"
+              >
+                <Minus className="w-3.5 h-3.5" />
+              </button>
+              <div className="flex-1 text-center">
+                <span className="text-lg font-bold text-foreground">{fontSize}</span>
+                <span className="text-[10px] text-muted-foreground mr-1">px</span>
+              </div>
+              <button
+                onClick={() => adjustFontSize(1)}
+                disabled={fontSize >= 22}
+                className="w-8 h-8 rounded-lg border border-border/50 flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/30 disabled:opacity-30 transition-all"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            {fontSize !== 16 && (
+              <button
+                onClick={resetFontSize}
+                className="text-[10px] text-primary hover:underline"
+              >
+                إعادة للحجم الافتراضي (16px)
+              </button>
+            )}
+            <p className="text-[10px] text-muted-foreground">معاينة: <span style={{ fontSize: `${fontSize}px` }}>هذا نص تجريبي بالحجم المختار</span></p>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Sound Preferences */}
       <Card className="border-border/50">
         <CardHeader className="pb-3">
