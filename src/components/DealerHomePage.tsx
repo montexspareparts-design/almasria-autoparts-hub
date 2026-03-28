@@ -460,7 +460,33 @@ const DealerHomePage = () => {
           </motion.section>
         ) : null}
 
-        {/* ─── Account & Payments — Premium Section ─── */}
+        {/* ─── Previously Purchased — Amazon-style Reorder ─── */}
+        {user && (
+          <DealerPreviouslyPurchased
+            userId={user.id}
+            isRTL={isRTL}
+            onAddToOrder={(p) => handleAddToOrder(p as ProductItem)}
+          />
+        )}
+
+        {/* ─── Recently Viewed ─── */}
+        {user && (
+          <DealerRecentlyViewed
+            userId={user.id}
+            isRTL={isRTL}
+            onPriceItem={(p) => handlePriceItem(p as ProductItem)}
+            onAddToOrder={(p) => handleAddToOrder(p as ProductItem)}
+          />
+        )}
+
+        {/* ─── Best Sellers ─── */}
+        <DealerBestSellers
+          isRTL={isRTL}
+          onPriceItem={(p) => handlePriceItem(p as ProductItem)}
+          onAddToOrder={(p) => handleAddToOrder(p as ProductItem)}
+        />
+
+
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
