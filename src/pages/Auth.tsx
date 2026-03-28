@@ -13,7 +13,7 @@ import { motion } from "framer-motion";
 import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 import logo from "@/assets/logo.webp";
 
-type AuthMethod = "phone" | "email";
+const isPhone = (val: string) => /^[0-9+\s()-]+$/.test(val.trim()) && val.replace(/\D/g, "").length >= 8;
 type AuthMode = "login" | "register";
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 60_000;
