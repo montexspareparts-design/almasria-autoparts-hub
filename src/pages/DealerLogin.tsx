@@ -14,7 +14,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 
-type AuthMethod = "phone" | "email";
+type AuthMethod = "phone" | "email" | "auto";
 const REMEMBER_KEY = "almasria_remember_me";
 const SESSION_FLAG = "almasria_session_active";
 
@@ -42,9 +42,7 @@ const DealerLogin = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const [authMethod, setAuthMethod] = useState<AuthMethod>("phone");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState(""); // single field for phone or email
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -86,7 +84,8 @@ const DealerLogin = () => {
   };
 
   const phoneToEmail = (p: string) => `${p.replace(/\D/g, "")}@phone.almasria.app`;
-  const getAuthEmail = () => authMethod === "email" ? email.trim() : phoneToEmail(phone);
+  const isPhone = (val: string) => /^[\d\s+()-]+$/.test(val.trim()) && val.replace(/\D/g, "").length >= 8;
+  const getAuthEmail = () => isPhone(identifier) ? phoneToEmail(identifier) : identifier.trim();
 
   const performLogin = async (authEmail: string, pwd: string) => supabase.auth.signInWithPassword({ email: authEmail, password: pwd });
 
@@ -94,7 +93,7 @@ const DealerLogin = () => {
     e.preventDefault(); setLoading(true);
     const authEmail = getAuthEmail();
     const { data, error } = await performLogin(authEmail, password);
-    if (error) { toast({ title: "بيانات غير صحيحة", description: authMethod === "phone" ? "رقم الهاتف أو كلمة المرور خطأ" : "البريد أو كلمة المرور خطأ", variant: "destructive" }); }
+    if (error) { toast({ title: "بيانات غير صحيحة", description: "رقم الهاتف/البريد أو كلمة المرور خطأ", variant: "destructive" }); }
     else if (data.user) {
       setRemembered(rememberMe);
       markSessionActive();
@@ -206,34 +205,27 @@ const DealerLogin = () => {
                 <div className="relative flex justify-center text-[10px]"><span className="bg-card px-2 text-muted-foreground">أو</span></div>
               </div>
 
-              {/* Auth Method */}
-              <div className="flex gap-2 mb-4">
-                <Button type="button" size="sm" variant={authMethod === "phone" ? "default" : "outline"} className="flex-1 gap-1.5 text-xs h-8" onClick={() => setAuthMethod("phone")}>
-                  <Phone className="w-3.5 h-3.5" /> الهاتف
-                </Button>
-                <Button type="button" size="sm" variant={authMethod === "email" ? "default" : "outline"} className="flex-1 gap-1.5 text-xs h-8" onClick={() => setAuthMethod("email")}>
-                  <Mail className="w-3.5 h-3.5" /> الإيميل
-                </Button>
-              </div>
-
+              {/* Auth Method — single smart input */}
               <form onSubmit={handleLogin} className="space-y-3">
-                {authMethod === "phone" ? (
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">رقم الهاتف <span className="text-primary">*</span></Label>
-                    <div className="relative">
-                      <Input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="01xxxxxxxxx" required dir="ltr" className="bg-background h-10 text-sm pl-9" />
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-foreground">رقم الهاتف أو البريد الإلكتروني <span className="text-primary">*</span></Label>
+                  <div className="relative">
+                    <Input
+                      type="text"
+                      value={identifier}
+                      onChange={e => setIdentifier(e.target.value)}
+                      placeholder="01xxxxxxxxx أو example@email.com"
+                      required
+                      dir="ltr"
+                      className="bg-background h-10 text-sm pl-9"
+                    />
+                    {isPhone(identifier) ? (
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/40" />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">البريد الإلكتروني <span className="text-primary">*</span></Label>
-                    <div className="relative">
-                      <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="example@email.com" required dir="ltr" className="bg-background h-10 text-sm pl-9" />
+                    ) : (
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/40" />
-                    </div>
+                    )}
                   </div>
-                )}
+                </div>
 
                 <div className="space-y-1.5">
                   <Label className="text-xs text-foreground">كلمة المرور <span className="text-primary">*</span></Label>
