@@ -1,5 +1,18 @@
+const SOUND_KEY = "dealer_sound_enabled";
+
+/** Check if pricing sounds are enabled (default: true) */
+export const isSoundEnabled = (): boolean => {
+  return localStorage.getItem(SOUND_KEY) !== "false";
+};
+
+/** Toggle pricing sound on/off */
+export const setSoundEnabled = (enabled: boolean) => {
+  localStorage.setItem(SOUND_KEY, String(enabled));
+};
+
 /** Plays a short pleasant "cha-ching" confirmation sound when a product is priced */
 export const playPricingSound = () => {
+  if (!isSoundEnabled()) return;
   try {
     const ctx = new AudioContext();
     const now = ctx.currentTime;

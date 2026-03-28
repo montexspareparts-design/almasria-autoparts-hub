@@ -5,9 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
-import { User, Phone, Mail, Building, Save, Loader2, Shield } from "lucide-react";
+import { User, Phone, Mail, Building, Save, Loader2, Shield, Volume2, VolumeX } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { isSoundEnabled, setSoundEnabled, playPricingSound } from "@/lib/pricingSound";
 
 const tierLabels: Record<string, string> = {
   wholesale_tier1: "تاجر جملة – درجة أولى",
