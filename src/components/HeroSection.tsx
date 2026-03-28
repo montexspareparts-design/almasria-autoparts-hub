@@ -104,6 +104,7 @@ const HeroSection = () => {
       return (data?.value as string) || "";
     },
     staleTime: 5 * 60 * 1000,
+    enabled: !isMobile, // Skip video URL fetch on mobile
   });
 
   const videoSrc = heroVideoUrl || "/videos/hero-cinematic-v2.mp4";
