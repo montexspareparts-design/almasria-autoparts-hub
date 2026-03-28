@@ -21,6 +21,8 @@ import DealerAccountSettings from "@/components/dealer/DealerAccountSettings";
 import DealerStatement from "@/components/dealer/DealerStatement";
 import DealerPayment from "@/components/dealer/DealerPayment";
 import DealerStockAlerts from "@/components/dealer/DealerStockAlerts";
+import DealerShoppingLists from "@/components/dealer/DealerShoppingLists";
+import DealerProductCompare from "@/components/dealer/DealerProductCompare";
 
 const DealerDashboard = () => {
   const { user, dealerAccount, isDealer, loading: authLoading, signOut } = useAuth();
@@ -95,6 +97,8 @@ const DealerDashboard = () => {
     offers: "العروض الخاصة",
     catalogs: "الكتالوجات",
     settings: "إعدادات الحساب",
+    shopping_lists: "قوائم الشراء",
+    compare: "مقارنة المنتجات",
   };
 
   const renderContent = () => {
@@ -124,6 +128,8 @@ const DealerDashboard = () => {
       case "offers": return <DealerOffers />;
       case "statement": return <DealerStatement userId={user!.id} />;
       case "stock_alerts": return <DealerStockAlerts />;
+      case "shopping_lists": return <DealerShoppingLists />;
+      case "compare": return <DealerProductCompare />;
       case "settings": return <DealerAccountSettings />;
       default: return null;
     }

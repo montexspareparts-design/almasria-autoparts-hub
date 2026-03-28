@@ -1,13 +1,15 @@
 import {
   LayoutDashboard, Search, ClipboardList, FileText, Receipt,
-  Heart, Upload, Bell, Tag, Settings, LogOut, User, CreditCard, Star
+  Heart, Upload, Bell, Tag, Settings, LogOut, User, CreditCard, Star,
+  ListPlus, Scale
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type DealerTab =
   | "overview" | "quotes" | "orders" | "invoices" | "price_lists"
   | "favorites" | "quick_order" | "notifications" | "offers"
-  | "catalogs" | "settings" | "statement" | "payment" | "stock_alerts";
+  | "catalogs" | "settings" | "statement" | "payment" | "stock_alerts"
+  | "shopping_lists" | "compare";
 
 interface DealerSidebarProps {
   activeTab: DealerTab;
@@ -87,6 +89,8 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
         <div className="h-px bg-border/30 my-2" />
         <p className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-[0.15em] px-3 pt-1 pb-1.5">المزيد</p>
         {renderItem("favorites", "المفضلة", Heart)}
+        {renderItem("shopping_lists", "قوائم الشراء", ListPlus)}
+        {renderItem("compare", "مقارنة المنتجات", Scale)}
         {renderItem("stock_alerts", "تنبيهات المخزون", Bell)}
         {renderItem("notifications", "الإشعارات", Bell, { badge: unreadCount })}
         {renderItem("offers", "العروض الخاصة", Tag)}
