@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart, CartItem } from "@/contexts/CartContext";
 import { toast } from "@/hooks/use-toast";
+import { playPricingSound } from "@/lib/pricingSound";
 import { ProductFilters } from "@/components/AdvancedProductFilter";
 
 /* ── Arabic text normalization ── */
