@@ -458,7 +458,7 @@ const DealerHomePage = () => {
                         hover:border-primary/15
                         transition-all duration-500"
                     >
-                      <div className="aspect-square bg-gradient-to-br from-muted/10 to-muted/30 relative overflow-hidden flex items-center justify-center">
+                      <div className="aspect-square bg-gradient-to-br from-muted/10 to-muted/30 relative overflow-hidden flex items-center justify-center cursor-pointer" onClick={() => navigate(`/dealer/product/${p.id}`)}>
                         {p.image_url
                           ? <img src={p.image_url} alt={p.name_ar} className="w-full h-full object-contain p-4 group-hover:scale-110 transition-transform duration-700 ease-out" loading="lazy" />
                           : <Package className="w-10 h-10 text-muted-foreground/10" />}
