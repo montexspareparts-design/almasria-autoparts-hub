@@ -223,6 +223,8 @@ export function useProductListing(options: UseProductListingOptions = {}) {
       { onConflict: "user_id,product_id,view_date" }
     );
     queryClient.invalidateQueries({ queryKey: ["dealer_views_today", user.id] });
+    queryClient.invalidateQueries({ queryKey: ["dealer_daily_count", user.id] });
+    toast({ title: "✅ تم التسعير", description: "اضغط لعرض الأصناف المسعّرة اليوم" });
   }, [user, isDealer, viewedProductIds, limitReached, queryClient]);
 
   /* ── Tier prices ── */
