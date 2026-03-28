@@ -78,17 +78,6 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
 
   return (
     <aside className="w-64 bg-card border-l border-border/30 flex flex-col h-full shrink-0 hidden lg:flex">
-      {/* Brand */}
-      <div className="px-5 pt-5 pb-3 border-b border-border/20">
-        <div className="flex items-center gap-3 justify-end">
-          <div className="text-left">
-            <p className="text-base font-extrabold text-foreground tracking-wide">المصرية جروب</p>
-            <p className="text-[11px] text-muted-foreground font-medium">بوابة التوزيع B2B</p>
-          </div>
-          <img src="/lovable-uploads/4e29e840-5e51-46a2-a42f-630e1e49386b.png" alt="Logo" className="h-10 w-10 object-contain rounded-lg" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-        </div>
-      </div>
-
       {/* Profile */}
       <div className="px-5 py-4 border-b border-border/20">
         <div className="flex items-center gap-3 justify-end">
