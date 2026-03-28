@@ -1,13 +1,15 @@
 import {
   LayoutDashboard, Search, ClipboardList, FileText, Receipt,
-  Heart, Upload, Bell, Tag, Settings, LogOut, User, CreditCard, Star
+  Heart, Upload, Bell, Tag, Settings, LogOut, User, CreditCard, Star,
+  ListPlus, Scale
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type DealerTab =
   | "overview" | "quotes" | "orders" | "invoices" | "price_lists"
   | "favorites" | "quick_order" | "notifications" | "offers"
-  | "catalogs" | "settings" | "statement" | "payment" | "stock_alerts";
+  | "catalogs" | "settings" | "statement" | "payment" | "stock_alerts"
+  | "shopping_lists" | "compare";
 
 interface DealerSidebarProps {
   activeTab: DealerTab;
