@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 import dealerQuotesIcon from "@/assets/dealer-quotes-icon.png";
 import dealerOrdersIcon from "@/assets/dealer-orders-icon.png";
 import dealerLogo from "@/assets/logo.webp";
