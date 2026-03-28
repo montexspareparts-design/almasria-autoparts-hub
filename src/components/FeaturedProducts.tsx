@@ -279,9 +279,9 @@ const FeaturedProducts = () => {
           product={selectedProduct}
           open={!!selectedProduct}
           onOpenChange={(open) => !open && setSelectedProduct(null)}
-          price={user ? (selectedProduct.sale_price || selectedProduct.base_price) : null}
-          priceLabel={user ? undefined : "سجّل لرؤية السعر"}
-          onAddToCart={user ? (product) => {
+          price={!user ? null : isDealer ? (viewedProductIds.includes(selectedProduct.id) ? selectedProduct.base_price : null) : (selectedProduct.sale_price || selectedProduct.base_price)}
+          priceLabel={!user ? "سجّل لرؤية السعر" : isDealer && viewedProductIds.includes(selectedProduct.id) ? "سعر الجملة الخاص بك" : undefined}
+          onAddToCart={user && (!isDealer || viewedProductIds.includes(selectedProduct.id)) ? (product) => {
             const cartItem: CartItem = {
               id: product.id,
               name_ar: product.name_ar,
@@ -296,7 +296,7 @@ const FeaturedProducts = () => {
             addItem(cartItem);
             toast({ title: "تمت الإضافة للسلة ✅", description: product.name_ar });
           } : undefined}
-          canAddToCart={!!user && selectedProduct.stock_quantity > 0}
+          canAddToCart={!!user && (!isDealer || viewedProductIds.includes(selectedProduct.id)) && selectedProduct.stock_quantity > 0}
           isLoggedIn={!!user}
         />
       )}
