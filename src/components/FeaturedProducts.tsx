@@ -184,7 +184,23 @@ const FeaturedProducts = () => {
 
                   {/* Price */}
                   <div className="flex items-end gap-2 mb-3">
-                    {user ? (
+                    {!user ? (
+                      <span className="text-muted-foreground font-bold text-sm">
+                        سجّل لرؤية السعر
+                      </span>
+                    ) : isDealer ? (
+                      viewedProductIds.includes(product.id) ? (
+                        <span className="text-primary font-black text-lg">
+                          {product.base_price.toLocaleString("ar-EG")} ج.م
+                        </span>
+                      ) : limitReached ? (
+                        <span className="text-muted-foreground text-xs flex items-center gap-1"><Lock className="w-3 h-3" />استنفدت الحد اليومي</span>
+                      ) : (
+                        <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8 text-primary border-primary/30" onClick={(e) => recordView(product.id, e)}>
+                          <Tag className="w-3.5 h-3.5" />تسعير ({DAILY_LIMIT - dailyViewCount} متبقي)
+                        </Button>
+                      )
+                    ) : (
                       product.sale_price ? (
                         <>
                           <span className="text-primary font-black text-lg">
@@ -199,16 +215,12 @@ const FeaturedProducts = () => {
                           {product.base_price.toLocaleString("ar-EG")} ج.م
                         </span>
                       )
-                    ) : (
-                      <span className="text-muted-foreground font-bold text-sm">
-                        سجّل لرؤية السعر
-                      </span>
                     )}
                   </div>
 
                   {/* Actions */}
                   <div className="flex gap-2">
-                    {product.stock_quantity > 0 && user && (
+                    {product.stock_quantity > 0 && user && (!isDealer || viewedProductIds.includes(product.id)) && (
                       <Button
                         size="sm"
                         className="flex-1 gap-1.5 text-xs h-9 font-bold"
