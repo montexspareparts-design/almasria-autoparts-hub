@@ -98,7 +98,7 @@ const Auth = () => {
     } else {
       const { error } = await supabase.auth.signUp({
         email: authEmail, password,
-        options: { data: { full_name: fullName, phone: authMethod === "phone" ? phone : "", address, email: authMethod === "email" ? email : "", car_model: carModel || null, car_year: carYear ? parseInt(carYear) : null } },
+        options: { data: { full_name: fullName, phone: credIsPhone ? credential : "", address, email: !credIsPhone ? credential : "", car_model: carModel || null, car_year: carYear ? parseInt(carYear) : null } },
       });
       if (error) {
         toast({ title: error.message.includes("already registered") ? "الحساب مسجل بالفعل" : "خطأ", description: error.message.includes("already registered") ? "سجّل دخول بدلاً من ذلك" : error.message, variant: "destructive" });
