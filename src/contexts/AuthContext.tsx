@@ -139,6 +139,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               .select("role")
               .eq("user_id", session.user.id);
             setIsAdmin(roles?.some((r) => r.role === "admin") ?? false);
+
+            // Check if Google user needs to complete phone
+            const provider = session.user.app_metadata?.provider;
+            if (provider === "google") {
+              const { data: profile } = await supabase
+                .from("profiles")
+                .select("phone")
+                .eq("user_id", session.user.id)
+                .maybeSingle();
+              if (!profile?.phone) {
+                setShowCompleteProfile(true);
+              }
+            }
           }, 0);
         } else {
           setDealerAccount(null);
