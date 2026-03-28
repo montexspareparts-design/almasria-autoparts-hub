@@ -8,6 +8,7 @@ import {
   Sparkles, CheckCircle2, XCircle, Truck, Zap,
   BarChart3, TrendingUp, Clock, ShieldCheck,
 } from "lucide-react";
+import CategoryBrowseSlider from "@/components/CategoryBrowseSlider";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
