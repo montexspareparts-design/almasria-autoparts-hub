@@ -21,6 +21,7 @@ const tierLabels: Record<string, string> = {
 const DealerAccountSettings = () => {
   const { user, dealerAccount } = useAuth();
   const [profile, setProfile] = useState({ full_name: "", phone: "", email: "" });
+  const [soundOn, setSoundOn] = useState(isSoundEnabled());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
