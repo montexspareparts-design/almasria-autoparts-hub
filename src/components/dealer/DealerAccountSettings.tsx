@@ -181,6 +181,7 @@ const DealerAccountSettings = () => {
         </CardContent>
       </Card>
     </div>
+  );
 };
 
 export default DealerAccountSettings;
