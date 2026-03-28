@@ -159,6 +159,7 @@ const DealerHomePage = () => {
     const { error } = await supabase.from("dealer_price_views").upsert({ user_id: user.id, product_id: product.id, view_date: today }, { onConflict: "user_id,product_id,view_date" });
     if (!error) {
       await refreshDailyCount();
+      playPricingSound();
       toast({
         title: "✅",
         description: isRTL ? `تم تسعير ${product.name_ar}` : `Priced ${product.name_ar}`,
