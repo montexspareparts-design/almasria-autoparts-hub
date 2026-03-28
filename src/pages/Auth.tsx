@@ -86,7 +86,7 @@ const Auth = () => {
           setLoginAttempts(0);
           toast({ title: "تم قفل تسجيل الدخول مؤقتاً", variant: "destructive" });
         } else {
-          toast({ title: "بيانات غير صحيحة", description: authMethod === "phone" ? "رقم الهاتف أو كلمة المرور خطأ" : "البريد أو كلمة المرور خطأ", variant: "destructive" });
+          toast({ title: "بيانات غير صحيحة", description: "تحقق من البيانات وحاول مرة أخرى", variant: "destructive" });
         }
       } else {
         setLoginAttempts(0); setLockedUntil(null);
