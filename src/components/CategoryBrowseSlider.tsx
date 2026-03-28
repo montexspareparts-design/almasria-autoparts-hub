@@ -204,34 +204,44 @@ const CategoryBrowseSlider = () => {
           </div>
         </div>
 
-        {/* Progress bar + compact arrows */}
-        <div className="flex items-center gap-3 mt-5 px-2">
-          {/* Left arrow */}
-          <button
-            onClick={() => scroll("right")}
-            disabled={!canScrollLeft}
-            className="w-8 h-8 rounded-lg border border-border/40 flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/30 disabled:opacity-20 disabled:cursor-default transition-all"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-
-          {/* Progress bar */}
-          <div className="flex-1 h-1 bg-muted/60 rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-primary rounded-full"
-              animate={{ width: `${Math.max(10, scrollProgress * 100)}%` }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-            />
+        {/* Progress bar + navigation */}
+        <div className="flex items-center justify-center gap-4 mt-6">
+          {/* Progress dots */}
+          <div className="flex items-center gap-1.5">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <motion.div
+                key={i}
+                className={`rounded-full transition-all duration-300 ${
+                  Math.round(scrollProgress * 4) === i
+                    ? "w-6 h-2 bg-primary"
+                    : "w-2 h-2 bg-muted-foreground/25"
+                }`}
+                layout
+              />
+            ))}
           </div>
 
-          {/* Right arrow */}
-          <button
-            onClick={() => scroll("left")}
-            disabled={!canScrollRight}
-            className="w-8 h-8 rounded-lg border border-border/40 flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/30 disabled:opacity-20 disabled:cursor-default transition-all"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
+          {/* Arrow buttons */}
+          <div className="flex items-center gap-2">
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => scroll("right")}
+              disabled={!canScrollLeft}
+              className="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground disabled:opacity-20 disabled:cursor-default transition-all duration-300"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => scroll("left")}
+              disabled={!canScrollRight}
+              className="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground disabled:opacity-20 disabled:cursor-default transition-all duration-300"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </motion.button>
+          </div>
         </div>
       </div>
     </section>
