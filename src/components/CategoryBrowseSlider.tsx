@@ -77,6 +77,7 @@ const CategoryBrowseSlider = () => {
   // Smooth continuous auto-scroll (marquee-style)
   const rafRef = useRef<number>(0);
   const speedRef = useRef(0);
+  const pauseUntilRef = useRef(0);
   const targetSpeed = 1.2; // pixels per frame
 
   useEffect(() => {
