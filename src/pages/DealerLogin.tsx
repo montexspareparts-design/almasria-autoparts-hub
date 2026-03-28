@@ -84,7 +84,8 @@ const DealerLogin = () => {
   };
 
   const phoneToEmail = (p: string) => `${p.replace(/\D/g, "")}@phone.almasria.app`;
-  const getAuthEmail = () => authMethod === "email" ? email.trim() : phoneToEmail(phone);
+  const isPhone = (val: string) => /^[\d\s+()-]+$/.test(val.trim()) && val.replace(/\D/g, "").length >= 8;
+  const getAuthEmail = () => isPhone(identifier) ? phoneToEmail(identifier) : identifier.trim();
 
   const performLogin = async (authEmail: string, pwd: string) => supabase.auth.signInWithPassword({ email: authEmail, password: pwd });
 
