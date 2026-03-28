@@ -121,6 +121,8 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
   const [editNotes, setEditNotes] = useState("");
   const [editQuantities, setEditQuantities] = useState<Record<string, number>>({});
   const [saving, setSaving] = useState(false);
+  const [reordering, setReordering] = useState<string | null>(null);
+  const { addItem } = useDealerCart();
 
   useEffect(() => {
     fetchOrders();
