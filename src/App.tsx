@@ -96,6 +96,7 @@ const App = () => (
                     <Route path="/dealer-apply" element={<DealerApply />} />
                     <Route path="/dealer-register" element={<DealerRegister />} />
                     <Route path="/dealer" element={<DealerDashboard />} />
+                    <Route path="/dealer/product/:productId" element={<DealerProductPage />} />
                     <Route path="/client-register" element={<ClientRegister />} />
                     <Route path="/admin" element={<AdminDashboard />} />
                     <Route path="/dealer-login" element={<DealerLogin />} />
