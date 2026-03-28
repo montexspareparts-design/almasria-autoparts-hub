@@ -97,6 +97,8 @@ const DealerDashboard = () => {
     offers: "العروض الخاصة",
     catalogs: "الكتالوجات",
     settings: "إعدادات الحساب",
+    shopping_lists: "قوائم الشراء",
+    compare: "مقارنة المنتجات",
   };
 
   const renderContent = () => {
