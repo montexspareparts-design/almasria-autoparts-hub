@@ -195,6 +195,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }}
     >
       {children}
+      {user && (
+        <CompleteProfileDialog
+          open={showCompleteProfile}
+          onOpenChange={setShowCompleteProfile}
+          userId={user.id}
+        />
+      )}
     </AuthContext.Provider>
   );
 };
