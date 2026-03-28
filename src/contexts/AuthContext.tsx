@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useRef, useCallback, Re
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import CompleteProfileDialog from "@/components/CompleteProfileDialog";
 
 interface DealerAccount {
   id: string;
@@ -45,6 +46,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [dealerAccount, setDealerAccount] = useState<DealerAccount | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showCompleteProfile, setShowCompleteProfile] = useState(false);
   const sessionCheckRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { toast } = useToast();
 
@@ -137,6 +139,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               .select("role")
               .eq("user_id", session.user.id);
             setIsAdmin(roles?.some((r) => r.role === "admin") ?? false);
+
+            // Check if Google user needs to complete phone
+            const provider = session.user.app_metadata?.provider;
+            if (provider === "google") {
+              const { data: profile } = await supabase
+                .from("profiles")
+                .select("phone")
+                .eq("user_id", session.user.id)
+                .maybeSingle();
+              if (!profile?.phone) {
+                setShowCompleteProfile(true);
+              }
+            }
           }, 0);
         } else {
           setDealerAccount(null);
@@ -180,6 +195,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }}
     >
       {children}
+      {user && (
+        <CompleteProfileDialog
+          open={showCompleteProfile}
+          onOpenChange={setShowCompleteProfile}
+          userId={user.id}
+        />
+      )}
     </AuthContext.Provider>
   );
 };
