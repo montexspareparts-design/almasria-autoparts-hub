@@ -19,6 +19,10 @@ import { useToast } from "@/hooks/use-toast";
 import dealerQuotesIcon from "@/assets/dealer-quotes-icon.png";
 import dealerOrdersIcon from "@/assets/dealer-orders-icon.png";
 import dealerLogo from "@/assets/logo.webp";
+import DealerPreviouslyPurchased from "@/components/dealer/DealerPreviouslyPurchased";
+import DealerRecentlyViewed from "@/components/dealer/DealerRecentlyViewed";
+import DealerBestSellers from "@/components/dealer/DealerBestSellers";
+import DealerOrderTimeline from "@/components/dealer/DealerOrderTimeline";
 
 /* ─── Types ─── */
 interface OrderSummary { id: string; order_number: string; status: string; total_amount: number; created_at: string; }
