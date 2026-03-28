@@ -80,14 +80,13 @@ const CategoryBrowseSlider = () => {
     const interval = setInterval(() => {
       if (!scrollRef.current) return;
       const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-      // RTL: scroll negatively (left), reset when reaching end
       if (scrollLeft <= -(scrollWidth - clientWidth) + 10) {
         scrollRef.current.scrollTo({ left: 0, behavior: "smooth" });
       } else {
-        scrollRef.current.scrollBy({ left: -200, behavior: "smooth" });
+        scrollRef.current.scrollBy({ left: -220, behavior: "smooth" });
       }
-      setTimeout(checkScroll, 350);
-    }, 3000);
+      setTimeout(checkScroll, 300);
+    }, 2000);
     return () => clearInterval(interval);
   }, [isHovered]);
 
