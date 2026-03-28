@@ -284,8 +284,8 @@ const TrendingProducts = () => {
         product={selectedProduct}
         open={!!selectedProduct}
         onOpenChange={(open) => { if (!open) setSelectedProduct(null); }}
-        price={user ? (selectedProduct?.sale_price || selectedProduct?.base_price) : null}
-        priceLabel={user ? undefined : "سجّل لرؤية السعر"}
+        price={!user ? null : isDealer ? (selectedProduct && viewedProductIds.includes(selectedProduct.id) ? selectedProduct.base_price : null) : (selectedProduct?.sale_price || selectedProduct?.base_price)}
+        priceLabel={!user ? "سجّل لرؤية السعر" : isDealer && selectedProduct && viewedProductIds.includes(selectedProduct.id) ? "سعر الجملة الخاص بك" : undefined}
         isLoggedIn={!!user}
       />
     </section>
