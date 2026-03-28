@@ -13,7 +13,7 @@ import { motion } from "framer-motion";
 import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 import logo from "@/assets/logo.webp";
 
-type AuthMethod = "phone" | "email";
+const isPhone = (val: string) => /^[0-9+\s()-]+$/.test(val.trim()) && val.replace(/\D/g, "").length >= 8;
 type AuthMode = "login" | "register";
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 60_000;
@@ -31,9 +31,7 @@ const isSessionActive = () => sessionStorage.getItem(SESSION_FLAG) === "true";
 
 const Auth = () => {
   const [mode, setMode] = useState<AuthMode>("login");
-  const [authMethod, setAuthMethod] = useState<AuthMethod>("phone");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
+  const [credential, setCredential] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [address, setAddress] = useState("");
@@ -52,7 +50,8 @@ const Auth = () => {
 
   const isLogin = mode === "login";
   const phoneToEmail = (p: string) => `${p.replace(/\D/g, "")}@phone.almasria.app`;
-  const getAuthEmail = () => authMethod === "email" ? email.trim() : phoneToEmail(phone);
+  const credIsPhone = isPhone(credential);
+  const getAuthEmail = () => credIsPhone ? phoneToEmail(credential) : credential.trim();
 
   // On mount: if not remembered and no active session, clear stale session
   useEffect(() => {
@@ -87,7 +86,7 @@ const Auth = () => {
           setLoginAttempts(0);
           toast({ title: "تم قفل تسجيل الدخول مؤقتاً", variant: "destructive" });
         } else {
-          toast({ title: "بيانات غير صحيحة", description: authMethod === "phone" ? "رقم الهاتف أو كلمة المرور خطأ" : "البريد أو كلمة المرور خطأ", variant: "destructive" });
+          toast({ title: "بيانات غير صحيحة", description: "تحقق من البيانات وحاول مرة أخرى", variant: "destructive" });
         }
       } else {
         setLoginAttempts(0); setLockedUntil(null);
@@ -99,7 +98,7 @@ const Auth = () => {
     } else {
       const { error } = await supabase.auth.signUp({
         email: authEmail, password,
-        options: { data: { full_name: fullName, phone: authMethod === "phone" ? phone : "", address, email: authMethod === "email" ? email : "", car_model: carModel || null, car_year: carYear ? parseInt(carYear) : null } },
+        options: { data: { full_name: fullName, phone: credIsPhone ? credential : "", address, email: !credIsPhone ? credential : "", car_model: carModel || null, car_year: carYear ? parseInt(carYear) : null } },
       });
       if (error) {
         toast({ title: error.message.includes("already registered") ? "الحساب مسجل بالفعل" : "خطأ", description: error.message.includes("already registered") ? "سجّل دخول بدلاً من ذلك" : error.message, variant: "destructive" });
@@ -185,31 +184,10 @@ const Auth = () => {
                 <div className="relative flex justify-center text-[11px]"><span className="bg-card px-3 text-muted-foreground/60">أو</span></div>
               </div>
 
-              {/* Auth Method Toggle */}
-              <div className="flex gap-2 mb-5">
-                <button 
-                  type="button" 
-                  onClick={() => setAuthMethod("phone")}
-                  className={`flex-1 flex items-center justify-center gap-2 text-xs font-bold h-10 rounded-lg border transition-all duration-200 ${
-                    authMethod === "phone" 
-                      ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20" 
-                      : "bg-transparent text-muted-foreground border-border/50 hover:border-border hover:text-foreground"
-                  }`}
-                >
-                  <Phone className="w-3.5 h-3.5" /> رقم الهاتف
-                </button>
-                <button 
-                  type="button" 
-                  onClick={() => setAuthMethod("email")}
-                  className={`flex-1 flex items-center justify-center gap-2 text-xs font-bold h-10 rounded-lg border transition-all duration-200 ${
-                    authMethod === "email" 
-                      ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20" 
-                      : "bg-transparent text-muted-foreground border-border/50 hover:border-border hover:text-foreground"
-                  }`}
-                >
-                  <Mail className="w-3.5 h-3.5" /> البريد الإلكتروني
-                </button>
-              </div>
+              {/* Unified credential hint */}
+              <p className="text-[11px] text-muted-foreground/50 text-center mb-5">
+                يمكنك الدخول برقم الهاتف أو البريد الإلكتروني
+              </p>
             </>
           )}
 
@@ -227,23 +205,24 @@ const Auth = () => {
                 </div>
               )}
 
-              {authMethod === "phone" ? (
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-foreground/80 text-right block">رقم الهاتف <span className="text-primary">*</span></Label>
-                  <div className="relative">
-                    <Input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="01xxxxxxxxx" required dir="ltr" className="bg-muted/40 border-border/40 h-11 text-sm pl-10 focus:border-primary/50 focus:ring-primary/20 transition-all" />
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-foreground/80 text-right block">رقم الهاتف أو البريد الإلكتروني <span className="text-primary">*</span></Label>
+                <div className="relative">
+                  <Input 
+                    value={credential} 
+                    onChange={e => setCredential(e.target.value)} 
+                    placeholder="01xxxxxxxxx أو example@email.com" 
+                    required 
+                    dir="ltr" 
+                    className="bg-muted/40 border-border/40 h-11 text-sm pl-10 focus:border-primary/50 focus:ring-primary/20 transition-all" 
+                  />
+                  {credIsPhone ? (
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30" />
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-foreground/80 text-right block">البريد الإلكتروني <span className="text-primary">*</span></Label>
-                  <div className="relative">
-                    <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="example@email.com" required dir="ltr" className="bg-muted/40 border-border/40 h-11 text-sm pl-10 focus:border-primary/50 focus:ring-primary/20 transition-all" />
+                  ) : (
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30" />
-                  </div>
+                  )}
                 </div>
-              )}
+              </div>
 
               <div className="space-y-2">
                 <Label className="text-xs font-semibold text-foreground/80 text-right block">كلمة المرور <span className="text-primary">*</span></Label>
