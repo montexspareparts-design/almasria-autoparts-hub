@@ -1,19 +1,59 @@
 import { motion } from "framer-motion";
-import { Package, ShoppingCart, Eye, ChevronLeft } from "lucide-react";
+import { Package, ShoppingCart, Eye, ChevronLeft, Lock, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart, CartItem } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import ProductDetailDialog from "@/components/ProductDetailDialog";
 import { Link } from "react-router-dom";
 
+const DAILY_LIMIT = 20;
+
 const FeaturedProducts = () => {
   const { addItem } = useCart();
-  const { user } = useAuth();
+  const { user, isDealer } = useAuth();
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const queryClient = useQueryClient();
+
+  // Dealer price view tracking
+  const { data: viewedProductIds = [] } = useQuery({
+    queryKey: ["dealer_views_today", user?.id],
+    queryFn: async () => {
+      const today = new Date().toISOString().split("T")[0];
+      const { data } = await supabase
+        .from("dealer_price_views")
+        .select("product_id")
+        .eq("user_id", user!.id)
+        .eq("view_date", today);
+      return (data || []).map((v) => v.product_id);
+    },
+    enabled: !!isDealer && !!user,
+  });
+
+  const { data: dailyViewCount = 0 } = useQuery({
+    queryKey: ["dealer_daily_count", user?.id],
+    queryFn: async () => {
+      const count = await supabase.rpc("get_daily_view_count", { _user_id: user!.id });
+      return (count.data as number) || 0;
+    },
+    enabled: !!isDealer && !!user,
+  });
+
+  const limitReached = dailyViewCount >= DAILY_LIMIT;
+
+  const recordView = useCallback(async (productId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user || !isDealer || viewedProductIds.includes(productId) || limitReached) return;
+    await supabase.from("dealer_price_views").upsert(
+      { user_id: user.id, product_id: productId, view_date: new Date().toISOString().split("T")[0] },
+      { onConflict: "user_id,product_id,view_date" }
+    );
+    queryClient.invalidateQueries({ queryKey: ["dealer_views_today", user.id] });
+    queryClient.invalidateQueries({ queryKey: ["dealer_daily_count", user.id] });
+  }, [user, isDealer, viewedProductIds, limitReached, queryClient]);
 
   const { data: products, isLoading } = useQuery({
     queryKey: ["featured_products"],
@@ -144,7 +184,23 @@ const FeaturedProducts = () => {
 
                   {/* Price */}
                   <div className="flex items-end gap-2 mb-3">
-                    {user ? (
+                    {!user ? (
+                      <span className="text-muted-foreground font-bold text-sm">
+                        سجّل لرؤية السعر
+                      </span>
+                    ) : isDealer ? (
+                      viewedProductIds.includes(product.id) ? (
+                        <span className="text-primary font-black text-lg">
+                          {product.base_price.toLocaleString("ar-EG")} ج.م
+                        </span>
+                      ) : limitReached ? (
+                        <span className="text-muted-foreground text-xs flex items-center gap-1"><Lock className="w-3 h-3" />استنفدت الحد اليومي</span>
+                      ) : (
+                        <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8 text-primary border-primary/30" onClick={(e) => recordView(product.id, e)}>
+                          <Tag className="w-3.5 h-3.5" />تسعير ({DAILY_LIMIT - dailyViewCount} متبقي)
+                        </Button>
+                      )
+                    ) : (
                       product.sale_price ? (
                         <>
                           <span className="text-primary font-black text-lg">
@@ -159,16 +215,12 @@ const FeaturedProducts = () => {
                           {product.base_price.toLocaleString("ar-EG")} ج.م
                         </span>
                       )
-                    ) : (
-                      <span className="text-muted-foreground font-bold text-sm">
-                        سجّل لرؤية السعر
-                      </span>
                     )}
                   </div>
 
                   {/* Actions */}
                   <div className="flex gap-2">
-                    {product.stock_quantity > 0 && user && (
+                    {product.stock_quantity > 0 && user && (!isDealer || viewedProductIds.includes(product.id)) && (
                       <Button
                         size="sm"
                         className="flex-1 gap-1.5 text-xs h-9 font-bold"
@@ -227,9 +279,9 @@ const FeaturedProducts = () => {
           product={selectedProduct}
           open={!!selectedProduct}
           onOpenChange={(open) => !open && setSelectedProduct(null)}
-          price={user ? (selectedProduct.sale_price || selectedProduct.base_price) : null}
-          priceLabel={user ? undefined : "سجّل لرؤية السعر"}
-          onAddToCart={user ? (product) => {
+          price={!user ? null : isDealer ? (viewedProductIds.includes(selectedProduct.id) ? selectedProduct.base_price : null) : (selectedProduct.sale_price || selectedProduct.base_price)}
+          priceLabel={!user ? "سجّل لرؤية السعر" : isDealer && viewedProductIds.includes(selectedProduct.id) ? "سعر الجملة الخاص بك" : undefined}
+          onAddToCart={user && (!isDealer || viewedProductIds.includes(selectedProduct.id)) ? (product) => {
             const cartItem: CartItem = {
               id: product.id,
               name_ar: product.name_ar,
@@ -244,7 +296,7 @@ const FeaturedProducts = () => {
             addItem(cartItem);
             toast({ title: "تمت الإضافة للسلة ✅", description: product.name_ar });
           } : undefined}
-          canAddToCart={!!user && selectedProduct.stock_quantity > 0}
+          canAddToCart={!!user && (!isDealer || viewedProductIds.includes(selectedProduct.id)) && selectedProduct.stock_quantity > 0}
           isLoggedIn={!!user}
         />
       )}

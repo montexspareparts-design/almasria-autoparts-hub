@@ -1,20 +1,60 @@
 import { motion } from "framer-motion";
-import { TrendingUp, Star, Clock, ShoppingCart, Eye, ChevronLeft } from "lucide-react";
+import { TrendingUp, Star, Clock, ShoppingCart, Eye, ChevronLeft, Lock, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart, CartItem } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import ProductDetailDialog from "@/components/ProductDetailDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+const DAILY_LIMIT = 20;
+
 const TrendingProducts = () => {
   const { addItem } = useCart();
-  const { user } = useAuth();
+  const { user, isDealer } = useAuth();
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const queryClient = useQueryClient();
+
+  // Dealer price view tracking
+  const { data: viewedProductIds = [] } = useQuery({
+    queryKey: ["dealer_views_today", user?.id],
+    queryFn: async () => {
+      const today = new Date().toISOString().split("T")[0];
+      const { data } = await supabase
+        .from("dealer_price_views")
+        .select("product_id")
+        .eq("user_id", user!.id)
+        .eq("view_date", today);
+      return (data || []).map((v) => v.product_id);
+    },
+    enabled: !!isDealer && !!user,
+  });
+
+  const { data: dailyViewCount = 0 } = useQuery({
+    queryKey: ["dealer_daily_count", user?.id],
+    queryFn: async () => {
+      const count = await supabase.rpc("get_daily_view_count", { _user_id: user!.id });
+      return (count.data as number) || 0;
+    },
+    enabled: !!isDealer && !!user,
+  });
+
+  const limitReached = dailyViewCount >= DAILY_LIMIT;
+
+  const recordView = useCallback(async (productId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user || !isDealer || viewedProductIds.includes(productId) || limitReached) return;
+    await supabase.from("dealer_price_views").upsert(
+      { user_id: user.id, product_id: productId, view_date: new Date().toISOString().split("T")[0] },
+      { onConflict: "user_id,product_id,view_date" }
+    );
+    queryClient.invalidateQueries({ queryKey: ["dealer_views_today", user.id] });
+    queryClient.invalidateQueries({ queryKey: ["dealer_daily_count", user.id] });
+  }, [user, isDealer, viewedProductIds, limitReached, queryClient]);
 
   // Best sellers - based on real order_items data
   const { data: bestSellers, isLoading: loadingBest } = useQuery({
@@ -164,7 +204,19 @@ const TrendingProducts = () => {
               )}
               <div className="flex items-center justify-between pt-1">
                 <div className="flex items-baseline gap-1">
-                  {user ? (
+                  {!user ? (
+                    <span className="text-xs font-bold text-muted-foreground">سجّل لرؤية السعر</span>
+                  ) : isDealer ? (
+                    viewedProductIds.includes(product.id) ? (
+                      <span className="text-sm font-black text-primary">{product.base_price} ج.م</span>
+                    ) : limitReached ? (
+                      <span className="text-[10px] text-muted-foreground flex items-center gap-1"><Lock className="w-3 h-3" />استنفدت الحد اليومي</span>
+                    ) : (
+                      <Button variant="outline" size="sm" className="gap-1 text-[10px] h-7 text-primary border-primary/30" onClick={(e) => recordView(product.id, e)}>
+                        <Tag className="w-3 h-3" />تسعير ({DAILY_LIMIT - dailyViewCount} متبقي)
+                      </Button>
+                    )
+                  ) : (
                     product.is_on_sale && product.sale_price ? (
                       <>
                         <span className="text-sm font-black text-primary">{product.sale_price} ج.م</span>
@@ -173,11 +225,9 @@ const TrendingProducts = () => {
                     ) : (
                       <span className="text-sm font-black text-primary">{product.base_price} ج.م</span>
                     )
-                  ) : (
-                    <span className="text-xs font-bold text-muted-foreground">سجّل لرؤية السعر</span>
                   )}
                 </div>
-                {user && (
+                {user && (!isDealer || viewedProductIds.includes(product.id)) && (
                   <Button
                     size="icon"
                     variant="ghost"
@@ -234,8 +284,8 @@ const TrendingProducts = () => {
         product={selectedProduct}
         open={!!selectedProduct}
         onOpenChange={(open) => { if (!open) setSelectedProduct(null); }}
-        price={user ? (selectedProduct?.sale_price || selectedProduct?.base_price) : null}
-        priceLabel={user ? undefined : "سجّل لرؤية السعر"}
+        price={!user ? null : isDealer ? (selectedProduct && viewedProductIds.includes(selectedProduct.id) ? selectedProduct.base_price : null) : (selectedProduct?.sale_price || selectedProduct?.base_price)}
+        priceLabel={!user ? "سجّل لرؤية السعر" : isDealer && selectedProduct && viewedProductIds.includes(selectedProduct.id) ? "سعر الجملة الخاص بك" : undefined}
         isLoggedIn={!!user}
       />
     </section>
