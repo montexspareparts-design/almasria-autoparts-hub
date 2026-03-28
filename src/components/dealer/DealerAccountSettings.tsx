@@ -154,8 +154,33 @@ const DealerAccountSettings = () => {
           </Button>
         </CardContent>
       </Card>
+      {/* Sound Preferences */}
+      <Card className="border-border/50">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center gap-2">
+            {soundOn ? <Volume2 className="w-4 h-4 text-primary" /> : <VolumeX className="w-4 h-4 text-muted-foreground" />}
+            تفضيلات الصوت
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+            <div>
+              <p className="text-sm font-medium text-foreground">صوت التسعير</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">تشغيل صوت تنبيه عند تسعير منتج</p>
+            </div>
+            <Switch
+              checked={soundOn}
+              onCheckedChange={(checked) => {
+                setSoundOn(checked);
+                setSoundEnabled(checked);
+                if (checked) playPricingSound();
+                toast({ title: checked ? "🔊 تم تفعيل الصوت" : "🔇 تم كتم الصوت" });
+              }}
+            />
+          </div>
+        </CardContent>
+      </Card>
     </div>
-  );
 };
 
 export default DealerAccountSettings;
