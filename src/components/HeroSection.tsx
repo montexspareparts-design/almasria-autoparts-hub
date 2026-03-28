@@ -7,6 +7,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsMobile } from "@/hooks/use-mobile";
 import heroBg from "@/assets/hero-corporate.webp";
 
 /* ── Floating Mechanical Parts ── */
@@ -70,16 +71,19 @@ const AnimatedCounter = ({ value, suffix, delay }: { value: number; suffix: stri
 const HeroSection = () => {
   const { t } = useLanguage();
   const { user, dealerAccount, isDealer } = useAuth();
+  const isMobile = useIsMobile();
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end start"] });
-  const contentOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
-  const contentY = useTransform(scrollYProgress, [0, 0.5], [0, -50]);
-  const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.15]);
+  // Skip parallax transforms on mobile for performance
+  const contentOpacity = useTransform(scrollYProgress, [0, 0.5], [1, isMobile ? 1 : 0]);
+  const contentY = useTransform(scrollYProgress, [0, 0.5], [0, isMobile ? 0 : -50]);
+  const bgScale = useTransform(scrollYProgress, [0, 1], [1, isMobile ? 1 : 1.15]);
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
 
-  // Defer video loading until after LCP paint
+  // Skip video entirely on mobile to save bandwidth
   useEffect(() => {
+    if (isMobile) return;
     const id = typeof requestIdleCallback !== 'undefined'
       ? requestIdleCallback(() => setShouldLoadVideo(true), { timeout: 2000 })
       : setTimeout(() => setShouldLoadVideo(true), 1500) as unknown as number;
@@ -87,7 +91,7 @@ const HeroSection = () => {
       if (typeof cancelIdleCallback !== 'undefined') cancelIdleCallback(id);
       else clearTimeout(id);
     };
-  }, []);
+  }, [isMobile]);
 
   const { data: heroVideoUrl } = useQuery({
     queryKey: ["site-setting", "hero_video_url"],
@@ -100,6 +104,7 @@ const HeroSection = () => {
       return (data?.value as string) || "";
     },
     staleTime: 5 * 60 * 1000,
+    enabled: !isMobile, // Skip video URL fetch on mobile
   });
 
   const videoSrc = heroVideoUrl || "/videos/hero-cinematic-v2.mp4";
