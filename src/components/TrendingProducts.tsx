@@ -1,13 +1,13 @@
 import { motion } from "framer-motion";
-import { TrendingUp, Star, Clock, ShoppingCart, Eye, ChevronLeft } from "lucide-react";
+import { TrendingUp, Star, Clock, ShoppingCart, Eye, ChevronLeft, Lock, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart, CartItem } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import ProductDetailDialog from "@/components/ProductDetailDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
