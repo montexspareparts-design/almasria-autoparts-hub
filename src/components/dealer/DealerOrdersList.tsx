@@ -8,11 +8,12 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Package, Clock, CheckCircle, Truck, XCircle, ChevronDown, ChevronUp,
   MessageCircle, Inbox, PackageCheck, Trash2, Pencil, Save, X, Loader2,
-  AlertTriangle, Wallet, CreditCard
+  AlertTriangle, Wallet, CreditCard, RefreshCw
 } from "lucide-react";
 import PaymentInstructionsBanner from "@/components/PaymentInstructionsBanner";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { useDealerCart } from "@/hooks/useDealerCart";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
