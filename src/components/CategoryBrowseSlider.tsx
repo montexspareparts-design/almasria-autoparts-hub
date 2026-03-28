@@ -74,20 +74,39 @@ const CategoryBrowseSlider = () => {
     fetchCounts();
   }, []);
 
-  // Auto-scroll when not hovered
+  // Smooth continuous auto-scroll (marquee-style)
+  const rafRef = useRef<number>(0);
+  const speedRef = useRef(0);
+  const targetSpeed = 0.6; // pixels per frame — smooth & cinematic
+
   useEffect(() => {
-    if (isHovered || !scrollRef.current) return;
-    const interval = setInterval(() => {
+    if (!scrollRef.current) return;
+    let lastTime = 0;
+
+    const animate = (time: number) => {
       if (!scrollRef.current) return;
-      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-      if (scrollLeft <= -(scrollWidth - clientWidth) + 10) {
-        scrollRef.current.scrollTo({ left: 0, behavior: "smooth" });
-      } else {
-        scrollRef.current.scrollBy({ left: -220, behavior: "smooth" });
+      const delta = lastTime ? (time - lastTime) : 16;
+      lastTime = time;
+
+      // Ease speed in/out based on hover
+      const target = isHovered ? 0 : targetSpeed;
+      speedRef.current += (target - speedRef.current) * 0.08;
+
+      if (Math.abs(speedRef.current) > 0.01) {
+        const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+        // RTL: scroll negatively
+        if (scrollLeft <= -(scrollWidth - clientWidth) + 5) {
+          scrollRef.current.scrollLeft = 0;
+        } else {
+          scrollRef.current.scrollLeft -= speedRef.current * (delta / 16);
+        }
+        checkScroll();
       }
-      setTimeout(checkScroll, 300);
-    }, 2000);
-    return () => clearInterval(interval);
+      rafRef.current = requestAnimationFrame(animate);
+    };
+
+    rafRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafRef.current);
   }, [isHovered]);
 
   const checkScroll = () => {
