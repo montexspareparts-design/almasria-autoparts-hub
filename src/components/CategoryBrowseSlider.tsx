@@ -124,8 +124,9 @@ const CategoryBrowseSlider = () => {
 
   const scroll = (dir: "left" | "right") => {
     if (!scrollRef.current) return;
-    scrollRef.current.scrollBy({ left: dir === "left" ? -300 : 300, behavior: "smooth" });
-    setTimeout(checkScroll, 350);
+    pauseUntilRef.current = Date.now() + 1500; // pause auto-scroll for 1.5s
+    scrollRef.current.scrollBy({ left: dir === "left" ? -400 : 400, behavior: "smooth" });
+    setTimeout(checkScroll, 400);
   };
 
   return (
