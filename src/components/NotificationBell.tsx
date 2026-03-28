@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 
 interface Notification {
   id: string;
@@ -20,30 +21,56 @@ interface Notification {
   created_at: string;
 }
 
-/** Determine where a notification should navigate */
-const getNotificationTarget = (n: Notification): { path: string; tab?: string } | null => {
+/** Determine where a notification should navigate based on user role */
+const getNotificationTarget = (
+  n: Notification,
+  isAdmin: boolean,
+  isDealer: boolean
+): { path: string; query: string } | null => {
   const msg = (n.message + " " + n.title).toLowerCase();
 
-  if (n.type === "order" || n.type === "order_edit") {
-    return { path: "/dealer", tab: "orders" };
+  // Admin-specific routing → /admin?section=...
+  if (isAdmin) {
+    if (n.type === "order" || n.type === "order_edit" || msg.includes("طلب") || msg.includes("order")) {
+      return { path: "/admin", query: "section=orders" };
+    }
+    if (msg.includes("تاجر") || msg.includes("اعتماد") || msg.includes("application")) {
+      return { path: "/admin", query: "section=dealer-applications" };
+    }
+    if (msg.includes("وافق") || msg.includes("رفض") || msg.includes("عميل")) {
+      return { path: "/admin", query: "section=orders" };
+    }
+    // Default admin: analytics
+    return { path: "/admin", query: "section=analytics" };
   }
-  if (msg.includes("كشف أسعار") || msg.includes("price")) {
-    return { path: "/dealer", tab: "price-lists" };
+
+  // Dealer routing → /dealer?tab=...
+  if (isDealer) {
+    if (n.type === "order" || n.type === "order_edit" || msg.includes("طلب")) {
+      return { path: "/dealer", query: "tab=orders" };
+    }
+    if (msg.includes("كشف أسعار") || msg.includes("price")) {
+      return { path: "/dealer", query: "tab=price-lists" };
+    }
+    if (msg.includes("فاتورة") || msg.includes("invoice")) {
+      return { path: "/dealer", query: "tab=invoices" };
+    }
+    if (n.type === "offer" || n.type === "stock_alert" || msg.includes("عرض") || msg.includes("متوفر")) {
+      return { path: "/dealer", query: "tab=offers" };
+    }
+    return { path: "/dealer", query: "tab=notifications" };
   }
-  if (msg.includes("عرض") && msg.includes("سعر")) {
-    return { path: "/dealer", tab: "quote-builder" };
+
+  // Regular user — go to orders
+  if (n.type === "order" || msg.includes("طلب")) {
+    return { path: "/my-orders", query: "" };
   }
-  if (msg.includes("فاتورة") || msg.includes("invoice")) {
-    return { path: "/dealer", tab: "invoices" };
-  }
-  if (n.type === "info" || n.type === "success" || n.type === "warning") {
-    return { path: "/dealer", tab: "notifications" };
-  }
+
   return null;
 };
 
 const NotificationBell = () => {
-  const { user } = useAuth();
+  const { user, isAdmin, isDealer } = useAuth();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
@@ -114,25 +141,30 @@ const NotificationBell = () => {
   };
 
   const handleNotificationClick = async (n: Notification) => {
-    // Mark as read
     if (!n.is_read) {
       await supabase.from("notifications").update({ is_read: true }).eq("id", n.id);
       setNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, is_read: true } : x)));
     }
 
-    // Navigate
-    const target = getNotificationTarget(n);
+    const target = getNotificationTarget(n, isAdmin, isDealer);
     if (target) {
       setOpen(false);
-      // Use query param to set the active tab
-      const params = target.tab ? `?tab=${target.tab}` : "";
-      navigate(`${target.path}${params}`);
+      const q = target.query ? `?${target.query}` : "";
+      navigate(`${target.path}${q}`);
     }
   };
 
   const getDisplayMessage = (msg: string) => msg.replace(/\[order_edit:[a-f0-9-]+\]\n?/, "");
 
+  const getRoleBadge = () => {
+    if (isAdmin) return { label: "مدير", className: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300" };
+    if (isDealer) return { label: "تاجر", className: "bg-primary/10 text-primary" };
+    return null;
+  };
+
   if (!user) return null;
+
+  const roleBadge = getRoleBadge();
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -148,7 +180,14 @@ const NotificationBell = () => {
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="end">
         <div className="flex items-center justify-between p-3 border-b border-border">
-          <h4 className="font-semibold text-sm text-foreground">الإشعارات</h4>
+          <div className="flex items-center gap-2">
+            <h4 className="font-semibold text-sm text-foreground">الإشعارات</h4>
+            {roleBadge && (
+              <Badge variant="secondary" className={`text-[9px] px-1.5 py-0 h-4 ${roleBadge.className}`}>
+                {roleBadge.label}
+              </Badge>
+            )}
+          </div>
           {unreadCount > 0 && (
             <Button variant="ghost" size="sm" className="text-xs h-auto py-1" onClick={markAllAsRead}>
               تعيين الكل كمقروء
@@ -176,20 +215,40 @@ const NotificationBell = () => {
                   <div>
                     <p className="text-sm font-medium text-foreground">{n.title}</p>
                     <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{getDisplayMessage(n.message)}</p>
-                    <p className="text-[10px] text-muted-foreground mt-1">
-                      {new Date(n.created_at).toLocaleDateString("ar-EG", {
-                        day: "numeric",
-                        month: "short",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-[10px] text-muted-foreground">
+                        {new Date(n.created_at).toLocaleDateString("ar-EG", {
+                          day: "numeric",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                      {/* Show destination hint */}
+                      <span className="text-[9px] text-muted-foreground/50">
+                        {isAdmin ? "← لوحة الإدارة" : isDealer ? "← بوابة التاجر" : ""}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </button>
             ))
           )}
         </ScrollArea>
+        {/* Footer link to full notifications page */}
+        <div className="border-t border-border p-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full text-xs text-primary"
+            onClick={() => {
+              setOpen(false);
+              navigate(isAdmin ? "/admin?section=orders" : isDealer ? "/dealer?tab=notifications" : "/my-orders");
+            }}
+          >
+            عرض كل الإشعارات
+          </Button>
+        </div>
       </PopoverContent>
     </Popover>
   );
