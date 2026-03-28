@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart, CartItem } from "@/contexts/CartContext";
 import { toast } from "@/hooks/use-toast";
+import { playPricingSound } from "@/lib/pricingSound";
 import { ProductFilters } from "@/components/AdvancedProductFilter";
 
 /* ── Arabic text normalization ── */
@@ -224,6 +225,7 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     );
     queryClient.invalidateQueries({ queryKey: ["dealer_views_today", user.id] });
     queryClient.invalidateQueries({ queryKey: ["dealer_daily_count", user.id] });
+    playPricingSound();
     toast({ title: "✅ تم التسعير", description: "اضغط لعرض الأصناف المسعّرة اليوم" });
   }, [user, isDealer, viewedProductIds, limitReached, queryClient]);
 
