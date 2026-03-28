@@ -5,9 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
-import { User, Phone, Mail, Building, Save, Loader2, Shield } from "lucide-react";
+import { User, Phone, Mail, Building, Save, Loader2, Shield, Volume2, VolumeX } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { isSoundEnabled, setSoundEnabled, playPricingSound } from "@/lib/pricingSound";
 
 const tierLabels: Record<string, string> = {
   wholesale_tier1: "تاجر جملة – درجة أولى",
@@ -19,6 +21,7 @@ const tierLabels: Record<string, string> = {
 const DealerAccountSettings = () => {
   const { user, dealerAccount } = useAuth();
   const [profile, setProfile] = useState({ full_name: "", phone: "", email: "" });
+  const [soundOn, setSoundOn] = useState(isSoundEnabled());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -149,6 +152,32 @@ const DealerAccountSettings = () => {
             {saving ? <Loader2 className="w-4 h-4 ml-1.5 animate-spin" /> : <Save className="w-4 h-4 ml-1.5" />}
             حفظ التغييرات
           </Button>
+        </CardContent>
+      </Card>
+      {/* Sound Preferences */}
+      <Card className="border-border/50">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center gap-2">
+            {soundOn ? <Volume2 className="w-4 h-4 text-primary" /> : <VolumeX className="w-4 h-4 text-muted-foreground" />}
+            تفضيلات الصوت
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+            <div>
+              <p className="text-sm font-medium text-foreground">صوت التسعير</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">تشغيل صوت تنبيه عند تسعير منتج</p>
+            </div>
+            <Switch
+              checked={soundOn}
+              onCheckedChange={(checked) => {
+                setSoundOn(checked);
+                setSoundEnabled(checked);
+                if (checked) playPricingSound();
+                toast({ title: checked ? "🔊 تم تفعيل الصوت" : "🔇 تم كتم الصوت" });
+              }}
+            />
+          </div>
         </CardContent>
       </Card>
     </div>
