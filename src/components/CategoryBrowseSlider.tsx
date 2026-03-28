@@ -125,7 +125,10 @@ const CategoryBrowseSlider = () => {
                 setTimeout(() => searchInput.focus(), 500);
               }
             }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/15 border border-primary/30 text-primary text-xs font-bold mb-4 hover:bg-primary/25 transition-colors cursor-pointer animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite] shadow-[0_0_12px_hsl(var(--primary)/0.3),0_0_24px_hsl(var(--primary)/0.15)]"
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/15 border border-primary/30 text-primary text-xs font-bold mb-4 hover:bg-primary/25 transition-colors cursor-pointer animate-[glowPulse_3s_ease-in-out_infinite]"
+            style={{
+              animationName: 'glowPulse',
+            }}
           >
             <Search className="w-3.5 h-3.5" />
             بتدوّر على إيه؟
