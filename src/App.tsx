@@ -19,6 +19,7 @@ const ClientRegister = lazy(() => import("./pages/ClientRegister"));
 const DealerDashboard = lazy(() => import("./pages/DealerDashboard"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const DealerLogin = lazy(() => import("./pages/DealerLogin"));
+const DealerProductPage = lazy(() => import("./pages/DealerProductPage"));
 const ProductsPage = lazy(() => import("./pages/ProductsPage"));
 const CartPage = lazy(() => import("./pages/CartPage"));
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
@@ -96,6 +97,7 @@ const App = () => (
                     <Route path="/dealer-apply" element={<DealerApply />} />
                     <Route path="/dealer-register" element={<DealerRegister />} />
                     <Route path="/dealer" element={<DealerDashboard />} />
+                    <Route path="/dealer/product/:productId" element={<DealerProductPage />} />
                     <Route path="/client-register" element={<ClientRegister />} />
                     <Route path="/admin" element={<AdminDashboard />} />
                     <Route path="/dealer-login" element={<DealerLogin />} />
