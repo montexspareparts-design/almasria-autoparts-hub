@@ -25,6 +25,7 @@ import DealerPreviouslyPurchased from "@/components/dealer/DealerPreviouslyPurch
 import DealerRecentlyViewed from "@/components/dealer/DealerRecentlyViewed";
 import DealerBestSellers from "@/components/dealer/DealerBestSellers";
 import DealerOrderTimeline from "@/components/dealer/DealerOrderTimeline";
+import { playPricingSound } from "@/lib/pricingSound";
 
 /* ─── Types ─── */
 interface OrderSummary { id: string; order_number: string; status: string; total_amount: number; created_at: string; }
