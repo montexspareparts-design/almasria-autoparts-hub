@@ -109,6 +109,7 @@ const App = () => (
                     <Route path="/catalogs" element={<CatalogsPage />} />
                     <Route path="/install" element={<InstallApp />} />
                     <Route path="/payment-callback" element={<PaymentCallback />} />
+                    <Route path="/policies" element={<PoliciesPage />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                </Suspense>
