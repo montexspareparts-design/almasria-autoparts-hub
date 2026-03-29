@@ -18,6 +18,9 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
     { label: t("footer.products"), href: "/products" },
     { label: t("footer.what_sets_us_apart"), href: "/what-sets-us-apart" },
     { label: t("footer.contact"), href: "/contact" },
+    { label: "سياسة الخصوصية", href: "/policies?tab=privacy" },
+    { label: "الشحن والتوصيل", href: "/policies?tab=delivery" },
+    { label: "الإرجاع والاسترداد", href: "/policies?tab=refund" },
     { label: t("footer.install_app"), href: "/install", icon: Download },
   ];
 
@@ -69,15 +72,8 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
             </ul>
           </div>
         </div>
-        <div className="mt-10 pt-6 border-t border-secondary-foreground/[0.06] flex flex-col items-center gap-3">
-          <div className="flex flex-wrap justify-center gap-4 text-xs text-secondary-foreground/40">
-            <Link to="/policies?tab=privacy" className="hover:text-primary transition-colors">سياسة الخصوصية</Link>
-            <span className="text-secondary-foreground/20">|</span>
-            <Link to="/policies?tab=delivery" className="hover:text-primary transition-colors">الشحن والتوصيل</Link>
-            <span className="text-secondary-foreground/20">|</span>
-            <Link to="/policies?tab=refund" className="hover:text-primary transition-colors">الإرجاع والاسترداد</Link>
-          </div>
-          <p className="text-xs text-secondary-foreground/30">© {new Date().getFullYear()} {t("footer.copyright")}</p>
+        <div className="mt-10 pt-6 border-t border-secondary-foreground/[0.06] text-center text-xs text-secondary-foreground/30">
+          © {new Date().getFullYear()} {t("footer.copyright")}
         </div>
       </div>
     </footer>
