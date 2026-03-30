@@ -31,7 +31,21 @@ const tierLabels: Record<string, string> = {
   retail: "Retail",
 };
 
-const tierColors: Record<string, string> = {
+const SwitchToAdminButton = () => {
+  const { isAdmin } = useAuth();
+  const navigate = useNavigate();
+  if (!isAdmin) return null;
+  return (
+    <button
+      onClick={() => navigate("/admin")}
+      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-bold text-primary hover:bg-primary/10 transition-colors"
+    >
+      <Shield className="w-4 h-4" />
+      <span>التبديل لوضع المدير</span>
+    </button>
+  );
+};
+
   wholesale_tier1: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
   wholesale_tier2: "bg-blue-500/15 text-blue-700 dark:text-blue-400",
   corporate: "bg-violet-500/15 text-violet-700 dark:text-violet-400",
