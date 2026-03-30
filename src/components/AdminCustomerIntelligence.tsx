@@ -1067,9 +1067,9 @@ const AdminCustomerIntelligence = () => {
                 ))}
               </div>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4">
               {/* Summary KPIs */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
                 {[
                   { icon: Search, value: totalSearchers, label: "عميل يبحث", change: searchersChange, bg: "bg-gradient-to-br from-primary/8 to-primary/3", iconBg: "bg-primary/15", iconColor: "text-primary", valueColor: "text-foreground" },
                   { icon: ShoppingCart, value: convertedCount, label: "تحوّلوا لطلبات", change: convertedChange, bg: "bg-gradient-to-br from-emerald-500/8 to-emerald-500/3", iconBg: "bg-emerald-500/15", iconColor: "text-emerald-600 dark:text-emerald-400", valueColor: "text-emerald-700 dark:text-emerald-400" },
