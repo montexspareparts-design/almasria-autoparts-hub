@@ -17,7 +17,47 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { cn } from "@/lib/utils";
 import { format, differenceInDays } from "date-fns";
 import { ar } from "date-fns/locale";
-import * as XLSX from "xlsx";
+import * as XLSX from "xlsx-js-style";
+
+const applyExcelStyles = (ws: XLSX.WorkSheet, headerCount: number) => {
+  const headerStyle = {
+    font: { bold: true, color: { rgb: "FFFFFF" }, sz: 12, name: "Arial" },
+    fill: { fgColor: { rgb: "C41E3A" } },
+    alignment: { horizontal: "center" as const, vertical: "center" as const, wrapText: true },
+    border: {
+      top: { style: "thin" as const, color: { rgb: "999999" } },
+      bottom: { style: "thin" as const, color: { rgb: "999999" } },
+      left: { style: "thin" as const, color: { rgb: "999999" } },
+      right: { style: "thin" as const, color: { rgb: "999999" } },
+    },
+  };
+  const cellStyle = {
+    font: { sz: 11, name: "Arial" },
+    alignment: { horizontal: "center" as const, vertical: "center" as const, wrapText: true },
+    border: {
+      top: { style: "thin" as const, color: { rgb: "DDDDDD" } },
+      bottom: { style: "thin" as const, color: { rgb: "DDDDDD" } },
+      left: { style: "thin" as const, color: { rgb: "DDDDDD" } },
+      right: { style: "thin" as const, color: { rgb: "DDDDDD" } },
+    },
+  };
+  const altRowStyle = { ...cellStyle, fill: { fgColor: { rgb: "FFF5F5" } } };
+  const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
+  for (let C = range.s.c; C <= range.e.c; C++) {
+    const addr = XLSX.utils.encode_cell({ r: 0, c: C });
+    if (ws[addr]) ws[addr].s = headerStyle;
+  }
+  let customerIdx = 0;
+  for (let R = 1; R <= range.e.r; R++) {
+    const numCell = ws[XLSX.utils.encode_cell({ r: R, c: 0 })];
+    if (numCell && numCell.v !== "" && numCell.v !== undefined) customerIdx++;
+    for (let C = range.s.c; C <= range.e.c; C++) {
+      const addr = XLSX.utils.encode_cell({ r: R, c: C });
+      if (ws[addr]) ws[addr].s = customerIdx % 2 === 0 ? altRowStyle : cellStyle;
+    }
+  }
+  ws["!rows"] = [{ hpt: 28 }];
+};
 import { toast } from "@/hooks/use-toast";
 import {
   Users, Search, Eye, ShoppingCart, Phone, Mail, Car,
@@ -519,6 +559,7 @@ const AdminCustomerIntelligence = () => {
     ws3["!cols"] = [{ wch: 20 }, { wch: 15 }, { wch: 35 }, { wch: 18 }, { wch: 15 }];
     ws4["!cols"] = [{ wch: 10 }, { wch: 20 }];
 
+    [ws1, ws2, ws3, ws4].forEach(w => applyExcelStyles(w, 16));
     XLSX.utils.book_append_sheet(wb, ws1, "ملف العملاء");
     XLSX.utils.book_append_sheet(wb, ws2, "سجل البحث والشراء");
     XLSX.utils.book_append_sheet(wb, ws3, "الأصناف المسعّرة");
@@ -1039,6 +1080,7 @@ const AdminCustomerIntelligence = () => {
                       { wch: 5 }, { wch: 22 }, { wch: 16 }, { wch: 14 }, { wch: 16 },
                       { wch: 14 }, { wch: 12 }, { wch: 18 }, { wch: 14 }, { wch: 12 }, { wch: 35 },
                     ];
+                    applyExcelStyles(ws, 11);
                     XLSX.utils.book_append_sheet(wb, ws, "أكثر الباحثين");
                     XLSX.writeFile(wb, `تقرير_أكثر_الباحثين_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
                     toast({ title: "تم تصدير التقرير بنجاح ✅" });
@@ -1173,6 +1215,7 @@ const AdminCustomerIntelligence = () => {
                       const ws = XLSX.utils.json_to_sheet(rows);
                       ws["!dir"] = "rtl" as any;
                       ws["!cols"] = [{ wch: 5 }, { wch: 22 }, { wch: 12 }, { wch: 16 }, { wch: 30 }, { wch: 14 }, { wch: 16 }, { wch: 14 }];
+                      applyExcelStyles(ws, 8);
                       XLSX.utils.book_append_sheet(wb, ws, "أكثر الباحثين تفصيلي");
                       XLSX.writeFile(wb, `أكثر_15_عميل_بحثاً_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
                       toast({ title: "تم تصدير التقرير بنجاح ✅" });
@@ -1332,19 +1375,21 @@ const AdminCustomerIntelligence = () => {
                                         }))
                                       );
                                       ws["!cols"] = [{ wch: 5 }, { wch: 22 }, { wch: 16 }, { wch: 35 }, { wch: 12 }, { wch: 22 }];
-                                      const wb = XLSX.utils.book_new();
-                                      XLSX.utils.book_append_sheet(wb, ws, "سجل البحث");
-                                      const infoWs = XLSX.utils.json_to_sheet([{
-                                        "الاسم": d.name,
-                                        "الهاتف": d.phone || "—",
-                                        "إجمالي البحث": d.searches,
-                                        "استفسارات فريدة": d.uniqueQueries,
-                                        "الطلبات": d.orders,
-                                        "إجمالي الإنفاق": d.totalSpent,
-                                        "الحالة": d.converted ? "محوّل" : "لم يشترِ",
-                                      }]);
-                                      XLSX.utils.book_append_sheet(wb, infoWs, "بيانات العميل");
-                                      XLSX.writeFile(wb, `سجل_بحث_${d.name.replace(/\s+/g, "_")}.xlsx`);
+                                       applyExcelStyles(ws, 6);
+                                       const wb = XLSX.utils.book_new();
+                                       XLSX.utils.book_append_sheet(wb, ws, "سجل البحث");
+                                       const infoWs = XLSX.utils.json_to_sheet([{
+                                         "الاسم": d.name,
+                                         "الهاتف": d.phone || "—",
+                                         "إجمالي البحث": d.searches,
+                                         "استفسارات فريدة": d.uniqueQueries,
+                                         "الطلبات": d.orders,
+                                         "إجمالي الإنفاق": d.totalSpent,
+                                         "الحالة": d.converted ? "محوّل" : "لم يشترِ",
+                                       }]);
+                                       applyExcelStyles(infoWs, 7);
+                                       XLSX.utils.book_append_sheet(wb, infoWs, "بيانات العميل");
+                                       XLSX.writeFile(wb, `سجل_بحث_${d.name.replace(/\s+/g, "_")}.xlsx`);
                                       toast({ title: "تم تصدير سجل البحث بنجاح ✅" });
                                     }}
                                   >
