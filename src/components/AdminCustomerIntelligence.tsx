@@ -19,69 +19,71 @@ import { format, differenceInDays } from "date-fns";
 import { ar } from "date-fns/locale";
 import * as XLSX from "xlsx-js-style";
 
-const addCompanyHeader = (ws: XLSX.WorkSheet, colCount: number) => {
+const addCompanyHeader = (ws: XLSX.WorkSheet, colCount: number, reportTitle?: string) => {
+  const shiftRows = 5; // company + subtitle + contact + report info + separator
   const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
-  // Shift all existing rows down by 4 to make room for company header
   for (let R = range.e.r; R >= 0; R--) {
     for (let C = range.s.c; C <= range.e.c; C++) {
       const oldAddr = XLSX.utils.encode_cell({ r: R, c: C });
-      const newAddr = XLSX.utils.encode_cell({ r: R + 4, c: C });
+      const newAddr = XLSX.utils.encode_cell({ r: R + shiftRows, c: C });
       if (ws[oldAddr]) {
         ws[newAddr] = ws[oldAddr];
         delete ws[oldAddr];
       }
     }
   }
-  // Company name - Row 1 (merged)
   const companyStyle = {
     font: { bold: true, color: { rgb: "FFFFFF" }, sz: 18, name: "Arial" },
     fill: { fgColor: { rgb: "1A1A2E" } },
     alignment: { horizontal: "center" as const, vertical: "center" as const },
   };
   ws[XLSX.utils.encode_cell({ r: 0, c: 0 })] = { v: "المصرية جروب | Al Masria Group", t: "s", s: companyStyle };
-  for (let C = 1; C < colCount; C++) {
-    ws[XLSX.utils.encode_cell({ r: 0, c: C })] = { v: "", t: "s", s: companyStyle };
-  }
-  // Subtitle - Row 2
+  for (let C = 1; C < colCount; C++) ws[XLSX.utils.encode_cell({ r: 0, c: C })] = { v: "", t: "s", s: companyStyle };
+
   const subtitleStyle = {
     font: { bold: true, color: { rgb: "FFFFFF" }, sz: 11, name: "Arial" },
     fill: { fgColor: { rgb: "C41E3A" } },
     alignment: { horizontal: "center" as const, vertical: "center" as const },
   };
   ws[XLSX.utils.encode_cell({ r: 1, c: 0 })] = { v: "موزع معتمد لقطع غيار وزيوت تويوتا الأصلية", t: "s", s: subtitleStyle };
-  for (let C = 1; C < colCount; C++) {
-    ws[XLSX.utils.encode_cell({ r: 1, c: C })] = { v: "", t: "s", s: subtitleStyle };
-  }
-  // Contact info - Row 3
+  for (let C = 1; C < colCount; C++) ws[XLSX.utils.encode_cell({ r: 1, c: C })] = { v: "", t: "s", s: subtitleStyle };
+
   const contactStyle = {
     font: { sz: 10, color: { rgb: "666666" }, name: "Arial" },
     fill: { fgColor: { rgb: "F5F5F5" } },
     alignment: { horizontal: "center" as const, vertical: "center" as const },
   };
   ws[XLSX.utils.encode_cell({ r: 2, c: 0 })] = { v: "📞 01000000000  |  🌐 almasriaautoparts.com  |  📍 القاهرة - الجيزة - الأقصر - دبي", t: "s", s: contactStyle };
-  for (let C = 1; C < colCount; C++) {
-    ws[XLSX.utils.encode_cell({ r: 2, c: C })] = { v: "", t: "s", s: contactStyle };
-  }
-  // Empty separator row 4
+  for (let C = 1; C < colCount; C++) ws[XLSX.utils.encode_cell({ r: 2, c: C })] = { v: "", t: "s", s: contactStyle };
+
+  // Report title + date - Row 4
+  const exportDate = format(new Date(), "yyyy/MM/dd - hh:mm a");
+  const reportText = reportTitle ? `📋 ${reportTitle}  |  📅 تاريخ التصدير: ${exportDate}` : `📅 تاريخ التصدير: ${exportDate}`;
+  const reportStyle = {
+    font: { bold: true, sz: 11, color: { rgb: "1A1A2E" }, name: "Arial" },
+    fill: { fgColor: { rgb: "E8E8F0" } },
+    alignment: { horizontal: "center" as const, vertical: "center" as const },
+  };
+  ws[XLSX.utils.encode_cell({ r: 3, c: 0 })] = { v: reportText, t: "s", s: reportStyle };
+  for (let C = 1; C < colCount; C++) ws[XLSX.utils.encode_cell({ r: 3, c: C })] = { v: "", t: "s", s: reportStyle };
+
+  // Separator row 5
   const sepStyle = { fill: { fgColor: { rgb: "FFFFFF" } } };
-  for (let C = 0; C < colCount; C++) {
-    ws[XLSX.utils.encode_cell({ r: 3, c: C })] = { v: "", t: "s", s: sepStyle };
-  }
-  // Merges for header rows
+  for (let C = 0; C < colCount; C++) ws[XLSX.utils.encode_cell({ r: 4, c: C })] = { v: "", t: "s", s: sepStyle };
+
   if (!ws["!merges"]) ws["!merges"] = [];
   ws["!merges"].push(
     { s: { r: 0, c: 0 }, e: { r: 0, c: colCount - 1 } },
     { s: { r: 1, c: 0 }, e: { r: 1, c: colCount - 1 } },
     { s: { r: 2, c: 0 }, e: { r: 2, c: colCount - 1 } },
+    { s: { r: 3, c: 0 }, e: { r: 3, c: colCount - 1 } },
   );
-  // Update range
-  range.e.r += 4;
+  range.e.r += shiftRows;
   ws["!ref"] = XLSX.utils.encode_range(range);
 };
 
-const applyExcelStyles = (ws: XLSX.WorkSheet, headerCount: number) => {
-  // First add the company header (shifts data down by 4 rows)
-  addCompanyHeader(ws, headerCount);
+const applyExcelStyles = (ws: XLSX.WorkSheet, headerCount: number, reportTitle?: string) => {
+  addCompanyHeader(ws, headerCount, reportTitle);
 
   const headerStyle = {
     font: { bold: true, color: { rgb: "FFFFFF" }, sz: 12, name: "Arial" },
@@ -106,13 +108,13 @@ const applyExcelStyles = (ws: XLSX.WorkSheet, headerCount: number) => {
   };
   const altRowStyle = { ...cellStyle, fill: { fgColor: { rgb: "FFF5F5" } } };
   const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
-  // Row 4 (index 4) is now the data header row
+  // Row 5 (index 5) is now the data header row
   for (let C = range.s.c; C <= range.e.c; C++) {
-    const addr = XLSX.utils.encode_cell({ r: 4, c: C });
+    const addr = XLSX.utils.encode_cell({ r: 5, c: C });
     if (ws[addr]) ws[addr].s = headerStyle;
   }
   let customerIdx = 0;
-  for (let R = 5; R <= range.e.r; R++) {
+  for (let R = 6; R <= range.e.r; R++) {
     const numCell = ws[XLSX.utils.encode_cell({ r: R, c: 0 })];
     if (numCell && numCell.v !== "" && numCell.v !== undefined) customerIdx++;
     for (let C = range.s.c; C <= range.e.c; C++) {
@@ -120,7 +122,7 @@ const applyExcelStyles = (ws: XLSX.WorkSheet, headerCount: number) => {
       if (ws[addr]) ws[addr].s = customerIdx % 2 === 0 ? altRowStyle : cellStyle;
     }
   }
-  ws["!rows"] = [{ hpt: 40 }, { hpt: 24 }, { hpt: 22 }, { hpt: 10 }, { hpt: 28 }];
+  ws["!rows"] = [{ hpt: 40 }, { hpt: 24 }, { hpt: 22 }, { hpt: 26 }, { hpt: 10 }, { hpt: 28 }];
 };
 import { toast } from "@/hooks/use-toast";
 import {
@@ -623,7 +625,10 @@ const AdminCustomerIntelligence = () => {
     ws3["!cols"] = [{ wch: 20 }, { wch: 15 }, { wch: 35 }, { wch: 18 }, { wch: 15 }];
     ws4["!cols"] = [{ wch: 10 }, { wch: 20 }];
 
-    [ws1, ws2, ws3, ws4].forEach(w => applyExcelStyles(w, 16));
+    applyExcelStyles(ws1, 16, "ملف العملاء");
+    applyExcelStyles(ws2, 16, "سجل البحث والشراء");
+    applyExcelStyles(ws3, 16, "الأصناف المسعّرة");
+    applyExcelStyles(ws4, 16, "ملخص أوقات البحث");
     XLSX.utils.book_append_sheet(wb, ws1, "ملف العملاء");
     XLSX.utils.book_append_sheet(wb, ws2, "سجل البحث والشراء");
     XLSX.utils.book_append_sheet(wb, ws3, "الأصناف المسعّرة");
@@ -1144,7 +1149,7 @@ const AdminCustomerIntelligence = () => {
                       { wch: 5 }, { wch: 22 }, { wch: 16 }, { wch: 14 }, { wch: 16 },
                       { wch: 14 }, { wch: 12 }, { wch: 18 }, { wch: 14 }, { wch: 12 }, { wch: 35 },
                     ];
-                    applyExcelStyles(ws, 11);
+                    applyExcelStyles(ws, 11, "تقرير أكثر الباحثين");
                     XLSX.utils.book_append_sheet(wb, ws, "أكثر الباحثين");
                     XLSX.writeFile(wb, `تقرير_أكثر_الباحثين_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
                     toast({ title: "تم تصدير التقرير بنجاح ✅" });
@@ -1279,7 +1284,7 @@ const AdminCustomerIntelligence = () => {
                       const ws = XLSX.utils.json_to_sheet(rows);
                       ws["!dir"] = "rtl" as any;
                       ws["!cols"] = [{ wch: 5 }, { wch: 22 }, { wch: 12 }, { wch: 16 }, { wch: 30 }, { wch: 14 }, { wch: 16 }, { wch: 14 }];
-                      applyExcelStyles(ws, 8);
+                      applyExcelStyles(ws, 8, "تقرير أكثر 15 عميل بحثاً - تفصيلي");
                       XLSX.utils.book_append_sheet(wb, ws, "أكثر الباحثين تفصيلي");
                       XLSX.writeFile(wb, `أكثر_15_عميل_بحثاً_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
                       toast({ title: "تم تصدير التقرير بنجاح ✅" });
@@ -1439,7 +1444,7 @@ const AdminCustomerIntelligence = () => {
                                         }))
                                       );
                                       ws["!cols"] = [{ wch: 5 }, { wch: 22 }, { wch: 16 }, { wch: 35 }, { wch: 12 }, { wch: 22 }];
-                                       applyExcelStyles(ws, 6);
+                                       applyExcelStyles(ws, 6, `سجل بحث العميل: ${d.name}`);
                                        const wb = XLSX.utils.book_new();
                                        XLSX.utils.book_append_sheet(wb, ws, "سجل البحث");
                                        const infoWs = XLSX.utils.json_to_sheet([{
@@ -1451,7 +1456,7 @@ const AdminCustomerIntelligence = () => {
                                          "إجمالي الإنفاق": d.totalSpent,
                                          "الحالة": d.converted ? "محوّل" : "لم يشترِ",
                                        }]);
-                                       applyExcelStyles(infoWs, 7);
+                                       applyExcelStyles(infoWs, 7, `بيانات العميل: ${d.name}`);
                                        XLSX.utils.book_append_sheet(wb, infoWs, "بيانات العميل");
                                        XLSX.writeFile(wb, `سجل_بحث_${d.name.replace(/\s+/g, "_")}.xlsx`);
                                       toast({ title: "تم تصدير سجل البحث بنجاح ✅" });
