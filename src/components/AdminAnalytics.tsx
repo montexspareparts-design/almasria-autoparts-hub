@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, DollarSign, ShoppingBag, Users, Package, TrendingUp, BarChart3, PieChart as PieIcon, ListOrdered, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Loader2, DollarSign, ShoppingBag, Users, Package, TrendingUp, BarChart3, PieChart as PieIcon, ListOrdered, ArrowUpRight, ArrowDownRight, Search } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
@@ -24,6 +24,7 @@ const AdminAnalytics = () => {
   const [topProducts, setTopProducts] = useState<{ name: string; quantity: number; revenue: number }[]>([]);
   const [dealerDist, setDealerDist] = useState<{ name: string; value: number }[]>([]);
   const [statusDist, setStatusDist] = useState<{ name: string; value: number }[]>([]);
+  const [topSearches, setTopSearches] = useState<{ query: string; count: number }[]>([]);
   const [kpis, setKpis] = useState({ totalRevenue: 0, totalOrders: 0, totalDealers: 0, totalProducts: 0, avgOrderValue: 0 });
 
   useEffect(() => {
@@ -36,8 +37,31 @@ const AdminAnalytics = () => {
       fetchTopProducts(),
       fetchDealerDistribution(),
       fetchKPIs(),
+      fetchTopSearches(),
     ]);
     setLoading(false);
+  };
+
+  const fetchTopSearches = async () => {
+    const { data } = await supabase
+      .from("customer_search_logs")
+      .select("search_query");
+
+    if (!data) return;
+
+    const queryMap = new Map<string, number>();
+    data.forEach((log) => {
+      const q = log.search_query?.trim().toLowerCase();
+      if (!q) return;
+      queryMap.set(q, (queryMap.get(q) || 0) + 1);
+    });
+
+    const sorted = [...queryMap.entries()]
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+      .map(([query, count]) => ({ query, count }));
+
+    setTopSearches(sorted);
   };
 
   const fetchMonthlySales = async () => {
@@ -463,6 +487,51 @@ const AdminAnalytics = () => {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Most Searched Products */}
+      <div className="rounded-2xl border border-border bg-card p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2.5 rounded-xl bg-cyan-500/10">
+            <Search className="w-5 h-5 text-cyan-600" strokeWidth={2} />
+          </div>
+          <div>
+            <h3 className="text-base font-bold text-foreground">أكثر المنتجات بحثاً</h3>
+            <p className="text-xs text-muted-foreground">أعلى 10 كلمات بحث استخداماً</p>
+          </div>
+        </div>
+        {topSearches.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+            <Search className="w-12 h-12 mb-3 opacity-20" />
+            <p className="text-sm">لا توجد بيانات بحث بعد</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {topSearches.map((item, i) => {
+              const maxCount = topSearches[0]?.count || 1;
+              const pct = (item.count / maxCount) * 100;
+              return (
+                <div key={item.query} className="flex items-center gap-3 group">
+                  <span className="text-xs font-black text-muted-foreground w-5 text-center shrink-0">
+                    {i + 1}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium text-foreground truncate">{item.query}</span>
+                      <span className="text-xs font-bold text-muted-foreground shrink-0 mr-2">{item.count} مرة</span>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500 bg-cyan-500"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
