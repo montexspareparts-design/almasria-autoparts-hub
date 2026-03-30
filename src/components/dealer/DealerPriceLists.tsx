@@ -980,15 +980,54 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
                   <p className="text-xs text-muted-foreground">حدد أصناف من القائمة أدناه أو ابحث وأضفها هنا</p>
                 </div>
               ) : (
-                <div className="divide-y divide-border max-h-60 overflow-y-auto">
+              <div className="divide-y divide-border max-h-60 overflow-y-auto">
                   {selectedProducts.map(sp => (
                     <div key={sp.product.id} className="flex items-center gap-2 p-2.5">
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium text-foreground truncate">{sp.product.name_ar}</p>
                         <p className="text-[10px] text-muted-foreground font-mono">{sp.product.sku}</p>
                       </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <Badge variant="secondary" className="text-[9px] h-5">×{sp.quantity}</Badge>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <div className="flex items-center border border-border rounded-md overflow-hidden">
+                          <button
+                            onClick={() => {
+                              if (sp.quantity <= 1) {
+                                removeProduct(sp.product.id);
+                              } else {
+                                setSelectedProducts(prev => prev.map(p =>
+                                  p.product.id === sp.product.id ? { ...p, quantity: p.quantity - 1 } : p
+                                ));
+                              }
+                            }}
+                            className="w-6 h-6 flex items-center justify-center hover:bg-muted transition-colors"
+                          >
+                            <Minus className="w-3 h-3 text-muted-foreground" />
+                          </button>
+                          <input
+                            type="number"
+                            min={1}
+                            value={sp.quantity}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value);
+                              if (!isNaN(val) && val >= 1) {
+                                setSelectedProducts(prev => prev.map(p =>
+                                  p.product.id === sp.product.id ? { ...p, quantity: val } : p
+                                ));
+                              }
+                            }}
+                            className="w-8 h-6 text-center text-xs font-bold bg-background border-x border-border focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
+                          <button
+                            onClick={() => {
+                              setSelectedProducts(prev => prev.map(p =>
+                                p.product.id === sp.product.id ? { ...p, quantity: p.quantity + 1 } : p
+                              ));
+                            }}
+                            className="w-6 h-6 flex items-center justify-center hover:bg-muted transition-colors"
+                          >
+                            <Plus className="w-3 h-3 text-primary" />
+                          </button>
+                        </div>
                         <button onClick={() => removeProduct(sp.product.id)} className="p-1 hover:bg-destructive/10 rounded">
                           <X className="w-3 h-3 text-destructive" />
                         </button>
