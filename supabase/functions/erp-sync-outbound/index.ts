@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
     // Admin-only actions
     if (action === "sync_stock" || action === "sync_prices") {
       const { data: isAdmin } = await supabase.rpc("has_role", {
-        _user_id: user.id,
+        _user_id: userId,
         _role: "admin",
       });
       if (!isAdmin) {
