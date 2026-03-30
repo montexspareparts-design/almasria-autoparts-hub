@@ -94,6 +94,7 @@ const CompleteProfileDialog = ({ open, onOpenChange, userId }: CompleteProfileDi
               />
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
             </div>
+            {phoneError && <p className="text-xs text-destructive mt-1">{phoneError}</p>}
           </div>
 
           <Button type="submit" className="w-full h-11 rounded-xl font-bold" disabled={loading}>
