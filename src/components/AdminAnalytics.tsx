@@ -286,7 +286,7 @@ const AdminAnalytics = () => {
                 {kpi.suffix && <span className="text-xs font-medium text-muted-foreground mr-1">{kpi.suffix}</span>}
               </p>
               <p className="text-xs font-medium text-muted-foreground mb-3">{kpi.label}</p>
-              <div className="flex justify-end">
+              <div className="flex justify-start">
                 <div className={`p-1.5 rounded-lg bg-white/80 dark:bg-black/20 shadow-sm`}>
                   <Icon className={`w-4 h-4 ${kpi.color}`} strokeWidth={2} />
                 </div>
