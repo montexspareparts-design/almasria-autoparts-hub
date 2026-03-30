@@ -56,11 +56,34 @@ const Auth = () => {
   useEffect(() => {
     let mounted = true;
 
+    const handleAuthRedirect = async (userId: string) => {
+      // Check dealer + admin status
+      const [{ data: dealer }, { data: roles }] = await Promise.all([
+        supabase.from("dealer_accounts").select("id").eq("user_id", userId).eq("is_active", true).maybeSingle(),
+        supabase.from("user_roles").select("role").eq("user_id", userId),
+      ]);
+      const hasAdmin = roles?.some((r) => r.role === "admin") ?? false;
+      const hasDealer = !!dealer;
+
+      if (!mounted) return;
+      markSessionActive();
+
+      // Both roles → AuthContext will show RoleSelectionDialog, navigate to / for now
+      if (hasDealer && hasAdmin) {
+        navigate("/", { replace: true });
+      } else if (hasAdmin) {
+        navigate("/admin", { replace: true });
+      } else if (hasDealer) {
+        navigate("/dealer", { replace: true });
+      } else {
+        navigate("/", { replace: true });
+      }
+    };
+
     const syncSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!mounted || !session?.user) return;
-      markSessionActive();
-      navigate("/", { replace: true });
+      handleAuthRedirect(session.user.id);
     };
 
     syncSession();
@@ -69,8 +92,7 @@ const Auth = () => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!mounted || !session?.user) return;
-      markSessionActive();
-      navigate("/", { replace: true });
+      handleAuthRedirect(session.user.id);
     });
 
     return () => {
