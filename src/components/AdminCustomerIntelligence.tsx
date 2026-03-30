@@ -1149,7 +1149,7 @@ const AdminCustomerIntelligence = () => {
                       { wch: 5 }, { wch: 22 }, { wch: 16 }, { wch: 14 }, { wch: 16 },
                       { wch: 14 }, { wch: 12 }, { wch: 18 }, { wch: 14 }, { wch: 12 }, { wch: 35 },
                     ];
-                    applyExcelStyles(ws, 11);
+                    applyExcelStyles(ws, 11, "تقرير أكثر الباحثين");
                     XLSX.utils.book_append_sheet(wb, ws, "أكثر الباحثين");
                     XLSX.writeFile(wb, `تقرير_أكثر_الباحثين_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
                     toast({ title: "تم تصدير التقرير بنجاح ✅" });
