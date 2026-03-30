@@ -1375,19 +1375,21 @@ const AdminCustomerIntelligence = () => {
                                         }))
                                       );
                                       ws["!cols"] = [{ wch: 5 }, { wch: 22 }, { wch: 16 }, { wch: 35 }, { wch: 12 }, { wch: 22 }];
-                                      const wb = XLSX.utils.book_new();
-                                      XLSX.utils.book_append_sheet(wb, ws, "سجل البحث");
-                                      const infoWs = XLSX.utils.json_to_sheet([{
-                                        "الاسم": d.name,
-                                        "الهاتف": d.phone || "—",
-                                        "إجمالي البحث": d.searches,
-                                        "استفسارات فريدة": d.uniqueQueries,
-                                        "الطلبات": d.orders,
-                                        "إجمالي الإنفاق": d.totalSpent,
-                                        "الحالة": d.converted ? "محوّل" : "لم يشترِ",
-                                      }]);
-                                      XLSX.utils.book_append_sheet(wb, infoWs, "بيانات العميل");
-                                      XLSX.writeFile(wb, `سجل_بحث_${d.name.replace(/\s+/g, "_")}.xlsx`);
+                                       applyExcelStyles(ws, 6);
+                                       const wb = XLSX.utils.book_new();
+                                       XLSX.utils.book_append_sheet(wb, ws, "سجل البحث");
+                                       const infoWs = XLSX.utils.json_to_sheet([{
+                                         "الاسم": d.name,
+                                         "الهاتف": d.phone || "—",
+                                         "إجمالي البحث": d.searches,
+                                         "استفسارات فريدة": d.uniqueQueries,
+                                         "الطلبات": d.orders,
+                                         "إجمالي الإنفاق": d.totalSpent,
+                                         "الحالة": d.converted ? "محوّل" : "لم يشترِ",
+                                       }]);
+                                       applyExcelStyles(infoWs, 7);
+                                       XLSX.utils.book_append_sheet(wb, infoWs, "بيانات العميل");
+                                       XLSX.writeFile(wb, `سجل_بحث_${d.name.replace(/\s+/g, "_")}.xlsx`);
                                       toast({ title: "تم تصدير سجل البحث بنجاح ✅" });
                                     }}
                                   >
