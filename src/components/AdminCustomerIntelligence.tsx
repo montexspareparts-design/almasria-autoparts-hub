@@ -519,6 +519,288 @@ const AdminCustomerIntelligence = () => {
         );
       })()}
 
+      {/* Top Searchers vs Orders Report */}
+      {profiles && profiles.length > 0 && (() => {
+        // Build top searchers data
+        const searcherData: {
+          userId: string;
+          name: string;
+          phone: string | null;
+          searches: number;
+          uniqueQueries: number;
+          orders: number;
+          totalSpent: number;
+          priceViews: number;
+          converted: boolean;
+          conversionRate: string;
+          topQueries: string[];
+        }[] = [];
+
+        profiles.forEach(p => {
+          const searches = userSearchMap[p.user_id] || [];
+          if (searches.length === 0) return;
+          const totalSearchCount = searches.reduce((sum, s) => sum + s.count, 0);
+          const userOrders = ordersMap?.[p.user_id];
+          const views = userViewsMap[p.user_id] || [];
+          const converted = !!(userOrders && userOrders.count > 0);
+
+          searcherData.push({
+            userId: p.user_id,
+            name: p.full_name || "بدون اسم",
+            phone: p.phone,
+            searches: totalSearchCount,
+            uniqueQueries: searches.length,
+            orders: userOrders?.count || 0,
+            totalSpent: userOrders?.total || 0,
+            priceViews: views.length,
+            converted,
+            conversionRate: totalSearchCount > 0 && userOrders
+              ? `${Math.round((userOrders.count / totalSearchCount) * 100)}%`
+              : "0%",
+            topQueries: searches
+              .sort((a, b) => b.count - a.count)
+              .slice(0, 3)
+              .map(s => s.query),
+          });
+        });
+
+        // Sort by searches descending
+        searcherData.sort((a, b) => b.searches - a.searches);
+        const top15 = searcherData.slice(0, 15);
+        const maxSearches = Math.max(...top15.map(d => d.searches), 1);
+        const maxOrders = Math.max(...top15.map(d => d.orders), 1);
+
+        // Summary stats
+        const totalSearchers = searcherData.length;
+        const convertedCount = searcherData.filter(d => d.converted).length;
+        const overallConversion = totalSearchers > 0 ? Math.round((convertedCount / totalSearchers) * 100) : 0;
+        const avgSearchesPerUser = totalSearchers > 0
+          ? Math.round(searcherData.reduce((s, d) => s + d.searches, 0) / totalSearchers)
+          : 0;
+        const topNonConverted = searcherData.filter(d => !d.converted).slice(0, 5);
+
+        // Chart data for top 10
+        const chartData = top15.slice(0, 10).map(d => ({
+          name: d.name.length > 12 ? d.name.slice(0, 12) + "…" : d.name,
+          بحث: d.searches,
+          طلبات: d.orders,
+        }));
+
+        const formatPhoneForWA = (phone: string) => {
+          let cleaned = phone.replace(/[\s\-()]/g, "");
+          cleaned = cleaned.replace(/^002/, "").replace(/^0020/, "");
+          if (cleaned.startsWith("0")) cleaned = "20" + cleaned.slice(1);
+          if (!cleaned.startsWith("+")) cleaned = "+" + cleaned;
+          return cleaned;
+        };
+
+        return (
+          <Card className="border-primary/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-black flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-primary" />
+                تقرير أكثر العملاء بحثاً مقابل الطلبات
+              </CardTitle>
+              <p className="text-xs text-muted-foreground mt-1">
+                مقارنة بين نشاط البحث وتحويله لطلبات فعلية — أداة لاكتشاف الفرص الضائعة
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {/* Summary KPIs */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="bg-muted/40 rounded-xl p-3 text-center">
+                  <p className="text-2xl font-black text-foreground">{totalSearchers}</p>
+                  <p className="text-[11px] text-muted-foreground font-medium">عميل يبحث</p>
+                </div>
+                <div className="bg-emerald-50 dark:bg-emerald-950/20 rounded-xl p-3 text-center">
+                  <p className="text-2xl font-black text-emerald-700 dark:text-emerald-400">{convertedCount}</p>
+                  <p className="text-[11px] text-muted-foreground font-medium">تحوّلوا لطلبات</p>
+                </div>
+                <div className="bg-amber-50 dark:bg-amber-950/20 rounded-xl p-3 text-center">
+                  <p className="text-2xl font-black text-amber-700 dark:text-amber-400">{overallConversion}%</p>
+                  <p className="text-[11px] text-muted-foreground font-medium">معدل التحويل</p>
+                </div>
+                <div className="bg-blue-50 dark:bg-blue-950/20 rounded-xl p-3 text-center">
+                  <p className="text-2xl font-black text-blue-700 dark:text-blue-400">{avgSearchesPerUser}</p>
+                  <p className="text-[11px] text-muted-foreground font-medium">متوسط بحث/عميل</p>
+                </div>
+              </div>
+
+              {/* Bar Chart: Search vs Orders */}
+              {chartData.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
+                    <BarChart3 className="w-4 h-4 text-primary" />
+                    أعلى 10 عملاء بحثاً — مقارنة بالطلبات
+                  </h4>
+                  <div className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                        <XAxis type="number" tick={{ fontSize: 11 }} />
+                        <YAxis
+                          dataKey="name"
+                          type="category"
+                          width={100}
+                          tick={{ fontSize: 11, textAnchor: "end" }}
+                        />
+                        <Tooltip
+                          contentStyle={{ direction: "rtl", borderRadius: 10, fontSize: 12 }}
+                          formatter={(value: number, name: string) => [value, name]}
+                        />
+                        <Legend wrapperStyle={{ fontSize: 12 }} />
+                        <Bar dataKey="بحث" fill="hsl(217, 91%, 60%)" radius={[0, 4, 4, 0]} barSize={14} />
+                        <Bar dataKey="طلبات" fill="hsl(142, 71%, 45%)" radius={[0, 4, 4, 0]} barSize={14} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
+
+              {/* Detailed Table */}
+              <div>
+                <h4 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
+                  <Search className="w-4 h-4 text-primary" />
+                  تفاصيل أكثر 15 عميل بحثاً
+                </h4>
+                <div className="overflow-x-auto rounded-xl border border-border">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-muted/50 text-muted-foreground text-[11px]">
+                        <th className="px-3 py-2.5 text-right font-bold">#</th>
+                        <th className="px-3 py-2.5 text-right font-bold">العميل</th>
+                        <th className="px-3 py-2.5 text-center font-bold">عمليات البحث</th>
+                        <th className="px-3 py-2.5 text-center font-bold">استفسارات فريدة</th>
+                        <th className="px-3 py-2.5 text-center font-bold">أصناف مسعّرة</th>
+                        <th className="px-3 py-2.5 text-center font-bold">الطلبات</th>
+                        <th className="px-3 py-2.5 text-center font-bold">إجمالي الإنفاق</th>
+                        <th className="px-3 py-2.5 text-center font-bold">التحويل</th>
+                        <th className="px-3 py-2.5 text-right font-bold">أهم ما بحث عنه</th>
+                        <th className="px-3 py-2.5 text-center font-bold">تواصل</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {top15.map((d, i) => (
+                        <tr key={d.userId} className={cn(
+                          "border-t border-border/50 transition-colors",
+                          i % 2 === 0 ? "bg-card" : "bg-muted/20",
+                          !d.converted && d.searches >= 5 && "bg-amber-50/50 dark:bg-amber-950/10"
+                        )}>
+                          <td className="px-3 py-2.5 text-xs text-muted-foreground font-bold">{i + 1}</td>
+                          <td className="px-3 py-2.5">
+                            <div>
+                              <p className="text-xs font-bold text-foreground">{d.name}</p>
+                              {d.phone && (
+                                <p className="text-[10px] text-muted-foreground" dir="ltr">{d.phone}</p>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-3 py-2.5 text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-blue-500 rounded-full"
+                                  style={{ width: `${(d.searches / maxSearches) * 100}%` }}
+                                />
+                              </div>
+                              <span className="text-xs font-bold text-foreground">{d.searches}</span>
+                            </div>
+                          </td>
+                          <td className="px-3 py-2.5 text-center text-xs text-foreground">{d.uniqueQueries}</td>
+                          <td className="px-3 py-2.5 text-center text-xs text-foreground">{d.priceViews}</td>
+                          <td className="px-3 py-2.5 text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <div className="w-10 h-1.5 bg-muted rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-emerald-500 rounded-full"
+                                  style={{ width: `${maxOrders > 0 ? (d.orders / maxOrders) * 100 : 0}%` }}
+                                />
+                              </div>
+                              <span className="text-xs font-bold text-foreground">{d.orders}</span>
+                            </div>
+                          </td>
+                          <td className="px-3 py-2.5 text-center text-xs font-bold text-foreground">
+                            {d.totalSpent > 0 ? `${d.totalSpent.toLocaleString("ar-EG")} ج.م` : "—"}
+                          </td>
+                          <td className="px-3 py-2.5 text-center">
+                            {d.converted ? (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                ✓ محوّل
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                                ✗ لم يشترِ
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2.5">
+                            <div className="flex flex-wrap gap-1">
+                              {d.topQueries.map((q, qi) => (
+                                <span key={qi} className="text-[10px] bg-muted/60 rounded px-1.5 py-0.5 text-foreground">
+                                  {q}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="px-3 py-2.5 text-center">
+                            {d.phone && (
+                              <a
+                                href={`https://wa.me/${formatPhoneForWA(d.phone)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex w-7 h-7 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 items-center justify-center transition-colors"
+                              >
+                                <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+                              </a>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Opportunity Alert: Top non-converted searchers */}
+              {topNonConverted.length > 0 && (
+                <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 rounded-xl p-4">
+                  <h4 className="text-sm font-black text-amber-800 dark:text-amber-300 flex items-center gap-2 mb-3">
+                    <Eye className="w-4 h-4" />
+                    ⚡ فرص تحويل — عملاء يبحثون ولم يشتروا بعد
+                  </h4>
+                  <div className="space-y-2">
+                    {topNonConverted.map((d, i) => (
+                      <div key={d.userId} className="flex items-center gap-3 bg-white/60 dark:bg-black/20 rounded-lg p-2.5">
+                        <span className="text-xs font-bold text-amber-700 dark:text-amber-400 w-5">{i + 1}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-foreground">{d.name}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {d.searches} عملية بحث • {d.priceViews} صنف مسعّر • أكثر ما بحث عنه: {d.topQueries[0] || "—"}
+                          </p>
+                        </div>
+                        {d.phone && (
+                          <a
+                            href={`https://wa.me/${formatPhoneForWA(d.phone)}?text=${encodeURIComponent(
+                              `مرحباً ${d.name}، لاحظنا اهتمامك بمنتجاتنا. هل يمكننا مساعدتك في إتمام طلبك؟`
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="shrink-0 flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2.5 py-1.5 rounded-lg hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" />
+                            تواصل
+                          </a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })()}
+
       {/* Filters bar */}
       <Card>
         <CardContent className="p-4 space-y-3">
