@@ -604,6 +604,52 @@ const AdminCustomerIntelligence = () => {
           : 0;
         const topNonConverted = searcherData.filter(d => !d.converted).slice(0, 5);
 
+        // Previous period comparison
+        let prevSearchers = 0;
+        let prevConverted = 0;
+        let prevConversion = 0;
+        let prevAvgSearches = 0;
+        if (cutoff) {
+          const periodMs = now.getTime() - cutoff.getTime();
+          const prevCutoff = new Date(cutoff.getTime() - periodMs);
+          const prevSearchMap: Record<string, { query: string; count: number }[]> = {};
+          searchLogs?.forEach((log: any) => {
+            const logDate = new Date(log.created_at);
+            if (logDate >= cutoff || logDate < prevCutoff) return;
+            const uid = log.user_id || "anonymous";
+            if (!prevSearchMap[uid]) prevSearchMap[uid] = [];
+            const existing = prevSearchMap[uid].find(s => s.query === log.search_query);
+            if (existing) existing.count++;
+            else prevSearchMap[uid].push({ query: log.search_query, count: 1 });
+          });
+          const prevSearcherData: { userId: string; searches: number; converted: boolean }[] = [];
+          profiles.forEach(p => {
+            const searches = prevSearchMap[p.user_id] || [];
+            if (searches.length === 0) return;
+            const total = searches.reduce((s, q) => s + q.count, 0);
+            const userOrders = ordersMap?.[p.user_id];
+            prevSearcherData.push({ userId: p.user_id, searches: total, converted: !!(userOrders && userOrders.count > 0) });
+          });
+          prevSearchers = prevSearcherData.length;
+          prevConverted = prevSearcherData.filter(d => d.converted).length;
+          prevConversion = prevSearchers > 0 ? Math.round((prevConverted / prevSearchers) * 100) : 0;
+          prevAvgSearches = prevSearchers > 0
+            ? Math.round(prevSearcherData.reduce((s, d) => s + d.searches, 0) / prevSearchers)
+            : 0;
+        }
+
+        const calcChange = (current: number, prev: number) => {
+          if (!cutoff) return null;
+          if (prev === 0 && current === 0) return 0;
+          if (prev === 0) return 100;
+          return Math.round(((current - prev) / prev) * 100);
+        };
+
+        const searchersChange = calcChange(totalSearchers, prevSearchers);
+        const convertedChange = calcChange(convertedCount, prevConverted);
+        const conversionChange = calcChange(overallConversion, prevConversion);
+        const avgChange = calcChange(avgSearchesPerUser, prevAvgSearches);
+
         // Chart data for top 10
         const chartData = top15.slice(0, 10).map(d => ({
           name: d.name.length > 12 ? d.name.slice(0, 12) + "…" : d.name,
