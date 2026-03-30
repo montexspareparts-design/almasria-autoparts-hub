@@ -1456,7 +1456,7 @@ const AdminCustomerIntelligence = () => {
                                          "إجمالي الإنفاق": d.totalSpent,
                                          "الحالة": d.converted ? "محوّل" : "لم يشترِ",
                                        }]);
-                                       applyExcelStyles(infoWs, 7);
+                                       applyExcelStyles(infoWs, 7, `بيانات العميل: ${d.name}`);
                                        XLSX.utils.book_append_sheet(wb, infoWs, "بيانات العميل");
                                        XLSX.writeFile(wb, `سجل_بحث_${d.name.replace(/\s+/g, "_")}.xlsx`);
                                       toast({ title: "تم تصدير سجل البحث بنجاح ✅" });
