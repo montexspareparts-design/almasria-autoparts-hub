@@ -100,7 +100,7 @@ const SectionLoader = () => (
 );
 
 const AdminDashboard = () => {
-  const { user, isAdmin, loading: authLoading, signOut } = useAuth();
+  const { user, isAdmin, isDealer, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
