@@ -844,11 +844,17 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
                     </div>
                   ) : (
                     <div className="divide-y divide-border max-h-[40vh] overflow-y-auto">
+                      <AnimatePresence>
                       {filteredLinkedProducts.map(product => {
                         const selected = isProductSelected(product.id);
                         return (
-                          <button
+                          <motion.button
                             key={product.id}
+                            layout
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.2 }}
                             onClick={() => toggleProductSelection(product)}
                             disabled={!selected && remainingToday === 0}
                             className={`w-full flex items-center gap-3 p-3 text-right transition-all ${
@@ -857,14 +863,17 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
                                 : "hover:bg-muted/50"
                             } ${!selected && remainingToday === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
                           >
-                            {/* Checkbox indicator */}
-                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
+                            {/* Checkbox indicator with pop animation */}
+                            <motion.div
+                              animate={selected ? { scale: [1, 1.3, 1] } : { scale: 1 }}
+                              transition={{ duration: 0.3 }}
+                              className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
                               selected
                                 ? "bg-primary border-primary"
                                 : "border-muted-foreground/30"
                             }`}>
                               {selected && <CheckCircle2 className="w-3.5 h-3.5 text-primary-foreground" />}
-                            </div>
+                            </motion.div>
 
                             {/* Product image */}
                             {product.image_url ? (
@@ -890,7 +899,9 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
                             </Badge>
 
                             {/* Add/remove icon */}
-                            <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
+                            <motion.div
+                              whileTap={{ scale: 0.8 }}
+                              className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
                               selected ? "bg-destructive/10" : "bg-primary/10"
                             }`}>
                               {selected ? (
@@ -898,10 +909,11 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
                               ) : (
                                 <Plus className="w-3.5 h-3.5 text-primary" />
                               )}
-                            </div>
-                          </button>
+                            </motion.div>
+                          </motion.button>
                         );
                       })}
+                      </AnimatePresence>
                     </div>
                   )}
                 </>
