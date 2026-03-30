@@ -11,7 +11,7 @@ import { generateQuotePdf } from "@/lib/generateQuotePdf";
 import { shareQuoteWhatsApp, shareQuoteEmail } from "@/lib/shareQuote";
 import {
   FileText, Download, Clock, RefreshCw, Eye, Search,
-  Plus, X, ShoppingCart, ArrowLeft, Loader2, AlertTriangle, ChevronRight,
+  Plus, Minus, X, ShoppingCart, ArrowLeft, Loader2, AlertTriangle, ChevronRight,
   CheckCircle2, Printer, MessageCircle, Mail, Package
 } from "lucide-react";
 
