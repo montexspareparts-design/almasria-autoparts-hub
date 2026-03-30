@@ -1304,7 +1304,7 @@ const AdminCustomerIntelligence = () => {
 
                 {/* Expanded detail */}
                 {isExpanded && (
-                  <div className="px-4 pb-5 space-y-4 border-t border-border/50 pt-4">
+                  <div className="px-5 pb-5 space-y-4 border-t border-border/30 pt-4 bg-gradient-to-b from-muted/20 to-transparent">
                     {/* Contact cards */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                       <div className="bg-muted/30 rounded-xl p-3 flex items-center gap-2.5">
