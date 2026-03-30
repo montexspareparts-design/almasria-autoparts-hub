@@ -52,6 +52,7 @@ const AdminCustomerIntelligence = () => {
   const [sendingIndex, setSendingIndex] = useState(-1);
   const [reportTimeFilter, setReportTimeFilter] = useState<string>("all");
   const [expandedSearcher, setExpandedSearcher] = useState<string | null>(null);
+  const [searchDetailFilter, setSearchDetailFilter] = useState("");
 
   // All profiles
   const { data: profiles, isLoading: loadingProfiles } = useQuery({
