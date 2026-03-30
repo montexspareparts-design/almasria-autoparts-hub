@@ -467,10 +467,12 @@ const AdminCustomerIntelligence = () => {
         const chartData = Object.entries(typeCounts).map(([name, value]) => ({ name, value }));
 
         return (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-primary" />
+          <Card className="rounded-2xl border-border/40 shadow-sm overflow-hidden">
+            <CardHeader className="pb-2 bg-gradient-to-l from-violet-500/5 to-transparent">
+              <CardTitle className="text-base font-black flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-violet-500/15 flex items-center justify-center">
+                  <BarChart3 className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                </div>
                 توزيع أنواع العملاء
               </CardTitle>
             </CardHeader>
@@ -494,7 +496,7 @@ const AdminCustomerIntelligence = () => {
                     </Pie>
                     <Tooltip
                       formatter={(value: number) => [`${value} عميل`, "العدد"]}
-                      contentStyle={{ direction: "rtl", borderRadius: 8, fontSize: 13 }}
+                      contentStyle={{ direction: "rtl", borderRadius: 12, fontSize: 13, boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
                     />
                     <Legend
                       formatter={(value) => <span style={{ fontSize: 12 }}>{value}</span>}
