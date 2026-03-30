@@ -37,8 +37,31 @@ const AdminAnalytics = () => {
       fetchTopProducts(),
       fetchDealerDistribution(),
       fetchKPIs(),
+      fetchTopSearches(),
     ]);
     setLoading(false);
+  };
+
+  const fetchTopSearches = async () => {
+    const { data } = await supabase
+      .from("customer_search_logs")
+      .select("search_query");
+
+    if (!data) return;
+
+    const queryMap = new Map<string, number>();
+    data.forEach((log) => {
+      const q = log.search_query?.trim().toLowerCase();
+      if (!q) return;
+      queryMap.set(q, (queryMap.get(q) || 0) + 1);
+    });
+
+    const sorted = [...queryMap.entries()]
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+      .map(([query, count]) => ({ query, count }));
+
+    setTopSearches(sorted);
   };
 
   const fetchMonthlySales = async () => {
