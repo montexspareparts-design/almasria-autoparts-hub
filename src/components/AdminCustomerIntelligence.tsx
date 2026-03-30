@@ -355,76 +355,56 @@ const AdminCustomerIntelligence = () => {
 
   return (
     <div className="space-y-6" dir="rtl">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <BarChart3 className="w-6 h-6 text-primary" />
-            تقرير ذكاء العملاء
-          </h2>
-          <p className="text-muted-foreground text-sm mt-1">
-            تحليل شامل لسلوك العملاء: عمليات البحث، الأسعار المشاهدة، الطلبات
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <Button
-            onClick={() => setBulkWhatsAppOpen(true)}
-            variant="outline"
-            className="gap-2 font-bold border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
-          >
-            <MessageCircle className="w-4 h-4" />
-            واتساب جماعي ({filteredWithPhone.length})
-          </Button>
-          <Button onClick={handleExportExcel} className="gap-2 font-bold">
-            <Download className="w-4 h-4" />
-            تصدير Excel
-          </Button>
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-l from-primary/10 via-primary/5 to-transparent border border-primary/10 p-6">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,hsl(var(--primary)/0.08),transparent_60%)]" />
+        <div className="relative flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h2 className="text-2xl font-black text-foreground flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center shadow-sm">
+                <BarChart3 className="w-5 h-5 text-primary" />
+              </div>
+              تقرير ذكاء العملاء
+            </h2>
+            <p className="text-muted-foreground text-sm mt-2 mr-[52px]">
+              تحليل شامل لسلوك العملاء: عمليات البحث، الأسعار المشاهدة، الطلبات
+            </p>
+          </div>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <Button
+              onClick={() => setBulkWhatsAppOpen(true)}
+              variant="outline"
+              className="gap-2 font-bold border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/30 rounded-xl h-10"
+            >
+              <MessageCircle className="w-4 h-4" />
+              واتساب جماعي ({filteredWithPhone.length})
+            </Button>
+            <Button onClick={handleExportExcel} className="gap-2 font-bold rounded-xl h-10 shadow-sm">
+              <Download className="w-4 h-4" />
+              تصدير Excel
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Users className="w-8 h-8 text-primary mx-auto mb-2" />
-            <p className="text-2xl font-black text-foreground">{totalCustomers}</p>
-            <p className="text-xs text-muted-foreground">إجمالي العملاء</p>
-          </CardContent>
-        </Card>
-        <Card className="border-blue-200 dark:border-blue-800/50">
-          <CardContent className="p-4 text-center">
-            <Briefcase className="w-8 h-8 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
-            <p className="text-2xl font-black text-foreground">{dealerCount}</p>
-            <p className="text-xs text-muted-foreground">تاجر</p>
-          </CardContent>
-        </Card>
-        <Card className="border-orange-200 dark:border-orange-800/50">
-          <CardContent className="p-4 text-center">
-            <ShoppingCart className="w-8 h-8 text-orange-600 dark:text-orange-400 mx-auto mb-2" />
-            <p className="text-2xl font-black text-foreground">{retailCount}</p>
-            <p className="text-xs text-muted-foreground">عميل قطاعي</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Car className="w-8 h-8 text-primary mx-auto mb-2" />
-            <p className="text-2xl font-black text-foreground">{withCar}</p>
-            <p className="text-xs text-muted-foreground">حددوا سيارتهم</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Search className="w-8 h-8 text-primary mx-auto mb-2" />
-            <p className="text-2xl font-black text-foreground">{totalSearches}</p>
-            <p className="text-xs text-muted-foreground">عمليات بحث</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <TrendingUp className="w-8 h-8 text-primary mx-auto mb-2" />
-            <p className="text-2xl font-black text-foreground">{activeSearchers}</p>
-            <p className="text-xs text-muted-foreground">عملاء يبحثون</p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        {[
+          { icon: Users, value: totalCustomers, label: "إجمالي العملاء", gradient: "from-primary/10 to-primary/5", iconBg: "bg-primary/15", iconColor: "text-primary" },
+          { icon: Briefcase, value: dealerCount, label: "تاجر", gradient: "from-blue-500/10 to-blue-500/5", iconBg: "bg-blue-500/15", iconColor: "text-blue-600 dark:text-blue-400" },
+          { icon: ShoppingCart, value: retailCount, label: "عميل قطاعي", gradient: "from-orange-500/10 to-orange-500/5", iconBg: "bg-orange-500/15", iconColor: "text-orange-600 dark:text-orange-400" },
+          { icon: Car, value: withCar, label: "حددوا سيارتهم", gradient: "from-violet-500/10 to-violet-500/5", iconBg: "bg-violet-500/15", iconColor: "text-violet-600 dark:text-violet-400" },
+          { icon: Search, value: totalSearches, label: "عمليات بحث", gradient: "from-cyan-500/10 to-cyan-500/5", iconBg: "bg-cyan-500/15", iconColor: "text-cyan-600 dark:text-cyan-400" },
+          { icon: TrendingUp, value: activeSearchers, label: "عملاء يبحثون", gradient: "from-emerald-500/10 to-emerald-500/5", iconBg: "bg-emerald-500/15", iconColor: "text-emerald-600 dark:text-emerald-400" },
+        ].map((kpi, idx) => (
+          <div key={idx} className={cn("rounded-2xl border border-border/40 bg-gradient-to-br p-4 text-center transition-all hover:shadow-md hover:border-border/70 hover:-translate-y-0.5 duration-200", kpi.gradient)}>
+            <div className={cn("w-10 h-10 rounded-xl mx-auto mb-2.5 flex items-center justify-center shadow-sm", kpi.iconBg)}>
+              <kpi.icon className={cn("w-5 h-5", kpi.iconColor)} />
+            </div>
+            <p className="text-2xl font-black text-foreground tracking-tight">{kpi.value}</p>
+            <p className="text-[11px] text-muted-foreground font-medium mt-0.5">{kpi.label}</p>
+          </div>
+        ))}
       </div>
 
       {/* Dealers vs Retail Pie Chart */}
