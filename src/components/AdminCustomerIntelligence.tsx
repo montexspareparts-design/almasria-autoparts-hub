@@ -999,18 +999,18 @@ const AdminCustomerIntelligence = () => {
         };
 
         return (
-          <Card className="rounded-2xl border-primary/15 shadow-sm overflow-hidden">
-            <CardHeader className="pb-3 bg-gradient-to-l from-primary/8 via-primary/3 to-transparent">
-              <div className="flex items-center justify-between flex-wrap gap-3">
+          <Card className="rounded-xl border-primary/15 shadow-sm overflow-hidden">
+            <CardHeader className="py-3 px-4 bg-gradient-to-l from-primary/8 via-primary/3 to-transparent">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <div>
-                  <CardTitle className="text-lg font-black flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center shadow-sm">
-                      <TrendingUp className="w-4.5 h-4.5 text-primary" />
+                  <CardTitle className="text-sm font-black flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-primary/15 flex items-center justify-center shadow-sm">
+                      <TrendingUp className="w-3.5 h-3.5 text-primary" />
                     </div>
-                    تقرير أكثر العملاء بحثاً مقابل الطلبات
+                    أكثر العملاء بحثاً مقابل الطلبات
                   </CardTitle>
-                  <p className="text-xs text-muted-foreground mt-1.5 mr-[46px]">
-                    مقارنة بين نشاط البحث وتحويله لطلبات فعلية — أداة لاكتشاف الفرص الضائعة
+                  <p className="text-[10px] text-muted-foreground mt-1 mr-[36px]">
+                    مقارنة نشاط البحث وتحويله لطلبات — أداة لاكتشاف الفرص
                   </p>
                 </div>
                 <Button
