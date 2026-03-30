@@ -42,8 +42,8 @@ const CompleteProfileDialog = ({ open, onOpenChange, userId }: CompleteProfileDi
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm p-0 overflow-hidden rounded-2xl border-border/60" dir="rtl">
+    <Dialog open={open} onOpenChange={() => {}}>
+      <DialogContent className="max-w-sm p-0 overflow-hidden rounded-2xl border-border/60 [&>button[aria-label='Close']]:hidden" dir="rtl" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
         <div className="bg-secondary px-6 pt-6 pb-5 text-center">
           <div className="w-14 h-14 rounded-2xl bg-primary/15 border border-primary/20 flex items-center justify-center mx-auto mb-3">
             <UserCheck className="w-7 h-7 text-primary" />
@@ -54,13 +54,13 @@ const CompleteProfileDialog = ({ open, onOpenChange, userId }: CompleteProfileDi
             </DialogTitle>
           </DialogHeader>
           <p className="text-secondary-foreground/60 text-sm mt-1">
-            أدخل رقم هاتفك للتواصل معك بخصوص الطلبات
+            أدخل رقم هاتفك لتفعيل حسابك والتواصل معك بخصوص الطلبات
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="px-6 pb-6 pt-4 space-y-4">
           <div className="space-y-1.5">
-            <Label className="text-xs font-bold">رقم الهاتف</Label>
+            <Label className="text-xs font-bold">رقم الهاتف <span className="text-destructive">*</span></Label>
             <div className="relative">
               <Input
                 value={phone}
@@ -76,16 +76,12 @@ const CompleteProfileDialog = ({ open, onOpenChange, userId }: CompleteProfileDi
           </div>
 
           <Button type="submit" className="w-full h-11 rounded-xl font-bold" disabled={loading}>
-            {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> جاري الحفظ...</> : "حفظ رقم الهاتف"}
+            {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> جاري الحفظ...</> : "تفعيل الحساب"}
           </Button>
 
-          <button
-            type="button"
-            onClick={() => onOpenChange(false)}
-            className="w-full text-xs text-muted-foreground hover:underline"
-          >
-            لاحقاً
-          </button>
+          <p className="text-[11px] text-muted-foreground text-center">
+            رقم الهاتف مطلوب لتفعيل حسابك ولن يتم مشاركته مع أطراف خارجية
+          </p>
         </form>
       </DialogContent>
     </Dialog>
