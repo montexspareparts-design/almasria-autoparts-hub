@@ -12,7 +12,7 @@ import { shareQuoteWhatsApp, shareQuoteEmail } from "@/lib/shareQuote";
 import {
   FileText, Download, Clock, RefreshCw, Eye, Search,
   Plus, X, ShoppingCart, ArrowLeft, Loader2, AlertTriangle, ChevronRight,
-  CheckCircle2, Printer, MessageCircle, Mail
+  CheckCircle2, Printer, MessageCircle, Mail, Package
 } from "lucide-react";
 
 interface PriceList {
@@ -506,6 +506,9 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
   const openPriceList = async (list: PriceList) => {
     setViewingList(list);
     setPdfSignedUrl(null);
+    setLinkedProducts([]);
+    setLinkedFilter("");
+    fetchLinkedProducts(list.id);
 
     // Record the view
     if (user) {
@@ -542,6 +545,12 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
       setPdfLoading(false);
     }
   };
+
+  // ─── Linked products for browsing ───
+  const [linkedProducts, setLinkedProducts] = useState<Product[]>([]);
+  const [loadingLinked, setLoadingLinked] = useState(false);
+  const [linkedFilter, setLinkedFilter] = useState("");
+  const [showLinkedList, setShowLinkedList] = useState(true);
 
   // ─── QUOTE SUMMARY MODE ───
   if (createdQuote) {
@@ -685,6 +694,58 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
     );
   }
 
+  const fetchLinkedProducts = async (listId: string) => {
+    setLoadingLinked(true);
+    const { data: linked } = await supabase
+      .from("price_list_products")
+      .select("product_id, price")
+      .eq("price_list_id", listId);
+
+    if (!linked || linked.length === 0) {
+      setLinkedProducts([]);
+      setLoadingLinked(false);
+      return;
+    }
+
+    const plPrices: Record<string, number | null> = {};
+    for (const l of linked) {
+      plPrices[l.product_id] = l.price != null ? Number(l.price) : null;
+    }
+    setPriceListPrices(prev => ({ ...prev, ...plPrices }));
+
+    const productIds = linked.map(l => l.product_id);
+    // Fetch in chunks of 100
+    const allProducts: Product[] = [];
+    for (let i = 0; i < productIds.length; i += 100) {
+      const chunk = productIds.slice(i, i + 100);
+      const { data } = await supabase
+        .from("products")
+        .select("id, name_ar, sku, base_price, sale_price, is_on_sale, image_url, stock_quantity")
+        .eq("is_active", true)
+        .in("id", chunk);
+      if (data) allProducts.push(...(data as Product[]));
+    }
+    setLinkedProducts(allProducts);
+    setLoadingLinked(false);
+  };
+
+  const isProductSelected = (productId: string) =>
+    selectedProducts.some(sp => sp.product.id === productId);
+
+  const toggleProductSelection = async (product: Product) => {
+    if (isProductSelected(product.id)) {
+      removeProduct(product.id);
+    } else {
+      await addProduct(product);
+    }
+  };
+
+  const filteredLinkedProducts = linkedProducts.filter(p => {
+    if (!linkedFilter) return true;
+    const q = linkedFilter.toLowerCase();
+    return p.name_ar.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q);
+  });
+
   // ─── PDF VIEWER MODE ───
   if (viewingList) {
     const downloadPdf = () => {
@@ -695,7 +756,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => { setViewingList(null); setSelectedProducts([]); setSearchQuery(""); setPdfSignedUrl(null); setEditingQuoteId(null); setEditingQuoteNumber(null); }}>
+          <Button variant="ghost" size="sm" onClick={() => { setViewingList(null); setSelectedProducts([]); setSearchQuery(""); setPdfSignedUrl(null); setEditingQuoteId(null); setEditingQuoteNumber(null); setLinkedProducts([]); setLinkedFilter(""); }}>
             <ArrowLeft className="w-4 h-4 ml-1" />
             رجوع
           </Button>
@@ -717,14 +778,14 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
         </div>
 
         <div className="flex flex-col lg:flex-row gap-4">
-          {/* PDF Viewer */}
-          <div className="flex-1 min-w-0">
+          {/* PDF Viewer + Linked Products List */}
+          <div className="flex-1 min-w-0 space-y-4">
             {pdfLoading ? (
-              <div className="border border-border rounded-lg bg-muted/30 flex items-center justify-center" style={{ height: "70vh" }}>
+              <div className="border border-border rounded-lg bg-muted/30 flex items-center justify-center" style={{ height: "50vh" }}>
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
               </div>
             ) : pdfSignedUrl ? (
-              <div className="border border-border rounded-lg overflow-hidden bg-muted/30" style={{ height: "70vh" }}>
+              <div className="border border-border rounded-lg overflow-hidden bg-muted/30" style={{ height: "50vh" }}>
                 <iframe
                   src={`https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(pdfSignedUrl)}`}
                   className="w-full h-full"
@@ -740,9 +801,114 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
                 </CardContent>
               </Card>
             )}
+
+            {/* Browsable Linked Products */}
+            <div className="border border-border rounded-lg bg-card">
+              <button
+                onClick={() => setShowLinkedList(!showLinkedList)}
+                className="w-full flex items-center gap-2 p-3 border-b border-border hover:bg-muted/50 transition-colors"
+              >
+                <Package className="w-4 h-4 text-primary" />
+                <span className="text-sm font-bold text-foreground flex-1 text-right">
+                  أصناف الكشف ({linkedProducts.length})
+                </span>
+                <span className="text-xs text-muted-foreground">اضغط على الصنف لتحديده</span>
+                <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${showLinkedList ? "rotate-90" : ""}`} />
+              </button>
+
+              {showLinkedList && (
+                <>
+                  {/* Filter input */}
+                  <div className="p-2 border-b border-border">
+                    <div className="relative">
+                      <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                      <Input
+                        placeholder="فلتر الأصناف..."
+                        value={linkedFilter}
+                        onChange={(e) => setLinkedFilter(e.target.value)}
+                        className="pr-9 h-8 text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  {loadingLinked ? (
+                    <div className="flex justify-center py-8">
+                      <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                    </div>
+                  ) : filteredLinkedProducts.length === 0 ? (
+                    <div className="p-6 text-center">
+                      <p className="text-xs text-muted-foreground">
+                        {linkedProducts.length === 0 ? "لا توجد أصناف مرتبطة بهذا الكشف" : "لا توجد نتائج"}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-border max-h-[40vh] overflow-y-auto">
+                      {filteredLinkedProducts.map(product => {
+                        const selected = isProductSelected(product.id);
+                        return (
+                          <button
+                            key={product.id}
+                            onClick={() => toggleProductSelection(product)}
+                            disabled={!selected && remainingToday === 0}
+                            className={`w-full flex items-center gap-3 p-3 text-right transition-all ${
+                              selected
+                                ? "bg-primary/5 border-r-2 border-r-primary"
+                                : "hover:bg-muted/50"
+                            } ${!selected && remainingToday === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+                          >
+                            {/* Checkbox indicator */}
+                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
+                              selected
+                                ? "bg-primary border-primary"
+                                : "border-muted-foreground/30"
+                            }`}>
+                              {selected && <CheckCircle2 className="w-3.5 h-3.5 text-primary-foreground" />}
+                            </div>
+
+                            {/* Product image */}
+                            {product.image_url ? (
+                              <img src={product.image_url} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0 border border-border" />
+                            ) : (
+                              <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
+                                <Package className="w-4 h-4 text-muted-foreground/40" />
+                              </div>
+                            )}
+
+                            {/* Product info */}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium text-foreground truncate">{product.name_ar}</p>
+                              <p className="text-[10px] text-muted-foreground font-mono">{product.sku}</p>
+                            </div>
+
+                            {/* Stock indicator */}
+                            <Badge
+                              variant={product.stock_quantity > 0 ? "secondary" : "destructive"}
+                              className="text-[9px] h-5 shrink-0"
+                            >
+                              {product.stock_quantity > 0 ? "متوفر" : "نفد"}
+                            </Badge>
+
+                            {/* Add/remove icon */}
+                            <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
+                              selected ? "bg-destructive/10" : "bg-primary/10"
+                            }`}>
+                              {selected ? (
+                                <X className="w-3.5 h-3.5 text-destructive" />
+                              ) : (
+                                <Plus className="w-3.5 h-3.5 text-primary" />
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
 
-          {/* Side Panel - Product Search & Selected */}
+          {/* Side Panel - Search & Selected */}
           <div className="w-full lg:w-80 xl:w-96 shrink-0 space-y-3">
             {/* Daily Limit */}
             <div className={`rounded-lg border p-2.5 flex items-center gap-2 text-xs ${remainingToday <= 5 ? "border-destructive/30 bg-destructive/5" : "border-primary/20 bg-primary/5"}`}>
@@ -811,7 +977,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
 
               {selectedProducts.length === 0 ? (
                 <div className="p-6 text-center">
-                  <p className="text-xs text-muted-foreground">ابحث عن أصناف من الكشف وأضفها هنا</p>
+                  <p className="text-xs text-muted-foreground">حدد أصناف من القائمة أدناه أو ابحث وأضفها هنا</p>
                 </div>
               ) : (
                 <div className="divide-y divide-border max-h-60 overflow-y-auto">
