@@ -409,10 +409,12 @@ const AdminCustomerIntelligence = () => {
 
       {/* Dealers vs Retail Pie Chart */}
       {totalCustomers > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-bold flex items-center gap-2">
-              <Users className="w-5 h-5 text-primary" />
+        <Card className="rounded-2xl border-border/40 shadow-sm overflow-hidden">
+          <CardHeader className="pb-2 bg-gradient-to-l from-blue-500/5 to-transparent">
+            <CardTitle className="text-base font-black flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-blue-500/15 flex items-center justify-center">
+                <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              </div>
               نسبة التجار مقابل العملاء القطاعيين
             </CardTitle>
           </CardHeader>
