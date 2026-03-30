@@ -1436,7 +1436,9 @@ const AdminCustomerIntelligence = () => {
                       </p>
                     )}
                   </div>
+                  </motion.div>
                 )}
+                </AnimatePresence>
               </div>
             );
           })}
