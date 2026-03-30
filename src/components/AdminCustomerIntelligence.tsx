@@ -18,6 +18,7 @@ import {
   Users, Search, Eye, ShoppingCart, Phone, Mail, Car,
   TrendingUp, Clock, ChevronDown, ChevronUp, BarChart3,
   Package, Calendar as CalendarIcon, Filter, X, Download,
+  MessageCircle,
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 
@@ -498,7 +499,7 @@ const AdminCustomerIntelligence = () => {
           ))}
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {filteredProfiles?.map((profile) => {
             const isExpanded = expandedUser === profile.user_id;
             const customerType = getCustomerType(profile.user_id);
@@ -506,170 +507,218 @@ const AdminCustomerIntelligence = () => {
             const viewedProducts = userViewsMap[profile.user_id] || [];
             const orders = ordersMap?.[profile.user_id];
 
+            const formatPhoneForWhatsApp = (phone: string) => {
+              let cleaned = phone.replace(/[\s\-()]/g, "");
+              cleaned = cleaned.replace(/^002/, "").replace(/^0020/, "");
+              if (cleaned.startsWith("0")) cleaned = "20" + cleaned.slice(1);
+              if (!cleaned.startsWith("+")) cleaned = "+" + cleaned;
+              return cleaned;
+            };
+
             return (
-              <Card key={profile.user_id} className="overflow-hidden">
-                <CardContent className="p-0">
-                  {/* Header row */}
+              <div
+                key={profile.user_id}
+                className={cn(
+                  "rounded-2xl border bg-card overflow-hidden transition-all duration-200",
+                  isExpanded ? "border-primary/30 shadow-md" : "border-border hover:border-border/80"
+                )}
+              >
+                {/* Header row */}
+                <div className="flex items-center gap-3 p-4">
+                  {/* Avatar */}
+                  <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <Users className="w-5 h-5 text-primary" />
+                  </div>
+
+                  {/* Main info — clickable to expand */}
                   <button
-                    className="w-full p-4 flex items-center gap-4 hover:bg-muted/30 transition-colors text-right"
+                    className="flex-1 min-w-0 text-right"
                     onClick={() => setExpandedUser(isExpanded ? null : profile.user_id)}
                   >
-                    {/* Avatar */}
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                      <Users className="w-5 h-5 text-primary" />
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold text-sm text-foreground">
+                        {profile.full_name || "بدون اسم"}
+                      </span>
+                      <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-md", getTypeBadgeColor(customerType))}>
+                        {customerType}
+                      </span>
                     </div>
-
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-bold text-foreground">
-                          {profile.full_name || "بدون اسم"}
-                        </span>
-                        <Badge className={`text-[10px] ${getTypeBadgeColor(customerType)}`}>
-                          {customerType}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1 flex-wrap">
-                        {profile.phone && (
-                          <span className="flex items-center gap-1">
-                            <Phone className="w-3 h-3" />{profile.phone}
-                          </span>
-                        )}
-                        {profile.car_model && (
-                          <span className="flex items-center gap-1">
-                            <Car className="w-3 h-3" />{profile.car_model}
-                            {profile.car_year && ` (${profile.car_year})`}
-                          </span>
-                        )}
+                    <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-1 flex-wrap">
+                      {profile.phone && (
                         <span className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          {new Date(profile.created_at).toLocaleDateString("ar-EG")}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Quick stats */}
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground shrink-0">
-                      {searches.length > 0 && (
-                        <span className="flex items-center gap-1" title="عمليات بحث">
-                          <Search className="w-3.5 h-3.5" />{searches.length}
+                          <Phone className="w-3 h-3" />{profile.phone}
                         </span>
                       )}
-                      {viewedProducts.length > 0 && (
-                        <span className="flex items-center gap-1" title="أصناف تم تسعيرها">
-                          <Eye className="w-3.5 h-3.5" />{viewedProducts.length}
+                      {profile.car_model && (
+                        <span className="flex items-center gap-1">
+                          <Car className="w-3 h-3" />{profile.car_model}
+                          {profile.car_year && ` (${profile.car_year})`}
                         </span>
                       )}
-                      {orders && (
-                        <span className="flex items-center gap-1" title="طلبات">
-                          <ShoppingCart className="w-3.5 h-3.5" />{orders.count}
-                        </span>
-                      )}
-                      {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                      <span className="flex items-center gap-1">
+                        <CalendarIcon className="w-3 h-3" />
+                        {new Date(profile.created_at).toLocaleDateString("ar-EG")}
+                      </span>
                     </div>
                   </button>
 
-                  {/* Expanded detail */}
-                  {isExpanded && (
-                    <div className="px-4 pb-4 space-y-4 border-t border-border pt-4">
-                      {/* Contact info */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div className="bg-muted/50 rounded-lg p-3">
-                          <p className="text-[11px] text-muted-foreground mb-1">البريد الإلكتروني</p>
-                          <p className="text-sm font-semibold text-foreground flex items-center gap-1">
-                            <Mail className="w-3.5 h-3.5 text-primary" />
-                            {profile.email || "—"}
-                          </p>
+                  {/* Quick action buttons */}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {/* WhatsApp button */}
+                    {profile.phone && (
+                      <a
+                        href={`https://wa.me/${formatPhoneForWhatsApp(profile.phone)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-9 h-9 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 flex items-center justify-center transition-colors"
+                        title="تواصل عبر واتساب"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <MessageCircle className="w-4 h-4 text-emerald-600" />
+                      </a>
+                    )}
+
+                    {/* Quick stats badges */}
+                    <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                      {searches.length > 0 && (
+                        <span className="flex items-center gap-0.5 bg-muted/60 rounded-md px-1.5 py-1" title="عمليات بحث">
+                          <Search className="w-3 h-3" />{searches.length}
+                        </span>
+                      )}
+                      {viewedProducts.length > 0 && (
+                        <span className="flex items-center gap-0.5 bg-muted/60 rounded-md px-1.5 py-1" title="أصناف مسعّرة">
+                          <Eye className="w-3 h-3" />{viewedProducts.length}
+                        </span>
+                      )}
+                      {orders && (
+                        <span className="flex items-center gap-0.5 bg-muted/60 rounded-md px-1.5 py-1" title="طلبات">
+                          <ShoppingCart className="w-3 h-3" />{orders.count}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Expand toggle */}
+                    <button
+                      onClick={() => setExpandedUser(isExpanded ? null : profile.user_id)}
+                      className="w-8 h-8 rounded-lg hover:bg-muted/50 flex items-center justify-center transition-colors"
+                    >
+                      {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Expanded detail */}
+                {isExpanded && (
+                  <div className="px-4 pb-5 space-y-4 border-t border-border/50 pt-4">
+                    {/* Contact cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      <div className="bg-muted/30 rounded-xl p-3 flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                          <Mail className="w-4 h-4 text-primary" />
                         </div>
-                        <div className="bg-muted/50 rounded-lg p-3">
-                          <p className="text-[11px] text-muted-foreground mb-1">الهاتف</p>
-                          <p className="text-sm font-semibold text-foreground flex items-center gap-1">
-                            <Phone className="w-3.5 h-3.5 text-primary" />
-                            {profile.phone || "—"}
-                          </p>
+                        <div className="min-w-0">
+                          <p className="text-[10px] text-muted-foreground">البريد الإلكتروني</p>
+                          <p className="text-xs font-semibold text-foreground truncate">{profile.email || "—"}</p>
                         </div>
-                        <div className="bg-muted/50 rounded-lg p-3">
-                          <p className="text-[11px] text-muted-foreground mb-1">السيارة</p>
-                          <p className="text-sm font-semibold text-foreground flex items-center gap-1">
-                            <Car className="w-3.5 h-3.5 text-primary" />
+                      </div>
+                      <div className="bg-muted/30 rounded-xl p-3 flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                          <Phone className="w-4 h-4 text-primary" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] text-muted-foreground">الهاتف</p>
+                          <p className="text-xs font-semibold text-foreground" dir="ltr">{profile.phone || "—"}</p>
+                        </div>
+                      </div>
+                      <div className="bg-muted/30 rounded-xl p-3 flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                          <Car className="w-4 h-4 text-primary" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] text-muted-foreground">السيارة</p>
+                          <p className="text-xs font-semibold text-foreground">
                             {profile.car_model ? `${profile.car_model}${profile.car_year ? ` (${profile.car_year})` : ""}` : "لم يحدد"}
                           </p>
                         </div>
                       </div>
+                    </div>
 
-                      {/* Orders summary */}
-                      {orders && (
-                        <div className="bg-green-50 dark:bg-green-950/20 rounded-lg p-3">
-                          <p className="text-xs font-bold text-green-800 dark:text-green-400 mb-1 flex items-center gap-1">
-                            <ShoppingCart className="w-3.5 h-3.5" />
-                            الطلبات
-                          </p>
-                          <p className="text-sm text-foreground">
+                    {/* Orders summary */}
+                    {orders && (
+                      <div className="bg-emerald-50 dark:bg-emerald-950/20 rounded-xl p-3 flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-500/15 flex items-center justify-center shrink-0">
+                          <ShoppingCart className="w-4 h-4 text-emerald-600" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400">الطلبات</p>
+                          <p className="text-sm text-foreground font-medium">
                             {orders.count} طلب • إجمالي {orders.total.toLocaleString("ar-EG")} ج.م
                           </p>
                         </div>
-                      )}
+                      </div>
+                    )}
 
-                      {/* Search history */}
-                      {searches.length > 0 && (
-                        <div>
-                          <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1">
-                            <Search className="w-3.5 h-3.5 text-primary" />
-                            سجل البحث ({searches.length} عملية)
-                          </p>
-                          <div className="flex flex-wrap gap-1.5">
-                            {searches
-                              .sort((a, b) => b.count - a.count)
-                              .slice(0, 15)
-                              .map((s, i) => (
-                                <Badge key={i} variant="outline" className="text-xs gap-1">
-                                  {s.query}
-                                  {s.count > 1 && (
-                                    <span className="text-[9px] bg-primary/10 text-primary px-1 rounded-full">
-                                      {s.count}×
-                                    </span>
-                                  )}
-                                </Badge>
-                              ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Viewed products */}
-                      {viewedProducts.length > 0 && productsMap && (
-                        <div>
-                          <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1">
-                            <Eye className="w-3.5 h-3.5 text-primary" />
-                            الأصناف التي تم تسعيرها ({viewedProducts.length} صنف)
-                          </p>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            {viewedProducts.slice(0, 10).map((pid) => {
-                              const product = productsMap[pid];
-                              if (!product) return null;
-                              return (
-                                <div key={pid} className="flex items-center gap-2 bg-muted/30 rounded-lg p-2">
-                                  <Package className="w-4 h-4 text-primary shrink-0" />
-                                  <div className="min-w-0">
-                                    <p className="text-xs font-semibold text-foreground truncate">{product.name_ar}</p>
-                                    <p className="text-[10px] text-muted-foreground font-mono">{product.sku}</p>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* No activity */}
-                      {searches.length === 0 && viewedProducts.length === 0 && !orders && (
-                        <p className="text-sm text-muted-foreground text-center py-4">
-                          لا يوجد نشاط مسجل لهذا العميل بعد
+                    {/* Search history */}
+                    {searches.length > 0 && (
+                      <div>
+                        <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1.5">
+                          <Search className="w-3.5 h-3.5 text-primary" />
+                          سجل البحث ({searches.length} عملية)
                         </p>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                        <div className="flex flex-wrap gap-1.5">
+                          {searches
+                            .sort((a, b) => b.count - a.count)
+                            .slice(0, 15)
+                            .map((s, i) => (
+                              <span key={i} className="inline-flex items-center gap-1 text-xs bg-muted/50 border border-border/50 rounded-lg px-2.5 py-1 font-medium text-foreground">
+                                {s.query}
+                                {s.count > 1 && (
+                                  <span className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-md font-bold">
+                                    {s.count}×
+                                  </span>
+                                )}
+                              </span>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Viewed products */}
+                    {viewedProducts.length > 0 && productsMap && (
+                      <div>
+                        <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1.5">
+                          <Eye className="w-3.5 h-3.5 text-primary" />
+                          الأصناف المسعّرة ({viewedProducts.length} صنف)
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {viewedProducts.slice(0, 10).map((pid) => {
+                            const product = productsMap[pid];
+                            if (!product) return null;
+                            return (
+                              <div key={pid} className="flex items-center gap-2.5 bg-muted/30 rounded-xl p-2.5">
+                                <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                                  <Package className="w-3.5 h-3.5 text-primary" />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-xs font-semibold text-foreground truncate">{product.name_ar}</p>
+                                  <p className="text-[10px] text-muted-foreground font-mono">{product.sku}</p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* No activity */}
+                    {searches.length === 0 && viewedProducts.length === 0 && !orders && (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        لا يوجد نشاط مسجل لهذا العميل بعد
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
             );
           })}
 
