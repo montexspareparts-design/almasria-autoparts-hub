@@ -1076,12 +1076,12 @@ const AdminCustomerIntelligence = () => {
                   { icon: TrendingUp, value: `${overallConversion}%`, label: "معدل التحويل", change: conversionChange, bg: "bg-gradient-to-br from-amber-500/8 to-amber-500/3", iconBg: "bg-amber-500/15", iconColor: "text-amber-600 dark:text-amber-400", valueColor: "text-amber-700 dark:text-amber-400" },
                   { icon: BarChart3, value: avgSearchesPerUser, label: "متوسط بحث/عميل", change: avgChange, bg: "bg-gradient-to-br from-blue-500/8 to-blue-500/3", iconBg: "bg-blue-500/15", iconColor: "text-blue-600 dark:text-blue-400", valueColor: "text-blue-700 dark:text-blue-400" },
                 ].map((kpi, idx) => (
-                  <div key={idx} className={cn("rounded-2xl p-4 text-center border border-border/30", kpi.bg)}>
-                    <div className={cn("w-9 h-9 rounded-xl mx-auto mb-2 flex items-center justify-center", kpi.iconBg)}>
-                      <kpi.icon className={cn("w-4.5 h-4.5", kpi.iconColor)} />
+                  <div key={idx} className={cn("rounded-xl p-3 text-center border border-border/30", kpi.bg)}>
+                    <div className={cn("w-7 h-7 rounded-lg mx-auto mb-1.5 flex items-center justify-center", kpi.iconBg)}>
+                      <kpi.icon className={cn("w-3.5 h-3.5", kpi.iconColor)} />
                     </div>
-                    <p className={cn("text-2xl font-black tracking-tight", kpi.valueColor)}>{kpi.value}</p>
-                    <p className="text-[11px] text-muted-foreground font-medium mt-0.5">{kpi.label}</p>
+                    <p className={cn("text-xl font-black tracking-tight", kpi.valueColor)}>{kpi.value}</p>
+                    <p className="text-[10px] text-muted-foreground font-medium">{kpi.label}</p>
                     {kpi.change !== null && (
                       <div className={cn(
                         "flex items-center justify-center gap-0.5 mt-2 text-[10px] font-bold rounded-full px-2.5 py-0.5 mx-auto w-fit",
