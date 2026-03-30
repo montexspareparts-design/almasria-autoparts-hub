@@ -563,6 +563,7 @@ const AdminCustomerIntelligence = () => {
           conversionRate: string;
           topQueries: string[];
           searchDetails: { query: string; count: number; lastAt: string }[];
+          isDealer: boolean;
         }[] = [];
 
         profiles.forEach(p => {
