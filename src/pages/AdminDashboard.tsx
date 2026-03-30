@@ -446,29 +446,54 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="bg-secondary border-b border-primary/20 sticky top-0 z-50">
-        <div className="flex items-center justify-between h-14 px-4">
-          <div className="flex items-center gap-3">
+      <header className="bg-secondary/95 backdrop-blur-md border-b border-border/30 sticky top-0 z-50">
+        <div className="flex items-center justify-between h-16 px-5">
+          <div className="flex items-center gap-4">
             <Button
               variant="ghost"
               size="icon"
-              className="lg:hidden text-secondary-foreground"
+              className="lg:hidden text-secondary-foreground/70 hover:text-secondary-foreground hover:bg-white/10 rounded-xl"
               onClick={() => setSidebarOpen(!sidebarOpen)}
             >
               {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </Button>
-            <a href="/" className="text-lg font-bold text-secondary-foreground">
-              المصرية <span className="text-gradient-red">جروب</span>
+            <a href="/" className="flex items-center gap-2.5 group">
+              <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center">
+                <Package className="w-5 h-5 text-primary" />
+              </div>
+              <div className="hidden sm:block">
+                <span className="text-base font-black text-secondary-foreground leading-none">
+                  المصرية <span className="text-primary">جروب</span>
+                </span>
+                <p className="text-[10px] text-secondary-foreground/50 font-medium mt-0.5">لوحة الإدارة</p>
+              </div>
             </a>
-            <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded">إدارة</span>
           </div>
-          <div className="flex items-center gap-2">
+
+          <div className="flex items-center gap-3">
             {pendingCount > 0 && (
-              <span className="text-xs bg-yellow-500/20 text-yellow-600 px-2 py-1 rounded-full font-medium">
+              <button
+                onClick={() => { setActiveSection("dealers"); setSidebarOpen(false); }}
+                className="flex items-center gap-1.5 text-xs bg-amber-500/15 text-amber-600 dark:text-amber-400 px-3 py-1.5 rounded-xl font-bold hover:bg-amber-500/25 transition-colors"
+              >
+                <Clock className="w-3.5 h-3.5" />
                 {pendingCount} طلب جديد
-              </span>
+              </button>
             )}
-            <Button variant="ghost" size="sm" onClick={() => { signOut(); navigate("/"); }} className="text-secondary-foreground/60">
+
+            {currentSection && (
+              <div className="hidden md:flex items-center gap-2 text-xs text-secondary-foreground/40 border-r border-secondary-foreground/10 pr-3">
+                <currentSection.icon className="w-3.5 h-3.5" />
+                <span className="font-medium">{currentSection.label}</span>
+              </div>
+            )}
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => { signOut(); navigate("/"); }}
+              className="w-9 h-9 rounded-xl text-secondary-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-colors"
+            >
               <LogOut className="w-4 h-4" />
             </Button>
           </div>
