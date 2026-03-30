@@ -1055,8 +1055,12 @@ const AdminCustomerIntelligence = () => {
       })()}
 
       {/* Filters bar */}
-      <Card>
-        <CardContent className="p-4 space-y-3">
+      <Card className="rounded-2xl border-border/40 shadow-sm">
+        <CardContent className="p-5 space-y-3">
+          <h4 className="text-sm font-black text-foreground flex items-center gap-2 mb-1">
+            <Filter className="w-4 h-4 text-primary" />
+            فلترة العملاء
+          </h4>
           {/* Row 1: Text search */}
           <div className="relative">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -1064,7 +1068,7 @@ const AdminCustomerIntelligence = () => {
               placeholder="ابحث بالاسم، الهاتف، الإيميل، أو نوع السيارة..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pr-10"
+              className="pr-10 rounded-xl h-10"
             />
           </div>
 
