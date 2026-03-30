@@ -31,6 +31,9 @@ const getNotificationTarget = (
 
   // Admin-specific routing → /admin?section=...
   if (isAdmin) {
+    if (n.type === "conversion_opportunity") {
+      return { path: "/admin", query: "section=customer-intel" };
+    }
     if (n.type === "order" || n.type === "order_edit" || msg.includes("طلب") || msg.includes("order")) {
       return { path: "/admin", query: "section=orders" };
     }
