@@ -980,7 +980,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
             )}
 
             {/* Selected Products */}
-            <div className="border border-border rounded-lg bg-card">
+            <div className="border border-border rounded-lg bg-card flex flex-col">
               <div className="flex items-center gap-2 p-3 border-b border-border">
                 <ShoppingCart className="w-4 h-4 text-foreground" />
                 <span className="text-xs font-bold text-foreground flex-1">
@@ -993,61 +993,98 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
                   <p className="text-xs text-muted-foreground">حدد أصناف من القائمة أدناه أو ابحث وأضفها هنا</p>
                 </div>
               ) : (
-              <div className="divide-y divide-border max-h-60 overflow-y-auto">
-                  {selectedProducts.map(sp => (
-                    <div key={sp.product.id} className="flex items-center gap-2 p-2.5">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-foreground truncate">{sp.product.name_ar}</p>
-                        <p className="text-[10px] text-muted-foreground font-mono">{sp.product.sku}</p>
-                      </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <div className="flex items-center border border-border rounded-md overflow-hidden">
-                          <button
-                            onClick={() => {
-                              if (sp.quantity <= 1) {
-                                removeProduct(sp.product.id);
-                              } else {
+                <>
+                  <div className="divide-y divide-border max-h-60 overflow-y-auto">
+                    <AnimatePresence>
+                    {selectedProducts.map(sp => (
+                      <motion.div
+                        key={sp.product.id}
+                        layout
+                        initial={{ opacity: 0, scale: 0.9, x: -20 }}
+                        animate={{ opacity: 1, scale: 1, x: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, x: 20 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                        className="flex items-center gap-2 p-2.5"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium text-foreground truncate">{sp.product.name_ar}</p>
+                          <p className="text-[10px] text-muted-foreground font-mono">{sp.product.sku}</p>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <div className="flex items-center border border-border rounded-md overflow-hidden">
+                            <button
+                              onClick={() => {
+                                if (sp.quantity <= 1) {
+                                  removeProduct(sp.product.id);
+                                } else {
+                                  setSelectedProducts(prev => prev.map(p =>
+                                    p.product.id === sp.product.id ? { ...p, quantity: p.quantity - 1 } : p
+                                  ));
+                                }
+                              }}
+                              className="w-6 h-6 flex items-center justify-center hover:bg-muted transition-colors"
+                            >
+                              <Minus className="w-3 h-3 text-muted-foreground" />
+                            </button>
+                            <input
+                              type="number"
+                              min={1}
+                              value={sp.quantity}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value);
+                                if (!isNaN(val) && val >= 1) {
+                                  setSelectedProducts(prev => prev.map(p =>
+                                    p.product.id === sp.product.id ? { ...p, quantity: val } : p
+                                  ));
+                                }
+                              }}
+                              className="w-8 h-6 text-center text-xs font-bold bg-background border-x border-border focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            />
+                            <button
+                              onClick={() => {
                                 setSelectedProducts(prev => prev.map(p =>
-                                  p.product.id === sp.product.id ? { ...p, quantity: p.quantity - 1 } : p
+                                  p.product.id === sp.product.id ? { ...p, quantity: p.quantity + 1 } : p
                                 ));
-                              }
-                            }}
-                            className="w-6 h-6 flex items-center justify-center hover:bg-muted transition-colors"
-                          >
-                            <Minus className="w-3 h-3 text-muted-foreground" />
-                          </button>
-                          <input
-                            type="number"
-                            min={1}
-                            value={sp.quantity}
-                            onChange={(e) => {
-                              const val = parseInt(e.target.value);
-                              if (!isNaN(val) && val >= 1) {
-                                setSelectedProducts(prev => prev.map(p =>
-                                  p.product.id === sp.product.id ? { ...p, quantity: val } : p
-                                ));
-                              }
-                            }}
-                            className="w-8 h-6 text-center text-xs font-bold bg-background border-x border-border focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          />
-                          <button
-                            onClick={() => {
-                              setSelectedProducts(prev => prev.map(p =>
-                                p.product.id === sp.product.id ? { ...p, quantity: p.quantity + 1 } : p
-                              ));
-                            }}
-                            className="w-6 h-6 flex items-center justify-center hover:bg-muted transition-colors"
-                          >
-                            <Plus className="w-3 h-3 text-primary" />
+                              }}
+                              className="w-6 h-6 flex items-center justify-center hover:bg-muted transition-colors"
+                            >
+                              <Plus className="w-3 h-3 text-primary" />
+                            </button>
+                          </div>
+                          <button onClick={() => removeProduct(sp.product.id)} className="p-1 hover:bg-destructive/10 rounded">
+                            <X className="w-3 h-3 text-destructive" />
                           </button>
                         </div>
-                        <button onClick={() => removeProduct(sp.product.id)} className="p-1 hover:bg-destructive/10 rounded">
-                          <X className="w-3 h-3 text-destructive" />
-                        </button>
-                      </div>
+                      </motion.div>
+                    ))}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* ─── Sticky Total Bar ─── */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="sticky bottom-0 bg-muted/50 backdrop-blur-sm border-t border-border p-2.5 flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-muted-foreground">الإجمالي:</span>
+                      <motion.span
+                        key={selectedProducts.reduce((s, p) => s + p.quantity, 0)}
+                        initial={{ scale: 1.2 }}
+                        animate={{ scale: 1 }}
+                        className="text-xs font-black text-primary"
+                      >
+                        {selectedProducts.reduce((s, p) => s + p.quantity, 0)} قطعة
+                      </motion.span>
                     </div>
-                  ))}
-                </div>
+                    <button
+                      onClick={() => setSelectedProducts([])}
+                      className="text-[10px] text-destructive/70 hover:text-destructive font-medium transition-colors"
+                    >
+                      مسح الكل
+                    </button>
+                  </motion.div>
+                </>
               )}
 
               {selectedProducts.length > 0 && (
@@ -1078,14 +1115,6 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
                       <ShoppingCart className="w-3.5 h-3.5" />
                     )}
                     تحويل لطلبية مباشرة ({selectedProducts.length} صنف)
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="w-full h-7 text-[10px] text-muted-foreground"
-                    onClick={() => setSelectedProducts([])}
-                  >
-                    مسح الكل
                   </Button>
                 </div>
               )}
