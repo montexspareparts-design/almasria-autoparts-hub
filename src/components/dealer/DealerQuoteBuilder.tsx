@@ -86,6 +86,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
   const [alertedProducts, setAlertedProducts] = useState<Set<string>>(new Set());
   const [todayItems, setTodayItems] = useState<QuoteItem[]>([]);
   const [loadingToday, setLoadingToday] = useState(false);
+  const [todayPricedIds, setTodayPricedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (user) {
@@ -149,9 +150,10 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
       .eq("user_id", user.id)
       .eq("view_date", today);
 
-    if (!views || views.length === 0) { setTodayItems([]); setLoadingToday(false); return; }
+    if (!views || views.length === 0) { setTodayItems([]); setTodayPricedIds(new Set()); setLoadingToday(false); return; }
 
     const productIds = views.map(v => v.product_id);
+    setTodayPricedIds(new Set(productIds));
     const { data: products } = await supabase
       .from("products")
       .select("id, name_ar, sku, base_price, sale_price, is_on_sale, image_url, stock_quantity")
@@ -234,11 +236,14 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
   };
 
   const addToQuote = async (product: Product) => {
-    if (dailyViews >= DAILY_LIMIT) {
+    const alreadyPriced = todayPricedIds.has(product.id);
+    const existing = quoteItems.find(i => i.product.id === product.id);
+    
+    // Only check limit for NEW products (not already priced today)
+    if (!alreadyPriced && !existing && dailyViews >= DAILY_LIMIT) {
       toast({ title: "تم استنفاذ الحد اليومي", description: `لقد استنفذت الحد اليومي (${DAILY_LIMIT} صنف)`, variant: "destructive" });
       return;
     }
-    const existing = quoteItems.find(i => i.product.id === product.id);
     if (existing) {
       setQuoteItems(prev => prev.map(i =>
         i.product.id === product.id ? { ...i, quantity: i.quantity + 1 } : i
@@ -246,7 +251,10 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
       return;
     }
     const price = await getProductPrice(product);
-    await recordPriceView(product.id);
+    // Only record view if not already priced today
+    if (!alreadyPriced) {
+      await recordPriceView(product.id);
+    }
     setQuoteItems(prev => [...prev, { product, quantity: 1, unit_price: price }]);
     setSearchQuery("");
     setSearchResults([]);

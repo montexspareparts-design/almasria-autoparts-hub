@@ -79,6 +79,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
   // Today's priced items
   const [todayPricedItems, setTodayPricedItems] = useState<Product[]>([]);
   const [loadingTodayItems, setLoadingTodayItems] = useState(false);
+  const [todayPricedIds, setTodayPricedIds] = useState<Set<string>>(new Set());
 
   // Quote summary state
   const [createdQuote, setCreatedQuote] = useState<{
@@ -111,6 +112,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
 
     if (views && views.length > 0) {
       const productIds = views.map(v => v.product_id);
+      setTodayPricedIds(new Set(productIds));
       const { data: products } = await supabase
         .from("products")
         .select("id, name_ar, sku, base_price, sale_price, is_on_sale, image_url, stock_quantity")
@@ -122,6 +124,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
       const ordered = productIds.map(id => productMap.get(id)).filter(Boolean) as Product[];
       setTodayPricedItems(ordered);
     } else {
+      setTodayPricedIds(new Set());
       setTodayPricedItems([]);
     }
     setLoadingTodayItems(false);
@@ -331,12 +334,18 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
   };
 
   const addProduct = async (product: Product) => {
-    const totalSelected = selectedProducts.reduce((sum, p) => sum + p.quantity, 0);
-    if (dailyViews + totalSelected >= DAILY_LIMIT) {
-      toast({ title: "تم الوصول للحد اليومي", description: `الحد الأقصى ${DAILY_LIMIT} صنف يومياً`, variant: "destructive" });
-      return;
-    }
+    const alreadyPriced = todayPricedIds.has(product.id);
     const existing = selectedProducts.find(p => p.product.id === product.id);
+    
+    // Only count new (not already priced) products against the limit
+    if (!alreadyPriced && !existing) {
+      const newSelectedCount = selectedProducts.filter(p => !todayPricedIds.has(p.product.id)).reduce((sum, p) => sum + p.quantity, 0);
+      if (dailyViews + newSelectedCount >= DAILY_LIMIT) {
+        toast({ title: "تم الوصول للحد اليومي", description: `الحد الأقصى ${DAILY_LIMIT} صنف يومياً`, variant: "destructive" });
+        return;
+      }
+    }
+
     if (existing) {
       setSelectedProducts(prev => prev.map(p =>
         p.product.id === product.id ? { ...p, quantity: p.quantity + 1 } : p
@@ -389,13 +398,15 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
       }))
     );
 
-    // Record price views
+    // Record price views only for NEW products (not already priced today)
     const today = new Date().toISOString().split("T")[0];
     for (const sp of selectedProducts) {
-      await supabase.from("dealer_price_views").upsert(
-        { user_id: user.id, product_id: sp.product.id, view_date: today },
-        { onConflict: "user_id,product_id,view_date" }
-      );
+      if (!todayPricedIds.has(sp.product.id)) {
+        await supabase.from("dealer_price_views").upsert(
+          { user_id: user.id, product_id: sp.product.id, view_date: today },
+          { onConflict: "user_id,product_id,view_date" }
+        );
+      }
     }
 
     toast({ title: "تم إرسال الطلبية ✓", description: `رقم الطلب: ${orderNumber}` });
@@ -476,13 +487,15 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
     // Push quote to ERP
     pushQuoteToERP(quoteId!);
 
-    // Record price views (upsert to avoid duplicate counting)
+    // Record price views only for NEW products (not already priced today)
     const today = new Date().toISOString().split("T")[0];
     for (const sp of selectedProducts) {
-      await supabase.from("dealer_price_views").upsert(
-        { user_id: user.id, product_id: sp.product.id, view_date: today },
-        { onConflict: "user_id,product_id,view_date" }
-      );
+      if (!todayPricedIds.has(sp.product.id)) {
+        await supabase.from("dealer_price_views").upsert(
+          { user_id: user.id, product_id: sp.product.id, view_date: today },
+          { onConflict: "user_id,product_id,view_date" }
+        );
+      }
     }
 
     // Show quote summary with action options
@@ -501,7 +514,9 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
   };
 
 
-  const remainingToday = Math.max(0, DAILY_LIMIT - dailyViews - selectedProducts.reduce((s, p) => s + p.quantity, 0));
+  // Only count NEW (not already priced) selected products against the limit
+  const newSelectedCount = selectedProducts.filter(p => !todayPricedIds.has(p.product.id)).reduce((s, p) => s + p.quantity, 0);
+  const remainingToday = Math.max(0, DAILY_LIMIT - dailyViews - newSelectedCount);
 
   // Get signed URL for PDF viewing
   const openPriceList = async (list: PriceList) => {
