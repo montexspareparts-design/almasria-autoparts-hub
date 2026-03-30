@@ -688,18 +688,22 @@ const AdminCustomerIntelligence = () => {
               {/* Summary KPIs */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="bg-muted/40 rounded-xl p-3 text-center">
+                  <Search className="w-5 h-5 text-primary mx-auto mb-1.5" />
                   <p className="text-2xl font-black text-foreground">{totalSearchers}</p>
                   <p className="text-[11px] text-muted-foreground font-medium">عميل يبحث</p>
                 </div>
                 <div className="bg-emerald-50 dark:bg-emerald-950/20 rounded-xl p-3 text-center">
+                  <ShoppingCart className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mx-auto mb-1.5" />
                   <p className="text-2xl font-black text-emerald-700 dark:text-emerald-400">{convertedCount}</p>
                   <p className="text-[11px] text-muted-foreground font-medium">تحوّلوا لطلبات</p>
                 </div>
                 <div className="bg-amber-50 dark:bg-amber-950/20 rounded-xl p-3 text-center">
+                  <TrendingUp className="w-5 h-5 text-amber-600 dark:text-amber-400 mx-auto mb-1.5" />
                   <p className="text-2xl font-black text-amber-700 dark:text-amber-400">{overallConversion}%</p>
                   <p className="text-[11px] text-muted-foreground font-medium">معدل التحويل</p>
                 </div>
                 <div className="bg-blue-50 dark:bg-blue-950/20 rounded-xl p-3 text-center">
+                  <BarChart3 className="w-5 h-5 text-blue-600 dark:text-blue-400 mx-auto mb-1.5" />
                   <p className="text-2xl font-black text-blue-700 dark:text-blue-400">{avgSearchesPerUser}</p>
                   <p className="text-[11px] text-muted-foreground font-medium">متوسط بحث/عميل</p>
                 </div>
