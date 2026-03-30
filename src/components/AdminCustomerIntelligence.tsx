@@ -1,4 +1,5 @@
 import { useState, useCallback, Fragment } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -913,9 +914,23 @@ const AdminCustomerIntelligence = () => {
                             )}
                           </td>
                         </tr>
+                        <AnimatePresence>
                         {expandedSearcher === d.userId && (
-                          <tr className="border-t border-border/30">
+                          <motion.tr
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="border-t border-border/30"
+                          >
                             <td colSpan={10} className="p-0">
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.3, ease: "easeInOut" }}
+                                className="overflow-hidden"
+                              >
                               <div className="bg-muted/30 px-6 py-4 space-y-3">
                                 <div className="flex items-center justify-between">
                                   <h5 className="text-xs font-black text-foreground flex items-center gap-2">
@@ -1004,9 +1019,11 @@ const AdminCustomerIntelligence = () => {
                                   );
                                 })()}
                               </div>
+                              </motion.div>
                             </td>
-                          </tr>
+                          </motion.tr>
                         )}
+                        </AnimatePresence>
                         </Fragment>
                       ))}
                     </tbody>
@@ -1302,8 +1319,15 @@ const AdminCustomerIntelligence = () => {
                   </div>
                 </div>
 
-                {/* Expanded detail */}
+                <AnimatePresence>
                 {isExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+                    className="overflow-hidden"
+                  >
                   <div className="px-5 pb-5 space-y-4 border-t border-border/30 pt-4 bg-gradient-to-b from-muted/20 to-transparent">
                     {/* Contact cards */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
@@ -1412,7 +1436,9 @@ const AdminCustomerIntelligence = () => {
                       </p>
                     )}
                   </div>
+                  </motion.div>
                 )}
+                </AnimatePresence>
               </div>
             );
           })}
