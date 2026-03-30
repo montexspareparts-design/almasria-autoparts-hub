@@ -19,7 +19,70 @@ import { format, differenceInDays } from "date-fns";
 import { ar } from "date-fns/locale";
 import * as XLSX from "xlsx-js-style";
 
+const addCompanyHeader = (ws: XLSX.WorkSheet, colCount: number) => {
+  const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
+  // Shift all existing rows down by 4 to make room for company header
+  for (let R = range.e.r; R >= 0; R--) {
+    for (let C = range.s.c; C <= range.e.c; C++) {
+      const oldAddr = XLSX.utils.encode_cell({ r: R, c: C });
+      const newAddr = XLSX.utils.encode_cell({ r: R + 4, c: C });
+      if (ws[oldAddr]) {
+        ws[newAddr] = ws[oldAddr];
+        delete ws[oldAddr];
+      }
+    }
+  }
+  // Company name - Row 1 (merged)
+  const companyStyle = {
+    font: { bold: true, color: { rgb: "FFFFFF" }, sz: 18, name: "Arial" },
+    fill: { fgColor: { rgb: "1A1A2E" } },
+    alignment: { horizontal: "center" as const, vertical: "center" as const },
+  };
+  ws[XLSX.utils.encode_cell({ r: 0, c: 0 })] = { v: "المصرية جروب | Al Masria Group", t: "s", s: companyStyle };
+  for (let C = 1; C < colCount; C++) {
+    ws[XLSX.utils.encode_cell({ r: 0, c: C })] = { v: "", t: "s", s: companyStyle };
+  }
+  // Subtitle - Row 2
+  const subtitleStyle = {
+    font: { bold: true, color: { rgb: "FFFFFF" }, sz: 11, name: "Arial" },
+    fill: { fgColor: { rgb: "C41E3A" } },
+    alignment: { horizontal: "center" as const, vertical: "center" as const },
+  };
+  ws[XLSX.utils.encode_cell({ r: 1, c: 0 })] = { v: "موزع معتمد لقطع غيار وزيوت تويوتا الأصلية", t: "s", s: subtitleStyle };
+  for (let C = 1; C < colCount; C++) {
+    ws[XLSX.utils.encode_cell({ r: 1, c: C })] = { v: "", t: "s", s: subtitleStyle };
+  }
+  // Contact info - Row 3
+  const contactStyle = {
+    font: { sz: 10, color: { rgb: "666666" }, name: "Arial" },
+    fill: { fgColor: { rgb: "F5F5F5" } },
+    alignment: { horizontal: "center" as const, vertical: "center" as const },
+  };
+  ws[XLSX.utils.encode_cell({ r: 2, c: 0 })] = { v: "📞 01000000000  |  🌐 almasriaautoparts.com  |  📍 القاهرة - الجيزة - الأقصر - دبي", t: "s", s: contactStyle };
+  for (let C = 1; C < colCount; C++) {
+    ws[XLSX.utils.encode_cell({ r: 2, c: C })] = { v: "", t: "s", s: contactStyle };
+  }
+  // Empty separator row 4
+  const sepStyle = { fill: { fgColor: { rgb: "FFFFFF" } } };
+  for (let C = 0; C < colCount; C++) {
+    ws[XLSX.utils.encode_cell({ r: 3, c: C })] = { v: "", t: "s", s: sepStyle };
+  }
+  // Merges for header rows
+  if (!ws["!merges"]) ws["!merges"] = [];
+  ws["!merges"].push(
+    { s: { r: 0, c: 0 }, e: { r: 0, c: colCount - 1 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: colCount - 1 } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: colCount - 1 } },
+  );
+  // Update range
+  range.e.r += 4;
+  ws["!ref"] = XLSX.utils.encode_range(range);
+};
+
 const applyExcelStyles = (ws: XLSX.WorkSheet, headerCount: number) => {
+  // First add the company header (shifts data down by 4 rows)
+  addCompanyHeader(ws, headerCount);
+
   const headerStyle = {
     font: { bold: true, color: { rgb: "FFFFFF" }, sz: 12, name: "Arial" },
     fill: { fgColor: { rgb: "C41E3A" } },
@@ -43,12 +106,13 @@ const applyExcelStyles = (ws: XLSX.WorkSheet, headerCount: number) => {
   };
   const altRowStyle = { ...cellStyle, fill: { fgColor: { rgb: "FFF5F5" } } };
   const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
+  // Row 4 (index 4) is now the data header row
   for (let C = range.s.c; C <= range.e.c; C++) {
-    const addr = XLSX.utils.encode_cell({ r: 0, c: C });
+    const addr = XLSX.utils.encode_cell({ r: 4, c: C });
     if (ws[addr]) ws[addr].s = headerStyle;
   }
   let customerIdx = 0;
-  for (let R = 1; R <= range.e.r; R++) {
+  for (let R = 5; R <= range.e.r; R++) {
     const numCell = ws[XLSX.utils.encode_cell({ r: R, c: 0 })];
     if (numCell && numCell.v !== "" && numCell.v !== undefined) customerIdx++;
     for (let C = range.s.c; C <= range.e.c; C++) {
@@ -56,7 +120,7 @@ const applyExcelStyles = (ws: XLSX.WorkSheet, headerCount: number) => {
       if (ws[addr]) ws[addr].s = customerIdx % 2 === 0 ? altRowStyle : cellStyle;
     }
   }
-  ws["!rows"] = [{ hpt: 28 }];
+  ws["!rows"] = [{ hpt: 40 }, { hpt: 24 }, { hpt: 22 }, { hpt: 10 }, { hpt: 28 }];
 };
 import { toast } from "@/hooks/use-toast";
 import {
