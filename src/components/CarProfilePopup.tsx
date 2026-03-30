@@ -8,21 +8,32 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import CarModelSelector from "./CarModelSelector";
 
-const POPUP_DISMISSED_KEY = "almasria_car_popup_dismissed";
-
 const CarProfilePopup = () => {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [carModel, setCarModel] = useState("");
   const [carYear, setCarYear] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isDealer, setIsDealer] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (!user) return;
-    const dismissed = localStorage.getItem(POPUP_DISMISSED_KEY);
-    if (dismissed) return;
 
     const checkProfile = async () => {
+      // Check if user is a dealer — dealers skip this popup
+      const { data: dealerData } = await supabase
+        .from("dealer_accounts")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (dealerData) {
+        setIsDealer(true);
+        return;
+      }
+      setIsDealer(false);
+
       const { data } = await supabase
         .from("profiles")
         .select("car_model, car_year")
@@ -30,7 +41,6 @@ const CarProfilePopup = () => {
         .maybeSingle();
 
       if (data && !data.car_model) {
-        // Delay popup to not interrupt initial page load
         setTimeout(() => setOpen(true), 3000);
       }
     };
@@ -38,7 +48,7 @@ const CarProfilePopup = () => {
   }, [user]);
 
   const handleSave = async () => {
-    if (!carModel || !user) return;
+    if (!carModel || !carYear || !user) return;
     setLoading(true);
     const { error } = await supabase
       .from("profiles")
@@ -57,16 +67,17 @@ const CarProfilePopup = () => {
     setLoading(false);
   };
 
-  const handleDismiss = () => {
-    localStorage.setItem(POPUP_DISMISSED_KEY, "true");
-    setOpen(false);
-  };
-
-  if (!user) return null;
+  if (!user || isDealer === null || isDealer) return null;
 
   return (
-    <Dialog open={open} onOpenChange={(val) => { if (!val) handleDismiss(); }}>
-      <DialogContent className="sm:max-w-md" dir="rtl">
+    <Dialog open={open} onOpenChange={() => {}}>
+      <DialogContent
+        className="sm:max-w-md [&>button]:hidden"
+        dir="rtl"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-lg">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -78,7 +89,7 @@ const CarProfilePopup = () => {
 
         <div className="space-y-4 py-2">
           <p className="text-sm text-muted-foreground leading-relaxed">
-            قولنا عربيتك إيه وهنقترحلك قطع الغيار اللي تناسبها مباشرة
+            حدد نوع عربيتك وسنة الصنع عشان نقدر نعرض لك قطع الغيار المناسبة
             <Sparkles className="w-3.5 h-3.5 text-primary inline mr-1" />
           </p>
 
@@ -87,17 +98,17 @@ const CarProfilePopup = () => {
             carYear={carYear}
             onModelChange={setCarModel}
             onYearChange={setCarYear}
+            required
             compact
           />
 
-          <div className="flex gap-2 pt-2">
-            <Button onClick={handleSave} disabled={!carModel || loading} className="flex-1 gap-2">
-              {loading ? "جاري الحفظ..." : "حفظ"}
-            </Button>
-            <Button variant="ghost" onClick={handleDismiss} className="text-muted-foreground">
-              لاحقاً
-            </Button>
-          </div>
+          <Button
+            onClick={handleSave}
+            disabled={!carModel || !carYear || loading}
+            className="w-full gap-2"
+          >
+            {loading ? "جاري الحفظ..." : "تأكيد وحفظ"}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
