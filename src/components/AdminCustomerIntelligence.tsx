@@ -818,7 +818,7 @@ const AdminCustomerIntelligence = () => {
                     </thead>
                     <tbody>
                       {top15.map((d, i) => (
-                        <React.Fragment key={d.userId}>
+                        <Fragment key={d.userId}>
                         <tr
                           className={cn(
                             "border-t border-border/50 transition-colors cursor-pointer hover:bg-muted/40",
