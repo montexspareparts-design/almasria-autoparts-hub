@@ -211,6 +211,11 @@ const AdminCustomerIntelligence = () => {
     if (customerTypeFilter && customerTypeFilter !== "all") {
       if (getCustomerType(p.user_id) !== customerTypeFilter) return false;
     }
+    if (accountTypeFilter !== "all") {
+      const isDealer = dealerUserIds?.has(p.user_id);
+      if (accountTypeFilter === "dealer" && !isDealer) return false;
+      if (accountTypeFilter === "retail" && isDealer) return false;
+    }
     return true;
   });
 
