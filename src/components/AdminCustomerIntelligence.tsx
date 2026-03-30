@@ -933,7 +933,7 @@ const AdminCustomerIntelligence = () => {
                             </td>
                           </tr>
                         )}
-                        </React.Fragment>
+                        </Fragment>
                       ))}
                     </tbody>
                   </table>
