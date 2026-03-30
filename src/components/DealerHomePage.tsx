@@ -48,7 +48,12 @@ const StockBadge = ({ qty, isRTL }: { qty: number; isRTL: boolean }) => (
   </span>
 );
 
-/* ─── Bottom Nav ─── */
+/* ─── Lazy Section Wrapper ─── */
+const LazyProductSection = ({ children }: { children: React.ReactNode }) => {
+  const [ref, visible] = useLazyVisible("300px");
+  return <div ref={ref}>{visible ? children : null}</div>;
+};
+
 const DealerHomeBottomNav = ({ isRTL }: { isRTL: boolean }) => {
   const navigate = useNavigate();
   const tabs = [
