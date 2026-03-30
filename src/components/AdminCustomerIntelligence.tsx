@@ -526,7 +526,7 @@ const AdminCustomerIntelligence = () => {
 
     XLSX.writeFile(wb, `تقرير_ذكاء_العملاء_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
     toast({ title: "تم تصدير التقرير بنجاح ✅" });
-  }, [filteredProfiles, ordersMap, userSearchMap, userViewsMap, productsMap, quotesMap, shoppingListsMap, userReturnRate]);
+  }, [filteredProfiles, ordersMap, userSearchMap, userViewsMap, productsMap, quotesMap, shoppingListsMap, userReturnRate, purchasedProductsByUser, searchLogs]);
 
   // Lifecycle distribution
   const lifecycleCounts = useMemo(() => {
