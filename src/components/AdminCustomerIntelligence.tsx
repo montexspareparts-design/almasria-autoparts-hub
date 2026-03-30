@@ -1319,8 +1319,15 @@ const AdminCustomerIntelligence = () => {
                   </div>
                 </div>
 
-                {/* Expanded detail */}
+                <AnimatePresence>
                 {isExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+                    className="overflow-hidden"
+                  >
                   <div className="px-5 pb-5 space-y-4 border-t border-border/30 pt-4 bg-gradient-to-b from-muted/20 to-transparent">
                     {/* Contact cards */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
