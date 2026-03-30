@@ -552,31 +552,37 @@ const DealerHomePage = () => {
           </motion.section>
         ) : null}
 
-        {/* ─── Previously Purchased — Amazon-style Reorder ─── */}
-        {user && (
-          <DealerPreviouslyPurchased
-            userId={user.id}
-            isRTL={isRTL}
-            onAddToOrder={(p) => handleAddToOrder(p as ProductItem)}
-          />
-        )}
+        {/* ─── Previously Purchased — Lazy loaded ─── */}
+        <LazyProductSection>
+          {user && (
+            <DealerPreviouslyPurchased
+              userId={user.id}
+              isRTL={isRTL}
+              onAddToOrder={(p) => handleAddToOrder(p as ProductItem)}
+            />
+          )}
+        </LazyProductSection>
 
-        {/* ─── Recently Viewed ─── */}
-        {user && (
-          <DealerRecentlyViewed
-            userId={user.id}
+        {/* ─── Recently Viewed — Lazy loaded ─── */}
+        <LazyProductSection>
+          {user && (
+            <DealerRecentlyViewed
+              userId={user.id}
+              isRTL={isRTL}
+              onPriceItem={(p) => handlePriceItem({ ...p, sale_price: null, brand: undefined } as ProductItem)}
+              onAddToOrder={(p) => handleAddToOrder(p as ProductItem)}
+            />
+          )}
+        </LazyProductSection>
+
+        {/* ─── Best Sellers — Lazy loaded ─── */}
+        <LazyProductSection>
+          <DealerBestSellers
             isRTL={isRTL}
             onPriceItem={(p) => handlePriceItem({ ...p, sale_price: null, brand: undefined } as ProductItem)}
             onAddToOrder={(p) => handleAddToOrder(p as ProductItem)}
           />
-        )}
-
-        {/* ─── Best Sellers ─── */}
-        <DealerBestSellers
-          isRTL={isRTL}
-          onPriceItem={(p) => handlePriceItem({ ...p, sale_price: null, brand: undefined } as ProductItem)}
-          onAddToOrder={(p) => handleAddToOrder(p as ProductItem)}
-        />
+        </LazyProductSection>
 
 
         <motion.section
