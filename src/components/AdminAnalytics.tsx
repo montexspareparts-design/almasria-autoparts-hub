@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, DollarSign, ShoppingBag, Users, Package, TrendingUp, BarChart3, PieChart as PieIcon, ListOrdered, ArrowUpRight, ArrowDownRight, Search } from "lucide-react";
+import { motion, useInView } from "framer-motion";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
@@ -274,24 +275,47 @@ const AdminAnalytics = () => {
     <div className="space-y-8">
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
-        {kpiCards.map((kpi) => {
+        {kpiCards.map((kpi, i) => {
           const Icon = kpi.icon;
           return (
-            <div
+            <motion.div
               key={kpi.label}
-              className={`relative overflow-hidden rounded-2xl border ${kpi.borderColor} ${kpi.bg} p-5 transition-all hover:shadow-md`}
+              initial={{ opacity: 0, y: 28, scale: 0.92 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{
+                duration: 0.5,
+                delay: i * 0.09,
+                type: "spring",
+                stiffness: 120,
+                damping: 14,
+              }}
+              whileHover={{ y: -4, scale: 1.03, transition: { duration: 0.2 } }}
+              className={`relative overflow-hidden rounded-2xl border ${kpi.borderColor} ${kpi.bg} p-5 cursor-default group`}
             >
-              <p className="text-2xl font-black text-foreground tracking-tight leading-none mb-1">
+              {/* Animated shimmer on hover */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-white/20 via-transparent to-transparent pointer-events-none" />
+
+              <motion.p
+                className="text-2xl font-black text-foreground tracking-tight leading-none mb-1 relative z-10"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4, delay: i * 0.09 + 0.2 }}
+              >
                 {kpi.value}
                 {kpi.suffix && <span className="text-xs font-medium text-muted-foreground mr-1">{kpi.suffix}</span>}
-              </p>
-              <div className="flex items-center gap-1.5">
-                <div className={`p-1 rounded-md bg-white/80 dark:bg-black/20 shadow-sm`}>
+              </motion.p>
+              <div className="flex items-center gap-1.5 relative z-10">
+                <motion.div
+                  className={`p-1 rounded-md bg-white/80 dark:bg-black/20 shadow-sm`}
+                  initial={{ scale: 0, rotate: -90 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ duration: 0.4, delay: i * 0.09 + 0.3, type: "spring", stiffness: 200 }}
+                >
                   <Icon className={`w-3.5 h-3.5 ${kpi.color}`} strokeWidth={2} />
-                </div>
+                </motion.div>
                 <p className="text-xs font-medium text-muted-foreground">{kpi.label}</p>
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>
