@@ -592,6 +592,7 @@ const AdminCustomerIntelligence = () => {
               .slice(0, 3)
               .map(s => s.query),
             searchDetails: searches.sort((a, b) => b.count - a.count),
+            isDealer: dealerUserIds?.has(p.user_id) || false,
           });
         });
 
