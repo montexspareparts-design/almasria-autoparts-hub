@@ -157,7 +157,17 @@ const NotificationBell = () => {
     }
   };
 
-  const getDisplayMessage = (msg: string) => msg.replace(/\[order_edit:[a-f0-9-]+\]\n?/, "");
+  const getDisplayMessage = (msg: string) =>
+    msg
+      .replace(/\[order_edit:[a-f0-9-]+\]\n?/, "")
+      .replace(/\[user:[a-f0-9-]+\]/g, "")
+      .replace(/\[phone:[^\]]*\]/g, "")
+      .trim();
+
+  const extractPhone = (msg: string): string | null => {
+    const match = msg.match(/\[phone:([^\]]+)\]/);
+    return match && match[1] ? match[1] : null;
+  };
 
   const getRoleBadge = () => {
     if (isAdmin) return { label: "مدير", className: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300" };
