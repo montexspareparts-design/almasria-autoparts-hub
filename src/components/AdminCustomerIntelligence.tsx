@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,6 +40,7 @@ const CUSTOMER_TYPES = [
 ] as const;
 
 const AdminCustomerIntelligence = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
@@ -771,12 +773,15 @@ const AdminCustomerIntelligence = () => {
                         )}>
                           <td className="px-3 py-2.5 text-xs text-muted-foreground font-bold">{i + 1}</td>
                           <td className="px-3 py-2.5">
-                            <div>
-                              <p className="text-xs font-bold text-foreground">{d.name}</p>
+                            <button
+                              onClick={() => navigate(`/admin?section=customers&search=${encodeURIComponent(d.phone || d.name)}`)}
+                              className="text-right hover:underline cursor-pointer group"
+                            >
+                              <p className="text-xs font-bold text-primary group-hover:text-primary/80 transition-colors">{d.name}</p>
                               {d.phone && (
                                 <p className="text-[10px] text-muted-foreground" dir="ltr">{d.phone}</p>
                               )}
-                            </div>
+                            </button>
                           </td>
                           <td className="px-3 py-2.5 text-center">
                             <div className="flex items-center justify-center gap-1.5">
