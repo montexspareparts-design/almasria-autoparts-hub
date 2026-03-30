@@ -57,6 +57,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem(SESSION_KEY);
     localStorage.removeItem("almasria_remember_me");
     localStorage.removeItem("almasria_remember_client");
+    localStorage.removeItem("almasria_last_role");
     sessionStorage.removeItem("almasria_session_active");
   }, []);
 
