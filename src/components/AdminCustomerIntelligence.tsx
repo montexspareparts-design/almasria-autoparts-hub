@@ -657,22 +657,24 @@ const AdminCustomerIntelligence = () => {
         };
 
         return (
-          <Card className="border-primary/20">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between flex-wrap gap-2">
+          <Card className="rounded-2xl border-primary/15 shadow-sm overflow-hidden">
+            <CardHeader className="pb-3 bg-gradient-to-l from-primary/8 via-primary/3 to-transparent">
+              <div className="flex items-center justify-between flex-wrap gap-3">
                 <div>
-                  <CardTitle className="text-lg font-black flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-primary" />
+                  <CardTitle className="text-lg font-black flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center shadow-sm">
+                      <TrendingUp className="w-4.5 h-4.5 text-primary" />
+                    </div>
                     تقرير أكثر العملاء بحثاً مقابل الطلبات
                   </CardTitle>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-1.5 mr-[46px]">
                     مقارنة بين نشاط البحث وتحويله لطلبات فعلية — أداة لاكتشاف الفرص الضائعة
                   </p>
                 </div>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="gap-1.5 text-xs font-bold"
+                  className="gap-1.5 text-xs font-bold rounded-xl"
                   onClick={() => {
                     const rows = searcherData.map((d, i) => ({
                       "#": i + 1,
@@ -705,7 +707,7 @@ const AdminCustomerIntelligence = () => {
                 </Button>
               </div>
               {/* Time filter */}
-              <div className="flex items-center gap-1.5 flex-wrap px-1">
+              <div className="flex items-center gap-1.5 flex-wrap px-1 mt-1">
                 {[
                   { value: "7d", label: "آخر 7 أيام" },
                   { value: "30d", label: "آخر 30 يوم" },
@@ -716,7 +718,7 @@ const AdminCustomerIntelligence = () => {
                     key={opt.value}
                     size="sm"
                     variant={reportTimeFilter === opt.value ? "default" : "outline"}
-                    className="text-[11px] h-7 px-3 font-bold"
+                    className={cn("text-[11px] h-7 px-3 font-bold rounded-lg", reportTimeFilter === opt.value && "shadow-sm")}
                     onClick={() => setReportTimeFilter(opt.value)}
                   >
                     {opt.label}
