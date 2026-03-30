@@ -48,10 +48,33 @@ const StockBadge = ({ qty, isRTL }: { qty: number; isRTL: boolean }) => (
   </span>
 );
 
-/* ─── Lazy Section Wrapper ─── */
+/* ─── Lazy Section Wrapper with Skeleton ─── */
 const LazyProductSection = ({ children }: { children: React.ReactNode }) => {
   const [ref, visible] = useLazyVisible("300px");
-  return <div ref={ref}>{visible ? children : null}</div>;
+  return (
+    <div ref={ref}>
+      {visible ? children : (
+        <div className="mt-8 space-y-4">
+          <div className="flex items-center gap-2.5">
+            <Skeleton className="w-7 h-7 rounded-[10px]" />
+            <Skeleton className="h-5 w-28 rounded" />
+          </div>
+          <div className="flex gap-3 overflow-hidden">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="shrink-0 w-[160px]">
+                <Skeleton className="aspect-square rounded-t-2xl" />
+                <div className="p-3 space-y-2">
+                  <Skeleton className="h-3.5 w-full rounded" />
+                  <Skeleton className="h-3 w-16 rounded" />
+                  <Skeleton className="h-8 w-full rounded-xl" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 const DealerHomeBottomNav = ({ isRTL }: { isRTL: boolean }) => {
