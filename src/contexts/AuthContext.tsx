@@ -3,6 +3,7 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import CompleteProfileDialog from "@/components/CompleteProfileDialog";
+import RoleSelectionDialog from "@/components/RoleSelectionDialog";
 
 interface DealerAccount {
   id: string;
@@ -47,6 +48,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [dealerAccount, setDealerAccount] = useState<DealerAccount | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [showCompleteProfile, setShowCompleteProfile] = useState(false);
+  const [showRoleSelection, setShowRoleSelection] = useState(false);
   const sessionCheckRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { toast } = useToast();
 
@@ -138,7 +140,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               .from("user_roles")
               .select("role")
               .eq("user_id", session.user.id);
-            setIsAdmin(roles?.some((r) => r.role === "admin") ?? false);
+            const hasAdmin = roles?.some((r) => r.role === "admin") ?? false;
+            setIsAdmin(hasAdmin);
+
+            // If both dealer and admin, show role selection
+            if (dealer && hasAdmin) {
+              setShowRoleSelection(true);
+            }
 
             // Check if Google user needs to complete phone
             const provider = session.user.app_metadata?.provider;
@@ -200,6 +208,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           open={showCompleteProfile}
           onOpenChange={setShowCompleteProfile}
           userId={user.id}
+        />
+      )}
+      {user && (
+        <RoleSelectionDialog
+          open={showRoleSelection}
+          onOpenChange={setShowRoleSelection}
         />
       )}
     </AuthContext.Provider>
