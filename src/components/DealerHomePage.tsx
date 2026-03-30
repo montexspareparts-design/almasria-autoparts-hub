@@ -247,7 +247,7 @@ const DealerHomePage = () => {
                   {isRTL ? "بوابة التجار" : "Dealer Portal"}
                 </p>
                 <h1 className="text-xl md:text-2xl font-black text-secondary-foreground leading-tight mt-0.5">
-                  {isRTL ? "ابحث واطلب بسرعة" : "Search & Order Fast"}
+                  {getGreeting()}{dealerName ? (isRTL ? ` يا ${dealerName}` : `, ${dealerName}`) : ""} 👋
                 </h1>
               </div>
             </div>
