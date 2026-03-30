@@ -522,6 +522,28 @@ const AdminCustomerIntelligence = () => {
 
       {/* Top Searchers vs Orders Report */}
       {profiles && profiles.length > 0 && (() => {
+        // Filter search logs by time
+        const now = new Date();
+        const cutoff = reportTimeFilter === "7d" ? new Date(now.getTime() - 7 * 86400000)
+          : reportTimeFilter === "30d" ? new Date(now.getTime() - 30 * 86400000)
+          : reportTimeFilter === "90d" ? new Date(now.getTime() - 90 * 86400000)
+          : null;
+
+        // Build filtered search map
+        const filteredSearchMap: Record<string, { query: string; count: number; lastAt: string }[]> = {};
+        searchLogs?.forEach((log: any) => {
+          if (cutoff && new Date(log.created_at) < cutoff) return;
+          const uid = log.user_id || "anonymous";
+          if (!filteredSearchMap[uid]) filteredSearchMap[uid] = [];
+          const existing = filteredSearchMap[uid].find(s => s.query === log.search_query);
+          if (existing) {
+            existing.count++;
+            if (log.created_at > existing.lastAt) existing.lastAt = log.created_at;
+          } else {
+            filteredSearchMap[uid].push({ query: log.search_query, count: 1, lastAt: log.created_at });
+          }
+        });
+
         // Build top searchers data
         const searcherData: {
           userId: string;
@@ -538,7 +560,7 @@ const AdminCustomerIntelligence = () => {
         }[] = [];
 
         profiles.forEach(p => {
-          const searches = userSearchMap[p.user_id] || [];
+          const searches = filteredSearchMap[p.user_id] || [];
           if (searches.length === 0) return;
           const totalSearchCount = searches.reduce((sum, s) => sum + s.count, 0);
           const userOrders = ordersMap?.[p.user_id];
