@@ -914,9 +914,23 @@ const AdminCustomerIntelligence = () => {
                             )}
                           </td>
                         </tr>
+                        <AnimatePresence>
                         {expandedSearcher === d.userId && (
-                          <tr className="border-t border-border/30">
+                          <motion.tr
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="border-t border-border/30"
+                          >
                             <td colSpan={10} className="p-0">
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.3, ease: "easeInOut" }}
+                                className="overflow-hidden"
+                              >
                               <div className="bg-muted/30 px-6 py-4 space-y-3">
                                 <div className="flex items-center justify-between">
                                   <h5 className="text-xs font-black text-foreground flex items-center gap-2">
