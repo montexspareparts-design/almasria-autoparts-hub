@@ -104,6 +104,22 @@ const DealerHomePage = () => {
   const [searching, setSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
+  const [dealerName, setDealerName] = useState<string | null>(null);
+
+  // Dynamic greeting based on time of day
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return isRTL ? "صباح الخير" : "Good Morning";
+    if (hour < 17) return isRTL ? "مساء الخير" : "Good Afternoon";
+    return isRTL ? "مساء الخير" : "Good Evening";
+  };
+
+  // Fetch dealer business name
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("dealer_applications").select("business_name").eq("user_id", user.id).maybeSingle()
+      .then(({ data }) => { if (data) setDealerName(data.business_name); });
+  }, [user]);
 
   const DAILY_PRICE_LIMIT = 20;
 
@@ -231,7 +247,7 @@ const DealerHomePage = () => {
                   {isRTL ? "بوابة التجار" : "Dealer Portal"}
                 </p>
                 <h1 className="text-xl md:text-2xl font-black text-secondary-foreground leading-tight mt-0.5">
-                  {isRTL ? "ابحث واطلب بسرعة" : "Search & Order Fast"}
+                  {getGreeting()}{dealerName ? (isRTL ? ` يا ${dealerName}` : `, ${dealerName}`) : ""} 👋
                 </h1>
               </div>
             </div>
@@ -285,13 +301,39 @@ const DealerHomePage = () => {
                   </button>
                 ))}
               </div>
-              <span className={`text-[10px] font-bold shrink-0 px-2.5 py-1 rounded-full ${
-                dailyViewCount >= DAILY_PRICE_LIMIT
-                  ? "text-destructive bg-destructive/15"
-                  : "text-secondary-foreground/40 bg-white/[0.07]"
-              }`}>
-                {dailyViewCount}/{DAILY_PRICE_LIMIT} {isRTL ? "تسعير" : "priced"}
-              </span>
+              {/* Circular progress for daily limit */}
+              {(() => {
+                const progress = dailyViewCount / DAILY_PRICE_LIMIT;
+                const radius = 14;
+                const circumference = 2 * Math.PI * radius;
+                const strokeDashoffset = circumference * (1 - progress);
+                const isNearLimit = dailyViewCount >= DAILY_PRICE_LIMIT - 5;
+                const isAtLimit = dailyViewCount >= DAILY_PRICE_LIMIT;
+                return (
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="relative w-9 h-9">
+                      <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+                        <circle cx="18" cy="18" r={radius} fill="none" stroke="currentColor" strokeWidth="3" className="text-white/[0.08]" />
+                        <motion.circle
+                          cx="18" cy="18" r={radius} fill="none"
+                          strokeWidth="3" strokeLinecap="round"
+                          className={isAtLimit ? "text-destructive" : isNearLimit ? "text-amber-400" : "text-primary"}
+                          strokeDasharray={circumference}
+                          initial={{ strokeDashoffset: circumference }}
+                          animate={{ strokeDashoffset }}
+                          transition={{ duration: 1, ease: "easeOut" }}
+                        />
+                      </svg>
+                      <span className={`absolute inset-0 flex items-center justify-center text-[9px] font-black ${isAtLimit ? "text-destructive" : "text-secondary-foreground/60"}`}>
+                        {dailyViewCount}
+                      </span>
+                    </div>
+                    <span className={`text-[10px] font-bold ${isAtLimit ? "text-destructive" : "text-secondary-foreground/40"}`}>
+                      /{DAILY_PRICE_LIMIT}
+                    </span>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* ─── Search Dropdown ─── */}
@@ -348,7 +390,7 @@ const DealerHomePage = () => {
       {/* ━━━ CONTENT ━━━ */}
       <div className="container mx-auto px-4 max-w-3xl">
 
-        {/* ─── Quick Actions — Premium Bento Grid ─── */}
+        {/* ─── Quick Actions — Premium Bento Grid with Shimmer ─── */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -358,15 +400,19 @@ const DealerHomePage = () => {
           {quickActions.map((item, i) => (
             <Link key={item.href} to={item.href} className="block group">
               <motion.div
+                initial={{ opacity: 0, scale: 0.92 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 + i * 0.1, duration: 0.5, ease }}
                 whileHover={{ y: -6 }}
                 whileTap={{ scale: 0.96 }}
-                transition={spring}
                 className="relative bg-card rounded-[20px] border border-border/40 p-5 md:p-6 flex flex-col items-center text-center gap-3 h-full overflow-hidden
                   shadow-[0_1px_3px_rgba(0,0,0,0.04)]
                   hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.12)]
                   hover:border-primary/20
                   transition-all duration-500"
               >
+                {/* Shimmer sweep effect */}
+                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out bg-gradient-to-r from-transparent via-white/[0.07] to-transparent pointer-events-none" />
                 {/* Subtle gradient overlay on hover */}
                 <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
