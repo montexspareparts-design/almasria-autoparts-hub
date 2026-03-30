@@ -57,6 +57,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem(SESSION_KEY);
     localStorage.removeItem("almasria_remember_me");
     localStorage.removeItem("almasria_remember_client");
+    localStorage.removeItem("almasria_last_role");
     sessionStorage.removeItem("almasria_session_active");
   }, []);
 
@@ -143,9 +144,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const hasAdmin = roles?.some((r) => r.role === "admin") ?? false;
             setIsAdmin(hasAdmin);
 
-            // If both dealer and admin, show role selection
+            // If both dealer and admin, check saved preference
             if (dealer && hasAdmin) {
-              setShowRoleSelection(true);
+              const savedRole = localStorage.getItem("almasria_last_role");
+              if (savedRole === "dealer" || savedRole === "admin") {
+                // Auto-redirect to saved role — no dialog
+              } else {
+                setShowRoleSelection(true);
+              }
             }
 
             // Check if Google user needs to complete phone

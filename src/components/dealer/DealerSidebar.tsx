@@ -37,7 +37,7 @@ const SwitchToAdminButton = () => {
   if (!isAdmin) return null;
   return (
     <button
-      onClick={() => navigate("/admin")}
+      onClick={() => { localStorage.setItem("almasria_last_role", "admin"); navigate("/admin"); }}
       className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-bold text-primary hover:bg-primary/10 transition-colors"
     >
       <Shield className="w-4 h-4" />

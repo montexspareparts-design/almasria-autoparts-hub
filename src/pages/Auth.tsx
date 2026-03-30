@@ -68,9 +68,16 @@ const Auth = () => {
       if (!mounted) return;
       markSessionActive();
 
-      // Both roles → AuthContext will show RoleSelectionDialog, navigate to / for now
+      // Both roles → check saved preference or show dialog via AuthContext
       if (hasDealer && hasAdmin) {
-        navigate("/", { replace: true });
+        const savedRole = localStorage.getItem("almasria_last_role");
+        if (savedRole === "admin") {
+          navigate("/admin", { replace: true });
+        } else if (savedRole === "dealer") {
+          navigate("/dealer", { replace: true });
+        } else {
+          navigate("/", { replace: true });
+        }
       } else if (hasAdmin) {
         navigate("/admin", { replace: true });
       } else if (hasDealer) {
