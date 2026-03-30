@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, XCircle, Clock, Eye, LogOut, Trash2, Users, ShoppingBag, Video, FileText, Image, Brain, Zap, Bell, ListVideo, Menu, X, ChevronRight, Package, BarChart3, Tag, Layers, TrendingUp } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Clock, Eye, LogOut, Trash2, Users, ShoppingBag, Video, FileText, Image, Brain, Zap, Bell, ListVideo, Menu, X, ChevronRight, Package, BarChart3, Tag, Layers, TrendingUp, ArrowLeftRight, Briefcase } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -100,7 +100,7 @@ const SectionLoader = () => (
 );
 
 const AdminDashboard = () => {
-  const { user, isAdmin, loading: authLoading, signOut } = useAuth();
+  const { user, isAdmin, isDealer, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -490,6 +490,18 @@ const AdminDashboard = () => {
                 <currentSection.icon className="w-3.5 h-3.5" />
                 <span className="font-medium">{currentSection.label}</span>
               </div>
+            )}
+
+            {isDealer && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/dealer")}
+                className="gap-1.5 text-xs font-bold text-blue-600 hover:bg-blue-500/10 rounded-xl"
+              >
+                <Briefcase className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">وضع التاجر</span>
+              </Button>
             )}
 
             <Button

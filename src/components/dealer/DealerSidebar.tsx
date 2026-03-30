@@ -1,11 +1,13 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Search, ClipboardList, FileText, Receipt,
   Heart, Upload, Bell, Tag, Settings, LogOut, User, CreditCard,
   ListPlus, Scale, ChevronDown, ChevronUp, Package, Zap,
-  BarChart3, ShoppingCart
+  BarChart3, ShoppingCart, Shield
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 export type DealerTab =
   | "overview" | "quotes" | "orders" | "invoices" | "price_lists"
@@ -27,6 +29,21 @@ const tierLabels: Record<string, string> = {
   wholesale_tier2: "Wholesale T2",
   corporate: "Corporate",
   retail: "Retail",
+};
+
+const SwitchToAdminButton = () => {
+  const { isAdmin } = useAuth();
+  const navigate = useNavigate();
+  if (!isAdmin) return null;
+  return (
+    <button
+      onClick={() => navigate("/admin")}
+      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-bold text-primary hover:bg-primary/10 transition-colors"
+    >
+      <Shield className="w-4 h-4" />
+      <span>التبديل لوضع المدير</span>
+    </button>
+  );
 };
 
 const tierColors: Record<string, string> = {
@@ -201,6 +218,7 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
           <Settings className="w-4 h-4" />
           <span>الإعدادات</span>
         </button>
+        <SwitchToAdminButton />
         <button
           onClick={onSignOut}
           className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-muted-foreground/60 hover:bg-destructive/5 hover:text-destructive transition-colors"
