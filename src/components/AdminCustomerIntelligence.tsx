@@ -20,7 +20,7 @@ import {
   Users, Search, Eye, ShoppingCart, Phone, Mail, Car,
   TrendingUp, Clock, ChevronDown, ChevronUp, BarChart3,
   Package, Calendar as CalendarIcon, Filter, X, Download,
-  MessageCircle, Send, Copy, ExternalLink,
+  MessageCircle, Send, Copy, ExternalLink, Briefcase,
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 
@@ -163,6 +163,8 @@ const AdminCustomerIntelligence = () => {
   const withCar = profiles?.filter(p => p.car_model).length || 0;
   const totalSearches = searchLogs?.length || 0;
   const activeSearchers = new Set(searchLogs?.map((l: any) => l.user_id).filter(Boolean)).size;
+  const dealerCount = profiles?.filter(p => dealerUserIds?.has(p.user_id)).length || 0;
+  const retailCount = totalCustomers - dealerCount;
 
   const getCustomerType = (userId: string): string => {
     const orders = ordersMap?.[userId];
@@ -374,12 +376,26 @@ const AdminCustomerIntelligence = () => {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <Card>
           <CardContent className="p-4 text-center">
             <Users className="w-8 h-8 text-primary mx-auto mb-2" />
             <p className="text-2xl font-black text-foreground">{totalCustomers}</p>
             <p className="text-xs text-muted-foreground">إجمالي العملاء</p>
+          </CardContent>
+        </Card>
+        <Card className="border-blue-200 dark:border-blue-800/50">
+          <CardContent className="p-4 text-center">
+            <Briefcase className="w-8 h-8 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
+            <p className="text-2xl font-black text-foreground">{dealerCount}</p>
+            <p className="text-xs text-muted-foreground">تاجر</p>
+          </CardContent>
+        </Card>
+        <Card className="border-orange-200 dark:border-orange-800/50">
+          <CardContent className="p-4 text-center">
+            <ShoppingCart className="w-8 h-8 text-orange-600 dark:text-orange-400 mx-auto mb-2" />
+            <p className="text-2xl font-black text-foreground">{retailCount}</p>
+            <p className="text-xs text-muted-foreground">عميل قطاعي</p>
           </CardContent>
         </Card>
         <Card>
