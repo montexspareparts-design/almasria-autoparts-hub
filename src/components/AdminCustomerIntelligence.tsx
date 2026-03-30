@@ -1016,18 +1016,22 @@ const AdminCustomerIntelligence = () => {
 
               {/* Opportunity Alert: Top non-converted searchers */}
               {topNonConverted.length > 0 && (
-                <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 rounded-xl p-4">
-                  <h4 className="text-sm font-black text-amber-800 dark:text-amber-300 flex items-center gap-2 mb-3">
-                    <Eye className="w-4 h-4" />
+                <div className="bg-gradient-to-l from-amber-500/10 via-amber-500/5 to-transparent border border-amber-200/60 dark:border-amber-800/30 rounded-2xl p-5">
+                  <h4 className="text-sm font-black text-amber-800 dark:text-amber-300 flex items-center gap-2.5 mb-4">
+                    <div className="w-8 h-8 rounded-xl bg-amber-500/15 flex items-center justify-center">
+                      <Eye className="w-4 h-4 text-amber-600" />
+                    </div>
                     ⚡ فرص تحويل — عملاء يبحثون ولم يشتروا بعد
                   </h4>
-                  <div className="space-y-2">
+                  <div className="space-y-2.5">
                     {topNonConverted.map((d, i) => (
-                      <div key={d.userId} className="flex items-center gap-3 bg-white/60 dark:bg-black/20 rounded-lg p-2.5">
-                        <span className="text-xs font-bold text-amber-700 dark:text-amber-400 w-5">{i + 1}</span>
+                      <div key={d.userId} className="flex items-center gap-3 bg-white/70 dark:bg-black/20 rounded-xl p-3 border border-amber-100/50 dark:border-amber-900/20 transition-all hover:shadow-sm">
+                        <div className="w-7 h-7 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
+                          <span className="text-[11px] font-black text-amber-700 dark:text-amber-400">{i + 1}</span>
+                        </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-bold text-foreground">{d.name}</p>
-                          <p className="text-[10px] text-muted-foreground">
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
                             {d.searches} عملية بحث • {d.priceViews} صنف مسعّر • أكثر ما بحث عنه: {d.topQueries[0] || "—"}
                           </p>
                         </div>
@@ -1038,7 +1042,7 @@ const AdminCustomerIntelligence = () => {
                             )}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="shrink-0 flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2.5 py-1.5 rounded-lg hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors"
+                            className="shrink-0 flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-3 py-2 rounded-xl hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors shadow-sm"
                           >
                             <MessageCircle className="w-3.5 h-3.5" />
                             تواصل
