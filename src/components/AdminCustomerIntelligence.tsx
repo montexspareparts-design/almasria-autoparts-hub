@@ -952,21 +952,39 @@ const AdminCustomerIntelligence = () => {
                                     تصدير Excel
                                   </Button>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[200px] overflow-y-auto">
-                                  {d.searchDetails.map((s, si) => (
-                                    <div key={si} className="flex items-center gap-2 bg-card rounded-lg px-3 py-2 border border-border/50">
-                                      <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-bold text-foreground truncate">{s.query}</p>
-                                        <p className="text-[10px] text-muted-foreground">
-                                          {format(new Date(s.lastAt), "dd MMM yyyy — hh:mm a", { locale: ar })}
-                                        </p>
-                                      </div>
-                                      <Badge variant="secondary" className="text-[10px] shrink-0">
-                                        {s.count}×
-                                      </Badge>
-                                    </div>
-                                  ))}
+                                <div className="relative" onClick={(e) => e.stopPropagation()}>
+                                  <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                                  <Input
+                                    placeholder="ابحث في كلمات البحث..."
+                                    value={searchDetailFilter}
+                                    onChange={(e) => setSearchDetailFilter(e.target.value)}
+                                    className="h-8 text-xs pr-8 bg-card"
+                                  />
                                 </div>
+                                {(() => {
+                                  const filtered = searchDetailFilter
+                                    ? d.searchDetails.filter(s => s.query.includes(searchDetailFilter))
+                                    : d.searchDetails;
+                                  return (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[200px] overflow-y-auto">
+                                      {filtered.length === 0 ? (
+                                        <p className="text-xs text-muted-foreground col-span-full text-center py-3">لا توجد نتائج مطابقة</p>
+                                      ) : filtered.map((s, si) => (
+                                        <div key={si} className="flex items-center gap-2 bg-card rounded-lg px-3 py-2 border border-border/50">
+                                          <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-bold text-foreground truncate">{s.query}</p>
+                                            <p className="text-[10px] text-muted-foreground">
+                                              {format(new Date(s.lastAt), "dd MMM yyyy — hh:mm a", { locale: ar })}
+                                            </p>
+                                          </div>
+                                          <Badge variant="secondary" className="text-[10px] shrink-0">
+                                            {s.count}×
+                                          </Badge>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  );
+                                })()}
                               </div>
                             </td>
                           </tr>
