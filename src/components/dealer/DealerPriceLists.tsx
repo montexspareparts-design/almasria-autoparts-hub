@@ -112,6 +112,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
 
     if (views && views.length > 0) {
       const productIds = views.map(v => v.product_id);
+      setTodayPricedIds(new Set(productIds));
       const { data: products } = await supabase
         .from("products")
         .select("id, name_ar, sku, base_price, sale_price, is_on_sale, image_url, stock_quantity")
@@ -123,6 +124,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
       const ordered = productIds.map(id => productMap.get(id)).filter(Boolean) as Product[];
       setTodayPricedItems(ordered);
     } else {
+      setTodayPricedIds(new Set());
       setTodayPricedItems([]);
     }
     setLoadingTodayItems(false);
