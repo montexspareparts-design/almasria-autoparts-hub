@@ -421,6 +421,44 @@ const AdminCustomerIntelligence = () => {
         </Card>
       </div>
 
+      {/* Dealers vs Retail Pie Chart */}
+      {totalCustomers > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-bold flex items-center gap-2">
+              <Users className="w-5 h-5 text-primary" />
+              نسبة التجار مقابل العملاء القطاعيين
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[280px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={[
+                      { name: "تجار", value: dealerCount },
+                      { name: "عملاء قطاعيين", value: retailCount },
+                    ]}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={4}
+                    dataKey="value"
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  >
+                    <Cell fill="hsl(217, 91%, 60%)" />
+                    <Cell fill="hsl(25, 95%, 53%)" />
+                  </Pie>
+                  <Tooltip formatter={(value: number) => [`${value} عميل`, ""]} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Customer Type Distribution Chart */}
       {filteredProfiles && filteredProfiles.length > 0 && (() => {
         const typeCounts: Record<string, number> = {};
