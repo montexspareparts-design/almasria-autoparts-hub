@@ -108,13 +108,13 @@ const applyExcelStyles = (ws: XLSX.WorkSheet, headerCount: number, reportTitle?:
   };
   const altRowStyle = { ...cellStyle, fill: { fgColor: { rgb: "FFF5F5" } } };
   const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
-  // Row 4 (index 4) is now the data header row
+  // Row 5 (index 5) is now the data header row
   for (let C = range.s.c; C <= range.e.c; C++) {
-    const addr = XLSX.utils.encode_cell({ r: 4, c: C });
+    const addr = XLSX.utils.encode_cell({ r: 5, c: C });
     if (ws[addr]) ws[addr].s = headerStyle;
   }
   let customerIdx = 0;
-  for (let R = 5; R <= range.e.r; R++) {
+  for (let R = 6; R <= range.e.r; R++) {
     const numCell = ws[XLSX.utils.encode_cell({ r: R, c: 0 })];
     if (numCell && numCell.v !== "" && numCell.v !== undefined) customerIdx++;
     for (let C = range.s.c; C <= range.e.c; C++) {
@@ -122,7 +122,7 @@ const applyExcelStyles = (ws: XLSX.WorkSheet, headerCount: number, reportTitle?:
       if (ws[addr]) ws[addr].s = customerIdx % 2 === 0 ? altRowStyle : cellStyle;
     }
   }
-  ws["!rows"] = [{ hpt: 40 }, { hpt: 24 }, { hpt: 22 }, { hpt: 10 }, { hpt: 28 }];
+  ws["!rows"] = [{ hpt: 40 }, { hpt: 24 }, { hpt: 22 }, { hpt: 26 }, { hpt: 10 }, { hpt: 28 }];
 };
 import { toast } from "@/hooks/use-toast";
 import {
