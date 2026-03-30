@@ -219,8 +219,8 @@ const AdminCustomerIntelligence = () => {
     return true;
   });
 
-  const hasActiveFilters = !!dateFrom || !!dateTo || (customerTypeFilter !== "all");
-  const clearFilters = () => { setDateFrom(undefined); setDateTo(undefined); setCustomerTypeFilter("all"); };
+  const hasActiveFilters = !!dateFrom || !!dateTo || (customerTypeFilter !== "all") || (accountTypeFilter !== "all");
+  const clearFilters = () => { setDateFrom(undefined); setDateTo(undefined); setCustomerTypeFilter("all"); setAccountTypeFilter("all"); };
 
   const formatPhone = (phone: string) => {
     const cleaned = phone.replace(/\D/g, "");
