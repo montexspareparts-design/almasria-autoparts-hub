@@ -79,6 +79,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
   // Today's priced items
   const [todayPricedItems, setTodayPricedItems] = useState<Product[]>([]);
   const [loadingTodayItems, setLoadingTodayItems] = useState(false);
+  const [todayPricedIds, setTodayPricedIds] = useState<Set<string>>(new Set());
 
   // Quote summary state
   const [createdQuote, setCreatedQuote] = useState<{
