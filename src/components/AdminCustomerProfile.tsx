@@ -48,9 +48,10 @@ interface DealerWithDetails {
 }
 
 const AdminCustomerProfile = () => {
+  const [searchParams] = useSearchParams();
   const [dealers, setDealers] = useState<DealerApplication[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(searchParams.get("search") || "");
   const [selectedDealer, setSelectedDealer] = useState<DealerWithDetails | null>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
