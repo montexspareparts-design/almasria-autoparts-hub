@@ -19,7 +19,7 @@ import * as XLSX from "xlsx";
 import { toast } from "@/hooks/use-toast";
 import {
   Users, Search, Eye, ShoppingCart, Phone, Mail, Car,
-  TrendingUp, Clock, ChevronDown, ChevronUp, BarChart3,
+  TrendingUp, TrendingDown, Clock, ChevronDown, ChevronUp, BarChart3,
   Package, Calendar as CalendarIcon, Filter, X, Download,
   MessageCircle, Send, Copy, ExternalLink, Briefcase,
 } from "lucide-react";
@@ -604,6 +604,52 @@ const AdminCustomerIntelligence = () => {
           : 0;
         const topNonConverted = searcherData.filter(d => !d.converted).slice(0, 5);
 
+        // Previous period comparison
+        let prevSearchers = 0;
+        let prevConverted = 0;
+        let prevConversion = 0;
+        let prevAvgSearches = 0;
+        if (cutoff) {
+          const periodMs = now.getTime() - cutoff.getTime();
+          const prevCutoff = new Date(cutoff.getTime() - periodMs);
+          const prevSearchMap: Record<string, { query: string; count: number }[]> = {};
+          searchLogs?.forEach((log: any) => {
+            const logDate = new Date(log.created_at);
+            if (logDate >= cutoff || logDate < prevCutoff) return;
+            const uid = log.user_id || "anonymous";
+            if (!prevSearchMap[uid]) prevSearchMap[uid] = [];
+            const existing = prevSearchMap[uid].find(s => s.query === log.search_query);
+            if (existing) existing.count++;
+            else prevSearchMap[uid].push({ query: log.search_query, count: 1 });
+          });
+          const prevSearcherData: { userId: string; searches: number; converted: boolean }[] = [];
+          profiles.forEach(p => {
+            const searches = prevSearchMap[p.user_id] || [];
+            if (searches.length === 0) return;
+            const total = searches.reduce((s, q) => s + q.count, 0);
+            const userOrders = ordersMap?.[p.user_id];
+            prevSearcherData.push({ userId: p.user_id, searches: total, converted: !!(userOrders && userOrders.count > 0) });
+          });
+          prevSearchers = prevSearcherData.length;
+          prevConverted = prevSearcherData.filter(d => d.converted).length;
+          prevConversion = prevSearchers > 0 ? Math.round((prevConverted / prevSearchers) * 100) : 0;
+          prevAvgSearches = prevSearchers > 0
+            ? Math.round(prevSearcherData.reduce((s, d) => s + d.searches, 0) / prevSearchers)
+            : 0;
+        }
+
+        const calcChange = (current: number, prev: number) => {
+          if (!cutoff) return null;
+          if (prev === 0 && current === 0) return 0;
+          if (prev === 0) return 100;
+          return Math.round(((current - prev) / prev) * 100);
+        };
+
+        const searchersChange = calcChange(totalSearchers, prevSearchers);
+        const convertedChange = calcChange(convertedCount, prevConverted);
+        const conversionChange = calcChange(overallConversion, prevConversion);
+        const avgChange = calcChange(avgSearchesPerUser, prevAvgSearches);
+
         // Chart data for top 10
         const chartData = top15.slice(0, 10).map(d => ({
           name: d.name.length > 12 ? d.name.slice(0, 12) + "…" : d.name,
@@ -689,26 +735,29 @@ const AdminCustomerIntelligence = () => {
             <CardContent className="space-y-5">
               {/* Summary KPIs */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="bg-muted/40 rounded-xl p-3 text-center">
-                  <Search className="w-5 h-5 text-primary mx-auto mb-1.5" />
-                  <p className="text-2xl font-black text-foreground">{totalSearchers}</p>
-                  <p className="text-[11px] text-muted-foreground font-medium">عميل يبحث</p>
-                </div>
-                <div className="bg-emerald-50 dark:bg-emerald-950/20 rounded-xl p-3 text-center">
-                  <ShoppingCart className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mx-auto mb-1.5" />
-                  <p className="text-2xl font-black text-emerald-700 dark:text-emerald-400">{convertedCount}</p>
-                  <p className="text-[11px] text-muted-foreground font-medium">تحوّلوا لطلبات</p>
-                </div>
-                <div className="bg-amber-50 dark:bg-amber-950/20 rounded-xl p-3 text-center">
-                  <TrendingUp className="w-5 h-5 text-amber-600 dark:text-amber-400 mx-auto mb-1.5" />
-                  <p className="text-2xl font-black text-amber-700 dark:text-amber-400">{overallConversion}%</p>
-                  <p className="text-[11px] text-muted-foreground font-medium">معدل التحويل</p>
-                </div>
-                <div className="bg-blue-50 dark:bg-blue-950/20 rounded-xl p-3 text-center">
-                  <BarChart3 className="w-5 h-5 text-blue-600 dark:text-blue-400 mx-auto mb-1.5" />
-                  <p className="text-2xl font-black text-blue-700 dark:text-blue-400">{avgSearchesPerUser}</p>
-                  <p className="text-[11px] text-muted-foreground font-medium">متوسط بحث/عميل</p>
-                </div>
+                {[
+                  { icon: Search, value: totalSearchers, label: "عميل يبحث", change: searchersChange, bg: "bg-muted/40", iconColor: "text-primary", valueColor: "text-foreground" },
+                  { icon: ShoppingCart, value: convertedCount, label: "تحوّلوا لطلبات", change: convertedChange, bg: "bg-emerald-50 dark:bg-emerald-950/20", iconColor: "text-emerald-600 dark:text-emerald-400", valueColor: "text-emerald-700 dark:text-emerald-400" },
+                  { icon: TrendingUp, value: `${overallConversion}%`, label: "معدل التحويل", change: conversionChange, bg: "bg-amber-50 dark:bg-amber-950/20", iconColor: "text-amber-600 dark:text-amber-400", valueColor: "text-amber-700 dark:text-amber-400" },
+                  { icon: BarChart3, value: avgSearchesPerUser, label: "متوسط بحث/عميل", change: avgChange, bg: "bg-blue-50 dark:bg-blue-950/20", iconColor: "text-blue-600 dark:text-blue-400", valueColor: "text-blue-700 dark:text-blue-400" },
+                ].map((kpi, idx) => (
+                  <div key={idx} className={cn("rounded-xl p-3 text-center", kpi.bg)}>
+                    <kpi.icon className={cn("w-5 h-5 mx-auto mb-1.5", kpi.iconColor)} />
+                    <p className={cn("text-2xl font-black", kpi.valueColor)}>{kpi.value}</p>
+                    <p className="text-[11px] text-muted-foreground font-medium">{kpi.label}</p>
+                    {kpi.change !== null && (
+                      <div className={cn(
+                        "flex items-center justify-center gap-0.5 mt-1.5 text-[10px] font-bold rounded-full px-2 py-0.5 mx-auto w-fit",
+                        kpi.change > 0 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                          : kpi.change < 0 ? "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400"
+                          : "bg-muted text-muted-foreground"
+                      )}>
+                        {kpi.change > 0 ? <TrendingUp className="w-3 h-3" /> : kpi.change < 0 ? <TrendingDown className="w-3 h-3" /> : null}
+                        {kpi.change > 0 ? "+" : ""}{kpi.change}% عن الفترة السابقة
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
 
               {/* Bar Chart: Search vs Orders */}
