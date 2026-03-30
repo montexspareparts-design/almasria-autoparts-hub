@@ -1444,7 +1444,7 @@ const AdminCustomerIntelligence = () => {
                                         }))
                                       );
                                       ws["!cols"] = [{ wch: 5 }, { wch: 22 }, { wch: 16 }, { wch: 35 }, { wch: 12 }, { wch: 22 }];
-                                       applyExcelStyles(ws, 6);
+                                       applyExcelStyles(ws, 6, `سجل بحث العميل: ${d.name}`);
                                        const wb = XLSX.utils.book_new();
                                        XLSX.utils.book_append_sheet(wb, ws, "سجل البحث");
                                        const infoWs = XLSX.utils.json_to_sheet([{
