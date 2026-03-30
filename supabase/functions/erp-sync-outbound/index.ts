@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
 
     // ─── Authentication Check ─────────────────────────────────────
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
+    if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -26,14 +26,21 @@ Deno.serve(async (req) => {
     }
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const userClient = createClient(
+      supabaseUrl,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+    const { data: claimsData, error: authError } = await userClient.auth.getClaims(token);
 
-    if (authError || !user) {
+    if (authError || !claimsData?.claims?.sub) {
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    const userId = claimsData.claims.sub as string;
     // ─── End Auth Check ─────────────────────────────────────────────────
 
     const { action, data } = await req.json();
@@ -41,7 +48,7 @@ Deno.serve(async (req) => {
     // Admin-only actions
     if (action === "sync_stock" || action === "sync_prices") {
       const { data: isAdmin } = await supabase.rpc("has_role", {
-        _user_id: user.id,
+        _user_id: userId,
         _role: "admin",
       });
       if (!isAdmin) {
