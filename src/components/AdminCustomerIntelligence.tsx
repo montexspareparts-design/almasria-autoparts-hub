@@ -1066,23 +1066,39 @@ const AdminCustomerIntelligence = () => {
                     className="gap-1.5 text-[10px] h-7 font-bold rounded-xl"
                     onClick={() => {
                       const rows: any[] = [];
-                      top15.forEach(d => {
-                        d.searchDetails.forEach(s => {
+                      top15.forEach((d, idx) => {
+                        const topSearches = d.searchDetails.slice(0, 10);
+                        if (topSearches.length === 0) {
                           rows.push({
+                            "#": idx + 1,
                             "اسم العميل": d.name,
                             "نوع الحساب": d.isDealer ? "جملة" : "قطاعي",
                             "رقم الهاتف": d.phone || "—",
-                            "كلمة البحث": s.query,
-                            "عدد المرات": s.count,
-                            "آخر بحث": format(new Date(s.lastAt), "dd/MM/yyyy hh:mm a", { locale: ar }),
+                            "الصنف المطلوب": "—",
+                            "عدد مرات البحث": 0,
+                            "إجمالي عمليات البحث": d.searches,
+                            "الحالة": d.converted ? "محوّل ✓" : "لم يشترِ ✗",
                           });
-                        });
+                        } else {
+                          topSearches.forEach((s, si) => {
+                            rows.push({
+                              "#": si === 0 ? idx + 1 : "",
+                              "اسم العميل": si === 0 ? d.name : "",
+                              "نوع الحساب": si === 0 ? (d.isDealer ? "جملة" : "قطاعي") : "",
+                              "رقم الهاتف": si === 0 ? (d.phone || "—") : "",
+                              "الصنف المطلوب": s.query,
+                              "عدد مرات البحث": s.count,
+                              "إجمالي عمليات البحث": si === 0 ? d.searches : "",
+                              "الحالة": si === 0 ? (d.converted ? "محوّل ✓" : "لم يشترِ ✗") : "",
+                            });
+                          });
+                        }
                       });
                       if (rows.length === 0) { toast({ title: "لا توجد بيانات", variant: "destructive" }); return; }
                       const wb = XLSX.utils.book_new();
                       const ws = XLSX.utils.json_to_sheet(rows);
                       ws["!dir"] = "rtl" as any;
-                      ws["!cols"] = [{ wch: 22 }, { wch: 12 }, { wch: 16 }, { wch: 35 }, { wch: 12 }, { wch: 22 }];
+                      ws["!cols"] = [{ wch: 5 }, { wch: 22 }, { wch: 12 }, { wch: 16 }, { wch: 30 }, { wch: 14 }, { wch: 16 }, { wch: 14 }];
                       XLSX.utils.book_append_sheet(wb, ws, "أكثر الباحثين تفصيلي");
                       XLSX.writeFile(wb, `أكثر_15_عميل_بحثاً_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
                       toast({ title: "تم تصدير التقرير بنجاح ✅" });
