@@ -597,13 +597,50 @@ const AdminCustomerIntelligence = () => {
         return (
           <Card className="border-primary/20">
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-black flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-primary" />
-                تقرير أكثر العملاء بحثاً مقابل الطلبات
-              </CardTitle>
-              <p className="text-xs text-muted-foreground mt-1">
-                مقارنة بين نشاط البحث وتحويله لطلبات فعلية — أداة لاكتشاف الفرص الضائعة
-              </p>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <CardTitle className="text-lg font-black flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-primary" />
+                    تقرير أكثر العملاء بحثاً مقابل الطلبات
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    مقارنة بين نشاط البحث وتحويله لطلبات فعلية — أداة لاكتشاف الفرص الضائعة
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5 text-xs font-bold"
+                  onClick={() => {
+                    const rows = searcherData.map((d, i) => ({
+                      "#": i + 1,
+                      "الاسم": d.name,
+                      "رقم الهاتف": d.phone || "—",
+                      "عمليات البحث": d.searches,
+                      "استفسارات فريدة": d.uniqueQueries,
+                      "أصناف مسعّرة": d.priceViews,
+                      "عدد الطلبات": d.orders,
+                      "إجمالي الإنفاق (ج.م)": d.totalSpent,
+                      "معدل التحويل": d.conversionRate,
+                      "الحالة": d.converted ? "محوّل" : "لم يشترِ",
+                      "أهم ما بحث عنه": d.topQueries.join(" | "),
+                    }));
+                    const wb = XLSX.utils.book_new();
+                    const ws = XLSX.utils.json_to_sheet(rows);
+                    ws["!dir"] = "rtl" as any;
+                    ws["!cols"] = [
+                      { wch: 5 }, { wch: 22 }, { wch: 16 }, { wch: 14 }, { wch: 16 },
+                      { wch: 14 }, { wch: 12 }, { wch: 18 }, { wch: 14 }, { wch: 12 }, { wch: 35 },
+                    ];
+                    XLSX.utils.book_append_sheet(wb, ws, "أكثر الباحثين");
+                    XLSX.writeFile(wb, `تقرير_أكثر_الباحثين_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+                    toast({ title: "تم تصدير التقرير بنجاح ✅" });
+                  }}
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  تصدير Excel
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-5">
               {/* Summary KPIs */}
