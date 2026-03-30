@@ -48,6 +48,7 @@ const AdminCustomerIntelligence = () => {
   const [bulkWhatsAppOpen, setBulkWhatsAppOpen] = useState(false);
   const [bulkMessage, setBulkMessage] = useState("مرحباً {{name}}، نود إبلاغكم بأحدث العروض والخصومات الحصرية من المصرية جروب. تواصلوا معنا لمزيد من التفاصيل!");
   const [sendingIndex, setSendingIndex] = useState(-1);
+  const [reportTimeFilter, setReportTimeFilter] = useState<string>("all");
 
   // All profiles
   const { data: profiles, isLoading: loadingProfiles } = useQuery({
@@ -521,6 +522,28 @@ const AdminCustomerIntelligence = () => {
 
       {/* Top Searchers vs Orders Report */}
       {profiles && profiles.length > 0 && (() => {
+        // Filter search logs by time
+        const now = new Date();
+        const cutoff = reportTimeFilter === "7d" ? new Date(now.getTime() - 7 * 86400000)
+          : reportTimeFilter === "30d" ? new Date(now.getTime() - 30 * 86400000)
+          : reportTimeFilter === "90d" ? new Date(now.getTime() - 90 * 86400000)
+          : null;
+
+        // Build filtered search map
+        const filteredSearchMap: Record<string, { query: string; count: number; lastAt: string }[]> = {};
+        searchLogs?.forEach((log: any) => {
+          if (cutoff && new Date(log.created_at) < cutoff) return;
+          const uid = log.user_id || "anonymous";
+          if (!filteredSearchMap[uid]) filteredSearchMap[uid] = [];
+          const existing = filteredSearchMap[uid].find(s => s.query === log.search_query);
+          if (existing) {
+            existing.count++;
+            if (log.created_at > existing.lastAt) existing.lastAt = log.created_at;
+          } else {
+            filteredSearchMap[uid].push({ query: log.search_query, count: 1, lastAt: log.created_at });
+          }
+        });
+
         // Build top searchers data
         const searcherData: {
           userId: string;
@@ -537,7 +560,7 @@ const AdminCustomerIntelligence = () => {
         }[] = [];
 
         profiles.forEach(p => {
-          const searches = userSearchMap[p.user_id] || [];
+          const searches = filteredSearchMap[p.user_id] || [];
           if (searches.length === 0) return;
           const totalSearchCount = searches.reduce((sum, s) => sum + s.count, 0);
           const userOrders = ordersMap?.[p.user_id];
@@ -640,6 +663,25 @@ const AdminCustomerIntelligence = () => {
                   <Download className="w-3.5 h-3.5" />
                   تصدير Excel
                 </Button>
+              </div>
+              {/* Time filter */}
+              <div className="flex items-center gap-1.5 flex-wrap px-1">
+                {[
+                  { value: "7d", label: "آخر 7 أيام" },
+                  { value: "30d", label: "آخر 30 يوم" },
+                  { value: "90d", label: "آخر 90 يوم" },
+                  { value: "all", label: "الكل" },
+                ].map(opt => (
+                  <Button
+                    key={opt.value}
+                    size="sm"
+                    variant={reportTimeFilter === opt.value ? "default" : "outline"}
+                    className="text-[11px] h-7 px-3 font-bold"
+                    onClick={() => setReportTimeFilter(opt.value)}
+                  >
+                    {opt.label}
+                  </Button>
+                ))}
               </div>
             </CardHeader>
             <CardContent className="space-y-5">
