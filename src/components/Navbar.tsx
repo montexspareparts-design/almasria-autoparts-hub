@@ -262,6 +262,17 @@ const Navbar = () => {
                 {!isDealer && (
                   <>
                     <Link
+                      to="/my-profile"
+                      className={`flex items-center gap-1.5 text-[13px] font-semibold px-2.5 py-1.5 rounded-lg transition-colors ${
+                        location.pathname === "/my-profile"
+                          ? "text-primary bg-primary/10"
+                          : "text-secondary-foreground/60 hover:text-secondary-foreground hover:bg-secondary-foreground/5"
+                      }`}
+                    >
+                      <User className="w-3.5 h-3.5" />
+                      {lang === "ar" ? "حسابي" : "My Profile"}
+                    </Link>
+                    <Link
                       to="/my-orders"
                       className={`flex items-center gap-1.5 text-[13px] font-semibold px-2.5 py-1.5 rounded-lg transition-colors ${
                         location.pathname === "/my-orders"
@@ -396,6 +407,9 @@ const Navbar = () => {
                     )}
                     {!isDealer && (
                       <>
+                        <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-secondary-foreground/70 font-semibold" onClick={() => { navigate("/my-profile"); setIsOpen(false); }}>
+                          <User className="w-4 h-4" /> {lang === "ar" ? "حسابي" : "My Profile"}
+                        </Button>
                         <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-secondary-foreground/70 font-semibold" onClick={() => { navigate("/my-orders"); setIsOpen(false); }}>
                           <ClipboardList className="w-4 h-4" /> {lang === "ar" ? "طلباتي" : "My Orders"}
                         </Button>
