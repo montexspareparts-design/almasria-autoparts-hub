@@ -103,6 +103,19 @@ const AdminCustomerIntelligence = () => {
     },
   });
 
+  // Dealer user IDs
+  const { data: dealerUserIds } = useQuery({
+    queryKey: ["admin_dealer_user_ids"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("dealer_accounts")
+        .select("user_id")
+        .eq("is_active", true);
+      if (error) throw error;
+      return new Set(data?.map(d => d.user_id) || []);
+    },
+  });
+
   // Orders count per user
   const { data: ordersMap } = useQuery({
     queryKey: ["admin_orders_per_user"],
