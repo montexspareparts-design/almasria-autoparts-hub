@@ -150,9 +150,10 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
       .eq("user_id", user.id)
       .eq("view_date", today);
 
-    if (!views || views.length === 0) { setTodayItems([]); setLoadingToday(false); return; }
+    if (!views || views.length === 0) { setTodayItems([]); setTodayPricedIds(new Set()); setLoadingToday(false); return; }
 
     const productIds = views.map(v => v.product_id);
+    setTodayPricedIds(new Set(productIds));
     const { data: products } = await supabase
       .from("products")
       .select("id, name_ar, sku, base_price, sale_price, is_on_sale, image_url, stock_quantity")
