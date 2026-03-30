@@ -301,13 +301,39 @@ const DealerHomePage = () => {
                   </button>
                 ))}
               </div>
-              <span className={`text-[10px] font-bold shrink-0 px-2.5 py-1 rounded-full ${
-                dailyViewCount >= DAILY_PRICE_LIMIT
-                  ? "text-destructive bg-destructive/15"
-                  : "text-secondary-foreground/40 bg-white/[0.07]"
-              }`}>
-                {dailyViewCount}/{DAILY_PRICE_LIMIT} {isRTL ? "تسعير" : "priced"}
-              </span>
+              {/* Circular progress for daily limit */}
+              {(() => {
+                const progress = dailyViewCount / DAILY_PRICE_LIMIT;
+                const radius = 14;
+                const circumference = 2 * Math.PI * radius;
+                const strokeDashoffset = circumference * (1 - progress);
+                const isNearLimit = dailyViewCount >= DAILY_PRICE_LIMIT - 5;
+                const isAtLimit = dailyViewCount >= DAILY_PRICE_LIMIT;
+                return (
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="relative w-9 h-9">
+                      <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+                        <circle cx="18" cy="18" r={radius} fill="none" stroke="currentColor" strokeWidth="3" className="text-white/[0.08]" />
+                        <motion.circle
+                          cx="18" cy="18" r={radius} fill="none"
+                          strokeWidth="3" strokeLinecap="round"
+                          className={isAtLimit ? "text-destructive" : isNearLimit ? "text-amber-400" : "text-primary"}
+                          strokeDasharray={circumference}
+                          initial={{ strokeDashoffset: circumference }}
+                          animate={{ strokeDashoffset }}
+                          transition={{ duration: 1, ease: "easeOut" }}
+                        />
+                      </svg>
+                      <span className={`absolute inset-0 flex items-center justify-center text-[9px] font-black ${isAtLimit ? "text-destructive" : "text-secondary-foreground/60"}`}>
+                        {dailyViewCount}
+                      </span>
+                    </div>
+                    <span className={`text-[10px] font-bold ${isAtLimit ? "text-destructive" : "text-secondary-foreground/40"}`}>
+                      /{DAILY_PRICE_LIMIT}
+                    </span>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* ─── Search Dropdown ─── */}
