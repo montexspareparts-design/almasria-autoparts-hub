@@ -506,6 +506,9 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
   const openPriceList = async (list: PriceList) => {
     setViewingList(list);
     setPdfSignedUrl(null);
+    setLinkedProducts([]);
+    setLinkedFilter("");
+    fetchLinkedProducts(list.id);
 
     // Record the view
     if (user) {
