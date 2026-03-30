@@ -103,6 +103,19 @@ const AdminCustomerIntelligence = () => {
     },
   });
 
+  // Dealer user IDs
+  const { data: dealerUserIds } = useQuery({
+    queryKey: ["admin_dealer_user_ids"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("dealer_accounts")
+        .select("user_id")
+        .eq("is_active", true);
+      if (error) throw error;
+      return new Set(data?.map(d => d.user_id) || []);
+    },
+  });
+
   // Orders count per user
   const { data: ordersMap } = useQuery({
     queryKey: ["admin_orders_per_user"],
@@ -597,6 +610,15 @@ const AdminCustomerIntelligence = () => {
                       <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-md", getTypeBadgeColor(customerType))}>
                         {customerType}
                       </span>
+                      {dealerUserIds?.has(profile.user_id) ? (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                          تاجر
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400">
+                          عميل قطاعي
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-1 flex-wrap">
                       {profile.phone && (
