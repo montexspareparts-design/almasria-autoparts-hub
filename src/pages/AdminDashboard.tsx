@@ -45,24 +45,51 @@ const clientTypeLabels: Record<string, string> = {
   distributor: "موزع",
 };
 
-const sidebarSections = [
-  { id: "analytics", label: "التحليلات", icon: BarChart3 },
-  { id: "customer-intel", label: "ذكاء العملاء", icon: Eye },
-  { id: "customers", label: "ملف العملاء", icon: Users },
-  { id: "dealers", label: "طلبات التجار", icon: Users },
-  { id: "products", label: "إدارة المنتجات", icon: Package },
-  { id: "orders", label: "إدارة الطلبات", icon: ShoppingBag },
-  { id: "coupons", label: "الكوبونات", icon: Tag },
-  { id: "qty-discounts", label: "خصومات الكمية", icon: Layers },
-  { id: "price-lists", label: "عروض الأسعار", icon: FileText },
-  { id: "catalogs", label: "الكتالوجات", icon: FileText },
-  { id: "hero-video", label: "فيديو الصفحة الرئيسية", icon: Video },
-  { id: "youtube", label: "إعدادات YouTube", icon: ListVideo },
-  { id: "product-images", label: "صور المنتجات", icon: Image },
-  { id: "image-verifier", label: "مراجعة الصور (AI)", icon: Brain },
-  { id: "push-notifications", label: "إشعارات Push", icon: Bell },
-  { id: "erp", label: "ربط ERP", icon: Zap },
+interface SidebarGroup {
+  label: string;
+  items: { id: string; label: string; icon: typeof BarChart3 }[];
+}
+
+const sidebarGroups: SidebarGroup[] = [
+  {
+    label: "الرئيسية",
+    items: [
+      { id: "analytics", label: "التحليلات", icon: BarChart3 },
+      { id: "customer-intel", label: "ذكاء العملاء", icon: Eye },
+      { id: "customers", label: "ملف العملاء", icon: Users },
+      { id: "dealers", label: "طلبات التجار", icon: Users },
+    ],
+  },
+  {
+    label: "المنتجات والطلبات",
+    items: [
+      { id: "products", label: "إدارة المنتجات", icon: Package },
+      { id: "orders", label: "إدارة الطلبات", icon: ShoppingBag },
+      { id: "coupons", label: "الكوبونات", icon: Tag },
+      { id: "qty-discounts", label: "خصومات الكمية", icon: Layers },
+      { id: "price-lists", label: "عروض الأسعار", icon: FileText },
+      { id: "catalogs", label: "الكتالوجات", icon: FileText },
+    ],
+  },
+  {
+    label: "المحتوى والوسائط",
+    items: [
+      { id: "hero-video", label: "فيديو الرئيسية", icon: Video },
+      { id: "youtube", label: "إعدادات YouTube", icon: ListVideo },
+      { id: "product-images", label: "صور المنتجات", icon: Image },
+      { id: "image-verifier", label: "مراجعة الصور (AI)", icon: Brain },
+    ],
+  },
+  {
+    label: "التنبيهات والربط",
+    items: [
+      { id: "push-notifications", label: "إشعارات Push", icon: Bell },
+      { id: "erp", label: "ربط ERP", icon: Zap },
+    ],
+  },
 ];
+
+const sidebarSections = sidebarGroups.flatMap(g => g.items);
 
 const SectionLoader = () => (
   <div className="flex items-center justify-center py-16">
@@ -469,33 +496,56 @@ const AdminDashboard = () => {
             />
           )}
 
-          <nav className="p-3 space-y-1">
-            {sidebarSections.map((section) => {
-              const Icon = section.icon;
-              const isActive = activeSection === section.id;
+          <nav className="p-3 space-y-4">
+            {sidebarGroups.map((group) => {
+              const hasActiveItem = group.items.some(i => i.id === activeSection);
               return (
-                <button
-                  key={section.id}
-                  onClick={() => {
-                    setActiveSection(section.id);
-                    setSidebarOpen(false);
-                  }}
-                  className={`
-                    w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all
-                    ${isActive
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                    }
-                  `}
-                >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span className="truncate">{section.label}</span>
-                  {section.id === "dealers" && pendingCount > 0 && !isActive && (
-                    <span className="mr-auto text-[10px] bg-yellow-500 text-white rounded-full w-5 h-5 flex items-center justify-center">
-                      {pendingCount}
-                    </span>
-                  )}
-                </button>
+                <div key={group.label}>
+                  <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
+                    {group.label}
+                  </div>
+                  <div className="mt-1 space-y-0.5">
+                    {group.items.map((section) => {
+                      const Icon = section.icon;
+                      const isActive = activeSection === section.id;
+                      return (
+                        <button
+                          key={section.id}
+                          onClick={() => {
+                            setActiveSection(section.id);
+                            setSidebarOpen(false);
+                          }}
+                          className={`
+                            w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-medium transition-all duration-150 relative group
+                            ${isActive
+                              ? "bg-primary/10 text-primary font-bold"
+                              : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                            }
+                          `}
+                        >
+                          {isActive && (
+                            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-l-full" />
+                          )}
+                          <div className={`
+                            w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors
+                            ${isActive
+                              ? "bg-primary/15 text-primary"
+                              : "bg-muted/50 text-muted-foreground/70 group-hover:bg-muted group-hover:text-foreground/70"
+                            }
+                          `}>
+                            <Icon className="w-3.5 h-3.5" />
+                          </div>
+                          <span className="truncate">{section.label}</span>
+                          {section.id === "dealers" && pendingCount > 0 && (
+                            <span className="mr-auto bg-destructive text-destructive-foreground text-[9px] font-bold rounded-md min-w-[20px] h-5 flex items-center justify-center px-1.5">
+                              {pendingCount}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               );
             })}
           </nav>
