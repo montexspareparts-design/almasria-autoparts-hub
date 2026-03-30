@@ -83,12 +83,14 @@ const CompleteProfileDialog = ({ open, onOpenChange, userId }: CompleteProfileDi
             <div className="relative">
               <Input
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => handlePhoneChange(e.target.value)}
                 placeholder="01xxxxxxxxx"
                 required
+                maxLength={11}
                 dir="ltr"
-                className="bg-background pl-9 h-11 rounded-xl text-sm"
+                className={`bg-background pl-9 h-11 rounded-xl text-sm ${phoneError ? "border-destructive" : ""}`}
                 type="tel"
+                inputMode="numeric"
               />
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
             </div>
