@@ -338,10 +338,20 @@ const AdminCustomerIntelligence = () => {
             تحليل شامل لسلوك العملاء: عمليات البحث، الأسعار المشاهدة، الطلبات
           </p>
         </div>
-        <Button onClick={handleExportExcel} className="gap-2 font-bold">
-          <Download className="w-4 h-4" />
-          تصدير Excel
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            onClick={() => setBulkWhatsAppOpen(true)}
+            variant="outline"
+            className="gap-2 font-bold border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
+          >
+            <MessageCircle className="w-4 h-4" />
+            واتساب جماعي ({filteredWithPhone.length})
+          </Button>
+          <Button onClick={handleExportExcel} className="gap-2 font-bold">
+            <Download className="w-4 h-4" />
+            تصدير Excel
+          </Button>
+        </div>
       </div>
 
       {/* KPIs */}
