@@ -9,6 +9,8 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -18,7 +20,7 @@ import {
   Users, Search, Eye, ShoppingCart, Phone, Mail, Car,
   TrendingUp, Clock, ChevronDown, ChevronUp, BarChart3,
   Package, Calendar as CalendarIcon, Filter, X, Download,
-  MessageCircle,
+  MessageCircle, Send, Copy, ExternalLink,
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 
@@ -42,6 +44,9 @@ const AdminCustomerIntelligence = () => {
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [customerTypeFilter, setCustomerTypeFilter] = useState<string>("all");
+  const [bulkWhatsAppOpen, setBulkWhatsAppOpen] = useState(false);
+  const [bulkMessage, setBulkMessage] = useState("مرحباً {{name}}، نود إبلاغكم بأحدث العروض والخصومات الحصرية من المصرية جروب. تواصلوا معنا لمزيد من التفاصيل!");
+  const [sendingIndex, setSendingIndex] = useState(-1);
 
   // All profiles
   const { data: profiles, isLoading: loadingProfiles } = useQuery({
@@ -198,6 +203,46 @@ const AdminCustomerIntelligence = () => {
   const hasActiveFilters = !!dateFrom || !!dateTo || (customerTypeFilter !== "all");
   const clearFilters = () => { setDateFrom(undefined); setDateTo(undefined); setCustomerTypeFilter("all"); };
 
+  const formatPhone = (phone: string) => {
+    const cleaned = phone.replace(/\D/g, "");
+    if (cleaned.startsWith("0")) return "2" + cleaned;
+    if (cleaned.startsWith("2")) return cleaned;
+    return "2" + cleaned;
+  };
+
+  const filteredWithPhone = filteredProfiles?.filter(p => p.phone) || [];
+
+  const handleBulkSend = () => {
+    if (filteredWithPhone.length === 0) {
+      toast({ title: "لا يوجد عملاء بأرقام هاتف", variant: "destructive" });
+      return;
+    }
+    setSendingIndex(0);
+    const customer = filteredWithPhone[0];
+    const msg = bulkMessage.replace(/\{\{name\}\}/g, customer.full_name || "عميلنا الكريم");
+    window.open(`https://wa.me/${formatPhone(customer.phone!)}?text=${encodeURIComponent(msg)}`, "_blank");
+  };
+
+  const handleSendNext = () => {
+    const nextIndex = sendingIndex + 1;
+    if (nextIndex >= filteredWithPhone.length) {
+      setSendingIndex(-1);
+      setBulkWhatsAppOpen(false);
+      toast({ title: `✅ تم إرسال الرسالة لـ ${filteredWithPhone.length} عميل` });
+      return;
+    }
+    setSendingIndex(nextIndex);
+    const customer = filteredWithPhone[nextIndex];
+    const msg = bulkMessage.replace(/\{\{name\}\}/g, customer.full_name || "عميلنا الكريم");
+    window.open(`https://wa.me/${formatPhone(customer.phone!)}?text=${encodeURIComponent(msg)}`, "_blank");
+  };
+
+  const handleCopyAllNumbers = () => {
+    const numbers = filteredWithPhone.map(p => formatPhone(p.phone!)).join("\n");
+    navigator.clipboard.writeText(numbers);
+    toast({ title: `✅ تم نسخ ${filteredWithPhone.length} رقم` });
+  };
+
   const handleExportExcel = useCallback(() => {
     if (!filteredProfiles || filteredProfiles.length === 0) {
       toast({ title: "لا توجد بيانات للتصدير", variant: "destructive" });
@@ -293,10 +338,20 @@ const AdminCustomerIntelligence = () => {
             تحليل شامل لسلوك العملاء: عمليات البحث، الأسعار المشاهدة، الطلبات
           </p>
         </div>
-        <Button onClick={handleExportExcel} className="gap-2 font-bold">
-          <Download className="w-4 h-4" />
-          تصدير Excel
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            onClick={() => setBulkWhatsAppOpen(true)}
+            variant="outline"
+            className="gap-2 font-bold border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
+          >
+            <MessageCircle className="w-4 h-4" />
+            واتساب جماعي ({filteredWithPhone.length})
+          </Button>
+          <Button onClick={handleExportExcel} className="gap-2 font-bold">
+            <Download className="w-4 h-4" />
+            تصدير Excel
+          </Button>
+        </div>
       </div>
 
       {/* KPIs */}
@@ -730,6 +785,88 @@ const AdminCustomerIntelligence = () => {
           )}
         </div>
       )}
+
+      {/* Bulk WhatsApp Dialog */}
+      <Dialog open={bulkWhatsAppOpen} onOpenChange={(open) => { setBulkWhatsAppOpen(open); if (!open) setSendingIndex(-1); }}>
+        <DialogContent className="sm:max-w-lg" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-lg">
+              <MessageCircle className="w-5 h-5 text-emerald-600" />
+              إرسال واتساب جماعي
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-xl p-3">
+              <Users className="w-4 h-4 shrink-0" />
+              <span>سيتم الإرسال لـ <strong className="text-foreground">{filteredWithPhone.length}</strong> عميل لديهم أرقام هاتف</span>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-foreground">نص الرسالة</label>
+              <Textarea
+                value={bulkMessage}
+                onChange={(e) => setBulkMessage(e.target.value)}
+                rows={4}
+                className="resize-none text-sm"
+                placeholder="اكتب رسالتك هنا..."
+              />
+              <p className="text-[11px] text-muted-foreground">
+                استخدم <code className="bg-muted px-1 rounded">{"{{name}}"}</code> لإدراج اسم العميل تلقائياً
+              </p>
+            </div>
+
+            {sendingIndex >= 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">التقدم</span>
+                  <span className="font-bold text-foreground">{sendingIndex + 1} / {filteredWithPhone.length}</span>
+                </div>
+                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-emerald-500 rounded-full transition-all duration-300"
+                    style={{ width: `${((sendingIndex + 1) / filteredWithPhone.length) * 100}%` }}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  الحالي: <strong className="text-foreground">{filteredWithPhone[sendingIndex]?.full_name || "—"}</strong> — {filteredWithPhone[sendingIndex]?.phone}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="flex-row-reverse gap-2 sm:gap-2">
+            {sendingIndex < 0 ? (
+              <>
+                <Button
+                  onClick={handleBulkSend}
+                  className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                  disabled={filteredWithPhone.length === 0 || !bulkMessage.trim()}
+                >
+                  <Send className="w-4 h-4" />
+                  بدء الإرسال
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleCopyAllNumbers}
+                  className="gap-2 font-bold"
+                >
+                  <Copy className="w-4 h-4" />
+                  نسخ الأرقام
+                </Button>
+              </>
+            ) : (
+              <Button
+                onClick={handleSendNext}
+                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+              >
+                <ExternalLink className="w-4 h-4" />
+                {sendingIndex + 1 >= filteredWithPhone.length ? "إنهاء ✅" : `التالي (${sendingIndex + 2}/${filteredWithPhone.length})`}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
