@@ -543,6 +543,12 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
     }
   };
 
+  // ─── Linked products for browsing ───
+  const [linkedProducts, setLinkedProducts] = useState<Product[]>([]);
+  const [loadingLinked, setLoadingLinked] = useState(false);
+  const [linkedFilter, setLinkedFilter] = useState("");
+  const [showLinkedList, setShowLinkedList] = useState(true);
+
   // ─── QUOTE SUMMARY MODE ───
   if (createdQuote) {
     const quoteShareData = {
@@ -684,12 +690,6 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
       </div>
     );
   }
-
-  // ─── Linked products for browsing ───
-  const [linkedProducts, setLinkedProducts] = useState<Product[]>([]);
-  const [loadingLinked, setLoadingLinked] = useState(false);
-  const [linkedFilter, setLinkedFilter] = useState("");
-  const [showLinkedList, setShowLinkedList] = useState(true);
 
   const fetchLinkedProducts = async (listId: string) => {
     setLoadingLinked(true);
