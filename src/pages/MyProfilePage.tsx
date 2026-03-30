@@ -107,6 +107,31 @@ const MyProfilePage = () => {
     setSaving(false);
   };
 
+  const handleChangePassword = async () => {
+    if (!newPassword || !confirmPassword) {
+      toast.error("يرجى ملء جميع الحقول");
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast.error("كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("كلمة المرور الجديدة غير متطابقة");
+      return;
+    }
+    setChangingPassword(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) {
+      toast.error("حدث خطأ: " + error.message);
+    } else {
+      toast.success("تم تغيير كلمة المرور بنجاح ✅");
+      setNewPassword("");
+      setConfirmPassword("");
+    }
+    setChangingPassword(false);
+  };
+
   if (!user) return null;
 
   return (
