@@ -758,15 +758,17 @@ const AdminCustomerIntelligence = () => {
 
               {/* Bar Chart: Search vs Orders */}
               {chartData.length > 0 && (
-                <div>
-                  <h4 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-                    <BarChart3 className="w-4 h-4 text-primary" />
+                <div className="bg-muted/20 rounded-2xl p-5 border border-border/30">
+                  <h4 className="text-sm font-black text-foreground mb-4 flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <BarChart3 className="w-3.5 h-3.5 text-primary" />
+                    </div>
                     أعلى 10 عملاء بحثاً — مقارنة بالطلبات
                   </h4>
                   <div className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
                         <XAxis type="number" tick={{ fontSize: 11 }} />
                         <YAxis
                           dataKey="name"
@@ -775,12 +777,12 @@ const AdminCustomerIntelligence = () => {
                           tick={{ fontSize: 11, textAnchor: "end" }}
                         />
                         <Tooltip
-                          contentStyle={{ direction: "rtl", borderRadius: 10, fontSize: 12 }}
+                          contentStyle={{ direction: "rtl", borderRadius: 12, fontSize: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
                           formatter={(value: number, name: string) => [value, name]}
                         />
                         <Legend wrapperStyle={{ fontSize: 12 }} />
-                        <Bar dataKey="بحث" fill="hsl(217, 91%, 60%)" radius={[0, 4, 4, 0]} barSize={14} />
-                        <Bar dataKey="طلبات" fill="hsl(142, 71%, 45%)" radius={[0, 4, 4, 0]} barSize={14} />
+                        <Bar dataKey="بحث" fill="hsl(217, 91%, 60%)" radius={[0, 6, 6, 0]} barSize={16} />
+                        <Bar dataKey="طلبات" fill="hsl(142, 71%, 45%)" radius={[0, 6, 6, 0]} barSize={16} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -789,24 +791,26 @@ const AdminCustomerIntelligence = () => {
 
               {/* Detailed Table */}
               <div>
-                <h4 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-                  <Search className="w-4 h-4 text-primary" />
+                <h4 className="text-sm font-black text-foreground mb-3 flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Search className="w-3.5 h-3.5 text-primary" />
+                  </div>
                   تفاصيل أكثر 15 عميل بحثاً
                 </h4>
-                <div className="overflow-x-auto rounded-xl border border-border">
+                <div className="overflow-x-auto rounded-2xl border border-border/40 shadow-sm">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="bg-muted/50 text-muted-foreground text-[11px]">
-                        <th className="px-3 py-2.5 text-right font-bold">#</th>
-                        <th className="px-3 py-2.5 text-right font-bold">العميل</th>
-                        <th className="px-3 py-2.5 text-center font-bold">عمليات البحث</th>
-                        <th className="px-3 py-2.5 text-center font-bold">استفسارات فريدة</th>
-                        <th className="px-3 py-2.5 text-center font-bold">أصناف مسعّرة</th>
-                        <th className="px-3 py-2.5 text-center font-bold">الطلبات</th>
-                        <th className="px-3 py-2.5 text-center font-bold">إجمالي الإنفاق</th>
-                        <th className="px-3 py-2.5 text-center font-bold">التحويل</th>
-                        <th className="px-3 py-2.5 text-right font-bold">أهم ما بحث عنه</th>
-                        <th className="px-3 py-2.5 text-center font-bold">تواصل</th>
+                      <tr className="bg-gradient-to-l from-muted/80 to-muted/40 text-muted-foreground text-[11px]">
+                        <th className="px-3 py-3 text-right font-black">#</th>
+                        <th className="px-3 py-3 text-right font-black">العميل</th>
+                        <th className="px-3 py-3 text-center font-black">عمليات البحث</th>
+                        <th className="px-3 py-3 text-center font-black">استفسارات فريدة</th>
+                        <th className="px-3 py-3 text-center font-black">أصناف مسعّرة</th>
+                        <th className="px-3 py-3 text-center font-black">الطلبات</th>
+                        <th className="px-3 py-3 text-center font-black">إجمالي الإنفاق</th>
+                        <th className="px-3 py-3 text-center font-black">التحويل</th>
+                        <th className="px-3 py-3 text-right font-black">أهم ما بحث عنه</th>
+                        <th className="px-3 py-3 text-center font-black">تواصل</th>
                       </tr>
                     </thead>
                     <tbody>
