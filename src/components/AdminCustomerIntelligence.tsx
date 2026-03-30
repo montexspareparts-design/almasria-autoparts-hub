@@ -559,6 +559,7 @@ const AdminCustomerIntelligence = () => {
     ws3["!cols"] = [{ wch: 20 }, { wch: 15 }, { wch: 35 }, { wch: 18 }, { wch: 15 }];
     ws4["!cols"] = [{ wch: 10 }, { wch: 20 }];
 
+    [ws1, ws2, ws3, ws4].forEach(w => applyExcelStyles(w, 16));
     XLSX.utils.book_append_sheet(wb, ws1, "ملف العملاء");
     XLSX.utils.book_append_sheet(wb, ws2, "سجل البحث والشراء");
     XLSX.utils.book_append_sheet(wb, ws3, "الأصناف المسعّرة");
