@@ -540,249 +540,323 @@ const AdminCustomerIntelligence = () => {
   }, [profiles, ordersMap, userSearchMap]);
 
   return (
-    <div className="space-y-6" dir="rtl">
+    <div className="space-y-5" dir="rtl">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-l from-primary/10 via-primary/5 to-transparent border border-primary/10 p-6">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-l from-primary/10 via-primary/5 to-transparent border border-primary/10 p-5">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,hsl(var(--primary)/0.08),transparent_60%)]" />
-        <div className="relative flex items-center justify-between flex-wrap gap-4">
+        <div className="relative flex items-center justify-between flex-wrap gap-3">
           <div>
-            <h2 className="text-2xl font-black text-foreground flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center shadow-sm">
-                <BarChart3 className="w-5 h-5 text-primary" />
+            <h2 className="text-xl font-black text-foreground flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center shadow-sm">
+                <BarChart3 className="w-4.5 h-4.5 text-primary" />
               </div>
               تقرير ذكاء العملاء
             </h2>
-            <p className="text-muted-foreground text-sm mt-2 mr-[52px]">
-              تحليل شامل لسلوك العملاء: عمليات البحث، الأسعار المشاهدة، الطلبات، دورة الحياة
+            <p className="text-muted-foreground text-xs mt-1.5 mr-[44px]">
+              تحليل شامل لسلوك العملاء: البحث، التسعير، الطلبات، دورة الحياة
             </p>
           </div>
-          <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
             <Button
               onClick={() => setBulkWhatsAppOpen(true)}
               variant="outline"
-              className="gap-2 font-bold border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/30 rounded-xl h-10"
+              size="sm"
+              className="gap-1.5 font-bold border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/30 rounded-xl"
             >
-              <MessageCircle className="w-4 h-4" />
+              <MessageCircle className="w-3.5 h-3.5" />
               واتساب جماعي ({filteredWithPhone.length})
             </Button>
-            <Button onClick={handleExportExcel} className="gap-2 font-bold rounded-xl h-10 shadow-sm">
-              <Download className="w-4 h-4" />
+            <Button onClick={handleExportExcel} size="sm" className="gap-1.5 font-bold rounded-xl shadow-sm">
+              <Download className="w-3.5 h-3.5" />
               تصدير Excel
             </Button>
           </div>
         </div>
       </div>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      {/* KPIs Row */}
+      <div className="grid grid-cols-3 md:grid-cols-6 gap-2.5">
         {[
-          { icon: Users, value: totalCustomers, label: "إجمالي العملاء", gradient: "from-primary/10 to-primary/5", iconBg: "bg-primary/15", iconColor: "text-primary" },
-          { icon: Briefcase, value: dealerCount, label: "تاجر", gradient: "from-blue-500/10 to-blue-500/5", iconBg: "bg-blue-500/15", iconColor: "text-blue-600 dark:text-blue-400" },
-          { icon: ShoppingCart, value: retailCount, label: "عميل قطاعي", gradient: "from-orange-500/10 to-orange-500/5", iconBg: "bg-orange-500/15", iconColor: "text-orange-600 dark:text-orange-400" },
-          { icon: Car, value: withCar, label: "حددوا سيارتهم", gradient: "from-violet-500/10 to-violet-500/5", iconBg: "bg-violet-500/15", iconColor: "text-violet-600 dark:text-violet-400" },
-          { icon: Search, value: totalSearches, label: "عمليات بحث", gradient: "from-cyan-500/10 to-cyan-500/5", iconBg: "bg-cyan-500/15", iconColor: "text-cyan-600 dark:text-cyan-400" },
-          { icon: TrendingUp, value: activeSearchers, label: "عملاء يبحثون", gradient: "from-emerald-500/10 to-emerald-500/5", iconBg: "bg-emerald-500/15", iconColor: "text-emerald-600 dark:text-emerald-400" },
+          { icon: Users, value: totalCustomers, label: "إجمالي العملاء", iconBg: "bg-primary/15", iconColor: "text-primary" },
+          { icon: Briefcase, value: dealerCount, label: "تاجر", iconBg: "bg-blue-500/15", iconColor: "text-blue-600 dark:text-blue-400" },
+          { icon: ShoppingCart, value: retailCount, label: "قطاعي", iconBg: "bg-orange-500/15", iconColor: "text-orange-600 dark:text-orange-400" },
+          { icon: Car, value: withCar, label: "حددوا سيارتهم", iconBg: "bg-violet-500/15", iconColor: "text-violet-600 dark:text-violet-400" },
+          { icon: Search, value: totalSearches, label: "عمليات بحث", iconBg: "bg-cyan-500/15", iconColor: "text-cyan-600 dark:text-cyan-400" },
+          { icon: TrendingUp, value: activeSearchers, label: "عملاء يبحثون", iconBg: "bg-emerald-500/15", iconColor: "text-emerald-600 dark:text-emerald-400" },
         ].map((kpi, idx) => (
-          <div key={idx} className={cn("rounded-2xl border border-border/40 bg-gradient-to-br p-4 text-center transition-all hover:shadow-md hover:border-border/70 hover:-translate-y-0.5 duration-200", kpi.gradient)}>
-            <div className={cn("w-10 h-10 rounded-xl mx-auto mb-2.5 flex items-center justify-center shadow-sm", kpi.iconBg)}>
-              <kpi.icon className={cn("w-5 h-5", kpi.iconColor)} />
+          <div key={idx} className="rounded-xl border border-border/40 bg-card p-3 text-center transition-all hover:shadow-sm hover:border-border/60 duration-200">
+            <div className={cn("w-8 h-8 rounded-lg mx-auto mb-1.5 flex items-center justify-center", kpi.iconBg)}>
+              <kpi.icon className={cn("w-4 h-4", kpi.iconColor)} />
             </div>
-            <p className="text-2xl font-black text-foreground tracking-tight">{kpi.value}</p>
-            <p className="text-[11px] text-muted-foreground font-medium mt-0.5">{kpi.label}</p>
+            <p className="text-xl font-black text-foreground">{kpi.value}</p>
+            <p className="text-[10px] text-muted-foreground font-medium">{kpi.label}</p>
           </div>
         ))}
       </div>
 
-      {/* Lifecycle Classification Cards */}
-      <Card className="rounded-2xl border-border/40 shadow-sm overflow-hidden">
-        <CardHeader className="pb-2 bg-gradient-to-l from-amber-500/5 to-transparent">
-          <CardTitle className="text-base font-black flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-amber-500/15 flex items-center justify-center">
-              <Star className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-            </div>
-            تصنيف دورة حياة العملاء
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            {Object.entries(LIFECYCLE_LABELS).map(([key, { label, color, icon: Icon }]) => (
-              <div key={key} className={cn("rounded-xl p-4 text-center border border-border/30 transition-all hover:shadow-sm", color.replace("text-", "").includes("bg-") ? "" : "bg-muted/20")}>
-                <div className={cn("w-9 h-9 rounded-xl mx-auto mb-2 flex items-center justify-center", color.split(" ")[0])}>
-                  <Icon className={cn("w-4 h-4", color.split(" ")[1])} />
-                </div>
-                <p className="text-2xl font-black text-foreground">{lifecycleCounts[key] || 0}</p>
-                <p className="text-[11px] font-bold mt-0.5">{label}</p>
-                <p className="text-[9px] text-muted-foreground mt-0.5">
-                  {key === "vip" && "5+ طلبات و 10K+ ج.م"}
-                  {key === "active" && "طلب خلال 30 يوم"}
-                  {key === "idle" && "آخر نشاط 30-90 يوم"}
-                  {key === "lost" && "لا نشاط منذ 90+ يوم"}
-                  {key === "new" && "بدون أي نشاط"}
-                </p>
+      {/* Lifecycle + Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Lifecycle Classification */}
+        <Card className="rounded-xl border-border/40 shadow-sm overflow-hidden">
+          <CardHeader className="py-3 px-4 bg-gradient-to-l from-amber-500/5 to-transparent">
+            <CardTitle className="text-sm font-black flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-amber-500/15 flex items-center justify-center">
+                <Star className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Search Heatmap */}
-      {searchHeatmapData.length > 0 && (
-        <Card className="rounded-2xl border-border/40 shadow-sm overflow-hidden">
-          <CardHeader className="pb-2 bg-gradient-to-l from-cyan-500/5 to-transparent">
-            <CardTitle className="text-base font-black flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-cyan-500/15 flex items-center justify-center">
-                <Clock className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
-              </div>
-              خريطة حرارية لأوقات البحث
-              <span className="text-xs font-medium text-muted-foreground mr-2">أي ساعة يبحث فيها العملاء أكثر؟</span>
+              دورة حياة العملاء
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="h-[260px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={searchHeatmapData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
-                  <XAxis dataKey="hour" tick={{ fontSize: 10 }} interval={1} />
-                  <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip
-                    contentStyle={{ direction: "rtl", borderRadius: 12, fontSize: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
-                    formatter={(value: number) => [`${value} عملية بحث`, "البحث"]}
-                    labelFormatter={(label) => `الساعة ${label}`}
-                  />
-                  <Bar dataKey="بحث" radius={[4, 4, 0, 0]} barSize={20}>
-                    {searchHeatmapData.map((entry, index) => {
-                      const max = Math.max(...searchHeatmapData.map(d => d.بحث), 1);
-                      const intensity = entry.بحث / max;
-                      const hue = intensity > 0.7 ? 0 : intensity > 0.4 ? 25 : 200;
-                      const sat = 70 + intensity * 20;
-                      const light = 65 - intensity * 20;
-                      return <Cell key={index} fill={`hsl(${hue}, ${sat}%, ${light}%)`} />;
-                    })}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            {/* Peak hours summary */}
-            {(() => {
-              const sorted = [...searchHeatmapData].sort((a, b) => b.بحث - a.بحث);
-              const top3 = sorted.slice(0, 3).filter(d => d.بحث > 0);
-              if (top3.length === 0) return null;
-              return (
-                <div className="flex items-center gap-2 mt-3 flex-wrap">
-                  <span className="text-[11px] font-bold text-muted-foreground">🔥 أكثر الأوقات نشاطاً:</span>
-                  {top3.map((d, i) => (
-                    <Badge key={i} variant="secondary" className="text-[10px]">
-                      {d.hour} ({d.بحث} بحث)
-                    </Badge>
-                  ))}
+          <CardContent className="p-4 pt-2">
+            <div className="grid grid-cols-5 gap-2">
+              {Object.entries(LIFECYCLE_LABELS).map(([key, { label, color, icon: Icon }]) => (
+                <div key={key} className={cn("rounded-lg p-2.5 text-center border border-border/30 transition-all hover:shadow-sm", color.replace("text-", "").includes("bg-") ? "" : "bg-muted/20")}>
+                  <div className={cn("w-7 h-7 rounded-lg mx-auto mb-1.5 flex items-center justify-center", color.split(" ")[0])}>
+                    <Icon className={cn("w-3.5 h-3.5", color.split(" ")[1])} />
+                  </div>
+                  <p className="text-lg font-black text-foreground leading-tight">{lifecycleCounts[key] || 0}</p>
+                  <p className="text-[10px] font-bold mt-0.5">{label}</p>
+                  <p className="text-[8px] text-muted-foreground mt-0.5 leading-tight">
+                    {key === "vip" && "5+ طلبات"}
+                    {key === "active" && "آخر 30 يوم"}
+                    {key === "idle" && "30-90 يوم"}
+                    {key === "lost" && "90+ يوم"}
+                    {key === "new" && "بدون نشاط"}
+                  </p>
                 </div>
-              );
-            })()}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Dealers vs Retail Pie Chart */}
-      {totalCustomers > 0 && (
-        <Card className="rounded-2xl border-border/40 shadow-sm overflow-hidden">
-          <CardHeader className="pb-2 bg-gradient-to-l from-blue-500/5 to-transparent">
-            <CardTitle className="text-base font-black flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-blue-500/15 flex items-center justify-center">
-                <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              </div>
-              نسبة التجار مقابل العملاء القطاعيين
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[280px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={[
-                      { name: "تجار", value: dealerCount },
-                      { name: "عملاء قطاعيين", value: retailCount },
-                    ]}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={4}
-                    dataKey="value"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  >
-                    <Cell fill="hsl(217, 91%, 60%)" />
-                    <Cell fill="hsl(25, 95%, 53%)" />
-                  </Pie>
-                  <Tooltip formatter={(value: number) => [`${value} عميل`, ""]} />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
+              ))}
             </div>
           </CardContent>
         </Card>
-      )}
 
-      {/* Customer Type Distribution Chart */}
-      {filteredProfiles && filteredProfiles.length > 0 && (() => {
-        const typeCounts: Record<string, number> = {};
-        filteredProfiles.forEach(p => {
-          const t = getCustomerType(p.user_id);
-          typeCounts[t] = (typeCounts[t] || 0) + 1;
-        });
-        const COLORS = [
-          "hsl(var(--chart-1, 142 71% 45%))",
-          "hsl(var(--chart-2, 217 91% 60%))",
-          "hsl(var(--chart-3, 48 96% 53%))",
-          "hsl(var(--chart-4, 280 65% 60%))",
-          "hsl(var(--chart-5, 25 95% 53%))",
-          "hsl(var(--muted-foreground, 215 16% 47%))",
-        ];
-        const typeColorMap: Record<string, string> = {};
-        CUSTOMER_TYPES.forEach((t, i) => { typeColorMap[t] = COLORS[i % COLORS.length]; });
-        const chartData = Object.entries(typeCounts).map(([name, value]) => ({ name, value }));
-
-        return (
-          <Card className="rounded-2xl border-border/40 shadow-sm overflow-hidden">
-            <CardHeader className="pb-2 bg-gradient-to-l from-violet-500/5 to-transparent">
-              <CardTitle className="text-base font-black flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-violet-500/15 flex items-center justify-center">
-                  <BarChart3 className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+        {/* Dealers vs Retail Pie */}
+        {totalCustomers > 0 && (
+          <Card className="rounded-xl border-border/40 shadow-sm overflow-hidden">
+            <CardHeader className="py-3 px-4 bg-gradient-to-l from-blue-500/5 to-transparent">
+              <CardTitle className="text-sm font-black flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-blue-500/15 flex items-center justify-center">
+                  <Users className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                 </div>
-                توزيع أنواع العملاء
+                نسبة التجار مقابل القطاعيين
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="h-[280px]">
+            <CardContent className="p-4 pt-0">
+              <div className="h-[220px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={chartData}
+                      data={[
+                        { name: "تجار", value: dealerCount },
+                        { name: "قطاعيين", value: retailCount },
+                      ]}
                       cx="50%"
                       cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={3}
+                      innerRadius={50}
+                      outerRadius={80}
+                      paddingAngle={4}
                       dataKey="value"
-                      label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                     >
-                      {chartData.map((entry, index) => (
-                        <Cell key={entry.name} fill={typeColorMap[entry.name] || COLORS[index % COLORS.length]} />
-                      ))}
+                      <Cell fill="hsl(217, 91%, 60%)" />
+                      <Cell fill="hsl(25, 95%, 53%)" />
                     </Pie>
-                    <Tooltip
-                      formatter={(value: number) => [`${value} عميل`, "العدد"]}
-                      contentStyle={{ direction: "rtl", borderRadius: 12, fontSize: 13, boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
-                    />
-                    <Legend
-                      formatter={(value) => <span style={{ fontSize: 12 }}>{value}</span>}
-                    />
+                    <Tooltip formatter={(value: number) => [`${value} عميل`, ""]} />
+                    <Legend wrapperStyle={{ fontSize: 11 }} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
-        );
-      })()}
+        )}
+      </div>
+
+      {/* Charts Row: Heatmap + Customer Type */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Search Heatmap */}
+        {searchHeatmapData.length > 0 && (
+          <Card className="rounded-xl border-border/40 shadow-sm overflow-hidden">
+            <CardHeader className="py-3 px-4 bg-gradient-to-l from-cyan-500/5 to-transparent">
+              <CardTitle className="text-sm font-black flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-cyan-500/15 flex items-center justify-center">
+                  <Clock className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+                </div>
+                خريطة أوقات البحث
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+              <div className="h-[220px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={searchHeatmapData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
+                    <XAxis dataKey="hour" tick={{ fontSize: 9 }} interval={2} />
+                    <YAxis tick={{ fontSize: 10 }} />
+                    <Tooltip
+                      contentStyle={{ direction: "rtl", borderRadius: 10, fontSize: 11, boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}
+                      formatter={(value: number) => [`${value} بحث`, ""]}
+                      labelFormatter={(label) => `الساعة ${label}`}
+                    />
+                    <Bar dataKey="بحث" radius={[3, 3, 0, 0]} barSize={14}>
+                      {searchHeatmapData.map((entry, index) => {
+                        const max = Math.max(...searchHeatmapData.map(d => d.بحث), 1);
+                        const intensity = entry.بحث / max;
+                        const hue = intensity > 0.7 ? 0 : intensity > 0.4 ? 25 : 200;
+                        const sat = 70 + intensity * 20;
+                        const light = 65 - intensity * 20;
+                        return <Cell key={index} fill={`hsl(${hue}, ${sat}%, ${light}%)`} />;
+                      })}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              {(() => {
+                const sorted = [...searchHeatmapData].sort((a, b) => b.بحث - a.بحث);
+                const top3 = sorted.slice(0, 3).filter(d => d.بحث > 0);
+                if (top3.length === 0) return null;
+                return (
+                  <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                    <span className="text-[10px] font-bold text-muted-foreground">🔥 الأوقات الأنشط:</span>
+                    {top3.map((d, i) => (
+                      <Badge key={i} variant="secondary" className="text-[9px] h-5">
+                        {d.hour} ({d.بحث})
+                      </Badge>
+                    ))}
+                  </div>
+                );
+              })()}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Customer Type Distribution */}
+        {filteredProfiles && filteredProfiles.length > 0 && (() => {
+          const typeCounts: Record<string, number> = {};
+          filteredProfiles.forEach(p => {
+            const t = getCustomerType(p.user_id);
+            typeCounts[t] = (typeCounts[t] || 0) + 1;
+          });
+          const COLORS = [
+            "hsl(var(--chart-1, 142 71% 45%))",
+            "hsl(var(--chart-2, 217 91% 60%))",
+            "hsl(var(--chart-3, 48 96% 53%))",
+            "hsl(var(--chart-4, 280 65% 60%))",
+            "hsl(var(--chart-5, 25 95% 53%))",
+            "hsl(var(--muted-foreground, 215 16% 47%))",
+          ];
+          const typeColorMap: Record<string, string> = {};
+          CUSTOMER_TYPES.forEach((t, i) => { typeColorMap[t] = COLORS[i % COLORS.length]; });
+          const chartData = Object.entries(typeCounts).map(([name, value]) => ({ name, value }));
+
+          return (
+            <Card className="rounded-xl border-border/40 shadow-sm overflow-hidden">
+              <CardHeader className="py-3 px-4 bg-gradient-to-l from-violet-500/5 to-transparent">
+                <CardTitle className="text-sm font-black flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-violet-500/15 flex items-center justify-center">
+                    <BarChart3 className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />
+                  </div>
+                  توزيع أنواع العملاء
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-0">
+                <div className="h-[220px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={chartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={50}
+                        outerRadius={80}
+                        paddingAngle={3}
+                        dataKey="value"
+                        label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                      >
+                        {chartData.map((entry, index) => (
+                          <Cell key={entry.name} fill={typeColorMap[entry.name] || COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(value: number) => [`${value} عميل`, ""]}
+                        contentStyle={{ direction: "rtl", borderRadius: 10, fontSize: 11, boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}
+                      />
+                      <Legend wrapperStyle={{ fontSize: 11 }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
+      </div>
+
+      {/* Filters & Search - moved up for better UX */}
+      <Card className="rounded-xl border-border/40 shadow-sm">
+        <CardContent className="py-3 px-4">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <div className="relative flex-1 min-w-[180px]">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <Input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="ابحث بالاسم أو الهاتف أو الإيميل..."
+                className="pr-9 h-8 text-xs"
+              />
+            </div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className={cn("gap-1 text-[11px] h-8", !dateFrom && "text-muted-foreground")}>
+                  <CalendarIcon className="w-3 h-3" />
+                  {dateFrom ? format(dateFrom, "dd/MM/yyyy") : "من تاريخ"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} disabled={(date) => date > new Date()} initialFocus className={cn("p-3 pointer-events-auto")} />
+              </PopoverContent>
+            </Popover>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className={cn("gap-1 text-[11px] h-8", !dateTo && "text-muted-foreground")}>
+                  <CalendarIcon className="w-3 h-3" />
+                  {dateTo ? format(dateTo, "dd/MM/yyyy") : "إلى تاريخ"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar mode="single" selected={dateTo} onSelect={setDateTo} disabled={(date) => date > new Date()} initialFocus className={cn("p-3 pointer-events-auto")} />
+              </PopoverContent>
+            </Popover>
+            <Select value={customerTypeFilter} onValueChange={setCustomerTypeFilter}>
+              <SelectTrigger className="w-[150px] h-8 text-[11px]">
+                <Filter className="w-3 h-3 ml-1" />
+                <SelectValue placeholder="نوع العميل" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل الأنواع</SelectItem>
+                {CUSTOMER_TYPES.map(type => (
+                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={accountTypeFilter} onValueChange={setAccountTypeFilter}>
+              <SelectTrigger className="w-[130px] h-8 text-[11px]">
+                <Users className="w-3 h-3 ml-1" />
+                <SelectValue placeholder="نوع الحساب" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">الكل</SelectItem>
+                <SelectItem value="dealer">تاجر</SelectItem>
+                <SelectItem value="retail">قطاعي</SelectItem>
+              </SelectContent>
+            </Select>
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" className="gap-1 text-[11px] h-8 text-destructive" onClick={clearFilters}>
+                <X className="w-3 h-3" />
+                مسح
+              </Button>
+            )}
+            <span className="text-[11px] text-muted-foreground mr-auto font-medium">
+              {filteredProfiles?.length || 0} عميل
+            </span>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Top Searchers vs Orders Report */}
       {profiles && profiles.length > 0 && (() => {
@@ -925,18 +999,18 @@ const AdminCustomerIntelligence = () => {
         };
 
         return (
-          <Card className="rounded-2xl border-primary/15 shadow-sm overflow-hidden">
-            <CardHeader className="pb-3 bg-gradient-to-l from-primary/8 via-primary/3 to-transparent">
-              <div className="flex items-center justify-between flex-wrap gap-3">
+          <Card className="rounded-xl border-primary/15 shadow-sm overflow-hidden">
+            <CardHeader className="py-3 px-4 bg-gradient-to-l from-primary/8 via-primary/3 to-transparent">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <div>
-                  <CardTitle className="text-lg font-black flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center shadow-sm">
-                      <TrendingUp className="w-4.5 h-4.5 text-primary" />
+                  <CardTitle className="text-sm font-black flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-primary/15 flex items-center justify-center shadow-sm">
+                      <TrendingUp className="w-3.5 h-3.5 text-primary" />
                     </div>
-                    تقرير أكثر العملاء بحثاً مقابل الطلبات
+                    أكثر العملاء بحثاً مقابل الطلبات
                   </CardTitle>
-                  <p className="text-xs text-muted-foreground mt-1.5 mr-[46px]">
-                    مقارنة بين نشاط البحث وتحويله لطلبات فعلية — أداة لاكتشاف الفرص الضائعة
+                  <p className="text-[10px] text-muted-foreground mt-1 mr-[36px]">
+                    مقارنة نشاط البحث وتحويله لطلبات — أداة لاكتشاف الفرص
                   </p>
                 </div>
                 <Button
@@ -993,21 +1067,21 @@ const AdminCustomerIntelligence = () => {
                 ))}
               </div>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4">
               {/* Summary KPIs */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
                 {[
                   { icon: Search, value: totalSearchers, label: "عميل يبحث", change: searchersChange, bg: "bg-gradient-to-br from-primary/8 to-primary/3", iconBg: "bg-primary/15", iconColor: "text-primary", valueColor: "text-foreground" },
                   { icon: ShoppingCart, value: convertedCount, label: "تحوّلوا لطلبات", change: convertedChange, bg: "bg-gradient-to-br from-emerald-500/8 to-emerald-500/3", iconBg: "bg-emerald-500/15", iconColor: "text-emerald-600 dark:text-emerald-400", valueColor: "text-emerald-700 dark:text-emerald-400" },
                   { icon: TrendingUp, value: `${overallConversion}%`, label: "معدل التحويل", change: conversionChange, bg: "bg-gradient-to-br from-amber-500/8 to-amber-500/3", iconBg: "bg-amber-500/15", iconColor: "text-amber-600 dark:text-amber-400", valueColor: "text-amber-700 dark:text-amber-400" },
                   { icon: BarChart3, value: avgSearchesPerUser, label: "متوسط بحث/عميل", change: avgChange, bg: "bg-gradient-to-br from-blue-500/8 to-blue-500/3", iconBg: "bg-blue-500/15", iconColor: "text-blue-600 dark:text-blue-400", valueColor: "text-blue-700 dark:text-blue-400" },
                 ].map((kpi, idx) => (
-                  <div key={idx} className={cn("rounded-2xl p-4 text-center border border-border/30", kpi.bg)}>
-                    <div className={cn("w-9 h-9 rounded-xl mx-auto mb-2 flex items-center justify-center", kpi.iconBg)}>
-                      <kpi.icon className={cn("w-4.5 h-4.5", kpi.iconColor)} />
+                  <div key={idx} className={cn("rounded-xl p-3 text-center border border-border/30", kpi.bg)}>
+                    <div className={cn("w-7 h-7 rounded-lg mx-auto mb-1.5 flex items-center justify-center", kpi.iconBg)}>
+                      <kpi.icon className={cn("w-3.5 h-3.5", kpi.iconColor)} />
                     </div>
-                    <p className={cn("text-2xl font-black tracking-tight", kpi.valueColor)}>{kpi.value}</p>
-                    <p className="text-[11px] text-muted-foreground font-medium mt-0.5">{kpi.label}</p>
+                    <p className={cn("text-xl font-black tracking-tight", kpi.valueColor)}>{kpi.value}</p>
+                    <p className="text-[10px] text-muted-foreground font-medium">{kpi.label}</p>
                     {kpi.change !== null && (
                       <div className={cn(
                         "flex items-center justify-center gap-0.5 mt-2 text-[10px] font-bold rounded-full px-2.5 py-0.5 mx-auto w-fit",
@@ -1378,81 +1452,6 @@ const AdminCustomerIntelligence = () => {
         );
       })()}
 
-      {/* Filters & search */}
-      <Card className="rounded-2xl border-border/40 shadow-sm">
-        <CardContent className="py-4">
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="ابحث بالاسم أو الهاتف أو الإيميل..."
-                className="pr-10 h-9 text-sm"
-              />
-            </div>
-
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className={cn("gap-1.5 text-xs h-9", !dateFrom && "text-muted-foreground")}>
-                  <CalendarIcon className="w-3.5 h-3.5" />
-                  {dateFrom ? format(dateFrom, "dd/MM/yyyy") : "من تاريخ"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} disabled={(date) => date > new Date()} initialFocus className={cn("p-3 pointer-events-auto")} />
-              </PopoverContent>
-            </Popover>
-
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className={cn("gap-1.5 text-xs h-9", !dateTo && "text-muted-foreground")}>
-                  <CalendarIcon className="w-3.5 h-3.5" />
-                  {dateTo ? format(dateTo, "dd/MM/yyyy") : "إلى تاريخ"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={dateTo} onSelect={setDateTo} disabled={(date) => date > new Date()} initialFocus className={cn("p-3 pointer-events-auto")} />
-              </PopoverContent>
-            </Popover>
-
-            <Select value={customerTypeFilter} onValueChange={setCustomerTypeFilter}>
-              <SelectTrigger className="w-[180px] h-9 text-xs">
-                <Filter className="w-3.5 h-3.5 ml-1.5" />
-                <SelectValue placeholder="نوع العميل" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">كل الأنواع</SelectItem>
-                {CUSTOMER_TYPES.map(type => (
-                  <SelectItem key={type} value={type}>{type}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={accountTypeFilter} onValueChange={setAccountTypeFilter}>
-              <SelectTrigger className="w-[160px] h-9 text-xs">
-                <Users className="w-3.5 h-3.5 ml-1.5" />
-                <SelectValue placeholder="نوع الحساب" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">الكل</SelectItem>
-                <SelectItem value="dealer">تاجر</SelectItem>
-                <SelectItem value="retail">عميل قطاعي</SelectItem>
-              </SelectContent>
-            </Select>
-            {hasActiveFilters && (
-              <Button variant="ghost" size="sm" className="gap-1 text-xs h-9 text-destructive" onClick={clearFilters}>
-                <X className="w-3.5 h-3.5" />
-                مسح الفلاتر
-              </Button>
-            )}
-
-            <span className="text-xs text-muted-foreground mr-auto">
-              {filteredProfiles?.length || 0} عميل
-            </span>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Customer list */}
       {loadingProfiles ? (
