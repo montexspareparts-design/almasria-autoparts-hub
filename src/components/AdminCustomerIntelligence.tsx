@@ -44,6 +44,7 @@ const AdminCustomerIntelligence = () => {
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [customerTypeFilter, setCustomerTypeFilter] = useState<string>("all");
+  const [accountTypeFilter, setAccountTypeFilter] = useState<string>("all");
   const [bulkWhatsAppOpen, setBulkWhatsAppOpen] = useState(false);
   const [bulkMessage, setBulkMessage] = useState("مرحباً {{name}}، نود إبلاغكم بأحدث العروض والخصومات الحصرية من المصرية جروب. تواصلوا معنا لمزيد من التفاصيل!");
   const [sendingIndex, setSendingIndex] = useState(-1);
@@ -210,11 +211,16 @@ const AdminCustomerIntelligence = () => {
     if (customerTypeFilter && customerTypeFilter !== "all") {
       if (getCustomerType(p.user_id) !== customerTypeFilter) return false;
     }
+    if (accountTypeFilter !== "all") {
+      const isDealer = dealerUserIds?.has(p.user_id);
+      if (accountTypeFilter === "dealer" && !isDealer) return false;
+      if (accountTypeFilter === "retail" && isDealer) return false;
+    }
     return true;
   });
 
-  const hasActiveFilters = !!dateFrom || !!dateTo || (customerTypeFilter !== "all");
-  const clearFilters = () => { setDateFrom(undefined); setDateTo(undefined); setCustomerTypeFilter("all"); };
+  const hasActiveFilters = !!dateFrom || !!dateTo || (customerTypeFilter !== "all") || (accountTypeFilter !== "all");
+  const clearFilters = () => { setDateFrom(undefined); setDateTo(undefined); setCustomerTypeFilter("all"); setAccountTypeFilter("all"); };
 
   const formatPhone = (phone: string) => {
     const cleaned = phone.replace(/\D/g, "");
@@ -543,6 +549,18 @@ const AdminCustomerIntelligence = () => {
               </SelectContent>
             </Select>
 
+            {/* Account Type (Dealer vs Retail) */}
+            <Select value={accountTypeFilter} onValueChange={setAccountTypeFilter}>
+              <SelectTrigger className="w-[160px] h-9 text-xs">
+                <Users className="w-3.5 h-3.5 ml-1.5" />
+                <SelectValue placeholder="نوع الحساب" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">الكل</SelectItem>
+                <SelectItem value="dealer">تاجر</SelectItem>
+                <SelectItem value="retail">عميل قطاعي</SelectItem>
+              </SelectContent>
+            </Select>
             {/* Clear filters */}
             {hasActiveFilters && (
               <Button variant="ghost" size="sm" className="gap-1 text-xs h-9 text-destructive" onClick={clearFilters}>
