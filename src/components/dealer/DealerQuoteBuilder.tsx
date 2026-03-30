@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -921,78 +922,113 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
           )}
         </div>
       ) : activeView === "saved" ? (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {savedQuotes.length === 0 ? (
             <div className="bg-card border border-dashed border-border rounded-lg p-10 text-center">
               <FileText className="w-10 h-10 mx-auto text-muted-foreground/30 mb-3" />
               <p className="text-sm text-muted-foreground font-medium">لا توجد عروض محفوظة</p>
             </div>
           ) : (
-            savedQuotes.map(q => (
-              <div
-                key={q.id}
-                className="bg-card border border-border rounded-lg p-3.5 flex items-center gap-3 cursor-pointer hover:border-primary/30 hover:shadow-md transition-all group"
-                onClick={() => openSavedQuote(q)}
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <p className="font-bold text-foreground text-sm">{q.quote_number}</p>
-                    <Badge
-                      variant={q.status === "converted" ? "default" : "secondary"}
-                      className="text-[10px] h-5"
-                    >
-                      {q.status === "draft" ? "مسودة" : q.status === "converted" ? "تم التحويل لطلب" : q.status}
-                    </Badge>
+            <AnimatePresence>
+            {savedQuotes.map((q, i) => {
+              const statusConfig: Record<string, { label: string; color: string; barColor: string; icon: typeof FileText }> = {
+                draft: { label: "مسودة", color: "text-amber-600 bg-amber-500/10", barColor: "bg-amber-500", icon: Edit3 },
+                converted: { label: "تم التحويل لطلب", color: "text-emerald-600 bg-emerald-500/10", barColor: "bg-emerald-500", icon: ShoppingCart },
+                sent: { label: "تم الإرسال", color: "text-blue-600 bg-blue-500/10", barColor: "bg-blue-500", icon: ArrowRight },
+              };
+              const st = statusConfig[q.status] || statusConfig.draft;
+              const StatusIcon = st.icon;
+
+              return (
+                <motion.div
+                  key={q.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ delay: i * 0.05, duration: 0.3 }}
+                  whileHover={{ y: -2 }}
+                  className="relative bg-card rounded-xl border border-border overflow-hidden cursor-pointer hover:border-primary/30 hover:shadow-lg transition-all duration-300 group"
+                  onClick={() => openSavedQuote(q)}
+                >
+                  {/* Colored top bar */}
+                  <div className={`h-1 ${st.barColor}`} />
+
+                  <div className="p-4">
+                    {/* Top row: number + status */}
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${st.color}`}>
+                          <StatusIcon className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-foreground text-sm">{q.quote_number}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {new Date(q.created_at).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric" })}
+                          </p>
+                        </div>
+                      </div>
+                      <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${st.color}`}>
+                        {st.label}
+                      </span>
+                    </div>
+
+                    {/* Notes preview */}
+                    {q.notes && (
+                      <p className="text-[11px] text-muted-foreground/70 truncate mb-3 pr-11">{q.notes}</p>
+                    )}
+
+                    {/* Bottom row: total + actions */}
+                    <div className="flex items-center justify-between">
+                      <p className="text-lg font-black text-foreground">{Number(q.total_amount).toLocaleString("ar-EG")} <span className="text-xs font-medium text-muted-foreground">ج.م</span></p>
+                      <div className="flex items-center gap-1">
+                        {q.status !== "converted" && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="w-8 h-8 text-primary hover:bg-primary/10 rounded-lg"
+                            title="تحويل لطلبية"
+                            onClick={(e) => { e.stopPropagation(); convertSavedQuoteToOrder(q); }}
+                            disabled={saving}
+                          >
+                            <ShoppingCart className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="w-8 h-8 text-[#25D366] hover:bg-[#25D366]/10 rounded-lg"
+                          title="مشاركة عبر واتساب"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            shareQuoteWhatsApp({
+                              quoteNumber: q.quote_number,
+                              date: new Date(q.created_at).toLocaleDateString("ar-EG"),
+                              items: [],
+                              totalAmount: Number(q.total_amount),
+                              notes: q.notes || undefined,
+                            });
+                          }}
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="w-8 h-8 text-destructive hover:bg-destructive/10 rounded-lg"
+                          onClick={(e) => { e.stopPropagation(); deleteQuote(q.id); }}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Hover hint */}
+                    <p className="text-[10px] text-primary/50 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">اضغط لفتح العرض والتعديل ←</p>
                   </div>
-                  <p className="text-[11px] text-muted-foreground">
-                    {new Date(q.created_at).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-                  </p>
-                  {q.notes && <p className="text-[11px] text-muted-foreground/70 mt-0.5 truncate">{q.notes}</p>}
-                  <p className="text-[10px] text-primary/60 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">اضغط لفتح العرض والتعديل ←</p>
-                </div>
-                <p className="font-bold text-foreground text-sm shrink-0">{Number(q.total_amount).toLocaleString("ar-EG")} ج.م</p>
-                <div className="flex items-center gap-1 shrink-0">
-                  {q.status !== "converted" && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="w-8 h-8 text-primary hover:bg-primary/10"
-                      title="تحويل لطلبية"
-                      onClick={(e) => { e.stopPropagation(); convertSavedQuoteToOrder(q); }}
-                      disabled={saving}
-                    >
-                      <ShoppingCart className="w-3.5 h-3.5" />
-                    </Button>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="w-8 h-8 text-[#25D366] hover:bg-[#25D366]/10"
-                    title="مشاركة عبر واتساب"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      shareQuoteWhatsApp({
-                        quoteNumber: q.quote_number,
-                        date: new Date(q.created_at).toLocaleDateString("ar-EG"),
-                        items: [],
-                        totalAmount: Number(q.total_amount),
-                        notes: q.notes || undefined,
-                      });
-                    }}
-                  >
-                    <MessageCircle className="w-3.5 h-3.5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="w-8 h-8 text-destructive hover:bg-destructive/10"
-                    onClick={(e) => { e.stopPropagation(); deleteQuote(q.id); }}
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </Button>
-                </div>
-              </div>
-            ))
+                </motion.div>
+              );
+            })}
+            </AnimatePresence>
           )}
         </div>
       ) : (
