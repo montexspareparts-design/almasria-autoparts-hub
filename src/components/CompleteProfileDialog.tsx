@@ -16,24 +16,43 @@ interface CompleteProfileDialogProps {
 const CompleteProfileDialog = ({ open, onOpenChange, userId }: CompleteProfileDialogProps) => {
   const { toast } = useToast();
   const [phone, setPhone] = useState("");
+  const [phoneError, setPhoneError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const egyptianPhoneRegex = /^01[0-25]\d{8}$/;
+
+  const validatePhone = (value: string): string => {
+    const digits = value.replace(/\D/g, "");
+    if (!digits) return "رقم الهاتف مطلوب";
+    if (!digits.startsWith("01")) return "الرقم لازم يبدأ بـ 01";
+    if (digits.length !== 11) return "الرقم لازم يكون 11 رقم";
+    if (!egyptianPhoneRegex.test(digits)) return "رقم هاتف مصري غير صحيح";
+    return "";
+  };
+
+  const handlePhoneChange = (value: string) => {
+    const digitsOnly = value.replace(/[^\d]/g, "");
+    setPhone(digitsOnly);
+    if (phoneError) setPhoneError(validatePhone(digitsOnly));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmed = phone.trim();
-    if (!trimmed || trimmed.length < 10) {
-      toast({ title: "يرجى إدخال رقم هاتف صحيح", variant: "destructive" });
+    const error = validatePhone(phone);
+    if (error) {
+      setPhoneError(error);
+      toast({ title: error, variant: "destructive" });
       return;
     }
     setLoading(true);
 
-    const { error } = await supabase
+    const { error: dbError } = await supabase
       .from("profiles")
-      .update({ phone: trimmed })
+      .update({ phone })
       .eq("user_id", userId);
 
-    if (error) {
-      toast({ title: "حدث خطأ", description: error.message, variant: "destructive" });
+    if (dbError) {
+      toast({ title: "حدث خطأ", description: dbError.message, variant: "destructive" });
     } else {
       toast({ title: "تم حفظ رقم الهاتف بنجاح ✅" });
       onOpenChange(false);
@@ -64,15 +83,18 @@ const CompleteProfileDialog = ({ open, onOpenChange, userId }: CompleteProfileDi
             <div className="relative">
               <Input
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => handlePhoneChange(e.target.value)}
                 placeholder="01xxxxxxxxx"
                 required
+                maxLength={11}
                 dir="ltr"
-                className="bg-background pl-9 h-11 rounded-xl text-sm"
+                className={`bg-background pl-9 h-11 rounded-xl text-sm ${phoneError ? "border-destructive" : ""}`}
                 type="tel"
+                inputMode="numeric"
               />
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
             </div>
+            {phoneError && <p className="text-xs text-destructive mt-1">{phoneError}</p>}
           </div>
 
           <Button type="submit" className="w-full h-11 rounded-xl font-bold" disabled={loading}>
