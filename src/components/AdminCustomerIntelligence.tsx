@@ -203,6 +203,46 @@ const AdminCustomerIntelligence = () => {
   const hasActiveFilters = !!dateFrom || !!dateTo || (customerTypeFilter !== "all");
   const clearFilters = () => { setDateFrom(undefined); setDateTo(undefined); setCustomerTypeFilter("all"); };
 
+  const formatPhone = (phone: string) => {
+    const cleaned = phone.replace(/\D/g, "");
+    if (cleaned.startsWith("0")) return "2" + cleaned;
+    if (cleaned.startsWith("2")) return cleaned;
+    return "2" + cleaned;
+  };
+
+  const filteredWithPhone = filteredProfiles?.filter(p => p.phone) || [];
+
+  const handleBulkSend = () => {
+    if (filteredWithPhone.length === 0) {
+      toast({ title: "لا يوجد عملاء بأرقام هاتف", variant: "destructive" });
+      return;
+    }
+    setSendingIndex(0);
+    const customer = filteredWithPhone[0];
+    const msg = bulkMessage.replace(/\{\{name\}\}/g, customer.full_name || "عميلنا الكريم");
+    window.open(`https://wa.me/${formatPhone(customer.phone!)}?text=${encodeURIComponent(msg)}`, "_blank");
+  };
+
+  const handleSendNext = () => {
+    const nextIndex = sendingIndex + 1;
+    if (nextIndex >= filteredWithPhone.length) {
+      setSendingIndex(-1);
+      setBulkWhatsAppOpen(false);
+      toast({ title: `✅ تم إرسال الرسالة لـ ${filteredWithPhone.length} عميل` });
+      return;
+    }
+    setSendingIndex(nextIndex);
+    const customer = filteredWithPhone[nextIndex];
+    const msg = bulkMessage.replace(/\{\{name\}\}/g, customer.full_name || "عميلنا الكريم");
+    window.open(`https://wa.me/${formatPhone(customer.phone!)}?text=${encodeURIComponent(msg)}`, "_blank");
+  };
+
+  const handleCopyAllNumbers = () => {
+    const numbers = filteredWithPhone.map(p => formatPhone(p.phone!)).join("\n");
+    navigator.clipboard.writeText(numbers);
+    toast({ title: `✅ تم نسخ ${filteredWithPhone.length} رقم` });
+  };
+
   const handleExportExcel = useCallback(() => {
     if (!filteredProfiles || filteredProfiles.length === 0) {
       toast({ title: "لا توجد بيانات للتصدير", variant: "destructive" });
