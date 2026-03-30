@@ -601,7 +601,14 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{product.name_ar}</p>
-                    <p className="text-[11px] text-muted-foreground font-mono">{product.sku}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-[11px] text-muted-foreground font-mono">{product.sku}</p>
+                      {todayPricedIds.has(product.id) && (
+                        <Badge className="text-[9px] h-4 px-1.5 bg-emerald-500/15 text-emerald-600 border-emerald-500/30 dark:text-emerald-400">
+                          ✓ مسعّر
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                   <div className="shrink-0">
                     <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
