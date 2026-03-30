@@ -86,6 +86,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
   const [alertedProducts, setAlertedProducts] = useState<Set<string>>(new Set());
   const [todayItems, setTodayItems] = useState<QuoteItem[]>([]);
   const [loadingToday, setLoadingToday] = useState(false);
+  const [todayPricedIds, setTodayPricedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (user) {
