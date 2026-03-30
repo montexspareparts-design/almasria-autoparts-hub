@@ -210,6 +210,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           userId={user.id}
         />
       )}
+      {user && (
+        <RoleSelectionDialog
+          open={showRoleSelection}
+          onOpenChange={setShowRoleSelection}
+        />
+      )}
     </AuthContext.Provider>
   );
 };
