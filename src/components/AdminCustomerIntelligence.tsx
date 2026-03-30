@@ -962,10 +962,20 @@ const AdminCustomerIntelligence = () => {
                                     className="h-8 text-xs pr-8 bg-card"
                                   />
                                 </div>
+                                <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                  <span className="text-[10px] text-muted-foreground font-medium">ترتيب:</span>
+                                  <Button size="sm" variant={searchDetailSort === "count" ? "default" : "outline"} className="h-6 text-[10px] px-2" onClick={() => setSearchDetailSort("count")}>
+                                    الأكثر بحثاً
+                                  </Button>
+                                  <Button size="sm" variant={searchDetailSort === "date" ? "default" : "outline"} className="h-6 text-[10px] px-2" onClick={() => setSearchDetailSort("date")}>
+                                    الأحدث
+                                  </Button>
+                                </div>
                                 {(() => {
-                                  const filtered = searchDetailFilter
+                                  const filtered = (searchDetailFilter
                                     ? d.searchDetails.filter(s => s.query.includes(searchDetailFilter))
-                                    : d.searchDetails;
+                                    : [...d.searchDetails]
+                                  ).sort((a, b) => searchDetailSort === "count" ? b.count - a.count : new Date(b.lastAt).getTime() - new Date(a.lastAt).getTime());
                                   return (
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[200px] overflow-y-auto">
                                       {filtered.length === 0 ? (
