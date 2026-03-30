@@ -163,6 +163,8 @@ const AdminCustomerIntelligence = () => {
   const withCar = profiles?.filter(p => p.car_model).length || 0;
   const totalSearches = searchLogs?.length || 0;
   const activeSearchers = new Set(searchLogs?.map((l: any) => l.user_id).filter(Boolean)).size;
+  const dealerCount = profiles?.filter(p => dealerUserIds?.has(p.user_id)).length || 0;
+  const retailCount = totalCustomers - dealerCount;
 
   const getCustomerType = (userId: string): string => {
     const orders = ordersMap?.[userId];
