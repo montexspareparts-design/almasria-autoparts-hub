@@ -98,7 +98,7 @@ const DealerOverview = ({
         .eq("user_id", userId).neq("status", "cancelled").order("created_at", { ascending: false }).limit(3),
       supabase.from("dealer_quotes").select("id, quote_number, status, total_amount, created_at")
         .eq("user_id", userId).order("created_at", { ascending: false }).limit(3),
-      supabase.from("orders").select("status, total_amount").eq("user_id", userId),
+      supabase.from("orders").select("status, total_amount").eq("user_id", userId).limit(200),
     ]).then(([ordersRes, quotesRes, summaryRes]) => {
       setRecentOrders((ordersRes.data as RecentOrder[]) || []);
       setRecentQuotes((quotesRes.data as RecentQuote[]) || []);

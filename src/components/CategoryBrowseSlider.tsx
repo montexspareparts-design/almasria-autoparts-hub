@@ -57,18 +57,19 @@ const CategoryBrowseSlider = () => {
 
   useEffect(() => {
     const fetchCounts = async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("name_ar")
-        .eq("is_active", true);
-      if (error || !data) return;
-
+      // Fetch counts per category using individual count queries instead of loading ALL product rows
+      const results = await Promise.all(
+        categories.map(async (cat) => {
+          const { count } = await supabase
+            .from("products")
+            .select("id", { count: "exact", head: true })
+            .eq("is_active", true)
+            .ilike("name_ar", `%${cat.search}%`);
+          return { search: cat.search, count: count ?? 0 };
+        })
+      );
       const counts: Record<string, number> = {};
-      categories.forEach((cat) => {
-        counts[cat.search] = data.filter((p) =>
-          p.name_ar.includes(cat.search)
-        ).length;
-      });
+      results.forEach((r) => { counts[r.search] = r.count; });
       setCategoryCounts(counts);
     };
     fetchCounts();

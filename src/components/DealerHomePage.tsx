@@ -26,6 +26,7 @@ import DealerRecentlyViewed from "@/components/dealer/DealerRecentlyViewed";
 import DealerBestSellers from "@/components/dealer/DealerBestSellers";
 import DealerOrderTimeline from "@/components/dealer/DealerOrderTimeline";
 import { playPricingSound } from "@/lib/pricingSound";
+import { useLazyVisible } from "@/hooks/useLazyVisible";
 
 /* ─── Types ─── */
 interface OrderSummary { id: string; order_number: string; status: string; total_amount: number; created_at: string; }
@@ -47,7 +48,12 @@ const StockBadge = ({ qty, isRTL }: { qty: number; isRTL: boolean }) => (
   </span>
 );
 
-/* ─── Bottom Nav ─── */
+/* ─── Lazy Section Wrapper ─── */
+const LazyProductSection = ({ children }: { children: React.ReactNode }) => {
+  const [ref, visible] = useLazyVisible("300px");
+  return <div ref={ref}>{visible ? children : null}</div>;
+};
+
 const DealerHomeBottomNav = ({ isRTL }: { isRTL: boolean }) => {
   const navigate = useNavigate();
   const tabs = [
@@ -551,31 +557,37 @@ const DealerHomePage = () => {
           </motion.section>
         ) : null}
 
-        {/* ─── Previously Purchased — Amazon-style Reorder ─── */}
-        {user && (
-          <DealerPreviouslyPurchased
-            userId={user.id}
-            isRTL={isRTL}
-            onAddToOrder={(p) => handleAddToOrder(p as ProductItem)}
-          />
-        )}
+        {/* ─── Previously Purchased — Lazy loaded ─── */}
+        <LazyProductSection>
+          {user && (
+            <DealerPreviouslyPurchased
+              userId={user.id}
+              isRTL={isRTL}
+              onAddToOrder={(p) => handleAddToOrder(p as ProductItem)}
+            />
+          )}
+        </LazyProductSection>
 
-        {/* ─── Recently Viewed ─── */}
-        {user && (
-          <DealerRecentlyViewed
-            userId={user.id}
+        {/* ─── Recently Viewed — Lazy loaded ─── */}
+        <LazyProductSection>
+          {user && (
+            <DealerRecentlyViewed
+              userId={user.id}
+              isRTL={isRTL}
+              onPriceItem={(p) => handlePriceItem({ ...p, sale_price: null, brand: undefined } as ProductItem)}
+              onAddToOrder={(p) => handleAddToOrder(p as ProductItem)}
+            />
+          )}
+        </LazyProductSection>
+
+        {/* ─── Best Sellers — Lazy loaded ─── */}
+        <LazyProductSection>
+          <DealerBestSellers
             isRTL={isRTL}
             onPriceItem={(p) => handlePriceItem({ ...p, sale_price: null, brand: undefined } as ProductItem)}
             onAddToOrder={(p) => handleAddToOrder(p as ProductItem)}
           />
-        )}
-
-        {/* ─── Best Sellers ─── */}
-        <DealerBestSellers
-          isRTL={isRTL}
-          onPriceItem={(p) => handlePriceItem({ ...p, sale_price: null, brand: undefined } as ProductItem)}
-          onAddToOrder={(p) => handleAddToOrder(p as ProductItem)}
-        />
+        </LazyProductSection>
 
 
         <motion.section
