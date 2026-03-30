@@ -39,6 +39,7 @@ const CatalogsPage = lazy(() => import("./pages/CatalogsPage"));
 const InstallApp = lazy(() => import("./pages/InstallApp"));
 const PaymentCallback = lazy(() => import("./pages/PaymentCallback"));
 const PoliciesPage = lazy(() => import("./pages/PoliciesPage"));
+const MyProfilePage = lazy(() => import("./pages/MyProfilePage"));
 
 const queryClient = new QueryClient();
 
