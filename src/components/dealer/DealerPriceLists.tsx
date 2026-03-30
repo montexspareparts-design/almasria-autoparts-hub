@@ -12,7 +12,7 @@ import { shareQuoteWhatsApp, shareQuoteEmail } from "@/lib/shareQuote";
 import {
   FileText, Download, Clock, RefreshCw, Eye, Search,
   Plus, X, ShoppingCart, ArrowLeft, Loader2, AlertTriangle, ChevronRight,
-  CheckCircle2, Printer, MessageCircle, Mail
+  CheckCircle2, Printer, MessageCircle, Mail, Package
 } from "lucide-react";
 
 interface PriceList {
