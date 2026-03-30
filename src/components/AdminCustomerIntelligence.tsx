@@ -785,6 +785,88 @@ const AdminCustomerIntelligence = () => {
           )}
         </div>
       )}
+
+      {/* Bulk WhatsApp Dialog */}
+      <Dialog open={bulkWhatsAppOpen} onOpenChange={(open) => { setBulkWhatsAppOpen(open); if (!open) setSendingIndex(-1); }}>
+        <DialogContent className="sm:max-w-lg" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-lg">
+              <MessageCircle className="w-5 h-5 text-emerald-600" />
+              إرسال واتساب جماعي
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-xl p-3">
+              <Users className="w-4 h-4 shrink-0" />
+              <span>سيتم الإرسال لـ <strong className="text-foreground">{filteredWithPhone.length}</strong> عميل لديهم أرقام هاتف</span>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-foreground">نص الرسالة</label>
+              <Textarea
+                value={bulkMessage}
+                onChange={(e) => setBulkMessage(e.target.value)}
+                rows={4}
+                className="resize-none text-sm"
+                placeholder="اكتب رسالتك هنا..."
+              />
+              <p className="text-[11px] text-muted-foreground">
+                استخدم <code className="bg-muted px-1 rounded">{"{{name}}"}</code> لإدراج اسم العميل تلقائياً
+              </p>
+            </div>
+
+            {sendingIndex >= 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">التقدم</span>
+                  <span className="font-bold text-foreground">{sendingIndex + 1} / {filteredWithPhone.length}</span>
+                </div>
+                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-emerald-500 rounded-full transition-all duration-300"
+                    style={{ width: `${((sendingIndex + 1) / filteredWithPhone.length) * 100}%` }}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  الحالي: <strong className="text-foreground">{filteredWithPhone[sendingIndex]?.full_name || "—"}</strong> — {filteredWithPhone[sendingIndex]?.phone}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="flex-row-reverse gap-2 sm:gap-2">
+            {sendingIndex < 0 ? (
+              <>
+                <Button
+                  onClick={handleBulkSend}
+                  className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                  disabled={filteredWithPhone.length === 0 || !bulkMessage.trim()}
+                >
+                  <Send className="w-4 h-4" />
+                  بدء الإرسال
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleCopyAllNumbers}
+                  className="gap-2 font-bold"
+                >
+                  <Copy className="w-4 h-4" />
+                  نسخ الأرقام
+                </Button>
+              </>
+            ) : (
+              <Button
+                onClick={handleSendNext}
+                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+              >
+                <ExternalLink className="w-4 h-4" />
+                {sendingIndex + 1 >= filteredWithPhone.length ? "إنهاء ✅" : `التالي (${sendingIndex + 2}/${filteredWithPhone.length})`}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
