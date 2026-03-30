@@ -1418,9 +1418,10 @@ const AdminCustomerIntelligence = () => {
           })}
 
           {filteredProfiles?.length === 0 && (
-            <div className="text-center py-12 text-muted-foreground">
-              <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p>لا توجد نتائج مطابقة</p>
+            <div className="text-center py-16 text-muted-foreground rounded-2xl border border-dashed border-border/50 bg-muted/10">
+              <Users className="w-14 h-14 mx-auto mb-4 opacity-20" />
+              <p className="text-lg font-bold">لا توجد نتائج مطابقة</p>
+              <p className="text-sm mt-1">جرّب تغيير الفلاتر أو كلمة البحث</p>
             </div>
           )}
         </div>
