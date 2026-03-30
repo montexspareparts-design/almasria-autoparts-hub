@@ -12,6 +12,7 @@ const RoleSelectionDialog = ({ open, onOpenChange }: RoleSelectionDialogProps) =
   const navigate = useNavigate();
 
   const handleSelect = (role: "dealer" | "admin") => {
+    localStorage.setItem("almasria_last_role", role);
     onOpenChange(false);
     navigate(role === "dealer" ? "/dealer" : "/admin", { replace: true });
   };
