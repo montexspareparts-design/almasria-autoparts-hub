@@ -693,6 +693,7 @@ const AdminCustomerIntelligence = () => {
                     const rows = searcherData.map((d, i) => ({
                       "#": i + 1,
                       "الاسم": d.name,
+                      "نوع الحساب": d.isDealer ? "جملة" : "قطاعي",
                       "رقم الهاتف": d.phone || "—",
                       "عمليات البحث": d.searches,
                       "استفسارات فريدة": d.uniqueQueries,
