@@ -587,6 +587,7 @@ const AdminCustomerIntelligence = () => {
               .sort((a, b) => b.count - a.count)
               .slice(0, 3)
               .map(s => s.query),
+            searchDetails: searches.sort((a, b) => b.count - a.count),
           });
         });
 
