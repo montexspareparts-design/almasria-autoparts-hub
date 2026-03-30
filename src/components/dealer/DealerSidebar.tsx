@@ -203,6 +203,7 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
           <Settings className="w-4 h-4" />
           <span>الإعدادات</span>
         </button>
+        <SwitchToAdminButton />
         <button
           onClick={onSignOut}
           className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-muted-foreground/60 hover:bg-destructive/5 hover:text-destructive transition-colors"
