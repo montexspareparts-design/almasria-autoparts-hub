@@ -1,4 +1,4 @@
-import { useState, useCallback, Fragment } from "react";
+import { useState, useCallback, Fragment, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -12,9 +12,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
+import { Tooltip as UITooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { format, differenceInDays } from "date-fns";
 import { ar } from "date-fns/locale";
 import * as XLSX from "xlsx";
 import { toast } from "@/hooks/use-toast";
@@ -23,6 +24,7 @@ import {
   TrendingUp, TrendingDown, Clock, ChevronDown, ChevronUp, BarChart3,
   Package, Calendar as CalendarIcon, Filter, X, Download,
   MessageCircle, Send, Copy, ExternalLink, Briefcase,
+  Star, Activity, AlertTriangle, CheckCircle2, ListOrdered, FileText, RefreshCw,
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 
@@ -39,6 +41,14 @@ interface CustomerProfile {
 const CUSTOMER_TYPES = [
   "عميل دائم", "عميل نشط", "مستكشف أسعار", "باحث متكرر", "زائر مهتم", "زائر جديد",
 ] as const;
+
+const LIFECYCLE_LABELS: Record<string, { label: string; color: string; icon: typeof Star }> = {
+  vip: { label: "VIP", color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400", icon: Star },
+  active: { label: "نشط", color: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400", icon: Activity },
+  idle: { label: "خامل", color: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400", icon: Clock },
+  lost: { label: "مفقود", color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400", icon: AlertTriangle },
+  new: { label: "جديد", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400", icon: Users },
+};
 
 const AdminCustomerIntelligence = () => {
   const navigate = useNavigate();
@@ -124,23 +134,109 @@ const AdminCustomerIntelligence = () => {
     },
   });
 
-  // Orders count per user
-  const { data: ordersMap } = useQuery({
-    queryKey: ["admin_orders_per_user"],
+  // Orders with dates per user
+  const { data: ordersData } = useQuery({
+    queryKey: ["admin_orders_full"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
-        .select("user_id, id, total_amount, status");
+        .select("user_id, id, total_amount, status, created_at, order_number")
+        .order("created_at", { ascending: false });
       if (error) throw error;
-      const map: Record<string, { count: number; total: number }> = {};
-      data?.forEach(o => {
-        if (!map[o.user_id]) map[o.user_id] = { count: 0, total: 0 };
-        map[o.user_id].count++;
-        map[o.user_id].total += Number(o.total_amount || 0);
-      });
-      return map;
+      return data;
     },
   });
+
+  // Dealer quotes per user
+  const { data: quotesData } = useQuery({
+    queryKey: ["admin_dealer_quotes"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("dealer_quotes")
+        .select("user_id, id, total_amount, status, created_at");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Shopping lists per user
+  const { data: shoppingListsData } = useQuery({
+    queryKey: ["admin_shopping_lists"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("dealer_shopping_lists")
+        .select("user_id, id, name, created_at");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Order items for purchase check
+  const { data: orderItemsData } = useQuery({
+    queryKey: ["admin_order_items_all"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("order_items")
+        .select("order_id, product_id, quantity");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Build orders map with last order date
+  const ordersMap = useMemo(() => {
+    if (!ordersData) return {} as Record<string, { count: number; total: number; lastOrderDate: string; lastOrderNumber: string }>;
+    const map: Record<string, { count: number; total: number; lastOrderDate: string; lastOrderNumber: string }> = {};
+    ordersData.forEach(o => {
+      if (!map[o.user_id]) {
+        map[o.user_id] = { count: 0, total: 0, lastOrderDate: o.created_at, lastOrderNumber: o.order_number };
+      }
+      map[o.user_id].count++;
+      map[o.user_id].total += Number(o.total_amount || 0);
+      if (o.created_at > map[o.user_id].lastOrderDate) {
+        map[o.user_id].lastOrderDate = o.created_at;
+        map[o.user_id].lastOrderNumber = o.order_number;
+      }
+    });
+    return map;
+  }, [ordersData]);
+
+  // Build quotes map
+  const quotesMap = useMemo(() => {
+    if (!quotesData) return {} as Record<string, number>;
+    const map: Record<string, number> = {};
+    quotesData.forEach(q => {
+      map[q.user_id] = (map[q.user_id] || 0) + 1;
+    });
+    return map;
+  }, [quotesData]);
+
+  // Build shopping lists map
+  const shoppingListsMap = useMemo(() => {
+    if (!shoppingListsData) return {} as Record<string, { count: number; names: string[] }>;
+    const map: Record<string, { count: number; names: string[] }> = {};
+    shoppingListsData.forEach(sl => {
+      if (!map[sl.user_id]) map[sl.user_id] = { count: 0, names: [] };
+      map[sl.user_id].count++;
+      map[sl.user_id].names.push(sl.name);
+    });
+    return map;
+  }, [shoppingListsData]);
+
+  // Build purchased product IDs per user
+  const purchasedProductsByUser = useMemo(() => {
+    if (!orderItemsData || !ordersData) return {} as Record<string, Set<string>>;
+    const orderUserMap: Record<string, string> = {};
+    ordersData.forEach(o => { orderUserMap[o.id] = o.user_id; });
+    const map: Record<string, Set<string>> = {};
+    orderItemsData.forEach(oi => {
+      const userId = orderUserMap[oi.order_id];
+      if (!userId) return;
+      if (!map[userId]) map[userId] = new Set();
+      map[userId].add(oi.product_id);
+    });
+    return map;
+  }, [orderItemsData, ordersData]);
 
   // Build user search logs map
   const userSearchMap: Record<string, { query: string; count: number; lastAt: string }[]> = {};
@@ -164,6 +260,60 @@ const AdminCustomerIntelligence = () => {
       userViewsMap[v.user_id].push(v.product_id);
     }
   });
+
+  // Build search heatmap data (hour of day)
+  const searchHeatmapData = useMemo(() => {
+    if (!searchLogs) return [];
+    const hourCounts: Record<number, number> = {};
+    for (let i = 0; i < 24; i++) hourCounts[i] = 0;
+    searchLogs.forEach((log: any) => {
+      const hour = new Date(log.created_at).getHours();
+      hourCounts[hour]++;
+    });
+    return Object.entries(hourCounts).map(([hour, count]) => ({
+      hour: `${String(hour).padStart(2, "0")}:00`,
+      بحث: count,
+      hourNum: Number(hour),
+    }));
+  }, [searchLogs]);
+
+  // Return rate: distinct days user searched
+  const userReturnRate = useMemo(() => {
+    if (!searchLogs) return {} as Record<string, number>;
+    const map: Record<string, Set<string>> = {};
+    searchLogs.forEach((log: any) => {
+      const uid = log.user_id;
+      if (!uid) return;
+      if (!map[uid]) map[uid] = new Set();
+      map[uid].add(new Date(log.created_at).toDateString());
+    });
+    const result: Record<string, number> = {};
+    Object.entries(map).forEach(([uid, days]) => { result[uid] = days.size; });
+    return result;
+  }, [searchLogs]);
+
+  // Lifecycle classification
+  const getLifecycleStage = (userId: string): string => {
+    const orders = ordersMap?.[userId];
+    const now = new Date();
+
+    if (orders && orders.count >= 5 && orders.total >= 10000) return "vip";
+    if (orders && orders.count >= 1) {
+      const daysSinceLastOrder = differenceInDays(now, new Date(orders.lastOrderDate));
+      if (daysSinceLastOrder <= 30) return "active";
+      if (daysSinceLastOrder <= 90) return "idle";
+      return "lost";
+    }
+    const searches = userSearchMap[userId];
+    if (searches && searches.length > 0) {
+      const lastSearch = new Date(Math.max(...searches.map(s => new Date(s.lastAt).getTime())));
+      const daysSinceSearch = differenceInDays(now, lastSearch);
+      if (daysSinceSearch <= 30) return "active";
+      if (daysSinceSearch <= 90) return "idle";
+      return "lost";
+    }
+    return "new";
+  };
 
   // Stats
   const totalCustomers = profiles?.length || 0;
@@ -277,12 +427,13 @@ const AdminCustomerIntelligence = () => {
       return;
     }
 
-    // Sheet 1: Customer profiles
     const profileRows = filteredProfiles.map(p => {
       const type = getCustomerType(p.user_id);
       const orders = ordersMap?.[p.user_id];
       const searches = userSearchMap[p.user_id] || [];
       const views = userViewsMap[p.user_id] || [];
+      const lifecycle = getLifecycleStage(p.user_id);
+      const lcLabel = LIFECYCLE_LABELS[lifecycle]?.label || "جديد";
       return {
         "الاسم": p.full_name || "—",
         "الهاتف": p.phone || "—",
@@ -291,14 +442,18 @@ const AdminCustomerIntelligence = () => {
         "سنة السيارة": p.car_year || "—",
         "تاريخ التسجيل": format(new Date(p.created_at), "yyyy-MM-dd"),
         "تصنيف العميل": type,
+        "مرحلة دورة الحياة": lcLabel,
         "عدد الطلبات": orders?.count || 0,
         "إجمالي المشتريات (ج.م)": orders?.total || 0,
+        "آخر طلب": orders?.lastOrderDate ? format(new Date(orders.lastOrderDate), "yyyy-MM-dd") : "—",
+        "عدد عروض الأسعار": quotesMap[p.user_id] || 0,
+        "قوائم التسوق": shoppingListsMap[p.user_id]?.count || 0,
         "عدد عمليات البحث": searches.length,
         "عدد الأصناف المسعّرة": views.length,
+        "معدل العودة (أيام)": userReturnRate[p.user_id] || 0,
       };
     });
 
-    // Sheet 2: Search activity detail
     const searchRows: any[] = [];
     filteredProfiles.forEach(p => {
       const searches = userSearchMap[p.user_id] || [];
@@ -313,7 +468,6 @@ const AdminCustomerIntelligence = () => {
       });
     });
 
-    // Sheet 3: Price views detail
     const viewRows: any[] = [];
     filteredProfiles.forEach(p => {
       const views = userViewsMap[p.user_id] || [];
@@ -335,13 +489,11 @@ const AdminCustomerIntelligence = () => {
     const ws2 = XLSX.utils.json_to_sheet(searchRows.length > 0 ? searchRows : [{ "ملاحظة": "لا توجد بيانات بحث" }]);
     const ws3 = XLSX.utils.json_to_sheet(viewRows.length > 0 ? viewRows : [{ "ملاحظة": "لا توجد بيانات تسعير" }]);
 
-    // Set RTL and column widths
-    [ws1, ws2, ws3].forEach(ws => {
-      ws["!dir"] = "rtl" as any;
-    });
+    [ws1, ws2, ws3].forEach(ws => { ws["!dir"] = "rtl" as any; });
     ws1["!cols"] = [
       { wch: 20 }, { wch: 15 }, { wch: 25 }, { wch: 15 }, { wch: 12 },
-      { wch: 14 }, { wch: 15 }, { wch: 12 }, { wch: 18 }, { wch: 15 }, { wch: 18 },
+      { wch: 14 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 18 },
+      { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 15 }, { wch: 18 }, { wch: 14 },
     ];
     ws2["!cols"] = [{ wch: 20 }, { wch: 15 }, { wch: 30 }, { wch: 12 }, { wch: 18 }];
     ws3["!cols"] = [{ wch: 20 }, { wch: 15 }, { wch: 35 }, { wch: 18 }, { wch: 15 }];
@@ -352,7 +504,18 @@ const AdminCustomerIntelligence = () => {
 
     XLSX.writeFile(wb, `تقرير_ذكاء_العملاء_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
     toast({ title: "تم تصدير التقرير بنجاح ✅" });
-  }, [filteredProfiles, ordersMap, userSearchMap, userViewsMap, productsMap, getCustomerType]);
+  }, [filteredProfiles, ordersMap, userSearchMap, userViewsMap, productsMap, quotesMap, shoppingListsMap, userReturnRate]);
+
+  // Lifecycle distribution
+  const lifecycleCounts = useMemo(() => {
+    if (!profiles) return {} as Record<string, number>;
+    const counts: Record<string, number> = { vip: 0, active: 0, idle: 0, lost: 0, new: 0 };
+    profiles.forEach(p => {
+      const stage = getLifecycleStage(p.user_id);
+      counts[stage] = (counts[stage] || 0) + 1;
+    });
+    return counts;
+  }, [profiles, ordersMap, userSearchMap]);
 
   return (
     <div className="space-y-6" dir="rtl">
@@ -368,7 +531,7 @@ const AdminCustomerIntelligence = () => {
               تقرير ذكاء العملاء
             </h2>
             <p className="text-muted-foreground text-sm mt-2 mr-[52px]">
-              تحليل شامل لسلوك العملاء: عمليات البحث، الأسعار المشاهدة، الطلبات
+              تحليل شامل لسلوك العملاء: عمليات البحث، الأسعار المشاهدة، الطلبات، دورة الحياة
             </p>
           </div>
           <div className="flex items-center gap-2.5 flex-wrap">
@@ -407,6 +570,95 @@ const AdminCustomerIntelligence = () => {
           </div>
         ))}
       </div>
+
+      {/* Lifecycle Classification Cards */}
+      <Card className="rounded-2xl border-border/40 shadow-sm overflow-hidden">
+        <CardHeader className="pb-2 bg-gradient-to-l from-amber-500/5 to-transparent">
+          <CardTitle className="text-base font-black flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-amber-500/15 flex items-center justify-center">
+              <Star className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            </div>
+            تصنيف دورة حياة العملاء
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {Object.entries(LIFECYCLE_LABELS).map(([key, { label, color, icon: Icon }]) => (
+              <div key={key} className={cn("rounded-xl p-4 text-center border border-border/30 transition-all hover:shadow-sm", color.replace("text-", "").includes("bg-") ? "" : "bg-muted/20")}>
+                <div className={cn("w-9 h-9 rounded-xl mx-auto mb-2 flex items-center justify-center", color.split(" ")[0])}>
+                  <Icon className={cn("w-4 h-4", color.split(" ")[1])} />
+                </div>
+                <p className="text-2xl font-black text-foreground">{lifecycleCounts[key] || 0}</p>
+                <p className="text-[11px] font-bold mt-0.5">{label}</p>
+                <p className="text-[9px] text-muted-foreground mt-0.5">
+                  {key === "vip" && "5+ طلبات و 10K+ ج.م"}
+                  {key === "active" && "طلب خلال 30 يوم"}
+                  {key === "idle" && "آخر نشاط 30-90 يوم"}
+                  {key === "lost" && "لا نشاط منذ 90+ يوم"}
+                  {key === "new" && "بدون أي نشاط"}
+                </p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Search Heatmap */}
+      {searchHeatmapData.length > 0 && (
+        <Card className="rounded-2xl border-border/40 shadow-sm overflow-hidden">
+          <CardHeader className="pb-2 bg-gradient-to-l from-cyan-500/5 to-transparent">
+            <CardTitle className="text-base font-black flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-cyan-500/15 flex items-center justify-center">
+                <Clock className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+              </div>
+              خريطة حرارية لأوقات البحث
+              <span className="text-xs font-medium text-muted-foreground mr-2">أي ساعة يبحث فيها العملاء أكثر؟</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[260px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={searchHeatmapData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
+                  <XAxis dataKey="hour" tick={{ fontSize: 10 }} interval={1} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <Tooltip
+                    contentStyle={{ direction: "rtl", borderRadius: 12, fontSize: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
+                    formatter={(value: number) => [`${value} عملية بحث`, "البحث"]}
+                    labelFormatter={(label) => `الساعة ${label}`}
+                  />
+                  <Bar dataKey="بحث" radius={[4, 4, 0, 0]} barSize={20}>
+                    {searchHeatmapData.map((entry, index) => {
+                      const max = Math.max(...searchHeatmapData.map(d => d.بحث), 1);
+                      const intensity = entry.بحث / max;
+                      const hue = intensity > 0.7 ? 0 : intensity > 0.4 ? 25 : 200;
+                      const sat = 70 + intensity * 20;
+                      const light = 65 - intensity * 20;
+                      return <Cell key={index} fill={`hsl(${hue}, ${sat}%, ${light}%)`} />;
+                    })}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            {/* Peak hours summary */}
+            {(() => {
+              const sorted = [...searchHeatmapData].sort((a, b) => b.بحث - a.بحث);
+              const top3 = sorted.slice(0, 3).filter(d => d.بحث > 0);
+              if (top3.length === 0) return null;
+              return (
+                <div className="flex items-center gap-2 mt-3 flex-wrap">
+                  <span className="text-[11px] font-bold text-muted-foreground">🔥 أكثر الأوقات نشاطاً:</span>
+                  {top3.map((d, i) => (
+                    <Badge key={i} variant="secondary" className="text-[10px]">
+                      {d.hour} ({d.بحث} بحث)
+                    </Badge>
+                  ))}
+                </div>
+              );
+            })()}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Dealers vs Retail Pie Chart */}
       {totalCustomers > 0 && (
@@ -512,14 +764,12 @@ const AdminCustomerIntelligence = () => {
 
       {/* Top Searchers vs Orders Report */}
       {profiles && profiles.length > 0 && (() => {
-        // Filter search logs by time
         const now = new Date();
         const cutoff = reportTimeFilter === "7d" ? new Date(now.getTime() - 7 * 86400000)
           : reportTimeFilter === "30d" ? new Date(now.getTime() - 30 * 86400000)
           : reportTimeFilter === "90d" ? new Date(now.getTime() - 90 * 86400000)
           : null;
 
-        // Build filtered search map
         const filteredSearchMap: Record<string, { query: string; count: number; lastAt: string }[]> = {};
         searchLogs?.forEach((log: any) => {
           if (cutoff && new Date(log.created_at) < cutoff) return;
@@ -534,7 +784,6 @@ const AdminCustomerIntelligence = () => {
           }
         });
 
-        // Build top searchers data
         const searcherData: {
           userId: string;
           name: string;
@@ -581,13 +830,11 @@ const AdminCustomerIntelligence = () => {
           });
         });
 
-        // Sort by searches descending
         searcherData.sort((a, b) => b.searches - a.searches);
         const top15 = searcherData.slice(0, 15);
         const maxSearches = Math.max(...top15.map(d => d.searches), 1);
         const maxOrders = Math.max(...top15.map(d => d.orders), 1);
 
-        // Summary stats
         const totalSearchers = searcherData.length;
         const convertedCount = searcherData.filter(d => d.converted).length;
         const overallConversion = totalSearchers > 0 ? Math.round((convertedCount / totalSearchers) * 100) : 0;
@@ -596,7 +843,6 @@ const AdminCustomerIntelligence = () => {
           : 0;
         const topNonConverted = searcherData.filter(d => !d.converted).slice(0, 5);
 
-        // Previous period comparison
         let prevSearchers = 0;
         let prevConverted = 0;
         let prevConversion = 0;
@@ -642,7 +888,6 @@ const AdminCustomerIntelligence = () => {
         const conversionChange = calcChange(overallConversion, prevConversion);
         const avgChange = calcChange(avgSearchesPerUser, prevAvgSearches);
 
-        // Chart data for top 10
         const chartData = top15.slice(0, 10).map(d => ({
           name: d.name.length > 12 ? d.name.slice(0, 12) + "…" : d.name,
           بحث: d.searches,
@@ -707,7 +952,6 @@ const AdminCustomerIntelligence = () => {
                   تصدير Excel
                 </Button>
               </div>
-              {/* Time filter */}
               <div className="flex items-center gap-1.5 flex-wrap px-1 mt-1">
                 {[
                   { value: "7d", label: "آخر 7 أيام" },
@@ -757,7 +1001,7 @@ const AdminCustomerIntelligence = () => {
                 ))}
               </div>
 
-              {/* Bar Chart: Search vs Orders */}
+              {/* Bar Chart */}
               {chartData.length > 0 && (
                 <div className="bg-muted/20 rounded-2xl p-5 border border-border/30">
                   <h4 className="text-sm font-black text-foreground mb-4 flex items-center gap-2.5">
@@ -771,12 +1015,7 @@ const AdminCustomerIntelligence = () => {
                       <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
                         <XAxis type="number" tick={{ fontSize: 11 }} />
-                        <YAxis
-                          dataKey="name"
-                          type="category"
-                          width={100}
-                          tick={{ fontSize: 11, textAnchor: "end" }}
-                        />
+                        <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 11, textAnchor: "end" }} />
                         <Tooltip
                           contentStyle={{ direction: "rtl", borderRadius: 12, fontSize: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
                           formatter={(value: number, name: string) => [value, name]}
@@ -856,10 +1095,7 @@ const AdminCustomerIntelligence = () => {
                           <td className="px-3 py-2.5 text-center">
                             <div className="flex items-center justify-center gap-1.5">
                               <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-blue-500 rounded-full"
-                                  style={{ width: `${(d.searches / maxSearches) * 100}%` }}
-                                />
+                                <div className="h-full bg-blue-500 rounded-full" style={{ width: `${(d.searches / maxSearches) * 100}%` }} />
                               </div>
                               <span className="text-xs font-bold text-foreground">{d.searches}</span>
                             </div>
@@ -869,10 +1105,7 @@ const AdminCustomerIntelligence = () => {
                           <td className="px-3 py-2.5 text-center">
                             <div className="flex items-center justify-center gap-1.5">
                               <div className="w-10 h-1.5 bg-muted rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-emerald-500 rounded-full"
-                                  style={{ width: `${maxOrders > 0 ? (d.orders / maxOrders) * 100 : 0}%` }}
-                                />
+                                <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${maxOrders > 0 ? (d.orders / maxOrders) * 100 : 0}%` }} />
                               </div>
                               <span className="text-xs font-bold text-foreground">{d.orders}</span>
                             </div>
@@ -956,7 +1189,6 @@ const AdminCustomerIntelligence = () => {
                                       ws["!cols"] = [{ wch: 5 }, { wch: 22 }, { wch: 16 }, { wch: 35 }, { wch: 12 }, { wch: 22 }];
                                       const wb = XLSX.utils.book_new();
                                       XLSX.utils.book_append_sheet(wb, ws, "سجل البحث");
-                                      // Info sheet
                                       const infoWs = XLSX.utils.json_to_sheet([{
                                         "الاسم": d.name,
                                         "الهاتف": d.phone || "—",
@@ -1031,7 +1263,7 @@ const AdminCustomerIntelligence = () => {
                 </div>
               </div>
 
-              {/* Opportunity Alert: Top non-converted searchers */}
+              {/* Opportunity Alert */}
               {topNonConverted.length > 0 && (
                 <div className="bg-gradient-to-l from-amber-500/10 via-amber-500/5 to-transparent border border-amber-200/60 dark:border-amber-800/30 rounded-2xl p-5">
                   <h4 className="text-sm font-black text-amber-800 dark:text-amber-300 flex items-center gap-2.5 mb-4">
@@ -1075,81 +1307,44 @@ const AdminCustomerIntelligence = () => {
         );
       })()}
 
-      {/* Filters bar */}
+      {/* Filters & search */}
       <Card className="rounded-2xl border-border/40 shadow-sm">
-        <CardContent className="p-5 space-y-3">
-          <h4 className="text-sm font-black text-foreground flex items-center gap-2 mb-1">
-            <Filter className="w-4 h-4 text-primary" />
-            فلترة العملاء
-          </h4>
-          {/* Row 1: Text search */}
-          <div className="relative">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="ابحث بالاسم، الهاتف، الإيميل، أو نوع السيارة..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pr-10 rounded-xl h-10"
-            />
-          </div>
+        <CardContent className="py-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="ابحث بالاسم أو الهاتف أو الإيميل..."
+                className="pr-10 h-9 text-sm"
+              />
+            </div>
 
-          {/* Row 2: Date range + customer type */}
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Date From */}
             <Popover>
               <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={cn(
-                    "gap-1.5 text-xs h-9",
-                    !dateFrom && "text-muted-foreground"
-                  )}
-                >
+                <Button variant="outline" size="sm" className={cn("gap-1.5 text-xs h-9", !dateFrom && "text-muted-foreground")}>
                   <CalendarIcon className="w-3.5 h-3.5" />
                   {dateFrom ? format(dateFrom, "dd/MM/yyyy") : "من تاريخ"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={dateFrom}
-                  onSelect={setDateFrom}
-                  disabled={(date) => date > new Date()}
-                  initialFocus
-                  className={cn("p-3 pointer-events-auto")}
-                />
+                <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} disabled={(date) => date > new Date()} initialFocus className={cn("p-3 pointer-events-auto")} />
               </PopoverContent>
             </Popover>
 
-            {/* Date To */}
             <Popover>
               <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={cn(
-                    "gap-1.5 text-xs h-9",
-                    !dateTo && "text-muted-foreground"
-                  )}
-                >
+                <Button variant="outline" size="sm" className={cn("gap-1.5 text-xs h-9", !dateTo && "text-muted-foreground")}>
                   <CalendarIcon className="w-3.5 h-3.5" />
                   {dateTo ? format(dateTo, "dd/MM/yyyy") : "إلى تاريخ"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={dateTo}
-                  onSelect={setDateTo}
-                  disabled={(date) => date > new Date()}
-                  initialFocus
-                  className={cn("p-3 pointer-events-auto")}
-                />
+                <Calendar mode="single" selected={dateTo} onSelect={setDateTo} disabled={(date) => date > new Date()} initialFocus className={cn("p-3 pointer-events-auto")} />
               </PopoverContent>
             </Popover>
 
-            {/* Customer Type */}
             <Select value={customerTypeFilter} onValueChange={setCustomerTypeFilter}>
               <SelectTrigger className="w-[180px] h-9 text-xs">
                 <Filter className="w-3.5 h-3.5 ml-1.5" />
@@ -1163,7 +1358,6 @@ const AdminCustomerIntelligence = () => {
               </SelectContent>
             </Select>
 
-            {/* Account Type (Dealer vs Retail) */}
             <Select value={accountTypeFilter} onValueChange={setAccountTypeFilter}>
               <SelectTrigger className="w-[160px] h-9 text-xs">
                 <Users className="w-3.5 h-3.5 ml-1.5" />
@@ -1175,7 +1369,6 @@ const AdminCustomerIntelligence = () => {
                 <SelectItem value="retail">عميل قطاعي</SelectItem>
               </SelectContent>
             </Select>
-            {/* Clear filters */}
             {hasActiveFilters && (
               <Button variant="ghost" size="sm" className="gap-1 text-xs h-9 text-destructive" onClick={clearFilters}>
                 <X className="w-3.5 h-3.5" />
@@ -1183,7 +1376,6 @@ const AdminCustomerIntelligence = () => {
               </Button>
             )}
 
-            {/* Results count */}
             <span className="text-xs text-muted-foreground mr-auto">
               {filteredProfiles?.length || 0} عميل
             </span>
@@ -1206,6 +1398,12 @@ const AdminCustomerIntelligence = () => {
             const searches = userSearchMap[profile.user_id] || [];
             const viewedProducts = userViewsMap[profile.user_id] || [];
             const orders = ordersMap?.[profile.user_id];
+            const lifecycle = getLifecycleStage(profile.user_id);
+            const lcInfo = LIFECYCLE_LABELS[lifecycle] || LIFECYCLE_LABELS.new;
+            const quotes = quotesMap[profile.user_id] || 0;
+            const shoppingLists = shoppingListsMap[profile.user_id];
+            const returnDays = userReturnRate[profile.user_id] || 0;
+            const purchasedProducts = purchasedProductsByUser[profile.user_id];
 
             const formatPhoneForWhatsApp = (phone: string) => {
               let cleaned = phone.replace(/[\s\-()]/g, "");
@@ -1225,7 +1423,6 @@ const AdminCustomerIntelligence = () => {
               >
                 {/* Header row */}
                 <div className="flex items-center gap-3.5 p-4">
-                  {/* Avatar */}
                   <div className={cn(
                     "w-11 h-11 rounded-xl flex items-center justify-center shrink-0 shadow-sm transition-colors",
                     dealerUserIds?.has(profile.user_id) ? "bg-blue-500/15" : "bg-primary/10"
@@ -1233,7 +1430,6 @@ const AdminCustomerIntelligence = () => {
                     <Users className={cn("w-5 h-5", dealerUserIds?.has(profile.user_id) ? "text-blue-600 dark:text-blue-400" : "text-primary")} />
                   </div>
 
-                  {/* Main info — clickable to expand */}
                   <button
                     className="flex-1 min-w-0 text-right"
                     onClick={() => setExpandedUser(isExpanded ? null : profile.user_id)}
@@ -1244,6 +1440,10 @@ const AdminCustomerIntelligence = () => {
                       </span>
                       <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-md", getTypeBadgeColor(customerType))}>
                         {customerType}
+                      </span>
+                      {/* Lifecycle badge */}
+                      <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-md", lcInfo.color)}>
+                        {lcInfo.label}
                       </span>
                       {dealerUserIds?.has(profile.user_id) ? (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
@@ -1271,12 +1471,16 @@ const AdminCustomerIntelligence = () => {
                         <CalendarIcon className="w-3 h-3" />
                         {new Date(profile.created_at).toLocaleDateString("ar-EG")}
                       </span>
+                      {orders && (
+                        <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
+                          <ShoppingCart className="w-3 h-3" />
+                          آخر طلب: {format(new Date(orders.lastOrderDate), "dd/MM/yyyy")}
+                        </span>
+                      )}
                     </div>
                   </button>
 
-                  {/* Quick action buttons */}
                   <div className="flex items-center gap-1.5 shrink-0">
-                    {/* WhatsApp button */}
                     {profile.phone && (
                       <a
                         href={`https://wa.me/${formatPhoneForWhatsApp(profile.phone)}`}
@@ -1290,7 +1494,6 @@ const AdminCustomerIntelligence = () => {
                       </a>
                     )}
 
-                    {/* Quick stats badges */}
                     <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                       {searches.length > 0 && (
                         <span className="flex items-center gap-0.5 bg-muted/60 rounded-md px-1.5 py-1" title="عمليات بحث">
@@ -1307,9 +1510,18 @@ const AdminCustomerIntelligence = () => {
                           <ShoppingCart className="w-3 h-3" />{orders.count}
                         </span>
                       )}
+                      {quotes > 0 && (
+                        <span className="flex items-center gap-0.5 bg-muted/60 rounded-md px-1.5 py-1" title="عروض أسعار">
+                          <FileText className="w-3 h-3" />{quotes}
+                        </span>
+                      )}
+                      {returnDays > 1 && (
+                        <span className="flex items-center gap-0.5 bg-muted/60 rounded-md px-1.5 py-1" title={`عاد ${returnDays} يوم مختلف`}>
+                          <RefreshCw className="w-3 h-3" />{returnDays}
+                        </span>
+                      )}
                     </div>
 
-                    {/* Expand toggle */}
                     <button
                       onClick={() => setExpandedUser(isExpanded ? null : profile.user_id)}
                       className="w-8 h-8 rounded-lg hover:bg-muted/50 flex items-center justify-center transition-colors"
@@ -1362,42 +1574,128 @@ const AdminCustomerIntelligence = () => {
                       </div>
                     </div>
 
-                    {/* Orders summary */}
-                    {orders && (
-                      <div className="bg-emerald-50 dark:bg-emerald-950/20 rounded-xl p-3 flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-emerald-500/15 flex items-center justify-center shrink-0">
-                          <ShoppingCart className="w-4 h-4 text-emerald-600" />
+                    {/* Stats row: orders, quotes, shopping lists, return rate */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                      {/* Last order */}
+                      <div className="bg-emerald-50/70 dark:bg-emerald-950/20 rounded-xl p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <ShoppingCart className="w-3.5 h-3.5 text-emerald-600" />
+                          <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">الطلبات</span>
                         </div>
-                        <div>
-                          <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400">الطلبات</p>
-                          <p className="text-sm text-foreground font-medium">
-                            {orders.count} طلب • إجمالي {orders.total.toLocaleString("ar-EG")} ج.م
-                          </p>
-                        </div>
+                        {orders ? (
+                          <>
+                            <p className="text-lg font-black text-foreground">{orders.count}</p>
+                            <p className="text-[10px] text-muted-foreground">
+                              إجمالي {orders.total.toLocaleString("ar-EG")} ج.م
+                            </p>
+                            <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">
+                              آخر طلب: {format(new Date(orders.lastOrderDate), "dd/MM/yyyy")}
+                            </p>
+                          </>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">لا توجد طلبات</p>
+                        )}
                       </div>
-                    )}
 
-                    {/* Search history */}
-                    {searches.length > 0 && (
+                      {/* Quotes */}
+                      <div className="bg-violet-50/70 dark:bg-violet-950/20 rounded-xl p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <FileText className="w-3.5 h-3.5 text-violet-600" />
+                          <span className="text-[10px] font-bold text-violet-700 dark:text-violet-400">عروض الأسعار</span>
+                        </div>
+                        <p className="text-lg font-black text-foreground">{quotes}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {quotes > 0 ? "عرض سعر مقدم" : "لم يطلب عروض"}
+                        </p>
+                      </div>
+
+                      {/* Shopping Lists */}
+                      <div className="bg-cyan-50/70 dark:bg-cyan-950/20 rounded-xl p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <ListOrdered className="w-3.5 h-3.5 text-cyan-600" />
+                          <span className="text-[10px] font-bold text-cyan-700 dark:text-cyan-400">قوائم التسوق</span>
+                        </div>
+                        <p className="text-lg font-black text-foreground">{shoppingLists?.count || 0}</p>
+                        {shoppingLists && shoppingLists.names.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {shoppingLists.names.slice(0, 3).map((name, ni) => (
+                              <span key={ni} className="text-[9px] bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 px-1.5 py-0.5 rounded">{name}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Return Rate */}
+                      <div className="bg-amber-50/70 dark:bg-amber-950/20 rounded-xl p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
+                          <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400">معدل العودة</span>
+                        </div>
+                        <p className="text-lg font-black text-foreground">{returnDays} يوم</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {returnDays > 5 ? "عميل متكرر 🔥" : returnDays > 1 ? "عاد أكثر من مرة" : "زيارة واحدة"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Searched Products Report with Purchase Status */}
+                    {searches.length > 0 && productsMap && (
                       <div>
                         <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1.5">
                           <Search className="w-3.5 h-3.5 text-primary" />
-                          سجل البحث ({searches.length} عملية)
+                          تقرير الأصناف المبحوث عنها ({searches.length} صنف)
                         </p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {searches
-                            .sort((a, b) => b.count - a.count)
-                            .slice(0, 15)
-                            .map((s, i) => (
-                              <span key={i} className="inline-flex items-center gap-1 text-xs bg-muted/50 border border-border/50 rounded-lg px-2.5 py-1 font-medium text-foreground">
-                                {s.query}
-                                {s.count > 1 && (
-                                  <span className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-md font-bold">
-                                    {s.count}×
-                                  </span>
-                                )}
-                              </span>
-                            ))}
+                        <div className="overflow-x-auto rounded-xl border border-border/40">
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr className="bg-muted/50 text-muted-foreground">
+                                <th className="px-3 py-2 text-right font-bold">كلمة البحث</th>
+                                <th className="px-3 py-2 text-center font-bold">عدد المرات</th>
+                                <th className="px-3 py-2 text-center font-bold">آخر بحث</th>
+                                <th className="px-3 py-2 text-center font-bold">حالة الشراء</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {searches
+                                .sort((a, b) => b.count - a.count)
+                                .slice(0, 20)
+                                .map((s, i) => {
+                                  // Check if any product matching this search query was purchased
+                                  const queryLower = s.query.toLowerCase();
+                                  const matchedPurchased = purchasedProducts
+                                    ? Object.values(productsMap).some(
+                                        (p: any) =>
+                                          purchasedProducts.has(p.id) &&
+                                          (p.name_ar?.toLowerCase().includes(queryLower) || p.sku?.toLowerCase().includes(queryLower))
+                                      )
+                                    : false;
+
+                                  return (
+                                    <tr key={i} className={cn("border-t border-border/30", i % 2 === 0 ? "bg-card" : "bg-muted/10")}>
+                                      <td className="px-3 py-2 font-medium text-foreground">{s.query}</td>
+                                      <td className="px-3 py-2 text-center">
+                                        <Badge variant="secondary" className="text-[10px]">{s.count}×</Badge>
+                                      </td>
+                                      <td className="px-3 py-2 text-center text-muted-foreground">
+                                        {format(new Date(s.lastAt), "dd/MM/yyyy", { locale: ar })}
+                                      </td>
+                                      <td className="px-3 py-2 text-center">
+                                        {matchedPurchased ? (
+                                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded-md">
+                                            <CheckCircle2 className="w-3 h-3" />
+                                            تم الشراء ✓
+                                          </span>
+                                        ) : (
+                                          <span className="text-[10px] font-bold text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-md">
+                                            لم يشترِ
+                                          </span>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                            </tbody>
+                          </table>
                         </div>
                       </div>
                     )}
@@ -1413,15 +1711,27 @@ const AdminCustomerIntelligence = () => {
                           {viewedProducts.slice(0, 10).map((pid) => {
                             const product = productsMap[pid];
                             if (!product) return null;
+                            const wasPurchased = purchasedProducts?.has(pid);
                             return (
-                              <div key={pid} className="flex items-center gap-2.5 bg-muted/30 rounded-xl p-2.5">
-                                <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                                  <Package className="w-3.5 h-3.5 text-primary" />
+                              <div key={pid} className={cn(
+                                "flex items-center gap-2.5 rounded-xl p-2.5",
+                                wasPurchased ? "bg-emerald-50/60 dark:bg-emerald-950/15 border border-emerald-200/40" : "bg-muted/30"
+                              )}>
+                                <div className={cn(
+                                  "w-7 h-7 rounded-lg flex items-center justify-center shrink-0",
+                                  wasPurchased ? "bg-emerald-500/15" : "bg-primary/10"
+                                )}>
+                                  {wasPurchased ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> : <Package className="w-3.5 h-3.5 text-primary" />}
                                 </div>
-                                <div className="min-w-0">
+                                <div className="min-w-0 flex-1">
                                   <p className="text-xs font-semibold text-foreground truncate">{product.name_ar}</p>
                                   <p className="text-[10px] text-muted-foreground font-mono">{product.sku}</p>
                                 </div>
+                                {wasPurchased && (
+                                  <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded shrink-0">
+                                    تم الشراء ✓
+                                  </span>
+                                )}
                               </div>
                             );
                           })}
