@@ -140,7 +140,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               .from("user_roles")
               .select("role")
               .eq("user_id", session.user.id);
-            setIsAdmin(roles?.some((r) => r.role === "admin") ?? false);
+            const hasAdmin = roles?.some((r) => r.role === "admin") ?? false;
+            setIsAdmin(hasAdmin);
+
+            // If both dealer and admin, show role selection
+            if (dealer && hasAdmin) {
+              setShowRoleSelection(true);
+            }
 
             // Check if Google user needs to complete phone
             const provider = session.user.app_metadata?.provider;
