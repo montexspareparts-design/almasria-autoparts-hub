@@ -1070,6 +1070,7 @@ const AdminCustomerIntelligence = () => {
                         d.searchDetails.forEach(s => {
                           rows.push({
                             "اسم العميل": d.name,
+                            "نوع الحساب": d.isDealer ? "جملة" : "قطاعي",
                             "رقم الهاتف": d.phone || "—",
                             "كلمة البحث": s.query,
                             "عدد المرات": s.count,
@@ -1081,7 +1082,7 @@ const AdminCustomerIntelligence = () => {
                       const wb = XLSX.utils.book_new();
                       const ws = XLSX.utils.json_to_sheet(rows);
                       ws["!dir"] = "rtl" as any;
-                      ws["!cols"] = [{ wch: 22 }, { wch: 16 }, { wch: 35 }, { wch: 12 }, { wch: 22 }];
+                      ws["!cols"] = [{ wch: 22 }, { wch: 12 }, { wch: 16 }, { wch: 35 }, { wch: 12 }, { wch: 22 }];
                       XLSX.utils.book_append_sheet(wb, ws, "أكثر الباحثين تفصيلي");
                       XLSX.writeFile(wb, `أكثر_15_عميل_بحثاً_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
                       toast({ title: "تم تصدير التقرير بنجاح ✅" });
