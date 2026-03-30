@@ -398,13 +398,15 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
       }))
     );
 
-    // Record price views
+    // Record price views only for NEW products (not already priced today)
     const today = new Date().toISOString().split("T")[0];
     for (const sp of selectedProducts) {
-      await supabase.from("dealer_price_views").upsert(
-        { user_id: user.id, product_id: sp.product.id, view_date: today },
-        { onConflict: "user_id,product_id,view_date" }
-      );
+      if (!todayPricedIds.has(sp.product.id)) {
+        await supabase.from("dealer_price_views").upsert(
+          { user_id: user.id, product_id: sp.product.id, view_date: today },
+          { onConflict: "user_id,product_id,view_date" }
+        );
+      }
     }
 
     toast({ title: "تم إرسال الطلبية ✓", description: `رقم الطلب: ${orderNumber}` });
