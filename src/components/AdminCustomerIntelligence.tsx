@@ -17,7 +17,47 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { cn } from "@/lib/utils";
 import { format, differenceInDays } from "date-fns";
 import { ar } from "date-fns/locale";
-import * as XLSX from "xlsx";
+import * as XLSX from "xlsx-js-style";
+
+const applyExcelStyles = (ws: XLSX.WorkSheet, headerCount: number) => {
+  const headerStyle = {
+    font: { bold: true, color: { rgb: "FFFFFF" }, sz: 12, name: "Arial" },
+    fill: { fgColor: { rgb: "C41E3A" } },
+    alignment: { horizontal: "center" as const, vertical: "center" as const, wrapText: true },
+    border: {
+      top: { style: "thin" as const, color: { rgb: "999999" } },
+      bottom: { style: "thin" as const, color: { rgb: "999999" } },
+      left: { style: "thin" as const, color: { rgb: "999999" } },
+      right: { style: "thin" as const, color: { rgb: "999999" } },
+    },
+  };
+  const cellStyle = {
+    font: { sz: 11, name: "Arial" },
+    alignment: { horizontal: "center" as const, vertical: "center" as const, wrapText: true },
+    border: {
+      top: { style: "thin" as const, color: { rgb: "DDDDDD" } },
+      bottom: { style: "thin" as const, color: { rgb: "DDDDDD" } },
+      left: { style: "thin" as const, color: { rgb: "DDDDDD" } },
+      right: { style: "thin" as const, color: { rgb: "DDDDDD" } },
+    },
+  };
+  const altRowStyle = { ...cellStyle, fill: { fgColor: { rgb: "FFF5F5" } } };
+  const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
+  for (let C = range.s.c; C <= range.e.c; C++) {
+    const addr = XLSX.utils.encode_cell({ r: 0, c: C });
+    if (ws[addr]) ws[addr].s = headerStyle;
+  }
+  let customerIdx = 0;
+  for (let R = 1; R <= range.e.r; R++) {
+    const numCell = ws[XLSX.utils.encode_cell({ r: R, c: 0 })];
+    if (numCell && numCell.v !== "" && numCell.v !== undefined) customerIdx++;
+    for (let C = range.s.c; C <= range.e.c; C++) {
+      const addr = XLSX.utils.encode_cell({ r: R, c: C });
+      if (ws[addr]) ws[addr].s = customerIdx % 2 === 0 ? altRowStyle : cellStyle;
+    }
+  }
+  ws["!rows"] = [{ hpt: 28 }];
+};
 import { toast } from "@/hooks/use-toast";
 import {
   Users, Search, Eye, ShoppingCart, Phone, Mail, Car,
