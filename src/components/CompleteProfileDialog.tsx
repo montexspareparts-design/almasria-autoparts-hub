@@ -16,13 +16,32 @@ interface CompleteProfileDialogProps {
 const CompleteProfileDialog = ({ open, onOpenChange, userId }: CompleteProfileDialogProps) => {
   const { toast } = useToast();
   const [phone, setPhone] = useState("");
+  const [phoneError, setPhoneError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const egyptianPhoneRegex = /^01[0-25]\d{8}$/;
+
+  const validatePhone = (value: string): string => {
+    const digits = value.replace(/\D/g, "");
+    if (!digits) return "رقم الهاتف مطلوب";
+    if (!digits.startsWith("01")) return "الرقم لازم يبدأ بـ 01";
+    if (digits.length !== 11) return "الرقم لازم يكون 11 رقم";
+    if (!egyptianPhoneRegex.test(digits)) return "رقم هاتف مصري غير صحيح";
+    return "";
+  };
+
+  const handlePhoneChange = (value: string) => {
+    const digitsOnly = value.replace(/[^\d]/g, "");
+    setPhone(digitsOnly);
+    if (phoneError) setPhoneError(validatePhone(digitsOnly));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmed = phone.trim();
-    if (!trimmed || trimmed.length < 10) {
-      toast({ title: "يرجى إدخال رقم هاتف صحيح", variant: "destructive" });
+    const error = validatePhone(phone);
+    if (error) {
+      setPhoneError(error);
+      toast({ title: error, variant: "destructive" });
       return;
     }
     setLoading(true);
