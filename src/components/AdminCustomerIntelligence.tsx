@@ -827,7 +827,7 @@ const AdminCustomerIntelligence = () => {
                             !d.converted && d.searches >= 5 && "bg-amber-50/50 dark:bg-amber-950/10",
                             expandedSearcher === d.userId && "bg-primary/5"
                           )}
-                          onClick={() => setExpandedSearcher(expandedSearcher === d.userId ? null : d.userId)}
+                          onClick={() => { setExpandedSearcher(expandedSearcher === d.userId ? null : d.userId); setSearchDetailFilter(""); }}
                         >
                           <td className="px-3 py-2.5 text-xs text-muted-foreground font-bold">{i + 1}</td>
                           <td className="px-3 py-2.5">
