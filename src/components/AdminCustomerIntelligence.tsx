@@ -939,12 +939,14 @@ const AdminCustomerIntelligence = () => {
                                       const ws = XLSX.utils.json_to_sheet(
                                         d.searchDetails.map((s, si) => ({
                                           "#": si + 1,
+                                          "اسم العميل": d.name,
+                                          "رقم الهاتف": d.phone || "—",
                                           "كلمة البحث": s.query,
                                           "عدد المرات": s.count,
                                           "آخر بحث": format(new Date(s.lastAt), "dd/MM/yyyy hh:mm a", { locale: ar }),
                                         }))
                                       );
-                                      ws["!cols"] = [{ wch: 5 }, { wch: 35 }, { wch: 12 }, { wch: 22 }];
+                                      ws["!cols"] = [{ wch: 5 }, { wch: 22 }, { wch: 16 }, { wch: 35 }, { wch: 12 }, { wch: 22 }];
                                       const wb = XLSX.utils.book_new();
                                       XLSX.utils.book_append_sheet(wb, ws, "سجل البحث");
                                       // Info sheet
