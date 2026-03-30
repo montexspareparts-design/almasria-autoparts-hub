@@ -1053,12 +1053,44 @@ const AdminCustomerIntelligence = () => {
 
               {/* Detailed Table */}
               <div>
-                <h4 className="text-sm font-black text-foreground mb-3 flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Search className="w-3.5 h-3.5 text-primary" />
-                  </div>
-                  تفاصيل أكثر 15 عميل بحثاً
-                </h4>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-black text-foreground flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Search className="w-3.5 h-3.5 text-primary" />
+                    </div>
+                    تفاصيل أكثر 15 عميل بحثاً
+                  </h4>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5 text-[10px] h-7 font-bold rounded-xl"
+                    onClick={() => {
+                      const rows: any[] = [];
+                      top15.forEach(d => {
+                        d.searchDetails.forEach(s => {
+                          rows.push({
+                            "اسم العميل": d.name,
+                            "رقم الهاتف": d.phone || "—",
+                            "كلمة البحث": s.query,
+                            "عدد المرات": s.count,
+                            "آخر بحث": format(new Date(s.lastAt), "dd/MM/yyyy hh:mm a", { locale: ar }),
+                          });
+                        });
+                      });
+                      if (rows.length === 0) { toast({ title: "لا توجد بيانات", variant: "destructive" }); return; }
+                      const wb = XLSX.utils.book_new();
+                      const ws = XLSX.utils.json_to_sheet(rows);
+                      ws["!dir"] = "rtl" as any;
+                      ws["!cols"] = [{ wch: 22 }, { wch: 16 }, { wch: 35 }, { wch: 12 }, { wch: 22 }];
+                      XLSX.utils.book_append_sheet(wb, ws, "أكثر الباحثين تفصيلي");
+                      XLSX.writeFile(wb, `أكثر_15_عميل_بحثاً_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+                      toast({ title: "تم تصدير التقرير بنجاح ✅" });
+                    }}
+                  >
+                    <Download className="w-3 h-3" />
+                    تصدير Excel
+                  </Button>
+                </div>
                 <div className="overflow-x-auto rounded-2xl border border-border/40 shadow-sm">
                   <table className="w-full text-sm">
                     <thead>
