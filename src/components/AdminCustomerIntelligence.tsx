@@ -20,7 +20,7 @@ import {
   Users, Search, Eye, ShoppingCart, Phone, Mail, Car,
   TrendingUp, Clock, ChevronDown, ChevronUp, BarChart3,
   Package, Calendar as CalendarIcon, Filter, X, Download,
-  MessageCircle, Send, Copy, ExternalLink,
+  MessageCircle, Send, Copy, ExternalLink, Briefcase,
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 
