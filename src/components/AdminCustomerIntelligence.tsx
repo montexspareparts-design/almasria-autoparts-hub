@@ -563,6 +563,7 @@ const AdminCustomerIntelligence = () => {
           conversionRate: string;
           topQueries: string[];
           searchDetails: { query: string; count: number; lastAt: string }[];
+          isDealer: boolean;
         }[] = [];
 
         profiles.forEach(p => {
@@ -591,6 +592,7 @@ const AdminCustomerIntelligence = () => {
               .slice(0, 3)
               .map(s => s.query),
             searchDetails: searches.sort((a, b) => b.count - a.count),
+            isDealer: dealerUserIds?.has(p.user_id) || false,
           });
         });
 
@@ -691,6 +693,7 @@ const AdminCustomerIntelligence = () => {
                     const rows = searcherData.map((d, i) => ({
                       "#": i + 1,
                       "الاسم": d.name,
+                      "نوع الحساب": d.isDealer ? "جملة" : "قطاعي",
                       "رقم الهاتف": d.phone || "—",
                       "عمليات البحث": d.searches,
                       "استفسارات فريدة": d.uniqueQueries,
@@ -835,12 +838,22 @@ const AdminCustomerIntelligence = () => {
                             <div className="flex items-center gap-1.5">
                               <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform", expandedSearcher === d.userId && "rotate-180")} />
                               <div>
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); navigate(`/admin?section=customers&search=${encodeURIComponent(d.phone || d.name)}`); }}
-                                  className="text-right hover:underline cursor-pointer group"
-                                >
-                                  <p className="text-xs font-bold text-primary group-hover:text-primary/80 transition-colors">{d.name}</p>
-                                </button>
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); navigate(`/admin?section=customers&search=${encodeURIComponent(d.phone || d.name)}`); }}
+                                    className="text-right hover:underline cursor-pointer group"
+                                  >
+                                    <p className="text-xs font-bold text-primary group-hover:text-primary/80 transition-colors">{d.name}</p>
+                                  </button>
+                                  <span className={cn(
+                                    "text-[9px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap",
+                                    d.isDealer
+                                      ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                                      : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                                  )}>
+                                    {d.isDealer ? "جملة" : "قطاعي"}
+                                  </span>
+                                </div>
                                 {d.phone && (
                                   <p className="text-[10px] text-muted-foreground" dir="ltr">{d.phone}</p>
                                 )}
