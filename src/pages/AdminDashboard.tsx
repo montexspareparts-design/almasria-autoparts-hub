@@ -492,6 +492,18 @@ const AdminDashboard = () => {
               </div>
             )}
 
+            {isDealer && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/dealer")}
+                className="gap-1.5 text-xs font-bold text-blue-600 hover:bg-blue-500/10 rounded-xl"
+              >
+                <Briefcase className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">وضع التاجر</span>
+              </Button>
+            )}
+
             <Button
               variant="ghost"
               size="icon"
