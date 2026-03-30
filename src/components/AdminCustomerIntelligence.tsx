@@ -40,6 +40,7 @@ const CUSTOMER_TYPES = [
 ] as const;
 
 const AdminCustomerIntelligence = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
