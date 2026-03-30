@@ -212,7 +212,7 @@ const NotificationBell = () => {
                 <div className="flex items-start gap-2">
                   <div
                     className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
-                      n.type === "success" ? "bg-emerald-500" : n.type === "order_edit" ? "bg-amber-500" : n.type === "order" ? "bg-primary" : n.type === "warning" ? "bg-amber-500" : "bg-primary"
+                      n.type === "success" ? "bg-emerald-500" : n.type === "conversion_opportunity" ? "bg-orange-500" : n.type === "order_edit" ? "bg-amber-500" : n.type === "order" ? "bg-primary" : n.type === "warning" ? "bg-amber-500" : "bg-primary"
                     }`}
                   />
                   <div>
