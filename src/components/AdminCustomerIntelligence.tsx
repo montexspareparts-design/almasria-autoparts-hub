@@ -726,22 +726,24 @@ const AdminCustomerIntelligence = () => {
                 ))}
               </div>
             </CardHeader>
-            <CardContent className="space-y-5">
+            <CardContent className="space-y-6">
               {/* Summary KPIs */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
-                  { icon: Search, value: totalSearchers, label: "عميل يبحث", change: searchersChange, bg: "bg-muted/40", iconColor: "text-primary", valueColor: "text-foreground" },
-                  { icon: ShoppingCart, value: convertedCount, label: "تحوّلوا لطلبات", change: convertedChange, bg: "bg-emerald-50 dark:bg-emerald-950/20", iconColor: "text-emerald-600 dark:text-emerald-400", valueColor: "text-emerald-700 dark:text-emerald-400" },
-                  { icon: TrendingUp, value: `${overallConversion}%`, label: "معدل التحويل", change: conversionChange, bg: "bg-amber-50 dark:bg-amber-950/20", iconColor: "text-amber-600 dark:text-amber-400", valueColor: "text-amber-700 dark:text-amber-400" },
-                  { icon: BarChart3, value: avgSearchesPerUser, label: "متوسط بحث/عميل", change: avgChange, bg: "bg-blue-50 dark:bg-blue-950/20", iconColor: "text-blue-600 dark:text-blue-400", valueColor: "text-blue-700 dark:text-blue-400" },
+                  { icon: Search, value: totalSearchers, label: "عميل يبحث", change: searchersChange, bg: "bg-gradient-to-br from-primary/8 to-primary/3", iconBg: "bg-primary/15", iconColor: "text-primary", valueColor: "text-foreground" },
+                  { icon: ShoppingCart, value: convertedCount, label: "تحوّلوا لطلبات", change: convertedChange, bg: "bg-gradient-to-br from-emerald-500/8 to-emerald-500/3", iconBg: "bg-emerald-500/15", iconColor: "text-emerald-600 dark:text-emerald-400", valueColor: "text-emerald-700 dark:text-emerald-400" },
+                  { icon: TrendingUp, value: `${overallConversion}%`, label: "معدل التحويل", change: conversionChange, bg: "bg-gradient-to-br from-amber-500/8 to-amber-500/3", iconBg: "bg-amber-500/15", iconColor: "text-amber-600 dark:text-amber-400", valueColor: "text-amber-700 dark:text-amber-400" },
+                  { icon: BarChart3, value: avgSearchesPerUser, label: "متوسط بحث/عميل", change: avgChange, bg: "bg-gradient-to-br from-blue-500/8 to-blue-500/3", iconBg: "bg-blue-500/15", iconColor: "text-blue-600 dark:text-blue-400", valueColor: "text-blue-700 dark:text-blue-400" },
                 ].map((kpi, idx) => (
-                  <div key={idx} className={cn("rounded-xl p-3 text-center", kpi.bg)}>
-                    <kpi.icon className={cn("w-5 h-5 mx-auto mb-1.5", kpi.iconColor)} />
-                    <p className={cn("text-2xl font-black", kpi.valueColor)}>{kpi.value}</p>
-                    <p className="text-[11px] text-muted-foreground font-medium">{kpi.label}</p>
+                  <div key={idx} className={cn("rounded-2xl p-4 text-center border border-border/30", kpi.bg)}>
+                    <div className={cn("w-9 h-9 rounded-xl mx-auto mb-2 flex items-center justify-center", kpi.iconBg)}>
+                      <kpi.icon className={cn("w-4.5 h-4.5", kpi.iconColor)} />
+                    </div>
+                    <p className={cn("text-2xl font-black tracking-tight", kpi.valueColor)}>{kpi.value}</p>
+                    <p className="text-[11px] text-muted-foreground font-medium mt-0.5">{kpi.label}</p>
                     {kpi.change !== null && (
                       <div className={cn(
-                        "flex items-center justify-center gap-0.5 mt-1.5 text-[10px] font-bold rounded-full px-2 py-0.5 mx-auto w-fit",
+                        "flex items-center justify-center gap-0.5 mt-2 text-[10px] font-bold rounded-full px-2.5 py-0.5 mx-auto w-fit",
                         kpi.change > 0 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
                           : kpi.change < 0 ? "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400"
                           : "bg-muted text-muted-foreground"
