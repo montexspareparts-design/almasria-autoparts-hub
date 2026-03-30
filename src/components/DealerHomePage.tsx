@@ -390,7 +390,7 @@ const DealerHomePage = () => {
       {/* ━━━ CONTENT ━━━ */}
       <div className="container mx-auto px-4 max-w-3xl">
 
-        {/* ─── Quick Actions — Premium Bento Grid ─── */}
+        {/* ─── Quick Actions — Premium Bento Grid with Shimmer ─── */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -400,15 +400,19 @@ const DealerHomePage = () => {
           {quickActions.map((item, i) => (
             <Link key={item.href} to={item.href} className="block group">
               <motion.div
+                initial={{ opacity: 0, scale: 0.92 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 + i * 0.1, duration: 0.5, ease }}
                 whileHover={{ y: -6 }}
                 whileTap={{ scale: 0.96 }}
-                transition={spring}
                 className="relative bg-card rounded-[20px] border border-border/40 p-5 md:p-6 flex flex-col items-center text-center gap-3 h-full overflow-hidden
                   shadow-[0_1px_3px_rgba(0,0,0,0.04)]
                   hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.12)]
                   hover:border-primary/20
                   transition-all duration-500"
               >
+                {/* Shimmer sweep effect */}
+                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out bg-gradient-to-r from-transparent via-white/[0.07] to-transparent pointer-events-none" />
                 {/* Subtle gradient overlay on hover */}
                 <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
