@@ -502,13 +502,30 @@ const AdminAnalytics = () => {
 
       {/* Most Searched Products */}
       <div className="rounded-2xl border border-border bg-card p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2.5 rounded-xl bg-cyan-500/10">
-            <Search className="w-5 h-5 text-cyan-600" strokeWidth={2} />
+        <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-cyan-500/10">
+              <Search className="w-5 h-5 text-cyan-600" strokeWidth={2} />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-foreground">أكثر المنتجات بحثاً</h3>
+              <p className="text-xs text-muted-foreground">أعلى 10 كلمات بحث استخداماً</p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-base font-bold text-foreground">أكثر المنتجات بحثاً</h3>
-            <p className="text-xs text-muted-foreground">أعلى 10 كلمات بحث استخداماً</p>
+          <div className="flex items-center gap-1 bg-muted/50 rounded-xl p-1">
+            {([["7", "7 أيام"], ["30", "30 يوم"], ["all", "الكل"]] as const).map(([val, label]) => (
+              <button
+                key={val}
+                onClick={() => handleSearchPeriodChange(val)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  searchPeriod === val
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </div>
         {topSearches.length === 0 ? (
