@@ -26,6 +26,13 @@ const MyProfilePage = () => {
   const [carModel, setCarModel] = useState("");
   const [carYear, setCarYear] = useState("");
   const [phoneError, setPhoneError] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [showCurrentPw, setShowCurrentPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [isGoogleUser, setIsGoogleUser] = useState(false);
 
   useEffect(() => {
     if (!user) {
