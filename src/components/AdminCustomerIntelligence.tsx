@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,6 +51,7 @@ const AdminCustomerIntelligence = () => {
   const [bulkMessage, setBulkMessage] = useState("مرحباً {{name}}، نود إبلاغكم بأحدث العروض والخصومات الحصرية من المصرية جروب. تواصلوا معنا لمزيد من التفاصيل!");
   const [sendingIndex, setSendingIndex] = useState(-1);
   const [reportTimeFilter, setReportTimeFilter] = useState<string>("all");
+  const [expandedSearcher, setExpandedSearcher] = useState<string | null>(null);
 
   // All profiles
   const { data: profiles, isLoading: loadingProfiles } = useQuery({
@@ -559,6 +560,7 @@ const AdminCustomerIntelligence = () => {
           converted: boolean;
           conversionRate: string;
           topQueries: string[];
+          searchDetails: { query: string; count: number; lastAt: string }[];
         }[] = [];
 
         profiles.forEach(p => {
@@ -586,6 +588,7 @@ const AdminCustomerIntelligence = () => {
               .sort((a, b) => b.count - a.count)
               .slice(0, 3)
               .map(s => s.query),
+            searchDetails: searches.sort((a, b) => b.count - a.count),
           });
         });
 
@@ -815,22 +818,32 @@ const AdminCustomerIntelligence = () => {
                     </thead>
                     <tbody>
                       {top15.map((d, i) => (
-                        <tr key={d.userId} className={cn(
-                          "border-t border-border/50 transition-colors",
-                          i % 2 === 0 ? "bg-card" : "bg-muted/20",
-                          !d.converted && d.searches >= 5 && "bg-amber-50/50 dark:bg-amber-950/10"
-                        )}>
+                        <React.Fragment key={d.userId}>
+                        <tr
+                          className={cn(
+                            "border-t border-border/50 transition-colors cursor-pointer hover:bg-muted/40",
+                            i % 2 === 0 ? "bg-card" : "bg-muted/20",
+                            !d.converted && d.searches >= 5 && "bg-amber-50/50 dark:bg-amber-950/10",
+                            expandedSearcher === d.userId && "bg-primary/5"
+                          )}
+                          onClick={() => setExpandedSearcher(expandedSearcher === d.userId ? null : d.userId)}
+                        >
                           <td className="px-3 py-2.5 text-xs text-muted-foreground font-bold">{i + 1}</td>
                           <td className="px-3 py-2.5">
-                            <button
-                              onClick={() => navigate(`/admin?section=customers&search=${encodeURIComponent(d.phone || d.name)}`)}
-                              className="text-right hover:underline cursor-pointer group"
-                            >
-                              <p className="text-xs font-bold text-primary group-hover:text-primary/80 transition-colors">{d.name}</p>
-                              {d.phone && (
-                                <p className="text-[10px] text-muted-foreground" dir="ltr">{d.phone}</p>
-                              )}
-                            </button>
+                            <div className="flex items-center gap-1.5">
+                              <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform", expandedSearcher === d.userId && "rotate-180")} />
+                              <div>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); navigate(`/admin?section=customers&search=${encodeURIComponent(d.phone || d.name)}`); }}
+                                  className="text-right hover:underline cursor-pointer group"
+                                >
+                                  <p className="text-xs font-bold text-primary group-hover:text-primary/80 transition-colors">{d.name}</p>
+                                </button>
+                                {d.phone && (
+                                  <p className="text-[10px] text-muted-foreground" dir="ltr">{d.phone}</p>
+                                )}
+                              </div>
+                            </div>
                           </td>
                           <td className="px-3 py-2.5 text-center">
                             <div className="flex items-center justify-center gap-1.5">
@@ -886,12 +899,41 @@ const AdminCustomerIntelligence = () => {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex w-7 h-7 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 items-center justify-center transition-colors"
+                                onClick={(e) => e.stopPropagation()}
                               >
                                 <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
                               </a>
                             )}
                           </td>
                         </tr>
+                        {expandedSearcher === d.userId && (
+                          <tr className="border-t border-border/30">
+                            <td colSpan={10} className="p-0">
+                              <div className="bg-muted/30 px-6 py-4 space-y-3">
+                                <h5 className="text-xs font-black text-foreground flex items-center gap-2">
+                                  <Search className="w-3.5 h-3.5 text-primary" />
+                                  سجل بحث {d.name} ({d.searchDetails.length} استفسار)
+                                </h5>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[200px] overflow-y-auto">
+                                  {d.searchDetails.map((s, si) => (
+                                    <div key={si} className="flex items-center gap-2 bg-card rounded-lg px-3 py-2 border border-border/50">
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-bold text-foreground truncate">{s.query}</p>
+                                        <p className="text-[10px] text-muted-foreground">
+                                          {format(new Date(s.lastAt), "dd MMM yyyy — hh:mm a", { locale: ar })}
+                                        </p>
+                                      </div>
+                                      <Badge variant="secondary" className="text-[10px] shrink-0">
+                                        {s.count}×
+                                      </Badge>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                        </React.Fragment>
                       ))}
                     </tbody>
                   </table>
