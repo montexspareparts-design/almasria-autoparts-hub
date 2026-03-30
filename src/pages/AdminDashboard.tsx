@@ -450,44 +450,44 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="bg-secondary/95 backdrop-blur-md border-b border-border/30 sticky top-0 z-50">
-        <div className="flex items-center justify-between h-16 px-5">
-          <div className="flex items-center gap-4">
+      <header className="bg-gradient-to-l from-secondary via-secondary to-[hsl(var(--secondary)/0.95)] backdrop-blur-xl border-b border-border/20 sticky top-0 z-50 shadow-sm">
+        <div className="flex items-center justify-between h-14 px-4 lg:px-5">
+          <div className="flex items-center gap-3">
             <Button
               variant="ghost"
               size="icon"
-              className="lg:hidden text-secondary-foreground/70 hover:text-secondary-foreground hover:bg-white/10 rounded-xl"
+              className="lg:hidden text-secondary-foreground/70 hover:text-secondary-foreground hover:bg-white/10 rounded-lg h-8 w-8"
               onClick={() => setSidebarOpen(!sidebarOpen)}
             >
-              {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {sidebarOpen ? <X className="w-4.5 h-4.5" /> : <Menu className="w-4.5 h-4.5" />}
             </Button>
-            <a href="/" className="flex items-center gap-2.5 group">
-              <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center">
-                <Package className="w-5 h-5 text-primary" />
+            <a href="/" className="flex items-center gap-2 group">
+              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center shadow-inner">
+                <Package className="w-4 h-4 text-primary" />
               </div>
               <div className="hidden sm:block">
-                <span className="text-base font-black text-secondary-foreground leading-none">
+                <span className="text-sm font-black text-secondary-foreground leading-none tracking-tight">
                   المصرية <span className="text-primary">جروب</span>
                 </span>
-                <p className="text-[10px] text-secondary-foreground/50 font-medium mt-0.5">لوحة الإدارة</p>
+                <p className="text-[9px] text-secondary-foreground/40 font-semibold mt-0.5 tracking-wide">ADMIN PANEL</p>
               </div>
             </a>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {pendingCount > 0 && (
               <button
                 onClick={() => { setActiveSection("dealers"); setSidebarOpen(false); }}
-                className="flex items-center gap-1.5 text-xs bg-amber-500/15 text-amber-600 dark:text-amber-400 px-3 py-1.5 rounded-xl font-bold hover:bg-amber-500/25 transition-colors"
+                className="flex items-center gap-1.5 text-[11px] bg-amber-500/15 text-amber-500 px-2.5 py-1 rounded-lg font-bold hover:bg-amber-500/25 transition-colors animate-pulse"
               >
-                <Clock className="w-3.5 h-3.5" />
-                {pendingCount} طلب جديد
+                <Clock className="w-3 h-3" />
+                {pendingCount} طلب
               </button>
             )}
 
             {currentSection && (
-              <div className="hidden md:flex items-center gap-2 text-xs text-secondary-foreground/40 border-r border-secondary-foreground/10 pr-3">
-                <currentSection.icon className="w-3.5 h-3.5" />
+              <div className="hidden md:flex items-center gap-1.5 text-[11px] text-secondary-foreground/30 border-r border-secondary-foreground/10 pr-2 mr-1">
+                <currentSection.icon className="w-3 h-3" />
                 <span className="font-medium">{currentSection.label}</span>
               </div>
             )}
@@ -497,9 +497,9 @@ const AdminDashboard = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => { localStorage.setItem("almasria_last_role", "dealer"); navigate("/dealer"); }}
-                className="gap-1.5 text-xs font-bold text-blue-600 hover:bg-blue-500/10 rounded-xl"
+                className="gap-1 text-[11px] font-bold text-blue-400 hover:bg-blue-500/10 rounded-lg h-8 px-2"
               >
-                <Briefcase className="w-3.5 h-3.5" />
+                <Briefcase className="w-3 h-3" />
                 <span className="hidden sm:inline">وضع التاجر</span>
               </Button>
             )}
@@ -508,9 +508,9 @@ const AdminDashboard = () => {
               variant="ghost"
               size="icon"
               onClick={() => { signOut(); navigate("/"); }}
-              className="w-9 h-9 rounded-xl text-secondary-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-colors"
+              className="w-8 h-8 rounded-lg text-secondary-foreground/30 hover:text-destructive hover:bg-destructive/10 transition-colors"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-3.5 h-3.5" />
             </Button>
           </div>
         </div>
@@ -522,84 +522,94 @@ const AdminDashboard = () => {
           className={`
             ${sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"}
             fixed lg:static inset-y-0 right-0 top-14 z-40
-            w-64 lg:w-56 xl:w-64
-            bg-card border-l border-border
-            transition-transform duration-200 ease-in-out
+            w-60 lg:w-52 xl:w-60
+            bg-card/95 backdrop-blur-sm border-l border-border/50
+            transition-transform duration-200 ease-out
             overflow-y-auto
             lg:translate-x-0
+            scrollbar-none
           `}
         >
-          {/* Mobile overlay */}
           {sidebarOpen && (
             <div
-              className="fixed inset-0 bg-black/40 z-[-1] lg:hidden"
+              className="fixed inset-0 bg-black/50 backdrop-blur-[2px] z-[-1] lg:hidden"
               onClick={() => setSidebarOpen(false)}
             />
           )}
 
-          <nav className="p-3 space-y-4">
-            {sidebarGroups.map((group) => {
-              const hasActiveItem = group.items.some(i => i.id === activeSection);
-              return (
-                <div key={group.label}>
-                  <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
-                    {group.label}
-                  </div>
-                  <div className="mt-1 space-y-0.5">
-                    {group.items.map((section) => {
-                      const Icon = section.icon;
-                      const isActive = activeSection === section.id;
-                      return (
-                        <button
-                          key={section.id}
-                          onClick={() => {
-                            setActiveSection(section.id);
-                            setSidebarOpen(false);
-                          }}
-                          className={`
-                            w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-medium transition-all duration-150 relative group
-                            ${isActive
-                              ? "bg-primary/10 text-primary font-bold"
-                              : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                            }
-                          `}
-                        >
-                          {isActive && (
-                            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-l-full" />
-                          )}
-                          <div className={`
-                            w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors
-                            ${isActive
-                              ? "bg-primary/15 text-primary"
-                              : "bg-muted/50 text-muted-foreground/70 group-hover:bg-muted group-hover:text-foreground/70"
-                            }
-                          `}>
-                            <Icon className="w-3.5 h-3.5" />
-                          </div>
-                          <span className="truncate">{section.label}</span>
-                          {section.id === "dealers" && pendingCount > 0 && (
-                            <span className="mr-auto bg-destructive text-destructive-foreground text-[9px] font-bold rounded-md min-w-[20px] h-5 flex items-center justify-center px-1.5">
-                              {pendingCount}
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
+          <nav className="p-2.5 space-y-1">
+            {sidebarGroups.map((group, gi) => (
+              <div key={group.label}>
+                {gi > 0 && <div className="h-px bg-border/40 mx-3 my-2" />}
+                <div className="px-3 py-1.5 text-[9px] font-extrabold uppercase tracking-[0.15em] text-muted-foreground/40">
+                  {group.label}
                 </div>
-              );
-            })}
+                <div className="mt-0.5 space-y-px">
+                  {group.items.map((section) => {
+                    const Icon = section.icon;
+                    const isActive = activeSection === section.id;
+                    return (
+                      <button
+                        key={section.id}
+                        onClick={() => {
+                          setActiveSection(section.id);
+                          setSidebarOpen(false);
+                        }}
+                        className={`
+                          w-full flex items-center gap-2 px-2.5 py-[7px] rounded-lg text-[12.5px] font-medium transition-all duration-150 relative group
+                          ${isActive
+                            ? "bg-primary/10 text-primary font-bold shadow-sm shadow-primary/5"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                          }
+                        `}
+                      >
+                        {isActive && (
+                          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[2.5px] h-4 bg-primary rounded-l-full" />
+                        )}
+                        <div className={`
+                          w-6 h-6 rounded-md flex items-center justify-center shrink-0 transition-colors
+                          ${isActive
+                            ? "bg-primary/15 text-primary"
+                            : "text-muted-foreground/60 group-hover:text-foreground/60"
+                          }
+                        `}>
+                          <Icon className="w-3.5 h-3.5" />
+                        </div>
+                        <span className="truncate">{section.label}</span>
+                        {section.id === "dealers" && pendingCount > 0 && (
+                          <span className="mr-auto bg-destructive text-destructive-foreground text-[9px] font-bold rounded-md min-w-[18px] h-4.5 flex items-center justify-center px-1">
+                            {pendingCount}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="p-4 lg:p-6 max-w-5xl">
-            {/* Breadcrumb */}
-            <div className="flex items-center gap-2 mb-6">
-              <span className="text-sm text-muted-foreground">لوحة التحكم</span>
-              <ChevronRight className="w-3 h-3 text-muted-foreground rotate-180" />
-              <span className="text-sm font-medium text-foreground">{currentSection?.label}</span>
+        <main className="flex-1 overflow-y-auto bg-muted/20">
+          <div className="p-4 lg:p-6 max-w-6xl">
+            {/* Page Header */}
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2.5">
+                {currentSection && (
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <currentSection.icon className="w-4.5 h-4.5 text-primary" />
+                  </div>
+                )}
+                <div>
+                  <h1 className="text-lg font-black text-foreground leading-tight">{currentSection?.label}</h1>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="text-[11px] text-muted-foreground/60">لوحة التحكم</span>
+                    <ChevronRight className="w-2.5 h-2.5 text-muted-foreground/40 rotate-180" />
+                    <span className="text-[11px] text-muted-foreground font-medium">{currentSection?.label}</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {renderActiveSection()}
