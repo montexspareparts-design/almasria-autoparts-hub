@@ -1213,6 +1213,7 @@ const AdminCustomerIntelligence = () => {
                       const ws = XLSX.utils.json_to_sheet(rows);
                       ws["!dir"] = "rtl" as any;
                       ws["!cols"] = [{ wch: 5 }, { wch: 22 }, { wch: 12 }, { wch: 16 }, { wch: 30 }, { wch: 14 }, { wch: 16 }, { wch: 14 }];
+                      applyExcelStyles(ws, 8);
                       XLSX.utils.book_append_sheet(wb, ws, "أكثر الباحثين تفصيلي");
                       XLSX.writeFile(wb, `أكثر_15_عميل_بحثاً_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
                       toast({ title: "تم تصدير التقرير بنجاح ✅" });
