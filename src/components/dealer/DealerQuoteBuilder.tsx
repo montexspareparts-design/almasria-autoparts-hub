@@ -236,11 +236,14 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
   };
 
   const addToQuote = async (product: Product) => {
-    if (dailyViews >= DAILY_LIMIT) {
+    const alreadyPriced = todayPricedIds.has(product.id);
+    const existing = quoteItems.find(i => i.product.id === product.id);
+    
+    // Only check limit for NEW products (not already priced today)
+    if (!alreadyPriced && !existing && dailyViews >= DAILY_LIMIT) {
       toast({ title: "تم استنفاذ الحد اليومي", description: `لقد استنفذت الحد اليومي (${DAILY_LIMIT} صنف)`, variant: "destructive" });
       return;
     }
-    const existing = quoteItems.find(i => i.product.id === product.id);
     if (existing) {
       setQuoteItems(prev => prev.map(i =>
         i.product.id === product.id ? { ...i, quantity: i.quantity + 1 } : i
@@ -248,7 +251,10 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
       return;
     }
     const price = await getProductPrice(product);
-    await recordPriceView(product.id);
+    // Only record view if not already priced today
+    if (!alreadyPriced) {
+      await recordPriceView(product.id);
+    }
     setQuoteItems(prev => [...prev, { product, quantity: 1, unit_price: price }]);
     setSearchQuery("");
     setSearchResults([]);
