@@ -549,6 +549,18 @@ const AdminCustomerIntelligence = () => {
               </SelectContent>
             </Select>
 
+            {/* Account Type (Dealer vs Retail) */}
+            <Select value={accountTypeFilter} onValueChange={setAccountTypeFilter}>
+              <SelectTrigger className="w-[160px] h-9 text-xs">
+                <Users className="w-3.5 h-3.5 ml-1.5" />
+                <SelectValue placeholder="نوع الحساب" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">الكل</SelectItem>
+                <SelectItem value="dealer">تاجر</SelectItem>
+                <SelectItem value="retail">عميل قطاعي</SelectItem>
+              </SelectContent>
+            </Select>
             {/* Clear filters */}
             {hasActiveFilters && (
               <Button variant="ghost" size="sm" className="gap-1 text-xs h-9 text-destructive" onClick={clearFilters}>
