@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -44,7 +44,6 @@ const Auth = () => {
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [lockedUntil, setLockedUntil] = useState<number | null>(null);
   const [rememberMe, setRememberMe] = useState(isRemembered());
-  const autoLoginAttempted = useRef(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -53,20 +52,32 @@ const Auth = () => {
   const credIsPhone = isPhone(credential);
   const getAuthEmail = () => credIsPhone ? phoneToEmail(credential) : credential.trim();
 
-  // On mount: if not remembered and no active session, clear stale session
+  // If session already exists (or arrives after OAuth), leave auth page immediately
   useEffect(() => {
-    if (!autoLoginAttempted.current) {
-      autoLoginAttempted.current = true;
-      if (!isRemembered() && !isSessionActive()) {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-          if (session) supabase.auth.signOut();
-        });
-      } else if (isSessionActive() || isRemembered()) {
-        markSessionActive();
-      }
-    }
-  }, []);
+    let mounted = true;
 
+    const syncSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!mounted || !session?.user) return;
+      markSessionActive();
+      navigate("/", { replace: true });
+    };
+
+    syncSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted || !session?.user) return;
+      markSessionActive();
+      navigate("/", { replace: true });
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isLogin && lockedUntil && Date.now() < lockedUntil) {
