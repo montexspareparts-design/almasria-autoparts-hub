@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import { useState, useCallback, Fragment } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -818,7 +818,7 @@ const AdminCustomerIntelligence = () => {
                     </thead>
                     <tbody>
                       {top15.map((d, i) => (
-                        <React.Fragment key={d.userId}>
+                        <Fragment key={d.userId}>
                         <tr
                           className={cn(
                             "border-t border-border/50 transition-colors cursor-pointer hover:bg-muted/40",
@@ -910,10 +910,47 @@ const AdminCustomerIntelligence = () => {
                           <tr className="border-t border-border/30">
                             <td colSpan={10} className="p-0">
                               <div className="bg-muted/30 px-6 py-4 space-y-3">
-                                <h5 className="text-xs font-black text-foreground flex items-center gap-2">
-                                  <Search className="w-3.5 h-3.5 text-primary" />
-                                  سجل بحث {d.name} ({d.searchDetails.length} استفسار)
-                                </h5>
+                                <div className="flex items-center justify-between">
+                                  <h5 className="text-xs font-black text-foreground flex items-center gap-2">
+                                    <Search className="w-3.5 h-3.5 text-primary" />
+                                    سجل بحث {d.name} ({d.searchDetails.length} استفسار)
+                                  </h5>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="gap-1.5 text-[10px] h-7"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const ws = XLSX.utils.json_to_sheet(
+                                        d.searchDetails.map((s, si) => ({
+                                          "#": si + 1,
+                                          "كلمة البحث": s.query,
+                                          "عدد المرات": s.count,
+                                          "آخر بحث": format(new Date(s.lastAt), "dd/MM/yyyy hh:mm a", { locale: ar }),
+                                        }))
+                                      );
+                                      ws["!cols"] = [{ wch: 5 }, { wch: 35 }, { wch: 12 }, { wch: 22 }];
+                                      const wb = XLSX.utils.book_new();
+                                      XLSX.utils.book_append_sheet(wb, ws, "سجل البحث");
+                                      // Info sheet
+                                      const infoWs = XLSX.utils.json_to_sheet([{
+                                        "الاسم": d.name,
+                                        "الهاتف": d.phone || "—",
+                                        "إجمالي البحث": d.searches,
+                                        "استفسارات فريدة": d.uniqueQueries,
+                                        "الطلبات": d.orders,
+                                        "إجمالي الإنفاق": d.totalSpent,
+                                        "الحالة": d.converted ? "محوّل" : "لم يشترِ",
+                                      }]);
+                                      XLSX.utils.book_append_sheet(wb, infoWs, "بيانات العميل");
+                                      XLSX.writeFile(wb, `سجل_بحث_${d.name.replace(/\s+/g, "_")}.xlsx`);
+                                      toast({ title: "تم تصدير سجل البحث بنجاح ✅" });
+                                    }}
+                                  >
+                                    <Download className="w-3 h-3" />
+                                    تصدير Excel
+                                  </Button>
+                                </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[200px] overflow-y-auto">
                                   {d.searchDetails.map((s, si) => (
                                     <div key={si} className="flex items-center gap-2 bg-card rounded-lg px-3 py-2 border border-border/50">
@@ -933,7 +970,7 @@ const AdminCustomerIntelligence = () => {
                             </td>
                           </tr>
                         )}
-                        </React.Fragment>
+                        </Fragment>
                       ))}
                     </tbody>
                   </table>
