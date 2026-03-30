@@ -39,6 +39,10 @@ const MyProfilePage = () => {
       navigate("/auth");
       return;
     }
+    // Check if Google user
+    const provider = user.app_metadata?.provider;
+    setIsGoogleUser(provider === "google");
+
     const fetchProfile = async () => {
       const { data } = await supabase
         .from("profiles")
