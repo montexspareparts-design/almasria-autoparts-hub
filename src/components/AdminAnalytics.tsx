@@ -24,6 +24,7 @@ const AdminAnalytics = () => {
   const [topProducts, setTopProducts] = useState<{ name: string; quantity: number; revenue: number }[]>([]);
   const [dealerDist, setDealerDist] = useState<{ name: string; value: number }[]>([]);
   const [statusDist, setStatusDist] = useState<{ name: string; value: number }[]>([]);
+  const [topSearches, setTopSearches] = useState<{ query: string; count: number }[]>([]);
   const [kpis, setKpis] = useState({ totalRevenue: 0, totalOrders: 0, totalDealers: 0, totalProducts: 0, avgOrderValue: 0 });
 
   useEffect(() => {
