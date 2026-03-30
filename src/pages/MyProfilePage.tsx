@@ -227,7 +227,70 @@ const MyProfilePage = () => {
                 </CardContent>
               </Card>
 
-              {/* Save Button */}
+              {/* Change Password - only for non-Google users */}
+              {!isGoogleUser && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Lock className="w-4 h-4 text-primary" />
+                      تغيير كلمة المرور
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold">كلمة المرور الجديدة</Label>
+                      <div className="relative">
+                        <Input
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          placeholder="أدخل كلمة المرور الجديدة"
+                          type={showNewPw ? "text" : "password"}
+                          dir="ltr"
+                          className="h-11 pl-9"
+                          minLength={6}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewPw(!showNewPw)}
+                          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground"
+                        >
+                          {showNewPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold">تأكيد كلمة المرور</Label>
+                      <Input
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="أعد إدخال كلمة المرور"
+                        type="password"
+                        dir="ltr"
+                        className="h-11"
+                        minLength={6}
+                      />
+                      {confirmPassword && newPassword !== confirmPassword && (
+                        <p className="text-xs text-destructive">كلمة المرور غير متطابقة</p>
+                      )}
+                    </div>
+
+                    <Button
+                      onClick={handleChangePassword}
+                      disabled={changingPassword || !newPassword || !confirmPassword || newPassword !== confirmPassword}
+                      variant="outline"
+                      className="w-full h-11 gap-2 font-bold"
+                    >
+                      {changingPassword ? (
+                        <><Loader2 className="w-4 h-4 animate-spin" /> جاري التغيير...</>
+                      ) : (
+                        <><Lock className="w-4 h-4" /> تغيير كلمة المرور</>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+
               <Button
                 onClick={handleSave}
                 disabled={saving}
