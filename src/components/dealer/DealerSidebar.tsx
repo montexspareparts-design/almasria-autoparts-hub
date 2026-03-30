@@ -46,6 +46,7 @@ const SwitchToAdminButton = () => {
   );
 };
 
+const tierColors: Record<string, string> = {
   wholesale_tier1: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
   wholesale_tier2: "bg-blue-500/15 text-blue-700 dark:text-blue-400",
   corporate: "bg-violet-500/15 text-violet-700 dark:text-violet-400",
