@@ -111,6 +111,7 @@ const App = () => (
                     <Route path="/install" element={<InstallApp />} />
                     <Route path="/payment-callback" element={<PaymentCallback />} />
                     <Route path="/policies" element={<PoliciesPage />} />
+                    <Route path="/my-profile" element={<MyProfilePage />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                </Suspense>
