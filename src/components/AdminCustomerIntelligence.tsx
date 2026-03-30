@@ -457,13 +457,21 @@ const AdminCustomerIntelligence = () => {
     const searchRows: any[] = [];
     filteredProfiles.forEach(p => {
       const searches = userSearchMap[p.user_id] || [];
+      const purchased = purchasedProductsByUser[p.user_id];
       searches.forEach(s => {
+        const queryLower = s.query.toLowerCase();
+        const hasPurchased = purchased ? Array.from(purchased).some(pid => {
+          const prod = productsMap?.[pid];
+          return prod && (prod.name_ar?.toLowerCase().includes(queryLower) || prod.name_en?.toLowerCase().includes(queryLower) || prod.sku?.toLowerCase().includes(queryLower));
+        }) : false;
         searchRows.push({
           "الاسم": p.full_name || "—",
           "الهاتف": p.phone || "—",
+          "البريد": p.email || "—",
           "كلمة البحث": s.query,
           "عدد المرات": s.count,
           "آخر بحث": format(new Date(s.lastAt), "yyyy-MM-dd HH:mm"),
+          "تم الشراء": hasPurchased ? "✓" : "✗",
         });
       });
     });
@@ -484,27 +492,41 @@ const AdminCustomerIntelligence = () => {
       });
     });
 
+    // Sheet 4: Heatmap summary
+    const hourCounts: Record<number, number> = {};
+    searchLogs?.forEach((log: any) => {
+      const h = new Date(log.created_at).getHours();
+      hourCounts[h] = (hourCounts[h] || 0) + 1;
+    });
+    const heatmapRows = Array.from({ length: 24 }, (_, i) => ({
+      "الساعة": `${i}:00`,
+      "عدد عمليات البحث": hourCounts[i] || 0,
+    }));
+
     const wb = XLSX.utils.book_new();
     const ws1 = XLSX.utils.json_to_sheet(profileRows);
     const ws2 = XLSX.utils.json_to_sheet(searchRows.length > 0 ? searchRows : [{ "ملاحظة": "لا توجد بيانات بحث" }]);
     const ws3 = XLSX.utils.json_to_sheet(viewRows.length > 0 ? viewRows : [{ "ملاحظة": "لا توجد بيانات تسعير" }]);
+    const ws4 = XLSX.utils.json_to_sheet(heatmapRows);
 
-    [ws1, ws2, ws3].forEach(ws => { ws["!dir"] = "rtl" as any; });
+    [ws1, ws2, ws3, ws4].forEach(ws => { ws["!dir"] = "rtl" as any; });
     ws1["!cols"] = [
       { wch: 20 }, { wch: 15 }, { wch: 25 }, { wch: 15 }, { wch: 12 },
       { wch: 14 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 18 },
       { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 15 }, { wch: 18 }, { wch: 14 },
     ];
-    ws2["!cols"] = [{ wch: 20 }, { wch: 15 }, { wch: 30 }, { wch: 12 }, { wch: 18 }];
+    ws2["!cols"] = [{ wch: 20 }, { wch: 15 }, { wch: 20 }, { wch: 30 }, { wch: 12 }, { wch: 18 }, { wch: 10 }];
     ws3["!cols"] = [{ wch: 20 }, { wch: 15 }, { wch: 35 }, { wch: 18 }, { wch: 15 }];
+    ws4["!cols"] = [{ wch: 10 }, { wch: 20 }];
 
     XLSX.utils.book_append_sheet(wb, ws1, "ملف العملاء");
-    XLSX.utils.book_append_sheet(wb, ws2, "سجل البحث");
+    XLSX.utils.book_append_sheet(wb, ws2, "سجل البحث والشراء");
     XLSX.utils.book_append_sheet(wb, ws3, "الأصناف المسعّرة");
+    XLSX.utils.book_append_sheet(wb, ws4, "أوقات البحث");
 
     XLSX.writeFile(wb, `تقرير_ذكاء_العملاء_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
     toast({ title: "تم تصدير التقرير بنجاح ✅" });
-  }, [filteredProfiles, ordersMap, userSearchMap, userViewsMap, productsMap, quotesMap, shoppingListsMap, userReturnRate]);
+  }, [filteredProfiles, ordersMap, userSearchMap, userViewsMap, productsMap, quotesMap, shoppingListsMap, userReturnRate, purchasedProductsByUser, searchLogs]);
 
   // Lifecycle distribution
   const lifecycleCounts = useMemo(() => {
