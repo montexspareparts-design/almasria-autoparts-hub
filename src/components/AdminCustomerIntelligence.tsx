@@ -355,84 +355,66 @@ const AdminCustomerIntelligence = () => {
 
   return (
     <div className="space-y-6" dir="rtl">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <BarChart3 className="w-6 h-6 text-primary" />
-            تقرير ذكاء العملاء
-          </h2>
-          <p className="text-muted-foreground text-sm mt-1">
-            تحليل شامل لسلوك العملاء: عمليات البحث، الأسعار المشاهدة، الطلبات
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <Button
-            onClick={() => setBulkWhatsAppOpen(true)}
-            variant="outline"
-            className="gap-2 font-bold border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
-          >
-            <MessageCircle className="w-4 h-4" />
-            واتساب جماعي ({filteredWithPhone.length})
-          </Button>
-          <Button onClick={handleExportExcel} className="gap-2 font-bold">
-            <Download className="w-4 h-4" />
-            تصدير Excel
-          </Button>
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-l from-primary/10 via-primary/5 to-transparent border border-primary/10 p-6">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,hsl(var(--primary)/0.08),transparent_60%)]" />
+        <div className="relative flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h2 className="text-2xl font-black text-foreground flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center shadow-sm">
+                <BarChart3 className="w-5 h-5 text-primary" />
+              </div>
+              تقرير ذكاء العملاء
+            </h2>
+            <p className="text-muted-foreground text-sm mt-2 mr-[52px]">
+              تحليل شامل لسلوك العملاء: عمليات البحث، الأسعار المشاهدة، الطلبات
+            </p>
+          </div>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <Button
+              onClick={() => setBulkWhatsAppOpen(true)}
+              variant="outline"
+              className="gap-2 font-bold border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/30 rounded-xl h-10"
+            >
+              <MessageCircle className="w-4 h-4" />
+              واتساب جماعي ({filteredWithPhone.length})
+            </Button>
+            <Button onClick={handleExportExcel} className="gap-2 font-bold rounded-xl h-10 shadow-sm">
+              <Download className="w-4 h-4" />
+              تصدير Excel
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Users className="w-8 h-8 text-primary mx-auto mb-2" />
-            <p className="text-2xl font-black text-foreground">{totalCustomers}</p>
-            <p className="text-xs text-muted-foreground">إجمالي العملاء</p>
-          </CardContent>
-        </Card>
-        <Card className="border-blue-200 dark:border-blue-800/50">
-          <CardContent className="p-4 text-center">
-            <Briefcase className="w-8 h-8 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
-            <p className="text-2xl font-black text-foreground">{dealerCount}</p>
-            <p className="text-xs text-muted-foreground">تاجر</p>
-          </CardContent>
-        </Card>
-        <Card className="border-orange-200 dark:border-orange-800/50">
-          <CardContent className="p-4 text-center">
-            <ShoppingCart className="w-8 h-8 text-orange-600 dark:text-orange-400 mx-auto mb-2" />
-            <p className="text-2xl font-black text-foreground">{retailCount}</p>
-            <p className="text-xs text-muted-foreground">عميل قطاعي</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Car className="w-8 h-8 text-primary mx-auto mb-2" />
-            <p className="text-2xl font-black text-foreground">{withCar}</p>
-            <p className="text-xs text-muted-foreground">حددوا سيارتهم</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <Search className="w-8 h-8 text-primary mx-auto mb-2" />
-            <p className="text-2xl font-black text-foreground">{totalSearches}</p>
-            <p className="text-xs text-muted-foreground">عمليات بحث</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <TrendingUp className="w-8 h-8 text-primary mx-auto mb-2" />
-            <p className="text-2xl font-black text-foreground">{activeSearchers}</p>
-            <p className="text-xs text-muted-foreground">عملاء يبحثون</p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        {[
+          { icon: Users, value: totalCustomers, label: "إجمالي العملاء", gradient: "from-primary/10 to-primary/5", iconBg: "bg-primary/15", iconColor: "text-primary" },
+          { icon: Briefcase, value: dealerCount, label: "تاجر", gradient: "from-blue-500/10 to-blue-500/5", iconBg: "bg-blue-500/15", iconColor: "text-blue-600 dark:text-blue-400" },
+          { icon: ShoppingCart, value: retailCount, label: "عميل قطاعي", gradient: "from-orange-500/10 to-orange-500/5", iconBg: "bg-orange-500/15", iconColor: "text-orange-600 dark:text-orange-400" },
+          { icon: Car, value: withCar, label: "حددوا سيارتهم", gradient: "from-violet-500/10 to-violet-500/5", iconBg: "bg-violet-500/15", iconColor: "text-violet-600 dark:text-violet-400" },
+          { icon: Search, value: totalSearches, label: "عمليات بحث", gradient: "from-cyan-500/10 to-cyan-500/5", iconBg: "bg-cyan-500/15", iconColor: "text-cyan-600 dark:text-cyan-400" },
+          { icon: TrendingUp, value: activeSearchers, label: "عملاء يبحثون", gradient: "from-emerald-500/10 to-emerald-500/5", iconBg: "bg-emerald-500/15", iconColor: "text-emerald-600 dark:text-emerald-400" },
+        ].map((kpi, idx) => (
+          <div key={idx} className={cn("rounded-2xl border border-border/40 bg-gradient-to-br p-4 text-center transition-all hover:shadow-md hover:border-border/70 hover:-translate-y-0.5 duration-200", kpi.gradient)}>
+            <div className={cn("w-10 h-10 rounded-xl mx-auto mb-2.5 flex items-center justify-center shadow-sm", kpi.iconBg)}>
+              <kpi.icon className={cn("w-5 h-5", kpi.iconColor)} />
+            </div>
+            <p className="text-2xl font-black text-foreground tracking-tight">{kpi.value}</p>
+            <p className="text-[11px] text-muted-foreground font-medium mt-0.5">{kpi.label}</p>
+          </div>
+        ))}
       </div>
 
       {/* Dealers vs Retail Pie Chart */}
       {totalCustomers > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-bold flex items-center gap-2">
-              <Users className="w-5 h-5 text-primary" />
+        <Card className="rounded-2xl border-border/40 shadow-sm overflow-hidden">
+          <CardHeader className="pb-2 bg-gradient-to-l from-blue-500/5 to-transparent">
+            <CardTitle className="text-base font-black flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-blue-500/15 flex items-center justify-center">
+                <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              </div>
               نسبة التجار مقابل العملاء القطاعيين
             </CardTitle>
           </CardHeader>
@@ -485,10 +467,12 @@ const AdminCustomerIntelligence = () => {
         const chartData = Object.entries(typeCounts).map(([name, value]) => ({ name, value }));
 
         return (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-primary" />
+          <Card className="rounded-2xl border-border/40 shadow-sm overflow-hidden">
+            <CardHeader className="pb-2 bg-gradient-to-l from-violet-500/5 to-transparent">
+              <CardTitle className="text-base font-black flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-violet-500/15 flex items-center justify-center">
+                  <BarChart3 className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                </div>
                 توزيع أنواع العملاء
               </CardTitle>
             </CardHeader>
@@ -512,7 +496,7 @@ const AdminCustomerIntelligence = () => {
                     </Pie>
                     <Tooltip
                       formatter={(value: number) => [`${value} عميل`, "العدد"]}
-                      contentStyle={{ direction: "rtl", borderRadius: 8, fontSize: 13 }}
+                      contentStyle={{ direction: "rtl", borderRadius: 12, fontSize: 13, boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
                     />
                     <Legend
                       formatter={(value) => <span style={{ fontSize: 12 }}>{value}</span>}
@@ -673,22 +657,24 @@ const AdminCustomerIntelligence = () => {
         };
 
         return (
-          <Card className="border-primary/20">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between flex-wrap gap-2">
+          <Card className="rounded-2xl border-primary/15 shadow-sm overflow-hidden">
+            <CardHeader className="pb-3 bg-gradient-to-l from-primary/8 via-primary/3 to-transparent">
+              <div className="flex items-center justify-between flex-wrap gap-3">
                 <div>
-                  <CardTitle className="text-lg font-black flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-primary" />
+                  <CardTitle className="text-lg font-black flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center shadow-sm">
+                      <TrendingUp className="w-4.5 h-4.5 text-primary" />
+                    </div>
                     تقرير أكثر العملاء بحثاً مقابل الطلبات
                   </CardTitle>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-1.5 mr-[46px]">
                     مقارنة بين نشاط البحث وتحويله لطلبات فعلية — أداة لاكتشاف الفرص الضائعة
                   </p>
                 </div>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="gap-1.5 text-xs font-bold"
+                  className="gap-1.5 text-xs font-bold rounded-xl"
                   onClick={() => {
                     const rows = searcherData.map((d, i) => ({
                       "#": i + 1,
@@ -721,7 +707,7 @@ const AdminCustomerIntelligence = () => {
                 </Button>
               </div>
               {/* Time filter */}
-              <div className="flex items-center gap-1.5 flex-wrap px-1">
+              <div className="flex items-center gap-1.5 flex-wrap px-1 mt-1">
                 {[
                   { value: "7d", label: "آخر 7 أيام" },
                   { value: "30d", label: "آخر 30 يوم" },
@@ -732,7 +718,7 @@ const AdminCustomerIntelligence = () => {
                     key={opt.value}
                     size="sm"
                     variant={reportTimeFilter === opt.value ? "default" : "outline"}
-                    className="text-[11px] h-7 px-3 font-bold"
+                    className={cn("text-[11px] h-7 px-3 font-bold rounded-lg", reportTimeFilter === opt.value && "shadow-sm")}
                     onClick={() => setReportTimeFilter(opt.value)}
                   >
                     {opt.label}
@@ -740,22 +726,24 @@ const AdminCustomerIntelligence = () => {
                 ))}
               </div>
             </CardHeader>
-            <CardContent className="space-y-5">
+            <CardContent className="space-y-6">
               {/* Summary KPIs */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
-                  { icon: Search, value: totalSearchers, label: "عميل يبحث", change: searchersChange, bg: "bg-muted/40", iconColor: "text-primary", valueColor: "text-foreground" },
-                  { icon: ShoppingCart, value: convertedCount, label: "تحوّلوا لطلبات", change: convertedChange, bg: "bg-emerald-50 dark:bg-emerald-950/20", iconColor: "text-emerald-600 dark:text-emerald-400", valueColor: "text-emerald-700 dark:text-emerald-400" },
-                  { icon: TrendingUp, value: `${overallConversion}%`, label: "معدل التحويل", change: conversionChange, bg: "bg-amber-50 dark:bg-amber-950/20", iconColor: "text-amber-600 dark:text-amber-400", valueColor: "text-amber-700 dark:text-amber-400" },
-                  { icon: BarChart3, value: avgSearchesPerUser, label: "متوسط بحث/عميل", change: avgChange, bg: "bg-blue-50 dark:bg-blue-950/20", iconColor: "text-blue-600 dark:text-blue-400", valueColor: "text-blue-700 dark:text-blue-400" },
+                  { icon: Search, value: totalSearchers, label: "عميل يبحث", change: searchersChange, bg: "bg-gradient-to-br from-primary/8 to-primary/3", iconBg: "bg-primary/15", iconColor: "text-primary", valueColor: "text-foreground" },
+                  { icon: ShoppingCart, value: convertedCount, label: "تحوّلوا لطلبات", change: convertedChange, bg: "bg-gradient-to-br from-emerald-500/8 to-emerald-500/3", iconBg: "bg-emerald-500/15", iconColor: "text-emerald-600 dark:text-emerald-400", valueColor: "text-emerald-700 dark:text-emerald-400" },
+                  { icon: TrendingUp, value: `${overallConversion}%`, label: "معدل التحويل", change: conversionChange, bg: "bg-gradient-to-br from-amber-500/8 to-amber-500/3", iconBg: "bg-amber-500/15", iconColor: "text-amber-600 dark:text-amber-400", valueColor: "text-amber-700 dark:text-amber-400" },
+                  { icon: BarChart3, value: avgSearchesPerUser, label: "متوسط بحث/عميل", change: avgChange, bg: "bg-gradient-to-br from-blue-500/8 to-blue-500/3", iconBg: "bg-blue-500/15", iconColor: "text-blue-600 dark:text-blue-400", valueColor: "text-blue-700 dark:text-blue-400" },
                 ].map((kpi, idx) => (
-                  <div key={idx} className={cn("rounded-xl p-3 text-center", kpi.bg)}>
-                    <kpi.icon className={cn("w-5 h-5 mx-auto mb-1.5", kpi.iconColor)} />
-                    <p className={cn("text-2xl font-black", kpi.valueColor)}>{kpi.value}</p>
-                    <p className="text-[11px] text-muted-foreground font-medium">{kpi.label}</p>
+                  <div key={idx} className={cn("rounded-2xl p-4 text-center border border-border/30", kpi.bg)}>
+                    <div className={cn("w-9 h-9 rounded-xl mx-auto mb-2 flex items-center justify-center", kpi.iconBg)}>
+                      <kpi.icon className={cn("w-4.5 h-4.5", kpi.iconColor)} />
+                    </div>
+                    <p className={cn("text-2xl font-black tracking-tight", kpi.valueColor)}>{kpi.value}</p>
+                    <p className="text-[11px] text-muted-foreground font-medium mt-0.5">{kpi.label}</p>
                     {kpi.change !== null && (
                       <div className={cn(
-                        "flex items-center justify-center gap-0.5 mt-1.5 text-[10px] font-bold rounded-full px-2 py-0.5 mx-auto w-fit",
+                        "flex items-center justify-center gap-0.5 mt-2 text-[10px] font-bold rounded-full px-2.5 py-0.5 mx-auto w-fit",
                         kpi.change > 0 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
                           : kpi.change < 0 ? "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400"
                           : "bg-muted text-muted-foreground"
@@ -770,15 +758,17 @@ const AdminCustomerIntelligence = () => {
 
               {/* Bar Chart: Search vs Orders */}
               {chartData.length > 0 && (
-                <div>
-                  <h4 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-                    <BarChart3 className="w-4 h-4 text-primary" />
+                <div className="bg-muted/20 rounded-2xl p-5 border border-border/30">
+                  <h4 className="text-sm font-black text-foreground mb-4 flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <BarChart3 className="w-3.5 h-3.5 text-primary" />
+                    </div>
                     أعلى 10 عملاء بحثاً — مقارنة بالطلبات
                   </h4>
                   <div className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
                         <XAxis type="number" tick={{ fontSize: 11 }} />
                         <YAxis
                           dataKey="name"
@@ -787,12 +777,12 @@ const AdminCustomerIntelligence = () => {
                           tick={{ fontSize: 11, textAnchor: "end" }}
                         />
                         <Tooltip
-                          contentStyle={{ direction: "rtl", borderRadius: 10, fontSize: 12 }}
+                          contentStyle={{ direction: "rtl", borderRadius: 12, fontSize: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
                           formatter={(value: number, name: string) => [value, name]}
                         />
                         <Legend wrapperStyle={{ fontSize: 12 }} />
-                        <Bar dataKey="بحث" fill="hsl(217, 91%, 60%)" radius={[0, 4, 4, 0]} barSize={14} />
-                        <Bar dataKey="طلبات" fill="hsl(142, 71%, 45%)" radius={[0, 4, 4, 0]} barSize={14} />
+                        <Bar dataKey="بحث" fill="hsl(217, 91%, 60%)" radius={[0, 6, 6, 0]} barSize={16} />
+                        <Bar dataKey="طلبات" fill="hsl(142, 71%, 45%)" radius={[0, 6, 6, 0]} barSize={16} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -801,24 +791,26 @@ const AdminCustomerIntelligence = () => {
 
               {/* Detailed Table */}
               <div>
-                <h4 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-                  <Search className="w-4 h-4 text-primary" />
+                <h4 className="text-sm font-black text-foreground mb-3 flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Search className="w-3.5 h-3.5 text-primary" />
+                  </div>
                   تفاصيل أكثر 15 عميل بحثاً
                 </h4>
-                <div className="overflow-x-auto rounded-xl border border-border">
+                <div className="overflow-x-auto rounded-2xl border border-border/40 shadow-sm">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="bg-muted/50 text-muted-foreground text-[11px]">
-                        <th className="px-3 py-2.5 text-right font-bold">#</th>
-                        <th className="px-3 py-2.5 text-right font-bold">العميل</th>
-                        <th className="px-3 py-2.5 text-center font-bold">عمليات البحث</th>
-                        <th className="px-3 py-2.5 text-center font-bold">استفسارات فريدة</th>
-                        <th className="px-3 py-2.5 text-center font-bold">أصناف مسعّرة</th>
-                        <th className="px-3 py-2.5 text-center font-bold">الطلبات</th>
-                        <th className="px-3 py-2.5 text-center font-bold">إجمالي الإنفاق</th>
-                        <th className="px-3 py-2.5 text-center font-bold">التحويل</th>
-                        <th className="px-3 py-2.5 text-right font-bold">أهم ما بحث عنه</th>
-                        <th className="px-3 py-2.5 text-center font-bold">تواصل</th>
+                      <tr className="bg-gradient-to-l from-muted/80 to-muted/40 text-muted-foreground text-[11px]">
+                        <th className="px-3 py-3 text-right font-black">#</th>
+                        <th className="px-3 py-3 text-right font-black">العميل</th>
+                        <th className="px-3 py-3 text-center font-black">عمليات البحث</th>
+                        <th className="px-3 py-3 text-center font-black">استفسارات فريدة</th>
+                        <th className="px-3 py-3 text-center font-black">أصناف مسعّرة</th>
+                        <th className="px-3 py-3 text-center font-black">الطلبات</th>
+                        <th className="px-3 py-3 text-center font-black">إجمالي الإنفاق</th>
+                        <th className="px-3 py-3 text-center font-black">التحويل</th>
+                        <th className="px-3 py-3 text-right font-black">أهم ما بحث عنه</th>
+                        <th className="px-3 py-3 text-center font-black">تواصل</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1024,18 +1016,22 @@ const AdminCustomerIntelligence = () => {
 
               {/* Opportunity Alert: Top non-converted searchers */}
               {topNonConverted.length > 0 && (
-                <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 rounded-xl p-4">
-                  <h4 className="text-sm font-black text-amber-800 dark:text-amber-300 flex items-center gap-2 mb-3">
-                    <Eye className="w-4 h-4" />
+                <div className="bg-gradient-to-l from-amber-500/10 via-amber-500/5 to-transparent border border-amber-200/60 dark:border-amber-800/30 rounded-2xl p-5">
+                  <h4 className="text-sm font-black text-amber-800 dark:text-amber-300 flex items-center gap-2.5 mb-4">
+                    <div className="w-8 h-8 rounded-xl bg-amber-500/15 flex items-center justify-center">
+                      <Eye className="w-4 h-4 text-amber-600" />
+                    </div>
                     ⚡ فرص تحويل — عملاء يبحثون ولم يشتروا بعد
                   </h4>
-                  <div className="space-y-2">
+                  <div className="space-y-2.5">
                     {topNonConverted.map((d, i) => (
-                      <div key={d.userId} className="flex items-center gap-3 bg-white/60 dark:bg-black/20 rounded-lg p-2.5">
-                        <span className="text-xs font-bold text-amber-700 dark:text-amber-400 w-5">{i + 1}</span>
+                      <div key={d.userId} className="flex items-center gap-3 bg-white/70 dark:bg-black/20 rounded-xl p-3 border border-amber-100/50 dark:border-amber-900/20 transition-all hover:shadow-sm">
+                        <div className="w-7 h-7 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
+                          <span className="text-[11px] font-black text-amber-700 dark:text-amber-400">{i + 1}</span>
+                        </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-bold text-foreground">{d.name}</p>
-                          <p className="text-[10px] text-muted-foreground">
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
                             {d.searches} عملية بحث • {d.priceViews} صنف مسعّر • أكثر ما بحث عنه: {d.topQueries[0] || "—"}
                           </p>
                         </div>
@@ -1046,7 +1042,7 @@ const AdminCustomerIntelligence = () => {
                             )}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="shrink-0 flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2.5 py-1.5 rounded-lg hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors"
+                            className="shrink-0 flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-3 py-2 rounded-xl hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors shadow-sm"
                           >
                             <MessageCircle className="w-3.5 h-3.5" />
                             تواصل
@@ -1063,8 +1059,12 @@ const AdminCustomerIntelligence = () => {
       })()}
 
       {/* Filters bar */}
-      <Card>
-        <CardContent className="p-4 space-y-3">
+      <Card className="rounded-2xl border-border/40 shadow-sm">
+        <CardContent className="p-5 space-y-3">
+          <h4 className="text-sm font-black text-foreground flex items-center gap-2 mb-1">
+            <Filter className="w-4 h-4 text-primary" />
+            فلترة العملاء
+          </h4>
           {/* Row 1: Text search */}
           <div className="relative">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -1072,7 +1072,7 @@ const AdminCustomerIntelligence = () => {
               placeholder="ابحث بالاسم، الهاتف، الإيميل، أو نوع السيارة..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pr-10"
+              className="pr-10 rounded-xl h-10"
             />
           </div>
 
@@ -1178,11 +1178,11 @@ const AdminCustomerIntelligence = () => {
       {loadingProfiles ? (
         <div className="space-y-3">
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-24 bg-muted animate-pulse rounded-xl" />
+            <div key={i} className="h-24 bg-muted animate-pulse rounded-2xl" />
           ))}
         </div>
       ) : (
-        <div className="space-y-2.5">
+        <div className="space-y-3">
           {filteredProfiles?.map((profile) => {
             const isExpanded = expandedUser === profile.user_id;
             const customerType = getCustomerType(profile.user_id);
@@ -1202,15 +1202,18 @@ const AdminCustomerIntelligence = () => {
               <div
                 key={profile.user_id}
                 className={cn(
-                  "rounded-2xl border bg-card overflow-hidden transition-all duration-200",
-                  isExpanded ? "border-primary/30 shadow-md" : "border-border hover:border-border/80"
+                  "rounded-2xl border bg-card overflow-hidden transition-all duration-300",
+                  isExpanded ? "border-primary/30 shadow-lg ring-1 ring-primary/10" : "border-border/40 hover:border-border/70 hover:shadow-sm"
                 )}
               >
                 {/* Header row */}
-                <div className="flex items-center gap-3 p-4">
+                <div className="flex items-center gap-3.5 p-4">
                   {/* Avatar */}
-                  <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <Users className="w-5 h-5 text-primary" />
+                  <div className={cn(
+                    "w-11 h-11 rounded-xl flex items-center justify-center shrink-0 shadow-sm transition-colors",
+                    dealerUserIds?.has(profile.user_id) ? "bg-blue-500/15" : "bg-primary/10"
+                  )}>
+                    <Users className={cn("w-5 h-5", dealerUserIds?.has(profile.user_id) ? "text-blue-600 dark:text-blue-400" : "text-primary")} />
                   </div>
 
                   {/* Main info — clickable to expand */}
@@ -1301,7 +1304,7 @@ const AdminCustomerIntelligence = () => {
 
                 {/* Expanded detail */}
                 {isExpanded && (
-                  <div className="px-4 pb-5 space-y-4 border-t border-border/50 pt-4">
+                  <div className="px-5 pb-5 space-y-4 border-t border-border/30 pt-4 bg-gradient-to-b from-muted/20 to-transparent">
                     {/* Contact cards */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                       <div className="bg-muted/30 rounded-xl p-3 flex items-center gap-2.5">
@@ -1415,9 +1418,10 @@ const AdminCustomerIntelligence = () => {
           })}
 
           {filteredProfiles?.length === 0 && (
-            <div className="text-center py-12 text-muted-foreground">
-              <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p>لا توجد نتائج مطابقة</p>
+            <div className="text-center py-16 text-muted-foreground rounded-2xl border border-dashed border-border/50 bg-muted/10">
+              <Users className="w-14 h-14 mx-auto mb-4 opacity-20" />
+              <p className="text-lg font-bold">لا توجد نتائج مطابقة</p>
+              <p className="text-sm mt-1">جرّب تغيير الفلاتر أو كلمة البحث</p>
             </div>
           )}
         </div>
