@@ -45,24 +45,51 @@ const clientTypeLabels: Record<string, string> = {
   distributor: "موزع",
 };
 
-const sidebarSections = [
-  { id: "analytics", label: "التحليلات", icon: BarChart3 },
-  { id: "customer-intel", label: "ذكاء العملاء", icon: Eye },
-  { id: "customers", label: "ملف العملاء", icon: Users },
-  { id: "dealers", label: "طلبات التجار", icon: Users },
-  { id: "products", label: "إدارة المنتجات", icon: Package },
-  { id: "orders", label: "إدارة الطلبات", icon: ShoppingBag },
-  { id: "coupons", label: "الكوبونات", icon: Tag },
-  { id: "qty-discounts", label: "خصومات الكمية", icon: Layers },
-  { id: "price-lists", label: "عروض الأسعار", icon: FileText },
-  { id: "catalogs", label: "الكتالوجات", icon: FileText },
-  { id: "hero-video", label: "فيديو الصفحة الرئيسية", icon: Video },
-  { id: "youtube", label: "إعدادات YouTube", icon: ListVideo },
-  { id: "product-images", label: "صور المنتجات", icon: Image },
-  { id: "image-verifier", label: "مراجعة الصور (AI)", icon: Brain },
-  { id: "push-notifications", label: "إشعارات Push", icon: Bell },
-  { id: "erp", label: "ربط ERP", icon: Zap },
+interface SidebarGroup {
+  label: string;
+  items: { id: string; label: string; icon: typeof BarChart3 }[];
+}
+
+const sidebarGroups: SidebarGroup[] = [
+  {
+    label: "الرئيسية",
+    items: [
+      { id: "analytics", label: "التحليلات", icon: BarChart3 },
+      { id: "customer-intel", label: "ذكاء العملاء", icon: Eye },
+      { id: "customers", label: "ملف العملاء", icon: Users },
+      { id: "dealers", label: "طلبات التجار", icon: Users },
+    ],
+  },
+  {
+    label: "المنتجات والطلبات",
+    items: [
+      { id: "products", label: "إدارة المنتجات", icon: Package },
+      { id: "orders", label: "إدارة الطلبات", icon: ShoppingBag },
+      { id: "coupons", label: "الكوبونات", icon: Tag },
+      { id: "qty-discounts", label: "خصومات الكمية", icon: Layers },
+      { id: "price-lists", label: "عروض الأسعار", icon: FileText },
+      { id: "catalogs", label: "الكتالوجات", icon: FileText },
+    ],
+  },
+  {
+    label: "المحتوى والوسائط",
+    items: [
+      { id: "hero-video", label: "فيديو الرئيسية", icon: Video },
+      { id: "youtube", label: "إعدادات YouTube", icon: ListVideo },
+      { id: "product-images", label: "صور المنتجات", icon: Image },
+      { id: "image-verifier", label: "مراجعة الصور (AI)", icon: Brain },
+    ],
+  },
+  {
+    label: "التنبيهات والربط",
+    items: [
+      { id: "push-notifications", label: "إشعارات Push", icon: Bell },
+      { id: "erp", label: "ربط ERP", icon: Zap },
+    ],
+  },
 ];
+
+const sidebarSections = sidebarGroups.flatMap(g => g.items);
 
 const SectionLoader = () => (
   <div className="flex items-center justify-center py-16">
