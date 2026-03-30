@@ -664,6 +664,25 @@ const AdminCustomerIntelligence = () => {
                   تصدير Excel
                 </Button>
               </div>
+              {/* Time filter */}
+              <div className="flex items-center gap-1.5 flex-wrap px-1">
+                {[
+                  { value: "7d", label: "آخر 7 أيام" },
+                  { value: "30d", label: "آخر 30 يوم" },
+                  { value: "90d", label: "آخر 90 يوم" },
+                  { value: "all", label: "الكل" },
+                ].map(opt => (
+                  <Button
+                    key={opt.value}
+                    size="sm"
+                    variant={reportTimeFilter === opt.value ? "default" : "outline"}
+                    className="text-[11px] h-7 px-3 font-bold"
+                    onClick={() => setReportTimeFilter(opt.value)}
+                  >
+                    {opt.label}
+                  </Button>
+                ))}
+              </div>
             </CardHeader>
             <CardContent className="space-y-5">
               {/* Summary KPIs */}
