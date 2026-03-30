@@ -104,6 +104,22 @@ const DealerHomePage = () => {
   const [searching, setSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
+  const [dealerName, setDealerName] = useState<string | null>(null);
+
+  // Dynamic greeting based on time of day
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return isRTL ? "صباح الخير" : "Good Morning";
+    if (hour < 17) return isRTL ? "مساء الخير" : "Good Afternoon";
+    return isRTL ? "مساء الخير" : "Good Evening";
+  };
+
+  // Fetch dealer business name
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("dealer_applications").select("business_name").eq("user_id", user.id).maybeSingle()
+      .then(({ data }) => { if (data) setDealerName(data.business_name); });
+  }, [user]);
 
   const DAILY_PRICE_LIMIT = 20;
 
