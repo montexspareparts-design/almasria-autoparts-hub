@@ -44,6 +44,7 @@ const AdminCustomerIntelligence = () => {
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [customerTypeFilter, setCustomerTypeFilter] = useState<string>("all");
+  const [accountTypeFilter, setAccountTypeFilter] = useState<string>("all");
   const [bulkWhatsAppOpen, setBulkWhatsAppOpen] = useState(false);
   const [bulkMessage, setBulkMessage] = useState("مرحباً {{name}}، نود إبلاغكم بأحدث العروض والخصومات الحصرية من المصرية جروب. تواصلوا معنا لمزيد من التفاصيل!");
   const [sendingIndex, setSendingIndex] = useState(-1);
