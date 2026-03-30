@@ -19,7 +19,7 @@ import * as XLSX from "xlsx";
 import { toast } from "@/hooks/use-toast";
 import {
   Users, Search, Eye, ShoppingCart, Phone, Mail, Car,
-  TrendingUp, Clock, ChevronDown, ChevronUp, BarChart3,
+  TrendingUp, TrendingDown, Clock, ChevronDown, ChevronUp, BarChart3,
   Package, Calendar as CalendarIcon, Filter, X, Download,
   MessageCircle, Send, Copy, ExternalLink, Briefcase,
 } from "lucide-react";
