@@ -512,7 +512,9 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
   };
 
 
-  const remainingToday = Math.max(0, DAILY_LIMIT - dailyViews - selectedProducts.reduce((s, p) => s + p.quantity, 0));
+  // Only count NEW (not already priced) selected products against the limit
+  const newSelectedCount = selectedProducts.filter(p => !todayPricedIds.has(p.product.id)).reduce((s, p) => s + p.quantity, 0);
+  const remainingToday = Math.max(0, DAILY_LIMIT - dailyViews - newSelectedCount);
 
   // Get signed URL for PDF viewing
   const openPriceList = async (list: PriceList) => {
