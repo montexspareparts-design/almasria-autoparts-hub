@@ -905,6 +905,13 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
                               <p className="text-[10px] text-muted-foreground font-mono">{product.sku}</p>
                             </div>
 
+                            {/* Previously priced badge */}
+                            {todayPricedIds.has(product.id) && (
+                              <Badge className="text-[9px] h-5 shrink-0 bg-emerald-500/15 text-emerald-600 border-emerald-500/30 dark:text-emerald-400">
+                                ✓ مسعّر
+                              </Badge>
+                            )}
+
                             {/* Stock indicator */}
                             <Badge
                               variant={product.stock_quantity > 0 ? "secondary" : "destructive"}
