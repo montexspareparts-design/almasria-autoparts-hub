@@ -43,16 +43,21 @@ const AdminAnalytics = () => {
     setLoading(false);
   };
 
-  const fetchTopSearches = async () => {
-    const { data } = await supabase
-      .from("customer_search_logs")
-      .select("search_query");
+  const fetchTopSearches = async (period: "7" | "30" | "all" = searchPeriod) => {
+    let query = supabase.from("customer_search_logs").select("search_query, created_at");
 
+    if (period !== "all") {
+      const daysAgo = new Date();
+      daysAgo.setDate(daysAgo.getDate() - Number(period));
+      query = query.gte("created_at", daysAgo.toISOString());
+    }
+
+    const { data } = await query;
     if (!data) return;
 
     const queryMap = new Map<string, number>();
     data.forEach((log) => {
-      const q = log.search_query?.trim().toLowerCase();
+      const q = (log as any).search_query?.trim().toLowerCase();
       if (!q) return;
       queryMap.set(q, (queryMap.get(q) || 0) + 1);
     });
@@ -63,6 +68,11 @@ const AdminAnalytics = () => {
       .map(([query, count]) => ({ query, count }));
 
     setTopSearches(sorted);
+  };
+
+  const handleSearchPeriodChange = (period: "7" | "30" | "all") => {
+    setSearchPeriod(period);
+    fetchTopSearches(period);
   };
 
   const fetchMonthlySales = async () => {
