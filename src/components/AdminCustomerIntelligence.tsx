@@ -540,90 +540,93 @@ const AdminCustomerIntelligence = () => {
   }, [profiles, ordersMap, userSearchMap]);
 
   return (
-    <div className="space-y-6" dir="rtl">
+    <div className="space-y-5" dir="rtl">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-l from-primary/10 via-primary/5 to-transparent border border-primary/10 p-6">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-l from-primary/10 via-primary/5 to-transparent border border-primary/10 p-5">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,hsl(var(--primary)/0.08),transparent_60%)]" />
-        <div className="relative flex items-center justify-between flex-wrap gap-4">
+        <div className="relative flex items-center justify-between flex-wrap gap-3">
           <div>
-            <h2 className="text-2xl font-black text-foreground flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center shadow-sm">
-                <BarChart3 className="w-5 h-5 text-primary" />
+            <h2 className="text-xl font-black text-foreground flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center shadow-sm">
+                <BarChart3 className="w-4.5 h-4.5 text-primary" />
               </div>
               تقرير ذكاء العملاء
             </h2>
-            <p className="text-muted-foreground text-sm mt-2 mr-[52px]">
-              تحليل شامل لسلوك العملاء: عمليات البحث، الأسعار المشاهدة، الطلبات، دورة الحياة
+            <p className="text-muted-foreground text-xs mt-1.5 mr-[44px]">
+              تحليل شامل لسلوك العملاء: البحث، التسعير، الطلبات، دورة الحياة
             </p>
           </div>
-          <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
             <Button
               onClick={() => setBulkWhatsAppOpen(true)}
               variant="outline"
-              className="gap-2 font-bold border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/30 rounded-xl h-10"
+              size="sm"
+              className="gap-1.5 font-bold border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/30 rounded-xl"
             >
-              <MessageCircle className="w-4 h-4" />
+              <MessageCircle className="w-3.5 h-3.5" />
               واتساب جماعي ({filteredWithPhone.length})
             </Button>
-            <Button onClick={handleExportExcel} className="gap-2 font-bold rounded-xl h-10 shadow-sm">
-              <Download className="w-4 h-4" />
+            <Button onClick={handleExportExcel} size="sm" className="gap-1.5 font-bold rounded-xl shadow-sm">
+              <Download className="w-3.5 h-3.5" />
               تصدير Excel
             </Button>
           </div>
         </div>
       </div>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      {/* KPIs Row */}
+      <div className="grid grid-cols-3 md:grid-cols-6 gap-2.5">
         {[
-          { icon: Users, value: totalCustomers, label: "إجمالي العملاء", gradient: "from-primary/10 to-primary/5", iconBg: "bg-primary/15", iconColor: "text-primary" },
-          { icon: Briefcase, value: dealerCount, label: "تاجر", gradient: "from-blue-500/10 to-blue-500/5", iconBg: "bg-blue-500/15", iconColor: "text-blue-600 dark:text-blue-400" },
-          { icon: ShoppingCart, value: retailCount, label: "عميل قطاعي", gradient: "from-orange-500/10 to-orange-500/5", iconBg: "bg-orange-500/15", iconColor: "text-orange-600 dark:text-orange-400" },
-          { icon: Car, value: withCar, label: "حددوا سيارتهم", gradient: "from-violet-500/10 to-violet-500/5", iconBg: "bg-violet-500/15", iconColor: "text-violet-600 dark:text-violet-400" },
-          { icon: Search, value: totalSearches, label: "عمليات بحث", gradient: "from-cyan-500/10 to-cyan-500/5", iconBg: "bg-cyan-500/15", iconColor: "text-cyan-600 dark:text-cyan-400" },
-          { icon: TrendingUp, value: activeSearchers, label: "عملاء يبحثون", gradient: "from-emerald-500/10 to-emerald-500/5", iconBg: "bg-emerald-500/15", iconColor: "text-emerald-600 dark:text-emerald-400" },
+          { icon: Users, value: totalCustomers, label: "إجمالي العملاء", iconBg: "bg-primary/15", iconColor: "text-primary" },
+          { icon: Briefcase, value: dealerCount, label: "تاجر", iconBg: "bg-blue-500/15", iconColor: "text-blue-600 dark:text-blue-400" },
+          { icon: ShoppingCart, value: retailCount, label: "قطاعي", iconBg: "bg-orange-500/15", iconColor: "text-orange-600 dark:text-orange-400" },
+          { icon: Car, value: withCar, label: "حددوا سيارتهم", iconBg: "bg-violet-500/15", iconColor: "text-violet-600 dark:text-violet-400" },
+          { icon: Search, value: totalSearches, label: "عمليات بحث", iconBg: "bg-cyan-500/15", iconColor: "text-cyan-600 dark:text-cyan-400" },
+          { icon: TrendingUp, value: activeSearchers, label: "عملاء يبحثون", iconBg: "bg-emerald-500/15", iconColor: "text-emerald-600 dark:text-emerald-400" },
         ].map((kpi, idx) => (
-          <div key={idx} className={cn("rounded-2xl border border-border/40 bg-gradient-to-br p-4 text-center transition-all hover:shadow-md hover:border-border/70 hover:-translate-y-0.5 duration-200", kpi.gradient)}>
-            <div className={cn("w-10 h-10 rounded-xl mx-auto mb-2.5 flex items-center justify-center shadow-sm", kpi.iconBg)}>
-              <kpi.icon className={cn("w-5 h-5", kpi.iconColor)} />
+          <div key={idx} className="rounded-xl border border-border/40 bg-card p-3 text-center transition-all hover:shadow-sm hover:border-border/60 duration-200">
+            <div className={cn("w-8 h-8 rounded-lg mx-auto mb-1.5 flex items-center justify-center", kpi.iconBg)}>
+              <kpi.icon className={cn("w-4 h-4", kpi.iconColor)} />
             </div>
-            <p className="text-2xl font-black text-foreground tracking-tight">{kpi.value}</p>
-            <p className="text-[11px] text-muted-foreground font-medium mt-0.5">{kpi.label}</p>
+            <p className="text-xl font-black text-foreground">{kpi.value}</p>
+            <p className="text-[10px] text-muted-foreground font-medium">{kpi.label}</p>
           </div>
         ))}
       </div>
 
-      {/* Lifecycle Classification Cards */}
-      <Card className="rounded-2xl border-border/40 shadow-sm overflow-hidden">
-        <CardHeader className="pb-2 bg-gradient-to-l from-amber-500/5 to-transparent">
-          <CardTitle className="text-base font-black flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-amber-500/15 flex items-center justify-center">
-              <Star className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-            </div>
-            تصنيف دورة حياة العملاء
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            {Object.entries(LIFECYCLE_LABELS).map(([key, { label, color, icon: Icon }]) => (
-              <div key={key} className={cn("rounded-xl p-4 text-center border border-border/30 transition-all hover:shadow-sm", color.replace("text-", "").includes("bg-") ? "" : "bg-muted/20")}>
-                <div className={cn("w-9 h-9 rounded-xl mx-auto mb-2 flex items-center justify-center", color.split(" ")[0])}>
-                  <Icon className={cn("w-4 h-4", color.split(" ")[1])} />
-                </div>
-                <p className="text-2xl font-black text-foreground">{lifecycleCounts[key] || 0}</p>
-                <p className="text-[11px] font-bold mt-0.5">{label}</p>
-                <p className="text-[9px] text-muted-foreground mt-0.5">
-                  {key === "vip" && "5+ طلبات و 10K+ ج.م"}
-                  {key === "active" && "طلب خلال 30 يوم"}
-                  {key === "idle" && "آخر نشاط 30-90 يوم"}
-                  {key === "lost" && "لا نشاط منذ 90+ يوم"}
-                  {key === "new" && "بدون أي نشاط"}
-                </p>
+      {/* Lifecycle + Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Lifecycle Classification */}
+        <Card className="rounded-xl border-border/40 shadow-sm overflow-hidden">
+          <CardHeader className="py-3 px-4 bg-gradient-to-l from-amber-500/5 to-transparent">
+            <CardTitle className="text-sm font-black flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-amber-500/15 flex items-center justify-center">
+                <Star className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              دورة حياة العملاء
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 pt-2">
+            <div className="grid grid-cols-5 gap-2">
+              {Object.entries(LIFECYCLE_LABELS).map(([key, { label, color, icon: Icon }]) => (
+                <div key={key} className={cn("rounded-lg p-2.5 text-center border border-border/30 transition-all hover:shadow-sm", color.replace("text-", "").includes("bg-") ? "" : "bg-muted/20")}>
+                  <div className={cn("w-7 h-7 rounded-lg mx-auto mb-1.5 flex items-center justify-center", color.split(" ")[0])}>
+                    <Icon className={cn("w-3.5 h-3.5", color.split(" ")[1])} />
+                  </div>
+                  <p className="text-lg font-black text-foreground leading-tight">{lifecycleCounts[key] || 0}</p>
+                  <p className="text-[10px] font-bold mt-0.5">{label}</p>
+                  <p className="text-[8px] text-muted-foreground mt-0.5 leading-tight">
+                    {key === "vip" && "5+ طلبات"}
+                    {key === "active" && "آخر 30 يوم"}
+                    {key === "idle" && "30-90 يوم"}
+                    {key === "lost" && "90+ يوم"}
+                    {key === "new" && "بدون نشاط"}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
       {/* Search Heatmap */}
       {searchHeatmapData.length > 0 && (
