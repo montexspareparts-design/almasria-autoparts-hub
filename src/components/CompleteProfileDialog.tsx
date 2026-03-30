@@ -46,13 +46,13 @@ const CompleteProfileDialog = ({ open, onOpenChange, userId }: CompleteProfileDi
     }
     setLoading(true);
 
-    const { error } = await supabase
+    const { error: dbError } = await supabase
       .from("profiles")
-      .update({ phone: trimmed })
+      .update({ phone })
       .eq("user_id", userId);
 
-    if (error) {
-      toast({ title: "حدث خطأ", description: error.message, variant: "destructive" });
+    if (dbError) {
+      toast({ title: "حدث خطأ", description: dbError.message, variant: "destructive" });
     } else {
       toast({ title: "تم حفظ رقم الهاتف بنجاح ✅" });
       onOpenChange(false);
