@@ -1019,9 +1019,11 @@ const AdminCustomerIntelligence = () => {
                                   );
                                 })()}
                               </div>
+                              </motion.div>
                             </td>
-                          </tr>
+                          </motion.tr>
                         )}
+                        </AnimatePresence>
                         </Fragment>
                       ))}
                     </tbody>
