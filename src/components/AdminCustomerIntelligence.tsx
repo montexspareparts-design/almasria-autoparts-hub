@@ -1178,11 +1178,11 @@ const AdminCustomerIntelligence = () => {
       {loadingProfiles ? (
         <div className="space-y-3">
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-24 bg-muted animate-pulse rounded-xl" />
+            <div key={i} className="h-24 bg-muted animate-pulse rounded-2xl" />
           ))}
         </div>
       ) : (
-        <div className="space-y-2.5">
+        <div className="space-y-3">
           {filteredProfiles?.map((profile) => {
             const isExpanded = expandedUser === profile.user_id;
             const customerType = getCustomerType(profile.user_id);
@@ -1202,15 +1202,18 @@ const AdminCustomerIntelligence = () => {
               <div
                 key={profile.user_id}
                 className={cn(
-                  "rounded-2xl border bg-card overflow-hidden transition-all duration-200",
-                  isExpanded ? "border-primary/30 shadow-md" : "border-border hover:border-border/80"
+                  "rounded-2xl border bg-card overflow-hidden transition-all duration-300",
+                  isExpanded ? "border-primary/30 shadow-lg ring-1 ring-primary/10" : "border-border/40 hover:border-border/70 hover:shadow-sm"
                 )}
               >
                 {/* Header row */}
-                <div className="flex items-center gap-3 p-4">
+                <div className="flex items-center gap-3.5 p-4">
                   {/* Avatar */}
-                  <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <Users className="w-5 h-5 text-primary" />
+                  <div className={cn(
+                    "w-11 h-11 rounded-xl flex items-center justify-center shrink-0 shadow-sm transition-colors",
+                    dealerUserIds?.has(profile.user_id) ? "bg-blue-500/15" : "bg-primary/10"
+                  )}>
+                    <Users className={cn("w-5 h-5", dealerUserIds?.has(profile.user_id) ? "text-blue-600 dark:text-blue-400" : "text-primary")} />
                   </div>
 
                   {/* Main info — clickable to expand */}
