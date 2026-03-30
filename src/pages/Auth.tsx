@@ -126,7 +126,7 @@ const Auth = () => {
         setRememberedFlag(rememberMe);
         markSessionActive();
         toast({ title: "تم تسجيل الدخول بنجاح ✅" });
-        navigate("/");
+        // Redirect is handled by the useEffect auth listener
       }
     } else {
       const { error } = await supabase.auth.signUp({
