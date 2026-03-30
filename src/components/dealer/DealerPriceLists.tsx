@@ -334,12 +334,18 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
   };
 
   const addProduct = async (product: Product) => {
-    const totalSelected = selectedProducts.reduce((sum, p) => sum + p.quantity, 0);
-    if (dailyViews + totalSelected >= DAILY_LIMIT) {
-      toast({ title: "تم الوصول للحد اليومي", description: `الحد الأقصى ${DAILY_LIMIT} صنف يومياً`, variant: "destructive" });
-      return;
-    }
+    const alreadyPriced = todayPricedIds.has(product.id);
     const existing = selectedProducts.find(p => p.product.id === product.id);
+    
+    // Only count new (not already priced) products against the limit
+    if (!alreadyPriced && !existing) {
+      const newSelectedCount = selectedProducts.filter(p => !todayPricedIds.has(p.product.id)).reduce((sum, p) => sum + p.quantity, 0);
+      if (dailyViews + newSelectedCount >= DAILY_LIMIT) {
+        toast({ title: "تم الوصول للحد اليومي", description: `الحد الأقصى ${DAILY_LIMIT} صنف يومياً`, variant: "destructive" });
+        return;
+      }
+    }
+
     if (existing) {
       setSelectedProducts(prev => prev.map(p =>
         p.product.id === product.id ? { ...p, quantity: p.quantity + 1 } : p
