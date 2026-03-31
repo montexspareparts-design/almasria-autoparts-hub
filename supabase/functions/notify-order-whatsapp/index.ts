@@ -13,6 +13,47 @@ const statusMessages: Record<string, string> = {
   cancelled: "❌ تم إلغاء طلبك. تواصل معنا لمزيد من التفاصيل",
 };
 
+// ─── Meta WhatsApp Business API Helper ──────────────────────────────────────
+async function sendWhatsApp(phone: string, message: string) {
+  const accessToken = Deno.env.get("META_WHATSAPP_ACCESS_TOKEN");
+  const phoneNumberId = Deno.env.get("META_WHATSAPP_PHONE_NUMBER_ID");
+
+  if (!accessToken || !phoneNumberId) {
+    console.error("Meta WhatsApp credentials not configured");
+    return { ok: false, data: { error: "Meta WhatsApp not configured" } };
+  }
+
+  // Clean phone number — ensure it has country code without +
+  let formatted = phone.replace(/[\s\-\(\)]/g, "");
+  if (formatted.startsWith("+")) formatted = formatted.slice(1);
+  if (formatted.startsWith("0")) formatted = "2" + formatted; // Egypt country code
+
+  const url = `https://graph.facebook.com/v21.0/${phoneNumberId}/messages`;
+
+  const resp = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      messaging_product: "whatsapp",
+      to: formatted,
+      type: "text",
+      text: { body: message },
+    }),
+  });
+
+  const data = await resp.json();
+  if (resp.ok) {
+    console.log(`WhatsApp sent to ${formatted}, ID: ${data.messages?.[0]?.id}`);
+  } else {
+    console.error(`WhatsApp failed to ${formatted}:`, JSON.stringify(data));
+  }
+  return { ok: resp.ok, data };
+}
+// ────────────────────────────────────────────────────────────────────────────
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -64,59 +105,21 @@ Deno.serve(async (req) => {
       );
     }
 
-    const twilioAccountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
-    const twilioAuthToken = Deno.env.get("TWILIO_AUTH_TOKEN");
-    const twilioPhone = Deno.env.get("TWILIO_PHONE_NUMBER");
-
-    if (!twilioAccountSid || !twilioAuthToken || !twilioPhone) {
-      console.error("Twilio credentials not configured");
-      return new Response(
-        JSON.stringify({ error: "Twilio not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     const statusMsg = statusMessages[newStatus] || `تم تحديث حالة طلبك إلى: ${newStatus}`;
     const greeting = customerName ? `مرحباً ${customerName}،\n` : "";
     const body = `${greeting}${statusMsg}\n\nرقم الطلب: ${orderNumber}\n\n— المصرية جروب لقطع غيار السيارات`;
 
-    // Clean phone number - ensure it starts with +
-    let phone = customerPhone.replace(/\s/g, "");
-    if (!phone.startsWith("+")) {
-      phone = phone.startsWith("0") ? `+2${phone}` : `+${phone}`;
-    }
+    const result = await sendWhatsApp(customerPhone, body);
 
-    // Send via Twilio WhatsApp API
-    const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`;
-    const twilioAuthHeader = btoa(`${twilioAccountSid}:${twilioAuthToken}`);
-
-    const response = await fetch(twilioUrl, {
-      method: "POST",
-      headers: {
-        "Authorization": `Basic ${twilioAuthHeader}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({
-        To: `whatsapp:${phone}`,
-        From: `whatsapp:${twilioPhone}`,
-        Body: body,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.error("Twilio WhatsApp error:", JSON.stringify(data));
+    if (!result.ok) {
       return new Response(
-        JSON.stringify({ success: false, error: data.message || "Failed to send WhatsApp" }),
+        JSON.stringify({ success: false, error: result.data?.error?.message || "Failed to send WhatsApp" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log("WhatsApp sent successfully, SID:", data.sid);
-
     return new Response(
-      JSON.stringify({ success: true, sid: data.sid }),
+      JSON.stringify({ success: true, messageId: result.data?.messages?.[0]?.id }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {

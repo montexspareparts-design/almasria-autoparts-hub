@@ -6,44 +6,45 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-// ─── WhatsApp helper ─────────────────────────────────────────────────────────
-async function sendWhatsApp(
-  phone: string,
-  message: string,
-  twilioAccountSid: string,
-  twilioAuthToken: string,
-  twilioPhone: string,
-) {
-  let formatted = phone.replace(/\s/g, "");
-  if (!formatted.startsWith("+")) {
-    formatted = formatted.startsWith("0") ? `+2${formatted}` : `+${formatted}`;
+// ─── Meta WhatsApp Business API Helper ──────────────────────────────────────
+async function sendWhatsApp(phone: string, message: string) {
+  const accessToken = Deno.env.get("META_WHATSAPP_ACCESS_TOKEN");
+  const phoneNumberId = Deno.env.get("META_WHATSAPP_PHONE_NUMBER_ID");
+
+  if (!accessToken || !phoneNumberId) {
+    console.warn("Meta WhatsApp credentials not configured — skipping");
+    return { ok: false, data: null };
   }
 
-  const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`;
-  const twilioAuthHeader = btoa(`${twilioAccountSid}:${twilioAuthToken}`);
+  let formatted = phone.replace(/[\s\-\(\)]/g, "");
+  if (formatted.startsWith("+")) formatted = formatted.slice(1);
+  if (formatted.startsWith("0")) formatted = "2" + formatted;
 
-  const resp = await fetch(twilioUrl, {
+  const url = `https://graph.facebook.com/v21.0/${phoneNumberId}/messages`;
+
+  const resp = await fetch(url, {
     method: "POST",
     headers: {
-      Authorization: `Basic ${twilioAuthHeader}`,
-      "Content-Type": "application/x-www-form-urlencoded",
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
     },
-    body: new URLSearchParams({
-      To: `whatsapp:${formatted}`,
-      From: `whatsapp:${twilioPhone}`,
-      Body: message,
+    body: JSON.stringify({
+      messaging_product: "whatsapp",
+      to: formatted,
+      type: "text",
+      text: { body: message },
     }),
   });
 
   const data = await resp.json();
   if (resp.ok) {
-    console.log(`WhatsApp sent to ${formatted}, SID: ${data.sid}`);
+    console.log(`WhatsApp sent to ${formatted}, ID: ${data.messages?.[0]?.id}`);
   } else {
     console.error(`WhatsApp failed to ${formatted}:`, JSON.stringify(data));
   }
   return { ok: resp.ok, data };
 }
-// ─────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -164,12 +165,6 @@ Deno.serve(async (req) => {
     });
     console.log(`Transaction logged for order ${orderNumber}, status: ${txStatus}`);
 
-    // ─── Twilio config ───────────────────────────────────────────────────
-    const twilioAccountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
-    const twilioAuthToken = Deno.env.get("TWILIO_AUTH_TOKEN");
-    const twilioPhone = Deno.env.get("TWILIO_PHONE_NUMBER");
-    const hasTwilio = !!(twilioAccountSid && twilioAuthToken && twilioPhone);
-
     // Shared amounts
     const amountEgp = transaction.amount_cents
       ? (transaction.amount_cents / 100).toLocaleString("ar-EG")
@@ -221,71 +216,69 @@ Deno.serve(async (req) => {
         }
       }
 
-      // ─── WhatsApp: Customer success ────────────────────────────────────
-      if (hasTwilio) {
-        try {
-          const { data: profile } = await supabase
+      // ─── WhatsApp: Customer success (Meta API) ────────────────────────
+      try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name, phone")
+          .eq("user_id", order.user_id)
+          .maybeSingle();
+
+        const customerName = profile?.full_name || "عميلنا الكريم";
+
+        if (profile?.phone) {
+          const customerMsg = [
+            `✅ تم استلام الدفع بنجاح!`,
+            ``,
+            `مرحباً ${customerName}،`,
+            `تم تأكيد دفعك بنجاح وطلبك الآن قيد التجهيز.`,
+            ``,
+            `📋 تفاصيل العملية:`,
+            `• رقم الطلب: ${orderNumber}`,
+            `• المبلغ المدفوع: ${amountEgp} ج.م`,
+            `• طريقة الدفع: ${payMethod}${cardInfo}`,
+            `• التاريخ: ${new Date().toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}`,
+            ``,
+            `سيتم إخطارك عند تجهيز طلبك وشحنه.`,
+            `شكراً لتعاملك معنا! 🙏`,
+            `— المصرية جروب لقطع غيار السيارات`,
+          ].join("\n");
+
+          await sendWhatsApp(profile.phone, customerMsg);
+        }
+
+        // ─── WhatsApp: Admin success notification ──────────────────────
+        const { data: admins } = await supabase
+          .from("user_roles")
+          .select("user_id")
+          .eq("role", "admin");
+
+        if (admins && admins.length > 0) {
+          const adminUserIds = admins.map((a: { user_id: string }) => a.user_id);
+          const { data: adminProfiles } = await supabase
             .from("profiles")
-            .select("full_name, phone")
-            .eq("user_id", order.user_id)
-            .maybeSingle();
+            .select("phone, full_name, user_id")
+            .in("user_id", adminUserIds);
 
-          const customerName = profile?.full_name || "عميلنا الكريم";
+          const adminMsg = [
+            `🆕 طلب مدفوع جديد!`,
+            ``,
+            `📋 تفاصيل:`,
+            `• رقم الطلب: ${orderNumber}`,
+            `• العميل: ${customerName}`,
+            `• المبلغ: ${amountEgp} ج.م`,
+            `• طريقة الدفع: ${payMethod}${cardInfo}`,
+            `• الوقت: ${new Date().toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}`,
+          ].join("\n");
 
-          if (profile?.phone) {
-            const customerMsg = [
-              `✅ تم استلام الدفع بنجاح!`,
-              ``,
-              `مرحباً ${customerName}،`,
-              `تم تأكيد دفعك بنجاح وطلبك الآن قيد التجهيز.`,
-              ``,
-              `📋 تفاصيل العملية:`,
-              `• رقم الطلب: ${orderNumber}`,
-              `• المبلغ المدفوع: ${amountEgp} ج.م`,
-              `• طريقة الدفع: ${payMethod}${cardInfo}`,
-              `• التاريخ: ${new Date().toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}`,
-              ``,
-              `سيتم إخطارك عند تجهيز طلبك وشحنه.`,
-              `شكراً لتعاملك معنا! 🙏`,
-              `— المصرية جروب لقطع غيار السيارات`,
-            ].join("\n");
-
-            await sendWhatsApp(profile.phone, customerMsg, twilioAccountSid!, twilioAuthToken!, twilioPhone!);
-          }
-
-          // ─── WhatsApp: Admin success notification ──────────────────────
-          const { data: admins } = await supabase
-            .from("user_roles")
-            .select("user_id")
-            .eq("role", "admin");
-
-          if (admins && admins.length > 0) {
-            const adminUserIds = admins.map((a: { user_id: string }) => a.user_id);
-            const { data: adminProfiles } = await supabase
-              .from("profiles")
-              .select("phone, full_name, user_id")
-              .in("user_id", adminUserIds);
-
-            const adminMsg = [
-              `🆕 طلب مدفوع جديد!`,
-              ``,
-              `📋 تفاصيل:`,
-              `• رقم الطلب: ${orderNumber}`,
-              `• العميل: ${customerName}`,
-              `• المبلغ: ${amountEgp} ج.م`,
-              `• طريقة الدفع: ${payMethod}${cardInfo}`,
-              `• الوقت: ${new Date().toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}`,
-            ].join("\n");
-
-            for (const adminProfile of (adminProfiles || [])) {
-              if (adminProfile.phone) {
-                await sendWhatsApp(adminProfile.phone, adminMsg, twilioAccountSid!, twilioAuthToken!, twilioPhone!);
-              }
+          for (const adminProfile of (adminProfiles || [])) {
+            if (adminProfile.phone) {
+              await sendWhatsApp(adminProfile.phone, adminMsg);
             }
           }
-        } catch (waError) {
-          console.error("WhatsApp notification error (success, non-blocking):", waError);
         }
+      } catch (waError) {
+        console.error("WhatsApp notification error (success, non-blocking):", waError);
       }
 
     // =====================================================================
@@ -353,8 +346,8 @@ Deno.serve(async (req) => {
         }
       }
 
-      // ─── WhatsApp: Customer failure + retry link ───────────────────────
-      if (hasTwilio && order) {
+      // ─── WhatsApp: Customer failure + retry link (Meta API) ───────────
+      if (order) {
         try {
           const { data: profile } = await supabase
             .from("profiles")
@@ -380,7 +373,7 @@ Deno.serve(async (req) => {
               `— المصرية جروب لقطع غيار السيارات`,
             ].join("\n");
 
-            await sendWhatsApp(profile.phone, failMsg, twilioAccountSid!, twilioAuthToken!, twilioPhone!);
+            await sendWhatsApp(profile.phone, failMsg);
           }
         } catch (waError) {
           console.error("WhatsApp notification error (failure, non-blocking):", waError);
