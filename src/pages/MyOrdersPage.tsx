@@ -74,6 +74,8 @@ const MyOrdersPage = () => {
   const [orderItems, setOrderItems] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(true);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(highlightOrder);
+  const [retryingPayment, setRetryingPayment] = useState<string | null>(null);
+  const [paymobData, setPaymobData] = useState<{ orderId: string; clientSecret: string; publicKey: string } | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
