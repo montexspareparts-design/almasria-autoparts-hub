@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 
 export type DealerTab =
-  | "overview" | "quotes" | "orders" | "invoices" | "price_lists"
+  | "quotes" | "orders" | "invoices" | "price_lists"
   | "favorites" | "quick_order" | "notifications" | "offers"
   | "catalogs" | "settings" | "statement" | "payment" | "stock_alerts"
   | "shopping_lists" | "compare";
@@ -74,9 +74,8 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
       label: "القائمة الرئيسية",
       defaultOpen: true,
       items: [
-        { id: "overview", label: "لوحة التحكم", icon: LayoutDashboard, iconColor: "text-emerald-600", iconBg: "bg-emerald-500/10" },
-        { id: "quotes", label: "اطلب قطع غيار", icon: Search, iconColor: "text-slate-600 dark:text-slate-400", iconBg: "bg-slate-500/10" },
-        { id: "price_lists", label: "كشوفات الأسعار", icon: FileText, iconColor: "text-amber-600", iconBg: "bg-amber-500/10" },
+        { id: "quotes", label: "ابحث عن القطعة", icon: Search, iconColor: "text-slate-600 dark:text-slate-400", iconBg: "bg-slate-500/10" },
+        { id: "price_lists", label: "كشوفات المصرية", icon: FileText, iconColor: "text-amber-600", iconBg: "bg-amber-500/10" },
       ],
     },
     {
@@ -93,10 +92,8 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
       label: "الأدوات",
       defaultOpen: true,
       items: [
-        { id: "favorites", label: "المفضلة", icon: Heart, iconColor: "text-rose-500", iconBg: "bg-rose-500/10" },
         { id: "shopping_lists", label: "قوائم الشراء", icon: ListPlus, iconColor: "text-blue-600", iconBg: "bg-blue-500/10" },
         { id: "compare", label: "مقارنة المنتجات", icon: Scale, iconColor: "text-teal-600", iconBg: "bg-teal-500/10" },
-        { id: "quick_order", label: "طلب سريع", icon: Zap, iconColor: "text-amber-500", iconBg: "bg-amber-500/10" },
         { id: "stock_alerts", label: "تنبيهات المخزون", icon: Package, iconColor: "text-orange-600", iconBg: "bg-orange-500/10" },
       ],
     },

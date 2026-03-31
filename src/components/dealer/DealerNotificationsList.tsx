@@ -307,7 +307,7 @@ const DealerNotificationsList = ({ userId, onNavigate }: { userId: string; onNav
                     } else if (msg.includes("فاتورة")) {
                       onNavigate("invoices");
                     } else {
-                      onNavigate("overview");
+                      onNavigate("quotes");
                     }
                   }
                 }}

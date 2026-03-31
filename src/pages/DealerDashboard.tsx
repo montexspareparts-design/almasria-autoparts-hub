@@ -7,7 +7,7 @@ import { LogOut, Loader2 } from "lucide-react";
 import dealerLogo from "@/assets/logo.webp";
 import DealerSidebar, { type DealerTab } from "@/components/dealer/DealerSidebar";
 import DealerMobileNav from "@/components/dealer/DealerMobileNav";
-import DealerOverview from "@/components/dealer/DealerOverview";
+
 import DealerOrdersList from "@/components/dealer/DealerOrdersList";
 import DealerNotificationsList from "@/components/dealer/DealerNotificationsList";
 import DealerOffers from "@/components/dealer/DealerOffers";
@@ -28,7 +28,7 @@ const DealerDashboard = () => {
   const { user, dealerAccount, isDealer, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState<DealerTab>((searchParams.get("tab") as DealerTab) || "overview");
+  const [activeTab, setActiveTab] = useState<DealerTab>((searchParams.get("tab") as DealerTab) || "quotes");
   const [priceListQuoteData, setPriceListQuoteData] = useState<PriceListQuoteData | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
@@ -83,40 +83,25 @@ const DealerDashboard = () => {
   const handleSignOut = () => { signOut(); navigate("/"); };
 
   const pageTitles: Record<DealerTab, string> = {
-    overview: "لوحة التحكم",
     quotes: "بحث القطع وعروض الأسعار",
-    quick_order: "طلب سريع — رفع Excel",
+    price_lists: "كشوفات المصرية",
     orders: "الطلبية",
     payment: "الدفع الإلكتروني",
     invoices: "الفواتير",
     statement: "كشف الحساب",
-    price_lists: "كشوفات المصرية",
-    favorites: "المفضلة",
+    shopping_lists: "قوائم الشراء",
+    compare: "مقارنة المنتجات",
     stock_alerts: "تنبيهات المخزون",
+    favorites: "المفضلة",
+    quick_order: "طلب سريع — رفع Excel",
     notifications: "الإشعارات",
     offers: "العروض الخاصة",
     catalogs: "الكتالوجات",
     settings: "إعدادات الحساب",
-    shopping_lists: "قوائم الشراء",
-    compare: "مقارنة المنتجات",
   };
 
   const renderContent = () => {
     switch (activeTab) {
-      case "overview":
-        return (
-          <DealerOverview
-            dealerAccount={dealerAccount as any}
-            dealerName={dealerName}
-            email={user?.email || ""}
-            ordersCount={orders.length}
-            totalSpent={totalSpent}
-            invoicesCount={invoicesCount}
-            pendingOrders={pendingOrders}
-            userId={user!.id}
-            onNavigate={(tab) => setActiveTab(tab as DealerTab)}
-          />
-        );
       case "quotes": return <DealerQuoteBuilder onNavigateToPriceLists={(data) => { setPriceListQuoteData(data || null); setActiveTab("price_lists"); }} />;
       case "quick_order": return <DealerQuickOrder />;
       case "orders": return <DealerOrdersList userId={user!.id} onNavigateToPayment={() => setActiveTab("payment")} />;
