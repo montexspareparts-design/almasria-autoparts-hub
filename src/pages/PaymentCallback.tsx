@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams, useNavigate, Link } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { CheckCircle2, XCircle, Loader2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
@@ -11,16 +11,24 @@ const PaymentCallback = () => {
   const [status, setStatus] = useState<"loading" | "success" | "failed">("loading");
 
   const success = searchParams.get("success");
-  const orderId = searchParams.get("order") || searchParams.get("merchant_order_id");
+  const pending = searchParams.get("pending");
+  const txnResponseCode = searchParams.get("txn_response_code");
+  const orderId =
+    searchParams.get("merchant_order_id") ||
+    searchParams.get("order") ||
+    searchParams.get("order_number");
   const txnId = searchParams.get("id");
 
   useEffect(() => {
-    if (success === "true") {
+    const isSuccess = success === "true" || txnResponseCode === "APPROVED";
+    const isPending = pending === "true";
+
+    if (isSuccess && !isPending) {
       setStatus("success");
     } else {
       setStatus("failed");
     }
-  }, [success]);
+  }, [pending, success, txnResponseCode]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -47,6 +55,9 @@ const PaymentCallback = () => {
                 <p className="text-sm text-muted-foreground">
                   رقم الطلب: <span className="font-bold text-foreground">{orderId}</span>
                 </p>
+              )}
+              {txnId && (
+                <p className="text-xs text-muted-foreground">رقم العملية: {txnId}</p>
               )}
               <Button onClick={() => navigate("/my-orders")} className="gap-2">
                 <ArrowRight className="w-4 h-4" />

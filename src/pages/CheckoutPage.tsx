@@ -17,6 +17,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { pushOrderToERP } from "@/lib/erpSync";
+import {
+  buildPaymobReturnUrl,
+  isPaymobPublicKeyConfigured,
+  PAYMOB_PUBLIC_KEY,
+} from "@/lib/paymob";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -36,11 +41,10 @@ const shippingOptions = [
 
 const paymentMethods = [
   { id: "cod", label: "الدفع عند الاستلام", icon: Banknote },
-  { id: "card", label: "Visa / Mastercard / Meeza", icon: CreditCard },
+  { id: "paymob", label: "بطاقات بنكية عبر Paymob", icon: CreditCard },
   { id: "instapay", label: "InstaPay", icon: Smartphone },
   { id: "bank_transfer", label: "تحويل بنكي", icon: Building2 },
   { id: "wallet", label: "محفظة إلكترونية", icon: Wallet },
-  { id: "paymob", label: "Paymob", icon: CreditCard },
   { id: "fawry", label: "Fawry", icon: Store },
 ];
 
@@ -53,9 +57,7 @@ const CheckoutPage = () => {
   const [payment, setPayment] = useState("cod");
   const [submitting, setSubmitting] = useState(false);
   const [paymobClientSecret, setPaymobClientSecret] = useState<string | null>(null);
-
-  // TODO: Replace with your Paymob public key (starts with pk_ or pkt_)
-  const PAYMOB_PUBLIC_KEY = "egy_pk_test_c3q3A7Q3VgjBR4KgpyivFFE758En5mgu";
+  const [paymobOrderId, setPaymobOrderId] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -84,6 +86,15 @@ const CheckoutPage = () => {
 
     if (!form.name || !form.phone || !form.governorate || !form.address) {
       toast({ title: "يرجى ملء جميع الحقول المطلوبة", variant: "destructive" });
+      return;
+    }
+
+    if (payment === "paymob" && !isPaymobPublicKeyConfigured) {
+      toast({
+        title: "مفتاح Paymob العام غير مضبوط",
+        description: "حدّث المفتاح العام في src/lib/paymob.ts أولاً.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -148,13 +159,12 @@ const CheckoutPage = () => {
 
       clearCart();
 
-      // If payment is card or paymob, create intention and show Flash Checkout
-      if (payment === "card" || payment === "paymob") {
+      if (payment === "paymob") {
         try {
           const { data: paymobData, error: paymobErr } = await supabase.functions.invoke("create-paymob-intention", {
             body: {
               order_id: order.id,
-              return_url: `${window.location.origin}/payment-callback`,
+              return_url: buildPaymobReturnUrl(),
             },
           });
 
@@ -167,6 +177,7 @@ const CheckoutPage = () => {
 
           // Show inline Paymob Flash Checkout
           setPaymobClientSecret(paymobData.client_secret);
+          setPaymobOrderId(order.id);
           setSubmitting(false);
           return;
         } catch (e: any) {
@@ -203,7 +214,16 @@ const CheckoutPage = () => {
             <div className="bg-card border border-border rounded-lg p-6">
               <PaymobCheckout clientSecret={paymobClientSecret} publicKey={PAYMOB_PUBLIC_KEY} />
             </div>
-            <p className="text-xs text-muted-foreground mt-4">سيتم تحويلك تلقائياً بعد إتمام الدفع</p>
+            <p className="text-xs text-muted-foreground mt-4">أكمل الدفع داخل النافذة، ثم ستعود تلقائياً لصفحة التأكيد.</p>
+            {paymobOrderId && (
+              <Button
+                variant="outline"
+                className="mt-4"
+                onClick={() => navigate(`/my-orders?highlight=${paymobOrderId}`)}
+              >
+                العودة إلى طلباتي
+              </Button>
+            )}
           </div>
         </div>
         <Footer />
