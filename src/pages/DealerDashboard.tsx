@@ -38,6 +38,7 @@ const DealerDashboard = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loadingData, setLoadingData] = useState(true);
+  const { itemCount: cartItemCount } = useDealerCart();
 
   useEffect(() => {
     if (!authLoading && !user) { navigate("/auth"); return; }

@@ -85,7 +85,14 @@ const DealerMobileNav = ({ activeTab, onTabChange, unreadCount, cartItemCount = 
                 activeTab === tab.id ? "text-primary" : "text-muted-foreground"
               )}
             >
-              <tab.Icon className={cn("w-5 h-5", activeTab === tab.id && "text-primary")} />
+              <div className="relative">
+                <tab.Icon className={cn("w-5 h-5", activeTab === tab.id && "text-primary")} />
+                {tab.id === "cart" && cartItemCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[8px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                    {cartItemCount > 99 ? "99+" : cartItemCount}
+                  </span>
+                )}
+              </div>
               <span className={cn("text-[10px] font-medium", activeTab === tab.id && "font-bold text-primary")}>{tab.label}</span>
             </button>
           ))}
