@@ -122,6 +122,34 @@ const MyOrdersPage = () => {
     }
   };
 
+  const handleRetryPayment = async (order: any) => {
+    if (order.payment_method !== "paymob") return;
+    setRetryingPayment(order.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-paymob-intention", {
+        body: {
+          order_id: order.id,
+          return_url: buildPaymobReturnUrl(),
+        },
+      });
+
+      if (error || !data?.client_secret || !isValidPaymobPublicKey(data?.public_key)) {
+        toast({ title: "حدث خطأ في بوابة الدفع", description: "يرجى المحاولة مرة أخرى", variant: "destructive" });
+        setRetryingPayment(null);
+        return;
+      }
+
+      setPaymobData({
+        orderId: order.id,
+        clientSecret: data.client_secret,
+        publicKey: data.public_key,
+      });
+    } catch (e: any) {
+      toast({ title: "حدث خطأ", description: e.message, variant: "destructive" });
+    }
+    setRetryingPayment(null);
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background">
