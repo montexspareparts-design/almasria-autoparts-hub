@@ -64,6 +64,7 @@ const AdminPaymobSettings = () => {
   });
 
   const callbackUrl = typeof window !== "undefined" ? buildPaymobReturnUrl() : "";
+  const webhookUrl = typeof window !== "undefined"
     ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/paymob-webhook`
     : "";
 
