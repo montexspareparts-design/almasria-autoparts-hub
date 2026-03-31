@@ -41,6 +41,7 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [converting, setConverting] = useState(false);
+  const [detailProduct, setDetailProduct] = useState<any>(null);
 
   const fetchPricedToday = useCallback(async () => {
     if (!user) return;
