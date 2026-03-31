@@ -6,13 +6,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { CreditCard, ShieldCheck, Globe, Activity, Loader2, CheckCircle, XCircle, Copy, ExternalLink, RefreshCw } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { CreditCard, ShieldCheck, Globe, Activity, Loader2, CheckCircle, XCircle, Copy, ExternalLink, RefreshCw, Receipt, ChevronLeft, ChevronRight } from "lucide-react";
 import { PAYMOB_CALLBACK_PATH, buildPaymobReturnUrl } from "@/lib/paymob";
+
+const TX_PAGE_SIZE = 15;
+
+const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+  success: { label: "ناجحة ✅", variant: "default" },
+  pending: { label: "معلقة ⏳", variant: "secondary" },
+  failed: { label: "فاشلة ❌", variant: "destructive" },
+};
 
 const AdminPaymobSettings = () => {
   const { toast } = useToast();
   const [testing, setTesting] = useState(false);
   const [healthResult, setHealthResult] = useState<null | { ok: boolean; message: string; details?: Record<string, unknown> }>(null);
+  const [txPage, setTxPage] = useState(0);
 
   // Check if public key is configured by calling the intention endpoint with a dry-run
   const { data: keyStatus, isLoading: keyLoading, refetch: refetchKey } = useQuery({
