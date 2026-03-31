@@ -7,12 +7,10 @@ import {
   CircleDot, Phone, Wallet, Loader2, RotateCcw, Timer
 } from "lucide-react";
 import PaymentInstructionsBanner from "@/components/PaymentInstructionsBanner";
-import PaymobCheckout from "@/components/PaymobCheckout";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { buildPaymobReturnUrl, isValidPaymobPublicKey } from "@/lib/paymob";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
