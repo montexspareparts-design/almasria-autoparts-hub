@@ -124,7 +124,27 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
   const [editQuantities, setEditQuantities] = useState<Record<string, number>>({});
   const [saving, setSaving] = useState(false);
   const [reordering, setReordering] = useState<string | null>(null);
+  const [paymobLoading, setPaymobLoading] = useState<string | null>(null);
+  const [paymobData, setPaymobData] = useState<{ orderId: string; clientSecret: string; publicKey: string } | null>(null);
   const { addItem } = useDealerCart();
+
+  const handlePaymob = async (order: Order) => {
+    setPaymobLoading(order.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-paymob-intention", {
+        body: { order_id: order.id, return_url: buildPaymobReturnUrl() },
+      });
+      if (error || !data?.client_secret || !isValidPaymobPublicKey(data?.public_key)) {
+        toast({ title: "حدث خطأ في بوابة الدفع", description: "يرجى المحاولة مرة أخرى", variant: "destructive" });
+        return;
+      }
+      setPaymobData({ orderId: order.id, clientSecret: data.client_secret, publicKey: data.public_key });
+    } catch (e: any) {
+      toast({ title: "حدث خطأ", description: e.message, variant: "destructive" });
+    } finally {
+      setPaymobLoading(null);
+    }
+  };
 
   useEffect(() => {
     fetchOrders();
