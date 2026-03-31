@@ -440,6 +440,8 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminProductImages /></Suspense>;
       case "image-verifier":
         return <Suspense fallback={<SectionLoader />}><AdminImageVerifier /></Suspense>;
+      case "payment-reminders":
+        return <Suspense fallback={<SectionLoader />}><AdminPaymentReminders /></Suspense>;
       case "push-notifications":
         return <Suspense fallback={<SectionLoader />}><AdminPushNotifications /></Suspense>;
       case "erp":
