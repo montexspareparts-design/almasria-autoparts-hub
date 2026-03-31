@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { generateQuotePdf } from "@/lib/generateQuotePdf";
+import ProductDetailDialog from "@/components/ProductDetailDialog";
 import {
   Eye, Loader2, Download, ShoppingCart, MessageCircle,
-  Package, CheckCircle2, XCircle, Clock, FileText
+  Package, CheckCircle2, XCircle, Clock, FileText, Info
 } from "lucide-react";
 
 interface PricedProduct {
