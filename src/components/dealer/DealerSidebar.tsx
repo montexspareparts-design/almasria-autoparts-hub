@@ -190,12 +190,19 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
                           <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-l-full" />
                         )}
 
-                        <item.icon className={cn(
-                          "w-4 h-4 shrink-0 transition-colors",
+                        <span className={cn(
+                          "w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors",
                           isActive
-                            ? "text-primary"
-                            : item.accent || "text-muted-foreground/60 group-hover/item:text-foreground/70"
-                        )} />
+                            ? "bg-primary/15"
+                            : item.iconBg || "bg-muted/50"
+                        )}>
+                          <item.icon className={cn(
+                            "w-4 h-4 transition-colors",
+                            isActive
+                              ? "text-primary"
+                              : item.iconColor || "text-muted-foreground/60"
+                          )} />
+                        </span>
                         <span className="truncate">{item.label}</span>
 
                         {(item.badge || 0) > 0 && (
