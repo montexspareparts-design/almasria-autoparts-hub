@@ -375,6 +375,20 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
           {items.length} / 20 صنف
         </Badge>
       </div>
+
+      {/* Product Detail Dialog */}
+      <ProductDetailDialog
+        product={detailProduct}
+        onClose={() => setDetailProduct(null)}
+        price={detailProduct ? getEffectivePrice({ product: detailProduct, tier_price: items.find(i => i.product_id === detailProduct.id)?.tier_price } as PricedProduct) : null}
+        priceLabel="سعر الجملة الخاص بك"
+        canAddToCart
+        onAddToCart={() => {}}
+        onLoginPrompt={() => {}}
+        onRevealPrice={() => {}}
+        remainingViews={0}
+        limitReached={false}
+      />
     </div>
   );
 };
