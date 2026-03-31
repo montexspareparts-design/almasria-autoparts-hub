@@ -309,6 +309,87 @@ const AdminPaymobSettings = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Transactions Log */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Receipt className="w-4 h-4 text-primary" />
+            سجل عمليات الدفع
+          </CardTitle>
+          <CardDescription className="text-xs">
+            جميع المعاملات المستلمة من بوابة Paymob
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {txLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : !txData?.rows.length ? (
+            <p className="text-sm text-muted-foreground text-center py-8">لا توجد معاملات مسجلة بعد</p>
+          ) : (
+            <>
+              <div className="overflow-x-auto rounded-lg border border-border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-right text-xs">التاريخ</TableHead>
+                      <TableHead className="text-right text-xs">رقم الطلب</TableHead>
+                      <TableHead className="text-right text-xs">رقم المعاملة</TableHead>
+                      <TableHead className="text-right text-xs">المبلغ</TableHead>
+                      <TableHead className="text-right text-xs">الحالة</TableHead>
+                      <TableHead className="text-right text-xs">طريقة الدفع</TableHead>
+                      <TableHead className="text-right text-xs">البطاقة</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {txData.rows.map((tx: any) => {
+                      const sc = statusConfig[tx.status] || { label: tx.status, variant: "outline" as const };
+                      return (
+                        <TableRow key={tx.id}>
+                          <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                            {new Date(tx.created_at).toLocaleString("ar-EG", { dateStyle: "short", timeStyle: "short" })}
+                          </TableCell>
+                          <TableCell className="text-xs font-mono">{tx.order_number || "—"}</TableCell>
+                          <TableCell className="text-xs font-mono text-muted-foreground">{tx.paymob_transaction_id || "—"}</TableCell>
+                          <TableCell className="text-xs font-medium">
+                            {tx.amount_cents ? `${(tx.amount_cents / 100).toLocaleString("ar-EG")} ${tx.currency}` : "—"}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={sc.variant} className="text-[10px]">{sc.label}</Badge>
+                          </TableCell>
+                          <TableCell className="text-xs">{tx.payment_method || "—"}</TableCell>
+                          <TableCell className="text-xs font-mono">
+                            {tx.card_last_four ? `•••• ${tx.card_last_four}` : "—"}
+                            {tx.card_brand && <span className="text-muted-foreground mr-1">({tx.card_brand})</span>}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {txData.total > TX_PAGE_SIZE && (
+                <div className="flex items-center justify-between mt-3">
+                  <p className="text-xs text-muted-foreground">
+                    عرض {txPage * TX_PAGE_SIZE + 1}–{Math.min((txPage + 1) * TX_PAGE_SIZE, txData.total)} من {txData.total}
+                  </p>
+                  <div className="flex gap-1">
+                    <Button variant="outline" size="icon" className="h-7 w-7" disabled={txPage === 0} onClick={() => setTxPage(p => p - 1)}>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button variant="outline" size="icon" className="h-7 w-7" disabled={(txPage + 1) * TX_PAGE_SIZE >= txData.total} onClick={() => setTxPage(p => p + 1)}>
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
