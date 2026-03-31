@@ -7,6 +7,7 @@ interface DealerMobileNavProps {
   activeTab: DealerTab;
   onTabChange: (tab: DealerTab) => void;
   unreadCount: number;
+  cartItemCount?: number;
 }
 
 const primaryTabs: { id: DealerTab; label: string; Icon: typeof LayoutDashboard }[] = [
