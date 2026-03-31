@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useDealerCart } from "@/hooks/useDealerCart";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
