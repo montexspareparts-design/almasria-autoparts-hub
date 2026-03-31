@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Search, ClipboardList, FileText, Receipt,
   Heart, Upload, Bell, Tag, Settings, LogOut, User, CreditCard,
   ListPlus, Scale, ChevronDown, ChevronUp, Package, Zap,
-  BarChart3, ShoppingCart, Shield
+  BarChart3, ShoppingCart, Shield, Eye
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
