@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
     // Look up the internal order
     const { data: order } = await supabase
       .from("orders")
-      .select("id, status, user_id")
+      .select("id, status, user_id, total_amount")
       .eq("order_number", orderNumber)
       .maybeSingle();
 
