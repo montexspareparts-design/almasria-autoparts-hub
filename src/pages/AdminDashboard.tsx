@@ -87,6 +87,7 @@ const sidebarGroups: SidebarGroup[] = [
     items: [
       { id: "push-notifications", label: "إشعارات Push", icon: Bell },
       { id: "erp", label: "ربط ERP", icon: Zap },
+      { id: "paymob", label: "إعدادات Paymob", icon: Briefcase },
     ],
   },
 ];
