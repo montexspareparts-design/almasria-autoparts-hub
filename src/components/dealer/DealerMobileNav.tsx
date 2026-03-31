@@ -18,6 +18,7 @@ const primaryTabs: { id: DealerTab; label: string; Icon: typeof LayoutDashboard 
 ];
 
 const moreTabs: { id: DealerTab; label: string; Icon: typeof LayoutDashboard }[] = [
+  { id: "orders", label: "طلباتي", Icon: ClipboardList },
   { id: "priced_today", label: "ما تم تسعيره", Icon: Eye },
   { id: "invoices", label: "الفواتير", Icon: Receipt },
   { id: "statement", label: "كشف الحساب", Icon: CreditCard },
