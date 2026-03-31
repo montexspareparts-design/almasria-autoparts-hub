@@ -15,6 +15,7 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     const paymobSecretKey = Deno.env.get("PAYMOB_SECRET_KEY");
     const paymobIntegrationId = Deno.env.get("PAYMOB_INTEGRATION_ID");
+    const paymobPublicKey = Deno.env.get("PAYMOB_PUBLIC_KEY");
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey =
@@ -32,6 +33,9 @@ Deno.serve(async (req) => {
     }
     if (!paymobIntegrationId) {
       throw new Error("PAYMOB_INTEGRATION_ID is not configured");
+    }
+    if (!paymobPublicKey) {
+      throw new Error("PAYMOB_PUBLIC_KEY is not configured");
     }
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
@@ -177,6 +181,7 @@ Deno.serve(async (req) => {
         client_secret: intentionData.client_secret,
         intention_id: intentionData.id,
         order_number: order.order_number,
+        public_key: paymobPublicKey,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
