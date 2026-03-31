@@ -12,6 +12,7 @@ import DealerOrdersList from "@/components/dealer/DealerOrdersList";
 import DealerNotificationsList from "@/components/dealer/DealerNotificationsList";
 import DealerOffers from "@/components/dealer/DealerOffers";
 
+import DealerProductSearch from "@/components/dealer/DealerProductSearch";
 import DealerQuoteBuilder, { type PriceListQuoteData } from "@/components/dealer/DealerQuoteBuilder";
 import DealerPriceLists from "@/components/dealer/DealerPriceLists";
 import DealerFavorites from "@/components/dealer/DealerFavorites";
@@ -104,7 +105,7 @@ const DealerDashboard = () => {
 
   const renderContent = () => {
     switch (activeTab) {
-      case "quotes": return <DealerQuoteBuilder onNavigateToPriceLists={(data) => { setPriceListQuoteData(data || null); setActiveTab("price_lists"); }} />;
+      case "quotes": return <DealerProductSearch />;
       case "priced_today": return <DealerPricedToday onConvertToOrder={() => setActiveTab("orders")} />;
       case "quick_order": return <DealerQuickOrder />;
       case "orders": return <DealerOrdersList userId={user!.id} onNavigateToPayment={() => setActiveTab("payment")} />;
