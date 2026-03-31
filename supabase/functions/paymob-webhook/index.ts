@@ -6,6 +6,45 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// ─── WhatsApp helper ─────────────────────────────────────────────────────────
+async function sendWhatsApp(
+  phone: string,
+  message: string,
+  twilioAccountSid: string,
+  twilioAuthToken: string,
+  twilioPhone: string,
+) {
+  let formatted = phone.replace(/\s/g, "");
+  if (!formatted.startsWith("+")) {
+    formatted = formatted.startsWith("0") ? `+2${formatted}` : `+${formatted}`;
+  }
+
+  const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`;
+  const twilioAuthHeader = btoa(`${twilioAccountSid}:${twilioAuthToken}`);
+
+  const resp = await fetch(twilioUrl, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${twilioAuthHeader}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      To: `whatsapp:${formatted}`,
+      From: `whatsapp:${twilioPhone}`,
+      Body: message,
+    }),
+  });
+
+  const data = await resp.json();
+  if (resp.ok) {
+    console.log(`WhatsApp sent to ${formatted}, SID: ${data.sid}`);
+  } else {
+    console.error(`WhatsApp failed to ${formatted}:`, JSON.stringify(data));
+  }
+  return { ok: resp.ok, data };
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -43,7 +82,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Build HMAC data string from transaction fields (Paymob's specified order)
     const hmacData = [
       transaction.amount_cents,
       transaction.created_at,
@@ -67,7 +105,6 @@ Deno.serve(async (req) => {
       transaction.success,
     ].join("");
 
-    // Compute HMAC-SHA512 and compare
     const encoder = new TextEncoder();
     const key = await crypto.subtle.importKey(
       "raw",
@@ -90,7 +127,6 @@ Deno.serve(async (req) => {
     }
 
     console.log("HMAC verified for order:", orderId, "success:", success);
-    // ─── End HMAC Verification ──────────────────────────────────────────
 
     if (!orderId) {
       console.error("No order ID in Paymob callback");
@@ -110,7 +146,7 @@ Deno.serve(async (req) => {
       .eq("order_number", orderNumber)
       .maybeSingle();
 
-    // ─── Log transaction to payment_transactions ─────────────────────────
+    // ─── Log transaction ─────────────────────────────────────────────────
     await supabase.from("payment_transactions").insert({
       order_id: order?.id || null,
       order_number: orderNumber,
@@ -127,20 +163,33 @@ Deno.serve(async (req) => {
       raw_payload: body,
     });
     console.log(`Transaction logged for order ${orderNumber}, status: ${txStatus}`);
-    // ─── End Log ─────────────────────────────────────────────────────────
 
+    // ─── Twilio config ───────────────────────────────────────────────────
+    const twilioAccountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
+    const twilioAuthToken = Deno.env.get("TWILIO_AUTH_TOKEN");
+    const twilioPhone = Deno.env.get("TWILIO_PHONE_NUMBER");
+    const hasTwilio = !!(twilioAccountSid && twilioAuthToken && twilioPhone);
+
+    // Shared amounts
+    const amountEgp = transaction.amount_cents
+      ? (transaction.amount_cents / 100).toLocaleString("ar-EG")
+      : "—";
+    const payMethod = transaction.source_data?.type || "غير محدد";
+    const cardInfo = transaction.source_data?.pan ? ` (****${transaction.source_data.pan})` : "";
+
+    // =====================================================================
+    // ─── SUCCESS ─────────────────────────────────────────────────────────
+    // =====================================================================
     if (success && !isPending && order) {
       if (["awaiting_payment", "confirmed", "pending"].includes(order.status)) {
         await supabase
           .from("orders")
           .update({ status: "processing" })
           .eq("id", order.id);
-
-        console.log(`Order ${orderNumber} moved to processing after successful payment`);
+        console.log(`Order ${orderNumber} moved to processing`);
       }
 
-      // ─── Push Notification to dealer on successful payment ─────────────
-      const amountEgpSuccess = transaction.amount_cents ? (transaction.amount_cents / 100).toFixed(2) : "—";
+      // Push notification to dealer
       const { data: successPushSubs } = await supabase
         .from("push_subscriptions")
         .select("*")
@@ -149,14 +198,13 @@ Deno.serve(async (req) => {
       if (successPushSubs && successPushSubs.length > 0) {
         const successPushPayload = JSON.stringify({
           title: "✅ تم استلام الدفع بنجاح",
-          body: `تم تأكيد دفع ${amountEgpSuccess} ج.م للطلب #${orderNumber}. طلبك قيد التجهيز الآن!`,
+          body: `تم تأكيد دفع ${amountEgp} ج.م للطلب #${orderNumber}. طلبك قيد التجهيز الآن!`,
           icon: "/pwa-192x192.png",
           badge: "/pwa-192x192.png",
           url: "/dealer",
           tag: "payment-success-" + orderNumber,
           timestamp: Date.now(),
         });
-
         for (const sub of successPushSubs) {
           try {
             const resp = await fetch(sub.endpoint, {
@@ -171,39 +219,21 @@ Deno.serve(async (req) => {
             console.error("Push send error (success):", pushErr);
           }
         }
-        console.log(`Sent success push to ${successPushSubs.length} sub(s) for dealer ${order.user_id}`);
       }
-      // ─── End Success Push ──────────────────────────────────────────────
 
-      // ─── WhatsApp Notification on Successful Payment ───────────────────
-      try {
-        const twilioAccountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
-        const twilioAuthToken = Deno.env.get("TWILIO_AUTH_TOKEN");
-        const twilioPhone = Deno.env.get("TWILIO_PHONE_NUMBER");
-
-        if (twilioAccountSid && twilioAuthToken && twilioPhone) {
-          // Fetch customer profile
+      // ─── WhatsApp: Customer success ────────────────────────────────────
+      if (hasTwilio) {
+        try {
           const { data: profile } = await supabase
             .from("profiles")
             .select("full_name, phone")
             .eq("user_id", order.user_id)
             .maybeSingle();
 
-          const customerPhone = profile?.phone;
           const customerName = profile?.full_name || "عميلنا الكريم";
-          const totalAmount = order.total_amount
-            ? Number(order.total_amount).toLocaleString("ar-EG")
-            : (transaction.amount_cents ? (transaction.amount_cents / 100).toLocaleString("ar-EG") : "—");
-          const paymentMethod = transaction.source_data?.type || "بطاقة بنكية";
-          const cardInfo = transaction.source_data?.pan ? ` (****${transaction.source_data.pan})` : "";
 
-          if (customerPhone) {
-            let phone = customerPhone.replace(/\s/g, "");
-            if (!phone.startsWith("+")) {
-              phone = phone.startsWith("0") ? `+2${phone}` : `+${phone}`;
-            }
-
-            const whatsappBody = [
+          if (profile?.phone) {
+            const customerMsg = [
               `✅ تم استلام الدفع بنجاح!`,
               ``,
               `مرحباً ${customerName}،`,
@@ -211,56 +241,60 @@ Deno.serve(async (req) => {
               ``,
               `📋 تفاصيل العملية:`,
               `• رقم الطلب: ${orderNumber}`,
-              `• المبلغ المدفوع: ${totalAmount} ج.م`,
-              `• طريقة الدفع: ${paymentMethod}${cardInfo}`,
+              `• المبلغ المدفوع: ${amountEgp} ج.م`,
+              `• طريقة الدفع: ${payMethod}${cardInfo}`,
               `• التاريخ: ${new Date().toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}`,
               ``,
               `سيتم إخطارك عند تجهيز طلبك وشحنه.`,
-              ``,
               `شكراً لتعاملك معنا! 🙏`,
               `— المصرية جروب لقطع غيار السيارات`,
             ].join("\n");
 
-            const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`;
-            const twilioAuthHeader = btoa(`${twilioAccountSid}:${twilioAuthToken}`);
-
-            const waResp = await fetch(twilioUrl, {
-              method: "POST",
-              headers: {
-                "Authorization": `Basic ${twilioAuthHeader}`,
-                "Content-Type": "application/x-www-form-urlencoded",
-              },
-              body: new URLSearchParams({
-                To: `whatsapp:${phone}`,
-                From: `whatsapp:${twilioPhone}`,
-                Body: whatsappBody,
-              }),
-            });
-
-            const waData = await waResp.json();
-            if (waResp.ok) {
-              console.log(`WhatsApp payment success sent to ${phone}, SID: ${waData.sid}`);
-            } else {
-              console.error("WhatsApp send failed:", JSON.stringify(waData));
-            }
-          } else {
-            console.log("No phone number found for user, skipping WhatsApp notification");
+            await sendWhatsApp(profile.phone, customerMsg, twilioAccountSid!, twilioAuthToken!, twilioPhone!);
           }
-        } else {
-          console.log("Twilio credentials not configured, skipping WhatsApp notification");
-        }
-      } catch (waError) {
-        console.error("WhatsApp notification error (non-blocking):", waError);
-      }
-      // ─── End WhatsApp Notification ─────────────────────────────────────
-    } else if (!success && !isPending) {
-      // ─── Notify admins & dealer on payment failure ─────────────────────
-      const errorDetail = transaction.data?.message || transaction.txn_response_code || "خطأ غير معروف";
-      const amountEgp = transaction.amount_cents ? (transaction.amount_cents / 100).toFixed(2) : "—";
-      const payMethod = transaction.source_data?.type || "غير محدد";
-      const cardInfo = transaction.source_data?.pan ? ` (****${transaction.source_data.pan})` : "";
 
-      // 1) Notify admins
+          // ─── WhatsApp: Admin success notification ──────────────────────
+          const { data: admins } = await supabase
+            .from("user_roles")
+            .select("user_id")
+            .eq("role", "admin");
+
+          if (admins && admins.length > 0) {
+            const adminUserIds = admins.map((a: { user_id: string }) => a.user_id);
+            const { data: adminProfiles } = await supabase
+              .from("profiles")
+              .select("phone, full_name, user_id")
+              .in("user_id", adminUserIds);
+
+            const adminMsg = [
+              `🆕 طلب مدفوع جديد!`,
+              ``,
+              `📋 تفاصيل:`,
+              `• رقم الطلب: ${orderNumber}`,
+              `• العميل: ${customerName}`,
+              `• المبلغ: ${amountEgp} ج.م`,
+              `• طريقة الدفع: ${payMethod}${cardInfo}`,
+              `• الوقت: ${new Date().toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}`,
+            ].join("\n");
+
+            for (const adminProfile of (adminProfiles || [])) {
+              if (adminProfile.phone) {
+                await sendWhatsApp(adminProfile.phone, adminMsg, twilioAccountSid!, twilioAuthToken!, twilioPhone!);
+              }
+            }
+          }
+        } catch (waError) {
+          console.error("WhatsApp notification error (success, non-blocking):", waError);
+        }
+      }
+
+    // =====================================================================
+    // ─── FAILURE ─────────────────────────────────────────────────────────
+    // =====================================================================
+    } else if (!success && !isPending) {
+      const errorDetail = transaction.data?.message || transaction.txn_response_code || "خطأ غير معروف";
+
+      // In-app notifications for admins & dealer
       const { data: admins } = await supabase
         .from("user_roles")
         .select("user_id")
@@ -273,7 +307,6 @@ Deno.serve(async (req) => {
         type: "payment_failed",
       }));
 
-      // 2) Notify the dealer (order owner)
       const dealerNotifs = order ? [{
         user_id: order.user_id,
         title: "⚠️ لم تتم عملية الدفع — طلب #" + orderNumber,
@@ -284,51 +317,75 @@ Deno.serve(async (req) => {
       const allNotifs = [...adminNotifs, ...dealerNotifs];
       if (allNotifs.length > 0) {
         await supabase.from("notifications").insert(allNotifs);
-        console.log(`Notified ${adminNotifs.length} admin(s) and ${dealerNotifs.length} dealer(s) about failed payment for order ${orderNumber}`);
       }
 
-      // ─── Send Push Notification to dealer ─────────────────────────────
+      // Push notification to dealer
       if (order) {
-        const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY");
-        const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
+        const { data: pushSubs } = await supabase
+          .from("push_subscriptions")
+          .select("*")
+          .eq("user_id", order.user_id);
 
-        if (vapidPrivateKey && vapidPublicKey) {
-          const { data: pushSubs } = await supabase
-            .from("push_subscriptions")
-            .select("*")
-            .eq("user_id", order.user_id);
-
-          if (pushSubs && pushSubs.length > 0) {
-            const pushPayload = JSON.stringify({
-              title: "⚠️ فشل عملية الدفع",
-              body: `لم تنجح عملية الدفع للطلب #${orderNumber} بقيمة ${amountEgp} ج.م. يمكنك إعادة المحاولة.`,
-              icon: "/pwa-192x192.png",
-              badge: "/pwa-192x192.png",
-              url: "/dealer",
-              tag: "payment-failed-" + orderNumber,
-              timestamp: Date.now(),
-            });
-
-            for (const sub of pushSubs) {
-              try {
-                const resp = await fetch(sub.endpoint, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json", TTL: "86400" },
-                  body: pushPayload,
-                });
-                if (resp.status === 410 || resp.status === 404) {
-                  await supabase.from("push_subscriptions").delete().eq("id", sub.id);
-                }
-              } catch (pushErr) {
-                console.error("Push send error:", pushErr);
+        if (pushSubs && pushSubs.length > 0) {
+          const pushPayload = JSON.stringify({
+            title: "⚠️ فشل عملية الدفع",
+            body: `لم تنجح عملية الدفع للطلب #${orderNumber} بقيمة ${amountEgp} ج.م. يمكنك إعادة المحاولة.`,
+            icon: "/pwa-192x192.png",
+            badge: "/pwa-192x192.png",
+            url: "/dealer",
+            tag: "payment-failed-" + orderNumber,
+            timestamp: Date.now(),
+          });
+          for (const sub of pushSubs) {
+            try {
+              const resp = await fetch(sub.endpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", TTL: "86400" },
+                body: pushPayload,
+              });
+              if (resp.status === 410 || resp.status === 404) {
+                await supabase.from("push_subscriptions").delete().eq("id", sub.id);
               }
+            } catch (pushErr) {
+              console.error("Push send error:", pushErr);
             }
-            console.log(`Sent push notification to ${pushSubs.length} subscription(s) for dealer ${order.user_id}`);
           }
         }
       }
-      // ─── End Push ──────────────────────────────────────────────────────
-      // ─── End notify ────────────────────────────────────────────────────
+
+      // ─── WhatsApp: Customer failure + retry link ───────────────────────
+      if (hasTwilio && order) {
+        try {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("full_name, phone")
+            .eq("user_id", order.user_id)
+            .maybeSingle();
+
+          const customerName = profile?.full_name || "عميلنا الكريم";
+          const paymentLink = `https://www.almasriaautoparts.com/payment?order_id=${order.id}`;
+
+          if (profile?.phone) {
+            const failMsg = [
+              `⚠️ لم تتم عملية الدفع`,
+              ``,
+              `مرحباً ${customerName}،`,
+              `تعذر إتمام الدفع للطلب #${orderNumber} بقيمة ${amountEgp} ج.م.`,
+              `السبب: ${errorDetail}`,
+              ``,
+              `يمكنك إعادة المحاولة من هنا:`,
+              paymentLink,
+              ``,
+              `أو تواصل معنا للمساعدة.`,
+              `— المصرية جروب لقطع غيار السيارات`,
+            ].join("\n");
+
+            await sendWhatsApp(profile.phone, failMsg, twilioAccountSid!, twilioAuthToken!, twilioPhone!);
+          }
+        } catch (waError) {
+          console.error("WhatsApp notification error (failure, non-blocking):", waError);
+        }
+      }
     } else {
       console.log(`Payment pending for order ${orderNumber}`);
     }
