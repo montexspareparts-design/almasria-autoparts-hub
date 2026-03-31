@@ -54,9 +54,9 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // ─── 30-min WhatsApp reminder ────────────────────────────────────────
-    const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
-    const sixtyMinAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    // ─── 2-min WhatsApp reminder (TESTING — normally 30 min) ────────────
+    const thirtyMinAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+    const sixtyMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
 
     // Orders created 30-60 min ago still awaiting payment (window to avoid re-sending)
     const { data: recentUnpaid } = await supabase
