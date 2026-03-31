@@ -189,7 +189,7 @@ const DealerDashboard = () => {
         </main>
       </div>
 
-      <DealerMobileNav activeTab={activeTab} onTabChange={setActiveTab} unreadCount={unreadCount} />
+      <DealerMobileNav activeTab={activeTab} onTabChange={setActiveTab} unreadCount={unreadCount} cartItemCount={cartItemCount} />
     </div>
   );
 };
