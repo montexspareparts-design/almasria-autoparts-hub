@@ -53,9 +53,18 @@ const tierColors: Record<string, string> = {
   retail: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
 };
 
+interface NavItem {
+  id: DealerTab;
+  label: string;
+  icon: typeof LayoutDashboard;
+  badge?: number;
+  iconColor?: string;
+  iconBg?: string;
+}
+
 interface NavGroup {
   label: string;
-  items: { id: DealerTab; label: string; icon: typeof LayoutDashboard; badge?: number; accent?: string }[];
+  items: NavItem[];
   defaultOpen?: boolean;
 }
 
@@ -65,38 +74,38 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
       label: "القائمة الرئيسية",
       defaultOpen: true,
       items: [
-        { id: "overview", label: "لوحة التحكم", icon: LayoutDashboard },
-        { id: "quotes", label: "اطلب قطع غيار", icon: Search },
-        { id: "price_lists", label: "كشوفات الأسعار", icon: FileText, accent: "text-amber-600" },
+        { id: "overview", label: "لوحة التحكم", icon: LayoutDashboard, iconColor: "text-emerald-600", iconBg: "bg-emerald-500/10" },
+        { id: "quotes", label: "اطلب قطع غيار", icon: Search, iconColor: "text-slate-600 dark:text-slate-400", iconBg: "bg-slate-500/10" },
+        { id: "price_lists", label: "كشوفات الأسعار", icon: FileText, iconColor: "text-amber-600", iconBg: "bg-amber-500/10" },
       ],
     },
     {
       label: "الطلبات والمعاملات",
       defaultOpen: true,
       items: [
-        { id: "orders", label: "طلباتي", icon: ClipboardList },
-        { id: "payment", label: "الدفع الإلكتروني", icon: CreditCard, accent: "text-emerald-600" },
-        { id: "invoices", label: "الفواتير", icon: Receipt },
-        { id: "statement", label: "كشف الحساب", icon: BarChart3 },
+        { id: "orders", label: "طلباتي", icon: ClipboardList, iconColor: "text-slate-600 dark:text-slate-400", iconBg: "bg-slate-500/10" },
+        { id: "payment", label: "الدفع الإلكتروني", icon: CreditCard, iconColor: "text-emerald-600", iconBg: "bg-emerald-500/10" },
+        { id: "invoices", label: "الفواتير", icon: Receipt, iconColor: "text-violet-600", iconBg: "bg-violet-500/10" },
+        { id: "statement", label: "كشف الحساب", icon: BarChart3, iconColor: "text-blue-600", iconBg: "bg-blue-500/10" },
       ],
     },
     {
       label: "الأدوات",
       defaultOpen: true,
       items: [
-        { id: "favorites", label: "المفضلة", icon: Heart },
-        { id: "shopping_lists", label: "قوائم الشراء", icon: ListPlus },
-        { id: "compare", label: "مقارنة المنتجات", icon: Scale },
-        { id: "quick_order", label: "طلب سريع", icon: Zap },
-        { id: "stock_alerts", label: "تنبيهات المخزون", icon: Package },
+        { id: "favorites", label: "المفضلة", icon: Heart, iconColor: "text-rose-500", iconBg: "bg-rose-500/10" },
+        { id: "shopping_lists", label: "قوائم الشراء", icon: ListPlus, iconColor: "text-blue-600", iconBg: "bg-blue-500/10" },
+        { id: "compare", label: "مقارنة المنتجات", icon: Scale, iconColor: "text-teal-600", iconBg: "bg-teal-500/10" },
+        { id: "quick_order", label: "طلب سريع", icon: Zap, iconColor: "text-amber-500", iconBg: "bg-amber-500/10" },
+        { id: "stock_alerts", label: "تنبيهات المخزون", icon: Package, iconColor: "text-orange-600", iconBg: "bg-orange-500/10" },
       ],
     },
     {
       label: "الإشعارات والعروض",
       defaultOpen: false,
       items: [
-        { id: "notifications", label: "الإشعارات", icon: Bell, badge: unreadCount },
-        { id: "offers", label: "العروض الخاصة", icon: Tag },
+        { id: "notifications", label: "الإشعارات", icon: Bell, badge: unreadCount, iconColor: "text-sky-600", iconBg: "bg-sky-500/10" },
+        { id: "offers", label: "العروض الخاصة", icon: Tag, iconColor: "text-pink-600", iconBg: "bg-pink-500/10" },
       ],
     },
   ];
@@ -181,12 +190,19 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
                           <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-l-full" />
                         )}
 
-                        <item.icon className={cn(
-                          "w-4 h-4 shrink-0 transition-colors",
+                        <span className={cn(
+                          "w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors",
                           isActive
-                            ? "text-primary"
-                            : item.accent || "text-muted-foreground/60 group-hover/item:text-foreground/70"
-                        )} />
+                            ? "bg-primary/15"
+                            : item.iconBg || "bg-muted/50"
+                        )}>
+                          <item.icon className={cn(
+                            "w-4 h-4 transition-colors",
+                            isActive
+                              ? "text-primary"
+                              : item.iconColor || "text-muted-foreground/60"
+                          )} />
+                        </span>
                         <span className="truncate">{item.label}</span>
 
                         {(item.badge || 0) > 0 && (
