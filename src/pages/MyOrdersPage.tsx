@@ -460,6 +460,11 @@ const MyOrdersPage = () => {
                               />
                             )}
 
+                            {/* Payment Countdown Timer */}
+                            {["awaiting_payment", "confirmed", "pending"].includes(order.status) && (
+                              <PaymentCountdown createdAt={order.created_at} />
+                            )}
+
                             {/* Retry Paymob Payment Button */}
                             {order.payment_method === "paymob" &&
                               ["awaiting_payment", "confirmed", "pending"].includes(order.status) && (
