@@ -4,12 +4,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Package, Clock, CheckCircle2, Truck, PackageCheck, ChevronDown,
   ChevronUp, ArrowRight, ShoppingCart, MapPin, CreditCard, CalendarDays,
-  CircleDot, Phone, Wallet
+  CircleDot, Phone, Wallet, Loader2, RotateCcw
 } from "lucide-react";
 import PaymentInstructionsBanner from "@/components/PaymentInstructionsBanner";
+import PaymobCheckout from "@/components/PaymobCheckout";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import { buildPaymobReturnUrl, isValidPaymobPublicKey } from "@/lib/paymob";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -71,6 +74,8 @@ const MyOrdersPage = () => {
   const [orderItems, setOrderItems] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(true);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(highlightOrder);
+  const [retryingPayment, setRetryingPayment] = useState<string | null>(null);
+  const [paymobData, setPaymobData] = useState<{ orderId: string; clientSecret: string; publicKey: string } | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -117,12 +122,73 @@ const MyOrdersPage = () => {
     }
   };
 
+  const handleRetryPayment = async (order: any) => {
+    if (order.payment_method !== "paymob") return;
+    setRetryingPayment(order.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-paymob-intention", {
+        body: {
+          order_id: order.id,
+          return_url: buildPaymobReturnUrl(),
+        },
+      });
+
+      if (error || !data?.client_secret || !isValidPaymobPublicKey(data?.public_key)) {
+        toast({ title: "حدث خطأ في بوابة الدفع", description: "يرجى المحاولة مرة أخرى", variant: "destructive" });
+        setRetryingPayment(null);
+        return;
+      }
+
+      setPaymobData({
+        orderId: order.id,
+        clientSecret: data.client_secret,
+        publicKey: data.public_key,
+      });
+    } catch (e: any) {
+      toast({ title: "حدث خطأ", description: e.message, variant: "destructive" });
+    }
+    setRetryingPayment(null);
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="pt-24 pb-20 flex items-center justify-center">
           <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Show Paymob inline checkout for retry payment
+  if (paymobData) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="pt-24 pb-12">
+          <div className="container mx-auto px-4 max-w-xl">
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-bold text-foreground mb-2">إتمام الدفع</h2>
+              <p className="text-sm text-muted-foreground">أكمل عملية الدفع لطلبك</p>
+            </div>
+            <PaymobCheckout
+              clientSecret={paymobData.clientSecret}
+              publicKey={paymobData.publicKey}
+            />
+            <div className="mt-4 text-center">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setPaymobData(null)}
+                className="gap-2 text-muted-foreground"
+              >
+                <ArrowRight className="w-4 h-4" />
+                العودة لطلباتي
+              </Button>
+            </div>
+          </div>
         </div>
         <Footer />
       </div>
@@ -318,7 +384,30 @@ const MyOrdersPage = () => {
                               />
                             )}
 
-                            {/* Order Items */}
+                            {/* Retry Paymob Payment Button */}
+                            {order.payment_method === "paymob" &&
+                              ["awaiting_payment", "confirmed", "pending"].includes(order.status) && (
+                              <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 flex items-center justify-between gap-4">
+                                <div>
+                                  <p className="text-sm font-bold text-foreground">لم يتم الدفع بعد</p>
+                                  <p className="text-xs text-muted-foreground mt-0.5">اضغط لإتمام عملية الدفع عبر البطاقة البنكية</p>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  className="gap-2 shrink-0"
+                                  disabled={retryingPayment === order.id}
+                                  onClick={() => handleRetryPayment(order)}
+                                >
+                                  {retryingPayment === order.id ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <RotateCcw className="w-4 h-4" />
+                                  )}
+                                  ادفع الآن
+                                </Button>
+                              </div>
+                            )}
+
                             <div>
                               <h3 className="text-sm font-bold text-card-foreground mb-3">المنتجات ({items.length})</h3>
                               <div className="space-y-2.5">
