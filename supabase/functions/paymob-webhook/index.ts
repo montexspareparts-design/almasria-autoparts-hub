@@ -139,26 +139,37 @@ Deno.serve(async (req) => {
         console.log(`Order ${orderNumber} moved to processing after successful payment`);
       }
     } else if (!success && !isPending) {
-      // ─── Notify admins on payment failure ──────────────────────────────
+      // ─── Notify admins & dealer on payment failure ─────────────────────
       const errorDetail = transaction.data?.message || transaction.txn_response_code || "خطأ غير معروف";
       const amountEgp = transaction.amount_cents ? (transaction.amount_cents / 100).toFixed(2) : "—";
       const payMethod = transaction.source_data?.type || "غير محدد";
       const cardInfo = transaction.source_data?.pan ? ` (****${transaction.source_data.pan})` : "";
 
+      // 1) Notify admins
       const { data: admins } = await supabase
         .from("user_roles")
         .select("user_id")
         .eq("role", "admin");
 
-      if (admins && admins.length > 0) {
-        const notifications = admins.map((a: { user_id: string }) => ({
-          user_id: a.user_id,
-          title: "❌ فشل عملية دفع — طلب #" + orderNumber,
-          message: `فشلت عملية دفع بقيمة ${amountEgp} ج.م عبر ${payMethod}${cardInfo}. السبب: ${errorDetail}`,
-          type: "payment_failed",
-        }));
-        await supabase.from("notifications").insert(notifications);
-        console.log(`Notified ${admins.length} admin(s) about failed payment for order ${orderNumber}`);
+      const adminNotifs = (admins || []).map((a: { user_id: string }) => ({
+        user_id: a.user_id,
+        title: "❌ فشل عملية دفع — طلب #" + orderNumber,
+        message: `فشلت عملية دفع بقيمة ${amountEgp} ج.م عبر ${payMethod}${cardInfo}. السبب: ${errorDetail}`,
+        type: "payment_failed",
+      }));
+
+      // 2) Notify the dealer (order owner)
+      const dealerNotifs = order ? [{
+        user_id: order.user_id,
+        title: "⚠️ لم تتم عملية الدفع — طلب #" + orderNumber,
+        message: `لم تنجح عملية الدفع بقيمة ${amountEgp} ج.م عبر ${payMethod}${cardInfo}. السبب: ${errorDetail}. يمكنك إعادة المحاولة من صفحة طلباتي.`,
+        type: "payment_failed",
+      }] : [];
+
+      const allNotifs = [...adminNotifs, ...dealerNotifs];
+      if (allNotifs.length > 0) {
+        await supabase.from("notifications").insert(allNotifs);
+        console.log(`Notified ${adminNotifs.length} admin(s) and ${dealerNotifs.length} dealer(s) about failed payment for order ${orderNumber}`);
       }
       // ─── End notify ────────────────────────────────────────────────────
     } else {
