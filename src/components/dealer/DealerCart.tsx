@@ -62,60 +62,76 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment }: DealerCartProps
   const vat = subtotal * 0.14;
   const total = subtotal + vat;
 
+  const createOrder = async (): Promise<{ id: string; order_number: string } | null> => {
+    if (!user || items.length === 0) return null;
+    const orderNumber = await generateOrderNumber();
+    const { data: order, error } = await supabase
+      .from("orders")
+      .insert({
+        user_id: user.id,
+        order_number: orderNumber,
+        total_amount: total,
+        notes: notes || null,
+        shipping_address: shippingAddress || null,
+        shipping_governorate: shippingGovernorate || null,
+        status: "pending",
+      })
+      .select()
+      .single();
+
+    if (error || !order) return null;
+
+    await supabase.from("order_items").insert(
+      items.map(item => ({
+        order_id: (order as any).id,
+        product_id: item.product_id,
+        quantity: item.quantity,
+        unit_price: getPrice(item),
+        total_price: getPrice(item) * item.quantity,
+      }))
+    );
+
+    await clearCart();
+    pushOrderToERP((order as any).id);
+    notifyNewOrderWhatsApp(orderNumber, total);
+    return { id: (order as any).id, order_number: orderNumber };
+  };
+
   const handleSubmitOrder = async () => {
     if (!user || items.length === 0) return;
     setSubmitting(true);
-
     try {
-      const orderNumber = await generateOrderNumber();
-
-      const { data: order, error } = await supabase
-        .from("orders")
-        .insert({
-          user_id: user.id,
-          order_number: orderNumber,
-          total_amount: total,
-          notes: notes || null,
-          shipping_address: shippingAddress || null,
-          shipping_governorate: shippingGovernorate || null,
-          status: "pending",
-        })
-        .select()
-        .single();
-
-      if (error || !order) {
+      const order = await createOrder();
+      if (!order) {
         toast({ title: "خطأ في إنشاء الطلب", variant: "destructive" });
-        setSubmitting(false);
         return;
       }
-
-      await supabase.from("order_items").insert(
-        items.map(item => ({
-          order_id: (order as any).id,
-          product_id: item.product_id,
-          quantity: item.quantity,
-          unit_price: getPrice(item),
-          total_price: getPrice(item) * item.quantity,
-        }))
-      );
-
-      await clearCart();
-      pushOrderToERP((order as any).id);
-      notifyNewOrderWhatsApp(orderNumber, total);
-
-      toast({
-        title: "✅ تم إرسال الطلب بنجاح",
-        description: `رقم الطلب: ${orderNumber}`,
-      });
-
-      setNotes("");
-      setShippingAddress("");
-      setShippingGovernorate("");
+      toast({ title: "✅ تم إرسال الطلب بنجاح", description: `رقم الطلب: ${order.order_number}` });
+      setNotes(""); setShippingAddress(""); setShippingGovernorate("");
       onNavigateToOrders();
     } catch {
       toast({ title: "حدث خطأ", variant: "destructive" });
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handlePayNow = async () => {
+    if (!user || items.length === 0) return;
+    setSubmittingPayment(true);
+    try {
+      const order = await createOrder();
+      if (!order) {
+        toast({ title: "خطأ في إنشاء الطلب", variant: "destructive" });
+        return;
+      }
+      toast({ title: "✅ تم إنشاء الطلب", description: `رقم الطلب: ${order.order_number} — جاري التوجيه للدفع...` });
+      setNotes(""); setShippingAddress(""); setShippingGovernorate("");
+      onNavigateToPayment();
+    } catch {
+      toast({ title: "حدث خطأ", variant: "destructive" });
+    } finally {
+      setSubmittingPayment(false);
     }
   };
 
