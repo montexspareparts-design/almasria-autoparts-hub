@@ -1,8 +1,7 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 async function sendWhatsApp(phone: string, message: string) {
@@ -17,6 +16,7 @@ async function sendWhatsApp(phone: string, message: string) {
   let formatted = phone.replace(/[\s\-\(\)]/g, "");
   if (formatted.startsWith("+")) formatted = formatted.slice(1);
   if (formatted.startsWith("0")) formatted = "2" + formatted;
+  if (/^\d{10}$/.test(formatted)) formatted = "2" + formatted;
 
   const resp = await fetch(
     `https://graph.facebook.com/v21.0/${phoneNumberId}/messages`,
@@ -50,58 +50,27 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
+    const { orderNumber, totalAmount, customerPhone, paymentLink } =
+      await req.json();
 
-    // Auth — any logged-in user
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace("Bearer ", "")
-    );
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const { orderNumber, totalAmount } = await req.json();
-    if (!orderNumber) {
-      return new Response(JSON.stringify({ error: "Missing orderNumber" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (!orderNumber || !customerPhone) {
+      return new Response(
+        JSON.stringify({ error: "Missing orderNumber or customerPhone" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const amountFormatted = totalAmount
       ? Number(totalAmount).toLocaleString("ar-EG")
       : "—";
 
-    const msg = `🆕 New order #${orderNumber}, total ${amountFormatted} EGP`;
+    let msg = `طلبك رقم ${orderNumber}\nالإجمالي ${amountFormatted} جنيه`;
 
-    // Send to all admin phones
-    const { data: admins } = await supabase
-      .from("user_roles")
-      .select("user_id")
-      .eq("role", "admin");
-
-    if (admins && admins.length > 0) {
-      const { data: adminProfiles } = await supabase
-        .from("profiles")
-        .select("phone")
-        .in("user_id", admins.map((a: { user_id: string }) => a.user_id));
-
-      for (const p of adminProfiles || []) {
-        if (p.phone) await sendWhatsApp(p.phone, msg);
-      }
+    if (paymentLink) {
+      msg += `\n\nادفع من هنا:\n${paymentLink}`;
     }
+
+    await sendWhatsApp(customerPhone, msg);
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
