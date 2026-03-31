@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CheckCircle2, XCircle, Loader2, ArrowRight, ShoppingBag, RotateCcw } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, ArrowRight, ShoppingBag, RotateCcw, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -14,7 +14,9 @@ const PaymentCallback = () => {
   const { user } = useAuth();
   const [status, setStatus] = useState<"loading" | "success" | "failed" | "pending">("loading");
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
+  const [orderId, setOrderId] = useState<string | null>(null);
   const [txnIdDisplay, setTxnIdDisplay] = useState<string | null>(null);
+  const [amountDisplay, setAmountDisplay] = useState<string | null>(null);
 
   const success = searchParams.get("success");
   const pending = searchParams.get("pending");
@@ -31,76 +33,53 @@ const PaymentCallback = () => {
       setTxnIdDisplay(txnId);
       setOrderNumber(merchantOrderId);
 
-      if (isPending) {
-        setStatus("pending");
-        return;
+      if (amountCents) {
+        const egp = (parseInt(amountCents) / 100).toLocaleString("ar-EG");
+        setAmountDisplay(egp);
       }
 
-      if (!isSuccess) {
-        setStatus("failed");
-        // Log failed transaction
-        if (merchantOrderId) {
-          await logTransaction("failed");
-        }
-        return;
-      }
-
-      // Payment succeeded — update order status
-      try {
-        if (merchantOrderId && user) {
-          // Find order by order_number
+      // Look up the internal order ID for retry navigation
+      if (merchantOrderId && user) {
+        try {
           const { data: order } = await supabase
             .from("orders")
-            .select("id, status, order_number")
+            .select("id, order_number")
             .eq("order_number", merchantOrderId)
             .eq("user_id", user.id)
             .single();
 
           if (order) {
+            setOrderId(order.id);
             setOrderNumber(order.order_number);
-
-            // Update order status to processing (payment confirmed)
-            if (["pending", "confirmed", "awaiting_payment"].includes(order.status)) {
-              await supabase
-                .from("orders")
-                .update({
-                  status: "processing",
-                  payment_method: "card_online",
-                })
-                .eq("id", order.id);
-            }
-
-            // Log successful transaction
-            await logTransaction("success", order.id);
           }
+        } catch {
+          // Non-critical — continue showing result
         }
+      }
 
+      if (isPending) {
+        setStatus("pending");
+      } else if (isSuccess) {
         setStatus("success");
-      } catch (err) {
-        console.error("Error processing payment callback:", err);
-        setStatus("success"); // Still show success to user since Paymob confirmed it
+      } else {
+        setStatus("failed");
       }
-    };
 
-    const logTransaction = async (txStatus: string, orderId?: string) => {
-      try {
-        await supabase.from("payment_transactions").insert({
-          order_id: orderId || null,
-          order_number: merchantOrderId,
-          paymob_transaction_id: txnId,
-          status: txStatus,
-          amount_cents: amountCents ? parseInt(amountCents) : null,
-          payment_method: "card_online",
-          card_brand: searchParams.get("source_data.sub_type") || null,
-          card_last_four: searchParams.get("source_data.pan") || null,
-        });
-      } catch (e) {
-        console.error("Failed to log transaction:", e);
-      }
+      // NOTE: Order status updates and transaction logging are handled
+      // exclusively by the Paymob webhook (source of truth).
+      // This page only displays the result to the user.
     };
 
     processCallback();
-  }, [success, pending, txnResponseCode, merchantOrderId, txnId, user]);
+  }, [success, pending, txnResponseCode, merchantOrderId, txnId, user, amountCents]);
+
+  const handleRetryPayment = () => {
+    if (orderId) {
+      navigate(`/payment?order_id=${orderId}`);
+    } else {
+      navigate("/my-orders");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -140,6 +119,14 @@ const PaymentCallback = () => {
                   </p>
                 </div>
               )}
+              {amountDisplay && (
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4">
+                  <p className="text-sm text-muted-foreground">المبلغ المدفوع</p>
+                  <p className="font-black text-xl text-green-700 dark:text-green-400">
+                    {amountDisplay} ج.م
+                  </p>
+                </div>
+              )}
               {txnIdDisplay && (
                 <p className="text-xs text-muted-foreground">
                   رقم العملية: <span dir="ltr">{txnIdDisplay}</span>
@@ -171,6 +158,11 @@ const PaymentCallback = () => {
               <p className="text-muted-foreground">
                 تم إرسال عملية الدفع وهي قيد المراجعة. سيتم تحديث حالة طلبك تلقائياً.
               </p>
+              {orderNumber && (
+                <p className="text-sm text-muted-foreground">
+                  رقم الطلب: <span className="font-bold text-foreground" dir="ltr">{orderNumber}</span>
+                </p>
+              )}
               <Button onClick={() => navigate("/my-orders")} className="gap-2">
                 <ShoppingBag className="w-4 h-4" />
                 عرض طلباتي
@@ -189,19 +181,31 @@ const PaymentCallback = () => {
               </div>
               <h1 className="text-2xl font-black text-foreground">لم تتم عملية الدفع</h1>
               <p className="text-muted-foreground">
-                حدثت مشكلة أثناء عملية الدفع. يمكنك المحاولة مرة أخرى.
+                حدثت مشكلة أثناء عملية الدفع. طلبك لا يزال محفوظ ويمكنك إعادة الدفع في أي وقت.
               </p>
               {orderNumber && (
+                <div className="bg-card border border-border rounded-xl p-4">
+                  <p className="text-sm text-muted-foreground">رقم الطلب</p>
+                  <p className="font-bold text-lg font-mono text-foreground" dir="ltr">
+                    {orderNumber}
+                  </p>
+                </div>
+              )}
+              {amountDisplay && (
                 <p className="text-sm text-muted-foreground">
-                  رقم الطلب: <span className="font-bold text-foreground">{orderNumber}</span>
+                  المبلغ: <span className="font-bold text-foreground">{amountDisplay} ج.م</span>
                 </p>
               )}
               <div className="flex flex-col gap-2 pt-2">
-                <Button onClick={() => navigate("/my-orders")} className="gap-2">
-                  <RotateCcw className="w-4 h-4" />
-                  المحاولة من طلباتي
+                <Button onClick={handleRetryPayment} className="gap-2 bg-primary hover:bg-primary/90">
+                  <CreditCard className="w-4 h-4" />
+                  ادفع مرة أخرى
                 </Button>
-                <Button variant="outline" onClick={() => navigate("/")} className="gap-2">
+                <Button variant="outline" onClick={() => navigate("/my-orders")} className="gap-2">
+                  <ShoppingBag className="w-4 h-4" />
+                  عرض طلباتي
+                </Button>
+                <Button variant="ghost" onClick={() => navigate("/")} className="gap-2 text-muted-foreground">
                   <ArrowRight className="w-4 h-4" />
                   العودة للرئيسية
                 </Button>
