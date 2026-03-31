@@ -48,12 +48,6 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
   const [converting, setConverting] = useState(false);
   const [detailProduct, setDetailProduct] = useState<any>(null);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
-  const [savedQuotes, setSavedQuotes] = useState<SavedQuote[]>([]);
-  const [loadingQuotes, setLoadingQuotes] = useState(true);
-  const [convertingQuoteId, setConvertingQuoteId] = useState<string | null>(null);
-  const [expandedQuoteId, setExpandedQuoteId] = useState<string | null>(null);
-  const [expandedQuoteItems, setExpandedQuoteItems] = useState<any[]>([]);
-  const [loadingQuoteItems, setLoadingQuoteItems] = useState(false);
 
   const fetchPricedToday = useCallback(async () => {
     if (!user) return;
