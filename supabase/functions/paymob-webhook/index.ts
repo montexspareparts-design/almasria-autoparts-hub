@@ -171,6 +171,48 @@ Deno.serve(async (req) => {
         await supabase.from("notifications").insert(allNotifs);
         console.log(`Notified ${adminNotifs.length} admin(s) and ${dealerNotifs.length} dealer(s) about failed payment for order ${orderNumber}`);
       }
+
+      // ─── Send Push Notification to dealer ─────────────────────────────
+      if (order) {
+        const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY");
+        const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
+
+        if (vapidPrivateKey && vapidPublicKey) {
+          const { data: pushSubs } = await supabase
+            .from("push_subscriptions")
+            .select("*")
+            .eq("user_id", order.user_id);
+
+          if (pushSubs && pushSubs.length > 0) {
+            const pushPayload = JSON.stringify({
+              title: "⚠️ فشل عملية الدفع",
+              body: `لم تنجح عملية الدفع للطلب #${orderNumber} بقيمة ${amountEgp} ج.م. يمكنك إعادة المحاولة.`,
+              icon: "/pwa-192x192.png",
+              badge: "/pwa-192x192.png",
+              url: "/dealer",
+              tag: "payment-failed-" + orderNumber,
+              timestamp: Date.now(),
+            });
+
+            for (const sub of pushSubs) {
+              try {
+                const resp = await fetch(sub.endpoint, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", TTL: "86400" },
+                  body: pushPayload,
+                });
+                if (resp.status === 410 || resp.status === 404) {
+                  await supabase.from("push_subscriptions").delete().eq("id", sub.id);
+                }
+              } catch (pushErr) {
+                console.error("Push send error:", pushErr);
+              }
+            }
+            console.log(`Sent push notification to ${pushSubs.length} subscription(s) for dealer ${order.user_id}`);
+          }
+        }
+      }
+      // ─── End Push ──────────────────────────────────────────────────────
       // ─── End notify ────────────────────────────────────────────────────
     } else {
       console.log(`Payment pending for order ${orderNumber}`);
