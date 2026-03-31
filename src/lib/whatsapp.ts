@@ -8,20 +8,22 @@ export async function notifyNewOrderWhatsApp(
   orderNumber: string,
   totalAmount: number,
   customerPhone?: string,
-  paymentLink?: string
+  paymentLink?: string,
+  customerName?: string
 ) {
   try {
-    // If no phone provided, try to get it from the current user's profile
     let phone = customerPhone;
-    if (!phone) {
+    let name = customerName;
+    if (!phone || !name) {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("phone")
+          .select("phone, full_name")
           .eq("user_id", user.id)
           .single();
-        phone = profile?.phone || undefined;
+        if (!phone) phone = profile?.phone || undefined;
+        if (!name) name = profile?.full_name || undefined;
       }
     }
 
@@ -31,7 +33,7 @@ export async function notifyNewOrderWhatsApp(
     }
 
     await supabase.functions.invoke("notify-order-whatsapp", {
-      body: { orderNumber, totalAmount, customerPhone: phone, paymentLink },
+      body: { orderNumber, totalAmount, customerPhone: phone, paymentLink, customerName: name },
     });
   } catch (err) {
     console.error("WhatsApp notification failed (non-blocking):", err);

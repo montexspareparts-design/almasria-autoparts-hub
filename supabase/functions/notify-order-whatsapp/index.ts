@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { orderNumber, totalAmount, customerPhone, paymentLink } =
+    const { orderNumber, totalAmount, customerPhone, paymentLink, customerName } =
       await req.json();
 
     if (!orderNumber || !customerPhone) {
