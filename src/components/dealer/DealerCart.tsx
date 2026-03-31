@@ -249,10 +249,9 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment }: DealerCartProps
                   </p>
                   <button
                     onClick={() => removeItem(item.product_id)}
-                    className="text-[10px] text-destructive hover:text-destructive/80 font-semibold flex items-center gap-0.5 transition-colors mr-auto"
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors mr-auto"
                   >
-                    <Trash2 className="w-3 h-3" />
-                    حذف
+                    <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </motion.div>
