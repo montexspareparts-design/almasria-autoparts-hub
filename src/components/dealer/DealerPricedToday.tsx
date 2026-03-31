@@ -126,14 +126,22 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
 
   const handleAddToCart = async (product: any, quantity: number = 1) => {
     await addToCart(product.id, quantity);
-    toast({ title: "✅ تمت الإضافة للسلة", description: `${product.name_ar} × ${quantity}` });
+    toast({
+      title: "✅ تمت الإضافة للسلة",
+      description: `${product.name_ar} × ${quantity}`,
+      action: <button onClick={onConvertToOrder} className="text-xs font-bold text-primary hover:underline whitespace-nowrap">فتح السلة ←</button>,
+    });
   };
 
   const handleConvertToOrder = async () => {
     if (selectedItems.length === 0) { toast({ title: "اختر أصناف أولاً", variant: "destructive" }); return; }
     setConverting(true);
     for (const item of selectedItems) await addToCart(item.product_id, item.quantity);
-    toast({ title: "✅ تمت إضافة الأصناف للسلة", description: `${selectedItems.length} صنف` });
+    toast({
+      title: "✅ تمت إضافة الأصناف للسلة",
+      description: `${selectedItems.length} صنف`,
+      action: <button onClick={onConvertToOrder} className="text-xs font-bold text-primary hover:underline whitespace-nowrap">فتح السلة ←</button>,
+    });
     setConverting(false);
     onConvertToOrder();
   };
