@@ -19,8 +19,7 @@ import { toast } from "@/hooks/use-toast";
 import { pushOrderToERP } from "@/lib/erpSync";
 import {
   buildPaymobReturnUrl,
-  isPaymobPublicKeyConfigured,
-  PAYMOB_PUBLIC_KEY,
+  isValidPaymobPublicKey,
 } from "@/lib/paymob";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -58,6 +57,7 @@ const CheckoutPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [paymobClientSecret, setPaymobClientSecret] = useState<string | null>(null);
   const [paymobOrderId, setPaymobOrderId] = useState<string | null>(null);
+  const [paymobPublicKey, setPaymobPublicKey] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -86,15 +86,6 @@ const CheckoutPage = () => {
 
     if (!form.name || !form.phone || !form.governorate || !form.address) {
       toast({ title: "يرجى ملء جميع الحقول المطلوبة", variant: "destructive" });
-      return;
-    }
-
-    if (payment === "paymob" && !isPaymobPublicKeyConfigured) {
-      toast({
-        title: "مفتاح Paymob العام غير مضبوط",
-        description: "حدّث المفتاح العام في src/lib/paymob.ts أولاً.",
-        variant: "destructive",
-      });
       return;
     }
 
@@ -168,7 +159,7 @@ const CheckoutPage = () => {
             },
           });
 
-          if (paymobErr || !paymobData?.client_secret) {
+          if (paymobErr || !paymobData?.client_secret || !isValidPaymobPublicKey(paymobData?.public_key)) {
             console.error("Paymob error:", paymobErr, paymobData);
             toast({ title: "حدث خطأ في بوابة الدفع", description: "تم حفظ طلبك. يمكنك الدفع لاحقاً من صفحة الطلبات.", variant: "destructive" });
             navigate(`/my-orders?highlight=${order.id}`);
@@ -178,6 +169,7 @@ const CheckoutPage = () => {
           // Show inline Paymob Flash Checkout
           setPaymobClientSecret(paymobData.client_secret);
           setPaymobOrderId(order.id);
+          setPaymobPublicKey(paymobData.public_key);
           setSubmitting(false);
           return;
         } catch (e: any) {
@@ -204,7 +196,7 @@ const CheckoutPage = () => {
   }
 
   // Show Paymob Flash Checkout if client_secret is available
-  if (paymobClientSecret) {
+  if (paymobClientSecret && paymobPublicKey) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
@@ -212,7 +204,7 @@ const CheckoutPage = () => {
           <div className="container mx-auto px-4 max-w-lg text-center">
             <h1 className="text-2xl font-black text-foreground mb-6">💳 إتمام الدفع</h1>
             <div className="bg-card border border-border rounded-lg p-6">
-              <PaymobCheckout clientSecret={paymobClientSecret} publicKey={PAYMOB_PUBLIC_KEY} />
+              <PaymobCheckout clientSecret={paymobClientSecret} publicKey={paymobPublicKey} />
             </div>
             <p className="text-xs text-muted-foreground mt-4">أكمل الدفع داخل النافذة، ثم ستعود تلقائياً لصفحة التأكيد.</p>
             {paymobOrderId && (
