@@ -28,6 +28,7 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment }: DealerCartProps
   const [loadingPrices, setLoadingPrices] = useState(false);
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [submittingPayment, setSubmittingPayment] = useState(false);
   const [shippingAddress, setShippingAddress] = useState("");
   const [shippingGovernorate, setShippingGovernorate] = useState("");
 
