@@ -49,6 +49,21 @@ Deno.serve(async (req) => {
 
     // --- Parse body ---
     const body = await req.json().catch(() => null);
+
+    // --- Secrets ---
+    const paymobApiKey = Deno.env.get("PAYMOB_API_KEY");
+    const integrationId = Deno.env.get("PAYMOB_INTEGRATION_ID");
+    const iframeId = Deno.env.get("PAYMOB_IFRAME_ID");
+    const paymobPublicKey = Deno.env.get("PAYMOB_PUBLIC_KEY");
+
+    // Dry-run mode: return key status for admin health checks
+    if (body?.dry_run === true) {
+      return new Response(
+        JSON.stringify({ public_key: paymobPublicKey || null }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const orderId = typeof body?.order_id === "string" ? body.order_id : "";
     const returnUrl = typeof body?.return_url === "string" ? body.return_url : "";
 
@@ -58,11 +73,6 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    // --- Secrets ---
-    const paymobApiKey = Deno.env.get("PAYMOB_API_KEY");
-    const integrationId = Deno.env.get("PAYMOB_INTEGRATION_ID");
-    const iframeId = Deno.env.get("PAYMOB_IFRAME_ID");
 
     if (!paymobApiKey) throw new Error("PAYMOB_API_KEY is not configured");
     if (!integrationId) throw new Error("PAYMOB_INTEGRATION_ID is not configured");
