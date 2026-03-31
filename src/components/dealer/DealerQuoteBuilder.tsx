@@ -485,7 +485,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
       return;
     }
 
-    const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
+    const orderNumber = await generateOrderNumber();
     const { data: order, error } = await supabase
       .from("orders")
       .insert({ user_id: user.id, order_number: orderNumber, total_amount: Number(quote.total_amount), notes: quote.notes || null, status: "pending" })

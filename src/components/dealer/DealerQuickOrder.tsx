@@ -144,7 +144,7 @@ const DealerQuickOrder = () => {
       return sum + p.base_price * l.quantity;
     }, 0);
 
-    const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
+    const orderNumber = await generateOrderNumber();
 
     const { data: order, error } = await supabase
       .from("orders")

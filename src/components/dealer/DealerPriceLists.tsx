@@ -589,7 +589,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
     const convertToOrder = async () => {
       if (!user) return;
       setSavingQuote(true);
-      const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
+      const orderNumber = await generateOrderNumber();
 
       const { data: order, error } = await supabase
         .from("orders")

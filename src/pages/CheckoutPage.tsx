@@ -93,7 +93,7 @@ const CheckoutPage = () => {
 
     setSubmitting(true);
     try {
-      const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+      const orderNumber = await generateOrderNumber();
 
       const { data: order, error: orderErr } = await supabase
         .from("orders")

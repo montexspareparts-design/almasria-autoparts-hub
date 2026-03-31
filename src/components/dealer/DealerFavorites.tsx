@@ -50,7 +50,7 @@ const DealerFavorites = () => {
 
   const quickOrder = async (product: FavoriteProduct["products"]) => {
     setAddingToOrder(product.id);
-    const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
+    const orderNumber = await generateOrderNumber();
     const price = product.is_on_sale && product.sale_price ? product.sale_price : product.base_price;
 
     const { data: order, error } = await supabase
