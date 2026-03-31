@@ -23,6 +23,7 @@ import DealerPayment from "@/components/dealer/DealerPayment";
 import DealerStockAlerts from "@/components/dealer/DealerStockAlerts";
 import DealerShoppingLists from "@/components/dealer/DealerShoppingLists";
 import DealerProductCompare from "@/components/dealer/DealerProductCompare";
+import DealerPricedToday from "@/components/dealer/DealerPricedToday";
 
 const DealerDashboard = () => {
   const { user, dealerAccount, isDealer, loading: authLoading, signOut } = useAuth();
@@ -84,6 +85,7 @@ const DealerDashboard = () => {
 
   const pageTitles: Record<DealerTab, string> = {
     quotes: "بحث القطع وعروض الأسعار",
+    priced_today: "ما تم تسعيره اليوم",
     price_lists: "كشوفات المصرية",
     orders: "الطلبية",
     payment: "الدفع الإلكتروني",
@@ -103,6 +105,7 @@ const DealerDashboard = () => {
   const renderContent = () => {
     switch (activeTab) {
       case "quotes": return <DealerQuoteBuilder onNavigateToPriceLists={(data) => { setPriceListQuoteData(data || null); setActiveTab("price_lists"); }} />;
+      case "priced_today": return <DealerPricedToday onConvertToOrder={() => setActiveTab("orders")} />;
       case "quick_order": return <DealerQuickOrder />;
       case "orders": return <DealerOrdersList userId={user!.id} onNavigateToPayment={() => setActiveTab("payment")} />;
       case "invoices": return <DealerInvoices userId={user!.id} />;

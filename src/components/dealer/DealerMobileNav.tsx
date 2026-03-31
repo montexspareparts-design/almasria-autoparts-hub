@@ -1,4 +1,4 @@
-import { LayoutDashboard, Search, ClipboardList, FileText, Bell, CreditCard, Receipt, Heart, Zap, Tag, Settings, Upload } from "lucide-react";
+import { LayoutDashboard, Search, ClipboardList, FileText, Bell, CreditCard, Receipt, Heart, Zap, Tag, Settings, Upload, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import type { DealerTab } from "./DealerSidebar";
@@ -17,6 +17,7 @@ const primaryTabs: { id: DealerTab; label: string; Icon: typeof LayoutDashboard 
 ];
 
 const moreTabs: { id: DealerTab; label: string; Icon: typeof LayoutDashboard }[] = [
+  { id: "priced_today", label: "ما تم تسعيره", Icon: Eye },
   { id: "invoices", label: "الفواتير", Icon: Receipt },
   { id: "statement", label: "كشف الحساب", Icon: CreditCard },
   { id: "shopping_lists", label: "قوائم الشراء", Icon: FileText },

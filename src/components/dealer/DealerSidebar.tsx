@@ -4,13 +4,13 @@ import {
   LayoutDashboard, Search, ClipboardList, FileText, Receipt,
   Heart, Upload, Bell, Tag, Settings, LogOut, User, CreditCard,
   ListPlus, Scale, ChevronDown, ChevronUp, Package, Zap,
-  BarChart3, ShoppingCart, Shield
+  BarChart3, ShoppingCart, Shield, Eye
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 
 export type DealerTab =
-  | "quotes" | "orders" | "invoices" | "price_lists"
+  | "quotes" | "priced_today" | "orders" | "invoices" | "price_lists"
   | "favorites" | "quick_order" | "notifications" | "offers"
   | "catalogs" | "settings" | "statement" | "payment" | "stock_alerts"
   | "shopping_lists" | "compare";
@@ -75,6 +75,7 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
       defaultOpen: true,
       items: [
         { id: "quotes", label: "ابحث عن القطعة", icon: Search, iconColor: "text-slate-600 dark:text-slate-400", iconBg: "bg-slate-500/10" },
+        { id: "priced_today", label: "ما تم تسعيره", icon: Eye, iconColor: "text-primary", iconBg: "bg-primary/10" },
         { id: "price_lists", label: "كشوفات المصرية", icon: FileText, iconColor: "text-amber-600", iconBg: "bg-amber-500/10" },
       ],
     },
