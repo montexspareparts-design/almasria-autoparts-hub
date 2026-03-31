@@ -214,6 +214,17 @@ Deno.serve(async (req) => {
         }
       }
 
+      // Send WhatsApp to customer on payment success
+      const { data: customerProfile } = await supabase
+        .from("profiles")
+        .select("phone")
+        .eq("user_id", order.user_id)
+        .maybeSingle();
+
+      if (customerProfile?.phone) {
+        const msg = `تم استلام الدفع بنجاح ✅\nطلبك رقم ${orderNumber} جاري التجهيز`;
+        await sendWhatsApp(customerProfile.phone, msg);
+      }
 
     // =====================================================================
     // ─── FAILURE ─────────────────────────────────────────────────────────
