@@ -34,3 +34,25 @@ export const playPricingSound = () => {
     // Silently ignore if audio not available
   }
 };
+
+/** Plays a short "pop" sound when an item is added to cart */
+export const playCartAddSound = () => {
+  if (!isSoundEnabled()) return;
+  try {
+    const ctx = new AudioContext();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(800, now);
+    osc.frequency.exponentialRampToValueAtTime(1400, now + 0.08);
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+    osc.start(now);
+    osc.stop(now + 0.15);
+  } catch {
+    // Silently ignore
+  }
+};
