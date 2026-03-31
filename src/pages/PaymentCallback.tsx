@@ -181,8 +181,17 @@ const PaymentCallback = () => {
               </div>
               <h1 className="text-2xl font-black text-foreground">لم تتم عملية الدفع</h1>
               <p className="text-muted-foreground">
-                حدثت مشكلة أثناء عملية الدفع. طلبك لا يزال محفوظ ويمكنك إعادة الدفع في أي وقت.
+                {txnResponseCode === "DECLINED"
+                  ? "تم رفض البطاقة من البنك. جرب بطاقة أخرى أو طريقة دفع مختلفة (محفظة إلكترونية / أمان)."
+                  : txnResponseCode === "INSUFFICIENT_FUNDS"
+                    ? "رصيد البطاقة غير كافي لإتمام العملية. جرب طريقة دفع أخرى."
+                    : txnResponseCode === "EXPIRED_CARD"
+                      ? "البطاقة منتهية الصلاحية. استخدم بطاقة أخرى."
+                      : "حدثت مشكلة أثناء عملية الدفع. طلبك لا يزال محفوظ ويمكنك إعادة الدفع بأي طريقة."}
               </p>
+              <div className="bg-muted/50 rounded-lg p-3 text-xs text-muted-foreground">
+                💡 يمكنك تجربة طريقة دفع أخرى: بطاقة بنكية، محفظة إلكترونية (Vodafone Cash)، أو فروع أمان/مصاري
+              </div>
               {orderNumber && (
                 <div className="bg-card border border-border rounded-xl p-4">
                   <p className="text-sm text-muted-foreground">رقم الطلب</p>
