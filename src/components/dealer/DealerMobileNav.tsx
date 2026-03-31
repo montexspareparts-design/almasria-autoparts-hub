@@ -32,7 +32,7 @@ const moreTabs: { id: DealerTab; label: string; Icon: typeof LayoutDashboard }[]
   { id: "settings", label: "حسابي", Icon: Settings },
 ];
 
-const DealerMobileNav = ({ activeTab, onTabChange, unreadCount }: DealerMobileNavProps) => {
+const DealerMobileNav = ({ activeTab, onTabChange, unreadCount, cartItemCount = 0 }: DealerMobileNavProps) => {
   const [showMore, setShowMore] = useState(false);
 
   return (
