@@ -7,7 +7,7 @@ import { LogOut, Loader2 } from "lucide-react";
 import dealerLogo from "@/assets/logo.webp";
 import DealerSidebar, { type DealerTab } from "@/components/dealer/DealerSidebar";
 import DealerMobileNav from "@/components/dealer/DealerMobileNav";
-import DealerOverview from "@/components/dealer/DealerOverview";
+
 import DealerOrdersList from "@/components/dealer/DealerOrdersList";
 import DealerNotificationsList from "@/components/dealer/DealerNotificationsList";
 import DealerOffers from "@/components/dealer/DealerOffers";
