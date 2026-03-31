@@ -11,8 +11,6 @@ import {
   AlertTriangle, Wallet, CreditCard, RefreshCw, RotateCcw
 } from "lucide-react";
 import PaymentInstructionsBanner from "@/components/PaymentInstructionsBanner";
-import PaymobCheckout from "@/components/PaymobCheckout";
-import { buildPaymobReturnUrl, isValidPaymobPublicKey } from "@/lib/paymob";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { useDealerCart } from "@/hooks/useDealerCart";
