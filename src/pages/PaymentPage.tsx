@@ -178,7 +178,12 @@ const PaymentPage = () => {
       setLoading(false);
     } catch (e: any) {
       console.error("Payment init error:", e);
-      setError(e.message || "حدث خطأ غير متوقع");
+      if (e.message === "SESSION_EXPIRED") {
+        setError("انتهت جلسة تسجيل الدخول. يرجى تسجيل الدخول مرة أخرى.");
+        setTimeout(() => navigate("/auth"), 2000);
+      } else {
+        setError(e.message || "حدث خطأ غير متوقع");
+      }
       setLoading(false);
     }
   };

@@ -196,6 +196,9 @@ const MyOrdersPage = () => {
   const handleRetryPayment = async (order: any) => {
     setRetryingPayment(order.id);
     try {
+      const { ensureActiveSession } = await import("@/lib/paymob");
+      await ensureActiveSession();
+
       const { data, error } = await supabase.functions.invoke("create-payment", {
         body: {
           order_id: order.id,

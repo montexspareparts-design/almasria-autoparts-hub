@@ -22,6 +22,9 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
     setLoading(true);
     setError(null);
     try {
+      const { ensureActiveSession } = await import("@/lib/paymob");
+      await ensureActiveSession();
+
       const { data, error: fnError } = await supabase.functions.invoke("create-payment", {
         body: {
           order_id: orderId,
