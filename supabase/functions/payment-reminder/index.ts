@@ -54,9 +54,9 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // ─── 30-min WhatsApp reminder ────────────────────────────────────────
-    const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
-    const sixtyMinAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    // ─── 2-min WhatsApp reminder (TESTING — normally 30 min) ────────────
+    const thirtyMinAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+    const sixtyMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
 
     // Orders created 30-60 min ago still awaiting payment (window to avoid re-sending)
     const { data: recentUnpaid } = await supabase
@@ -117,9 +117,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ─── 24-hour final WhatsApp + in-app reminder ─────────────────────
-    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+    // ─── 5-min final reminder (TESTING — normally 24 hours) ─────────────
+    const twentyFourHoursAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    const fortyEightHoursAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
 
     const { data: staleOrders, error } = await supabase
       .from("orders")
