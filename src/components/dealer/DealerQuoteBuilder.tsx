@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { pushOrderToERP, pushQuoteToERP } from "@/lib/erpSync";
 import { generateOrderNumber } from "@/lib/orderNumber";
+import { notifyNewOrderWhatsApp } from "@/lib/whatsapp";
 import { generateQuotePdf } from "@/lib/generateQuotePdf";
 import { shareQuoteWhatsApp, shareQuoteEmail } from "@/lib/shareQuote";
 import {
@@ -360,6 +361,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
 
     toast({ title: "تم إرسال الطلب ✓", description: `رقم الطلب: ${orderNumber}` });
     pushOrderToERP((order as any).id);
+    notifyNewOrderWhatsApp(orderNumber, totalAmount);
     setQuoteItems([]);
     setNotes("");
     setEditingQuoteId(null);
@@ -512,6 +514,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
 
     toast({ title: "تم إرسال الطلبية ✓", description: `رقم الطلب: ${orderNumber}` });
     pushOrderToERP((order as any).id);
+    notifyNewOrderWhatsApp(orderNumber, Number(quote.total_amount));
     fetchSavedQuotes();
     setSaving(false);
   };
@@ -921,6 +924,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
                           );
                           toast({ title: "تم إرسال الطلب ✓", description: `رقم الطلب: ${orderNumber}` });
                           pushOrderToERP((order as any).id);
+                          notifyNewOrderWhatsApp(orderNumber, total);
                         } else {
                           toast({ title: "خطأ", variant: "destructive" });
                         }

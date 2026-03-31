@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { pushOrderToERP } from "@/lib/erpSync";
 import { generateOrderNumber } from "@/lib/orderNumber";
+import { notifyNewOrderWhatsApp } from "@/lib/whatsapp";
 import {
   buildPaymobReturnUrl,
   isValidPaymobPublicKey,
@@ -127,6 +128,7 @@ const CheckoutPage = () => {
 
       // Push order to Al Faisal ERP (fire-and-forget)
       pushOrderToERP(order.id);
+      notifyNewOrderWhatsApp(orderNumber, orderTotal);
 
       // Record coupon usage if applied
       if (couponCode) {

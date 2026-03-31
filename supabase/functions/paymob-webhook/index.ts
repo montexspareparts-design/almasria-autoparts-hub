@@ -6,46 +6,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-// ─── Meta WhatsApp Business API Helper ──────────────────────────────────────
-async function sendWhatsApp(phone: string, message: string) {
-  const accessToken = Deno.env.get("META_WHATSAPP_ACCESS_TOKEN");
-  const phoneNumberId = Deno.env.get("META_WHATSAPP_PHONE_NUMBER_ID");
-
-  if (!accessToken || !phoneNumberId) {
-    console.warn("Meta WhatsApp credentials not configured — skipping");
-    return { ok: false, data: null };
-  }
-
-  let formatted = phone.replace(/[\s\-\(\)]/g, "");
-  if (formatted.startsWith("+")) formatted = formatted.slice(1);
-  if (formatted.startsWith("0")) formatted = "2" + formatted;
-
-  const url = `https://graph.facebook.com/v21.0/${phoneNumberId}/messages`;
-
-  const resp = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      messaging_product: "whatsapp",
-      to: formatted,
-      type: "text",
-      text: { body: message },
-    }),
-  });
-
-  const data = await resp.json();
-  if (resp.ok) {
-    console.log(`WhatsApp sent to ${formatted}, ID: ${data.messages?.[0]?.id}`);
-  } else {
-    console.error(`WhatsApp failed to ${formatted}:`, JSON.stringify(data));
-  }
-  return { ok: resp.ok, data };
-}
-// ────────────────────────────────────────────────────────────────────────────
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -216,70 +176,6 @@ Deno.serve(async (req) => {
         }
       }
 
-      // ─── WhatsApp: Customer success (Meta API) ────────────────────────
-      try {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("full_name, phone")
-          .eq("user_id", order.user_id)
-          .maybeSingle();
-
-        const customerName = profile?.full_name || "عميلنا الكريم";
-
-        if (profile?.phone) {
-          const customerMsg = [
-            `✅ تم استلام الدفع بنجاح!`,
-            ``,
-            `مرحباً ${customerName}،`,
-            `تم تأكيد دفعك بنجاح وطلبك الآن قيد التجهيز.`,
-            ``,
-            `📋 تفاصيل العملية:`,
-            `• رقم الطلب: ${orderNumber}`,
-            `• المبلغ المدفوع: ${amountEgp} ج.م`,
-            `• طريقة الدفع: ${payMethod}${cardInfo}`,
-            `• التاريخ: ${new Date().toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}`,
-            ``,
-            `سيتم إخطارك عند تجهيز طلبك وشحنه.`,
-            `شكراً لتعاملك معنا! 🙏`,
-            `— المصرية جروب لقطع غيار السيارات`,
-          ].join("\n");
-
-          await sendWhatsApp(profile.phone, customerMsg);
-        }
-
-        // ─── WhatsApp: Admin success notification ──────────────────────
-        const { data: admins } = await supabase
-          .from("user_roles")
-          .select("user_id")
-          .eq("role", "admin");
-
-        if (admins && admins.length > 0) {
-          const adminUserIds = admins.map((a: { user_id: string }) => a.user_id);
-          const { data: adminProfiles } = await supabase
-            .from("profiles")
-            .select("phone, full_name, user_id")
-            .in("user_id", adminUserIds);
-
-          const adminMsg = [
-            `🆕 طلب مدفوع جديد!`,
-            ``,
-            `📋 تفاصيل:`,
-            `• رقم الطلب: ${orderNumber}`,
-            `• العميل: ${customerName}`,
-            `• المبلغ: ${amountEgp} ج.م`,
-            `• طريقة الدفع: ${payMethod}${cardInfo}`,
-            `• الوقت: ${new Date().toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}`,
-          ].join("\n");
-
-          for (const adminProfile of (adminProfiles || [])) {
-            if (adminProfile.phone) {
-              await sendWhatsApp(adminProfile.phone, adminMsg);
-            }
-          }
-        }
-      } catch (waError) {
-        console.error("WhatsApp notification error (success, non-blocking):", waError);
-      }
 
     // =====================================================================
     // ─── FAILURE ─────────────────────────────────────────────────────────
@@ -346,39 +242,6 @@ Deno.serve(async (req) => {
         }
       }
 
-      // ─── WhatsApp: Customer failure + retry link (Meta API) ───────────
-      if (order) {
-        try {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("full_name, phone")
-            .eq("user_id", order.user_id)
-            .maybeSingle();
-
-          const customerName = profile?.full_name || "عميلنا الكريم";
-          const paymentLink = `https://www.almasriaautoparts.com/payment?order_id=${order.id}`;
-
-          if (profile?.phone) {
-            const failMsg = [
-              `⚠️ لم تتم عملية الدفع`,
-              ``,
-              `مرحباً ${customerName}،`,
-              `تعذر إتمام الدفع للطلب #${orderNumber} بقيمة ${amountEgp} ج.م.`,
-              `السبب: ${errorDetail}`,
-              ``,
-              `يمكنك إعادة المحاولة من هنا:`,
-              paymentLink,
-              ``,
-              `أو تواصل معنا للمساعدة.`,
-              `— المصرية جروب لقطع غيار السيارات`,
-            ].join("\n");
-
-            await sendWhatsApp(profile.phone, failMsg);
-          }
-        } catch (waError) {
-          console.error("WhatsApp notification error (failure, non-blocking):", waError);
-        }
-      }
     } else {
       console.log(`Payment pending for order ${orderNumber}`);
     }
