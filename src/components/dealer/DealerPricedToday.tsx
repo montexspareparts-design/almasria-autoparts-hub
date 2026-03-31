@@ -137,7 +137,11 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
     if (selectedItems.length === 0) { toast({ title: "اختر أصناف أولاً", variant: "destructive" }); return; }
     setConverting(true);
     for (const item of selectedItems) await addToCart(item.product_id, item.quantity);
-    toast({ title: "✅ تمت إضافة الأصناف للسلة", description: `${selectedItems.length} صنف` });
+    toast({
+      title: "✅ تمت إضافة الأصناف للسلة",
+      description: `${selectedItems.length} صنف`,
+      action: <button onClick={onConvertToOrder} className="text-xs font-bold text-primary hover:underline whitespace-nowrap">فتح السلة ←</button>,
+    });
     setConverting(false);
     onConvertToOrder();
   };
