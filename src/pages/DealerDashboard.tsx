@@ -83,22 +83,21 @@ const DealerDashboard = () => {
   const handleSignOut = () => { signOut(); navigate("/"); };
 
   const pageTitles: Record<DealerTab, string> = {
-    overview: "لوحة التحكم",
     quotes: "بحث القطع وعروض الأسعار",
-    quick_order: "طلب سريع — رفع Excel",
+    price_lists: "كشوفات المصرية",
     orders: "الطلبية",
     payment: "الدفع الإلكتروني",
     invoices: "الفواتير",
     statement: "كشف الحساب",
-    price_lists: "كشوفات المصرية",
-    favorites: "المفضلة",
+    shopping_lists: "قوائم الشراء",
+    compare: "مقارنة المنتجات",
     stock_alerts: "تنبيهات المخزون",
+    favorites: "المفضلة",
+    quick_order: "طلب سريع — رفع Excel",
     notifications: "الإشعارات",
     offers: "العروض الخاصة",
     catalogs: "الكتالوجات",
     settings: "إعدادات الحساب",
-    shopping_lists: "قوائم الشراء",
-    compare: "مقارنة المنتجات",
   };
 
   const renderContent = () => {
