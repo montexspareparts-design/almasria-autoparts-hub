@@ -29,6 +29,7 @@ const AdminQuantityDiscounts = lazy(() => import("@/components/AdminQuantityDisc
 const AdminCustomerIntelligence = lazy(() => import("@/components/AdminCustomerIntelligence"));
 const AdminProductInsights = lazy(() => import("@/components/AdminProductInsights"));
 const AdminPaymobSettings = lazy(() => import("@/components/AdminPaymobSettings"));
+const AdminPaymentReminders = lazy(() => import("@/components/AdminPaymentReminders"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];
@@ -83,14 +84,15 @@ const sidebarGroups: SidebarGroup[] = [
       { id: "image-verifier", label: "مراجعة الصور (AI)", icon: Brain },
     ],
   },
-  {
-    label: "التنبيهات والربط",
-    items: [
-      { id: "push-notifications", label: "إشعارات Push", icon: Bell },
-      { id: "erp", label: "ربط ERP", icon: Zap },
-      { id: "paymob", label: "إعدادات Paymob", icon: Briefcase },
-    ],
-  },
+    {
+      label: "التنبيهات والربط",
+      items: [
+        { id: "payment-reminders", label: "متابعة التذكيرات", icon: Clock },
+        { id: "push-notifications", label: "إشعارات Push", icon: Bell },
+        { id: "erp", label: "ربط ERP", icon: Zap },
+        { id: "paymob", label: "إعدادات Paymob", icon: Briefcase },
+      ],
+    },
 ];
 
 const sidebarSections = sidebarGroups.flatMap(g => g.items);
@@ -438,6 +440,8 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminProductImages /></Suspense>;
       case "image-verifier":
         return <Suspense fallback={<SectionLoader />}><AdminImageVerifier /></Suspense>;
+      case "payment-reminders":
+        return <Suspense fallback={<SectionLoader />}><AdminPaymentReminders /></Suspense>;
       case "push-notifications":
         return <Suspense fallback={<SectionLoader />}><AdminPushNotifications /></Suspense>;
       case "erp":
