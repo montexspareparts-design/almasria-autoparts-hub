@@ -68,6 +68,7 @@ export const useDealerCart = () => {
     }
     await fetchCart();
     playCartAddSound();
+  }, [user, items, fetchCart]);
 
   const updateQuantity = useCallback(async (productId: string, qty: number) => {
     if (qty <= 0) {
