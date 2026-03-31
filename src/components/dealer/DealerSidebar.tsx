@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 
 export type DealerTab =
-  | "quotes" | "priced_today" | "orders" | "invoices" | "price_lists"
+  | "quotes" | "priced_today" | "cart" | "orders" | "invoices" | "price_lists"
   | "favorites" | "quick_order" | "notifications" | "offers"
   | "catalogs" | "settings" | "statement" | "payment" | "stock_alerts"
   | "shopping_lists" | "compare";
@@ -83,6 +83,7 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
       label: "الطلبات والمعاملات",
       defaultOpen: true,
       items: [
+        { id: "cart", label: "السلة", icon: ShoppingCart, iconColor: "text-rose-600", iconBg: "bg-rose-500/10" },
         { id: "orders", label: "طلباتي", icon: ClipboardList, iconColor: "text-slate-600 dark:text-slate-400", iconBg: "bg-slate-500/10" },
         { id: "payment", label: "الدفع الإلكتروني", icon: CreditCard, iconColor: "text-emerald-600", iconBg: "bg-emerald-500/10" },
         { id: "invoices", label: "الفواتير", icon: Receipt, iconColor: "text-violet-600", iconBg: "bg-violet-500/10" },
