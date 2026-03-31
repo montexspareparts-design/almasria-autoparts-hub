@@ -384,7 +384,30 @@ const MyOrdersPage = () => {
                               />
                             )}
 
-                            {/* Order Items */}
+                            {/* Retry Paymob Payment Button */}
+                            {order.payment_method === "paymob" &&
+                              ["awaiting_payment", "confirmed", "pending"].includes(order.status) && (
+                              <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 flex items-center justify-between gap-4">
+                                <div>
+                                  <p className="text-sm font-bold text-foreground">لم يتم الدفع بعد</p>
+                                  <p className="text-xs text-muted-foreground mt-0.5">اضغط لإتمام عملية الدفع عبر البطاقة البنكية</p>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  className="gap-2 shrink-0"
+                                  disabled={retryingPayment === order.id}
+                                  onClick={() => handleRetryPayment(order)}
+                                >
+                                  {retryingPayment === order.id ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <RotateCcw className="w-4 h-4" />
+                                  )}
+                                  ادفع الآن
+                                </Button>
+                              </div>
+                            )}
+
                             <div>
                               <h3 className="text-sm font-bold text-card-foreground mb-3">المنتجات ({items.length})</h3>
                               <div className="space-y-2.5">
