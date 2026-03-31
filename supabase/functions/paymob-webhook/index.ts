@@ -217,13 +217,32 @@ Deno.serve(async (req) => {
       // Send WhatsApp to customer on payment success
       const { data: customerProfile } = await supabase
         .from("profiles")
-        .select("phone")
+        .select("phone, full_name")
         .eq("user_id", order.user_id)
         .maybeSingle();
 
       if (customerProfile?.phone) {
         const msg = `تم استلام الدفع بنجاح ✅\nطلبك رقم ${orderNumber} جاري التجهيز`;
         await sendWhatsApp(customerProfile.phone, msg);
+      }
+
+      // Send WhatsApp to admins on payment success
+      const { data: adminRoles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "admin");
+
+      if (adminRoles && adminRoles.length > 0) {
+        const { data: adminProfiles } = await supabase
+          .from("profiles")
+          .select("phone")
+          .in("user_id", adminRoles.map((a: { user_id: string }) => a.user_id));
+
+        const clientName = customerProfile?.full_name || "عميل";
+        const adminMsg = `💳 تم دفع طلب #${orderNumber}\nالعميل: ${clientName}\nالمبلغ: ${amountEgp} ج.م`;
+        for (const p of adminProfiles || []) {
+          if (p.phone) await sendWhatsApp(p.phone, adminMsg);
+        }
       }
 
     // =====================================================================

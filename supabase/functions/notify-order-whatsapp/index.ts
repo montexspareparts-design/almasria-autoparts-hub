@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { orderNumber, totalAmount, customerPhone, paymentLink } =
+    const { orderNumber, totalAmount, customerPhone, paymentLink, customerName } =
       await req.json();
 
     if (!orderNumber || !customerPhone) {
@@ -91,7 +91,8 @@ Deno.serve(async (req) => {
         .select("phone")
         .in("user_id", admins.map((a: { user_id: string }) => a.user_id));
 
-      const adminMsg = `🆕 طلب جديد #${orderNumber}\nالإجمالي ${amountFormatted} جنيه\nالعميل: ${customerPhone}`;
+      const clientName = customerName || customerPhone;
+      const adminMsg = `🆕 طلب جديد #${orderNumber}\nالعميل: ${clientName}\nالإجمالي: ${amountFormatted} جنيه`;
       for (const p of adminProfiles || []) {
         if (p.phone) await sendWhatsApp(p.phone, adminMsg);
       }
