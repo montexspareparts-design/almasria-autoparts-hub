@@ -903,7 +903,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
                       className="h-10"
                       onClick={async () => {
                         setSaving(true);
-                        const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
+                        const orderNumber = await generateOrderNumber();
                         const total = todayItems.reduce((s, i) => s + i.unit_price * i.quantity, 0);
                         const { data: order, error } = await supabase
                           .from("orders")
