@@ -82,7 +82,7 @@ const AdminPaymobSettings = () => {
       // 1. Check edge function is reachable
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        const { data, error } = await supabase.functions.invoke("create-paymob-intention", {
+        const { data, error } = await supabase.functions.invoke("create-payment", {
           body: { dry_run: true },
         });
         if (error) {
