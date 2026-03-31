@@ -84,14 +84,15 @@ const sidebarGroups: SidebarGroup[] = [
       { id: "image-verifier", label: "مراجعة الصور (AI)", icon: Brain },
     ],
   },
-  {
-    label: "التنبيهات والربط",
-    items: [
-      { id: "push-notifications", label: "إشعارات Push", icon: Bell },
-      { id: "erp", label: "ربط ERP", icon: Zap },
-      { id: "paymob", label: "إعدادات Paymob", icon: Briefcase },
-    ],
-  },
+    {
+      label: "التنبيهات والربط",
+      items: [
+        { id: "payment-reminders", label: "متابعة التذكيرات", icon: Clock },
+        { id: "push-notifications", label: "إشعارات Push", icon: Bell },
+        { id: "erp", label: "ربط ERP", icon: Zap },
+        { id: "paymob", label: "إعدادات Paymob", icon: Briefcase },
+      ],
+    },
 ];
 
 const sidebarSections = sidebarGroups.flatMap(g => g.items);
