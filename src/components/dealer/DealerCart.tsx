@@ -156,7 +156,6 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment }: DealerCartProps
           <h3 className="text-lg font-bold text-foreground">السلة فارغة</h3>
           <p className="text-sm text-muted-foreground">أضف أصناف من البحث أو عروض الأسعار</p>
         </div>
-        <DealerRecentOrders onNavigateToOrders={onNavigateToOrders} onNavigateToPayment={onNavigateToPayment} />
       </div>
     );
   }
