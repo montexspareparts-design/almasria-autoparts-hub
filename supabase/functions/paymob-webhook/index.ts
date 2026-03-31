@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
     // Look up the internal order
     const { data: order } = await supabase
       .from("orders")
-      .select("id, status, user_id")
+      .select("id, status, user_id, total_amount")
       .eq("order_number", orderNumber)
       .maybeSingle();
 
@@ -174,6 +174,85 @@ Deno.serve(async (req) => {
         console.log(`Sent success push to ${successPushSubs.length} sub(s) for dealer ${order.user_id}`);
       }
       // ─── End Success Push ──────────────────────────────────────────────
+
+      // ─── WhatsApp Notification on Successful Payment ───────────────────
+      try {
+        const twilioAccountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
+        const twilioAuthToken = Deno.env.get("TWILIO_AUTH_TOKEN");
+        const twilioPhone = Deno.env.get("TWILIO_PHONE_NUMBER");
+
+        if (twilioAccountSid && twilioAuthToken && twilioPhone) {
+          // Fetch customer profile
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("full_name, phone")
+            .eq("user_id", order.user_id)
+            .maybeSingle();
+
+          const customerPhone = profile?.phone;
+          const customerName = profile?.full_name || "عميلنا الكريم";
+          const totalAmount = order.total_amount
+            ? Number(order.total_amount).toLocaleString("ar-EG")
+            : (transaction.amount_cents ? (transaction.amount_cents / 100).toLocaleString("ar-EG") : "—");
+          const paymentMethod = transaction.source_data?.type || "بطاقة بنكية";
+          const cardInfo = transaction.source_data?.pan ? ` (****${transaction.source_data.pan})` : "";
+
+          if (customerPhone) {
+            let phone = customerPhone.replace(/\s/g, "");
+            if (!phone.startsWith("+")) {
+              phone = phone.startsWith("0") ? `+2${phone}` : `+${phone}`;
+            }
+
+            const whatsappBody = [
+              `✅ تم استلام الدفع بنجاح!`,
+              ``,
+              `مرحباً ${customerName}،`,
+              `تم تأكيد دفعك بنجاح وطلبك الآن قيد التجهيز.`,
+              ``,
+              `📋 تفاصيل العملية:`,
+              `• رقم الطلب: ${orderNumber}`,
+              `• المبلغ المدفوع: ${totalAmount} ج.م`,
+              `• طريقة الدفع: ${paymentMethod}${cardInfo}`,
+              `• التاريخ: ${new Date().toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}`,
+              ``,
+              `سيتم إخطارك عند تجهيز طلبك وشحنه.`,
+              ``,
+              `شكراً لتعاملك معنا! 🙏`,
+              `— المصرية جروب لقطع غيار السيارات`,
+            ].join("\n");
+
+            const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`;
+            const twilioAuthHeader = btoa(`${twilioAccountSid}:${twilioAuthToken}`);
+
+            const waResp = await fetch(twilioUrl, {
+              method: "POST",
+              headers: {
+                "Authorization": `Basic ${twilioAuthHeader}`,
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
+              body: new URLSearchParams({
+                To: `whatsapp:${phone}`,
+                From: `whatsapp:${twilioPhone}`,
+                Body: whatsappBody,
+              }),
+            });
+
+            const waData = await waResp.json();
+            if (waResp.ok) {
+              console.log(`WhatsApp payment success sent to ${phone}, SID: ${waData.sid}`);
+            } else {
+              console.error("WhatsApp send failed:", JSON.stringify(waData));
+            }
+          } else {
+            console.log("No phone number found for user, skipping WhatsApp notification");
+          }
+        } else {
+          console.log("Twilio credentials not configured, skipping WhatsApp notification");
+        }
+      } catch (waError) {
+        console.error("WhatsApp notification error (non-blocking):", waError);
+      }
+      // ─── End WhatsApp Notification ─────────────────────────────────────
     } else if (!success && !isPending) {
       // ─── Notify admins & dealer on payment failure ─────────────────────
       const errorDetail = transaction.data?.message || transaction.txn_response_code || "خطأ غير معروف";
