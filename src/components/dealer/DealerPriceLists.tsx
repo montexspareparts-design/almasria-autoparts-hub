@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { pushOrderToERP, pushQuoteToERP } from "@/lib/erpSync";
 import { generateOrderNumber } from "@/lib/orderNumber";
+import { notifyNewOrderWhatsApp } from "@/lib/whatsapp";
 import { generateQuotePdf } from "@/lib/generateQuotePdf";
 import { shareQuoteWhatsApp, shareQuoteEmail } from "@/lib/shareQuote";
 import {
