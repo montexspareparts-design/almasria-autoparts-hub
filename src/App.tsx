@@ -111,6 +111,7 @@ const App = () => (
                     <Route path="/catalogs" element={<CatalogsPage />} />
                     <Route path="/install" element={<InstallApp />} />
                     <Route path="/payment-callback" element={<PaymentCallback />} />
+                    <Route path="/payment" element={<PaymentPage />} />
                     <Route path="/policies" element={<PoliciesPage />} />
                     <Route path="/my-profile" element={<MyProfilePage />} />
                     <Route path="*" element={<NotFound />} />
