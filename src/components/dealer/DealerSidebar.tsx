@@ -85,7 +85,6 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
       defaultOpen: true,
       items: [
         { id: "cart", label: "السلة", icon: ShoppingCart, badge: cartItemCount, iconColor: "text-rose-600", iconBg: "bg-rose-500/10" },
-        { id: "orders", label: "طلباتي", icon: ClipboardList, iconColor: "text-slate-600 dark:text-slate-400", iconBg: "bg-slate-500/10" },
         { id: "payment", label: "الدفع الإلكتروني", icon: CreditCard, iconColor: "text-emerald-600", iconBg: "bg-emerald-500/10" },
         { id: "invoices", label: "الفواتير", icon: Receipt, iconColor: "text-violet-600", iconBg: "bg-violet-500/10" },
         { id: "statement", label: "كشف الحساب", icon: BarChart3, iconColor: "text-blue-600", iconBg: "bg-blue-500/10" },
