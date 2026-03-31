@@ -1,0 +1,1 @@
+INSERT INTO site_settings (key, value) VALUES ('app_base_url', 'https://almasriaautoparts.com') ON CONFLICT (key) DO UPDATE SET value = 'https://almasriaautoparts.com', updated_at = now();
