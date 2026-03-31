@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { AlertCircle, Loader2 } from "lucide-react";
 
 declare global {
   interface Window {
@@ -21,38 +21,80 @@ const PAYMOB_SDK_URL = "https://egypt.paymob.com/unifiedcheckout/sdk/latest/paym
 const PaymobCheckout = ({ clientSecret, publicKey }: PaymobCheckoutProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
-  const mountedRef = useRef(false);
+  const [error, setError] = useState<string | null>(null);
+  const containerId = useMemo(
+    () => `paymob-checkout-${Math.random().toString(36).slice(2, 10)}`,
+    []
+  );
 
   useEffect(() => {
-    if (mountedRef.current) return;
-    mountedRef.current = true;
+    let cancelled = false;
 
     const loadAndMount = async () => {
-      // Load SDK if not already loaded
-      if (!window.Paymob) {
-        await new Promise<void>((resolve, reject) => {
-          const script = document.createElement("script");
-          script.src = PAYMOB_SDK_URL;
-          script.onload = () => resolve();
-          script.onerror = () => reject(new Error("Failed to load Paymob SDK"));
-          document.head.appendChild(script);
-        });
-      }
-
-      // Mount checkout button
       try {
+        setLoading(true);
+        setError(null);
+
+        if (!window.Paymob) {
+          await new Promise<void>((resolve, reject) => {
+            const existingScript = document.querySelector<HTMLScriptElement>(
+              `script[src="${PAYMOB_SDK_URL}"]`
+            );
+
+            if (existingScript) {
+              existingScript.addEventListener("load", () => resolve(), { once: true });
+              existingScript.addEventListener(
+                "error",
+                () => reject(new Error("Failed to load Paymob SDK")),
+                { once: true }
+              );
+
+              if ((window as Window & { Paymob?: unknown }).Paymob) {
+                resolve();
+              }
+
+              return;
+            }
+
+            const script = document.createElement("script");
+            script.src = PAYMOB_SDK_URL;
+            script.async = true;
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error("Failed to load Paymob SDK"));
+            document.head.appendChild(script);
+          });
+        }
+
+        if (cancelled || !containerRef.current) return;
+
+        containerRef.current.innerHTML = "";
+
         window.Paymob(publicKey)
           .checkoutButton(clientSecret)
-          .mount("#paymob-checkout-container");
-        setLoading(false);
+          .mount(`#${containerId}`);
+
+        if (!cancelled) {
+          setLoading(false);
+        }
       } catch (err) {
         console.error("Paymob mount error:", err);
-        setLoading(false);
+        if (!cancelled) {
+          setError("تعذر تحميل بوابة Paymob الآن. جرّب مرة أخرى بعد لحظات.");
+          setLoading(false);
+        }
       }
     };
 
     loadAndMount();
-  }, [clientSecret, publicKey]);
+
+    return () => {
+      cancelled = true;
+
+      if (containerRef.current) {
+        containerRef.current.innerHTML = "";
+      }
+    };
+  }, [clientSecret, publicKey, containerId]);
 
   return (
     <div className="w-full">
@@ -62,7 +104,15 @@ const PaymobCheckout = ({ clientSecret, publicKey }: PaymobCheckoutProps) => {
           <span>جاري تحميل بوابة الدفع...</span>
         </div>
       )}
-      <div id="paymob-checkout-container" ref={containerRef} />
+      {error && (
+        <div className="mb-4 rounded-lg border border-destructive/20 bg-destructive/5 p-4 text-sm text-foreground">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="mt-0.5 h-4 w-4 text-destructive" />
+            <span>{error}</span>
+          </div>
+        </div>
+      )}
+      <div id={containerId} ref={containerRef} />
     </div>
   );
 };

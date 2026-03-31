@@ -15,6 +15,7 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const paymobSecretKey = Deno.env.get("PAYMOB_SECRET_KEY");
+    const paymobHmacSecret = Deno.env.get("PAYMOB_HMAC_SECRET") || paymobSecretKey;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     const body = await req.json();
@@ -26,8 +27,8 @@ Deno.serve(async (req) => {
     const isPending = transaction.pending === true || transaction.pending === "true";
 
     // ─── HMAC Verification (REQUIRED) ───────────────────────────────────
-    if (!paymobSecretKey) {
-      console.error("PAYMOB_SECRET_KEY not configured");
+    if (!paymobHmacSecret) {
+      console.error("PAYMOB HMAC secret not configured");
       return new Response(
         JSON.stringify({ error: "Webhook secret not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -70,7 +71,7 @@ Deno.serve(async (req) => {
     const encoder = new TextEncoder();
     const key = await crypto.subtle.importKey(
       "raw",
-      encoder.encode(paymobSecretKey),
+      encoder.encode(paymobHmacSecret),
       { name: "HMAC", hash: "SHA-512" },
       false,
       ["sign"]

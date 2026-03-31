@@ -12,10 +12,20 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const authHeader = req.headers.get("Authorization");
     const paymobSecretKey = Deno.env.get("PAYMOB_SECRET_KEY");
     const paymobIntegrationId = Deno.env.get("PAYMOB_INTEGRATION_ID");
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const anonKey =
+      Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
+
+    if (!authHeader || !anonKey) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     if (!paymobSecretKey) {
       throw new Error("PAYMOB_SECRET_KEY is not configured");
@@ -26,27 +36,27 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // ─── Authentication Check ───────────────────────────────────────────
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
+    const authClient = createClient(supabaseUrl, anonKey, {
+      global: {
+        headers: {
+          Authorization: authHeader,
+        },
+      },
+    });
+
+    const { data: claimsData, error: authError } = await authClient.auth.getClaims();
+    const userId = claimsData?.claims?.sub;
+
+    if (authError || !userId) {
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-    // ─── End Auth Check ─────────────────────────────────────────────────
-
-    const { order_id, return_url } = await req.json();
+    const body = await req.json().catch(() => null);
+    const order_id = typeof body?.order_id === "string" ? body.order_id : "";
+    const return_url = typeof body?.return_url === "string" ? body.return_url : "";
 
     if (!order_id) {
       return new Response(
@@ -58,7 +68,7 @@ Deno.serve(async (req) => {
     // Fetch order details
     const { data: order, error: orderErr } = await supabase
       .from("orders")
-      .select("*, order_items(*, products(name_ar, sku))")
+      .select("id, user_id, total_amount, order_number, shipping_address, shipping_governorate, order_items(quantity, unit_price, products(name_ar, sku))")
       .eq("id", order_id)
       .single();
 
@@ -71,7 +81,7 @@ Deno.serve(async (req) => {
     }
 
     // Verify user owns the order
-    if (order.user_id !== user.id) {
+    if (order.user_id !== userId) {
       return new Response(
         JSON.stringify({ error: "Forbidden" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -124,6 +134,7 @@ Deno.serve(async (req) => {
         state: order.shipping_governorate || "Cairo",
       },
       items,
+      merchant_order_id: order.order_number,
       extras: {
         order_id: order.id,
         order_number: order.order_number,
@@ -165,6 +176,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         client_secret: intentionData.client_secret,
         intention_id: intentionData.id,
+        order_number: order.order_number,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
