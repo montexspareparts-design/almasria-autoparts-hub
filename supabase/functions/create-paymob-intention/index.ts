@@ -16,6 +16,7 @@ Deno.serve(async (req) => {
     const paymobSecretKey = Deno.env.get("PAYMOB_SECRET_KEY");
     const paymobIntegrationId = Deno.env.get("PAYMOB_INTEGRATION_ID");
     const paymobPublicKey = Deno.env.get("PAYMOB_PUBLIC_KEY");
+    const paymobIframeId = Deno.env.get("PAYMOB_IFRAME_ID");
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey =
