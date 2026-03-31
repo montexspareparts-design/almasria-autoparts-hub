@@ -104,6 +104,7 @@ const DealerDashboard = () => {
   const renderContent = () => {
     switch (activeTab) {
       case "quotes": return <DealerQuoteBuilder onNavigateToPriceLists={(data) => { setPriceListQuoteData(data || null); setActiveTab("price_lists"); }} />;
+      case "priced_today": return <DealerPricedToday onConvertToOrder={() => setActiveTab("orders")} />;
       case "quick_order": return <DealerQuickOrder />;
       case "orders": return <DealerOrdersList userId={user!.id} onNavigateToPayment={() => setActiveTab("payment")} />;
       case "invoices": return <DealerInvoices userId={user!.id} />;
