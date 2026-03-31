@@ -28,6 +28,40 @@ Deno.serve(async (req) => {
       );
     }
 
+    const authClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    // Try getClaims first, fall back to getUser for older SDK
+    let userId: string | undefined;
+    try {
+      const { data: claimsData } = await authClient.auth.getClaims();
+      userId = claimsData?.claims?.sub as string | undefined;
+    } catch {
+      // getClaims not available — fall back
+    }
+    if (!userId) {
+      const { data: { user: authUser } } = await authClient.auth.getUser();
+      userId = authUser?.id;
+    }
+
+    if (!userId) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const body = await req.json().catch(() => null);
+
+    // Dry-run mode: return key status for admin health checks (skip Paymob key validation)
+    if (body?.dry_run === true) {
+      return new Response(
+        JSON.stringify({ public_key: paymobPublicKey || null }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (!paymobSecretKey) {
       throw new Error("PAYMOB_SECRET_KEY is not configured");
     }
@@ -39,34 +73,6 @@ Deno.serve(async (req) => {
     }
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
-
-    const authClient = createClient(supabaseUrl, anonKey, {
-      global: {
-        headers: {
-          Authorization: authHeader,
-        },
-      },
-    });
-
-    const { data: claimsData, error: authError } = await authClient.auth.getClaims();
-    const userId = claimsData?.claims?.sub;
-
-    if (authError || !userId) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const body = await req.json().catch(() => null);
-
-    // Dry-run mode: just return public key status for admin health checks
-    if (body?.dry_run === true) {
-      return new Response(
-        JSON.stringify({ public_key: paymobPublicKey || null }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
 
     const order_id = typeof body?.order_id === "string" ? body.order_id : "";
     const return_url = typeof body?.return_url === "string" ? body.return_url : "";
