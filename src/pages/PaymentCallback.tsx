@@ -82,19 +82,19 @@ const PaymentCallback = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-[100svh] bg-background flex flex-col">
       <Navbar />
-      <div className="pt-24 pb-12 flex items-center justify-center min-h-[70vh]">
-        <div className="max-w-md w-full mx-auto px-4 text-center">
+      <div className="pt-20 md:pt-24 pb-8 md:pb-12 flex items-center justify-center flex-1">
+        <div className="max-w-md w-full mx-auto px-3 sm:px-4 text-center">
           {status === "loading" && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="space-y-4"
+              className="space-y-3 sm:space-y-4"
             >
-              <Loader2 className="w-16 h-16 animate-spin text-primary mx-auto" />
-              <h1 className="text-xl font-bold text-foreground">جاري التحقق من الدفع...</h1>
-              <p className="text-sm text-muted-foreground">يرجى الانتظار لحظات</p>
+              <Loader2 className="w-12 h-12 sm:w-16 sm:h-16 animate-spin text-primary mx-auto" />
+              <h1 className="text-lg sm:text-xl font-bold text-foreground">جاري التحقق من الدفع...</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground">يرجى الانتظار لحظات</p>
             </motion.div>
           )}
 
@@ -102,42 +102,42 @@ const PaymentCallback = () => {
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="space-y-5"
+              className="space-y-4 sm:space-y-5"
             >
-              <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto">
-                <CheckCircle2 className="w-10 h-10 text-green-600" />
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto">
+                <CheckCircle2 className="w-8 h-8 sm:w-10 sm:h-10 text-green-600" />
               </div>
-              <h1 className="text-2xl font-black text-foreground">تم الدفع بنجاح! 🎉</h1>
-              <p className="text-muted-foreground">
+              <h1 className="text-xl sm:text-2xl font-black text-foreground">تم الدفع بنجاح! 🎉</h1>
+              <p className="text-sm text-muted-foreground">
                 تم استلام الدفع وطلبك الآن قيد التجهيز.
               </p>
               {orderNumber && (
-                <div className="bg-card border border-border rounded-xl p-4">
-                  <p className="text-sm text-muted-foreground">رقم الطلب</p>
-                  <p className="font-bold text-lg font-mono text-foreground" dir="ltr">
+                <div className="bg-card border border-border rounded-xl p-3 sm:p-4">
+                  <p className="text-xs sm:text-sm text-muted-foreground">رقم الطلب</p>
+                  <p className="font-bold text-base sm:text-lg font-mono text-foreground" dir="ltr">
                     {orderNumber}
                   </p>
                 </div>
               )}
               {amountDisplay && (
-                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4">
-                  <p className="text-sm text-muted-foreground">المبلغ المدفوع</p>
-                  <p className="font-black text-xl text-green-700 dark:text-green-400">
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-3 sm:p-4">
+                  <p className="text-xs sm:text-sm text-muted-foreground">المبلغ المدفوع</p>
+                  <p className="font-black text-lg sm:text-xl text-green-700 dark:text-green-400">
                     {amountDisplay} ج.م
                   </p>
                 </div>
               )}
               {txnIdDisplay && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[10px] sm:text-xs text-muted-foreground">
                   رقم العملية: <span dir="ltr">{txnIdDisplay}</span>
                 </p>
               )}
-              <div className="flex flex-col gap-2 pt-2">
-                <Button onClick={() => navigate("/my-orders")} className="gap-2">
+              <div className="flex flex-col gap-2 pt-1 sm:pt-2">
+                <Button onClick={() => navigate("/my-orders")} className="gap-2 h-10 sm:h-11 text-sm">
                   <ShoppingBag className="w-4 h-4" />
                   عرض طلباتي
                 </Button>
-                <Button variant="outline" onClick={() => navigate("/")} className="gap-2">
+                <Button variant="outline" onClick={() => navigate("/")} className="gap-2 h-10 sm:h-11 text-sm">
                   <ArrowRight className="w-4 h-4" />
                   العودة للرئيسية
                 </Button>
@@ -149,21 +149,21 @@ const PaymentCallback = () => {
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="space-y-5"
+              className="space-y-4 sm:space-y-5"
             >
-              <div className="w-20 h-20 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center mx-auto">
-                <Loader2 className="w-10 h-10 text-yellow-600 animate-spin" />
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center mx-auto">
+                <Loader2 className="w-8 h-8 sm:w-10 sm:h-10 text-yellow-600 animate-spin" />
               </div>
-              <h1 className="text-2xl font-black text-foreground">الدفع قيد المعالجة</h1>
-              <p className="text-muted-foreground">
+              <h1 className="text-xl sm:text-2xl font-black text-foreground">الدفع قيد المعالجة</h1>
+              <p className="text-sm text-muted-foreground">
                 تم إرسال عملية الدفع وهي قيد المراجعة. سيتم تحديث حالة طلبك تلقائياً.
               </p>
               {orderNumber && (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   رقم الطلب: <span className="font-bold text-foreground" dir="ltr">{orderNumber}</span>
                 </p>
               )}
-              <Button onClick={() => navigate("/my-orders")} className="gap-2">
+              <Button onClick={() => navigate("/my-orders")} className="gap-2 h-10 sm:h-11 text-sm">
                 <ShoppingBag className="w-4 h-4" />
                 عرض طلباتي
               </Button>
@@ -174,13 +174,13 @@ const PaymentCallback = () => {
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="space-y-5"
+              className="space-y-4 sm:space-y-5"
             >
-              <div className="w-20 h-20 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto">
-                <XCircle className="w-10 h-10 text-red-600" />
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto">
+                <XCircle className="w-8 h-8 sm:w-10 sm:h-10 text-red-600" />
               </div>
-              <h1 className="text-2xl font-black text-foreground">لم تتم عملية الدفع</h1>
-              <p className="text-muted-foreground">
+              <h1 className="text-xl sm:text-2xl font-black text-foreground">لم تتم عملية الدفع</h1>
+              <p className="text-sm text-muted-foreground">
                 {txnResponseCode === "DECLINED"
                   ? "تم رفض البطاقة من البنك. جرب بطاقة أخرى أو طريقة دفع مختلفة (محفظة إلكترونية / أمان)."
                   : txnResponseCode === "INSUFFICIENT_FUNDS"
@@ -189,32 +189,32 @@ const PaymentCallback = () => {
                       ? "البطاقة منتهية الصلاحية. استخدم بطاقة أخرى."
                       : "حدثت مشكلة أثناء عملية الدفع. طلبك لا يزال محفوظ ويمكنك إعادة الدفع بأي طريقة."}
               </p>
-              <div className="bg-muted/50 rounded-lg p-3 text-xs text-muted-foreground">
+              <div className="bg-muted/50 rounded-lg p-2.5 sm:p-3 text-[11px] sm:text-xs text-muted-foreground">
                 💡 يمكنك تجربة طريقة دفع أخرى: بطاقة بنكية، محفظة إلكترونية (Vodafone Cash)، أو فروع أمان/مصاري
               </div>
               {orderNumber && (
-                <div className="bg-card border border-border rounded-xl p-4">
-                  <p className="text-sm text-muted-foreground">رقم الطلب</p>
-                  <p className="font-bold text-lg font-mono text-foreground" dir="ltr">
+                <div className="bg-card border border-border rounded-xl p-3 sm:p-4">
+                  <p className="text-xs sm:text-sm text-muted-foreground">رقم الطلب</p>
+                  <p className="font-bold text-base sm:text-lg font-mono text-foreground" dir="ltr">
                     {orderNumber}
                   </p>
                 </div>
               )}
               {amountDisplay && (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   المبلغ: <span className="font-bold text-foreground">{amountDisplay} ج.م</span>
                 </p>
               )}
-              <div className="flex flex-col gap-2 pt-2">
-                <Button onClick={handleRetryPayment} className="gap-2 bg-primary hover:bg-primary/90">
+              <div className="flex flex-col gap-2 pt-1 sm:pt-2">
+                <Button onClick={handleRetryPayment} className="gap-2 h-10 sm:h-11 text-sm bg-primary hover:bg-primary/90">
                   <CreditCard className="w-4 h-4" />
                   ادفع مرة أخرى
                 </Button>
-                <Button variant="outline" onClick={() => navigate("/my-orders")} className="gap-2">
+                <Button variant="outline" onClick={() => navigate("/my-orders")} className="gap-2 h-10 sm:h-11 text-sm">
                   <ShoppingBag className="w-4 h-4" />
                   عرض طلباتي
                 </Button>
-                <Button variant="ghost" onClick={() => navigate("/")} className="gap-2 text-muted-foreground">
+                <Button variant="ghost" onClick={() => navigate("/")} className="gap-2 text-muted-foreground text-xs sm:text-sm">
                   <ArrowRight className="w-4 h-4" />
                   العودة للرئيسية
                 </Button>
