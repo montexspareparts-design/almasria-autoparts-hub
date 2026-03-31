@@ -101,22 +101,35 @@ Deno.serve(async (req) => {
     }
 
     const orderNumber = orderId;
+    const txStatus = success && !isPending ? "success" : isPending ? "pending" : "failed";
 
-    if (success && !isPending) {
-      const { data: order, error: fetchErr } = await supabase
-        .from("orders")
-        .select("id, status, user_id")
-        .eq("order_number", orderNumber)
-        .maybeSingle();
+    // Look up the internal order
+    const { data: order } = await supabase
+      .from("orders")
+      .select("id, status, user_id")
+      .eq("order_number", orderNumber)
+      .maybeSingle();
 
-      if (fetchErr || !order) {
-        console.error("Order not found:", orderNumber, fetchErr);
-        return new Response(
-          JSON.stringify({ error: "Order not found" }),
-          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+    // ─── Log transaction to payment_transactions ─────────────────────────
+    await supabase.from("payment_transactions").insert({
+      order_id: order?.id || null,
+      order_number: orderNumber,
+      paymob_transaction_id: String(transaction.id || ""),
+      amount_cents: transaction.amount_cents,
+      currency: transaction.currency || "EGP",
+      status: txStatus,
+      payment_method: transaction.source_data?.type || null,
+      card_last_four: transaction.source_data?.pan || null,
+      card_brand: transaction.source_data?.sub_type || null,
+      is_refunded: transaction.is_refunded === true,
+      is_voided: transaction.is_voided === true,
+      error_message: !success ? (transaction.data?.message || transaction.txn_response_code || null) : null,
+      raw_payload: body,
+    });
+    console.log(`Transaction logged for order ${orderNumber}, status: ${txStatus}`);
+    // ─── End Log ─────────────────────────────────────────────────────────
 
+    if (success && !isPending && order) {
       if (["awaiting_payment", "confirmed", "pending"].includes(order.status)) {
         await supabase
           .from("orders")
