@@ -386,6 +386,11 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
         canAddToCart
         isLoggedIn={!!user}
         isDealer={!!dealerAccount}
+        onAddToCart={(product) => {
+          toggleSelect(product.id);
+          toast({ title: "✅ تم تحديد الصنف", description: `${product.name_ar} — يمكنك تحويله لطلبية من الأعلى` });
+          setDetailProduct(null);
+        }}
       />
     </div>
   );
