@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Package, Clock, CheckCircle2, Truck, PackageCheck, ChevronDown,
   ChevronUp, ArrowRight, ShoppingCart, MapPin, CreditCard, CalendarDays,
-  CircleDot, Phone, Wallet, Loader2, RotateCcw
+  CircleDot, Phone, Wallet, Loader2, RotateCcw, Timer
 } from "lucide-react";
 import PaymentInstructionsBanner from "@/components/PaymentInstructionsBanner";
 import PaymobCheckout from "@/components/PaymobCheckout";
@@ -63,6 +63,82 @@ const getStatusIndex = (status: string, paymentMethod?: string | null) => {
   const key = statusToKey[status] ?? "pending";
   const idx = statuses.findIndex(s => s.key === key);
   return idx >= 0 ? idx : 0;
+};
+
+const PAYMENT_DEADLINE_HOURS = 48;
+
+const PaymentCountdown = ({ createdAt }: { createdAt: string }) => {
+  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0, expired: false });
+
+  useEffect(() => {
+    const deadline = new Date(createdAt).getTime() + PAYMENT_DEADLINE_HOURS * 60 * 60 * 1000;
+
+    const update = () => {
+      const diff = deadline - Date.now();
+      if (diff <= 0) {
+        setTimeLeft({ hours: 0, minutes: 0, seconds: 0, expired: true });
+        return;
+      }
+      setTimeLeft({
+        hours: Math.floor(diff / (1000 * 60 * 60)),
+        minutes: Math.floor((diff / (1000 * 60)) % 60),
+        seconds: Math.floor((diff / 1000) % 60),
+        expired: false,
+      });
+    };
+
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, [createdAt]);
+
+  if (timeLeft.expired) {
+    return (
+      <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 flex items-center gap-3">
+        <Timer className="w-5 h-5 text-destructive shrink-0" />
+        <div>
+          <p className="text-sm font-bold text-destructive">انتهت مهلة الدفع</p>
+          <p className="text-xs text-destructive/70">سيتم إلغاء الطلب تلقائياً قريباً</p>
+        </div>
+      </div>
+    );
+  }
+
+  const isUrgent = timeLeft.hours < 6;
+  const urgentClasses = isUrgent
+    ? "bg-destructive/10 border-destructive/30"
+    : "bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-700";
+  const textClasses = isUrgent ? "text-destructive" : "text-amber-700 dark:text-amber-400";
+  const subTextClasses = isUrgent ? "text-destructive/70" : "text-amber-600/70 dark:text-amber-400/70";
+
+  const pad = (n: number) => String(n).padStart(2, "0");
+
+  return (
+    <div className={`border rounded-lg p-3 flex items-center justify-between gap-3 ${urgentClasses}`}>
+      <div className="flex items-center gap-2.5">
+        <Timer className={`w-5 h-5 shrink-0 ${textClasses}`} />
+        <div>
+          <p className={`text-sm font-bold ${textClasses}`}>مهلة الدفع</p>
+          <p className={`text-[10px] ${subTextClasses}`}>سيُلغى الطلب تلقائياً بعد انتهاء المهلة</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-1 font-mono shrink-0" dir="ltr">
+        {[
+          { val: pad(timeLeft.hours), label: "ساعة" },
+          { val: pad(timeLeft.minutes), label: "دقيقة" },
+          { val: pad(timeLeft.seconds), label: "ثانية" },
+        ].map((unit, i) => (
+          <div key={i} className="flex items-center gap-1">
+            {i > 0 && <span className={`text-lg font-bold ${textClasses}`}>:</span>}
+            <div className="text-center">
+              <span className={`text-lg font-black tabular-nums ${textClasses}`}>{unit.val}</span>
+              <p className={`text-[8px] ${subTextClasses}`}>{unit.label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 };
 
 const MyOrdersPage = () => {
@@ -382,6 +458,11 @@ const MyOrdersPage = () => {
                                 orderNumber={order.order_number}
                                 totalAmount={Number(order.total_amount)}
                               />
+                            )}
+
+                            {/* Payment Countdown Timer */}
+                            {["awaiting_payment", "confirmed", "pending"].includes(order.status) && (
+                              <PaymentCountdown createdAt={order.created_at} />
                             )}
 
                             {/* Retry Paymob Payment Button */}
