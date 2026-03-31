@@ -1,6 +1,11 @@
 import { useState } from "react";
-import { Smartphone, Copy, CheckCircle2, ExternalLink, CreditCard, Banknote, Building2, Wallet } from "lucide-react";
+import { Smartphone, Copy, CheckCircle2, ExternalLink, CreditCard, Wallet, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import PaymobCheckout from "@/components/PaymobCheckout";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { buildPaymobReturnUrl, isValidPaymobPublicKey } from "@/lib/paymob";
+import { toast } from "@/hooks/use-toast";
 
 const WHATSAPP_NUMBER = "201153961008";
 
@@ -30,14 +35,67 @@ const paymentMethods = [
   },
 ];
 
-const DealerPayment = () => {
+interface DealerPaymentProps {
+  /** If provided, shows Paymob pay button for a specific order */
+  targetOrderId?: string;
+  targetOrderNumber?: string;
+  targetOrderAmount?: number;
+}
+
+const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: DealerPaymentProps) => {
+  const { user } = useAuth();
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [paymobLoading, setPaymobLoading] = useState(false);
+  const [paymobData, setPaymobData] = useState<{ clientSecret: string; publicKey: string } | null>(null);
 
   const handleCopy = (id: string, text: string) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   };
+
+  const handlePaymobPay = async (orderId: string) => {
+    setPaymobLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-paymob-intention", {
+        body: {
+          order_id: orderId,
+          return_url: buildPaymobReturnUrl(),
+        },
+      });
+
+      if (error || !data?.client_secret || !isValidPaymobPublicKey(data?.public_key)) {
+        toast({ title: "حدث خطأ في بوابة الدفع", description: "يرجى المحاولة مرة أخرى", variant: "destructive" });
+        return;
+      }
+
+      setPaymobData({ clientSecret: data.client_secret, publicKey: data.public_key });
+    } catch (e: any) {
+      toast({ title: "حدث خطأ", description: e.message, variant: "destructive" });
+    } finally {
+      setPaymobLoading(false);
+    }
+  };
+
+  // Show Paymob inline checkout
+  if (paymobData) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <h2 className="text-xl font-black text-foreground mb-2">💳 إتمام الدفع عبر Paymob</h2>
+          <p className="text-sm text-muted-foreground">أكمل عملية الدفع بالبطاقة البنكية</p>
+        </div>
+        <div className="bg-card border border-border rounded-xl p-6">
+          <PaymobCheckout clientSecret={paymobData.clientSecret} publicKey={paymobData.publicKey} />
+        </div>
+        <div className="text-center">
+          <Button variant="ghost" size="sm" onClick={() => setPaymobData(null)} className="gap-2 text-muted-foreground">
+            ← العودة لوسائل الدفع
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -60,7 +118,60 @@ const DealerPayment = () => {
         </div>
       </div>
 
-      {/* Payment Methods */}
+      {/* Paymob Card Payment */}
+      <div className="rounded-xl border-2 p-5 space-y-4 bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+            <CreditCard className="w-6 h-6 text-blue-600" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-base font-bold text-foreground">بطاقة بنكية عبر Paymob</h3>
+            <p className="text-[11px] text-muted-foreground">ادفع مباشرة ببطاقتك البنكية (Visa / Mastercard / Meeza) — تأكيد فوري</p>
+          </div>
+        </div>
+
+        {/* Supported cards */}
+        <div className="bg-white dark:bg-background/60 rounded-lg p-3.5 border border-border/50">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground font-medium">البطاقات المدعومة</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-foreground">Visa • Mastercard • Meeza</span>
+            </div>
+          </div>
+          <div className="flex items-center justify-between mt-2">
+            <span className="text-xs text-muted-foreground font-medium">التأكيد</span>
+            <span className="text-xs font-bold text-green-600">فوري ✓</span>
+          </div>
+          {targetOrderAmount && (
+            <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/50">
+              <span className="text-xs text-muted-foreground font-medium">المبلغ المطلوب</span>
+              <span className="text-sm font-black text-primary">{targetOrderAmount.toLocaleString("ar-EG")} ج.م</span>
+            </div>
+          )}
+        </div>
+
+        {targetOrderId ? (
+          <Button
+            className="w-full gap-2"
+            size="sm"
+            disabled={paymobLoading}
+            onClick={() => handlePaymobPay(targetOrderId)}
+          >
+            {paymobLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <CreditCard className="w-4 h-4" />
+            )}
+            {paymobLoading ? "جاري التحميل..." : `ادفع الآن ${targetOrderNumber ? `— طلب #${targetOrderNumber}` : ""}`}
+          </Button>
+        ) : (
+          <p className="text-xs text-muted-foreground text-center py-1">
+            اختر طلب من قائمة الطلبات واضغط "ادفع عبر Paymob" لبدء الدفع
+          </p>
+        )}
+      </div>
+
+      {/* Manual Payment Methods */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {paymentMethods.map((method) => (
           <div

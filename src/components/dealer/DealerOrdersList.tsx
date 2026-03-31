@@ -8,9 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Package, Clock, CheckCircle, Truck, XCircle, ChevronDown, ChevronUp,
   MessageCircle, Inbox, PackageCheck, Trash2, Pencil, Save, X, Loader2,
-  AlertTriangle, Wallet, CreditCard, RefreshCw
+  AlertTriangle, Wallet, CreditCard, RefreshCw, RotateCcw
 } from "lucide-react";
 import PaymentInstructionsBanner from "@/components/PaymentInstructionsBanner";
+import PaymobCheckout from "@/components/PaymobCheckout";
+import { buildPaymobReturnUrl, isValidPaymobPublicKey } from "@/lib/paymob";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { useDealerCart } from "@/hooks/useDealerCart";
@@ -122,7 +124,27 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
   const [editQuantities, setEditQuantities] = useState<Record<string, number>>({});
   const [saving, setSaving] = useState(false);
   const [reordering, setReordering] = useState<string | null>(null);
+  const [paymobLoading, setPaymobLoading] = useState<string | null>(null);
+  const [paymobData, setPaymobData] = useState<{ orderId: string; clientSecret: string; publicKey: string } | null>(null);
   const { addItem } = useDealerCart();
+
+  const handlePaymob = async (order: Order) => {
+    setPaymobLoading(order.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-paymob-intention", {
+        body: { order_id: order.id, return_url: buildPaymobReturnUrl() },
+      });
+      if (error || !data?.client_secret || !isValidPaymobPublicKey(data?.public_key)) {
+        toast({ title: "حدث خطأ في بوابة الدفع", description: "يرجى المحاولة مرة أخرى", variant: "destructive" });
+        return;
+      }
+      setPaymobData({ orderId: order.id, clientSecret: data.client_secret, publicKey: data.public_key });
+    } catch (e: any) {
+      toast({ title: "حدث خطأ", description: e.message, variant: "destructive" });
+    } finally {
+      setPaymobLoading(null);
+    }
+  };
 
   useEffect(() => {
     fetchOrders();
@@ -456,27 +478,54 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
                     )}
 
                     {/* ─── Payment CTA ─── */}
-                    {isElectronicPayment(order.payment_method) &&
-                      ["confirmed", "awaiting_payment"].includes(order.status) && (
-                      <div className="rounded-xl overflow-hidden border border-amber-300/50">
-                        <div className="bg-gradient-to-l from-amber-50 to-amber-100/50 dark:from-amber-950/30 dark:to-amber-900/20 p-4 space-y-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-amber-200/60 dark:bg-amber-800/40 flex items-center justify-center shrink-0">
-                              <Wallet className="w-5 h-5 text-amber-700 dark:text-amber-300" />
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="text-sm font-bold text-amber-800 dark:text-amber-200">ادفع لاستكمال الطلب</h4>
-                              <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-0.5">حوّل المبلغ المطلوب واستكمل الخطوات</p>
+                    {["confirmed", "awaiting_payment", "pending"].includes(order.status) && (
+                      <div className="space-y-3">
+                        {/* Paymob Inline Checkout */}
+                        {paymobData && paymobData.orderId === order.id ? (
+                          <div className="rounded-xl overflow-hidden border border-blue-300/50">
+                            <div className="bg-gradient-to-l from-blue-50 to-blue-100/50 dark:from-blue-950/30 dark:to-blue-900/20 p-4 space-y-3">
+                              <div className="flex items-center justify-between">
+                                <h4 className="text-sm font-bold text-blue-800 dark:text-blue-200">💳 إتمام الدفع عبر Paymob</h4>
+                                <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setPaymobData(null)}>✕ إغلاق</Button>
+                              </div>
+                              <PaymobCheckout clientSecret={paymobData.clientSecret} publicKey={paymobData.publicKey} />
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Button size="sm" className="flex-1 gap-2 rounded-lg h-9" onClick={() => onNavigateToPayment?.()}>
-                              <CreditCard className="w-4 h-4" />
-                              انتقل لوسائل الدفع
-                            </Button>
-                            <span className="text-sm font-black text-primary px-2">{Number(order.total_amount).toLocaleString("ar-EG")} ج.م</span>
+                        ) : (
+                          <div className="rounded-xl overflow-hidden border border-amber-300/50">
+                            <div className="bg-gradient-to-l from-amber-50 to-amber-100/50 dark:from-amber-950/30 dark:to-amber-900/20 p-4 space-y-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-amber-200/60 dark:bg-amber-800/40 flex items-center justify-center shrink-0">
+                                  <Wallet className="w-5 h-5 text-amber-700 dark:text-amber-300" />
+                                </div>
+                                <div className="flex-1">
+                                  <h4 className="text-sm font-bold text-amber-800 dark:text-amber-200">ادفع لاستكمال الطلب</h4>
+                                  <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-0.5">اختر طريقة الدفع المناسبة</p>
+                                </div>
+                                <span className="text-sm font-black text-primary px-2">{Number(order.total_amount).toLocaleString("ar-EG")} ج.م</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  size="sm"
+                                  className="flex-1 gap-2 rounded-lg h-9"
+                                  disabled={paymobLoading === order.id}
+                                  onClick={() => handlePaymob(order)}
+                                >
+                                  {paymobLoading === order.id ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <CreditCard className="w-4 h-4" />
+                                  )}
+                                  ادفع بالبطاقة (Paymob)
+                                </Button>
+                                <Button size="sm" variant="outline" className="flex-1 gap-2 rounded-lg h-9" onClick={() => onNavigateToPayment?.()}>
+                                  <Wallet className="w-4 h-4" />
+                                  تحويل / محفظة
+                                </Button>
+                              </div>
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                     )}
 
