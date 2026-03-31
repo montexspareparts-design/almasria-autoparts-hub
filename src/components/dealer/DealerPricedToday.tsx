@@ -73,7 +73,7 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
       const { data: tierPrices } = await supabase
         .from("product_tier_prices")
         .select("product_id, price")
-        .eq("tier", dealerAccount.tier)
+        .eq("tier", dealerAccount.tier as any)
         .in("product_id", productIds);
 
       if (tierPrices) {
