@@ -6,46 +6,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-// ─── Meta WhatsApp Business API Helper ──────────────────────────────────────
-async function sendWhatsApp(phone: string, message: string) {
-  const accessToken = Deno.env.get("META_WHATSAPP_ACCESS_TOKEN");
-  const phoneNumberId = Deno.env.get("META_WHATSAPP_PHONE_NUMBER_ID");
-
-  if (!accessToken || !phoneNumberId) {
-    console.warn("Meta WhatsApp credentials not configured — skipping");
-    return { ok: false, data: null };
-  }
-
-  let formatted = phone.replace(/[\s\-\(\)]/g, "");
-  if (formatted.startsWith("+")) formatted = formatted.slice(1);
-  if (formatted.startsWith("0")) formatted = "2" + formatted;
-
-  const url = `https://graph.facebook.com/v21.0/${phoneNumberId}/messages`;
-
-  const resp = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      messaging_product: "whatsapp",
-      to: formatted,
-      type: "text",
-      text: { body: message },
-    }),
-  });
-
-  const data = await resp.json();
-  if (resp.ok) {
-    console.log(`WhatsApp sent to ${formatted}, ID: ${data.messages?.[0]?.id}`);
-  } else {
-    console.error(`WhatsApp failed to ${formatted}:`, JSON.stringify(data));
-  }
-  return { ok: resp.ok, data };
-}
-// ────────────────────────────────────────────────────────────────────────────
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
