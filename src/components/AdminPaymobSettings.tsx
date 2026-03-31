@@ -47,7 +47,22 @@ const AdminPaymobSettings = () => {
     staleTime: 60_000,
   });
 
-  const callbackUrl = typeof window !== "undefined" ? buildPaymobReturnUrl() : "";
+  // Transactions log
+  const { data: txData, isLoading: txLoading } = useQuery({
+    queryKey: ["payment-transactions", txPage],
+    queryFn: async () => {
+      const from = txPage * TX_PAGE_SIZE;
+      const to = from + TX_PAGE_SIZE - 1;
+      const { data, error, count } = await supabase
+        .from("payment_transactions")
+        .select("*", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .range(from, to);
+      if (error) throw error;
+      return { rows: data || [], total: count || 0 };
+    },
+  });
+
   const webhookUrl = typeof window !== "undefined"
     ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/paymob-webhook`
     : "";
