@@ -346,9 +346,6 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment }: DealerCartProps
       <p className="text-[10px] text-muted-foreground text-center">
         "ادفع الآن" ينقلك مباشرة للدفع الإلكتروني — "أرسل الطلب" يرسله للمراجعة والدفع لاحقاً
       </p>
-
-      {/* Recent Orders Summary */}
-      <DealerRecentOrders onNavigateToOrders={onNavigateToOrders} onNavigateToPayment={onNavigateToPayment} />
     </div>
   );
 };
