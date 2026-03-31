@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { pushOrderToERP, pushQuoteToERP } from "@/lib/erpSync";
+import { generateOrderNumber } from "@/lib/orderNumber";
 import { generateQuotePdf } from "@/lib/generateQuotePdf";
 import { shareQuoteWhatsApp, shareQuoteEmail } from "@/lib/shareQuote";
 import {
@@ -328,7 +329,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
   const convertToOrder = async () => {
     if (quoteItems.length === 0) return;
     setSaving(true);
-    const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
+    const orderNumber = await generateOrderNumber();
 
     const { data: order, error } = await supabase
       .from("orders")
@@ -484,7 +485,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
       return;
     }
 
-    const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
+    const orderNumber = await generateOrderNumber();
     const { data: order, error } = await supabase
       .from("orders")
       .insert({ user_id: user.id, order_number: orderNumber, total_amount: Number(quote.total_amount), notes: quote.notes || null, status: "pending" })
@@ -902,7 +903,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
                       className="h-10"
                       onClick={async () => {
                         setSaving(true);
-                        const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
+                        const orderNumber = await generateOrderNumber();
                         const total = todayItems.reduce((s, i) => s + i.unit_price * i.quantity, 0);
                         const { data: order, error } = await supabase
                           .from("orders")

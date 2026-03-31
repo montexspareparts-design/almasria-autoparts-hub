@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { pushOrderToERP, pushQuoteToERP } from "@/lib/erpSync";
+import { generateOrderNumber } from "@/lib/orderNumber";
 import { generateQuotePdf } from "@/lib/generateQuotePdf";
 import { shareQuoteWhatsApp, shareQuoteEmail } from "@/lib/shareQuote";
 import {
@@ -374,7 +375,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
       })
     );
     const totalAmount = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-    const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
+    const orderNumber = await generateOrderNumber();
 
     const { data: order, error } = await supabase
       .from("orders")
@@ -588,7 +589,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
     const convertToOrder = async () => {
       if (!user) return;
       setSavingQuote(true);
-      const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
+      const orderNumber = await generateOrderNumber();
 
       const { data: order, error } = await supabase
         .from("orders")

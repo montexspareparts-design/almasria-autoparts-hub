@@ -17,6 +17,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { pushOrderToERP } from "@/lib/erpSync";
+import { generateOrderNumber } from "@/lib/orderNumber";
 import {
   buildPaymobReturnUrl,
   isValidPaymobPublicKey,
@@ -92,7 +93,7 @@ const CheckoutPage = () => {
 
     setSubmitting(true);
     try {
-      const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+      const orderNumber = await generateOrderNumber();
 
       const { data: order, error: orderErr } = await supabase
         .from("orders")

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { pushOrderToERP } from "@/lib/erpSync";
+import { generateOrderNumber } from "@/lib/orderNumber";
 import { Loader2, Zap, Plus, Trash2, Minus, Search, CheckCircle, ShoppingCart } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -143,7 +144,7 @@ const DealerQuickOrder = () => {
       return sum + p.base_price * l.quantity;
     }, 0);
 
-    const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
+    const orderNumber = await generateOrderNumber();
 
     const { data: order, error } = await supabase
       .from("orders")

@@ -1475,6 +1475,7 @@ export type Database = {
         Args: { _email?: string; _phone?: string }
         Returns: Json
       }
+      generate_order_number: { Args: never; Returns: string }
       get_best_selling_products: {
         Args: { _limit?: number }
         Returns: string[]
