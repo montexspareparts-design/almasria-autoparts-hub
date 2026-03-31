@@ -17,12 +17,13 @@ const primaryTabs: { id: DealerTab; label: string; Icon: typeof LayoutDashboard 
 ];
 
 const moreTabs: { id: DealerTab; label: string; Icon: typeof LayoutDashboard }[] = [
-  { id: "price_lists", label: "الأسعار", Icon: FileText },
-  { id: "payment", label: "الدفع", Icon: CreditCard },
   { id: "invoices", label: "الفواتير", Icon: Receipt },
   { id: "statement", label: "كشف الحساب", Icon: CreditCard },
-  { id: "favorites", label: "المفضلة", Icon: Heart },
+  { id: "shopping_lists", label: "قوائم الشراء", Icon: FileText },
+  { id: "compare", label: "مقارنة المنتجات", Icon: Search },
   { id: "stock_alerts", label: "تنبيهات المخزون", Icon: Bell },
+  { id: "favorites", label: "المفضلة", Icon: Heart },
+  { id: "quick_order", label: "طلب سريع", Icon: Zap },
   { id: "notifications", label: "الإشعارات", Icon: Bell },
   { id: "offers", label: "العروض", Icon: Tag },
   { id: "settings", label: "حسابي", Icon: Settings },

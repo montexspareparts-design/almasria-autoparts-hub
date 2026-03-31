@@ -102,20 +102,6 @@ const DealerDashboard = () => {
 
   const renderContent = () => {
     switch (activeTab) {
-      case "overview":
-        return (
-          <DealerOverview
-            dealerAccount={dealerAccount as any}
-            dealerName={dealerName}
-            email={user?.email || ""}
-            ordersCount={orders.length}
-            totalSpent={totalSpent}
-            invoicesCount={invoicesCount}
-            pendingOrders={pendingOrders}
-            userId={user!.id}
-            onNavigate={(tab) => setActiveTab(tab as DealerTab)}
-          />
-        );
       case "quotes": return <DealerQuoteBuilder onNavigateToPriceLists={(data) => { setPriceListQuoteData(data || null); setActiveTab("price_lists"); }} />;
       case "quick_order": return <DealerQuickOrder />;
       case "orders": return <DealerOrdersList userId={user!.id} onNavigateToPayment={() => setActiveTab("payment")} />;

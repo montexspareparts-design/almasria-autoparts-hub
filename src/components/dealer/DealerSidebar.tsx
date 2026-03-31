@@ -92,10 +92,8 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
       label: "الأدوات",
       defaultOpen: true,
       items: [
-        { id: "favorites", label: "المفضلة", icon: Heart, iconColor: "text-rose-500", iconBg: "bg-rose-500/10" },
         { id: "shopping_lists", label: "قوائم الشراء", icon: ListPlus, iconColor: "text-blue-600", iconBg: "bg-blue-500/10" },
         { id: "compare", label: "مقارنة المنتجات", icon: Scale, iconColor: "text-teal-600", iconBg: "bg-teal-500/10" },
-        { id: "quick_order", label: "طلب سريع", icon: Zap, iconColor: "text-amber-500", iconBg: "bg-amber-500/10" },
         { id: "stock_alerts", label: "تنبيهات المخزون", icon: Package, iconColor: "text-orange-600", iconBg: "bg-orange-500/10" },
       ],
     },
