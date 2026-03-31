@@ -6,12 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { generateQuotePdf } from "@/lib/generateQuotePdf";
+import { generateOrderNumber } from "@/lib/orderNumber";
+import { pushOrderToERP } from "@/lib/erpSync";
+import { notifyNewOrderWhatsApp } from "@/lib/whatsapp";
 import ProductDetailDialog from "@/components/ProductDetailDialog";
 import { useDealerCart } from "@/hooks/useDealerCart";
 import {
   Eye, Loader2, Download, ShoppingCart, MessageCircle,
-  Package, CheckCircle2, XCircle, Clock, FileText, Info,
-  Minus, Plus
+  Package, CheckCircle2, XCircle, Clock, Info,
+  Minus, Plus, FileText, ArrowRight, Trash2
 } from "lucide-react";
 
 interface PricedProduct {
@@ -34,6 +37,15 @@ interface PricedProduct {
   quantity: number;
 }
 
+interface SavedQuote {
+  id: string;
+  quote_number: string;
+  status: string;
+  total_amount: number;
+  notes: string | null;
+  created_at: string;
+}
+
 interface DealerPricedTodayProps {
   onConvertToOrder: () => void;
 }
@@ -47,6 +59,13 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
   const [converting, setConverting] = useState(false);
   const [detailProduct, setDetailProduct] = useState<any>(null);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  // Saved quotes
+  const [savedQuotes, setSavedQuotes] = useState<SavedQuote[]>([]);
+  const [loadingQuotes, setLoadingQuotes] = useState(true);
+  const [convertingQuoteId, setConvertingQuoteId] = useState<string | null>(null);
+  const [expandedQuoteId, setExpandedQuoteId] = useState<string | null>(null);
+  const [expandedQuoteItems, setExpandedQuoteItems] = useState<any[]>([]);
+  const [loadingQuoteItems, setLoadingQuoteItems] = useState(false);
 
   const fetchPricedToday = useCallback(async () => {
     if (!user) return;
@@ -104,7 +123,23 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
     setLoading(false);
   }, [user, dealerAccount]);
 
-  useEffect(() => { fetchPricedToday(); }, [fetchPricedToday]);
+  const fetchSavedQuotes = useCallback(async () => {
+    if (!user) return;
+    setLoadingQuotes(true);
+    const { data } = await supabase
+      .from("dealer_quotes")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    setSavedQuotes((data as SavedQuote[]) || []);
+    setLoadingQuotes(false);
+  }, [user]);
+
+  useEffect(() => {
+    fetchPricedToday();
+    fetchSavedQuotes();
+  }, [fetchPricedToday, fetchSavedQuotes]);
 
   const toggleSelect = (productId: string) => {
     setSelectedIds(prev => {
@@ -225,6 +260,98 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
     }
   };
 
+  // === Saved Quotes Functions ===
+  const handleConvertQuoteToOrder = async (quote: SavedQuote) => {
+    if (!user) return;
+    setConvertingQuoteId(quote.id);
+
+    const { data: qItems } = await supabase
+      .from("dealer_quote_items")
+      .select("product_id, quantity, unit_price, total_price")
+      .eq("quote_id", quote.id);
+
+    if (!qItems || qItems.length === 0) {
+      toast({ title: "العرض فارغ", variant: "destructive" });
+      setConvertingQuoteId(null);
+      return;
+    }
+
+    // Add all items to cart
+    for (const item of qItems) {
+      await addToCart(item.product_id, item.quantity);
+    }
+
+    // Mark quote as converted
+    await supabase.from("dealer_quotes").update({ status: "converted" }).eq("id", quote.id);
+
+    toast({
+      title: "✅ تم إضافة أصناف العرض للسلة",
+      description: `${qItems.length} صنف من عرض ${quote.quote_number} — يمكنك إتمام الطلب الآن`,
+    });
+
+    setConvertingQuoteId(null);
+    fetchSavedQuotes();
+    onConvertToOrder();
+  };
+
+  const handleDeleteQuote = async (quoteId: string) => {
+    await supabase.from("dealer_quote_items").delete().eq("quote_id", quoteId);
+    await supabase.from("dealer_quotes").delete().eq("id", quoteId);
+    toast({ title: "تم حذف العرض" });
+    if (expandedQuoteId === quoteId) {
+      setExpandedQuoteId(null);
+      setExpandedQuoteItems([]);
+    }
+    fetchSavedQuotes();
+  };
+
+  const toggleExpandQuote = async (quoteId: string) => {
+    if (expandedQuoteId === quoteId) {
+      setExpandedQuoteId(null);
+      setExpandedQuoteItems([]);
+      return;
+    }
+    setExpandedQuoteId(quoteId);
+    setLoadingQuoteItems(true);
+
+    const { data: qItems } = await supabase
+      .from("dealer_quote_items")
+      .select("id, product_id, quantity, unit_price, total_price")
+      .eq("quote_id", quoteId);
+
+    if (!qItems || qItems.length === 0) {
+      setExpandedQuoteItems([]);
+      setLoadingQuoteItems(false);
+      return;
+    }
+
+    const productIds = qItems.map(i => i.product_id);
+    const { data: products } = await supabase
+      .from("products")
+      .select("id, name_ar, sku, image_url")
+      .in("id", productIds);
+
+    const productMap = new Map((products || []).map(p => [p.id, p]));
+    const merged = qItems.map(qi => ({
+      ...qi,
+      product: productMap.get(qi.product_id),
+    }));
+
+    setExpandedQuoteItems(merged);
+    setLoadingQuoteItems(false);
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "converted":
+        return <Badge className="bg-emerald-500/10 text-emerald-700 text-[10px]">تم التحويل لطلبية</Badge>;
+      case "sent":
+        return <Badge className="bg-blue-500/10 text-blue-700 text-[10px]">تم الإرسال</Badge>;
+      default:
+        return <Badge className="bg-yellow-500/10 text-yellow-700 text-[10px]">مسودة</Badge>;
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -234,186 +361,322 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
     );
   }
 
-  if (items.length === 0) {
-    return (
-      <div className="text-center py-20 space-y-3">
-        <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto">
-          <Eye className="w-8 h-8 text-muted-foreground/40" />
-        </div>
-        <h3 className="text-lg font-bold text-foreground">لم يتم تسعير أي صنف اليوم</h3>
-        <p className="text-sm text-muted-foreground">ابحث عن قطع الغيار وسعّرها لتظهر هنا</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-5">
-      {/* Header & Actions Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-black text-foreground">عرض سعر</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {items.length} صنف تم تسعيره — {new Date().toLocaleDateString("ar-EG")}
-          </p>
+    <div className="space-y-8">
+      {/* === Today's Priced Items === */}
+      {items.length === 0 ? (
+        <div className="text-center py-12 space-y-3">
+          <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto">
+            <Eye className="w-8 h-8 text-muted-foreground/40" />
+          </div>
+          <h3 className="text-lg font-bold text-foreground">لم يتم تسعير أي صنف اليوم</h3>
+          <p className="text-sm text-muted-foreground">ابحث عن قطع الغيار وسعّرها لتظهر هنا</p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <Button variant="outline" size="sm" onClick={handleShareWhatsApp} className="gap-1.5 text-xs">
-            <MessageCircle className="w-3.5 h-3.5 text-green-600" />
-            واتساب
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleDownloadPdf} disabled={downloadingPdf} className="gap-1.5 text-xs">
-            {downloadingPdf ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-            تحميل PDF
-          </Button>
-          <Button
-            size="sm"
-            onClick={handleConvertToOrder}
-            disabled={selectedIds.size === 0 || converting}
-            className="gap-1.5 text-xs"
-          >
-            {converting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShoppingCart className="w-3.5 h-3.5" />}
-            أضف للسلة ({selectedIds.size})
-          </Button>
-        </div>
-      </div>
+      ) : (
+        <div className="space-y-5">
+          {/* Header & Actions Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-black text-foreground">عرض سعر</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {items.length} صنف تم تسعيره — {new Date().toLocaleDateString("ar-EG")}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button variant="outline" size="sm" onClick={handleShareWhatsApp} className="gap-1.5 text-xs">
+                <MessageCircle className="w-3.5 h-3.5 text-green-600" />
+                واتساب
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleDownloadPdf} disabled={downloadingPdf} className="gap-1.5 text-xs">
+                {downloadingPdf ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                تحميل PDF
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleConvertToOrder}
+                disabled={selectedIds.size === 0 || converting}
+                className="gap-1.5 text-xs"
+              >
+                {converting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShoppingCart className="w-3.5 h-3.5" />}
+                أضف للسلة ({selectedIds.size})
+              </Button>
+            </div>
+          </div>
 
-      {/* Select All */}
-      <div className="flex items-center gap-3 px-1">
-        <button
-          onClick={toggleSelectAll}
-          className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
-            selectedIds.size === items.length
-              ? "bg-primary border-primary"
-              : "border-muted-foreground/30"
-          }`}>
-            {selectedIds.size === items.length && (
-              <CheckCircle2 className="w-3 h-3 text-primary-foreground" />
+          {/* Select All */}
+          <div className="flex items-center gap-3 px-1">
+            <button
+              onClick={toggleSelectAll}
+              className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
+                selectedIds.size === items.length
+                  ? "bg-primary border-primary"
+                  : "border-muted-foreground/30"
+              }`}>
+                {selectedIds.size === items.length && (
+                  <CheckCircle2 className="w-3 h-3 text-primary-foreground" />
+                )}
+              </div>
+              تحديد الكل
+            </button>
+            {selectedIds.size > 0 && (
+              <span className="text-xs text-primary font-bold">
+                {selectedIds.size} محدد — إجمالي: {selectedTotal.toLocaleString("ar-EG")} ج.م
+              </span>
             )}
           </div>
-          تحديد الكل
-        </button>
-        {selectedIds.size > 0 && (
-          <span className="text-xs text-primary font-bold">
-            {selectedIds.size} محدد — إجمالي: {selectedTotal.toLocaleString("ar-EG")} ج.م
-          </span>
-        )}
-      </div>
 
-      {/* Items List */}
-      <div className="space-y-2">
-        <AnimatePresence>
-          {items.map((item, idx) => {
-            const price = getEffectivePrice(item);
-            const isSelected = selectedIds.has(item.product_id);
-            const inStock = item.product.stock_quantity > 0;
-            const viewedTime = new Date(item.viewed_at).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
+          {/* Items List */}
+          <div className="space-y-2">
+            <AnimatePresence>
+              {items.map((item, idx) => {
+                const price = getEffectivePrice(item);
+                const isSelected = selectedIds.has(item.product_id);
+                const inStock = item.product.stock_quantity > 0;
+                const viewedTime = new Date(item.viewed_at).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
 
-            return (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.03 }}
-                className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
-                  isSelected
-                    ? "border-primary/30 bg-primary/5 shadow-sm"
-                    : "border-border/50 bg-card hover:bg-muted/30"
-                }`}
-              >
-                {/* Checkbox */}
-                <button
-                  onClick={() => toggleSelect(item.product_id)}
-                  className="shrink-0"
-                >
-                  <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ${
-                    isSelected ? "bg-primary border-primary" : "border-muted-foreground/25"
-                  }`}>
-                    {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-primary-foreground" />}
-                  </div>
-                </button>
-
-                {/* Image */}
-                <div className="w-12 h-12 rounded-lg bg-muted/50 overflow-hidden shrink-0">
-                  {item.product.image_url ? (
-                    <img src={item.product.image_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Package className="w-5 h-5 text-muted-foreground/30" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-foreground truncate">{item.product.name_ar}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[10px] font-mono text-muted-foreground">{item.product.sku}</span>
-                    <span className={`inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
-                      inStock ? "text-emerald-700 bg-emerald-500/10" : "text-destructive bg-destructive/10"
-                    }`}>
-                      {inStock ? <CheckCircle2 className="w-2.5 h-2.5" /> : <XCircle className="w-2.5 h-2.5" />}
-                      {inStock ? "متوفر" : "نفد"}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Quantity Controls */}
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <button
-                    onClick={() => updateQuantity(item.product_id, -1)}
-                    className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-foreground hover:bg-muted-foreground/20 transition-colors"
+                return (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.03 }}
+                    className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
+                      isSelected
+                        ? "border-primary/30 bg-primary/5 shadow-sm"
+                        : "border-border/50 bg-card hover:bg-muted/30"
+                    }`}
                   >
-                    <Minus className="w-3 h-3" />
-                  </button>
-                  <span className="text-sm font-bold w-7 text-center text-foreground">{item.quantity}</span>
-                  <button
-                    onClick={() => updateQuantity(item.product_id, 1)}
-                    className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-foreground hover:bg-muted-foreground/20 transition-colors"
-                  >
-                    <Plus className="w-3 h-3" />
-                  </button>
-                </div>
-
-                {/* Price, Time & Actions */}
-                <div className="text-left shrink-0 space-y-1">
-                  <p className="text-sm font-black text-primary">{(price * item.quantity).toLocaleString("ar-EG")} ج.م</p>
-                  <div className="flex items-center gap-2 justify-end">
-                    <span className="flex items-center gap-1 text-[9px] text-muted-foreground">
-                      <Clock className="w-2.5 h-2.5" />
-                      {viewedTime}
-                    </span>
+                    {/* Checkbox */}
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDetailProduct(item.product);
-                      }}
-                      className="text-[10px] text-primary hover:text-primary/80 font-semibold flex items-center gap-0.5 transition-colors"
+                      onClick={() => toggleSelect(item.product_id)}
+                      className="shrink-0"
                     >
-                      <Info className="w-3 h-3" />
-                      التفاصيل
+                      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ${
+                        isSelected ? "bg-primary border-primary" : "border-muted-foreground/25"
+                      }`}>
+                        {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-primary-foreground" />}
+                      </div>
                     </button>
+
+                    {/* Image */}
+                    <div className="w-12 h-12 rounded-lg bg-muted/50 overflow-hidden shrink-0">
+                      {item.product.image_url ? (
+                        <img src={item.product.image_url} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Package className="w-5 h-5 text-muted-foreground/30" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-foreground truncate">{item.product.name_ar}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[10px] font-mono text-muted-foreground">{item.product.sku}</span>
+                        <span className={`inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                          inStock ? "text-emerald-700 bg-emerald-500/10" : "text-destructive bg-destructive/10"
+                        }`}>
+                          {inStock ? <CheckCircle2 className="w-2.5 h-2.5" /> : <XCircle className="w-2.5 h-2.5" />}
+                          {inStock ? "متوفر" : "نفد"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Quantity Controls */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        onClick={() => updateQuantity(item.product_id, -1)}
+                        className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-foreground hover:bg-muted-foreground/20 transition-colors"
+                      >
+                        <Minus className="w-3 h-3" />
+                      </button>
+                      <span className="text-sm font-bold w-7 text-center text-foreground">{item.quantity}</span>
+                      <button
+                        onClick={() => updateQuantity(item.product_id, 1)}
+                        className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-foreground hover:bg-muted-foreground/20 transition-colors"
+                      >
+                        <Plus className="w-3 h-3" />
+                      </button>
+                    </div>
+
+                    {/* Price, Time & Actions */}
+                    <div className="text-left shrink-0 space-y-1">
+                      <p className="text-sm font-black text-primary">{(price * item.quantity).toLocaleString("ar-EG")} ج.م</p>
+                      <div className="flex items-center gap-2 justify-end">
+                        <span className="flex items-center gap-1 text-[9px] text-muted-foreground">
+                          <Clock className="w-2.5 h-2.5" />
+                          {viewedTime}
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDetailProduct(item.product);
+                          }}
+                          className="text-[10px] text-primary hover:text-primary/80 font-semibold flex items-center gap-0.5 transition-colors"
+                        >
+                          <Info className="w-3 h-3" />
+                          التفاصيل
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
+
+          {/* Summary Footer */}
+          <div className="rounded-xl bg-muted/50 border border-border/50 p-4 flex items-center justify-between">
+            <div>
+              <p className="text-xs text-muted-foreground">إجمالي جميع الأصناف</p>
+              <p className="text-lg font-black text-foreground mt-0.5">
+                {items.reduce((s, i) => s + getEffectivePrice(i) * i.quantity, 0).toLocaleString("ar-EG")} ج.م
+              </p>
+            </div>
+            <Badge variant="secondary" className="text-xs gap-1">
+              <Eye className="w-3 h-3" />
+              {items.length} / 20 صنف
+            </Badge>
+          </div>
+        </div>
+      )}
+
+      {/* === Saved Quotes Section === */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <FileText className="w-5 h-5 text-primary" />
+          <h2 className="text-lg font-black text-foreground">عروض الأسعار المحفوظة</h2>
+        </div>
+
+        {loadingQuotes ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-5 h-5 animate-spin text-primary" />
+          </div>
+        ) : savedQuotes.length === 0 ? (
+          <div className="text-center py-8 border border-border/50 rounded-xl bg-muted/20">
+            <FileText className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">لا توجد عروض أسعار محفوظة</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {savedQuotes.map((quote) => (
+              <motion.div
+                key={quote.id}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-xl border border-border/50 bg-card overflow-hidden"
+              >
+                {/* Quote Header */}
+                <div
+                  className="flex items-center gap-3 p-3 cursor-pointer hover:bg-muted/30 transition-colors"
+                  onClick={() => toggleExpandQuote(quote.id)}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-foreground">{quote.quote_number}</span>
+                      {getStatusBadge(quote.status)}
+                    </div>
+                    <div className="flex items-center gap-3 mt-1">
+                      <span className="text-[10px] text-muted-foreground">
+                        {new Date(quote.created_at).toLocaleDateString("ar-EG")}
+                      </span>
+                      <span className="text-xs font-bold text-primary">
+                        {Number(quote.total_amount).toLocaleString("ar-EG")} ج.م
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {quote.status !== "converted" && (
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="gap-1 text-[10px] h-7 px-2"
+                        disabled={convertingQuoteId === quote.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleConvertQuoteToOrder(quote);
+                        }}
+                      >
+                        {convertingQuoteId === quote.id ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <ArrowRight className="w-3 h-3" />
+                        )}
+                        تحويل لطلبية
+                      </Button>
+                    )}
+                    {quote.status === "draft" && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive h-7 w-7 p-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteQuote(quote.id);
+                        }}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    )}
                   </div>
                 </div>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
-      </div>
 
-      {/* Summary Footer */}
-      <div className="rounded-xl bg-muted/50 border border-border/50 p-4 flex items-center justify-between">
-        <div>
-          <p className="text-xs text-muted-foreground">إجمالي جميع الأصناف</p>
-          <p className="text-lg font-black text-foreground mt-0.5">
-            {items.reduce((s, i) => s + getEffectivePrice(i) * i.quantity, 0).toLocaleString("ar-EG")} ج.م
-          </p>
-        </div>
-        <Badge variant="secondary" className="text-xs gap-1">
-          <Eye className="w-3 h-3" />
-          {items.length} / 20 صنف
-        </Badge>
+                {/* Expanded Items */}
+                <AnimatePresence>
+                  {expandedQuoteId === quote.id && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="border-t border-border/30 overflow-hidden"
+                    >
+                      {loadingQuoteItems ? (
+                        <div className="flex items-center justify-center py-4">
+                          <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                        </div>
+                      ) : expandedQuoteItems.length === 0 ? (
+                        <p className="text-xs text-muted-foreground p-3 text-center">العرض فارغ</p>
+                      ) : (
+                        <div className="p-2 space-y-1">
+                          {expandedQuoteItems.map((qi: any) => (
+                            <div key={qi.id} className="flex items-center gap-2 p-2 rounded-lg bg-muted/20">
+                              <div className="w-8 h-8 rounded bg-muted/50 overflow-hidden shrink-0">
+                                {qi.product?.image_url ? (
+                                  <img src={qi.product.image_url} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <Package className="w-3.5 h-3.5 text-muted-foreground/30" />
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-semibold text-foreground truncate">
+                                  {qi.product?.name_ar || qi.product_id}
+                                </p>
+                                <span className="text-[10px] font-mono text-muted-foreground">
+                                  {qi.product?.sku || "—"}
+                                </span>
+                              </div>
+                              <span className="text-[10px] text-muted-foreground">×{qi.quantity}</span>
+                              <span className="text-xs font-bold text-primary">
+                                {Number(qi.total_price).toLocaleString("ar-EG")} ج.م
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Product Detail Dialog */}
