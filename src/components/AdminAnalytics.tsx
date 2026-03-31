@@ -427,6 +427,125 @@ const AdminAnalytics = () => {
         )}
       </div>
 
+      {/* Daily Tracking Metrics */}
+      <div className="rounded-2xl border border-border bg-card p-6">
+        <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-emerald-500/10">
+              <CreditCard className="w-5 h-5 text-emerald-600" strokeWidth={2} />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-foreground">مقاييس التتبع اليومية</h3>
+              <p className="text-xs text-muted-foreground">الطلبات والمدفوعات ومعدل التحويل</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1 bg-muted/50 rounded-xl p-1">
+            {([["7", "7 أيام"], ["14", "14 يوم"], ["30", "30 يوم"]] as const).map(([val, label]) => (
+              <button
+                key={val}
+                onClick={() => handleMetricsPeriodChange(val)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  metricsPeriod === val
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Summary Cards */}
+        {(() => {
+          const totalOrders = dailyMetrics.reduce((s, d) => s + d.orders, 0);
+          const totalPaid = dailyMetrics.reduce((s, d) => s + d.paid, 0);
+          const conversionRate = totalOrders > 0 ? Math.round((totalPaid / totalOrders) * 100) : 0;
+          const avgOrdersPerDay = dailyMetrics.length > 0 ? (totalOrders / dailyMetrics.length).toFixed(1) : "0";
+          return (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+              <div className="rounded-xl border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-950/30 p-3">
+                <p className="text-lg font-black text-foreground">{totalOrders.toLocaleString("ar-EG")}</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1"><ShoppingBag className="w-3 h-3" /> إجمالي الطلبات</p>
+              </div>
+              <div className="rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-950/30 p-3">
+                <p className="text-lg font-black text-foreground">{totalPaid.toLocaleString("ar-EG")}</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1"><CreditCard className="w-3 h-3" /> مدفوعات ناجحة</p>
+              </div>
+              <div className="rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/30 p-3">
+                <p className="text-lg font-black text-foreground">{conversionRate}%</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1"><Percent className="w-3 h-3" /> معدل التحويل</p>
+              </div>
+              <div className="rounded-xl border border-violet-200 dark:border-violet-900/50 bg-violet-50 dark:bg-violet-950/30 p-3">
+                <p className="text-lg font-black text-foreground">{avgOrdersPerDay}</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1"><TrendingUp className="w-3 h-3" /> معدل يومي</p>
+              </div>
+            </div>
+          );
+        })()}
+
+        {dailyMetrics.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+            <BarChart3 className="w-12 h-12 mb-3 opacity-20" />
+            <p className="text-sm">لا توجد بيانات</p>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={300}>
+            <ComposedChart data={dailyMetrics} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+              <XAxis
+                dataKey="date"
+                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                yAxisId="left"
+                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                axisLine={false}
+                tickLine={false}
+                width={35}
+              />
+              <YAxis
+                yAxisId="right"
+                orientation="right"
+                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                axisLine={false}
+                tickLine={false}
+                width={35}
+                tickFormatter={v => `${v}%`}
+                domain={[0, 100]}
+              />
+              <Tooltip content={({ active, payload, label }: any) => {
+                if (!active || !payload?.length) return null;
+                return (
+                  <div className="bg-card border border-border rounded-xl shadow-xl px-4 py-3" dir="rtl">
+                    <p className="text-sm font-bold text-foreground mb-1">{label}</p>
+                    {payload.map((p: any, i: number) => (
+                      <p key={i} className="text-xs text-muted-foreground">
+                        {p.dataKey === "orders" ? "الطلبات" : p.dataKey === "paid" ? "المدفوعات" : "معدل التحويل"}:{" "}
+                        <span className="font-bold text-foreground">
+                          {p.value}{p.dataKey === "rate" ? "%" : ""}
+                        </span>
+                      </p>
+                    ))}
+                  </div>
+                );
+              }} />
+              <Bar yAxisId="left" dataKey="orders" name="orders" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={16} opacity={0.8} />
+              <Bar yAxisId="left" dataKey="paid" name="paid" fill="#10b981" radius={[4, 4, 0, 0]} barSize={16} opacity={0.8} />
+              <Line yAxisId="right" type="monotone" dataKey="rate" name="rate" stroke="#f59e0b" strokeWidth={2.5} dot={{ r: 3, fill: "#f59e0b" }} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        )}
+
+        <div className="flex items-center justify-center gap-6 mt-4 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm bg-blue-500" /> الطلبات</div>
+          <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm bg-emerald-500" /> المدفوعات</div>
+          <div className="flex items-center gap-1.5"><div className="w-3 h-1 rounded-full bg-amber-500" /> معدل التحويل</div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Products */}
         <div className="rounded-2xl border border-border bg-card p-6">
