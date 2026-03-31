@@ -162,6 +162,39 @@ const MyOrdersPage = () => {
     );
   }
 
+  // Show Paymob inline checkout for retry payment
+  if (paymobData) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="pt-24 pb-12">
+          <div className="container mx-auto px-4 max-w-xl">
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-bold text-foreground mb-2">إتمام الدفع</h2>
+              <p className="text-sm text-muted-foreground">أكمل عملية الدفع لطلبك</p>
+            </div>
+            <PaymobCheckout
+              clientSecret={paymobData.clientSecret}
+              publicKey={paymobData.publicKey}
+            />
+            <div className="mt-4 text-center">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setPaymobData(null)}
+                className="gap-2 text-muted-foreground"
+              >
+                <ArrowRight className="w-4 h-4" />
+                العودة لطلباتي
+              </Button>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
