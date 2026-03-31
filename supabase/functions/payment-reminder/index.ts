@@ -117,9 +117,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ─── 5-min final reminder (TESTING — normally 24 hours) ─────────────
-    const twentyFourHoursAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-    const fortyEightHoursAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+    // ─── 24-hour final reminder ─────────────
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
 
     const { data: staleOrders, error } = await supabase
       .from("orders")
