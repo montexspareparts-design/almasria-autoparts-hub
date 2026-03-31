@@ -28,6 +28,7 @@ const AdminCoupons = lazy(() => import("@/components/AdminCoupons"));
 const AdminQuantityDiscounts = lazy(() => import("@/components/AdminQuantityDiscounts"));
 const AdminCustomerIntelligence = lazy(() => import("@/components/AdminCustomerIntelligence"));
 const AdminProductInsights = lazy(() => import("@/components/AdminProductInsights"));
+const AdminPaymobSettings = lazy(() => import("@/components/AdminPaymobSettings"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];

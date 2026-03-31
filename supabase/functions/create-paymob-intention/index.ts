@@ -59,6 +59,15 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json().catch(() => null);
+
+    // Dry-run mode: just return public key status for admin health checks
+    if (body?.dry_run === true) {
+      return new Response(
+        JSON.stringify({ public_key: paymobPublicKey || null }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const order_id = typeof body?.order_id === "string" ? body.order_id : "";
     const return_url = typeof body?.return_url === "string" ? body.return_url : "";
 
