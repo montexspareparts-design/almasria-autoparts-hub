@@ -448,28 +448,12 @@ const MyOrdersPage = () => {
                               </div>
                             )}
 
-                            {/* Payment Instructions - only after admin approval */}
-                            {isElectronicPayment(order.payment_method) &&
-                              ["confirmed", "awaiting_payment"].includes(order.status) && (
-                              <PaymentInstructionsBanner
-                                paymentMethod={order.payment_method!}
-                                orderNumber={order.order_number}
-                                totalAmount={Number(order.total_amount)}
-                              />
-                            )}
-
-                            {/* Payment Countdown Timer */}
+                            {/* Pay / Retry Payment Button */}
                             {["awaiting_payment", "confirmed", "pending"].includes(order.status) && (
-                              <PaymentCountdown createdAt={order.created_at} />
-                            )}
-
-                            {/* Retry Paymob Payment Button */}
-                            {order.payment_method === "paymob" &&
-                              ["awaiting_payment", "confirmed", "pending"].includes(order.status) && (
                               <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 flex items-center justify-between gap-4">
                                 <div>
-                                  <p className="text-sm font-bold text-foreground">لم يتم الدفع بعد</p>
-                                  <p className="text-xs text-muted-foreground mt-0.5">اضغط لإتمام عملية الدفع عبر البطاقة البنكية</p>
+                                  <p className="text-sm font-bold text-foreground">ادفع لاستكمال الطلب</p>
+                                  <p className="text-xs text-muted-foreground mt-0.5">ادفع ببطاقتك البنكية (Visa / Mastercard / Meeza) — تأكيد فوري</p>
                                 </div>
                                 <Button
                                   size="sm"
@@ -480,7 +464,7 @@ const MyOrdersPage = () => {
                                   {retryingPayment === order.id ? (
                                     <Loader2 className="w-4 h-4 animate-spin" />
                                   ) : (
-                                    <RotateCcw className="w-4 h-4" />
+                                    <CreditCard className="w-4 h-4" />
                                   )}
                                   ادفع الآن
                                 </Button>
