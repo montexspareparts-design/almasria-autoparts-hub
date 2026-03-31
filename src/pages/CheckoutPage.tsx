@@ -153,33 +153,9 @@ const CheckoutPage = () => {
       clearCart();
 
       if (payment === "paymob") {
-        try {
-          const { data: paymobData, error: paymobErr } = await supabase.functions.invoke("create-paymob-intention", {
-            body: {
-              order_id: order.id,
-              return_url: buildPaymobReturnUrl(),
-            },
-          });
-
-          if (paymobErr || !paymobData?.client_secret || !isValidPaymobPublicKey(paymobData?.public_key)) {
-            console.error("Paymob error:", paymobErr, paymobData);
-            toast({ title: "حدث خطأ في بوابة الدفع", description: "تم حفظ طلبك. يمكنك الدفع لاحقاً من صفحة الطلبات.", variant: "destructive" });
-            navigate(`/my-orders?highlight=${order.id}`);
-            return;
-          }
-
-          // Show inline Paymob Flash Checkout
-          setPaymobClientSecret(paymobData.client_secret);
-          setPaymobOrderId(order.id);
-          setPaymobPublicKey(paymobData.public_key);
-          setSubmitting(false);
-          return;
-        } catch (e: any) {
-          console.error("Paymob error:", e);
-          toast({ title: "حدث خطأ في بوابة الدفع", description: "تم حفظ طلبك. يمكنك الدفع لاحقاً.", variant: "destructive" });
-          navigate(`/my-orders?highlight=${order.id}`);
-          return;
-        }
+        // Redirect to dedicated payment page
+        navigate(`/payment?order_id=${order.id}&amount=${orderTotal}`);
+        return;
       }
 
       toast({ title: "تم تقديم طلبك بنجاح! ✅", description: `رقم الطلب: ${orderNumber}` });
