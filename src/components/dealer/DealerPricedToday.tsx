@@ -11,7 +11,7 @@ import { useDealerCart } from "@/hooks/useDealerCart";
 import {
   Eye, Loader2, Download, ShoppingCart, MessageCircle,
   Package, CheckCircle2, XCircle, Clock, Info,
-  Minus, Plus, FileText, ArrowRight, Trash2, X
+  Minus, Plus, X
 } from "lucide-react";
 
 interface PricedProduct {
