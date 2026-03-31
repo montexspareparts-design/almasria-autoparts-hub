@@ -11,7 +11,7 @@ import { useDealerCart } from "@/hooks/useDealerCart";
 import {
   Eye, Loader2, Download, ShoppingCart, MessageCircle,
   Package, CheckCircle2, XCircle, Clock, Info,
-  Minus, Plus, FileText, ArrowRight, Trash2, X
+  Minus, Plus, X
 } from "lucide-react";
 
 interface PricedProduct {
@@ -34,14 +34,6 @@ interface PricedProduct {
   quantity: number;
 }
 
-interface SavedQuote {
-  id: string;
-  quote_number: string;
-  status: string;
-  total_amount: number;
-  notes: string | null;
-  created_at: string;
-}
 
 interface DealerPricedTodayProps {
   onConvertToOrder: () => void;
@@ -56,12 +48,6 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
   const [converting, setConverting] = useState(false);
   const [detailProduct, setDetailProduct] = useState<any>(null);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
-  const [savedQuotes, setSavedQuotes] = useState<SavedQuote[]>([]);
-  const [loadingQuotes, setLoadingQuotes] = useState(true);
-  const [convertingQuoteId, setConvertingQuoteId] = useState<string | null>(null);
-  const [expandedQuoteId, setExpandedQuoteId] = useState<string | null>(null);
-  const [expandedQuoteItems, setExpandedQuoteItems] = useState<any[]>([]);
-  const [loadingQuoteItems, setLoadingQuoteItems] = useState(false);
 
   const fetchPricedToday = useCallback(async () => {
     if (!user) return;
@@ -104,17 +90,7 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
     setLoading(false);
   }, [user, dealerAccount]);
 
-  const fetchSavedQuotes = useCallback(async () => {
-    if (!user) return;
-    setLoadingQuotes(true);
-    const { data } = await supabase
-      .from("dealer_quotes").select("*").eq("user_id", user.id)
-      .order("created_at", { ascending: false }).limit(20);
-    setSavedQuotes((data as SavedQuote[]) || []);
-    setLoadingQuotes(false);
-  }, [user]);
-
-  useEffect(() => { fetchPricedToday(); fetchSavedQuotes(); }, [fetchPricedToday, fetchSavedQuotes]);
+  useEffect(() => { fetchPricedToday(); }, [fetchPricedToday]);
 
   const toggleSelect = (productId: string) => {
     setSelectedIds(prev => {
@@ -192,48 +168,6 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
     finally { setDownloadingPdf(false); }
   };
 
-  // === Saved Quotes ===
-  const handleConvertQuoteToOrder = async (quote: SavedQuote) => {
-    if (!user) return;
-    setConvertingQuoteId(quote.id);
-    const { data: qItems } = await supabase.from("dealer_quote_items").select("product_id, quantity, unit_price, total_price").eq("quote_id", quote.id);
-    if (!qItems || qItems.length === 0) { toast({ title: "العرض فارغ", variant: "destructive" }); setConvertingQuoteId(null); return; }
-    for (const item of qItems) await addToCart(item.product_id, item.quantity);
-    await supabase.from("dealer_quotes").update({ status: "converted" }).eq("id", quote.id);
-    toast({ title: "✅ تم إضافة أصناف العرض للسلة", description: `${qItems.length} صنف من عرض ${quote.quote_number}` });
-    setConvertingQuoteId(null);
-    fetchSavedQuotes();
-    onConvertToOrder();
-  };
-
-  const handleDeleteQuote = async (quoteId: string) => {
-    await supabase.from("dealer_quote_items").delete().eq("quote_id", quoteId);
-    await supabase.from("dealer_quotes").delete().eq("id", quoteId);
-    toast({ title: "تم حذف العرض" });
-    if (expandedQuoteId === quoteId) { setExpandedQuoteId(null); setExpandedQuoteItems([]); }
-    fetchSavedQuotes();
-  };
-
-  const toggleExpandQuote = async (quoteId: string) => {
-    if (expandedQuoteId === quoteId) { setExpandedQuoteId(null); setExpandedQuoteItems([]); return; }
-    setExpandedQuoteId(quoteId);
-    setLoadingQuoteItems(true);
-    const { data: qItems } = await supabase.from("dealer_quote_items").select("id, product_id, quantity, unit_price, total_price").eq("quote_id", quoteId);
-    if (!qItems || qItems.length === 0) { setExpandedQuoteItems([]); setLoadingQuoteItems(false); return; }
-    const productIds = qItems.map(i => i.product_id);
-    const { data: products } = await supabase.from("products").select("id, name_ar, sku, image_url").in("id", productIds);
-    const productMap = new Map((products || []).map(p => [p.id, p]));
-    setExpandedQuoteItems(qItems.map(qi => ({ ...qi, product: productMap.get(qi.product_id) })));
-    setLoadingQuoteItems(false);
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "converted": return <Badge className="bg-emerald-500/10 text-emerald-700 text-[10px]">تم التحويل لطلبية</Badge>;
-      case "sent": return <Badge className="bg-blue-500/10 text-blue-700 text-[10px]">تم الإرسال</Badge>;
-      default: return <Badge className="bg-yellow-500/10 text-yellow-700 text-[10px]">مسودة</Badge>;
-    }
-  };
 
   if (loading) {
     return (
@@ -420,82 +354,6 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
         </div>
       )}
 
-      {/* === Saved Quotes Section === */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <FileText className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-black text-foreground">عروض الأسعار المحفوظة</h2>
-        </div>
-
-        {loadingQuotes ? (
-          <div className="flex items-center justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>
-        ) : savedQuotes.length === 0 ? (
-          <div className="text-center py-8 border border-border/50 rounded-xl bg-muted/20">
-            <FileText className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">لا توجد عروض أسعار محفوظة</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {savedQuotes.map((quote) => (
-              <motion.div key={quote.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="rounded-xl border border-border/50 bg-card overflow-hidden">
-                <div className="flex items-center gap-3 p-3 cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => toggleExpandQuote(quote.id)}>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-foreground">{quote.quote_number}</span>
-                      {getStatusBadge(quote.status)}
-                    </div>
-                    <div className="flex items-center gap-3 mt-1">
-                      <span className="text-[10px] text-muted-foreground">{new Date(quote.created_at).toLocaleDateString("ar-EG")}</span>
-                      <span className="text-xs font-bold text-primary">{Number(quote.total_amount).toLocaleString("ar-EG")} ج.م</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {quote.status !== "converted" && (
-                      <Button size="sm" variant="default" className="gap-1 text-[10px] h-7 px-2" disabled={convertingQuoteId === quote.id} onClick={(e) => { e.stopPropagation(); handleConvertQuoteToOrder(quote); }}>
-                        {convertingQuoteId === quote.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <ArrowRight className="w-3 h-3" />}
-                        تحويل لطلبية
-                      </Button>
-                    )}
-                    {quote.status === "draft" && (
-                      <Button size="sm" variant="ghost" className="text-destructive h-7 w-7 p-0" onClick={(e) => { e.stopPropagation(); handleDeleteQuote(quote.id); }}>
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-
-                <AnimatePresence>
-                  {expandedQuoteId === quote.id && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="border-t border-border/30 overflow-hidden">
-                      {loadingQuoteItems ? (
-                        <div className="flex items-center justify-center py-4"><Loader2 className="w-4 h-4 animate-spin text-primary" /></div>
-                      ) : expandedQuoteItems.length === 0 ? (
-                        <p className="text-xs text-muted-foreground p-3 text-center">العرض فارغ</p>
-                      ) : (
-                        <div className="p-2 space-y-1">
-                          {expandedQuoteItems.map((qi: any) => (
-                            <div key={qi.id} className="flex items-center gap-2 p-2 rounded-lg bg-muted/20">
-                              <div className="w-8 h-8 rounded bg-muted/50 overflow-hidden shrink-0">
-                                {qi.product?.image_url ? <img src={qi.product.image_url} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><Package className="w-3.5 h-3.5 text-muted-foreground/30" /></div>}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs font-semibold text-foreground truncate">{qi.product?.name_ar || qi.product_id}</p>
-                                <span className="text-[10px] font-mono text-muted-foreground">{qi.product?.sku || "—"}</span>
-                              </div>
-                              <span className="text-[10px] text-muted-foreground">×{qi.quantity}</span>
-                              <span className="text-xs font-bold text-primary">{Number(qi.total_price).toLocaleString("ar-EG")} ج.م</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </div>
 
       {/* Product Detail Dialog */}
       <ProductDetailDialog
