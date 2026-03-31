@@ -379,15 +379,13 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
       {/* Product Detail Dialog */}
       <ProductDetailDialog
         product={detailProduct}
-        onClose={() => setDetailProduct(null)}
+        open={!!detailProduct}
+        onOpenChange={(open) => { if (!open) setDetailProduct(null); }}
         price={detailProduct ? getEffectivePrice({ product: detailProduct, tier_price: items.find(i => i.product_id === detailProduct.id)?.tier_price } as PricedProduct) : null}
         priceLabel="سعر الجملة الخاص بك"
         canAddToCart
-        onAddToCart={() => {}}
-        onLoginPrompt={() => {}}
-        onRevealPrice={() => {}}
-        remainingViews={0}
-        limitReached={false}
+        isLoggedIn={!!user}
+        isDealer={!!dealerAccount}
       />
     </div>
   );
