@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
+import { ensureActiveSession } from "@/lib/paymob";
 
 type PaymentMethod = "card" | "wallet" | "kiosk";
 
