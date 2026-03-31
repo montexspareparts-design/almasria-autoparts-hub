@@ -84,6 +84,7 @@ const DealerDashboard = () => {
 
   const pageTitles: Record<DealerTab, string> = {
     quotes: "بحث القطع وعروض الأسعار",
+    priced_today: "ما تم تسعيره اليوم",
     price_lists: "كشوفات المصرية",
     orders: "الطلبية",
     payment: "الدفع الإلكتروني",
