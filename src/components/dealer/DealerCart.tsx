@@ -15,7 +15,7 @@ import {
   ShoppingCart, Trash2, Minus, Plus, Package, Loader2,
   ArrowRight, FileText, XCircle, CheckCircle2, MessageCircle, CreditCard
 } from "lucide-react";
-import DealerRecentOrders from "./DealerRecentOrders";
+
 
 interface DealerCartProps {
   onNavigateToOrders: () => void;
@@ -156,7 +156,6 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment }: DealerCartProps
           <h3 className="text-lg font-bold text-foreground">السلة فارغة</h3>
           <p className="text-sm text-muted-foreground">أضف أصناف من البحث أو عروض الأسعار</p>
         </div>
-        <DealerRecentOrders onNavigateToOrders={onNavigateToOrders} onNavigateToPayment={onNavigateToPayment} />
       </div>
     );
   }
@@ -347,9 +346,6 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment }: DealerCartProps
       <p className="text-[10px] text-muted-foreground text-center">
         "ادفع الآن" ينقلك مباشرة للدفع الإلكتروني — "أرسل الطلب" يرسله للمراجعة والدفع لاحقاً
       </p>
-
-      {/* Recent Orders Summary */}
-      <DealerRecentOrders onNavigateToOrders={onNavigateToOrders} onNavigateToPayment={onNavigateToPayment} />
     </div>
   );
 };
