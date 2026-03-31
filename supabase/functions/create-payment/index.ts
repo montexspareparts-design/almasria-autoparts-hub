@@ -52,20 +52,29 @@ Deno.serve(async (req) => {
 
     // --- Secrets ---
     const paymobApiKey = Deno.env.get("PAYMOB_API_KEY");
-    const integrationId = Deno.env.get("PAYMOB_INTEGRATION_ID");
+    const cardIntegrationId = Deno.env.get("PAYMOB_INTEGRATION_ID");
+    const walletIntegrationId = Deno.env.get("PAYMOB_WALLET_INTEGRATION_ID");
+    const kioskIntegrationId = Deno.env.get("PAYMOB_KIOSK_INTEGRATION_ID");
     const iframeId = Deno.env.get("PAYMOB_IFRAME_ID");
     const paymobPublicKey = Deno.env.get("PAYMOB_PUBLIC_KEY");
 
     // Dry-run mode: return key status for admin health checks
     if (body?.dry_run === true) {
       return new Response(
-        JSON.stringify({ public_key: paymobPublicKey || null }),
+        JSON.stringify({
+          public_key: paymobPublicKey || null,
+          methods: {
+            card: !!cardIntegrationId,
+            wallet: !!walletIntegrationId,
+            kiosk: !!kioskIntegrationId,
+          },
+        }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const orderId = typeof body?.order_id === "string" ? body.order_id : "";
-    const returnUrl = typeof body?.return_url === "string" ? body.return_url : "";
+    const paymentMethod = typeof body?.payment_method === "string" ? body.payment_method : "card";
 
     if (!orderId) {
       return new Response(JSON.stringify({ error: "order_id is required" }), {
@@ -75,7 +84,24 @@ Deno.serve(async (req) => {
     }
 
     if (!paymobApiKey) throw new Error("PAYMOB_API_KEY is not configured");
-    if (!integrationId) throw new Error("PAYMOB_INTEGRATION_ID is not configured");
+
+    // Determine integration ID based on payment method
+    let activeIntegrationId: string | undefined;
+    switch (paymentMethod) {
+      case "wallet":
+        activeIntegrationId = walletIntegrationId;
+        if (!activeIntegrationId) throw new Error("PAYMOB_WALLET_INTEGRATION_ID is not configured");
+        break;
+      case "kiosk":
+        activeIntegrationId = kioskIntegrationId;
+        if (!activeIntegrationId) throw new Error("PAYMOB_KIOSK_INTEGRATION_ID is not configured");
+        break;
+      case "card":
+      default:
+        activeIntegrationId = cardIntegrationId;
+        if (!activeIntegrationId) throw new Error("PAYMOB_INTEGRATION_ID is not configured");
+        break;
+    }
 
     // --- Fetch order from DB ---
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -166,7 +192,7 @@ Deno.serve(async (req) => {
     // ========================================
     // Step 3: Generate payment key
     // ========================================
-    console.log("Step 3: Generating payment key...");
+    console.log(`Step 3: Generating payment key for method: ${paymentMethod}...`);
     const paymentKeyRes = await fetch(`${PAYMOB_BASE}/api/acceptance/payment_keys`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -191,7 +217,7 @@ Deno.serve(async (req) => {
           postal_code: "NA",
         },
         currency: "EGP",
-        integration_id: parseInt(integrationId),
+        integration_id: parseInt(activeIntegrationId),
         lock_order_when_paid: true,
       }),
     });
@@ -204,19 +230,62 @@ Deno.serve(async (req) => {
     const paymentKey = paymentKeyData.token;
     console.log("Step 3: ✅ Payment key generated");
 
-    // Build iframe URL
-    const iframeUrl = iframeId
-      ? `${PAYMOB_BASE}/api/acceptance/iframes/${iframeId}?payment_token=${paymentKey}`
-      : null;
+    // ========================================
+    // Build response based on payment method
+    // ========================================
+    let iframeUrl: string | null = null;
+    let walletRedirectUrl: string | null = null;
+    let kioskBillReference: string | null = null;
 
-    // ========================================
-    // Return response
-    // ========================================
+    if (paymentMethod === "card") {
+      iframeUrl = iframeId
+        ? `${PAYMOB_BASE}/api/acceptance/iframes/${iframeId}?payment_token=${paymentKey}`
+        : null;
+    } else if (paymentMethod === "wallet") {
+      // For wallet, we need to call the wallet pay endpoint
+      const walletPhone = body?.wallet_phone || profile?.phone || "01000000000";
+      console.log("Step 4: Initiating wallet payment...");
+      const walletRes = await fetch(`${PAYMOB_BASE}/api/acceptance/payments/pay`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          source: {
+            identifier: walletPhone,
+            subtype: "WALLET",
+          },
+          payment_token: paymentKey,
+        }),
+      });
+      const walletData = await walletRes.json();
+      console.log("Wallet response:", JSON.stringify(walletData));
+      walletRedirectUrl = walletData?.redirect_url || walletData?.iframe_redirection_url || null;
+    } else if (paymentMethod === "kiosk") {
+      // For kiosk, call the pay endpoint to get bill reference
+      console.log("Step 4: Creating kiosk bill...");
+      const kioskRes = await fetch(`${PAYMOB_BASE}/api/acceptance/payments/pay`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          source: {
+            identifier: "AGGREGATOR",
+            subtype: "AGGREGATOR",
+          },
+          payment_token: paymentKey,
+        }),
+      });
+      const kioskData = await kioskRes.json();
+      console.log("Kiosk response:", JSON.stringify(kioskData));
+      kioskBillReference = kioskData?.data?.bill_reference?.toString() || kioskData?.id?.toString() || null;
+    }
+
     return new Response(
       JSON.stringify({
         payment_key: paymentKey,
+        payment_method: paymentMethod,
         iframe_url: iframeUrl,
         iframe_id: iframeId || null,
+        wallet_redirect_url: walletRedirectUrl,
+        kiosk_bill_reference: kioskBillReference,
         paymob_order_id: paymobOrderId,
         order_number: order.order_number,
         amount_cents: amountCents,
