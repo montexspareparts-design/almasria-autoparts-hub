@@ -13,7 +13,6 @@ interface DealerMobileNavProps {
 const primaryTabs: { id: DealerTab; label: string; Icon: typeof LayoutDashboard }[] = [
   { id: "quotes", label: "المنتجات", Icon: Search },
   { id: "cart", label: "السلة", Icon: ShoppingCart },
-  { id: "orders", label: "طلباتي", Icon: ClipboardList },
   { id: "price_lists", label: "الأسعار", Icon: FileText },
   { id: "payment", label: "الدفع", Icon: CreditCard },
 ];
