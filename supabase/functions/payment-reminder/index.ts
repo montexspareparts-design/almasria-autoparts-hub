@@ -117,14 +117,16 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ─── 24-hour in-app reminder (existing logic) ────────────────────────
+    // ─── 24-hour final WhatsApp + in-app reminder ─────────────────────
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
 
     const { data: staleOrders, error } = await supabase
       .from("orders")
-      .select("id, order_number, user_id, total_amount, updated_at")
+      .select("id, order_number, user_id, total_amount, created_at")
       .eq("status", "awaiting_payment")
-      .lt("updated_at", twentyFourHoursAgo);
+      .lt("created_at", twentyFourHoursAgo)
+      .gt("created_at", fortyEightHoursAgo);
 
     if (error) {
       console.error("Error fetching stale orders:", error);
@@ -141,21 +143,44 @@ Deno.serve(async (req) => {
         .from("notifications")
         .select("id")
         .eq("user_id", order.user_id)
-        .eq("type", "warning")
-        .ilike("message", `%${order.order_number}%تذكير%`)
+        .eq("type", "payment_reminder_final")
+        .ilike("message", `%${order.order_number}%`)
         .limit(1);
 
       if (existingReminder && existingReminder.length > 0) continue;
 
       const total = Number(order.total_amount).toLocaleString("ar-EG");
 
+      // In-app notification
       await supabase.from("notifications").insert({
         user_id: order.user_id,
-        title: "⏰ تذكير بالدفع",
-        message: `تذكير: طلبك رقم ${order.order_number} بقيمة ${total} ج.م لا يزال بانتظار الدفع. يرجى إتمام الدفع لبدء التجهيز.`,
-        type: "warning",
+        title: "⚠️ تذكير أخير بالدفع",
+        message: `تذكير أخير: طلبك رقم ${order.order_number} بقيمة ${total} ج.م سيتم إلغاؤه قريبًا إذا لم يتم الدفع.`,
+        type: "payment_reminder_final",
       });
 
+      // WhatsApp final reminder
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("phone")
+        .eq("user_id", order.user_id)
+        .maybeSingle();
+
+      if (profile?.phone) {
+        const { data: siteSetting } = await supabase
+          .from("site_settings")
+          .select("value")
+          .eq("key", "app_base_url")
+          .maybeSingle();
+
+        const baseUrl = siteSetting?.value || "https://almasria-autoparts-hub.lovable.app";
+        const link = `${baseUrl}/payment?order_id=${order.id}&amount=${order.total_amount}`;
+
+        const msg = `⚠️ تذكير أخير\nطلبك رقم ${order.order_number} لم يتم دفعه بعد\nالإجمالي: ${total} جنيه\n\nسيتم إلغاء الطلب قريبًا\nادفع الآن:\n${link}`;
+        await sendWhatsApp(profile.phone, msg);
+      }
+
+      // Notify admins
       const { data: admins } = await supabase
         .from("user_roles")
         .select("user_id")
