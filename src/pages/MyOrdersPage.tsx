@@ -149,7 +149,7 @@ const MyOrdersPage = () => {
   const [loading, setLoading] = useState(true);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(highlightOrder);
   const [retryingPayment, setRetryingPayment] = useState<string | null>(null);
-  const [paymobData, setPaymobData] = useState<{ orderId: string; clientSecret: string; publicKey: string } | null>(null);
+  const [paymobIframe, setPaymobIframe] = useState<{ orderId: string; iframeUrl: string } | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -169,7 +169,6 @@ const MyOrdersPage = () => {
     const orderList = data || [];
     setOrders(orderList);
 
-    // Fetch items for all orders
     if (orderList.length > 0) {
       const { data: items } = await supabase
         .from("order_items")
@@ -186,37 +185,33 @@ const MyOrdersPage = () => {
 
     setLoading(false);
 
-    // Auto-expand highlighted order
     if (highlightOrder && orderList.find((o) => o.id === highlightOrder)) {
       setExpandedOrder(highlightOrder);
     } else if (highlightOrder && orderList.length > 0) {
-      // If highlight is an order_number, find by order_number
       const found = orderList.find((o) => o.order_number === highlightOrder);
       if (found) setExpandedOrder(found.id);
     }
   };
 
   const handleRetryPayment = async (order: any) => {
-    if (order.payment_method !== "paymob") return;
     setRetryingPayment(order.id);
     try {
-      const { data, error } = await supabase.functions.invoke("create-paymob-intention", {
+      const { data, error } = await supabase.functions.invoke("create-payment", {
         body: {
           order_id: order.id,
-          return_url: buildPaymobReturnUrl(),
+          return_url: `${window.location.origin}/payment-callback`,
         },
       });
 
-      if (error || !data?.client_secret || !isValidPaymobPublicKey(data?.public_key)) {
-        toast({ title: "حدث خطأ في بوابة الدفع", description: "يرجى المحاولة مرة أخرى", variant: "destructive" });
+      if (error || !data?.iframe_url) {
+        toast({ title: "حدث خطأ في بوابة الدفع", description: data?.error || "يرجى المحاولة مرة أخرى", variant: "destructive" });
         setRetryingPayment(null);
         return;
       }
 
-      setPaymobData({
+      setPaymobIframe({
         orderId: order.id,
-        clientSecret: data.client_secret,
-        publicKey: data.public_key,
+        iframeUrl: data.iframe_url,
       });
     } catch (e: any) {
       toast({ title: "حدث خطأ", description: e.message, variant: "destructive" });
@@ -236,26 +231,31 @@ const MyOrdersPage = () => {
     );
   }
 
-  // Show Paymob inline checkout for retry payment
-  if (paymobData) {
+  // Show Paymob iframe for retry payment
+  if (paymobIframe) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="pt-24 pb-12">
-          <div className="container mx-auto px-4 max-w-xl">
+          <div className="container mx-auto px-4 max-w-2xl">
             <div className="text-center mb-6">
               <h2 className="text-xl font-bold text-foreground mb-2">إتمام الدفع</h2>
               <p className="text-sm text-muted-foreground">أكمل عملية الدفع لطلبك</p>
             </div>
-            <PaymobCheckout
-              clientSecret={paymobData.clientSecret}
-              publicKey={paymobData.publicKey}
-            />
+            <div className="rounded-xl border border-border overflow-hidden bg-card">
+              <iframe
+                src={paymobIframe.iframeUrl}
+                className="w-full border-0"
+                style={{ minHeight: "480px", height: "65vh", maxHeight: "650px" }}
+                title="Paymob Payment"
+                allow="payment"
+              />
+            </div>
             <div className="mt-4 text-center">
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setPaymobData(null)}
+                onClick={() => setPaymobIframe(null)}
                 className="gap-2 text-muted-foreground"
               >
                 <ArrowRight className="w-4 h-4" />
