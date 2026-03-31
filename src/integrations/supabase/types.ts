@@ -889,6 +889,68 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_transactions: {
+        Row: {
+          amount_cents: number | null
+          card_brand: string | null
+          card_last_four: string | null
+          created_at: string
+          currency: string | null
+          error_message: string | null
+          id: string
+          is_refunded: boolean | null
+          is_voided: boolean | null
+          order_id: string | null
+          order_number: string | null
+          payment_method: string | null
+          paymob_transaction_id: string | null
+          raw_payload: Json | null
+          status: string
+        }
+        Insert: {
+          amount_cents?: number | null
+          card_brand?: string | null
+          card_last_four?: string | null
+          created_at?: string
+          currency?: string | null
+          error_message?: string | null
+          id?: string
+          is_refunded?: boolean | null
+          is_voided?: boolean | null
+          order_id?: string | null
+          order_number?: string | null
+          payment_method?: string | null
+          paymob_transaction_id?: string | null
+          raw_payload?: Json | null
+          status?: string
+        }
+        Update: {
+          amount_cents?: number | null
+          card_brand?: string | null
+          card_last_four?: string | null
+          created_at?: string
+          currency?: string | null
+          error_message?: string | null
+          id?: string
+          is_refunded?: boolean | null
+          is_voided?: boolean | null
+          order_id?: string | null
+          order_number?: string | null
+          payment_method?: string | null
+          paymob_transaction_id?: string | null
+          raw_payload?: Json | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       price_list_products: {
         Row: {
           id: string
