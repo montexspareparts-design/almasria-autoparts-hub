@@ -336,12 +336,24 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
                   </div>
                 </div>
 
-                {/* Price & Time */}
-                <div className="text-left shrink-0 space-y-0.5">
+                {/* Price, Time & Detail */}
+                <div className="text-left shrink-0 space-y-1">
                   <p className="text-sm font-black text-primary">{price.toLocaleString("ar-EG")} ج.م</p>
-                  <div className="flex items-center gap-1 text-[9px] text-muted-foreground justify-end">
-                    <Clock className="w-2.5 h-2.5" />
-                    {viewedTime}
+                  <div className="flex items-center gap-2 justify-end">
+                    <span className="flex items-center gap-1 text-[9px] text-muted-foreground">
+                      <Clock className="w-2.5 h-2.5" />
+                      {viewedTime}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDetailProduct(item.product);
+                      }}
+                      className="text-[10px] text-primary hover:text-primary/80 font-semibold flex items-center gap-0.5 transition-colors"
+                    >
+                      <Info className="w-3 h-3" />
+                      التفاصيل
+                    </button>
                   </div>
                 </div>
               </motion.div>
