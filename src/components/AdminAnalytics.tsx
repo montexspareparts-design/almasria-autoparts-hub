@@ -28,6 +28,8 @@ const AdminAnalytics = () => {
   const [topSearches, setTopSearches] = useState<{ query: string; count: number }[]>([]);
   const [searchPeriod, setSearchPeriod] = useState<"7" | "30" | "all">("all");
   const [kpis, setKpis] = useState({ totalRevenue: 0, totalOrders: 0, totalDealers: 0, totalProducts: 0, avgOrderValue: 0 });
+  const [dailyMetrics, setDailyMetrics] = useState<{ date: string; orders: number; paid: number; rate: number }[]>([]);
+  const [metricsPeriod, setMetricsPeriod] = useState<"7" | "14" | "30">("14");
 
   useEffect(() => {
     fetchAll();
