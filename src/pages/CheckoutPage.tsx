@@ -62,6 +62,7 @@ const CheckoutPage = () => {
   const [form, setForm] = useState({
     name: "",
     phone: "",
+    email: "",
     governorate: "",
     city: "",
     address: "",
