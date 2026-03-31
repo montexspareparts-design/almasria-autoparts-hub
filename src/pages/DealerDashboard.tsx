@@ -12,6 +12,7 @@ import DealerOrdersList from "@/components/dealer/DealerOrdersList";
 import DealerNotificationsList from "@/components/dealer/DealerNotificationsList";
 import DealerOffers from "@/components/dealer/DealerOffers";
 
+import DealerProductSearch from "@/components/dealer/DealerProductSearch";
 import DealerQuoteBuilder, { type PriceListQuoteData } from "@/components/dealer/DealerQuoteBuilder";
 import DealerPriceLists from "@/components/dealer/DealerPriceLists";
 import DealerFavorites from "@/components/dealer/DealerFavorites";
