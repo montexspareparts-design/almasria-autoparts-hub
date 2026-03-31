@@ -90,17 +90,7 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
     setLoading(false);
   }, [user, dealerAccount]);
 
-  const fetchSavedQuotes = useCallback(async () => {
-    if (!user) return;
-    setLoadingQuotes(true);
-    const { data } = await supabase
-      .from("dealer_quotes").select("*").eq("user_id", user.id)
-      .order("created_at", { ascending: false }).limit(20);
-    setSavedQuotes((data as SavedQuote[]) || []);
-    setLoadingQuotes(false);
-  }, [user]);
-
-  useEffect(() => { fetchPricedToday(); fetchSavedQuotes(); }, [fetchPricedToday, fetchSavedQuotes]);
+  useEffect(() => { fetchPricedToday(); }, [fetchPricedToday]);
 
   const toggleSelect = (productId: string) => {
     setSelectedIds(prev => {
