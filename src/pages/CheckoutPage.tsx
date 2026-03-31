@@ -423,10 +423,13 @@ const CheckoutPage = () => {
                   {submitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      جاري تقديم الطلب...
+                      جاري إنشاء الطلب...
                     </>
                   ) : (
-                    "تأكيد الطلب"
+                    <>
+                      <CreditCard className="w-5 h-5" />
+                      ادفع الآن
+                    </>
                   )}
                 </Button>
               </div>
