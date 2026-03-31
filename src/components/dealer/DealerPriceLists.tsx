@@ -375,7 +375,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
       })
     );
     const totalAmount = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-    const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
+    const orderNumber = await generateOrderNumber();
 
     const { data: order, error } = await supabase
       .from("orders")
