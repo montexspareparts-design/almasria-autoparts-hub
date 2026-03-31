@@ -34,14 +34,6 @@ interface PricedProduct {
   quantity: number;
 }
 
-interface SavedQuote {
-  id: string;
-  quote_number: string;
-  status: string;
-  total_amount: number;
-  notes: string | null;
-  created_at: string;
-}
 
 interface DealerPricedTodayProps {
   onConvertToOrder: () => void;
