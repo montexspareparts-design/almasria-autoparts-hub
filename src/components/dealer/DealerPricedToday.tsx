@@ -7,9 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { generateQuotePdf } from "@/lib/generateQuotePdf";
 import ProductDetailDialog from "@/components/ProductDetailDialog";
+import { useDealerCart } from "@/hooks/useDealerCart";
 import {
   Eye, Loader2, Download, ShoppingCart, MessageCircle,
-  Package, CheckCircle2, XCircle, Clock, FileText, Info
+  Package, CheckCircle2, XCircle, Clock, FileText, Info,
+  Minus, Plus
 } from "lucide-react";
 
 interface PricedProduct {
@@ -29,6 +31,7 @@ interface PricedProduct {
     brand: string;
   };
   tier_price?: number | null;
+  quantity: number;
 }
 
 interface DealerPricedTodayProps {
@@ -37,11 +40,13 @@ interface DealerPricedTodayProps {
 
 const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
   const { user, dealerAccount } = useAuth();
+  const { addItem: addToCart } = useDealerCart();
   const [items, setItems] = useState<PricedProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [converting, setConverting] = useState(false);
   const [detailProduct, setDetailProduct] = useState<any>(null);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   const fetchPricedToday = useCallback(async () => {
     if (!user) return;
@@ -69,7 +74,6 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
       .select("id, name_ar, name_en, sku, base_price, sale_price, is_on_sale, image_url, stock_quantity, brand")
       .in("id", productIds);
 
-    // Get tier prices if dealer has a tier
     let tierPricesMap: Record<string, number> = {};
     if (dealerAccount?.tier) {
       const { data: tierPrices } = await supabase
@@ -93,6 +97,7 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
         viewed_at: v.viewed_at,
         product: productsMap.get(v.product_id)!,
         tier_price: tierPricesMap[v.product_id] || null,
+        quantity: 1,
       }));
 
     setItems(merged);
@@ -117,6 +122,14 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
     }
   };
 
+  const updateQuantity = (productId: string, delta: number) => {
+    setItems(prev => prev.map(item => {
+      if (item.product_id !== productId) return item;
+      const newQty = Math.max(1, item.quantity + delta);
+      return { ...item, quantity: newQty };
+    }));
+  };
+
   const getEffectivePrice = (item: PricedProduct) => {
     if (item.tier_price) return item.tier_price;
     if (item.product.is_on_sale && item.product.sale_price) return item.product.sale_price;
@@ -124,7 +137,15 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
   };
 
   const selectedItems = items.filter(i => selectedIds.has(i.product_id));
-  const selectedTotal = selectedItems.reduce((sum, i) => sum + getEffectivePrice(i), 0);
+  const selectedTotal = selectedItems.reduce((sum, i) => sum + getEffectivePrice(i) * i.quantity, 0);
+
+  const handleAddToCart = async (product: any, quantity: number = 1) => {
+    await addToCart(product.id, quantity);
+    toast({
+      title: "✅ تمت الإضافة للسلة",
+      description: `${product.name_ar} × ${quantity}`,
+    });
+  };
 
   const handleConvertToOrder = async () => {
     if (selectedItems.length === 0) {
@@ -133,18 +154,14 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
     }
     setConverting(true);
 
-    // Store selected items in session for order creation
-    const orderItems = selectedItems.map(item => ({
-      id: item.product_id,
-      sku: item.product.sku,
-      name_ar: item.product.name_ar,
-      name_en: item.product.name_en,
-      quantity: 1,
-      unit_price: getEffectivePrice(item),
-    }));
-    sessionStorage.setItem("quote_pending_items", JSON.stringify(orderItems));
+    for (const item of selectedItems) {
+      await addToCart(item.product_id, item.quantity);
+    }
 
-    toast({ title: "✅ تم تجهيز الأصناف للطلب", description: `${selectedItems.length} صنف — انتقل لإتمام الطلب` });
+    toast({
+      title: "✅ تمت إضافة الأصناف للسلة",
+      description: `${selectedItems.length} صنف — يمكنك إتمام الطلب الآن`,
+    });
     setConverting(false);
     onConvertToOrder();
   };
@@ -154,7 +171,7 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
     if (itemsToShare.length === 0) return;
 
     const lines = [
-      "📋 *ما تم تسعيره اليوم — المصرية جروب*",
+      "📋 *عرض سعر — المصرية جروب*",
       `التاريخ: ${new Date().toLocaleDateString("ar-EG")}`,
       "",
       "━━━━━━━━━━━━━━━━━━━━━━",
@@ -165,11 +182,12 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
       lines.push(
         `${idx + 1}. ${item.product.name_ar}`,
         `   رقم القطعة: ${item.product.sku}`,
-        `   السعر: ${price.toLocaleString("en-US")} ج.م`,
+        `   الكمية: ${item.quantity}`,
+        `   السعر: ${(price * item.quantity).toLocaleString("en-US")} ج.م`,
       );
     });
 
-    const total = itemsToShare.reduce((s, i) => s + getEffectivePrice(i), 0);
+    const total = itemsToShare.reduce((s, i) => s + getEffectivePrice(i) * i.quantity, 0);
     lines.push(
       "━━━━━━━━━━━━━━━━━━━━━━",
       `💰 *الإجمالي: ${total.toLocaleString("en-US")} ج.م*`,
@@ -180,30 +198,31 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
     window.open(`https://wa.me/?text=${encodeURIComponent(lines.join("\n"))}`, "_blank");
   };
 
-  const handleDownload = () => {
+  const handleDownloadPdf = async () => {
     const itemsToExport = selectedItems.length > 0 ? selectedItems : items;
     if (itemsToExport.length === 0) return;
 
-    const csvRows = [
-      ["#", "رقم القطعة", "الاسم", "الماركة", "السعر", "التوفر"].join(","),
-      ...itemsToExport.map((item, idx) => [
-        idx + 1,
-        item.product.sku,
-        `"${item.product.name_ar}"`,
-        item.product.brand,
-        getEffectivePrice(item),
-        item.product.stock_quantity > 0 ? "متوفر" : "غير متوفر"
-      ].join(","))
-    ];
-
-    const blob = new Blob(["\uFEFF" + csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `priced-today-${new Date().toISOString().split("T")[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast({ title: "✅ تم تحميل الملف" });
+    setDownloadingPdf(true);
+    try {
+      const totalAmount = itemsToExport.reduce((s, i) => s + getEffectivePrice(i) * i.quantity, 0);
+      await generateQuotePdf({
+        quoteNumber: `QP-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}`,
+        date: new Date().toLocaleDateString("ar-EG"),
+        items: itemsToExport.map(item => ({
+          name: item.product.name_ar,
+          sku: item.product.sku,
+          quantity: item.quantity,
+          unitPrice: getEffectivePrice(item),
+          totalPrice: getEffectivePrice(item) * item.quantity,
+        })),
+        totalAmount,
+      });
+      toast({ title: "✅ تم تحميل عرض السعر PDF" });
+    } catch {
+      toast({ title: "خطأ في تحميل PDF", variant: "destructive" });
+    } finally {
+      setDownloadingPdf(false);
+    }
   };
 
   if (loading) {
@@ -232,7 +251,7 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
       {/* Header & Actions Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-black text-foreground">ما تم تسعيره اليوم</h2>
+          <h2 className="text-xl font-black text-foreground">عرض سعر</h2>
           <p className="text-sm text-muted-foreground mt-0.5">
             {items.length} صنف تم تسعيره — {new Date().toLocaleDateString("ar-EG")}
           </p>
@@ -242,9 +261,9 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
             <MessageCircle className="w-3.5 h-3.5 text-green-600" />
             واتساب
           </Button>
-          <Button variant="outline" size="sm" onClick={handleDownload} className="gap-1.5 text-xs">
-            <Download className="w-3.5 h-3.5" />
-            تحميل CSV
+          <Button variant="outline" size="sm" onClick={handleDownloadPdf} disabled={downloadingPdf} className="gap-1.5 text-xs">
+            {downloadingPdf ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+            تحميل PDF
           </Button>
           <Button
             size="sm"
@@ -253,7 +272,7 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
             className="gap-1.5 text-xs"
           >
             {converting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShoppingCart className="w-3.5 h-3.5" />}
-            حوّل للطلب ({selectedIds.size})
+            أضف للسلة ({selectedIds.size})
           </Button>
         </div>
       </div>
@@ -297,19 +316,23 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.03 }}
-                onClick={() => toggleSelect(item.product_id)}
-                className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
                   isSelected
                     ? "border-primary/30 bg-primary/5 shadow-sm"
                     : "border-border/50 bg-card hover:bg-muted/30"
                 }`}
               >
                 {/* Checkbox */}
-                <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
-                  isSelected ? "bg-primary border-primary" : "border-muted-foreground/25"
-                }`}>
-                  {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-primary-foreground" />}
-                </div>
+                <button
+                  onClick={() => toggleSelect(item.product_id)}
+                  className="shrink-0"
+                >
+                  <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ${
+                    isSelected ? "bg-primary border-primary" : "border-muted-foreground/25"
+                  }`}>
+                    {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-primary-foreground" />}
+                  </div>
+                </button>
 
                 {/* Image */}
                 <div className="w-12 h-12 rounded-lg bg-muted/50 overflow-hidden shrink-0">
@@ -336,9 +359,26 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
                   </div>
                 </div>
 
-                {/* Price, Time & Detail */}
+                {/* Quantity Controls */}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    onClick={() => updateQuantity(item.product_id, -1)}
+                    className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-foreground hover:bg-muted-foreground/20 transition-colors"
+                  >
+                    <Minus className="w-3 h-3" />
+                  </button>
+                  <span className="text-sm font-bold w-7 text-center text-foreground">{item.quantity}</span>
+                  <button
+                    onClick={() => updateQuantity(item.product_id, 1)}
+                    className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-foreground hover:bg-muted-foreground/20 transition-colors"
+                  >
+                    <Plus className="w-3 h-3" />
+                  </button>
+                </div>
+
+                {/* Price, Time & Actions */}
                 <div className="text-left shrink-0 space-y-1">
-                  <p className="text-sm font-black text-primary">{price.toLocaleString("ar-EG")} ج.م</p>
+                  <p className="text-sm font-black text-primary">{(price * item.quantity).toLocaleString("ar-EG")} ج.م</p>
                   <div className="flex items-center gap-2 justify-end">
                     <span className="flex items-center gap-1 text-[9px] text-muted-foreground">
                       <Clock className="w-2.5 h-2.5" />
@@ -365,9 +405,9 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
       {/* Summary Footer */}
       <div className="rounded-xl bg-muted/50 border border-border/50 p-4 flex items-center justify-between">
         <div>
-          <p className="text-xs text-muted-foreground">إجمالي جميع الأصناف المسعّرة</p>
+          <p className="text-xs text-muted-foreground">إجمالي جميع الأصناف</p>
           <p className="text-lg font-black text-foreground mt-0.5">
-            {items.reduce((s, i) => s + getEffectivePrice(i), 0).toLocaleString("ar-EG")} ج.م
+            {items.reduce((s, i) => s + getEffectivePrice(i) * i.quantity, 0).toLocaleString("ar-EG")} ج.م
           </p>
         </div>
         <Badge variant="secondary" className="text-xs gap-1">
@@ -381,14 +421,14 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
         product={detailProduct}
         open={!!detailProduct}
         onOpenChange={(open) => { if (!open) setDetailProduct(null); }}
-        price={detailProduct ? getEffectivePrice({ product: detailProduct, tier_price: items.find(i => i.product_id === detailProduct.id)?.tier_price } as PricedProduct) : null}
+        price={detailProduct ? getEffectivePrice({ product: detailProduct, tier_price: items.find(i => i.product_id === detailProduct.id)?.tier_price, quantity: 1 } as PricedProduct) : null}
         priceLabel="سعر الجملة الخاص بك"
         canAddToCart
         isLoggedIn={!!user}
         isDealer={!!dealerAccount}
         onAddToCart={(product) => {
-          toggleSelect(product.id);
-          toast({ title: "✅ تم تحديد الصنف", description: `${product.name_ar} — يمكنك تحويله لطلبية من الأعلى` });
+          const item = items.find(i => i.product_id === product.id);
+          handleAddToCart(product, item?.quantity || 1);
           setDetailProduct(null);
         }}
       />
