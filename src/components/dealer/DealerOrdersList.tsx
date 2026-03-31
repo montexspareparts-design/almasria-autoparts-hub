@@ -123,20 +123,20 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
   const [saving, setSaving] = useState(false);
   const [reordering, setReordering] = useState<string | null>(null);
   const [paymobLoading, setPaymobLoading] = useState<string | null>(null);
-  const [paymobData, setPaymobData] = useState<{ orderId: string; clientSecret: string; publicKey: string } | null>(null);
+  const [paymobIframe, setPaymobIframe] = useState<{ orderId: string; iframeUrl: string } | null>(null);
   const { addItem } = useDealerCart();
 
   const handlePaymob = async (order: Order) => {
     setPaymobLoading(order.id);
     try {
-      const { data, error } = await supabase.functions.invoke("create-paymob-intention", {
-        body: { order_id: order.id, return_url: buildPaymobReturnUrl() },
+      const { data, error } = await supabase.functions.invoke("create-payment", {
+        body: { order_id: order.id, return_url: `${window.location.origin}/payment-callback` },
       });
-      if (error || !data?.client_secret || !isValidPaymobPublicKey(data?.public_key)) {
-        toast({ title: "حدث خطأ في بوابة الدفع", description: "يرجى المحاولة مرة أخرى", variant: "destructive" });
+      if (error || !data?.iframe_url) {
+        toast({ title: "حدث خطأ في بوابة الدفع", description: data?.error || "يرجى المحاولة مرة أخرى", variant: "destructive" });
         return;
       }
-      setPaymobData({ orderId: order.id, clientSecret: data.client_secret, publicKey: data.public_key });
+      setPaymobIframe({ orderId: order.id, iframeUrl: data.iframe_url });
     } catch (e: any) {
       toast({ title: "حدث خطأ", description: e.message, variant: "destructive" });
     } finally {
