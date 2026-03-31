@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { playCartAddSound } from "@/lib/pricingSound";
 
 export interface DealerCartItem {
   id: string;
@@ -66,6 +67,7 @@ export const useDealerCart = () => {
       await supabase.from("dealer_cart_items").insert({ user_id: user.id, product_id: productId, quantity: qty });
     }
     await fetchCart();
+    playCartAddSound();
   }, [user, items, fetchCart]);
 
   const updateQuantity = useCallback(async (productId: string, qty: number) => {
