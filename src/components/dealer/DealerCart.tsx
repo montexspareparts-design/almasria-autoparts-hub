@@ -15,6 +15,7 @@ import {
   ShoppingCart, Trash2, Minus, Plus, Package, Loader2,
   ArrowRight, FileText, XCircle, CheckCircle2, MessageCircle, CreditCard
 } from "lucide-react";
+import DealerRecentOrders from "./DealerRecentOrders";
 
 interface DealerCartProps {
   onNavigateToOrders: () => void;
