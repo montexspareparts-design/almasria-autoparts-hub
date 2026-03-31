@@ -478,49 +478,49 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
                     {/* ─── Payment CTA ─── */}
                     {["confirmed", "awaiting_payment", "pending"].includes(order.status) && (
                       <div className="space-y-3">
-                        {/* Paymob Inline Checkout */}
-                        {paymobData && paymobData.orderId === order.id ? (
-                          <div className="rounded-xl overflow-hidden border border-blue-300/50">
-                            <div className="bg-gradient-to-l from-blue-50 to-blue-100/50 dark:from-blue-950/30 dark:to-blue-900/20 p-4 space-y-3">
-                              <div className="flex items-center justify-between">
-                                <h4 className="text-sm font-bold text-blue-800 dark:text-blue-200">💳 إتمام الدفع عبر Paymob</h4>
-                                <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setPaymobData(null)}>✕ إغلاق</Button>
-                              </div>
-                              <PaymobCheckout clientSecret={paymobData.clientSecret} publicKey={paymobData.publicKey} />
+                        {paymobIframe && paymobIframe.orderId === order.id ? (
+                          <div className="rounded-xl overflow-hidden border border-border">
+                            <div className="p-3 flex items-center justify-between bg-muted/30">
+                              <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                                <CreditCard className="w-4 h-4 text-primary" />
+                                إتمام الدفع
+                              </h4>
+                              <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setPaymobIframe(null)}>✕ إغلاق</Button>
                             </div>
+                            <iframe
+                              src={paymobIframe.iframeUrl}
+                              className="w-full border-0"
+                              style={{ minHeight: "450px", height: "55vh", maxHeight: "600px" }}
+                              title="Paymob Payment"
+                              allow="payment"
+                            />
                           </div>
                         ) : (
-                          <div className="rounded-xl overflow-hidden border border-amber-300/50">
-                            <div className="bg-gradient-to-l from-amber-50 to-amber-100/50 dark:from-amber-950/30 dark:to-amber-900/20 p-4 space-y-3">
+                          <div className="rounded-xl overflow-hidden border border-primary/20">
+                            <div className="bg-gradient-to-l from-primary/5 to-primary/10 p-4 space-y-3">
                               <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-amber-200/60 dark:bg-amber-800/40 flex items-center justify-center shrink-0">
-                                  <Wallet className="w-5 h-5 text-amber-700 dark:text-amber-300" />
+                                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                                  <CreditCard className="w-5 h-5 text-primary" />
                                 </div>
                                 <div className="flex-1">
-                                  <h4 className="text-sm font-bold text-amber-800 dark:text-amber-200">ادفع لاستكمال الطلب</h4>
-                                  <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-0.5">اختر طريقة الدفع المناسبة</p>
+                                  <h4 className="text-sm font-bold text-foreground">ادفع لاستكمال الطلب</h4>
+                                  <p className="text-[11px] text-muted-foreground mt-0.5">Visa • Mastercard • Meeza — تأكيد فوري</p>
                                 </div>
                                 <span className="text-sm font-black text-primary px-2">{Number(order.total_amount).toLocaleString("ar-EG")} ج.م</span>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  size="sm"
-                                  className="flex-1 gap-2 rounded-lg h-9"
-                                  disabled={paymobLoading === order.id}
-                                  onClick={() => handlePaymob(order)}
-                                >
-                                  {paymobLoading === order.id ? (
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                  ) : (
-                                    <CreditCard className="w-4 h-4" />
-                                  )}
-                                  ادفع بالبطاقة (Paymob)
-                                </Button>
-                                <Button size="sm" variant="outline" className="flex-1 gap-2 rounded-lg h-9" onClick={() => onNavigateToPayment?.()}>
-                                  <Wallet className="w-4 h-4" />
-                                  تحويل / محفظة
-                                </Button>
-                              </div>
+                              <Button
+                                size="sm"
+                                className="w-full gap-2 rounded-lg h-10"
+                                disabled={paymobLoading === order.id}
+                                onClick={() => handlePaymob(order)}
+                              >
+                                {paymobLoading === order.id ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <CreditCard className="w-4 h-4" />
+                                )}
+                                {paymobLoading === order.id ? "جاري التحميل..." : "ادفع بالبطاقة الآن"}
+                              </Button>
                             </div>
                           </div>
                         )}
