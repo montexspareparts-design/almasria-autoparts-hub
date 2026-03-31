@@ -69,7 +69,7 @@ interface NavGroup {
   defaultOpen?: boolean;
 }
 
-const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, unreadCount }: DealerSidebarProps) => {
+const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, unreadCount, cartItemCount = 0 }: DealerSidebarProps) => {
   const navGroups: NavGroup[] = [
     {
       label: "القائمة الرئيسية",
