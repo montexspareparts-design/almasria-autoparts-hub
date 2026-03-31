@@ -242,39 +242,6 @@ Deno.serve(async (req) => {
         }
       }
 
-      // ─── WhatsApp: Customer failure + retry link (Meta API) ───────────
-      if (order) {
-        try {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("full_name, phone")
-            .eq("user_id", order.user_id)
-            .maybeSingle();
-
-          const customerName = profile?.full_name || "عميلنا الكريم";
-          const paymentLink = `https://www.almasriaautoparts.com/payment?order_id=${order.id}`;
-
-          if (profile?.phone) {
-            const failMsg = [
-              `⚠️ لم تتم عملية الدفع`,
-              ``,
-              `مرحباً ${customerName}،`,
-              `تعذر إتمام الدفع للطلب #${orderNumber} بقيمة ${amountEgp} ج.م.`,
-              `السبب: ${errorDetail}`,
-              ``,
-              `يمكنك إعادة المحاولة من هنا:`,
-              paymentLink,
-              ``,
-              `أو تواصل معنا للمساعدة.`,
-              `— المصرية جروب لقطع غيار السيارات`,
-            ].join("\n");
-
-            await sendWhatsApp(profile.phone, failMsg);
-          }
-        } catch (waError) {
-          console.error("WhatsApp notification error (failure, non-blocking):", waError);
-        }
-      }
     } else {
       console.log(`Payment pending for order ${orderNumber}`);
     }
