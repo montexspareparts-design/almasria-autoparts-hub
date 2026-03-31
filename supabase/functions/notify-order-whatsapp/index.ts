@@ -66,10 +66,10 @@ Deno.serve(async (req) => {
       ? Number(totalAmount).toLocaleString("ar-EG")
       : "—";
 
-    let msg = `طلبك رقم ${orderNumber}\nالإجمالي ${amountFormatted} جنيه`;
+    let msg = `طلبك جاهز 👌\nرقم الطلب: ${orderNumber}\nالإجمالي: ${amountFormatted} جنيه`;
 
     if (paymentLink) {
-      msg += `\n\nادفع من هنا:\n${paymentLink}`;
+      msg += `\n\nادفع الآن لتأكيد الطلب فورًا:\n${paymentLink}`;
     }
 
     // Send to customer
