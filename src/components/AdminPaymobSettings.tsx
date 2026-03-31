@@ -32,7 +32,7 @@ const AdminPaymobSettings = () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) return { configured: false, masked: "" };
 
-        const { data, error } = await supabase.functions.invoke("create-paymob-intention", {
+        const { data, error } = await supabase.functions.invoke("create-payment", {
           body: { dry_run: true },
         });
         if (error) return { configured: false, masked: "", error: error.message };
