@@ -138,6 +138,42 @@ Deno.serve(async (req) => {
 
         console.log(`Order ${orderNumber} moved to processing after successful payment`);
       }
+
+      // ─── Push Notification to dealer on successful payment ─────────────
+      const amountEgpSuccess = transaction.amount_cents ? (transaction.amount_cents / 100).toFixed(2) : "—";
+      const { data: successPushSubs } = await supabase
+        .from("push_subscriptions")
+        .select("*")
+        .eq("user_id", order.user_id);
+
+      if (successPushSubs && successPushSubs.length > 0) {
+        const successPushPayload = JSON.stringify({
+          title: "✅ تم استلام الدفع بنجاح",
+          body: `تم تأكيد دفع ${amountEgpSuccess} ج.م للطلب #${orderNumber}. طلبك قيد التجهيز الآن!`,
+          icon: "/pwa-192x192.png",
+          badge: "/pwa-192x192.png",
+          url: "/dealer",
+          tag: "payment-success-" + orderNumber,
+          timestamp: Date.now(),
+        });
+
+        for (const sub of successPushSubs) {
+          try {
+            const resp = await fetch(sub.endpoint, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", TTL: "86400" },
+              body: successPushPayload,
+            });
+            if (resp.status === 410 || resp.status === 404) {
+              await supabase.from("push_subscriptions").delete().eq("id", sub.id);
+            }
+          } catch (pushErr) {
+            console.error("Push send error (success):", pushErr);
+          }
+        }
+        console.log(`Sent success push to ${successPushSubs.length} sub(s) for dealer ${order.user_id}`);
+      }
+      // ─── End Success Push ──────────────────────────────────────────────
     } else if (!success && !isPending) {
       // ─── Notify admins & dealer on payment failure ─────────────────────
       const errorDetail = transaction.data?.message || transaction.txn_response_code || "خطأ غير معروف";
