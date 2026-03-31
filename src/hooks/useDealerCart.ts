@@ -67,7 +67,7 @@ export const useDealerCart = () => {
       await supabase.from("dealer_cart_items").insert({ user_id: user.id, product_id: productId, quantity: qty });
     }
     await fetchCart();
-  }, [user, items, fetchCart]);
+    playCartAddSound();
 
   const updateQuantity = useCallback(async (productId: string, qty: number) => {
     if (qty <= 0) {
