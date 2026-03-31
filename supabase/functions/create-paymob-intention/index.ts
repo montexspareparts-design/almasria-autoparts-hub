@@ -16,6 +16,7 @@ Deno.serve(async (req) => {
     const paymobSecretKey = Deno.env.get("PAYMOB_SECRET_KEY");
     const paymobIntegrationId = Deno.env.get("PAYMOB_INTEGRATION_ID");
     const paymobPublicKey = Deno.env.get("PAYMOB_PUBLIC_KEY");
+    const paymobIframeId = Deno.env.get("PAYMOB_IFRAME_ID");
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey =
@@ -191,12 +192,19 @@ Deno.serve(async (req) => {
       throw new Error(`Failed to create Paymob intention: ${JSON.stringify(intentionData).slice(0, 500)}`);
     }
 
+    // Build iframe URL
+    const iframeUrl = paymobIframeId && intentionData.payment_keys?.[0]
+      ? `https://accept.paymob.com/api/acceptance/iframes/${paymobIframeId}?payment_token=${intentionData.payment_keys[0]}`
+      : null;
+
     return new Response(
       JSON.stringify({
         client_secret: intentionData.client_secret,
         intention_id: intentionData.id,
         order_number: order.order_number,
         public_key: paymobPublicKey,
+        iframe_url: iframeUrl,
+        iframe_id: paymobIframeId || null,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
