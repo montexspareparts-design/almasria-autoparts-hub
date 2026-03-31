@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { pushOrderToERP } from "@/lib/erpSync";
 import { generateOrderNumber } from "@/lib/orderNumber";
+import { notifyNewOrderWhatsApp } from "@/lib/whatsapp";
 import { Loader2, Zap, Plus, Trash2, Minus, Search, CheckCircle, ShoppingCart } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
