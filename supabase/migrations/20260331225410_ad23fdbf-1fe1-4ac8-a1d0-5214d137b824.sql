@@ -1,0 +1,1 @@
+UPDATE orders SET created_at = now() - interval '6 minutes' WHERE order_number = 'TEST-REMIND-002';
