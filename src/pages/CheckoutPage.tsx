@@ -62,6 +62,7 @@ const CheckoutPage = () => {
   const [form, setForm] = useState({
     name: "",
     phone: "",
+    email: "",
     governorate: "",
     city: "",
     address: "",
@@ -253,6 +254,10 @@ const CheckoutPage = () => {
                   <div>
                     <Label>رقم الهاتف *</Label>
                     <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="01xxxxxxxxx" className="mt-1" dir="ltr" />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Label>البريد الإلكتروني</Label>
+                    <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="example@email.com" className="mt-1" dir="ltr" />
                   </div>
                   <div>
                     <Label>المحافظة *</Label>
