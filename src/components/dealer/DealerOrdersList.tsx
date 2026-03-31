@@ -129,6 +129,9 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
   const handlePaymob = async (order: Order) => {
     setPaymobLoading(order.id);
     try {
+      const { ensureActiveSession } = await import("@/lib/paymob");
+      await ensureActiveSession();
+
       const { data, error } = await supabase.functions.invoke("create-payment", {
         body: { order_id: order.id, return_url: `${window.location.origin}/payment-callback` },
       });
