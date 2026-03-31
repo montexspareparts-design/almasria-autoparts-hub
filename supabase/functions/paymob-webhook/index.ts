@@ -6,6 +6,44 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+async function sendWhatsApp(phone: string, message: string) {
+  const accessToken = Deno.env.get("META_WHATSAPP_ACCESS_TOKEN");
+  const phoneNumberId = Deno.env.get("META_WHATSAPP_PHONE_NUMBER_ID");
+  if (!accessToken || !phoneNumberId) return;
+
+  let formatted = phone.replace(/[\s\-\(\)]/g, "");
+  if (formatted.startsWith("+")) formatted = formatted.slice(1);
+  if (formatted.startsWith("0")) formatted = "2" + formatted;
+  if (/^\d{10}$/.test(formatted)) formatted = "2" + formatted;
+
+  try {
+    const resp = await fetch(
+      `https://graph.facebook.com/v21.0/${phoneNumberId}/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: formatted,
+          type: "text",
+          text: { body: message },
+        }),
+      }
+    );
+    const data = await resp.json();
+    if (resp.ok) {
+      console.log(`WhatsApp sent to ${formatted}`);
+    } else {
+      console.error(`WhatsApp failed:`, JSON.stringify(data));
+    }
+  } catch (err) {
+    console.error("WhatsApp send error:", err);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
