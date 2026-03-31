@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { generateQuotePdf } from "@/lib/generateQuotePdf";
+import ProductDetailDialog from "@/components/ProductDetailDialog";
 import {
   Eye, Loader2, Download, ShoppingCart, MessageCircle,
-  Package, CheckCircle2, XCircle, Clock, FileText
+  Package, CheckCircle2, XCircle, Clock, FileText, Info
 } from "lucide-react";
 
 interface PricedProduct {
@@ -40,6 +41,7 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [converting, setConverting] = useState(false);
+  const [detailProduct, setDetailProduct] = useState<any>(null);
 
   const fetchPricedToday = useCallback(async () => {
     if (!user) return;
@@ -334,12 +336,24 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
                   </div>
                 </div>
 
-                {/* Price & Time */}
-                <div className="text-left shrink-0 space-y-0.5">
+                {/* Price, Time & Detail */}
+                <div className="text-left shrink-0 space-y-1">
                   <p className="text-sm font-black text-primary">{price.toLocaleString("ar-EG")} ج.م</p>
-                  <div className="flex items-center gap-1 text-[9px] text-muted-foreground justify-end">
-                    <Clock className="w-2.5 h-2.5" />
-                    {viewedTime}
+                  <div className="flex items-center gap-2 justify-end">
+                    <span className="flex items-center gap-1 text-[9px] text-muted-foreground">
+                      <Clock className="w-2.5 h-2.5" />
+                      {viewedTime}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDetailProduct(item.product);
+                      }}
+                      className="text-[10px] text-primary hover:text-primary/80 font-semibold flex items-center gap-0.5 transition-colors"
+                    >
+                      <Info className="w-3 h-3" />
+                      التفاصيل
+                    </button>
                   </div>
                 </div>
               </motion.div>
@@ -361,6 +375,18 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
           {items.length} / 20 صنف
         </Badge>
       </div>
+
+      {/* Product Detail Dialog */}
+      <ProductDetailDialog
+        product={detailProduct}
+        open={!!detailProduct}
+        onOpenChange={(open) => { if (!open) setDetailProduct(null); }}
+        price={detailProduct ? getEffectivePrice({ product: detailProduct, tier_price: items.find(i => i.product_id === detailProduct.id)?.tier_price } as PricedProduct) : null}
+        priceLabel="سعر الجملة الخاص بك"
+        canAddToCart
+        isLoggedIn={!!user}
+        isDealer={!!dealerAccount}
+      />
     </div>
   );
 };
