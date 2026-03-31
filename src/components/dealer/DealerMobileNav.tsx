@@ -1,4 +1,4 @@
-import { LayoutDashboard, Search, ClipboardList, FileText, Bell, CreditCard, Receipt, Heart, Zap, Tag, Settings, Upload, Eye } from "lucide-react";
+import { LayoutDashboard, Search, ClipboardList, FileText, Bell, CreditCard, Receipt, Heart, Zap, Tag, Settings, Upload, Eye, ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import type { DealerTab } from "./DealerSidebar";
