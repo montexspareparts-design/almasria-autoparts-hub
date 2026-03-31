@@ -132,6 +132,8 @@ const PaymentPage = () => {
       setLoading(true);
       setError(null);
 
+      await ensureActiveSession();
+
       const { data, error: fnError } = await supabase.functions.invoke("create-payment", {
         body: {
           order_id: orderId,
