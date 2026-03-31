@@ -28,7 +28,7 @@ const DealerDashboard = () => {
   const { user, dealerAccount, isDealer, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState<DealerTab>((searchParams.get("tab") as DealerTab) || "overview");
+  const [activeTab, setActiveTab] = useState<DealerTab>((searchParams.get("tab") as DealerTab) || "quotes");
   const [priceListQuoteData, setPriceListQuoteData] = useState<PriceListQuoteData | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
