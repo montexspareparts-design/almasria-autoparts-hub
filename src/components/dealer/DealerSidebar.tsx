@@ -75,7 +75,7 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
       defaultOpen: true,
       items: [
         { id: "quotes", label: "ابحث عن القطعة", icon: Search, iconColor: "text-slate-600 dark:text-slate-400", iconBg: "bg-slate-500/10" },
-        { id: "priced_today", label: "عرض سعر", icon: Eye, iconColor: "text-primary", iconBg: "bg-primary/10" },
+        { id: "priced_today", label: "ما تم تسعيره", icon: Eye, iconColor: "text-primary", iconBg: "bg-primary/10" },
         { id: "price_lists", label: "كشوفات المصرية", icon: FileText, iconColor: "text-amber-600", iconBg: "bg-amber-500/10" },
       ],
     },
