@@ -8,9 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Package, Clock, CheckCircle, Truck, XCircle, ChevronDown, ChevronUp,
   MessageCircle, Inbox, PackageCheck, Trash2, Pencil, Save, X, Loader2,
-  AlertTriangle, Wallet, CreditCard, RefreshCw
+  AlertTriangle, Wallet, CreditCard, RefreshCw, RotateCcw
 } from "lucide-react";
 import PaymentInstructionsBanner from "@/components/PaymentInstructionsBanner";
+import PaymobCheckout from "@/components/PaymobCheckout";
+import { buildPaymobReturnUrl, isValidPaymobPublicKey } from "@/lib/paymob";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { useDealerCart } from "@/hooks/useDealerCart";
