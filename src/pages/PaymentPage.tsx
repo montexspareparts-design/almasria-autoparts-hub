@@ -7,7 +7,6 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { buildPaymobReturnUrl, isValidPaymobPublicKey } from "@/lib/paymob";
 import { toast } from "@/hooks/use-toast";
 
 const PaymentPage = () => {
@@ -21,10 +20,10 @@ const PaymentPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [paymentData, setPaymentData] = useState<{
-    iframeUrl: string | null;
-    clientSecret: string;
-    publicKey: string;
+    paymentKey: string;
+    iframeUrl: string;
     orderNumber: string;
+    amountCents: number;
   } | null>(null);
 
   useEffect(() => {
@@ -45,17 +44,18 @@ const PaymentPage = () => {
         setLoading(true);
         setError(null);
 
+        // Call the new create-payment edge function
         const { data, error: fnError } = await supabase.functions.invoke(
-          "create-paymob-intention",
+          "create-payment",
           {
             body: {
               order_id: orderId,
-              return_url: buildPaymobReturnUrl(),
+              return_url: `${window.location.origin}/payment-callback`,
             },
           }
         );
 
-        if (fnError || !data?.client_secret) {
+        if (fnError || !data?.payment_key) {
           console.error("Payment init error:", fnError, data);
           setError(data?.error || "تعذر إنشاء جلسة الدفع. يرجى المحاولة مرة أخرى.");
           setLoading(false);
@@ -63,10 +63,10 @@ const PaymentPage = () => {
         }
 
         setPaymentData({
-          iframeUrl: data.iframe_url || null,
-          clientSecret: data.client_secret,
-          publicKey: data.public_key || "",
+          paymentKey: data.payment_key,
+          iframeUrl: data.iframe_url,
           orderNumber: data.order_number || "",
+          amountCents: data.amount_cents || 0,
         });
         setLoading(false);
       } catch (e: any) {
@@ -79,7 +79,11 @@ const PaymentPage = () => {
     initPayment();
   }, [orderId, user, navigate]);
 
-  const displayAmount = amount ? Number(amount).toLocaleString("ar-EG") : null;
+  const displayAmount = amount
+    ? Number(amount).toLocaleString("ar-EG")
+    : paymentData?.amountCents
+      ? (paymentData.amountCents / 100).toLocaleString("ar-EG")
+      : null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -132,7 +136,7 @@ const PaymentPage = () => {
             </motion.div>
           )}
 
-          {/* Payment Area */}
+          {/* Payment iframe Area */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -169,15 +173,11 @@ const PaymentPage = () => {
             {/* Paymob iframe */}
             {paymentData && !loading && !error && (
               <iframe
-                src={
-                  paymentData.iframeUrl ||
-                  `https://accept.paymob.com/unifiedcheckout/?publicKey=${encodeURIComponent(paymentData.publicKey)}&clientSecret=${encodeURIComponent(paymentData.clientSecret)}`
-                }
+                src={paymentData.iframeUrl}
                 className="w-full border-0"
                 style={{ minHeight: "500px", height: "70vh", maxHeight: "700px" }}
                 title="Paymob Payment"
                 allow="payment"
-                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"
               />
             )}
           </motion.div>
