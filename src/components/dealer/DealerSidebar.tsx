@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 
 export type DealerTab =
-  | "quotes" | "orders" | "invoices" | "price_lists"
+  | "quotes" | "priced_today" | "orders" | "invoices" | "price_lists"
   | "favorites" | "quick_order" | "notifications" | "offers"
   | "catalogs" | "settings" | "statement" | "payment" | "stock_alerts"
   | "shopping_lists" | "compare";
