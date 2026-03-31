@@ -3,7 +3,6 @@ import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { CreditCard, ShieldCheck, Loader2, ArrowRight, AlertCircle, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import PaymobCheckout from "@/components/PaymobCheckout";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,7 +20,8 @@ const PaymentPage = () => {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [paymobData, setPaymobData] = useState<{
+  const [paymentData, setPaymentData] = useState<{
+    iframeUrl: string | null;
     clientSecret: string;
     publicKey: string;
     orderNumber: string;
@@ -55,16 +55,17 @@ const PaymentPage = () => {
           }
         );
 
-        if (fnError || !data?.client_secret || !isValidPaymobPublicKey(data?.public_key)) {
+        if (fnError || !data?.client_secret) {
           console.error("Payment init error:", fnError, data);
           setError(data?.error || "تعذر إنشاء جلسة الدفع. يرجى المحاولة مرة أخرى.");
           setLoading(false);
           return;
         }
 
-        setPaymobData({
+        setPaymentData({
+          iframeUrl: data.iframe_url || null,
           clientSecret: data.client_secret,
-          publicKey: data.public_key,
+          publicKey: data.public_key || "",
           orderNumber: data.order_number || "",
         });
         setLoading(false);
@@ -84,22 +85,22 @@ const PaymentPage = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="pt-24 pb-12">
-        <div className="container mx-auto px-4 max-w-lg">
+        <div className="container mx-auto px-4 max-w-2xl">
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-8"
+            className="text-center mb-6"
           >
             <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
               <CreditCard className="w-8 h-8 text-primary" />
             </div>
             <h1 className="text-2xl md:text-3xl font-black text-foreground">إتمام الدفع</h1>
-            <p className="text-sm text-muted-foreground mt-2">ادفع بأمان عبر بطاقتك البنكية</p>
+            <p className="text-sm text-muted-foreground mt-2">ادفع بأمان عبر بطاقتك البنكية — Visa / Mastercard / Meeza</p>
           </motion.div>
 
           {/* Order Summary */}
-          {(paymobData?.orderNumber || displayAmount) && (
+          {(paymentData?.orderNumber || displayAmount) && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -111,11 +112,11 @@ const PaymentPage = () => {
                 <h2 className="font-bold text-foreground">تفاصيل الطلب</h2>
               </div>
               <div className="space-y-2 text-sm">
-                {paymobData?.orderNumber && (
+                {paymentData?.orderNumber && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">رقم الطلب</span>
                     <span className="font-bold font-mono text-foreground" dir="ltr">
-                      {paymobData.orderNumber}
+                      {paymentData.orderNumber}
                     </span>
                   </div>
                 )}
@@ -136,17 +137,17 @@ const PaymentPage = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-card border border-border rounded-xl p-6"
+            className="bg-card border border-border rounded-xl overflow-hidden"
           >
             {loading && (
-              <div className="flex flex-col items-center justify-center gap-3 py-12">
+              <div className="flex flex-col items-center justify-center gap-3 py-16">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
                 <p className="text-sm text-muted-foreground">جاري تجهيز بوابة الدفع...</p>
               </div>
             )}
 
             {error && (
-              <div className="text-center py-8 space-y-4">
+              <div className="text-center py-10 px-6 space-y-4">
                 <div className="w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
                   <AlertCircle className="w-7 h-7 text-destructive" />
                 </div>
@@ -165,10 +166,18 @@ const PaymentPage = () => {
               </div>
             )}
 
-            {paymobData && !loading && !error && (
-              <PaymobCheckout
-                clientSecret={paymobData.clientSecret}
-                publicKey={paymobData.publicKey}
+            {/* Paymob iframe */}
+            {paymentData && !loading && !error && (
+              <iframe
+                src={
+                  paymentData.iframeUrl ||
+                  `https://accept.paymob.com/unifiedcheckout/?publicKey=${encodeURIComponent(paymentData.publicKey)}&clientSecret=${encodeURIComponent(paymentData.clientSecret)}`
+                }
+                className="w-full border-0"
+                style={{ minHeight: "500px", height: "70vh", maxHeight: "700px" }}
+                title="Paymob Payment"
+                allow="payment"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"
               />
             )}
           </motion.div>
@@ -176,7 +185,7 @@ const PaymentPage = () => {
           {/* Security Badge */}
           <div className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
             <ShieldCheck className="w-4 h-4 text-green-600" />
-            <span>معاملة آمنة ومشفرة — Visa / Mastercard / Meeza</span>
+            <span>معاملة آمنة ومشفرة عبر Paymob</span>
           </div>
 
           {/* Back Link */}
