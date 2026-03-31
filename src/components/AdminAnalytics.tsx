@@ -42,8 +42,59 @@ const AdminAnalytics = () => {
       fetchDealerDistribution(),
       fetchKPIs(),
       fetchTopSearches(),
+      fetchDailyMetrics(),
     ]);
     setLoading(false);
+  };
+
+  const fetchDailyMetrics = async (period: "7" | "14" | "30" = metricsPeriod) => {
+    const daysAgo = new Date();
+    daysAgo.setDate(daysAgo.getDate() - Number(period));
+
+    const [ordersRes, paymentsRes] = await Promise.all([
+      supabase.from("orders").select("created_at, status").gte("created_at", daysAgo.toISOString()),
+      supabase.from("payment_transactions").select("created_at, status").eq("status", "success").gte("created_at", daysAgo.toISOString()),
+    ]);
+
+    const dayMap = new Map<string, { orders: number; paid: number }>();
+
+    // Pre-fill all days
+    for (let i = 0; i < Number(period); i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      dayMap.set(key, { orders: 0, paid: 0 });
+    }
+
+    (ordersRes.data || []).forEach(o => {
+      const key = o.created_at.slice(0, 10);
+      const existing = dayMap.get(key) || { orders: 0, paid: 0 };
+      existing.orders++;
+      dayMap.set(key, existing);
+    });
+
+    (paymentsRes.data || []).forEach(p => {
+      const key = p.created_at.slice(0, 10);
+      const existing = dayMap.get(key) || { orders: 0, paid: 0 };
+      existing.paid++;
+      dayMap.set(key, existing);
+    });
+
+    const sorted = [...dayMap.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, val]) => ({
+        date: new Date(date).toLocaleDateString("ar-EG", { month: "short", day: "numeric" }),
+        orders: val.orders,
+        paid: val.paid,
+        rate: val.orders > 0 ? Math.round((val.paid / val.orders) * 100) : 0,
+      }));
+
+    setDailyMetrics(sorted);
+  };
+
+  const handleMetricsPeriodChange = (period: "7" | "14" | "30") => {
+    setMetricsPeriod(period);
+    fetchDailyMetrics(period);
   };
 
   const fetchTopSearches = async (period: "7" | "30" | "all" = searchPeriod) => {
