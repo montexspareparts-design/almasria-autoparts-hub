@@ -10,10 +10,10 @@ interface DealerMobileNavProps {
 }
 
 const primaryTabs: { id: DealerTab; label: string; Icon: typeof LayoutDashboard }[] = [
-  { id: "overview", label: "الرئيسية", Icon: LayoutDashboard },
   { id: "quotes", label: "المنتجات", Icon: Search },
   { id: "orders", label: "طلباتي", Icon: ClipboardList },
-  { id: "quick_order", label: "طلب سريع", Icon: Zap },
+  { id: "price_lists", label: "الأسعار", Icon: FileText },
+  { id: "payment", label: "الدفع", Icon: CreditCard },
 ];
 
 const moreTabs: { id: DealerTab; label: string; Icon: typeof LayoutDashboard }[] = [
