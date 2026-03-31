@@ -74,9 +74,8 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
       label: "القائمة الرئيسية",
       defaultOpen: true,
       items: [
-        { id: "overview", label: "لوحة التحكم", icon: LayoutDashboard, iconColor: "text-emerald-600", iconBg: "bg-emerald-500/10" },
-        { id: "quotes", label: "اطلب قطع غيار", icon: Search, iconColor: "text-slate-600 dark:text-slate-400", iconBg: "bg-slate-500/10" },
-        { id: "price_lists", label: "كشوفات الأسعار", icon: FileText, iconColor: "text-amber-600", iconBg: "bg-amber-500/10" },
+        { id: "quotes", label: "ابحث عن القطعة", icon: Search, iconColor: "text-slate-600 dark:text-slate-400", iconBg: "bg-slate-500/10" },
+        { id: "price_lists", label: "كشوفات المصرية", icon: FileText, iconColor: "text-amber-600", iconBg: "bg-amber-500/10" },
       ],
     },
     {
