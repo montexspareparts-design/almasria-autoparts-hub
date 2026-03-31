@@ -528,7 +528,6 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
                         )}
                       </div>
                     )}
-                    )}
 
                     {/* ─── Pending Approval Banner ─── */}
                     {order.status === "pending_approval" && (
