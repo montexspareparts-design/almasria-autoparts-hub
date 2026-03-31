@@ -15,6 +15,7 @@ import {
   ShoppingCart, Trash2, Minus, Plus, Package, Loader2,
   ArrowRight, FileText, XCircle, CheckCircle2, MessageCircle, CreditCard
 } from "lucide-react";
+import DealerRecentOrders from "./DealerRecentOrders";
 
 interface DealerCartProps {
   onNavigateToOrders: () => void;
@@ -147,12 +148,15 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment }: DealerCartProps
 
   if (items.length === 0) {
     return (
-      <div className="text-center py-20 space-y-3">
-        <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto">
-          <ShoppingCart className="w-8 h-8 text-muted-foreground/40" />
+      <div className="space-y-6">
+        <div className="text-center py-12 space-y-3">
+          <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto">
+            <ShoppingCart className="w-8 h-8 text-muted-foreground/40" />
+          </div>
+          <h3 className="text-lg font-bold text-foreground">السلة فارغة</h3>
+          <p className="text-sm text-muted-foreground">أضف أصناف من البحث أو عروض الأسعار</p>
         </div>
-        <h3 className="text-lg font-bold text-foreground">السلة فارغة</h3>
-        <p className="text-sm text-muted-foreground">أضف أصناف من البحث أو عروض الأسعار</p>
+        <DealerRecentOrders onNavigateToOrders={onNavigateToOrders} onNavigateToPayment={onNavigateToPayment} />
       </div>
     );
   }
@@ -343,6 +347,9 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment }: DealerCartProps
       <p className="text-[10px] text-muted-foreground text-center">
         "ادفع الآن" ينقلك مباشرة للدفع الإلكتروني — "أرسل الطلب" يرسله للمراجعة والدفع لاحقاً
       </p>
+
+      {/* Recent Orders Summary */}
+      <DealerRecentOrders onNavigateToOrders={onNavigateToOrders} onNavigateToPayment={onNavigateToPayment} />
     </div>
   );
 };
