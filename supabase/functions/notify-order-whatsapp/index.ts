@@ -72,7 +72,30 @@ Deno.serve(async (req) => {
       msg += `\n\nادفع من هنا:\n${paymentLink}`;
     }
 
+    // Send to customer
     await sendWhatsApp(customerPhone, msg);
+
+    // Send to all admin phones
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, serviceRoleKey);
+
+    const { data: admins } = await supabase
+      .from("user_roles")
+      .select("user_id")
+      .eq("role", "admin");
+
+    if (admins && admins.length > 0) {
+      const { data: adminProfiles } = await supabase
+        .from("profiles")
+        .select("phone")
+        .in("user_id", admins.map((a: { user_id: string }) => a.user_id));
+
+      const adminMsg = `🆕 طلب جديد #${orderNumber}\nالإجمالي ${amountFormatted} جنيه\nالعميل: ${customerPhone}`;
+      for (const p of adminProfiles || []) {
+        if (p.phone) await sendWhatsApp(p.phone, adminMsg);
+      }
+    }
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
