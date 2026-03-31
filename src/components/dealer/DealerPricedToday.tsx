@@ -377,9 +377,9 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
           {/* Header & Actions Bar */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl font-black text-foreground">عرض سعر</h2>
+              <h2 className="text-xl font-black text-foreground">أصناف تم تسعيرها اليوم</h2>
               <p className="text-sm text-muted-foreground mt-0.5">
-                {items.length} صنف تم تسعيره — {new Date().toLocaleDateString("ar-EG")}
+                {items.length} صنف — {new Date().toLocaleDateString("ar-EG")}
               </p>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
