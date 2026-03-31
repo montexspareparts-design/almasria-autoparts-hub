@@ -315,21 +315,34 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment }: DealerCartProps
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-2">
         <Button
+          className="flex-1 gap-2 text-sm h-12 bg-emerald-600 hover:bg-emerald-700 text-white"
+          onClick={handlePayNow}
+          disabled={submittingPayment || submitting || items.length === 0}
+        >
+          {submittingPayment ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <CreditCard className="w-4 h-4" />
+          )}
+          ادفع الآن
+        </Button>
+        <Button
+          variant="outline"
           className="flex-1 gap-2 text-sm h-12"
           onClick={handleSubmitOrder}
-          disabled={submitting || items.length === 0}
+          disabled={submitting || submittingPayment || items.length === 0}
         >
           {submitting ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
             <ArrowRight className="w-4 h-4" />
           )}
-          تأكيد الطلب وإرساله
+          أرسل الطلب (ادفع لاحقاً)
         </Button>
       </div>
 
       <p className="text-[10px] text-muted-foreground text-center">
-        بالضغط على "تأكيد الطلب" سيتم إرسال طلبك للمراجعة والموافقة
+        "ادفع الآن" ينقلك مباشرة للدفع الإلكتروني — "أرسل الطلب" يرسله للمراجعة والدفع لاحقاً
       </p>
     </div>
   );
