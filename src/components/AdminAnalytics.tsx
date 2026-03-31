@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, DollarSign, ShoppingBag, Users, Package, TrendingUp, BarChart3, PieChart as PieIcon, ListOrdered, ArrowUpRight, ArrowDownRight, Search } from "lucide-react";
+import { Loader2, DollarSign, ShoppingBag, Users, Package, TrendingUp, BarChart3, PieChart as PieIcon, ListOrdered, ArrowUpRight, ArrowDownRight, Search, CreditCard, Percent } from "lucide-react";
 import { motion, useInView } from "framer-motion";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
