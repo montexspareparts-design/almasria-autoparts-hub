@@ -168,48 +168,6 @@ const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
     finally { setDownloadingPdf(false); }
   };
 
-  // === Saved Quotes ===
-  const handleConvertQuoteToOrder = async (quote: SavedQuote) => {
-    if (!user) return;
-    setConvertingQuoteId(quote.id);
-    const { data: qItems } = await supabase.from("dealer_quote_items").select("product_id, quantity, unit_price, total_price").eq("quote_id", quote.id);
-    if (!qItems || qItems.length === 0) { toast({ title: "العرض فارغ", variant: "destructive" }); setConvertingQuoteId(null); return; }
-    for (const item of qItems) await addToCart(item.product_id, item.quantity);
-    await supabase.from("dealer_quotes").update({ status: "converted" }).eq("id", quote.id);
-    toast({ title: "✅ تم إضافة أصناف العرض للسلة", description: `${qItems.length} صنف من عرض ${quote.quote_number}` });
-    setConvertingQuoteId(null);
-    fetchSavedQuotes();
-    onConvertToOrder();
-  };
-
-  const handleDeleteQuote = async (quoteId: string) => {
-    await supabase.from("dealer_quote_items").delete().eq("quote_id", quoteId);
-    await supabase.from("dealer_quotes").delete().eq("id", quoteId);
-    toast({ title: "تم حذف العرض" });
-    if (expandedQuoteId === quoteId) { setExpandedQuoteId(null); setExpandedQuoteItems([]); }
-    fetchSavedQuotes();
-  };
-
-  const toggleExpandQuote = async (quoteId: string) => {
-    if (expandedQuoteId === quoteId) { setExpandedQuoteId(null); setExpandedQuoteItems([]); return; }
-    setExpandedQuoteId(quoteId);
-    setLoadingQuoteItems(true);
-    const { data: qItems } = await supabase.from("dealer_quote_items").select("id, product_id, quantity, unit_price, total_price").eq("quote_id", quoteId);
-    if (!qItems || qItems.length === 0) { setExpandedQuoteItems([]); setLoadingQuoteItems(false); return; }
-    const productIds = qItems.map(i => i.product_id);
-    const { data: products } = await supabase.from("products").select("id, name_ar, sku, image_url").in("id", productIds);
-    const productMap = new Map((products || []).map(p => [p.id, p]));
-    setExpandedQuoteItems(qItems.map(qi => ({ ...qi, product: productMap.get(qi.product_id) })));
-    setLoadingQuoteItems(false);
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "converted": return <Badge className="bg-emerald-500/10 text-emerald-700 text-[10px]">تم التحويل لطلبية</Badge>;
-      case "sent": return <Badge className="bg-blue-500/10 text-blue-700 text-[10px]">تم الإرسال</Badge>;
-      default: return <Badge className="bg-yellow-500/10 text-yellow-700 text-[10px]">مسودة</Badge>;
-    }
-  };
 
   if (loading) {
     return (
