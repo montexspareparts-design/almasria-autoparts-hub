@@ -53,9 +53,18 @@ const tierColors: Record<string, string> = {
   retail: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
 };
 
+interface NavItem {
+  id: DealerTab;
+  label: string;
+  icon: typeof LayoutDashboard;
+  badge?: number;
+  iconColor?: string;
+  iconBg?: string;
+}
+
 interface NavGroup {
   label: string;
-  items: { id: DealerTab; label: string; icon: typeof LayoutDashboard; badge?: number; accent?: string }[];
+  items: NavItem[];
   defaultOpen?: boolean;
 }
 
