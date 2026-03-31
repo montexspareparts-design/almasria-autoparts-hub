@@ -36,17 +36,9 @@ const Index = () => {
   const { dealerAccount, loading } = useAuth();
   const isDealer = !!dealerAccount;
 
-  // Dealer gets a completely different homepage
+  // Dealer goes directly to /dealer dashboard
   if (!loading && isDealer) {
-    return (
-      <div className="min-h-screen">
-        <Navbar />
-        <DealerHomePage />
-        <Suspense fallback={null}><Footer /></Suspense>
-        <Suspense fallback={null}><WhatsAppFloat /></Suspense>
-        <Suspense fallback={null}><BackToTop /></Suspense>
-      </div>
-    );
+    return <Navigate to="/dealer" replace />;
   }
 
   return (
