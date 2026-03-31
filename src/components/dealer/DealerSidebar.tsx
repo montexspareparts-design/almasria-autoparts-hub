@@ -22,6 +22,7 @@ interface DealerSidebarProps {
   tier: string;
   onSignOut: () => void;
   unreadCount: number;
+  cartItemCount?: number;
 }
 
 const tierLabels: Record<string, string> = {
@@ -68,7 +69,7 @@ interface NavGroup {
   defaultOpen?: boolean;
 }
 
-const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, unreadCount }: DealerSidebarProps) => {
+const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, unreadCount, cartItemCount = 0 }: DealerSidebarProps) => {
   const navGroups: NavGroup[] = [
     {
       label: "القائمة الرئيسية",
@@ -83,7 +84,7 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
       label: "الطلبات والمعاملات",
       defaultOpen: true,
       items: [
-        { id: "cart", label: "السلة", icon: ShoppingCart, iconColor: "text-rose-600", iconBg: "bg-rose-500/10" },
+        { id: "cart", label: "السلة", icon: ShoppingCart, badge: cartItemCount, iconColor: "text-rose-600", iconBg: "bg-rose-500/10" },
         { id: "orders", label: "طلباتي", icon: ClipboardList, iconColor: "text-slate-600 dark:text-slate-400", iconBg: "bg-slate-500/10" },
         { id: "payment", label: "الدفع الإلكتروني", icon: CreditCard, iconColor: "text-emerald-600", iconBg: "bg-emerald-500/10" },
         { id: "invoices", label: "الفواتير", icon: Receipt, iconColor: "text-violet-600", iconBg: "bg-violet-500/10" },

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useDealerCart } from "@/hooks/useDealerCart";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,6 +38,7 @@ const DealerDashboard = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loadingData, setLoadingData] = useState(true);
+  const { itemCount: cartItemCount } = useDealerCart();
 
   useEffect(() => {
     if (!authLoading && !user) { navigate("/auth"); return; }
@@ -179,6 +181,7 @@ const DealerDashboard = () => {
           tier={dealerAccount?.tier || "retail"}
           onSignOut={handleSignOut}
           unreadCount={unreadCount}
+          cartItemCount={cartItemCount}
         />
         <main className="flex-1 overflow-y-auto pb-20 lg:pb-6">
           <div className="p-4 md:p-6 lg:p-8 max-w-7xl">
@@ -187,7 +190,7 @@ const DealerDashboard = () => {
         </main>
       </div>
 
-      <DealerMobileNav activeTab={activeTab} onTabChange={setActiveTab} unreadCount={unreadCount} />
+      <DealerMobileNav activeTab={activeTab} onTabChange={setActiveTab} unreadCount={unreadCount} cartItemCount={cartItemCount} />
     </div>
   );
 };

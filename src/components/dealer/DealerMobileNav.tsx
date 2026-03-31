@@ -7,6 +7,7 @@ interface DealerMobileNavProps {
   activeTab: DealerTab;
   onTabChange: (tab: DealerTab) => void;
   unreadCount: number;
+  cartItemCount?: number;
 }
 
 const primaryTabs: { id: DealerTab; label: string; Icon: typeof LayoutDashboard }[] = [
@@ -31,7 +32,7 @@ const moreTabs: { id: DealerTab; label: string; Icon: typeof LayoutDashboard }[]
   { id: "settings", label: "حسابي", Icon: Settings },
 ];
 
-const DealerMobileNav = ({ activeTab, onTabChange, unreadCount }: DealerMobileNavProps) => {
+const DealerMobileNav = ({ activeTab, onTabChange, unreadCount, cartItemCount = 0 }: DealerMobileNavProps) => {
   const [showMore, setShowMore] = useState(false);
 
   return (
@@ -84,7 +85,14 @@ const DealerMobileNav = ({ activeTab, onTabChange, unreadCount }: DealerMobileNa
                 activeTab === tab.id ? "text-primary" : "text-muted-foreground"
               )}
             >
-              <tab.Icon className={cn("w-5 h-5", activeTab === tab.id && "text-primary")} />
+              <div className="relative">
+                <tab.Icon className={cn("w-5 h-5", activeTab === tab.id && "text-primary")} />
+                {tab.id === "cart" && cartItemCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[8px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                    {cartItemCount > 99 ? "99+" : cartItemCount}
+                  </span>
+                )}
+              </div>
               <span className={cn("text-[10px] font-medium", activeTab === tab.id && "font-bold text-primary")}>{tab.label}</span>
             </button>
           ))}
