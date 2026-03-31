@@ -22,6 +22,7 @@ interface DealerSidebarProps {
   tier: string;
   onSignOut: () => void;
   unreadCount: number;
+  cartItemCount?: number;
 }
 
 const tierLabels: Record<string, string> = {
