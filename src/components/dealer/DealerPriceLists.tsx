@@ -617,6 +617,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
 
       toast({ title: "تم إرسال الطلبية ✓", description: `رقم الطلب: ${orderNumber}` });
       pushOrderToERP((order as any).id);
+      notifyNewOrderWhatsApp(orderNumber, createdQuote.totalAmount);
       setCreatedQuote(null);
       setSavingQuote(false);
     };

@@ -174,6 +174,7 @@ const DealerQuickOrder = () => {
 
     // Push to Al Faisal ERP
     pushOrderToERP((order as any).id);
+    notifyNewOrderWhatsApp(orderNumber, total);
 
     toast({ title: "تم إرسال الطلب ✓", description: `رقم الطلب: ${orderNumber}` });
     setLines([]);

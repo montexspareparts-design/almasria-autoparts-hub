@@ -128,6 +128,7 @@ const CheckoutPage = () => {
 
       // Push order to Al Faisal ERP (fire-and-forget)
       pushOrderToERP(order.id);
+      notifyNewOrderWhatsApp(orderNumber, orderTotal);
 
       // Record coupon usage if applied
       if (couponCode) {
