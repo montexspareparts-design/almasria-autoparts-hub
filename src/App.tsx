@@ -38,6 +38,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const CatalogsPage = lazy(() => import("./pages/CatalogsPage"));
 const InstallApp = lazy(() => import("./pages/InstallApp"));
 const PaymentCallback = lazy(() => import("./pages/PaymentCallback"));
+const PaymentPage = lazy(() => import("./pages/PaymentPage"));
 const PoliciesPage = lazy(() => import("./pages/PoliciesPage"));
 const MyProfilePage = lazy(() => import("./pages/MyProfilePage"));
 
