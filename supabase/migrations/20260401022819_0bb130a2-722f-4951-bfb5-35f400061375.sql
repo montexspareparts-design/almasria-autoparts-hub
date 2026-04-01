@@ -1,0 +1,1 @@
+ALTER TABLE public.dealer_accounts ADD COLUMN vehicle_types text[] DEFAULT '{}'::text[];

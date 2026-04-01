@@ -27,6 +27,8 @@ import DealerShoppingLists from "@/components/dealer/DealerShoppingLists";
 import DealerProductCompare from "@/components/dealer/DealerProductCompare";
 import DealerPricedToday from "@/components/dealer/DealerPricedToday";
 import DealerCart from "@/components/dealer/DealerCart";
+import VehicleTypeDialog from "@/components/dealer/VehicleTypeDialog";
+import DealerVehicleRecommendations from "@/components/dealer/DealerVehicleRecommendations";
 
 const DealerDashboard = () => {
   const { user, dealerAccount, isDealer, loading: authLoading, signOut } = useAuth();
@@ -39,6 +41,8 @@ const DealerDashboard = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loadingData, setLoadingData] = useState(true);
+  const [vehicleTypes, setVehicleTypes] = useState<string[]>(dealerAccount?.vehicle_types || []);
+  const [showVehicleDialog, setShowVehicleDialog] = useState(false);
   const dealerCart = useDealerCart();
   const cartItemCount = dealerCart.itemCount;
 
@@ -69,6 +73,11 @@ const DealerDashboard = () => {
     setOrders(ordersRes.data || []);
     setUnreadCount(notifRes.data?.length || 0);
     setLoadingData(false);
+
+    // Show vehicle type dialog if dealer hasn't chosen yet
+    const vt = dealerAccount?.vehicle_types || [];
+    setVehicleTypes(vt);
+    if (vt.length === 0) setShowVehicleDialog(true);
   };
 
   if (authLoading || loadingData || !user || !isDealer) {
@@ -111,7 +120,12 @@ const DealerDashboard = () => {
 
   const renderContent = () => {
     switch (activeTab) {
-      case "quotes": return <DealerProductSearch />;
+      case "quotes": return (
+        <div className="space-y-6">
+          {vehicleTypes.length > 0 && <DealerVehicleRecommendations vehicleTypes={vehicleTypes} compact />}
+          <DealerProductSearch />
+        </div>
+      );
       case "priced_today": return <DealerPricedToday onConvertToOrder={() => setActiveTab("cart")} sharedCart={dealerCart} />;
       case "cart": return <DealerCart onNavigateToOrders={() => setActiveTab("orders")} onNavigateToPayment={(info) => { if (info) setPaymentTarget(info); setActiveTab("payment"); }} sharedCart={dealerCart} />;
       case "quick_order": return <DealerQuickOrder />;
@@ -193,6 +207,17 @@ const DealerDashboard = () => {
       </div>
 
       <DealerMobileNav activeTab={activeTab} onTabChange={setActiveTab} unreadCount={unreadCount} cartItemCount={cartItemCount} />
+
+      {dealerAccount && (
+        <VehicleTypeDialog
+          open={showVehicleDialog}
+          dealerAccountId={dealerAccount.id}
+          onComplete={(types) => {
+            setVehicleTypes(types);
+            setShowVehicleDialog(false);
+          }}
+        />
+      )}
     </div>
   );
 };

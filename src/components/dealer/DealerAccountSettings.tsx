@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
-import { User, Phone, Save, Loader2, Shield, Volume2, VolumeX, Sun, Moon, Monitor, Type, Minus, Plus, Palette } from "lucide-react";
+import { User, Phone, Save, Loader2, Shield, Volume2, VolumeX, Sun, Moon, Monitor, Type, Minus, Plus, Palette, Car, Bus, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { isSoundEnabled, setSoundEnabled, playPricingSound } from "@/lib/pricingSound";
 import { useTheme } from "next-themes";
@@ -32,6 +32,8 @@ const DealerAccountSettings = () => {
   const [profile, setProfile] = useState({ full_name: "", phone: "", email: "" });
   const [soundOn, setSoundOn] = useState(isSoundEnabled());
   const [fontSize, setFontSize] = useState(getFontSize());
+  const [vehicleTypes, setVehicleTypes] = useState<string[]>((dealerAccount as any)?.vehicle_types || []);
+  const [savingVehicle, setSavingVehicle] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -144,7 +146,65 @@ const DealerAccountSettings = () => {
         </CardContent>
       </Card>
 
-      {/* Editable Profile */}
+      {/* Vehicle Types */}
+      <Card className="border-border/50">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Car className="w-4 h-4 text-primary" />
+            نوع العربيات
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-[11px] text-muted-foreground">اختر نوع العربيات اللي بتشتغل فيها عشان نعرض لك الأصناف المناسبة</p>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { id: "sedan", label: "ملاكي", icon: Car },
+              { id: "microbus", label: "ميكروباص", icon: Bus },
+            ].map((opt) => {
+              const isSelected = vehicleTypes.includes(opt.id);
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => setVehicleTypes((prev) =>
+                    prev.includes(opt.id) ? prev.filter((v) => v !== opt.id) : [...prev, opt.id]
+                  )}
+                  className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
+                    isSelected
+                      ? "border-primary bg-primary/5"
+                      : "border-border/50 bg-muted/30 hover:border-primary/30"
+                  }`}
+                >
+                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                    isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                  }`}>
+                    <opt.icon className="w-4 h-4" />
+                  </div>
+                  <span className="text-sm font-bold text-foreground">{opt.label}</span>
+                  {isSelected && <Check className="w-4 h-4 text-primary mr-auto" />}
+                </button>
+              );
+            })}
+          </div>
+          <Button
+            size="sm"
+            disabled={vehicleTypes.length === 0 || savingVehicle}
+            onClick={async () => {
+              setSavingVehicle(true);
+              await supabase
+                .from("dealer_accounts")
+                .update({ vehicle_types: vehicleTypes } as any)
+                .eq("id", dealerAccount!.id);
+              toast({ title: "✅ تم حفظ نوع العربيات" });
+              setSavingVehicle(false);
+            }}
+          >
+            {savingVehicle ? <Loader2 className="w-3 h-3 ml-1 animate-spin" /> : <Save className="w-3 h-3 ml-1" />}
+            حفظ
+          </Button>
+        </CardContent>
+      </Card>
+
+
       <Card className="border-border/50">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm flex items-center gap-2">

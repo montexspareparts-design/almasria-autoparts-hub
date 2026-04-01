@@ -226,6 +226,7 @@ export type Database = {
           tier: Database["public"]["Enums"]["customer_tier"]
           updated_at: string
           user_id: string
+          vehicle_types: string[] | null
         }
         Insert: {
           active_session_id?: string | null
@@ -240,6 +241,7 @@ export type Database = {
           tier?: Database["public"]["Enums"]["customer_tier"]
           updated_at?: string
           user_id: string
+          vehicle_types?: string[] | null
         }
         Update: {
           active_session_id?: string | null
@@ -254,6 +256,7 @@ export type Database = {
           tier?: Database["public"]["Enums"]["customer_tier"]
           updated_at?: string
           user_id?: string
+          vehicle_types?: string[] | null
         }
         Relationships: [
           {
