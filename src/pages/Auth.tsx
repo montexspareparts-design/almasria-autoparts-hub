@@ -227,10 +227,27 @@ const Auth = () => {
                 <div className="relative flex justify-center text-[11px]"><span className="bg-card px-3 text-muted-foreground/60">أو</span></div>
               </div>
 
-              {/* Unified credential hint */}
-              <p className="text-[11px] text-muted-foreground/50 text-center mb-5">
-                يمكنك الدخول برقم الهاتف أو البريد الإلكتروني
-              </p>
+              {/* Phone / Email Toggle */}
+              {isLogin && (
+                <div className="flex gap-2 mb-5">
+                  <Button
+                    type="button"
+                    variant={loginMethod === "phone" ? "default" : "outline"}
+                    className="flex-1 gap-2 h-11 rounded-xl font-bold text-sm"
+                    onClick={() => { setLoginMethod("phone"); setCredential(""); }}
+                  >
+                    <Phone className="w-4 h-4" /> رقم الهاتف
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={loginMethod === "email" ? "default" : "outline"}
+                    className="flex-1 gap-2 h-11 rounded-xl font-bold text-sm"
+                    onClick={() => { setLoginMethod("email"); setCredential(""); }}
+                  >
+                    <Mail className="w-4 h-4" /> البريد الإلكتروني
+                  </Button>
+                </div>
+              )}
             </>
           )}
 
