@@ -85,7 +85,8 @@ const DealerRecommendations = ({ userId, tier, onNavigateToQuotes }: { userId: s
         {products.map(p => (
           <div
             key={p.id}
-            className="bg-card border border-border rounded-lg overflow-hidden hover:border-primary/30 hover:shadow-sm transition-all group"
+            className="bg-card border border-border rounded-lg overflow-hidden hover:border-primary/30 hover:shadow-sm transition-all group cursor-pointer"
+            onClick={() => setSelectedProduct(p)}
           >
             <div className="aspect-square bg-muted/50 relative overflow-hidden">
               <img
