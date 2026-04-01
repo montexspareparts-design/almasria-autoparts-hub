@@ -274,15 +274,16 @@ const DealerPricedToday = ({ onConvertToOrder, sharedCart }: DealerPricedTodayPr
                     exit={{ opacity: 0, x: 80, height: 0, marginBottom: 0 }}
                     transition={{ delay: idx * 0.02 }}
                     className={cn(
-                      "rounded-xl border bg-card p-3 sm:p-4 transition-all duration-200",
+                      "rounded-xl border bg-card p-3 sm:p-4 transition-all duration-200 cursor-pointer",
                       isSelected
                         ? "border-primary/30 bg-primary/[0.02] shadow-sm"
                         : "border-border/40 hover:border-border/60"
                     )}
+                    onClick={() => toggleSelect(item.product_id)}
                   >
                     <div className="flex gap-3">
                       {/* Checkbox */}
-                      <button onClick={() => toggleSelect(item.product_id)} className="shrink-0 mt-1">
+                      <button onClick={(e) => { e.stopPropagation(); toggleSelect(item.product_id); }} className="shrink-0 mt-1">
                         <div className={cn(
                           "w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all",
                           isSelected
@@ -312,7 +313,7 @@ const DealerPricedToday = ({ onConvertToOrder, sharedCart }: DealerPricedTodayPr
                           
                           {/* Delete Button — Prominent Trash Icon */}
                           <button
-                            onClick={() => removeItem(item.product_id)}
+                            onClick={(e) => { e.stopPropagation(); removeItem(item.product_id); }}
                             className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 active:scale-95 transition-all"
                             title="حذف الصنف"
                           >
@@ -347,7 +348,7 @@ const DealerPricedToday = ({ onConvertToOrder, sharedCart }: DealerPricedTodayPr
 
                             {/* Details */}
                             <button
-                              onClick={() => setDetailProduct(item.product)}
+                              onClick={(e) => { e.stopPropagation(); setDetailProduct(item.product); }}
                               className="text-[11px] text-primary hover:text-primary/80 font-semibold flex items-center gap-0.5 transition-colors"
                             >
                               <Info className="w-3 h-3" /> التفاصيل
@@ -356,14 +357,14 @@ const DealerPricedToday = ({ onConvertToOrder, sharedCart }: DealerPricedTodayPr
                             {/* Quantity */}
                             <div className="flex items-center gap-0.5 bg-muted/50 rounded-lg p-0.5">
                               <button
-                                onClick={() => updateQuantity(item.product_id, -1)}
+                                onClick={(e) => { e.stopPropagation(); updateQuantity(item.product_id, -1); }}
                                 className="w-7 h-7 rounded-md bg-background flex items-center justify-center text-foreground hover:bg-accent transition-colors shadow-sm"
                               >
                                 <Minus className="w-3 h-3" />
                               </button>
                               <span className="text-sm font-bold w-8 text-center text-foreground">{item.quantity}</span>
                               <button
-                                onClick={() => updateQuantity(item.product_id, 1)}
+                                onClick={(e) => { e.stopPropagation(); updateQuantity(item.product_id, 1); }}
                                 className="w-7 h-7 rounded-md bg-background flex items-center justify-center text-foreground hover:bg-accent transition-colors shadow-sm"
                               >
                                 <Plus className="w-3 h-3" />
