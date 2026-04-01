@@ -155,8 +155,8 @@ const PaymentPage = () => {
         });
       }
 
-      if (selectedMethod === "card" && data.iframe_url) {
-        window.location.href = data.iframe_url;
+      if (selectedMethod === "card" && (data.order_url || data.iframe_url)) {
+        window.location.href = data.order_url || data.iframe_url;
         return;
       } else if (selectedMethod === "wallet" && data.wallet_redirect_url) {
         setWalletRedirectUrl(data.wallet_redirect_url);
