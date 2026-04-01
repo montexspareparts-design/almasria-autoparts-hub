@@ -309,7 +309,17 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-[15px] text-foreground">{method.label}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{method.labelEn}</p>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    {method.id === "card" ? (
+                      <>
+                        <img src={visaLogo} alt="Visa" className="h-5 w-auto object-contain rounded-sm" loading="lazy" />
+                        <img src={mastercardLogo} alt="Mastercard" className="h-5 w-auto object-contain rounded-sm" loading="lazy" />
+                        <img src={meezaLogo} alt="Meeza" className="h-5 w-auto object-contain rounded-sm" loading="lazy" />
+                      </>
+                    ) : (
+                      <p className="text-[11px] text-muted-foreground">{method.labelEn}</p>
+                    )}
+                  </div>
                 </div>
                 <div className={`w-5.5 h-5.5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-300 ${
                   isSelected ? "border-primary bg-primary" : "border-muted-foreground/25"
