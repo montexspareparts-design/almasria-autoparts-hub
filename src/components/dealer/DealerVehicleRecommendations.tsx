@@ -73,7 +73,7 @@ const DealerVehicleRecommendations = ({ vehicleTypes, compact }: DealerVehicleRe
   };
 
   const vehicleLabel = vehicleTypes.map((vt) =>
-    vt === "sedan" ? "ملاكي" : vt === "microbus" ? "ميكروباص" : vt
+    vt === "sedan" ? "ملاكي" : vt === "microbus" ? "نقل وميكروباص" : vt
   ).join(" و ");
 
   if (loading) {
