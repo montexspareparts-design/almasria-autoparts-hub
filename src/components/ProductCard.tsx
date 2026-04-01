@@ -127,14 +127,10 @@ const ProductCard = ({
 
   // Grid mode
   return (
-    <motion.div
-      key={product.id}
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: Math.min(index * 0.025, 0.4), duration: 0.35 }}
+    <div
       className="bg-card border border-border rounded-2xl overflow-hidden group cursor-pointer relative
         hover:border-primary/30 hover:shadow-[0_0_20px_hsl(var(--primary)/0.15),0_15px_35px_hsl(0_0%_0%/0.1)] hover:-translate-y-1.5
-        transition-all duration-400 ease-out"
+        transition-all duration-400 ease-out animate-fade-in"
       onClick={() => onProductClick(product)}
     >
       {/* ── Image Section ── */}
