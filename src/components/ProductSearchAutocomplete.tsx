@@ -169,6 +169,14 @@ const ProductSearchAutocomplete = ({
     return () => clearTimeout(timeout);
   }, [value, isFocused]);
 
+  // Popular products to show when focused with no search
+  const popularProducts = useMemo(() => {
+    if (value && value.length >= 2) return [];
+    return [...products]
+      .sort((a, b) => (b as any).stock_quantity - (a as any).stock_quantity)
+      .slice(0, 8);
+  }, [products, value]);
+
   const allMatches = useMemo(() => {
     if (!value || value.length < 2) return [];
     return products.filter(p => fuzzyProductMatch(value, p));
