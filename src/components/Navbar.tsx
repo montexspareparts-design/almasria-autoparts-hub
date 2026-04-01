@@ -272,17 +272,6 @@ const Navbar = () => {
                       <User className="w-3.5 h-3.5" />
                       {lang === "ar" ? "حسابي" : "My Profile"}
                     </Link>
-                    <Link
-                      to="/my-orders"
-                      className={`flex items-center gap-1.5 text-[13px] font-semibold px-2.5 py-1.5 rounded-lg transition-colors ${
-                        location.pathname === "/my-orders"
-                          ? "text-primary bg-primary/10"
-                          : "text-secondary-foreground/60 hover:text-secondary-foreground hover:bg-secondary-foreground/5"
-                      }`}
-                    >
-                      <ClipboardList className="w-3.5 h-3.5" />
-                      {lang === "ar" ? "طلباتي" : "My Orders"}
-                    </Link>
                     <div className="w-px h-5 bg-secondary-foreground/10 mx-1" />
                     <Button
                       variant="outline"
