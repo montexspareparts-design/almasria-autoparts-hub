@@ -196,7 +196,7 @@ const CheckoutPage = () => {
                 className="mt-4"
                 onClick={() => navigate(`/?highlight=${paymobOrderId}`)}
               >
-                العودة إلى طلباتي
+                العودة للرئيسية
               </Button>
             )}
           </div>

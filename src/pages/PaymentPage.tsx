@@ -436,7 +436,7 @@ const PaymentPage = () => {
                       بعد الدفع هيتم تحديث حالة طلبك تلقائياً
                     </p>
                     <Button variant="outline" onClick={() => navigate("/")} className="gap-2 h-10 sm:h-11">
-                      عرض طلباتي
+                      العودة للرئيسية
                     </Button>
                   </div>
                 )}
@@ -472,7 +472,7 @@ const PaymentPage = () => {
                       ⚠️ يجب الدفع خلال 48 ساعة — بعدها يتم إلغاء الفاتورة تلقائياً
                     </div>
                     <Button variant="outline" onClick={() => navigate("/")} className="gap-2 h-10 sm:h-11">
-                      عرض طلباتي
+                      العودة للرئيسية
                     </Button>
                   </div>
                 )}
@@ -499,7 +499,7 @@ const PaymentPage = () => {
             <Button variant="ghost" size="sm" asChild className="gap-2 text-muted-foreground text-xs sm:text-sm">
               <Link to="/">
                 <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                العودة لطلباتي
+                العودة للرئيسية
               </Link>
             </Button>
           </div>
