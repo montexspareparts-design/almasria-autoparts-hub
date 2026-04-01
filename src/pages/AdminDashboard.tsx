@@ -442,6 +442,8 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminProductImages /></Suspense>;
       case "image-verifier":
         return <Suspense fallback={<SectionLoader />}><AdminImageVerifier /></Suspense>;
+      case "instapay-receipts":
+        return <Suspense fallback={<SectionLoader />}><AdminInstaPayReceipts /></Suspense>;
       case "payment-reminders":
         return <Suspense fallback={<SectionLoader />}><AdminPaymentReminders /></Suspense>;
       case "push-notifications":
