@@ -399,9 +399,6 @@ const Navbar = () => {
                         <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-secondary-foreground/70 font-semibold" onClick={() => { navigate("/my-profile"); setIsOpen(false); }}>
                           <User className="w-4 h-4" /> {lang === "ar" ? "حسابي" : "My Profile"}
                         </Button>
-                        <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-secondary-foreground/70 font-semibold" onClick={() => { navigate("/my-orders"); setIsOpen(false); }}>
-                          <ClipboardList className="w-4 h-4" /> {lang === "ar" ? "طلباتي" : "My Orders"}
-                        </Button>
                         <Button variant="outline" size="sm" className="w-full gap-2 font-semibold" onClick={() => { navigate("/dealer-apply"); setIsOpen(false); }}>
                           <Briefcase className="w-4 h-4" /> {lang === "ar" ? "تقديم طلب اعتماد" : "Apply as Dealer"}
                         </Button>
