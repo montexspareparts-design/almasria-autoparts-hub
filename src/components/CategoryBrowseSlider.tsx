@@ -147,17 +147,12 @@ const CategoryBrowseSlider = () => {
                 setTimeout(() => searchInput.focus(), 500);
               }
             }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/15 border border-primary/30 text-primary text-xs font-bold mb-4 hover:bg-primary/25 transition-colors cursor-pointer animate-[glowPulse_3s_ease-in-out_infinite]"
-            style={{
-              animationName: 'glowPulse',
-            }}
+            className="inline-flex items-center gap-3 px-8 py-3 rounded-full bg-primary/15 border-2 border-primary/30 text-primary text-lg md:text-2xl font-black mb-4 hover:bg-primary/25 hover:scale-105 transition-all duration-300 cursor-pointer animate-[glowPulse_3s_ease-in-out_infinite]"
+            style={{ animationName: 'glowPulse' }}
           >
-            <Search className="w-3.5 h-3.5" />
+            <Search className="w-6 h-6 md:w-7 md:h-7" />
             بتدوّر على إيه؟
           </button>
-          <h2 className="text-2xl md:text-4xl font-black text-foreground mb-3">
-            تصفّح حسب <span className="text-primary">الفئة</span>
-          </h2>
           <p className="text-muted-foreground text-sm max-w-md mx-auto">
             اختار الفئة اللي محتاجها وهنوصّلك للمنتج اللي بتدور عليه
           </p>
