@@ -39,7 +39,7 @@ const YEARS = Array.from({ length: 15 }, (_, i) => String(2015 + i));
 interface Props {
   filters: ProductFilters;
   onFiltersChange: (filters: ProductFilters) => void;
-  categories?: { id: string; name_ar: string; icon?: string | null }[];
+  categories?: { id: string; name_ar: string; icon?: string | null; slug?: string }[];
   categoryCounts?: Record<string, number>;
   showBrands?: boolean;
   totalResults: number;
