@@ -54,7 +54,7 @@ const ProductCard = ({
         onClick={() => onProductClick(product)}
       >
         {/* Image */}
-        <div className="w-28 sm:w-40 shrink-0 bg-white relative flex items-center justify-center p-3 overflow-hidden">
+        <div className="w-20 sm:w-40 shrink-0 bg-white relative flex items-center justify-center p-2 sm:p-3 overflow-hidden">
           {/* Shimmer sweep on hover */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out z-10 pointer-events-none" />
           {product.image_url ? (
@@ -65,26 +65,30 @@ const ProductCard = ({
               loading="lazy"
             />
           ) : (
-            <Package className="w-10 h-10 text-muted-foreground/20" />
+            <Package className="w-8 h-8 sm:w-10 sm:h-10 text-muted-foreground/20" />
           )}
           {product.is_on_sale && (
-            <Badge className="absolute top-2 left-2 bg-destructive text-destructive-foreground text-[9px] font-bold px-1.5 py-0 h-5">
+            <Badge className="absolute top-1 left-1 sm:top-2 sm:left-2 bg-destructive text-destructive-foreground text-[8px] sm:text-[9px] font-bold px-1 sm:px-1.5 py-0 h-4 sm:h-5">
               تخفيض
             </Badge>
           )}
+          {/* Stock dot - mobile only */}
+          <div className={`absolute top-1 right-1 w-2 h-2 rounded-full sm:hidden ring-1 ring-white ${
+            stockAvailable ? "bg-green-500" : "bg-red-400"
+          }`} />
         </div>
 
         {/* Content */}
-        <div className="flex-1 p-3 sm:p-4 flex flex-col justify-center min-w-0" onClick={(e) => e.stopPropagation()}>
-          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-            <span className="text-[10px] font-mono bg-muted text-muted-foreground px-2 py-0.5 rounded">{product.sku}</span>
-            <StockBadge available={stockAvailable} />
+        <div className="flex-1 p-2 sm:p-4 flex flex-col justify-center min-w-0 gap-1 sm:gap-1.5" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+            <span className="text-[8px] sm:text-[10px] font-mono bg-muted text-muted-foreground px-1 sm:px-2 py-0.5 rounded leading-none">{product.sku}</span>
+            <span className="hidden sm:inline"><StockBadge available={stockAvailable} /></span>
             {brandRouteMap[product.brand] && (
               <TooltipProvider delayDuration={200}>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <span
-                      className={`text-[9px] font-bold px-1.5 py-0.5 rounded cursor-pointer hover:opacity-80 transition-opacity ${brandRouteMap[product.brand].color}`}
+                      className={`text-[7px] sm:text-[9px] font-bold px-1 sm:px-1.5 py-px sm:py-0.5 rounded cursor-pointer hover:opacity-80 transition-opacity ${brandRouteMap[product.brand].color}`}
                       onClick={(e) => { e.stopPropagation(); navigate(brandRouteMap[product.brand].path); }}
                     >
                       {brandRouteMap[product.brand].label}
@@ -95,13 +99,13 @@ const ProductCard = ({
               </TooltipProvider>
             )}
           </div>
-          <h3 className="font-bold text-card-foreground text-sm leading-relaxed mb-1 group-hover:text-primary transition-colors">
+          <h3 className="font-bold text-card-foreground text-[11px] sm:text-sm leading-snug sm:leading-relaxed line-clamp-2 group-hover:text-primary transition-colors">
             {product.name_ar}
           </h3>
           {product.product_categories && (
-            <p className="text-xs text-muted-foreground mb-2">{(product.product_categories as any).name_ar}</p>
+            <p className="text-[9px] sm:text-xs text-muted-foreground leading-none">{(product.product_categories as any).name_ar}</p>
           )}
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap mt-0.5">
             <PriceSection
               user={user}
               isDealer={isDealer}
@@ -116,8 +120,8 @@ const ProductCard = ({
               compact
             />
             {stockAvailable && canSeePrice && (
-              <Button size="sm" className="gap-1.5 text-xs h-8" onClick={() => onAddToCart(product)}>
-                <ShoppingCart className="w-3 h-3" />أضف للسلة
+              <Button size="sm" className="gap-1 sm:gap-1.5 text-[9px] sm:text-xs h-6 sm:h-8 px-2 sm:px-3" onClick={() => onAddToCart(product)}>
+                <ShoppingCart className="w-2.5 h-2.5 sm:w-3 sm:h-3" />أضف
               </Button>
             )}
           </div>
