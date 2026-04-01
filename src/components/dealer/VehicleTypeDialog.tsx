@@ -63,7 +63,7 @@ const VehicleTypeDialog = ({ open, dealerAccountId, onComplete }: VehicleTypeDia
   return (
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent
-        className="sm:max-w-md [&>button]:hidden"
+        className="sm:max-w-md [&>button]:hidden max-h-[90vh] flex flex-col"
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
         dir="rtl"
@@ -78,7 +78,7 @@ const VehicleTypeDialog = ({ open, dealerAccountId, onComplete }: VehicleTypeDia
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3 py-2">
+        <div className="space-y-3 py-2 overflow-y-auto flex-1">
           {vehicleOptions.map((opt) => {
             const isSelected = selected.includes(opt.id);
             return (
@@ -110,14 +110,16 @@ const VehicleTypeDialog = ({ open, dealerAccountId, onComplete }: VehicleTypeDia
           })}
         </div>
 
-        <Button
-          onClick={handleSave}
-          disabled={selected.length === 0 || saving}
-          className="w-full mt-2 h-11 text-sm font-bold"
-        >
-          {saving ? <Loader2 className="w-4 h-4 ml-2 animate-spin" /> : <Check className="w-4 h-4 ml-2" />}
-          تأكيد الاختيار
-        </Button>
+        <div className="pt-2 sticky bottom-0 bg-background">
+          <Button
+            onClick={handleSave}
+            disabled={selected.length === 0 || saving}
+            className="w-full h-12 text-sm font-bold"
+          >
+            {saving ? <Loader2 className="w-4 h-4 ml-2 animate-spin" /> : <Check className="w-4 h-4 ml-2" />}
+            تأكيد الدخول
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
