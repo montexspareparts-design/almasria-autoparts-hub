@@ -233,7 +233,7 @@ const ProductSearchAutocomplete = ({
         </div>
         <Input
           ref={inputRef}
-          placeholder={placeholder}
+          placeholder={value ? placeholder : (typingPlaceholder || placeholder)}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setIsFocused(true)}
