@@ -181,8 +181,10 @@ const ProductSearchAutocomplete = ({
 
   return (
     <div ref={wrapperRef} className="relative flex-1">
-      <div className="relative">
-        <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+      <div className="relative group">
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-primary/10 group-focus-within:bg-primary/20 flex items-center justify-center transition-all duration-300 group-focus-within:scale-110 pointer-events-none">
+          <Search className="w-4.5 h-4.5 text-primary/70 group-focus-within:text-primary transition-colors duration-300" />
+        </div>
         <Input
           ref={inputRef}
           placeholder={placeholder}
@@ -190,7 +192,7 @@ const ProductSearchAutocomplete = ({
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onKeyDown={handleKeyDown}
-          className="pr-10 pl-20 bg-card border-border h-11 text-sm placeholder:text-muted-foreground/60"
+          className="pr-14 pl-20 bg-card border-border/60 h-12 text-sm placeholder:text-muted-foreground/50 rounded-xl shadow-sm transition-all duration-300 focus-visible:ring-primary/30 focus-visible:ring-offset-0 focus-visible:border-primary/40 focus-visible:shadow-md focus-visible:shadow-primary/5"
         />
         <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
           {value && (
