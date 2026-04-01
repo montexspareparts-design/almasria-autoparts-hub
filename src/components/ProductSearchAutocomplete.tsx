@@ -304,9 +304,9 @@ const ProductSearchAutocomplete = ({
               )}
 
               <p className="text-[10px] text-muted-foreground px-2.5 py-1.5 font-semibold">
-                {suggestions.length} نتيجة
+                {suggestions.length > 0 ? `${suggestions.length} نتيجة` : "الأكثر توفراً"}
               </p>
-              {suggestions.map((product, idx) => (
+              {displayProducts.map((product, idx) => (
                 <button
                   key={product.id}
                   onClick={() => {
