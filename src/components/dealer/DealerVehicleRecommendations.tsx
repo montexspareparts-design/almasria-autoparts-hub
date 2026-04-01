@@ -15,11 +15,10 @@ const INITIAL_COUNT = 4;
 const LOAD_MORE_COUNT = 4;
 
 interface DealerVehicleRecommendationsProps {
-  vehicleTypes: string[];
   compact?: boolean;
 }
 
-const DealerVehicleRecommendations = ({ vehicleTypes, compact }: DealerVehicleRecommendationsProps) => {
+const DealerVehicleRecommendations = ({ compact }: DealerVehicleRecommendationsProps) => {
   const { user, isDealer, dealerAccount } = useAuth();
   const { addItem } = useDealerCart();
   const [allProducts, setAllProducts] = useState<any[]>([]);
