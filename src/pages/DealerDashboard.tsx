@@ -34,6 +34,7 @@ const DealerDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<DealerTab>((searchParams.get("tab") as DealerTab) || "quotes");
   const [priceListQuoteData, setPriceListQuoteData] = useState<PriceListQuoteData | null>(null);
+  const [paymentTarget, setPaymentTarget] = useState<{ id: string; orderNumber: string; amount: number } | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
