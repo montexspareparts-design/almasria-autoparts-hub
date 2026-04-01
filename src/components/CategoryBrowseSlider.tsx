@@ -173,7 +173,7 @@ const CategoryBrowseSlider = () => {
           <div
             className="flex w-max gap-3 py-2"
             style={{
-              animation: `marquee-rtl ${sortedCategories.length * 2.5}s linear infinite`,
+              animation: `marquee-rtl ${sortedCategories.length * 1.2}s linear infinite`,
             }}
           >
             {[...sortedCategories, ...sortedCategories].map((cat, i) => (
