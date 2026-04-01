@@ -271,15 +271,15 @@ Deno.serve(async (req) => {
     let iframeUrl: string | null = null;
     let walletRedirectUrl: string | null = null;
     let kioskBillReference: string | null = null;
-    // Use the standalone order_url from Paymob for card payments (external redirect)
-    const orderUrl: string | null = orderData.order_url || null;
 
     if (paymentMethod === "card") {
-      // Prefer standalone order_url; fall back to iframe URL
-      iframeUrl = orderUrl
-        || (iframeId
-          ? `${PAYMOB_BASE}/api/acceptance/iframes/${iframeId}?payment_token=${paymentKey}`
-          : null);
+      // Always build the iframe URL using our IFRAME_ID + payment key
+      // Do NOT use orderData.order_url — it may reference the wrong integration
+      if (iframeId) {
+        iframeUrl = `${PAYMOB_BASE}/api/acceptance/iframes/${iframeId}?payment_token=${paymentKey}`;
+      } else {
+        console.error("PAYMOB_IFRAME_ID is not configured — cannot build card redirect URL");
+      }
     } else if (paymentMethod === "wallet") {
       // For wallet, we need to call the wallet pay endpoint
         const walletPhone = body.wallet_phone || profile?.phone || "01000000000";
