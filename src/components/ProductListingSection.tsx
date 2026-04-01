@@ -92,7 +92,12 @@ const ProductListingSection = ({
               onChange={(v) => setFilters(prev => ({ ...prev, search: v }))}
               products={products as any}
               onProductClick={(p) => setSelectedProduct(p)}
+              onAddToQuote={(p) => {
+                recordView(p.id);
+                setSelectedProduct(p);
+              }}
               onCommandPaletteOpen={() => setCommandPaletteOpen(true)}
+              isDealer={isDealer}
             />
 
             {/* Dealer daily view counter — premium golden pill */}

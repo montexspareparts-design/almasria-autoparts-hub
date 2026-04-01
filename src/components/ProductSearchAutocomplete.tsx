@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Search, X, Package, Hash, Command, Lightbulb } from "lucide-react";
+import { Search, X, Package, Hash, Command, Lightbulb, PlusCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
 import { normalizeArabic, expandAliases } from "@/hooks/useProductListing";
@@ -18,8 +18,10 @@ interface Props {
   onChange: (value: string) => void;
   products?: Product[];
   onProductClick?: (product: Product) => void;
+  onAddToQuote?: (product: Product) => void;
   onCommandPaletteOpen?: () => void;
   placeholder?: string;
+  isDealer?: boolean;
 }
 
 /* ── Common model names & parts for "did you mean?" ── */
@@ -113,8 +115,8 @@ const fuzzyProductMatch = (query: string, product: Product): boolean => {
 };
 
 const ProductSearchAutocomplete = ({
-  value, onChange, products = [], onProductClick, onCommandPaletteOpen,
-  placeholder = "ابحث بالاسم أو رقم القطعة..."
+  value, onChange, products = [], onProductClick, onAddToQuote, onCommandPaletteOpen,
+  placeholder = "ابحث بالاسم أو رقم القطعة...", isDealer = false
 }: Props) => {
   const [isFocused, setIsFocused] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -322,6 +324,21 @@ const ProductSearchAutocomplete = ({
                       </span>
                     </div>
                   </div>
+
+                  {/* Add to quote button for dealers */}
+                  {isDealer && onAddToQuote && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onAddToQuote(product);
+                      }}
+                      className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-[10px] font-bold border border-primary/20 hover:border-primary/30 transition-all duration-200 hover:scale-105"
+                      title="أضف لعرض السعر"
+                    >
+                      <PlusCircle className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">تسعير</span>
+                    </button>
+                  )}
                 </button>
               ))}
             </div>
