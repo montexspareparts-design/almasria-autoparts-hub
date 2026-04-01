@@ -122,8 +122,8 @@ const DealerDashboard = () => {
     switch (activeTab) {
       case "quotes": return (
         <div className="space-y-6">
-          {vehicleTypes.length > 0 && <DealerVehicleRecommendations vehicleTypes={vehicleTypes} compact />}
           <DealerProductSearch />
+          {vehicleTypes.length > 0 && <DealerVehicleRecommendations vehicleTypes={vehicleTypes} compact />}
         </div>
       );
       case "priced_today": return <DealerPricedToday onConvertToOrder={() => setActiveTab("cart")} sharedCart={dealerCart} />;
