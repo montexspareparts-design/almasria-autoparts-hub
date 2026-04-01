@@ -138,7 +138,7 @@ const fuzzyMatchWord = (word: string, ...texts: string[]): boolean => {
   return false;
 };
 
-const ITEMS_PER_PAGE = 24;
+const ITEMS_PER_PAGE = 12;
 const DAILY_LIMIT = 20;
 
 interface UseProductListingOptions {
