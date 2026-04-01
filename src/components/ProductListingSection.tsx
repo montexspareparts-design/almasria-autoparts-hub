@@ -248,29 +248,20 @@ const ProductListingSection = ({
                 </div>
               )}
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-10">
-                  <Button variant="outline" size="sm" disabled={currentPage <= 1} onClick={() => { setCurrentPage((p: number) => p - 1); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="gap-1">
-                    <ChevronRight className="w-4 h-4" />السابق
-                  </Button>
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                      let page: number;
-                      if (totalPages <= 7) page = i + 1;
-                      else if (currentPage <= 4) page = i + 1;
-                      else if (currentPage >= totalPages - 3) page = totalPages - 6 + i;
-                      else page = currentPage - 3 + i;
-                      return (
-                        <button key={page} onClick={() => { setCurrentPage(page); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                          className={`w-9 h-9 rounded-lg text-sm font-medium transition-all ${currentPage === page ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
-                          {page}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <Button variant="outline" size="sm" disabled={currentPage >= totalPages} onClick={() => { setCurrentPage((p: number) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="gap-1">
-                    التالي<ChevronLeft className="w-4 h-4" />
+              {/* Load More */}
+              {hasMore && (
+                <div className="flex flex-col items-center gap-3 mt-10">
+                  <p className="text-sm text-muted-foreground">
+                    عرض {paginatedProducts.length} من {filteredProducts.length} منتج
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={loadMore}
+                    className="gap-2 px-8 rounded-full border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground transition-all"
+                  >
+                    تحميل المزيد
+                    <ChevronLeft className="w-4 h-4" />
                   </Button>
                 </div>
               )}
