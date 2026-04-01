@@ -77,6 +77,15 @@ const ProductsPage = () => {
   const productsRef = useRef<HTMLDivElement>(null);
   const config = brand ? brandConfig[brand] : null;
   const { trackBrand, trackCategory, trackSearch } = usePersonalization();
+  const { user, isDealer, dealerAccount } = useAuth();
+  const [vehicleTypes, setVehicleTypes] = useState<string[]>([]);
+
+  // Fetch dealer vehicle types
+  useEffect(() => {
+    if (isDealer && dealerAccount?.vehicle_types) {
+      setVehicleTypes(dealerAccount.vehicle_types);
+    }
+  }, [isDealer, dealerAccount]);
 
   const listing = useProductListing({
     brandFilter: config?.brandKey,
