@@ -26,6 +26,8 @@ const brandLabels: Record<string, string> = {
 };
 
 const DealerRecommendations = ({ userId, tier, onNavigateToQuotes }: { userId: string; tier?: string; onNavigateToQuotes?: () => void }) => {
+  const { user, isDealer, dealerAccount } = useAuth();
+  const { addItem } = useDealerCart();
   const [products, setProducts] = useState<PopularProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
