@@ -218,13 +218,13 @@ const ProductSearchAutocomplete = ({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setSelectedIndex(prev => Math.min(prev + 1, suggestions.length - 1));
+      setSelectedIndex(prev => Math.min(prev + 1, displayProducts.length - 1));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setSelectedIndex(prev => Math.max(prev - 1, -1));
-    } else if (e.key === "Enter" && selectedIndex >= 0 && suggestions[selectedIndex]) {
+    } else if (e.key === "Enter" && selectedIndex >= 0 && displayProducts[selectedIndex]) {
       e.preventDefault();
-      onProductClick?.(suggestions[selectedIndex]);
+      onProductClick?.(displayProducts[selectedIndex]);
       setIsFocused(false);
     } else if (e.key === "Escape") {
       setIsFocused(false);
