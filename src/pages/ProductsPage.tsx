@@ -218,10 +218,10 @@ const ProductsPage = () => {
       
 
       <div ref={productsRef} />
-      {isDealer && vehicleTypes.length > 0 && (
+      {isDealer && (
         <Suspense fallback={<div className="container mx-auto px-4 pt-6"><div className="h-40 bg-muted/30 rounded-xl animate-pulse" /></div>}>
           <div className="container mx-auto px-4 pt-6">
-            <DealerVehicleRecommendations vehicleTypes={vehicleTypes} compact />
+            <DealerVehicleRecommendations compact />
           </div>
         </Suspense>
       )}
