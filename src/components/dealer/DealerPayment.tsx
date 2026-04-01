@@ -8,9 +8,6 @@ import { Input } from "@/components/ui/input";
 import visaLogo from "@/assets/visa-logo.png";
 import mastercardLogo from "@/assets/mastercard-logo.png";
 import meezaLogo from "@/assets/meeza-logo.png";
-import vodafoneCashLogo from "@/assets/vodafone-cash-logo.png";
-import orangeMoneyLogo from "@/assets/orange-money-logo.png";
-import etisalatCashLogo from "@/assets/etisalat-cash-logo.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -318,12 +315,6 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
                         <img src={visaLogo} alt="Visa" className="h-5 w-auto object-contain rounded-sm" loading="lazy" />
                         <img src={mastercardLogo} alt="Mastercard" className="h-5 w-auto object-contain rounded-sm" loading="lazy" />
                         <img src={meezaLogo} alt="Meeza" className="h-5 w-auto object-contain rounded-sm" loading="lazy" />
-                      </>
-                    ) : method.id === "wallet" ? (
-                      <>
-                        <img src={vodafoneCashLogo} alt="Vodafone Cash" className="h-5 w-auto object-contain rounded-sm" loading="lazy" />
-                        <img src={orangeMoneyLogo} alt="Orange Money" className="h-5 w-auto object-contain rounded-sm" loading="lazy" />
-                        <img src={etisalatCashLogo} alt="Etisalat Cash" className="h-5 w-auto object-contain rounded-sm" loading="lazy" />
                       </>
                     ) : (
                       <p className="text-[11px] text-muted-foreground">{method.labelEn}</p>
