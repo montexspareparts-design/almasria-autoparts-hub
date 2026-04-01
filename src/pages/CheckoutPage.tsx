@@ -164,7 +164,7 @@ const CheckoutPage = () => {
       }
 
       toast({ title: "تم تقديم طلبك بنجاح! ✅", description: `رقم الطلب: ${orderNumber}` });
-      navigate(`/my-orders?highlight=${order.id}`);
+      navigate(`/?highlight=${order.id}`);
     } catch (err: any) {
       console.error(err);
       toast({ title: "حدث خطأ أثناء تقديم الطلب", description: err.message, variant: "destructive" });
@@ -194,9 +194,9 @@ const CheckoutPage = () => {
               <Button
                 variant="outline"
                 className="mt-4"
-                onClick={() => navigate(`/my-orders?highlight=${paymobOrderId}`)}
+                onClick={() => navigate(`/?highlight=${paymobOrderId}`)}
               >
-                العودة إلى طلباتي
+                العودة للرئيسية
               </Button>
             )}
           </div>
