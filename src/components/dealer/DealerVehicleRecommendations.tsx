@@ -10,17 +10,6 @@ import { useDealerCart } from "@/hooks/useDealerCart";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Keywords that map vehicle types to product names
-const VEHICLE_KEYWORDS: Record<string, string[]> = {
-  sedan: [
-    "كورولا", "كامري", "ياريس", "بيلتا", "لاند كروزر", "لاندكروزر", "لاندكرورز",
-    "فورتشنر", "فورتشينر", "راف فور", "راف4",
-    "بريوس", "افالون", "اوريون", "سيينا", "راش",
-  ],
-  microbus: [
-    "هاي اس", "هايس", "كوستر", "هاي لوكس", "هايلوكس",
-  ],
-};
 
 const INITIAL_COUNT = 4;
 const LOAD_MORE_COUNT = 4;
