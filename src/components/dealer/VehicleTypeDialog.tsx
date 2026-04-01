@@ -9,13 +9,13 @@ const vehicleOptions = [
   {
     id: "sedan",
     label: "ملاكي",
-    description: "كورولا، كامري، ياريس، لاند كروزر، فورتشنر، هاي لوكس ...",
+    description: "كورولا، كامري، ياريس، بيلتا، لاند كروزر، فورتشنر، راف فور ...",
     icon: Car,
   },
   {
     id: "microbus",
     label: "ميكروباص",
-    description: "هاي اس، كوستر ...",
+    description: "هاي اس، كوستر، هاي لوكس ...",
     icon: Bus,
   },
 ];
