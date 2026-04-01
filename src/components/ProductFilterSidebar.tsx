@@ -232,7 +232,7 @@ const ProductFilterSidebar = ({
                         <span className="text-xs opacity-60">{totalResults}</span>
                       </button>
                       {categories.map((cat) => {
-                        const catSlug = (cat as any).slug || "";
+                        const catSlug = cat.slug || "";
                         const categoryIconMap: Record<string, { icon: React.ReactNode; bg: string }> = {
                           "spark-plugs-coils": { icon: <Zap className="w-3.5 h-3.5 text-yellow-600 dark:text-yellow-400" />, bg: "bg-yellow-500/10" },
                           "water-cooling": { icon: <Droplets className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />, bg: "bg-cyan-500/10" },
