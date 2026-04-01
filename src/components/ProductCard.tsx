@@ -309,10 +309,10 @@ const PriceSection = ({
   if (price !== null) {
     return (
       <div className={compact ? "flex items-baseline gap-1.5" : ""}>
-        <div className="text-primary font-black text-base sm:text-lg tracking-tight">
-          {price.toLocaleString("ar-EG")} <span className="text-xs font-bold">ج.م</span>
+        <div className="text-primary font-black text-sm sm:text-lg tracking-tight leading-tight">
+          {price.toLocaleString("ar-EG")} <span className="text-[10px] sm:text-xs font-bold">ج.م</span>
         </div>
-        <p className={`text-[10px] sm:text-[11px] font-medium ${
+        <p className={`text-[9px] sm:text-[11px] font-medium leading-none ${
           isDealer && hasViewed ? "text-green-600" : "text-muted-foreground/70"
         }`}>
           {isDealer && hasViewed ? "سعر الجملة الخاص بك" : "سعر قطاعي"}
