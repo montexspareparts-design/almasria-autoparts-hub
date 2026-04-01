@@ -161,13 +161,15 @@ const ProductDetailDialog = ({
             </div>
           )}
 
-          {/* Zoom toggle */}
-          <button
-            className="absolute bottom-3 left-3 bg-background/80 backdrop-blur-sm border border-border rounded-full p-2 text-foreground hover:bg-background transition-colors"
-            onClick={(e) => { e.stopPropagation(); setZoomed(!zoomed); }}
-          >
-            {zoomed ? <ZoomOut className="w-4 h-4" /> : <ZoomIn className="w-4 h-4" />}
-          </button>
+          {/* Zoom toggle - desktop only */}
+          {!isMobile && (
+            <button
+              className="absolute bottom-3 left-3 bg-background/80 backdrop-blur-sm border border-border rounded-full p-2 text-foreground hover:bg-background transition-colors"
+              onClick={(e) => { e.stopPropagation(); setZoomed(!zoomed); }}
+            >
+              {zoomed ? <ZoomOut className="w-4 h-4" /> : <ZoomIn className="w-4 h-4" />}
+            </button>
+          )}
 
           {zoomed && (
             <div className="absolute top-3 right-3 bg-primary/90 text-primary-foreground text-[11px] px-2 py-1 rounded-full font-semibold">
