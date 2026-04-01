@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Car, Calendar, Hash, DollarSign, RotateCcw, ChevronDown, ChevronUp,
-  SlidersHorizontal, icons, Layers, X
+  SlidersHorizontal, icons, Layers, X, ShieldCheck, Droplets, Wrench, Zap, Disc3, Cog
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
