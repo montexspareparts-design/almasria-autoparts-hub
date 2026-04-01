@@ -314,6 +314,17 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     staleTime: 2 * 60 * 1000, // cache for 2 minutes
   });
 
+  /* ── Best-selling product IDs ── */
+  const { data: bestSellingIds } = useQuery({
+    queryKey: ["best_selling_ids"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_best_selling_products", { _limit: 200 });
+      if (error) throw error;
+      return (data as string[]) || [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   /* ── Smart year extraction from search query ── */
   const extractYearFromSearch = (search: string): number | null => {
     const match = search.match(/\b(19|20)\d{2}\b/);
