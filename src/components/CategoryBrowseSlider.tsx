@@ -171,34 +171,45 @@ const CategoryBrowseSlider = () => {
           <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-background to-transparent z-[5] pointer-events-none" />
 
           <div
-            className="flex w-max gap-3 py-2"
+            className="flex w-max gap-4 py-2"
             style={{
-              animation: `marquee-rtl ${sortedCategories.length * 1.2}s linear infinite`,
+              animation: `marquee-rtl ${sortedCategories.length * 2.5}s linear infinite`,
             }}
           >
             {[...sortedCategories, ...sortedCategories].map((cat, i) => (
-              <Link
+              <motion.div
                 key={`${cat.name}-${i}`}
-                to={`/products/${cat.brand}?search=${encodeURIComponent(cat.search)}`}
-                className="group/card block relative w-[120px] sm:w-[140px] rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 shrink-0"
+                whileHover={{ scale: 1.08, y: -6 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                className="shrink-0"
               >
-                <div className="aspect-[4/3] bg-white p-2 relative overflow-hidden">
-                  <img
-                    src={cat.image}
-                    alt={cat.name}
-                    loading="lazy"
-                    width={280}
-                    height={210}
-                    className="w-full h-full object-contain group-hover/card:scale-110 transition-transform duration-300"
-                  />
-                </div>
-                <div className={`relative bg-gradient-to-br ${cat.accent} px-2.5 py-2 text-center`}>
-                  <span className="text-white font-bold text-xs block leading-snug">{cat.name}</span>
-                  <span className="text-white/70 text-[10px] block">
-                    {categoryCounts[cat.search] !== undefined ? `${categoryCounts[cat.search]} صنف` : "..."}
-                  </span>
-                </div>
-              </Link>
+                <Link
+                  to={`/products/${cat.brand}?search=${encodeURIComponent(cat.search)}`}
+                  className="group/card block relative w-[120px] sm:w-[140px] rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300"
+                >
+                  <div className="aspect-[4/3] bg-white p-2 relative overflow-hidden">
+                    <motion.img
+                      src={cat.image}
+                      alt={cat.name}
+                      loading="lazy"
+                      width={280}
+                      height={210}
+                      className="w-full h-full object-contain"
+                      whileHover={{ scale: 1.15, rotate: 2 }}
+                      transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300" />
+                  </div>
+                  <div className={`relative bg-gradient-to-br ${cat.accent} px-2.5 py-2 text-center overflow-hidden`}>
+                    <div className="absolute inset-0 bg-white/0 group-hover/card:bg-white/10 transition-colors duration-300" />
+                    <span className="relative text-white font-bold text-xs block leading-snug">{cat.name}</span>
+                    <span className="relative text-white/70 text-[10px] block">
+                      {categoryCounts[cat.search] !== undefined ? `${categoryCounts[cat.search]} صنف` : "..."}
+                    </span>
+                  </div>
+                </Link>
+              </motion.div>
             ))}
           </div>
         </div>
