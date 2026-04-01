@@ -182,6 +182,30 @@ Deno.serve(async (req) => {
         console.log(`Order ${orderNumber} moved to processing`);
       }
 
+      // In-app notification for dealer on payment success
+      await supabase.from("notifications").insert({
+        user_id: order.user_id,
+        title: "✅ تم استلام الدفع بنجاح — طلب #" + orderNumber,
+        message: `تم تأكيد دفع ${amountEgp} ج.م عبر ${payMethod}${cardInfo} للطلب #${orderNumber}. طلبك قيد التجهيز الآن!`,
+        type: "payment_success",
+      });
+
+      // In-app notification for admins on payment success
+      const { data: adminRolesSuccess } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "admin");
+
+      if (adminRolesSuccess && adminRolesSuccess.length > 0) {
+        const adminSuccessNotifs = adminRolesSuccess.map((a: { user_id: string }) => ({
+          user_id: a.user_id,
+          title: "💳 تم دفع طلب #" + orderNumber,
+          message: `تم استلام دفع ${amountEgp} ج.م عبر ${payMethod}${cardInfo} للطلب #${orderNumber}.`,
+          type: "payment_success",
+        }));
+        await supabase.from("notifications").insert(adminSuccessNotifs);
+      }
+
       // Push notification to dealer
       const { data: successPushSubs } = await supabase
         .from("push_subscriptions")
