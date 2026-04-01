@@ -74,9 +74,6 @@ const PaymentPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [orderInfo, setOrderInfo] = useState<{ orderNumber: string; amountCents: number } | null>(null);
 
-  // Card payment state
-  const [iframeUrl, setIframeUrl] = useState<string | null>(null);
-
   // Wallet payment state
   const [walletRedirectUrl, setWalletRedirectUrl] = useState<string | null>(null);
 
@@ -159,8 +156,8 @@ const PaymentPage = () => {
       }
 
       if (selectedMethod === "card" && data.iframe_url) {
-        setIframeUrl(data.iframe_url);
-        setStep("pay");
+        window.location.href = data.iframe_url;
+        return;
       } else if (selectedMethod === "wallet" && data.wallet_redirect_url) {
         setWalletRedirectUrl(data.wallet_redirect_url);
         setStep("pay");
@@ -201,7 +198,6 @@ const PaymentPage = () => {
 
   const handleBack = () => {
     setStep("choose");
-    setIframeUrl(null);
     setWalletRedirectUrl(null);
     setKioskBillRef(null);
     setError(null);
@@ -400,19 +396,6 @@ const PaymentPage = () => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
               >
-                {/* Card iframe */}
-                {selectedMethod === "card" && iframeUrl && (
-                  <div className="bg-card border border-border rounded-xl overflow-hidden -mx-3 sm:mx-0">
-                    <iframe
-                      src={iframeUrl}
-                      className="w-full border-0"
-                      style={{ minHeight: "420px", height: "65svh", maxHeight: "700px" }}
-                      title="Paymob Payment"
-                      allow="payment"
-                    />
-                  </div>
-                )}
-
                 {/* Wallet - waiting for approval */}
                 {selectedMethod === "wallet" && (
                   <div className="bg-card border border-border rounded-xl p-5 sm:p-8 text-center space-y-3 sm:space-y-4">
