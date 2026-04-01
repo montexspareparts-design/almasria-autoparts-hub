@@ -87,7 +87,7 @@ const ProductListingSection = ({
       <section id={sectionId} className={sectionClassName || "py-3 md:py-5 bg-background"}>
         <div className="container mx-auto px-4">
           {/* Premium toolbar */}
-          <div className="flex items-center gap-2.5 mb-4 p-2.5 rounded-2xl bg-card/80 backdrop-blur-sm border border-border/60 shadow-sm">
+          <div className="flex items-center gap-2.5 mb-4 p-2.5 rounded-2xl bg-card/80 backdrop-blur-sm border border-border/60 shadow-sm relative z-[55]">
             <ProductSearchAutocomplete
               value={filters.search}
               onChange={(v) => setFilters(prev => ({ ...prev, search: v }))}

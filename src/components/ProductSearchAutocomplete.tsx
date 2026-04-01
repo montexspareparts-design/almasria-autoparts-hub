@@ -241,7 +241,7 @@ const ProductSearchAutocomplete = ({
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onKeyDown={handleKeyDown}
-          className="pr-14 pl-20 bg-card border-border/60 h-12 text-sm placeholder:text-muted-foreground/50 rounded-xl shadow-sm transition-all duration-300 focus-visible:ring-primary/30 focus-visible:ring-offset-0 focus-visible:border-primary/40 focus-visible:shadow-md focus-visible:shadow-primary/5"
+          className="pr-14 pl-20 bg-card border-border/60 h-10 sm:h-12 text-xs sm:text-sm placeholder:text-muted-foreground/50 rounded-xl shadow-sm transition-all duration-300 focus-visible:ring-primary/30 focus-visible:ring-offset-0 focus-visible:border-primary/40 focus-visible:shadow-md focus-visible:shadow-primary/5"
         />
         <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
           {value && (
@@ -272,9 +272,9 @@ const ProductSearchAutocomplete = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.98 }}
             transition={{ duration: 0.15 }}
-            className="absolute top-full left-0 right-0 mt-1.5 bg-card border border-border rounded-xl shadow-xl shadow-black/10 overflow-hidden z-50"
+            className="absolute top-full left-0 right-0 mt-1.5 bg-card border border-border rounded-xl shadow-xl shadow-black/10 overflow-hidden z-[60]"
           >
-            <div className="p-1.5 max-h-[420px] overflow-y-auto">
+            <div className="p-1 sm:p-1.5 max-h-[60vh] sm:max-h-[420px] overflow-y-auto">
               {/* "Did you mean?" hint */}
               {didYouMean && (
                 <button
@@ -301,14 +301,14 @@ const ProductSearchAutocomplete = ({
                     setIsFocused(false);
                   }}
                   onMouseEnter={() => setSelectedIndex(idx)}
-                  className={`w-full flex items-center gap-3 px-2.5 py-2 rounded-lg transition-all ${
+                  className={`w-full flex items-center gap-2 sm:gap-3 px-2 sm:px-2.5 py-1.5 sm:py-2 rounded-lg transition-all ${
                     selectedIndex === idx
                       ? "bg-primary/10 text-foreground"
                       : "hover:bg-muted text-foreground"
                   }`}
                 >
                   {/* Product image */}
-                  <div className="w-10 h-10 rounded-lg bg-white border border-border shrink-0 flex items-center justify-center overflow-hidden">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white border border-border shrink-0 flex items-center justify-center overflow-hidden">
                     {product.image_url ? (
                       <img src={product.image_url} alt="" className="w-full h-full object-contain p-1" />
                     ) : (
