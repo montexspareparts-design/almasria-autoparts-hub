@@ -153,26 +153,44 @@ const ProductFilterSidebar = ({
                     transition={{ duration: 0.2 }}
                     className="overflow-hidden"
                   >
-                    <div className="space-y-0.5 pb-3">
+                    <div className="space-y-1 pb-3">
                       <button
                         onClick={() => updateFilter("brandKey", null)}
-                        className={`w-full text-right px-3 py-2 rounded-lg text-sm transition-all ${
+                        className={`w-full flex items-center gap-2.5 text-right px-3 py-2.5 rounded-xl text-sm transition-all ${
                           !filters.brandKey ? "bg-primary/10 text-primary font-bold border border-primary/20" : "text-muted-foreground hover:bg-muted"
                         }`}
                       >
+                        <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                          <Layers className="w-3.5 h-3.5" />
+                        </div>
                         جميع الماركات
                       </button>
-                      {BRAND_OPTIONS.map((b) => (
-                        <button
-                          key={b.value}
-                          onClick={() => updateFilter("brandKey", filters.brandKey === b.value ? null : b.value)}
-                          className={`w-full text-right px-3 py-2 rounded-lg text-sm transition-all ${
-                            filters.brandKey === b.value ? "bg-primary/10 text-primary font-bold border border-primary/20" : "text-muted-foreground hover:bg-muted"
-                          }`}
-                        >
-                          {b.label}
-                        </button>
-                      ))}
+                      {BRAND_OPTIONS.map((b) => {
+                        const iconMap: Record<string, { icon: React.ReactNode; bg: string }> = {
+                          toyota_genuine: { icon: <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />, bg: "bg-emerald-500/10" },
+                          toyota_oils: { icon: <Droplets className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />, bg: "bg-blue-500/10" },
+                          mtx_aftermarket: { icon: <Wrench className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />, bg: "bg-orange-500/10" },
+                          denso: { icon: <Zap className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />, bg: "bg-red-500/10" },
+                          aisin: { icon: <Cog className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />, bg: "bg-purple-500/10" },
+                          fbk: { icon: <Disc3 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />, bg: "bg-amber-500/10" },
+                        };
+                        const brandIcon = iconMap[b.value] || { icon: <Layers className="w-3.5 h-3.5" />, bg: "bg-muted" };
+                        const isActive = filters.brandKey === b.value;
+                        return (
+                          <button
+                            key={b.value}
+                            onClick={() => updateFilter("brandKey", isActive ? null : b.value)}
+                            className={`w-full flex items-center gap-2.5 text-right px-3 py-2.5 rounded-xl text-sm transition-all ${
+                              isActive ? "bg-primary/10 text-primary font-bold border border-primary/20" : "text-muted-foreground hover:bg-muted"
+                            }`}
+                          >
+                            <div className={`w-7 h-7 rounded-lg ${isActive ? "bg-primary/15" : brandIcon.bg} flex items-center justify-center shrink-0 transition-colors`}>
+                              {brandIcon.icon}
+                            </div>
+                            {b.label}
+                          </button>
+                        );
+                      })}
                     </div>
                   </motion.div>
                 )}
