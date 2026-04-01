@@ -510,8 +510,8 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     filters, setFilters,
     // View
     viewMode, setViewMode,
-    // Pagination
-    currentPage, setCurrentPage, totalPages, ITEMS_PER_PAGE,
+    // Load More
+    currentPage, setCurrentPage, totalPages, ITEMS_PER_PAGE, hasMore, loadMore,
     // Products
     products, isLoading, filteredProducts, paginatedProducts,
     // Categories
