@@ -20,11 +20,13 @@ import {
 interface DealerCartProps {
   onNavigateToOrders: () => void;
   onNavigateToPayment: () => void;
+  sharedCart?: ReturnType<typeof useDealerCart>;
 }
 
-const DealerCart = ({ onNavigateToOrders, onNavigateToPayment }: DealerCartProps) => {
+const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: DealerCartProps) => {
   const { user, dealerAccount } = useAuth();
-  const { items, loading, updateQuantity, removeItem, clearCart, fetchCart } = useDealerCart();
+  const fallbackCart = useDealerCart();
+  const { items, loading, updateQuantity, removeItem, clearCart, fetchCart } = sharedCart || fallbackCart;
   const [tierPrices, setTierPrices] = useState<Record<string, number>>({});
   const [loadingPrices, setLoadingPrices] = useState(false);
   const [notes, setNotes] = useState("");
