@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import visaLogo from "@/assets/visa-logo.png";
 import mastercardLogo from "@/assets/mastercard-logo.png";
 import meezaLogo from "@/assets/meeza-logo.png";
+import instapayLogo from "@/assets/instapay-logo.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -370,8 +371,12 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
                   </motion.div>
                 )}
 
-                <div className={`w-10 h-10 rounded-xl ${method.iconBg} flex items-center justify-center mb-3`}>
-                  <Icon className="w-5 h-5 text-white" />
+                <div className={`w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center mb-3 ${method.id === "instapay" ? "" : method.iconBg}`}>
+                  {method.id === "instapay" ? (
+                    <img src={instapayLogo} alt="InstaPay" className="w-10 h-10 object-contain" />
+                  ) : (
+                    <Icon className="w-5 h-5 text-white" />
+                  )}
                 </div>
                 <p className="font-bold text-sm text-foreground leading-tight">{method.label}</p>
                 {method.id === "card" ? (
