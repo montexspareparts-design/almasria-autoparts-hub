@@ -19,7 +19,7 @@ import {
 
 interface DealerCartProps {
   onNavigateToOrders: () => void;
-  onNavigateToPayment: () => void;
+  onNavigateToPayment: (orderInfo?: { id: string; orderNumber: string; amount: number }) => void;
   sharedCart?: ReturnType<typeof useDealerCart>;
 }
 
