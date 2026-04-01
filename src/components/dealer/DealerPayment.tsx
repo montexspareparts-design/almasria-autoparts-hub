@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
-  CreditCard, Loader2, ShieldCheck, AlertCircle, ArrowRight,
-  Smartphone, Store, Copy, CheckCircle2, RotateCcw, Package
+  CreditCard, Loader2, ShieldCheck, AlertCircle, ArrowLeft,
+  Smartphone, Store, Copy, CheckCircle2, Package, Lock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,21 +18,30 @@ const PAYMENT_METHODS = [
     label: "بطاقة بنكية",
     labelEn: "Visa / Mastercard / Meeza",
     icon: CreditCard,
-    description: "ادفع ببطاقتك البنكية مباشرة",
+    iconBg: "bg-blue-500/10",
+    iconColor: "text-blue-600",
+    selectedBorder: "border-blue-500/50",
+    selectedBg: "bg-blue-50 dark:bg-blue-950/20",
   },
   {
     id: "wallet" as PaymentMethod,
     label: "محفظة إلكترونية",
     labelEn: "Vodafone Cash / Orange / Etisalat",
     icon: Smartphone,
-    description: "ادفع من محفظتك الإلكترونية",
+    iconBg: "bg-orange-500/10",
+    iconColor: "text-orange-600",
+    selectedBorder: "border-orange-500/50",
+    selectedBg: "bg-orange-50 dark:bg-orange-950/20",
   },
   {
     id: "kiosk" as PaymentMethod,
     label: "فروع أمان / مصاري",
     labelEn: "Aman / Masary Kiosk",
     icon: Store,
-    description: "ادفع من أقرب فرع أمان أو مصاري",
+    iconBg: "bg-emerald-500/10",
+    iconColor: "text-emerald-600",
+    selectedBorder: "border-emerald-500/50",
+    selectedBg: "bg-emerald-50 dark:bg-emerald-950/20",
   },
 ];
 
@@ -50,11 +59,12 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
   const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState<"choose" | "pay">("choose");
 
-  // Payment result states
   const [iframeUrl, setIframeUrl] = useState<string | null>(null);
   const [walletRedirectUrl, setWalletRedirectUrl] = useState<string | null>(null);
   const [kioskBillRef, setKioskBillRef] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  const selectedMethodData = PAYMENT_METHODS.find((m) => m.id === selectedMethod)!;
 
   const handlePay = async (orderId: string) => {
     if (selectedMethod === "wallet" && !walletPhone) {
@@ -78,7 +88,6 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
       });
 
       if (fnError || !data?.payment_key) {
-        console.error("Payment error:", fnError, data);
         setError(data?.error || "تعذر إنشاء جلسة الدفع. يرجى المحاولة مرة أخرى.");
         return;
       }
@@ -99,7 +108,6 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
         setError("تعذر بدء عملية الدفع بهذه الطريقة. جرب طريقة أخرى.");
       }
     } catch (e: any) {
-      console.error("Payment error:", e);
       setError(e.message || "حدث خطأ غير متوقع");
     } finally {
       setLoading(false);
@@ -126,27 +134,21 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
   // ─── Step 2: Payment in progress ───
   if (step === "pay") {
     return (
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CreditCard className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-black text-foreground">إتمام الدفع</h2>
-          </div>
-          <Button variant="ghost" size="sm" onClick={handleBack} className="text-xs text-muted-foreground">
-            ← رجوع
-          </Button>
-        </div>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4 max-w-lg mx-auto">
+        <button onClick={handleBack} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="w-3.5 h-3.5" />
+          رجوع لطرق الدفع
+        </button>
 
         {targetOrderNumber && (
-          <div className="flex items-center justify-between bg-muted/50 rounded-lg px-4 py-2.5 text-sm">
+          <div className="flex items-center justify-between bg-muted/40 rounded-xl px-4 py-3 text-sm">
             <span className="text-muted-foreground">طلب رقم</span>
             <span className="font-bold font-mono text-foreground" dir="ltr">{targetOrderNumber}</span>
           </div>
         )}
 
-        {/* Card iframe */}
         {selectedMethod === "card" && iframeUrl && (
-          <div className="rounded-xl border border-border overflow-hidden bg-card">
+          <div className="rounded-2xl border border-border overflow-hidden bg-card shadow-sm">
             <iframe
               src={iframeUrl}
               className="w-full border-0"
@@ -157,22 +159,23 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
           </div>
         )}
 
-        {/* Wallet waiting */}
         {selectedMethod === "wallet" && (
-          <div className="bg-card border border-border rounded-xl p-6 text-center space-y-4">
-            <div className="w-14 h-14 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mx-auto">
-              <Smartphone className="w-7 h-7 text-orange-600" />
+          <div className="bg-card border border-border rounded-2xl p-8 text-center space-y-5">
+            <div className="w-16 h-16 rounded-2xl bg-orange-500/10 flex items-center justify-center mx-auto">
+              <Smartphone className="w-8 h-8 text-orange-600" />
             </div>
-            <h3 className="text-lg font-black text-foreground">
-              {walletRedirectUrl ? "جاري فتح تطبيق المحفظة..." : "في انتظار تأكيد الدفع"}
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              {walletRedirectUrl
-                ? "لو مفتحش تلقائياً، اضغط الزر:"
-                : "افتح تطبيق المحفظة على موبايلك ووافق على عملية الدفع"}
-            </p>
+            <div>
+              <h3 className="text-lg font-black text-foreground">
+                {walletRedirectUrl ? "جاري فتح تطبيق المحفظة..." : "في انتظار تأكيد الدفع"}
+              </h3>
+              <p className="text-sm text-muted-foreground mt-2">
+                {walletRedirectUrl
+                  ? "لو مفتحش تلقائياً، اضغط الزر:"
+                  : "افتح تطبيق المحفظة على موبايلك ووافق على عملية الدفع"}
+              </p>
+            </div>
             {walletRedirectUrl && (
-              <Button asChild className="gap-2 h-11">
+              <Button asChild className="gap-2 h-12 rounded-xl">
                 <a href={walletRedirectUrl} target="_blank" rel="noopener noreferrer">
                   <Smartphone className="w-4 h-4" />
                   فتح المحفظة
@@ -182,71 +185,71 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
           </div>
         )}
 
-        {/* Kiosk bill reference */}
         {selectedMethod === "kiosk" && kioskBillRef && (
-          <div className="bg-card border border-border rounded-xl p-6 text-center space-y-4">
-            <div className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto">
-              <Store className="w-7 h-7 text-emerald-600" />
+          <div className="bg-card border border-border rounded-2xl p-8 text-center space-y-5">
+            <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center mx-auto">
+              <Store className="w-8 h-8 text-emerald-600" />
             </div>
-            <h3 className="text-lg font-black text-foreground">رقم فاتورة الدفع</h3>
-            <p className="text-sm text-muted-foreground">
-              اذهب لأقرب فرع أمان أو مصاري وادفع برقم الفاتورة ده:
-            </p>
-            <div className="flex items-center justify-center gap-3 bg-muted/50 rounded-xl px-6 py-4 border border-border">
-              <span className="text-2xl font-black font-mono text-primary tracking-wider" dir="ltr">
+            <div>
+              <h3 className="text-lg font-black text-foreground">رقم فاتورة الدفع</h3>
+              <p className="text-sm text-muted-foreground mt-2">
+                اذهب لأقرب فرع أمان أو مصاري وادفع برقم الفاتورة:
+              </p>
+            </div>
+            <div className="flex items-center justify-center gap-3 bg-muted/30 rounded-xl px-6 py-5 border border-border/60">
+              <span className="text-3xl font-black font-mono text-primary tracking-widest" dir="ltr">
                 {kioskBillRef}
               </span>
-              <Button variant="ghost" size="icon" onClick={handleCopyBillRef} className="shrink-0">
-                {copied ? <CheckCircle2 className="w-5 h-5 text-green-600" /> : <Copy className="w-5 h-5" />}
-              </Button>
+              <button onClick={handleCopyBillRef} className="p-2 rounded-lg hover:bg-muted transition-colors">
+                {copied ? <CheckCircle2 className="w-5 h-5 text-emerald-600" /> : <Copy className="w-5 h-5 text-muted-foreground" />}
+              </button>
             </div>
-            <p className="text-xs text-muted-foreground">
-              الفاتورة صالحة لمدة 24 ساعة
-            </p>
+            <p className="text-[11px] text-muted-foreground">الفاتورة صالحة لمدة 24 ساعة</p>
           </div>
         )}
 
-        <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-          <ShieldCheck className="w-3.5 h-3.5 text-green-600" />
-          <span>معاملة آمنة ومشفرة</span>
-        </div>
+        <SecurityBadge />
       </motion.div>
     );
   }
 
   // ─── Step 1: Choose payment method ───
   return (
-    <div className="space-y-5">
+    <div className="max-w-lg mx-auto space-y-6">
       {/* Header */}
-      <div>
+      <div className="text-center space-y-1.5">
+        <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
+          <Lock className="w-7 h-7 text-primary" />
+        </div>
         <h2 className="text-xl font-black text-foreground">الدفع الإلكتروني</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          اختر طريقة الدفع المناسبة لك
-        </p>
+        <p className="text-sm text-muted-foreground">اختر طريقة الدفع وأكمل المعاملة بأمان</p>
       </div>
 
-      {/* Order Summary */}
+      {/* Order Summary Card */}
       {(targetOrderNumber || targetOrderAmount) && (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-card border border-border rounded-xl p-4"
+          className="bg-gradient-to-br from-primary/5 to-primary/[0.02] border border-primary/10 rounded-2xl p-5"
         >
-          <div className="flex items-center gap-2 mb-2">
-            <Package className="w-4 h-4 text-muted-foreground" />
-            <h3 className="font-bold text-sm text-foreground">تفاصيل الطلب</h3>
+          <div className="flex items-center gap-2 mb-3">
+            <Package className="w-4 h-4 text-primary" />
+            <span className="text-xs font-bold text-primary">تفاصيل الطلب</span>
           </div>
-          <div className="space-y-2 text-sm">
+          <div className="space-y-2.5">
             {targetOrderNumber && (
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center text-sm">
                 <span className="text-muted-foreground">رقم الطلب</span>
                 <span className="font-bold font-mono text-foreground" dir="ltr">{targetOrderNumber}</span>
               </div>
             )}
-            {targetOrderAmount && (
-              <div className="flex justify-between items-center pt-2 border-t border-border">
-                <span className="text-muted-foreground">المبلغ المطلوب</span>
-                <span className="text-lg font-black text-primary">{targetOrderAmount.toLocaleString("ar-EG")} ج.م</span>
+            {targetOrderAmount != null && targetOrderAmount > 0 && (
+              <div className="flex justify-between items-center pt-2.5 border-t border-primary/10">
+                <span className="text-sm text-muted-foreground">المبلغ المطلوب</span>
+                <div className="text-left" dir="ltr">
+                  <span className="text-2xl font-black text-primary">{targetOrderAmount.toLocaleString("ar-EG")}</span>
+                  <span className="text-xs text-muted-foreground mr-1">ج.م</span>
+                </div>
               </div>
             )}
           </div>
@@ -260,12 +263,12 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="flex items-start gap-2 p-3 rounded-xl bg-destructive/5 border border-destructive/15 text-sm"
+            className="flex items-start gap-3 p-4 rounded-2xl bg-destructive/5 border border-destructive/15"
           >
-            <AlertCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+            <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
             <div className="flex-1">
-              <p className="text-destructive font-medium">{error}</p>
-              <button onClick={() => setError(null)} className="text-xs text-muted-foreground underline mt-1">
+              <p className="text-sm text-destructive font-bold">{error}</p>
+              <button onClick={() => setError(null)} className="text-xs text-muted-foreground underline mt-1.5">
                 إغلاق
               </button>
             </div>
@@ -274,37 +277,50 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
       </AnimatePresence>
 
       {/* Payment Methods */}
-      <div className="space-y-2.5">
-        {PAYMENT_METHODS.map((method) => {
+      <div className="space-y-3">
+        <p className="text-xs font-bold text-muted-foreground px-1">طريقة الدفع</p>
+        {PAYMENT_METHODS.map((method, index) => {
           const Icon = method.icon;
           const isSelected = selectedMethod === method.id;
           return (
-            <button
+            <motion.button
               key={method.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.06 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => setSelectedMethod(method.id)}
-              className={`w-full text-right p-3.5 rounded-xl border-2 transition-all duration-200 active:scale-[0.98] ${
+              className={`w-full text-right p-4 rounded-2xl border-2 transition-all duration-300 ${
                 isSelected
-                  ? "border-primary bg-primary/5 shadow-md"
-                  : "border-border bg-card hover:border-primary/40 hover:bg-primary/[0.02]"
+                  ? `${method.selectedBorder} ${method.selectedBg} shadow-sm`
+                  : "border-border/50 bg-card hover:border-border hover:shadow-sm"
               }`}
             >
-              <div className="flex items-center gap-3">
-                <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
-                  isSelected ? "bg-primary/10" : "bg-muted"
+              <div className="flex items-center gap-4">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 ${
+                  isSelected ? method.iconBg : "bg-muted"
                 }`}>
-                  <Icon className={`w-5 h-5 ${isSelected ? "text-primary" : "text-muted-foreground"}`} />
+                  <Icon className={`w-5.5 h-5.5 transition-colors duration-300 ${
+                    isSelected ? method.iconColor : "text-muted-foreground"
+                  }`} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-sm text-foreground">{method.label}</p>
-                  <p className="text-[10px] text-muted-foreground truncate">{method.labelEn}</p>
+                  <p className="font-bold text-[15px] text-foreground">{method.label}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{method.labelEn}</p>
                 </div>
-                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                  isSelected ? "border-primary" : "border-muted-foreground/30"
+                <div className={`w-5.5 h-5.5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-300 ${
+                  isSelected ? "border-primary bg-primary" : "border-muted-foreground/25"
                 }`}>
-                  {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                  {isSelected && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="w-2 h-2 rounded-full bg-primary-foreground"
+                    />
+                  )}
                 </div>
               </div>
-            </button>
+            </motion.button>
           );
         })}
       </div>
@@ -316,60 +332,74 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
           >
-            <label className="block text-xs font-bold text-foreground mb-1.5">
-              رقم المحفظة (Vodafone Cash / Orange / Etisalat)
-            </label>
-            <Input
-              type="tel"
-              placeholder="01xxxxxxxxx"
-              value={walletPhone}
-              onChange={(e) => setWalletPhone(e.target.value)}
-              dir="ltr"
-              className="text-base font-mono h-12"
-              maxLength={11}
-              inputMode="tel"
-            />
-            <p className="text-[10px] text-muted-foreground mt-1">
-              أدخل رقم المحفظة المسجل عليها حسابك
-            </p>
+            <div className="bg-card border border-border/60 rounded-2xl p-4 space-y-2.5">
+              <label className="block text-xs font-bold text-foreground">
+                رقم المحفظة
+              </label>
+              <Input
+                type="tel"
+                placeholder="01xxxxxxxxx"
+                value={walletPhone}
+                onChange={(e) => setWalletPhone(e.target.value)}
+                dir="ltr"
+                className="text-base font-mono h-12 rounded-xl border-border/60"
+                maxLength={11}
+                inputMode="tel"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                أدخل رقم المحفظة المسجل عليها حسابك (Vodafone Cash / Orange / Etisalat)
+              </p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* CTA */}
       {targetOrderId ? (
-        <Button
-          className="w-full h-12 gap-2 text-base font-bold rounded-xl"
-          disabled={loading}
-          onClick={() => handlePay(targetOrderId)}
-        >
-          {loading ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              جاري تجهيز بوابة الدفع...
-            </>
-          ) : (
-            <>
-              متابعة الدفع
-              <ArrowRight className="w-4 h-4 rotate-180" />
-            </>
-          )}
-        </Button>
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          <Button
+            className="w-full h-14 gap-2.5 text-base font-black rounded-2xl shadow-lg shadow-primary/15 transition-all duration-300 hover:shadow-xl hover:shadow-primary/20"
+            disabled={loading}
+            onClick={() => handlePay(targetOrderId)}
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                جاري تجهيز بوابة الدفع...
+              </>
+            ) : (
+              <>
+                <selectedMethodData.icon className="w-5 h-5" />
+                ادفع الآن
+                {targetOrderAmount != null && targetOrderAmount > 0 && (
+                  <span className="text-primary-foreground/70 text-sm font-normal mr-1">
+                    ({targetOrderAmount.toLocaleString("ar-EG")} ج.م)
+                  </span>
+                )}
+              </>
+            )}
+          </Button>
+        </motion.div>
       ) : (
-        <div className="text-center py-3">
-          <p className="text-sm text-muted-foreground">اختر طلب من قائمة الطلبات لبدء الدفع</p>
-          <ArrowRight className="w-4 h-4 text-muted-foreground mx-auto mt-2 rotate-180" />
+        <div className="bg-muted/30 border border-dashed border-border rounded-2xl p-6 text-center space-y-2">
+          <Package className="w-8 h-8 text-muted-foreground/40 mx-auto" />
+          <p className="text-sm font-bold text-muted-foreground">اختر طلب من قائمة الطلبات لبدء الدفع</p>
+          <p className="text-[11px] text-muted-foreground/70">يمكنك الذهاب لتبويب "طلباتي" واختيار طلب</p>
         </div>
       )}
 
-      {/* Security Badge */}
-      <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-        <ShieldCheck className="w-4 h-4 text-green-600" />
-        <span>مدعوم من Paymob — بوابة دفع معتمدة ومرخصة</span>
-      </div>
+      <SecurityBadge />
     </div>
   );
 };
+
+const SecurityBadge = () => (
+  <div className="flex items-center justify-center gap-2 py-2">
+    <ShieldCheck className="w-4 h-4 text-emerald-600" />
+    <span className="text-[11px] text-muted-foreground">مدعوم من Paymob — بوابة دفع معتمدة ومرخصة</span>
+  </div>
+);
 
 export default DealerPayment;
