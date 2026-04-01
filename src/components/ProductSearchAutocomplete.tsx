@@ -314,16 +314,16 @@ const ProductSearchAutocomplete = ({
                     setIsFocused(false);
                   }}
                   onMouseEnter={() => setSelectedIndex(idx)}
-                  className={`w-full flex items-center gap-2 sm:gap-3 px-2 sm:px-2.5 py-1.5 sm:py-2 rounded-lg transition-all ${
+                  className={`w-full flex flex-row-reverse items-center gap-2 px-2 sm:px-2.5 py-1.5 sm:py-2 rounded-lg transition-all ${
                     selectedIndex === idx
                       ? "bg-primary/10 text-foreground"
                       : "hover:bg-muted text-foreground"
                   }`}
                 >
                   {/* Product image */}
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white border border-border shrink-0 flex items-center justify-center overflow-hidden">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-white border border-border shrink-0 flex items-center justify-center overflow-hidden">
                     {product.image_url ? (
-                      <img src={product.image_url} alt="" className="w-full h-full object-contain p-1" />
+                      <img src={product.image_url} alt="" className="w-full h-full object-contain p-0.5" />
                     ) : (
                       <Package className="w-5 h-5 text-muted-foreground/30" />
                     )}
@@ -331,12 +331,10 @@ const ProductSearchAutocomplete = ({
 
                   {/* Product info */}
                   <div className="flex-1 text-right min-w-0">
-                    <p className="text-xs font-bold truncate">{product.name_ar}</p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-[10px] font-mono text-muted-foreground flex items-center gap-0.5">
-                        <Hash className="w-2.5 h-2.5" />{product.sku}
-                      </span>
-                    </div>
+                    <p className="text-[11px] sm:text-xs font-bold truncate leading-tight">{product.name_ar}</p>
+                    <p className="text-[10px] font-mono text-muted-foreground mt-0.5 truncate direction-ltr text-right">
+                      {product.sku}
+                    </p>
                   </div>
 
                   {/* Add to quote button for dealers */}
@@ -346,11 +344,10 @@ const ProductSearchAutocomplete = ({
                         e.stopPropagation();
                         onAddToQuote(product);
                       }}
-                      className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-[10px] font-bold border border-primary/20 hover:border-primary/30 transition-all duration-200 hover:scale-105"
+                      className="shrink-0 p-1.5 rounded-full bg-primary/10 hover:bg-primary/20 text-primary transition-all"
                       title="أضف لعرض السعر"
                     >
-                      <PlusCircle className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">تسعير</span>
+                      <PlusCircle className="w-4 h-4" />
                     </button>
                   )}
                 </button>
