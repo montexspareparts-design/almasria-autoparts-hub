@@ -226,8 +226,12 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     queryClient.invalidateQueries({ queryKey: ["dealer_views_today", user.id] });
     queryClient.invalidateQueries({ queryKey: ["dealer_daily_count", user.id] });
     playPricingSound();
-    toast({ title: "✅ تم التسعير", description: "اضغط لعرض الأصناف المسعّرة اليوم" });
-  }, [user, isDealer, viewedProductIds, limitReached, queryClient]);
+    toast({
+      title: "✅ تم التسعير",
+      description: "اضغط لعرض الأصناف المسعّرة اليوم",
+      action: <button onClick={() => navigate("/dealer?tab=priced_today")} className="text-xs font-bold text-primary hover:underline whitespace-nowrap">عرض المسعّرة ←</button>,
+    });
+  }, [user, isDealer, viewedProductIds, limitReached, queryClient, navigate]);
 
   /* ── Tier prices ── */
   const { data: tierPrices } = useQuery({
