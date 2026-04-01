@@ -44,12 +44,8 @@ const ProductCard = ({
 
   if (viewMode === "list") {
     return (
-      <motion.div
-        key={product.id}
-        initial={{ opacity: 0, x: -10 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: Math.min(index * 0.02, 0.3) }}
-        className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 cursor-pointer flex group"
+      <div
+        className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 cursor-pointer flex group animate-fade-in"
         onClick={() => onProductClick(product)}
       >
         {/* Image */}
