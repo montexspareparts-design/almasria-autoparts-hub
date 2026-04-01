@@ -94,7 +94,6 @@ const ProductListingSection = ({
               onProductClick={(p) => setSelectedProduct(p)}
               onAddToQuote={(p) => {
                 recordView(p.id);
-                setSelectedProduct(p);
               }}
               onCommandPaletteOpen={() => setCommandPaletteOpen(true)}
               isDealer={isDealer}
@@ -132,21 +131,7 @@ const ProductListingSection = ({
             </Select>
           </div>
 
-          {/* Active search filter banner */}
-          {filters.search && !isLoading && (
-            <div className="mb-3 rounded-lg bg-primary/5 border border-primary/15 px-3 py-2 flex items-center justify-between gap-2">
-              <p className="text-xs text-foreground">
-                <Search className="w-3 h-3 inline-block ml-1 text-primary" />
-                نتائج "<span className="font-bold text-primary">{filters.search}</span>" — <span className="font-bold">{filteredProducts.length}</span> منتج
-              </p>
-              <button
-                className="text-muted-foreground hover:text-destructive transition-colors p-0.5"
-                onClick={() => setFilters(prev => ({ ...prev, search: "" }))}
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
+          {/* Active search filter banner - hidden, results show inline */}
 
           {/* Extra content before grid */}
           {beforeGrid}
