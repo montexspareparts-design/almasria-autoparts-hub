@@ -272,7 +272,7 @@ const ProductSearchAutocomplete = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.98 }}
             transition={{ duration: 0.15 }}
-            className="absolute top-full left-0 right-0 mt-1.5 bg-card border border-border rounded-xl shadow-xl shadow-black/10 overflow-hidden z-50"
+            className="absolute top-full left-0 right-0 mt-1.5 bg-card border border-border rounded-xl shadow-xl shadow-black/10 overflow-hidden z-[60]"
           >
             <div className="p-1.5 max-h-[420px] overflow-y-auto">
               {/* "Did you mean?" hint */}
