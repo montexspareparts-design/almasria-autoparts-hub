@@ -74,6 +74,15 @@ const CheckoutPage = () => {
   const selectedShipping = shippingOptions.find((s) => s.id === shipping)!;
   const orderTotal = total;
 
+  // Loading guard: prevent auto-logout during auth check
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   const handleShippingChange = (val: string) => {
     setShipping(val);
     const opt = shippingOptions.find((s) => s.id === val);
