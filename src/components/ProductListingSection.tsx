@@ -95,6 +95,7 @@ const ProductListingSection = ({
               onProductClick={(p) => setSelectedProduct(p)}
               onAddToQuote={(p) => {
                 recordView(p.id);
+                toast({ title: "✅ تم التسعير بنجاح", description: p.name_ar || "تم إضافة المنتج لقائمة التسعير" });
               }}
               onCommandPaletteOpen={() => setCommandPaletteOpen(true)}
               isDealer={isDealer}
