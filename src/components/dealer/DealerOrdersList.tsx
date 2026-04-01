@@ -99,7 +99,7 @@ const notifyAdmins = async (orderNumber: string, action: string, details: string
   const { data: adminRoles } = await supabase
     .from("user_roles")
     .select("user_id")
-    .eq("role", "admin" as any);
+    .eq("role", "admin");
 
   if (adminRoles && adminRoles.length > 0) {
     const notifications = adminRoles.map(admin => ({
@@ -129,19 +129,20 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
   const handlePaymob = async (order: Order) => {
     setPaymobLoading(order.id);
     try {
-      const { ensureActiveSession } = await import("@/lib/paymob");
+      const { buildPaymobReturnUrl, ensureActiveSession } = await import("@/lib/paymob");
       await ensureActiveSession();
 
       const { data, error } = await supabase.functions.invoke("create-payment", {
-        body: { order_id: order.id, return_url: `${window.location.origin}/payment-callback` },
+        body: { order_id: order.id, return_url: buildPaymobReturnUrl() },
       });
       if (error || !data?.iframe_url) {
         toast({ title: "حدث خطأ في بوابة الدفع", description: data?.error || "يرجى المحاولة مرة أخرى", variant: "destructive" });
         return;
       }
       setPaymobIframe({ orderId: order.id, iframeUrl: data.iframe_url });
-    } catch (e: any) {
-      toast({ title: "حدث خطأ", description: e.message, variant: "destructive" });
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "حدث خطأ غير متوقع";
+      toast({ title: "حدث خطأ", description: message, variant: "destructive" });
     } finally {
       setPaymobLoading(null);
     }

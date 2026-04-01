@@ -6,12 +6,17 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+const PAYMOB_ATTEMPT_SEPARATOR = "--pm--";
+
+const normalizePaymobOrderReference = (reference?: string | null) =>
+  reference ? reference.split(PAYMOB_ATTEMPT_SEPARATOR)[0] : null;
+
 async function sendWhatsApp(phone: string, message: string) {
   const accessToken = Deno.env.get("META_WHATSAPP_ACCESS_TOKEN");
   const phoneNumberId = Deno.env.get("META_WHATSAPP_PHONE_NUMBER_ID");
   if (!accessToken || !phoneNumberId) return;
 
-  let formatted = phone.replace(/[\s\-\(\)]/g, "");
+  let formatted = phone.replace(/[\s\-()]/g, "");
   if (formatted.startsWith("+")) formatted = formatted.slice(1);
   if (formatted.startsWith("0")) formatted = "2" + formatted;
   if (/^\d{10}$/.test(formatted)) formatted = "2" + formatted;
@@ -60,7 +65,8 @@ Deno.serve(async (req) => {
 
     // Paymob sends transaction callback
     const transaction = body.obj || body;
-    const orderId = transaction.order?.merchant_order_id || transaction.merchant_order_id;
+    const rawOrderReference = transaction.order?.merchant_order_id || transaction.merchant_order_id;
+    const orderId = normalizePaymobOrderReference(rawOrderReference);
     const success = transaction.success === true || transaction.success === "true";
     const isPending = transaction.pending === true || transaction.pending === "true";
 

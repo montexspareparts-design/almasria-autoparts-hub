@@ -7,6 +7,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { normalizePaymobOrderReference } from "@/lib/paymob";
 
 const PaymentCallback = () => {
   const [searchParams] = useSearchParams();
@@ -21,7 +22,9 @@ const PaymentCallback = () => {
   const success = searchParams.get("success");
   const pending = searchParams.get("pending");
   const txnResponseCode = searchParams.get("txn_response_code");
-  const merchantOrderId = searchParams.get("merchant_order_id") || searchParams.get("order");
+  const merchantOrderId = normalizePaymobOrderReference(
+    searchParams.get("merchant_order_id") || searchParams.get("order")
+  );
   const txnId = searchParams.get("id");
   const amountCents = searchParams.get("amount_cents");
 

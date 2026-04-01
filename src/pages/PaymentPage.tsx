@@ -12,7 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
-import { ensureActiveSession } from "@/lib/paymob";
+import { buildPaymobReturnUrl, ensureActiveSession } from "@/lib/paymob";
 
 type PaymentMethod = "card" | "wallet" | "kiosk";
 
@@ -140,7 +140,7 @@ const PaymentPage = () => {
           order_id: orderId,
           payment_method: selectedMethod,
           wallet_phone: selectedMethod === "wallet" ? walletPhone : undefined,
-          return_url: `${window.location.origin}/payment-callback`,
+          return_url: buildPaymobReturnUrl(),
         },
       });
 
@@ -177,13 +177,14 @@ const PaymentPage = () => {
       }
 
       setLoading(false);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error("Payment init error:", e);
-      if (e.message === "SESSION_EXPIRED") {
+      const message = e instanceof Error ? e.message : "حدث خطأ غير متوقع";
+      if (message === "SESSION_EXPIRED") {
         setError("انتهت جلسة تسجيل الدخول. يرجى تسجيل الدخول مرة أخرى.");
         setTimeout(() => navigate("/auth"), 2000);
       } else {
-        setError(e.message || "حدث خطأ غير متوقع");
+        setError(message);
       }
       setLoading(false);
     }

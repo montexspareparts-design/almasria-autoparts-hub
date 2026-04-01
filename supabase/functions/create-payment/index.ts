@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "npm:zod@3.25.76";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,6 +8,18 @@ const corsHeaders = {
 };
 
 const PAYMOB_BASE = "https://accept.paymob.com";
+const PAYMOB_ATTEMPT_SEPARATOR = "--pm--";
+
+const RequestSchema = z.object({
+  dry_run: z.boolean().optional(),
+  order_id: z.string().uuid().optional(),
+  payment_method: z.enum(["card", "wallet", "kiosk"]).optional(),
+  wallet_phone: z.string().min(8).max(20).optional(),
+  return_url: z.string().url().optional(),
+});
+
+const buildMerchantOrderReference = (orderNumber: string) =>
+  `${orderNumber}${PAYMOB_ATTEMPT_SEPARATOR}${crypto.randomUUID().slice(0, 8)}`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -48,7 +61,17 @@ Deno.serve(async (req) => {
     }
 
     // --- Parse body ---
-    const body = await req.json().catch(() => null);
+    const rawBody = await req.json().catch(() => null);
+    const parsedBody = RequestSchema.safeParse(rawBody);
+
+    if (!parsedBody.success) {
+      return new Response(JSON.stringify({ error: parsedBody.error.flatten() }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const body = parsedBody.data;
 
     // --- Secrets ---
     const paymobApiKey = Deno.env.get("PAYMOB_API_KEY");
@@ -73,8 +96,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    const orderId = typeof body?.order_id === "string" ? body.order_id : "";
-    const paymentMethod = typeof body?.payment_method === "string" ? body.payment_method : "card";
+    const orderId = body.order_id || "";
+    const paymentMethod = body.payment_method || "card";
 
     if (!orderId) {
       return new Response(JSON.stringify({ error: "order_id is required" }), {
@@ -109,7 +132,7 @@ Deno.serve(async (req) => {
 
     const { data: order, error: orderErr } = await supabase
       .from("orders")
-      .select("id, user_id, total_amount, order_number, shipping_address, shipping_governorate, order_items(quantity, unit_price, products(name_ar, sku))")
+      .select("id, user_id, total_amount, order_number, status, shipping_address, shipping_governorate, order_items(quantity, unit_price, products(name_ar, sku))")
       .eq("id", orderId)
       .single();
 
@@ -127,6 +150,13 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (!["awaiting_payment", "confirmed", "pending"].includes(order.status ?? "awaiting_payment")) {
+      return new Response(JSON.stringify({ error: "Order is not eligible for a new payment attempt" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // --- Fetch profile ---
     const { data: profile } = await supabase
       .from("profiles")
@@ -138,6 +168,7 @@ Deno.serve(async (req) => {
     const firstName = nameParts[0] || "Customer";
     const lastName = nameParts.slice(1).join(" ") || "User";
     const amountCents = Math.round(order.total_amount * 100);
+    const merchantOrderReference = buildMerchantOrderReference(order.order_number);
 
     // ========================================
     // Step 1: Authenticate with Paymob
@@ -161,7 +192,11 @@ Deno.serve(async (req) => {
     // Step 2: Create order on Paymob
     // ========================================
     console.log("Step 2: Creating Paymob order...");
-    const items = (order.order_items || []).map((item: any) => ({
+    const items = (order.order_items || []).map((item: {
+      quantity: number;
+      unit_price: number;
+      products?: { name_ar?: string | null; sku?: string | null } | null;
+    }) => ({
       name: item.products?.name_ar || item.products?.sku || "منتج",
       amount_cents: Math.round(item.unit_price * 100),
       quantity: item.quantity,
@@ -176,7 +211,7 @@ Deno.serve(async (req) => {
         delivery_needed: false,
         amount_cents: amountCents,
         currency: "EGP",
-        merchant_order_id: order.order_number,
+        merchant_order_id: merchantOrderReference,
         items,
       }),
     });
@@ -243,7 +278,7 @@ Deno.serve(async (req) => {
         : null;
     } else if (paymentMethod === "wallet") {
       // For wallet, we need to call the wallet pay endpoint
-      const walletPhone = body?.wallet_phone || profile?.phone || "01000000000";
+        const walletPhone = body.wallet_phone || profile?.phone || "01000000000";
       console.log("Step 4: Initiating wallet payment...");
       const walletRes = await fetch(`${PAYMOB_BASE}/api/acceptance/payments/pay`, {
         method: "POST",
@@ -287,15 +322,17 @@ Deno.serve(async (req) => {
         wallet_redirect_url: walletRedirectUrl,
         kiosk_bill_reference: kioskBillReference,
         paymob_order_id: paymobOrderId,
+        merchant_order_reference: merchantOrderReference,
         order_number: order.order_number,
         amount_cents: amountCents,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (error: any) {
-    console.error("create-payment error:", error.message);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("create-payment error:", message);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
