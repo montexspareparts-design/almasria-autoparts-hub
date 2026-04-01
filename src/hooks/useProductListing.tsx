@@ -435,6 +435,39 @@ export function useProductListing(options: UseProductListingOptions = {}) {
       case "price_asc": result.sort((a, b) => a.base_price - b.base_price); break;
       case "price_desc": result.sort((a, b) => b.base_price - a.base_price); break;
       case "name_asc": result.sort((a, b) => a.name_ar.localeCompare(b.name_ar, "ar")); break;
+      default: {
+        // "newest" default: diversify by interleaving categories & brands
+        // Group products by category_id (or brand as fallback)
+        const buckets = new Map<string, any[]>();
+        for (const p of result) {
+          const key = p.category_id || p.brand || "_";
+          if (!buckets.has(key)) buckets.set(key, []);
+          buckets.get(key)!.push(p);
+        }
+        // Round-robin interleave from each bucket for variety
+        if (buckets.size > 1) {
+          const iterators = Array.from(buckets.values());
+          const diversified: any[] = [];
+          let idx = 0;
+          while (diversified.length < result.length) {
+            const bucket = iterators[idx % iterators.length];
+            const itemIdx = Math.floor(idx / iterators.length);
+            if (itemIdx < bucket.length) {
+              diversified.push(bucket[itemIdx]);
+            }
+            idx++;
+            // Safety: prevent infinite loop
+            if (idx > result.length * 3) break;
+          }
+          // Add any remaining items not yet included
+          const addedIds = new Set(diversified.map(p => p.id));
+          for (const p of result) {
+            if (!addedIds.has(p.id)) diversified.push(p);
+          }
+          result = diversified;
+        }
+        break;
+      }
     }
 
     return result;
