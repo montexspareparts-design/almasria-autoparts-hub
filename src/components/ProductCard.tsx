@@ -266,7 +266,7 @@ const ProductCard = ({
 /* ── Sub-components ── */
 
 const StockBadge = ({ available }: { available: boolean }) => (
-  <span className={`text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full font-semibold ${
+  <span className={`text-[8px] sm:text-[11px] px-1.5 sm:px-2 py-px sm:py-0.5 rounded-full font-semibold leading-none ${
     available
       ? "text-green-700 bg-green-50 dark:text-green-400 dark:bg-green-950/30"
       : "text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-950/30"
