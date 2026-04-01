@@ -42,6 +42,7 @@ const ProductDetailDialog = ({
   limitReached = false,
 }: ProductDetailDialogProps) => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [zoomed, setZoomed] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
   const imageRef = useRef<HTMLDivElement>(null);
