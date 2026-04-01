@@ -313,7 +313,7 @@ const DealerPricedToday = ({ onConvertToOrder, sharedCart }: DealerPricedTodayPr
                           
                           {/* Delete Button — Prominent Trash Icon */}
                           <button
-                            onClick={() => removeItem(item.product_id)}
+                            onClick={(e) => { e.stopPropagation(); removeItem(item.product_id); }}
                             className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 active:scale-95 transition-all"
                             title="حذف الصنف"
                           >
