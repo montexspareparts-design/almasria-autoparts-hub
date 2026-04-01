@@ -316,12 +316,6 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
                         <img src={mastercardLogo} alt="Mastercard" className="h-5 w-auto object-contain rounded-sm" loading="lazy" />
                         <img src={meezaLogo} alt="Meeza" className="h-5 w-auto object-contain rounded-sm" loading="lazy" />
                       </>
-                    ) : method.id === "wallet" ? (
-                      <>
-                        <img src={vodafoneCashLogo} alt="Vodafone Cash" className="h-5 w-auto object-contain rounded-sm" loading="lazy" />
-                        <img src={orangeMoneyLogo} alt="Orange Money" className="h-5 w-auto object-contain rounded-sm" loading="lazy" />
-                        <img src={etisalatCashLogo} alt="Etisalat Cash" className="h-5 w-auto object-contain rounded-sm" loading="lazy" />
-                      </>
                     ) : (
                       <p className="text-[11px] text-muted-foreground">{method.labelEn}</p>
                     )}
