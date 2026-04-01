@@ -323,12 +323,12 @@ const PriceSection = ({
 
   if (isDealer && !limitReached) {
     return compact ? (
-      <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8" onClick={() => onRecordView(productId)}>
+      <Button variant="outline" size="sm" className="gap-1.5 text-[10px] sm:text-xs h-7 sm:h-8" onClick={() => onRecordView(productId)}>
         <Eye className="w-3 h-3" />اعرض السعر
       </Button>
     ) : (
-      <Button variant="outline" size="sm" className="w-full gap-2 text-xs" onClick={() => onRecordView(productId)}>
-        <Eye className="w-3.5 h-3.5" />اعرض السعر ({dailyLimit - dailyViewCount} متبقي)
+      <Button variant="outline" size="sm" className="w-full gap-1.5 sm:gap-2 text-[10px] sm:text-xs h-7 sm:h-8" onClick={() => onRecordView(productId)}>
+        <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5" />اعرض السعر ({dailyLimit - dailyViewCount} متبقي)
       </Button>
     );
   }
