@@ -158,6 +158,7 @@ const DealerVehicleRecommendations = ({ vehicleTypes, compact }: DealerVehicleRe
         product={selectedProduct}
         open={!!selectedProduct}
         onOpenChange={(open) => !open && setSelectedProduct(null)}
+        price={selectedProduct?.base_price ?? null}
       />
     </div>
   );

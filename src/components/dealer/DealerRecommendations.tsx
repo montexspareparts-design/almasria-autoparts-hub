@@ -123,6 +123,7 @@ const DealerRecommendations = ({ userId, tier, onNavigateToQuotes }: { userId: s
         product={selectedProduct}
         open={!!selectedProduct}
         onOpenChange={(open) => !open && setSelectedProduct(null)}
+        price={null}
       />
     </div>
   );
