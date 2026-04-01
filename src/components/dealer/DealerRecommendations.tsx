@@ -129,6 +129,14 @@ const DealerRecommendations = ({ userId, tier, onNavigateToQuotes }: { userId: s
         open={!!selectedProduct}
         onOpenChange={(open) => !open && setSelectedProduct(null)}
         price={null}
+        canAddToCart={!!dealerAccount?.is_active}
+        isLoggedIn={!!user}
+        isDealer={!!dealerAccount}
+        onAddToCart={(product) => {
+          addItem(product.id, 1);
+          toast.success("تمت الإضافة للسلة");
+          setSelectedProduct(null);
+        }}
       />
     </div>
   );
