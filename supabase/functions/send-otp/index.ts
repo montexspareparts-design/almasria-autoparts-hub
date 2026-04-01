@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { phone, channel = "sms" } = await req.json();
+    const { phone, channel = "whatsapp" } = await req.json();
 
     if (!phone || phone.length < 8) {
       return new Response(
@@ -20,13 +20,13 @@ Deno.serve(async (req) => {
       );
     }
 
-    const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
-    const authToken = Deno.env.get("TWILIO_AUTH_TOKEN");
-    const twilioPhone = Deno.env.get("TWILIO_PHONE_NUMBER");
+    const metaAccessToken = Deno.env.get("META_WHATSAPP_ACCESS_TOKEN");
+    const metaPhoneNumberId = Deno.env.get("META_WHATSAPP_PHONE_NUMBER_ID");
 
-    if (!accountSid || !authToken || !twilioPhone) {
+    if (!metaAccessToken || !metaPhoneNumberId) {
+      console.error("Meta WhatsApp configuration missing");
       return new Response(
-        JSON.stringify({ error: "Twilio configuration missing" }),
+        JSON.stringify({ error: "WhatsApp configuration missing" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -67,7 +67,6 @@ Deno.serve(async (req) => {
         { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-    // ─── End Rate Limiting ──────────────────────────────────────────────
 
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -91,63 +90,60 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Format phone number for Twilio
+    // Format phone number for WhatsApp (E.164 without +)
     let formattedPhone = phone.replace(/\D/g, "");
     // Handle international prefix 002 or 0020
-    if (formattedPhone.startsWith("002")) {
+    if (formattedPhone.startsWith("0020")) {
       formattedPhone = formattedPhone.substring(2); // Remove "00", keep "20..."
+    } else if (formattedPhone.startsWith("002")) {
+      formattedPhone = formattedPhone.substring(2);
     }
-    if (formattedPhone.startsWith("20") && formattedPhone.length >= 11) {
-      formattedPhone = "+" + formattedPhone;
-    } else if (formattedPhone.startsWith("0")) {
-      formattedPhone = "+20" + formattedPhone.substring(1);
-    } else if (!formattedPhone.startsWith("+")) {
-      formattedPhone = "+20" + formattedPhone;
+    // If starts with 0, add Egypt code
+    if (formattedPhone.startsWith("0")) {
+      formattedPhone = "20" + formattedPhone.substring(1);
     }
-
-    let formattedTwilioPhone = twilioPhone.replace(/\D/g, "");
-    if (formattedTwilioPhone.startsWith("0")) {
-      formattedTwilioPhone = "+20" + formattedTwilioPhone.substring(1);
-    } else if (!formattedTwilioPhone.startsWith("+")) {
-      formattedTwilioPhone = "+" + formattedTwilioPhone;
+    // If doesn't start with country code, add Egypt
+    if (!formattedPhone.startsWith("20")) {
+      formattedPhone = "20" + formattedPhone;
     }
 
-    const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
-    const TWILIO_WHATSAPP_SANDBOX = "+14155238886";
+    const messageBody = `كود التحقق الخاص بك في المصرية جروب: ${otp}\nصالح لمدة 5 دقائق.`;
 
-    const fromNumber = channel === "whatsapp"
-      ? `whatsapp:${TWILIO_WHATSAPP_SANDBOX}`
-      : formattedTwilioPhone;
-    const toNumber = channel === "whatsapp"
-      ? `whatsapp:${formattedPhone}`
-      : formattedPhone;
+    // Send via Meta WhatsApp Business API
+    const metaUrl = `https://graph.facebook.com/v21.0/${metaPhoneNumberId}/messages`;
 
-    const body = new URLSearchParams({
-      To: toNumber,
-      From: fromNumber,
-      Body: `كود التحقق الخاص بك في المصرية جروب: ${otp}\nصالح لمدة 5 دقائق.`,
-    });
-
-    const twilioRes = await fetch(twilioUrl, {
+    const metaRes = await fetch(metaUrl, {
       method: "POST",
       headers: {
-        Authorization: "Basic " + btoa(`${accountSid}:${authToken}`),
-        "Content-Type": "application/x-www-form-urlencoded",
+        "Authorization": `Bearer ${metaAccessToken}`,
+        "Content-Type": "application/json",
       },
-      body: body.toString(),
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to: formattedPhone,
+        type: "text",
+        text: {
+          preview_url: false,
+          body: messageBody,
+        },
+      }),
     });
 
-    if (!twilioRes.ok) {
-      const errText = await twilioRes.text();
-      console.error("Twilio error:", errText);
+    const metaData = await metaRes.json();
+
+    if (!metaRes.ok) {
+      console.error("Meta WhatsApp error:", JSON.stringify(metaData));
       return new Response(
-        JSON.stringify({ error: "فشل إرسال الرسالة. تأكد من الرقم." }),
+        JSON.stringify({ error: "فشل إرسال الرسالة عبر واتساب. تأكد من الرقم." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    console.log("WhatsApp OTP sent successfully to:", formattedPhone);
+
     return new Response(
-      JSON.stringify({ success: true, message: "تم إرسال كود التحقق" }),
+      JSON.stringify({ success: true, message: "تم إرسال كود التحقق عبر واتساب" }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
