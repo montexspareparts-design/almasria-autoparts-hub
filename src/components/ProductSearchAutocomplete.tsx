@@ -125,7 +125,7 @@ const ProductSearchAutocomplete = ({
     if (!value || value.length < 2) return [];
     return products
       .filter(p => fuzzyProductMatch(value, p))
-      .slice(0, 6);
+      .slice(0, 12);
   }, [value, products]);
 
   // "Did you mean?" suggestion
