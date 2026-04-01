@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Bell } from "lucide-react";
+import { playPaymentSuccessSound } from "@/lib/pricingSound";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -129,8 +130,14 @@ const NotificationBell = () => {
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
-          setNotifications((prev) => [payload.new as Notification, ...prev]);
-          playNotificationSound();
+          const newNotif = payload.new as Notification;
+          setNotifications((prev) => [newNotif, ...prev]);
+          // Play different sound for payment success
+          if (newNotif.type === "payment_success") {
+            playPaymentSuccessSound();
+          } else {
+            playNotificationSound();
+          }
         }
       )
       .subscribe();
@@ -229,7 +236,7 @@ const NotificationBell = () => {
                 <div className="flex items-start gap-2">
                   <div
                     className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
-                      n.type === "success" ? "bg-emerald-500" : n.type === "conversion_opportunity" ? "bg-orange-500" : n.type === "order_edit" ? "bg-amber-500" : n.type === "order" ? "bg-primary" : n.type === "warning" ? "bg-amber-500" : "bg-primary"
+                      n.type === "payment_success" ? "bg-emerald-500" : n.type === "success" ? "bg-emerald-500" : n.type === "payment_failed" ? "bg-destructive" : n.type === "conversion_opportunity" ? "bg-orange-500" : n.type === "order_edit" ? "bg-amber-500" : n.type === "order" ? "bg-primary" : n.type === "warning" ? "bg-amber-500" : "bg-primary"
                     }`}
                   />
                   <div>

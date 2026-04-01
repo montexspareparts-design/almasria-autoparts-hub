@@ -56,3 +56,60 @@ export const playCartAddSound = () => {
     // Silently ignore
   }
 };
+
+/** Plays a celebratory "success chime" — ascending triple tone with harmonics */
+export const playPaymentSuccessSound = () => {
+  if (!isSoundEnabled()) return;
+  try {
+    const ctx = new AudioContext();
+    const now = ctx.currentTime;
+
+    // Three ascending chime notes with rich harmonics
+    const notes = [
+      { freq: 523, time: 0, dur: 0.25 },      // C5
+      { freq: 659, time: 0.15, dur: 0.25 },    // E5
+      { freq: 784, time: 0.30, dur: 0.45 },    // G5 (longer, resonant)
+    ];
+
+    notes.forEach(({ freq, time, dur }) => {
+      // Main tone
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.2, now + time);
+      gain.gain.setValueAtTime(0.2, now + time + dur * 0.6);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + time + dur);
+      osc.start(now + time);
+      osc.stop(now + time + dur);
+
+      // Soft harmonic overtone for richness
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.type = "triangle";
+      osc2.frequency.value = freq * 2;
+      gain2.gain.setValueAtTime(0.06, now + time);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + time + dur * 0.8);
+      osc2.start(now + time);
+      osc2.stop(now + time + dur);
+    });
+
+    // Final sparkle
+    const sparkle = ctx.createOscillator();
+    const sparkleGain = ctx.createGain();
+    sparkle.connect(sparkleGain);
+    sparkleGain.connect(ctx.destination);
+    sparkle.type = "sine";
+    sparkle.frequency.value = 1568; // G6
+    sparkleGain.gain.setValueAtTime(0.08, now + 0.55);
+    sparkleGain.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
+    sparkle.start(now + 0.55);
+    sparkle.stop(now + 0.9);
+  } catch {
+    // Silently ignore
+  }
+};
