@@ -28,6 +28,7 @@ const DealerVehicleRecommendations = ({ vehicleTypes, compact }: DealerVehicleRe
   const { user, isDealer } = useAuth();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   useEffect(() => {
     if (vehicleTypes.length > 0) fetchRecommendations();
