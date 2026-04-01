@@ -130,6 +130,8 @@ const CategoryBrowseSlider = () => {
     setTimeout(checkScroll, 400);
   };
 
+  const sortedCategories = [...categories].filter((cat) => (categoryCounts[cat.search] ?? 0) > 0).sort((a, b) => (categoryCounts[b.search] ?? 0) - (categoryCounts[a.search] ?? 0));
+
   return (
     <section className="py-14 bg-gradient-to-b from-background to-muted/40">
       <div className="container mx-auto px-4">
