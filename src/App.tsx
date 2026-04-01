@@ -114,6 +114,7 @@ const App = () => (
                     <Route path="/payment" element={<PaymentPage />} />
                     <Route path="/policies" element={<PoliciesPage />} />
                     <Route path="/my-profile" element={<MyProfilePage />} />
+                    <Route path="/track-order" element={<TrackOrderPage />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                </Suspense>
