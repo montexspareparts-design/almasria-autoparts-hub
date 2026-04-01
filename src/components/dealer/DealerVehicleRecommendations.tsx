@@ -69,31 +69,20 @@ const DealerVehicleRecommendations = ({ compact }: DealerVehicleRecommendationsP
 
   const fetchRecommendations = async () => {
     setLoading(true);
-    const keywords = vehicleTypes.flatMap((vt) => VEHICLE_KEYWORDS[vt] || []);
-    if (keywords.length === 0) { setLoading(false); return; }
-
-    const orFilter = keywords.map((kw) => `name_ar.ilike.%${kw}%`).join(",");
-    const { data: bestSellingIds } = await supabase.rpc("get_best_selling_products", { _limit: 200 });
 
     const { data: matchingProducts } = await supabase
       .from("products")
       .select("id, name_ar, sku, image_url, base_price, stock_quantity, brand, is_on_sale, sale_price")
       .eq("is_active", true)
-      .gt("stock_quantity", 0)
-      .or(orFilter)
+      .gt("stock_quantity", 20)
       .order("stock_quantity", { ascending: false })
-      .limit(100);
+      .limit(24);
 
     if (!matchingProducts) { setLoading(false); return; }
 
-    const bestSellingSet = new Set(bestSellingIds || []);
-    const scored = matchingProducts.map((p) => ({
-      ...p,
-      score: (bestSellingSet.has(p.id) ? 1000 : 0) + p.stock_quantity,
-    }));
-
-    scored.sort((a, b) => b.score - a.score);
-    setAllProducts(scored.slice(0, 24));
+    // Shuffle slightly so it doesn't look static
+    const shuffled = [...matchingProducts].sort(() => Math.random() - 0.5);
+    setAllProducts(shuffled.slice(0, 24));
     setLoading(false);
   };
 
