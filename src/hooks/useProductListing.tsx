@@ -493,7 +493,7 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     }
 
     return result;
-  }, [products, filters]);
+  }, [products, filters, bestSellingIds]);
 
   /* ── Search logging (debounced) ── */
   const lastLoggedSearch = useRef("");
