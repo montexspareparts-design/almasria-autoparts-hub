@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
@@ -13,6 +13,9 @@ import ProductListingSection from "@/components/ProductListingSection";
 import PersonalizedProducts from "@/components/PersonalizedProducts";
 import { useProductListing } from "@/hooks/useProductListing";
 import { usePersonalization } from "@/hooks/usePersonalization";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import DealerVehicleRecommendations from "@/components/dealer/DealerVehicleRecommendations";
 
 import TrendingProducts from "@/components/TrendingProducts";
 import CategoryBrowseSlider from "@/components/CategoryBrowseSlider";
@@ -74,6 +77,15 @@ const ProductsPage = () => {
   const productsRef = useRef<HTMLDivElement>(null);
   const config = brand ? brandConfig[brand] : null;
   const { trackBrand, trackCategory, trackSearch } = usePersonalization();
+  const { user, isDealer, dealerAccount } = useAuth();
+  const [vehicleTypes, setVehicleTypes] = useState<string[]>([]);
+
+  // Fetch dealer vehicle types
+  useEffect(() => {
+    if (isDealer && dealerAccount?.vehicle_types) {
+      setVehicleTypes(dealerAccount.vehicle_types);
+    }
+  }, [isDealer, dealerAccount]);
 
   const listing = useProductListing({
     brandFilter: config?.brandKey,
@@ -205,6 +217,11 @@ const ProductsPage = () => {
       
 
       <div ref={productsRef} />
+      {isDealer && vehicleTypes.length > 0 && (
+        <div className="container mx-auto px-4 pt-6">
+          <DealerVehicleRecommendations vehicleTypes={vehicleTypes} compact />
+        </div>
+      )}
       <ProductListingSection
         {...listing}
         dailyLimit={listing.DAILY_LIMIT}
