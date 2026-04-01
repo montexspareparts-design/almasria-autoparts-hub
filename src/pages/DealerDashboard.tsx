@@ -34,6 +34,7 @@ const DealerDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<DealerTab>((searchParams.get("tab") as DealerTab) || "quotes");
   const [priceListQuoteData, setPriceListQuoteData] = useState<PriceListQuoteData | null>(null);
+  const [paymentTarget, setPaymentTarget] = useState<{ id: string; orderNumber: string; amount: number } | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -112,11 +113,11 @@ const DealerDashboard = () => {
     switch (activeTab) {
       case "quotes": return <DealerProductSearch />;
       case "priced_today": return <DealerPricedToday onConvertToOrder={() => setActiveTab("cart")} sharedCart={dealerCart} />;
-      case "cart": return <DealerCart onNavigateToOrders={() => setActiveTab("orders")} onNavigateToPayment={() => setActiveTab("payment")} sharedCart={dealerCart} />;
+      case "cart": return <DealerCart onNavigateToOrders={() => setActiveTab("orders")} onNavigateToPayment={(info) => { if (info) setPaymentTarget(info); setActiveTab("payment"); }} sharedCart={dealerCart} />;
       case "quick_order": return <DealerQuickOrder />;
       case "orders": return <DealerOrdersList userId={user!.id} onNavigateToPayment={() => setActiveTab("payment")} />;
       case "invoices": return <DealerInvoices userId={user!.id} />;
-      case "payment": return <DealerPayment />;
+      case "payment": return <DealerPayment targetOrderId={paymentTarget?.id} targetOrderNumber={paymentTarget?.orderNumber} targetOrderAmount={paymentTarget?.amount} />;
       case "price_lists": return <DealerPriceLists onNavigateToQuotes={() => setActiveTab("quotes")} editingQuoteData={priceListQuoteData} onClearEditingQuote={() => setPriceListQuoteData(null)} />;
       case "favorites": return <DealerFavorites />;
       case "notifications": return <DealerNotificationsList userId={user!.id} onNavigate={(tab) => setActiveTab(tab as DealerTab)} />;
