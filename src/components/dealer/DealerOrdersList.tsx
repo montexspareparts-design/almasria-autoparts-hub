@@ -482,24 +482,6 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
                     {/* ─── Payment CTA ─── */}
                     {["confirmed", "awaiting_payment", "pending"].includes(order.status) && (
                       <div className="space-y-3">
-                        {paymobIframe && paymobIframe.orderId === order.id ? (
-                          <div className="rounded-xl overflow-hidden border border-border">
-                            <div className="p-3 flex items-center justify-between bg-muted/30">
-                              <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
-                                <CreditCard className="w-4 h-4 text-primary" />
-                                إتمام الدفع
-                              </h4>
-                              <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setPaymobIframe(null)}>✕ إغلاق</Button>
-                            </div>
-                            <iframe
-                              src={paymobIframe.iframeUrl}
-                              className="w-full border-0"
-                              style={{ minHeight: "450px", height: "55vh", maxHeight: "600px" }}
-                              title="Paymob Payment"
-                              allow="payment"
-                            />
-                          </div>
-                        ) : (
                           <div className="rounded-xl overflow-hidden border border-primary/20">
                             <div className="bg-gradient-to-l from-primary/5 to-primary/10 p-4 space-y-3">
                               <div className="flex items-center gap-3">
@@ -527,7 +509,6 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
                               </Button>
                             </div>
                           </div>
-                        )}
                       </div>
                     )}
 
