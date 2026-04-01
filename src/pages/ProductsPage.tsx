@@ -13,6 +13,9 @@ import ProductListingSection from "@/components/ProductListingSection";
 import PersonalizedProducts from "@/components/PersonalizedProducts";
 import { useProductListing } from "@/hooks/useProductListing";
 import { usePersonalization } from "@/hooks/usePersonalization";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import DealerVehicleRecommendations from "@/components/dealer/DealerVehicleRecommendations";
 
 import TrendingProducts from "@/components/TrendingProducts";
 import CategoryBrowseSlider from "@/components/CategoryBrowseSlider";
