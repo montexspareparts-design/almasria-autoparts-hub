@@ -231,7 +231,7 @@ export function useProductListing(options: UseProductListingOptions = {}) {
       description: "اضغط لعرض الأصناف المسعّرة اليوم",
       action: <button onClick={() => navigate("/dealer?tab=priced_today")} className="text-xs font-bold text-primary hover:underline whitespace-nowrap">عرض المسعّرة ←</button>,
     });
-  }, [user, isDealer, viewedProductIds, limitReached, queryClient]);
+  }, [user, isDealer, viewedProductIds, limitReached, queryClient, navigate]);
 
   /* ── Tier prices ── */
   const { data: tierPrices } = useQuery({
