@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TrendingUp, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import ProductDetailDialog from "@/components/ProductDetailDialog";
 
 interface PopularProduct {
   id: string;
