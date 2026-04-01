@@ -186,12 +186,6 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
           </div>
         )}
 
-        {/* Card iframe */}
-        {selectedMethod === "card" && iframeUrl && (
-          <div className="rounded-2xl border border-border overflow-hidden bg-card shadow-sm">
-            <iframe src={iframeUrl} className="w-full border-0" style={{ minHeight: "480px", height: "65vh", maxHeight: "650px" }} title="Paymob Payment" allow="payment" />
-          </div>
-        )}
 
         {/* Wallet */}
         {selectedMethod === "wallet" && (
