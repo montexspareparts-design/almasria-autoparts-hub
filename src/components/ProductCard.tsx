@@ -182,19 +182,19 @@ const ProductCard = ({
       </div>
 
       {/* ── Content Section ── */}
-      <div className="p-3 sm:p-4 space-y-2" onClick={(e) => e.stopPropagation()}>
+      <div className="p-2.5 sm:p-4 space-y-1.5 sm:space-y-2" onClick={(e) => e.stopPropagation()}>
         {/* SKU + Stock + Brand */}
-        <div className="flex items-center justify-between flex-wrap gap-1">
-          <span className="text-[10px] sm:text-[11px] font-mono text-muted-foreground/70 tracking-tight">
+        <div className="flex items-center justify-between flex-wrap gap-0.5 sm:gap-1">
+          <span className="text-[9px] sm:text-[11px] font-mono text-muted-foreground/70 tracking-tight leading-none">
             {product.sku}
           </span>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             {brandRouteMap[product.brand] && (
               <TooltipProvider delayDuration={200}>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <span
-                      className={`text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded cursor-pointer hover:opacity-80 transition-opacity ${brandRouteMap[product.brand].color}`}
+                      className={`text-[7px] sm:text-[9px] font-bold px-1 sm:px-1.5 py-px sm:py-0.5 rounded cursor-pointer hover:opacity-80 transition-opacity ${brandRouteMap[product.brand].color}`}
                       onClick={(e) => { e.stopPropagation(); navigate(brandRouteMap[product.brand].path); }}
                     >
                       {brandRouteMap[product.brand].label}
@@ -209,21 +209,21 @@ const ProductCard = ({
         </div>
 
         {/* Name */}
-        <h3 className="font-bold text-card-foreground text-xs sm:text-sm leading-relaxed line-clamp-2
+        <h3 className="font-bold text-card-foreground text-[11px] sm:text-sm leading-snug sm:leading-relaxed line-clamp-2
           group-hover:text-primary transition-colors duration-200">
           {product.name_ar}
         </h3>
 
         {/* Category */}
         {product.product_categories && (
-          <p className="text-[10px] sm:text-xs text-muted-foreground/80 flex items-center gap-1">
+          <p className="text-[9px] sm:text-xs text-muted-foreground/80 flex items-center gap-1 leading-none">
             <span className="w-1 h-1 rounded-full bg-primary/40 shrink-0" />
             {(product.product_categories as any).name_ar}
           </p>
         )}
 
         {/* Divider */}
-        <div className="h-px bg-border/60 my-1" />
+        <div className="h-px bg-border/60" />
 
         {/* Price */}
         <PriceSection
@@ -241,7 +241,7 @@ const ProductCard = ({
 
         {/* Min order */}
         {product.min_order_qty > 1 && (
-          <p className="text-[10px] text-muted-foreground/60">
+          <p className="text-[9px] sm:text-[10px] text-muted-foreground/60">
             الحد الأدنى: {product.min_order_qty} قطعة
           </p>
         )}
@@ -250,11 +250,11 @@ const ProductCard = ({
         {stockAvailable && canSeePrice && (
           <Button
             size="sm"
-            className="w-full gap-2 text-xs h-9 rounded-lg font-semibold
+            className="w-full gap-1.5 sm:gap-2 text-[10px] sm:text-xs h-7 sm:h-9 rounded-lg font-semibold
               shadow-sm hover:shadow-md hover:shadow-primary/10 transition-shadow duration-200"
             onClick={() => onAddToCart(product)}
           >
-            <ShoppingCart className="w-3.5 h-3.5" />
+            <ShoppingCart className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             أضف للسلة
           </Button>
         )}
