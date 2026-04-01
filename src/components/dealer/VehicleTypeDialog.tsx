@@ -110,16 +110,14 @@ const VehicleTypeDialog = ({ open, dealerAccountId, onComplete }: VehicleTypeDia
           })}
         </div>
 
-        <div className="pt-2 sticky bottom-0 bg-background">
-          <Button
-            onClick={handleSave}
-            disabled={selected.length === 0 || saving}
-            className="w-full h-12 text-sm font-bold"
-          >
-            {saving ? <Loader2 className="w-4 h-4 ml-2 animate-spin" /> : <Check className="w-4 h-4 ml-2" />}
-            تأكيد الدخول
-          </Button>
-        </div>
+        <Button
+          onClick={handleSave}
+          disabled={selected.length === 0 || saving}
+          className="w-full h-12 text-sm font-bold mt-4 shrink-0"
+        >
+          {saving ? <Loader2 className="w-4 h-4 ml-2 animate-spin" /> : <Check className="w-4 h-4 ml-2" />}
+          تأكيد الدخول
+        </Button>
       </DialogContent>
     </Dialog>
   );
