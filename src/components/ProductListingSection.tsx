@@ -147,7 +147,7 @@ const ProductListingSection = ({
           {beforeGrid}
 
           {/* Sidebar + Products Grid */}
-          <div className="flex gap-6 items-start">
+          <div className="flex gap-4 items-start">
             <ProductFilterSidebar
               filters={filters}
               onFiltersChange={setFilters}
@@ -162,20 +162,19 @@ const ProductListingSection = ({
 
             <div className="flex-1 min-w-0">
               {/* Results count + view toggle */}
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-sm text-muted-foreground font-medium">
+              <div className="flex items-center justify-between mb-2.5">
+                <p className="text-xs text-muted-foreground">
                   {isLoading ? "جاري التحميل..." : <><span className="text-foreground font-bold">{filteredProducts.length}</span> منتج</>}
                 </p>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
-                    <button onClick={() => setViewMode("grid")} className={`p-2 rounded-md transition-all ${viewMode === "grid" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-                      <Grid3X3 className="w-4 h-4" />
+                <div className="flex items-center gap-1.5">
+                  <div className="flex items-center bg-muted rounded-md p-0.5">
+                    <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded transition-all ${viewMode === "grid" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                      <Grid3X3 className="w-3.5 h-3.5" />
                     </button>
-                    <button onClick={() => setViewMode("list")} className={`p-2 rounded-md transition-all ${viewMode === "list" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-                      <List className="w-4 h-4" />
+                    <button onClick={() => setViewMode("list")} className={`p-1.5 rounded transition-all ${viewMode === "list" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                      <List className="w-3.5 h-3.5" />
                     </button>
                   </div>
-                  <p className="text-xs text-muted-foreground">{paginatedProducts.length} من {filteredProducts.length} منتج</p>
                 </div>
               </div>
 
