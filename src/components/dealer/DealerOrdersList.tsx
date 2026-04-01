@@ -291,7 +291,7 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
       `قام التاجر بإلغاء الطلب بقيمة ${Number(order.total_amount).toLocaleString("ar-EG")} ج.م`
     );
 
-    setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: "cancelled" } : o));
+    setOrders(prev => prev.filter(o => o.id !== order.id));
     setEditingOrder(null);
     setSaving(false);
     toast({ title: "تم إلغاء الطلب", description: "تم إبلاغ الإدارة بالإلغاء" });
