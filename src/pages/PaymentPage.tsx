@@ -62,7 +62,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 const PaymentPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   const orderId = searchParams.get("order_id");
   const amount = searchParams.get("amount");
@@ -86,6 +86,7 @@ const PaymentPage = () => {
 
   // Fetch order info on mount
   useEffect(() => {
+    if (authLoading) return; // Wait for auth to finish loading
     if (!user) {
       toast({ title: "يجب تسجيل الدخول أولاً", variant: "destructive" });
       navigate("/auth");
@@ -112,7 +113,7 @@ const PaymentPage = () => {
       }
     };
     fetchOrder();
-  }, [orderId, user, navigate]);
+  }, [orderId, user, authLoading, navigate]);
 
   const displayAmount = amount
     ? Number(amount).toLocaleString("ar-EG")
@@ -204,6 +205,15 @@ const PaymentPage = () => {
     setKioskBillRef(null);
     setError(null);
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-[100svh] bg-background flex flex-col items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <p className="text-muted-foreground mt-3 text-sm">جاري التحميل...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[100svh] bg-background flex flex-col">
