@@ -41,6 +41,8 @@ const DealerDashboard = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loadingData, setLoadingData] = useState(true);
+  const [vehicleTypes, setVehicleTypes] = useState<string[]>(dealerAccount?.vehicle_types || []);
+  const [showVehicleDialog, setShowVehicleDialog] = useState(false);
   const dealerCart = useDealerCart();
   const cartItemCount = dealerCart.itemCount;
 
