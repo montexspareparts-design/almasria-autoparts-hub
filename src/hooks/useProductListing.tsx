@@ -314,6 +314,17 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     staleTime: 2 * 60 * 1000, // cache for 2 minutes
   });
 
+  /* ── Best-selling product IDs ── */
+  const { data: bestSellingIds } = useQuery({
+    queryKey: ["best_selling_ids"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_best_selling_products", { _limit: 200 });
+      if (error) throw error;
+      return (data as string[]) || [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   /* ── Smart year extraction from search query ── */
   const extractYearFromSearch = (search: string): number | null => {
     const match = search.match(/\b(19|20)\d{2}\b/);
@@ -435,6 +446,17 @@ export function useProductListing(options: UseProductListingOptions = {}) {
       case "price_asc": result.sort((a, b) => a.base_price - b.base_price); break;
       case "price_desc": result.sort((a, b) => b.base_price - a.base_price); break;
       case "name_asc": result.sort((a, b) => a.name_ar.localeCompare(b.name_ar, "ar")); break;
+      case "best_selling": {
+        if (bestSellingIds && bestSellingIds.length > 0) {
+          const rankMap = new Map(bestSellingIds.map((id, i) => [id, i]));
+          result.sort((a, b) => {
+            const ra = rankMap.has(a.id) ? rankMap.get(a.id)! : Infinity;
+            const rb = rankMap.has(b.id) ? rankMap.get(b.id)! : Infinity;
+            return ra - rb;
+          });
+        }
+        break;
+      }
       default: {
         // "newest" default: diversify by interleaving categories & brands
         // Group products by category_id (or brand as fallback)
@@ -471,7 +493,7 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     }
 
     return result;
-  }, [products, filters]);
+  }, [products, filters, bestSellingIds]);
 
   /* ── Search logging (debounced) ── */
   const lastLoggedSearch = useRef("");
