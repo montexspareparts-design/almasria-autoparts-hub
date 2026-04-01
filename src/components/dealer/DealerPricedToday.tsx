@@ -357,7 +357,7 @@ const DealerPricedToday = ({ onConvertToOrder, sharedCart }: DealerPricedTodayPr
                             {/* Quantity */}
                             <div className="flex items-center gap-0.5 bg-muted/50 rounded-lg p-0.5">
                               <button
-                                onClick={() => updateQuantity(item.product_id, -1)}
+                                onClick={(e) => { e.stopPropagation(); updateQuantity(item.product_id, -1); }}
                                 className="w-7 h-7 rounded-md bg-background flex items-center justify-center text-foreground hover:bg-accent transition-colors shadow-sm"
                               >
                                 <Minus className="w-3 h-3" />
