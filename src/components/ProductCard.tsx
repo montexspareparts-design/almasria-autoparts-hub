@@ -121,7 +121,7 @@ const ProductCard = ({
             )}
           </div>
         </div>
-      </motion.div>
+      </div>
     );
   }
 
