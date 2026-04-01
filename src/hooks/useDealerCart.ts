@@ -56,7 +56,31 @@ export const useDealerCart = () => {
     setLoading(false);
   }, [user, isDealer]);
 
-  useEffect(() => { fetchCart(); }, [fetchCart]);
+  useEffect(() => {
+    fetchCart();
+
+    if (!user || !isDealer) return;
+
+    const channel = supabase
+      .channel(`dealer-cart-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'dealer_cart_items',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          fetchCart();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, isDealer, fetchCart]);
 
   const addItem = useCallback(async (productId: string, qty: number = 1) => {
     if (!user) return;

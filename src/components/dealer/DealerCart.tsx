@@ -36,10 +36,6 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
   const [shippingAddress, setShippingAddress] = useState("");
   const [shippingGovernorate, setShippingGovernorate] = useState("");
 
-  // Refetch cart when component mounts to ensure fresh data
-  useEffect(() => {
-    fetchCart();
-  }, [fetchCart]);
 
   // Fetch tier prices for all items
   const fetchTierPrices = async () => {
