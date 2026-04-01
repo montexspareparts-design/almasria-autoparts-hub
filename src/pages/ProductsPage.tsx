@@ -219,21 +219,33 @@ const ProductsPage = () => {
 
       <div ref={productsRef} />
       {isDealer && vehicleTypes.length > 0 && (
-        <div className="container mx-auto px-4 pt-6">
-          <DealerVehicleRecommendations vehicleTypes={vehicleTypes} compact />
-        </div>
+        <Suspense fallback={<div className="container mx-auto px-4 pt-6"><div className="h-40 bg-muted/30 rounded-xl animate-pulse" /></div>}>
+          <div className="container mx-auto px-4 pt-6">
+            <DealerVehicleRecommendations vehicleTypes={vehicleTypes} compact />
+          </div>
+        </Suspense>
       )}
       <ProductListingSection
         {...listing}
         dailyLimit={listing.DAILY_LIMIT}
         showBrands={true}
-        beforeGrid={<div className="mb-6"><PersonalizedProducts /></div>}
+        beforeGrid={
+          <Suspense fallback={null}>
+            <div className="mb-6"><PersonalizedProducts /></div>
+          </Suspense>
+        }
         sectionClassName="py-8"
       />
-      <CarRecommendations />
-      <TrendingProducts />
+      <Suspense fallback={<div className="h-40" />}>
+        <CarRecommendations />
+      </Suspense>
+      <Suspense fallback={<div className="h-40" />}>
+        <TrendingProducts />
+      </Suspense>
 
-      <Footer />
+      <Suspense fallback={null}>
+        <Footer />
+      </Suspense>
     </div>
   );
 };
