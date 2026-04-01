@@ -41,7 +41,7 @@ const PaymentCallback = lazy(() => import("./pages/PaymentCallback"));
 const PaymentPage = lazy(() => import("./pages/PaymentPage"));
 const PoliciesPage = lazy(() => import("./pages/PoliciesPage"));
 const MyProfilePage = lazy(() => import("./pages/MyProfilePage"));
-
+const TrackOrderPage = lazy(() => import("./pages/TrackOrderPage"));
 const queryClient = new QueryClient();
 
 const PageLoader = () => (
@@ -114,6 +114,7 @@ const App = () => (
                     <Route path="/payment" element={<PaymentPage />} />
                     <Route path="/policies" element={<PoliciesPage />} />
                     <Route path="/my-profile" element={<MyProfilePage />} />
+                    <Route path="/track-order" element={<TrackOrderPage />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                </Suspense>
