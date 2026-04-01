@@ -1,32 +1,57 @@
 
 
-## خطة: نافذة اختيار الدور (تاجر / مدير) عند تسجيل الدخول
+## Plan: Add Realtime Subscription on `dealer_cart_items`
 
-### الفكرة
-عندما يسجل مستخدم دخوله ويكون لديه **صلاحيتين معاً** (تاجر نشط + دور admin)، تظهر نافذة حوار تسأله: "ادخل كـ تاجر" أو "ادخل كـ مدير"، ثم يتم توجيهه للوحة المناسبة.
+### Overview
+Subscribe to Postgres changes on `dealer_cart_items` filtered by `user_id`, so the cart updates instantly without manual refetch after every mutation.
 
-### التغييرات
+### Steps
 
-#### 1. إنشاء مكون `RoleSelectionDialog`
-- ملف جديد: `src/components/RoleSelectionDialog.tsx`
-- نافذة Dialog تظهر زرين كبيرين:
-  - **تاجر** → يوجه إلى `/dealer`
-  - **مدير** → يوجه إلى `/admin`
-- تصميم احترافي بأيقونات (Briefcase للتاجر، Shield للمدير)
-- تُغلق فقط عند الاختيار (لا يمكن إغلاقها بدون اختيار)
+**1. Enable Realtime on `dealer_cart_items` (DB migration)**
+```sql
+ALTER PUBLICATION supabase_realtime ADD TABLE public.dealer_cart_items;
+```
 
-#### 2. تعديل `AuthContext.tsx`
-- إضافة state جديد: `showRoleSelection` + `setShowRoleSelection`
-- بعد تحميل بيانات الـ dealer و admin role، إذا كان المستخدم **تاجر نشط + admin معاً**، يتم تفعيل `showRoleSelection = true`
-- تمرير هذه الحالة عبر Context أو عرض `RoleSelectionDialog` داخل `AuthProvider`
+**2. Update `useDealerCart.ts` — add Realtime channel**
 
-#### 3. تعديل صفحتي `Auth.tsx` و `DealerLogin.tsx`
-- بدلاً من التوجيه المباشر إلى `/` بعد تسجيل الدخول، يتم التحقق:
-  - إذا كان المستخدم يحمل الدورين → لا يتم التوجيه تلقائياً (النافذة ستتولى التوجيه)
-  - إذا كان مدير فقط → توجيه لـ `/admin`
-  - إذا كان تاجر فقط → توجيه لـ `/dealer`
-  - غير ذلك → توجيه لـ `/`
+Inside the existing `useEffect` that calls `fetchCart()`, add a Supabase Realtime subscription:
 
-### النتيجة
-عند تسجيل الدخول بحساب يحمل صلاحيتي تاجر ومدير، تظهر نافذة اختيار واضحة وأنيقة تمكّن المستخدم من اختيار اللوحة المناسبة.
+```ts
+useEffect(() => {
+  fetchCart();
+
+  if (!user || !isDealer) return;
+
+  const channel = supabase
+    .channel(`dealer-cart-${user.id}`)
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'dealer_cart_items',
+        filter: `user_id=eq.${user.id}`,
+      },
+      () => {
+        fetchCart();
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [user, isDealer, fetchCart]);
+```
+
+This means any INSERT/UPDATE/DELETE on the user's cart rows triggers an automatic refetch — whether from the same tab, another component, or even another device.
+
+**3. Remove redundant `fetchCart()` calls from DealerCart.tsx**
+
+The `useEffect(() => { fetchCart(); }, [fetchCart])` in `DealerCart.tsx` becomes unnecessary since Realtime handles sync. Remove it to avoid double-fetching.
+
+### Technical Notes
+- The Realtime filter `user_id=eq.${user.id}` ensures only the current user's changes trigger updates (efficient, no unnecessary traffic).
+- Channel cleanup on unmount prevents memory leaks.
+- The `fetchCart()` inside the Realtime callback re-joins product data, keeping the full `DealerCartItem` shape intact.
 
