@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { TrendingUp, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import ProductDetailDialog from "@/components/ProductDetailDialog";
+import { useDealerCart } from "@/hooks/useDealerCart";
+import { toast } from "sonner";
 
 interface PopularProduct {
   id: string;
@@ -23,6 +26,8 @@ const brandLabels: Record<string, string> = {
 };
 
 const DealerRecommendations = ({ userId, tier, onNavigateToQuotes }: { userId: string; tier?: string; onNavigateToQuotes?: () => void }) => {
+  const { user, isDealer, dealerAccount } = useAuth();
+  const { addItem } = useDealerCart();
   const [products, setProducts] = useState<PopularProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
@@ -124,6 +129,14 @@ const DealerRecommendations = ({ userId, tier, onNavigateToQuotes }: { userId: s
         open={!!selectedProduct}
         onOpenChange={(open) => !open && setSelectedProduct(null)}
         price={null}
+        canAddToCart={!!dealerAccount?.is_active}
+        isLoggedIn={!!user}
+        isDealer={!!dealerAccount}
+        onAddToCart={(product) => {
+          addItem(product.id, 1);
+          toast.success("تمت الإضافة للسلة");
+          setSelectedProduct(null);
+        }}
       />
     </div>
   );

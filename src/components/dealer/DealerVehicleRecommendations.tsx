@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Package, ShoppingCart, TrendingUp, Car, Bus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import ProductDetailDialog from "@/components/ProductDetailDialog";
+import { useDealerCart } from "@/hooks/useDealerCart";
+import { toast } from "sonner";
 
 // Keywords that map vehicle types to product names
 const VEHICLE_KEYWORDS: Record<string, string[]> = {
@@ -25,7 +27,8 @@ interface DealerVehicleRecommendationsProps {
 }
 
 const DealerVehicleRecommendations = ({ vehicleTypes, compact }: DealerVehicleRecommendationsProps) => {
-  const { user, isDealer } = useAuth();
+  const { user, isDealer, dealerAccount } = useAuth();
+  const { addItem } = useDealerCart();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
@@ -159,6 +162,14 @@ const DealerVehicleRecommendations = ({ vehicleTypes, compact }: DealerVehicleRe
         open={!!selectedProduct}
         onOpenChange={(open) => !open && setSelectedProduct(null)}
         price={selectedProduct?.base_price ?? null}
+        canAddToCart={!!dealerAccount?.is_active}
+        isLoggedIn={!!user}
+        isDealer={!!dealerAccount}
+        onAddToCart={(product) => {
+          addItem(product.id, 1);
+          toast.success("تمت الإضافة للسلة");
+          setSelectedProduct(null);
+        }}
       />
     </div>
   );
