@@ -217,6 +217,11 @@ const ProductsPage = () => {
       
 
       <div ref={productsRef} />
+      {isDealer && vehicleTypes.length > 0 && (
+        <div className="container mx-auto px-4 pt-6">
+          <DealerVehicleRecommendations vehicleTypes={vehicleTypes} compact />
+        </div>
+      )}
       <ProductListingSection
         {...listing}
         dailyLimit={listing.DAILY_LIMIT}
