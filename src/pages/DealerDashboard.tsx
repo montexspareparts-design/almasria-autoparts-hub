@@ -207,6 +207,17 @@ const DealerDashboard = () => {
       </div>
 
       <DealerMobileNav activeTab={activeTab} onTabChange={setActiveTab} unreadCount={unreadCount} cartItemCount={cartItemCount} />
+
+      {dealerAccount && (
+        <VehicleTypeDialog
+          open={showVehicleDialog}
+          dealerAccountId={dealerAccount.id}
+          onComplete={(types) => {
+            setVehicleTypes(types);
+            setShowVehicleDialog(false);
+          }}
+        />
+      )}
     </div>
   );
 };
