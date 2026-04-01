@@ -266,17 +266,19 @@ const Auth = () => {
               )}
 
               <div className="space-y-2">
-                <Label className="text-xs font-semibold text-foreground/80 text-right block">رقم الهاتف أو البريد الإلكتروني <span className="text-primary">*</span></Label>
+                <Label className="text-xs font-semibold text-foreground/80 text-right block">
+                  {isLogin ? (loginMethod === "phone" ? "رقم الهاتف" : "البريد الإلكتروني") : "رقم الهاتف أو البريد الإلكتروني"} <span className="text-primary">*</span>
+                </Label>
                 <div className="relative">
                   <Input 
                     value={credential} 
                     onChange={e => setCredential(e.target.value)} 
-                    placeholder="01xxxxxxxxx أو example@email.com" 
+                    placeholder={isLogin ? (loginMethod === "phone" ? "01xxxxxxxxx" : "example@email.com") : "01xxxxxxxxx أو example@email.com"}
                     required 
                     dir="ltr" 
                     className="bg-muted/40 border-border/40 h-11 text-sm pl-10 focus:border-primary/50 focus:ring-primary/20 transition-all" 
                   />
-                  {credIsPhone ? (
+                  {(isLogin ? loginMethod === "phone" : credIsPhone) ? (
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30" />
                   ) : (
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30" />
