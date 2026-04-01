@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Search, X, Package, Hash, Command, Lightbulb, PlusCircle } from "lucide-react";
+import { Search, X, Package, Hash, Command, Lightbulb, PlusCircle, ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
 import { normalizeArabic, expandAliases } from "@/hooks/useProductListing";
@@ -169,12 +169,13 @@ const ProductSearchAutocomplete = ({
     return () => clearTimeout(timeout);
   }, [value, isFocused]);
 
-  const suggestions = useMemo(() => {
+  const allMatches = useMemo(() => {
     if (!value || value.length < 2) return [];
-    return products
-      .filter(p => fuzzyProductMatch(value, p))
-      .slice(0, 12);
+    return products.filter(p => fuzzyProductMatch(value, p));
   }, [value, products]);
+
+  const suggestions = useMemo(() => allMatches.slice(0, 12), [allMatches]);
+  const filteredTotal = allMatches.length;
 
   // "Did you mean?" suggestion
   const didYouMean = useMemo(() => {
@@ -341,6 +342,17 @@ const ProductSearchAutocomplete = ({
                   )}
                 </button>
               ))}
+
+              {/* Show all results button */}
+              {suggestions.length > 0 && (
+                <button
+                  onClick={() => setIsFocused(false)}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 mt-1 rounded-xl bg-primary/5 hover:bg-primary/10 text-primary text-xs font-bold border border-primary/10 hover:border-primary/20 transition-all"
+                >
+                  عرض كل النتائج ({filteredTotal})
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
           </motion.div>
         )}
