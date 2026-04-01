@@ -100,8 +100,8 @@ const ProductListingSection = ({
               <div
                 className={`shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
                   limitReached
-                    ? "bg-destructive/10 border-destructive/20 text-destructive"
-                    : "bg-primary/5 border-primary/15 text-primary"
+                    ? "bg-amber-500/10 border-amber-500/25 text-amber-700 dark:text-amber-400"
+                    : "bg-amber-500/5 border-amber-500/15 text-amber-700 dark:text-amber-400"
                 }`}
                 title={limitReached ? "استنفدت الحد اليومي" : `شاهدت ${dailyViewCount} من ${dailyLimit} صنف`}
               >
