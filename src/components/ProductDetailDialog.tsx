@@ -282,7 +282,7 @@ const ProductDetailDialog = ({
           <Separator />
 
           {/* Price Section */}
-          <div className="bg-muted/50 rounded-lg p-4">
+          <div className="bg-muted/50 rounded-xl sm:rounded-lg p-3 sm:p-4">
             {!isLoggedIn ? (
               <Button
                 variant="outline"
