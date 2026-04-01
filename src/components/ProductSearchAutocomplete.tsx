@@ -169,6 +169,14 @@ const ProductSearchAutocomplete = ({
     return () => clearTimeout(timeout);
   }, [value, isFocused]);
 
+  // Popular products to show when focused with no search
+  const popularProducts = useMemo(() => {
+    if (value && value.length >= 2) return [];
+    return [...products]
+      .sort((a, b) => (b as any).stock_quantity - (a as any).stock_quantity)
+      .slice(0, 8);
+  }, [products, value]);
+
   const allMatches = useMemo(() => {
     if (!value || value.length < 2) return [];
     return products.filter(p => fuzzyProductMatch(value, p));
@@ -190,7 +198,8 @@ const ProductSearchAutocomplete = ({
     return null;
   }, [value]);
 
-  const showDropdown = isFocused && (suggestions.length > 0 || didYouMean);
+  const showDropdown = isFocused && (suggestions.length > 0 || didYouMean || popularProducts.length > 0);
+  const displayProducts = suggestions.length > 0 ? suggestions : popularProducts;
 
   useEffect(() => {
     setSelectedIndex(-1);
@@ -209,13 +218,13 @@ const ProductSearchAutocomplete = ({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setSelectedIndex(prev => Math.min(prev + 1, suggestions.length - 1));
+      setSelectedIndex(prev => Math.min(prev + 1, displayProducts.length - 1));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setSelectedIndex(prev => Math.max(prev - 1, -1));
-    } else if (e.key === "Enter" && selectedIndex >= 0 && suggestions[selectedIndex]) {
+    } else if (e.key === "Enter" && selectedIndex >= 0 && displayProducts[selectedIndex]) {
       e.preventDefault();
-      onProductClick?.(suggestions[selectedIndex]);
+      onProductClick?.(displayProducts[selectedIndex]);
       setIsFocused(false);
     } else if (e.key === "Escape") {
       setIsFocused(false);
@@ -231,9 +240,13 @@ const ProductSearchAutocomplete = ({
   return (
     <div ref={wrapperRef} className="relative flex-1">
       <div className="relative group">
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-primary/10 group-focus-within:bg-primary/20 flex items-center justify-center transition-all duration-300 group-focus-within:scale-110 pointer-events-none">
+        <button
+          type="button"
+          onClick={() => { setIsFocused(true); inputRef.current?.focus(); }}
+          className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-primary/10 group-focus-within:bg-primary/20 flex items-center justify-center transition-all duration-300 group-focus-within:scale-110"
+        >
           <Search className="w-4.5 h-4.5 text-primary/70 group-focus-within:text-primary transition-colors duration-300" />
-        </div>
+        </button>
         <Input
           ref={inputRef}
           placeholder={value ? placeholder : (typingPlaceholder || placeholder)}
@@ -291,9 +304,9 @@ const ProductSearchAutocomplete = ({
               )}
 
               <p className="text-[10px] text-muted-foreground px-2.5 py-1.5 font-semibold">
-                {suggestions.length} نتيجة
+                {suggestions.length > 0 ? `${suggestions.length} نتيجة` : "الأكثر توفراً"}
               </p>
-              {suggestions.map((product, idx) => (
+              {displayProducts.map((product, idx) => (
                 <button
                   key={product.id}
                   onClick={() => {
