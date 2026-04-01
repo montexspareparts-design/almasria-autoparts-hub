@@ -283,7 +283,7 @@ const DealerPricedToday = ({ onConvertToOrder, sharedCart }: DealerPricedTodayPr
                   >
                     <div className="flex gap-3">
                       {/* Checkbox */}
-                      <button onClick={() => toggleSelect(item.product_id)} className="shrink-0 mt-1">
+                      <button onClick={(e) => { e.stopPropagation(); toggleSelect(item.product_id); }} className="shrink-0 mt-1">
                         <div className={cn(
                           "w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all",
                           isSelected
