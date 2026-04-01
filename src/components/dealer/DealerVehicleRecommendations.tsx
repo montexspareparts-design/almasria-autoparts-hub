@@ -96,21 +96,9 @@ const DealerVehicleRecommendations = ({ vehicleTypes, compact }: DealerVehicleRe
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center gap-2">
         <TrendingUp className="w-4 h-4 text-primary" />
-        <h3 className="text-sm font-bold text-foreground">الأكثر طلباً — {vehicleLabel}</h3>
-        <div className="flex gap-1">
-          {vehicleTypes.includes("sedan") && (
-            <Badge variant="secondary" className="text-[9px] gap-1 px-1.5">
-              <Car className="w-2.5 h-2.5" /> ملاكي
-            </Badge>
-          )}
-          {vehicleTypes.includes("microbus") && (
-            <Badge variant="secondary" className="text-[9px] gap-1 px-1.5">
-              <Bus className="w-2.5 h-2.5" /> نقل وميكروباص
-            </Badge>
-          )}
-        </div>
+        <h3 className="text-sm font-bold text-foreground">الأكثر طلباً</h3>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
