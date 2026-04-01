@@ -37,11 +37,13 @@ interface PricedProduct {
 
 interface DealerPricedTodayProps {
   onConvertToOrder: () => void;
+  sharedCart?: ReturnType<typeof useDealerCart>;
 }
 
-const DealerPricedToday = ({ onConvertToOrder }: DealerPricedTodayProps) => {
+const DealerPricedToday = ({ onConvertToOrder, sharedCart }: DealerPricedTodayProps) => {
   const { user, dealerAccount } = useAuth();
-  const { addItem: addToCart } = useDealerCart();
+  const fallbackCart = useDealerCart();
+  const { addItem: addToCart } = sharedCart || fallbackCart;
   const [items, setItems] = useState<PricedProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
