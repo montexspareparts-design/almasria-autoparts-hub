@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { Package, Lock, Eye, ShoppingCart, Heart, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
