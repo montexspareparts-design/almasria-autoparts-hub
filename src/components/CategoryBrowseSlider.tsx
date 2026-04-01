@@ -158,104 +158,63 @@ const CategoryBrowseSlider = () => {
           </p>
         </motion.div>
 
-        {/* Slider */}
-        <div className="relative group" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+        {/* Marquee ticker */}
+        <div
+          className="relative overflow-hidden"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
           {/* Fade edges */}
-          <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-[5] pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-[5] pointer-events-none" />
+          <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-background to-transparent z-[5] pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-background to-transparent z-[5] pointer-events-none" />
 
           <div
-            ref={scrollRef}
-            onScroll={checkScroll}
-            className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory px-2"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            className="flex w-max gap-5 py-2"
+            style={{
+              animation: `marquee-rtl ${sortedCategories.length * 3}s linear infinite`,
+              animationPlayState: isHovered ? 'paused' : 'running',
+            }}
           >
-            {[...categories].filter((cat) => (categoryCounts[cat.search] ?? 0) > 0).sort((a, b) => (categoryCounts[b.search] ?? 0) - (categoryCounts[a.search] ?? 0)).map((cat, i) => (
-              <motion.div
-                key={cat.name}
-                initial={{ opacity: 0, y: 25, scale: 0.92 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                viewport={{ once: true, margin: "-30px" }}
-                transition={{ delay: i * 0.04, type: "spring", stiffness: 120, damping: 14 }}
-                className="snap-start"
+            {/* Duplicate items for seamless loop */}
+            {[...sortedCategories, ...sortedCategories].map((cat, i) => (
+              <Link
+                key={`${cat.name}-${i}`}
+                to={`/products/${cat.brand}?search=${encodeURIComponent(cat.search)}`}
+                className="group/card block relative min-w-[150px] sm:min-w-[170px] rounded-2xl overflow-hidden shadow-md hover:shadow-[0_0_20px_hsl(var(--primary)/0.35),0_15px_35px_hsl(0_0%_0%/0.15)] transition-all duration-400 shrink-0"
               >
-                <Link
-                  to={`/products/${cat.brand}?search=${encodeURIComponent(cat.search)}`}
-                  className="group/card block relative min-w-[150px] sm:min-w-[170px] rounded-2xl overflow-hidden shadow-md hover:shadow-[0_0_20px_hsl(var(--primary)/0.35),0_15px_35px_hsl(0_0%_0%/0.15)] transition-all duration-400"
+                <motion.div
+                  whileHover={{ y: -10, scale: 1.05, rotateZ: -1 }}
+                  transition={{ type: "spring", stiffness: 350, damping: 18 }}
                 >
-                  <motion.div
-                    whileHover={{ y: -10, scale: 1.05, rotateZ: -1 }}
-                    transition={{ type: "spring", stiffness: 350, damping: 18 }}
-                  >
-                    {/* Product Image */}
-                    <div className="aspect-square bg-white p-3 relative overflow-hidden">
-                      <img
-                        src={cat.image}
-                        alt={cat.name}
-                        loading="lazy"
-                        width={512}
-                        height={512}
-                        className="w-full h-full object-contain group-hover/card:scale-115 transition-transform duration-400 ease-out"
-                      />
-                      {/* Shimmer overlay on hover */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover/card:translate-x-full transition-transform duration-500 ease-in-out" />
-                      <div className="absolute inset-0 bg-primary/0 group-hover/card:bg-primary/5 transition-colors duration-200" />
-                    </div>
+                  {/* Product Image */}
+                  <div className="aspect-square bg-white p-3 relative overflow-hidden">
+                    <img
+                      src={cat.image}
+                      alt={cat.name}
+                      loading="lazy"
+                      width={512}
+                      height={512}
+                      className="w-full h-full object-contain group-hover/card:scale-115 transition-transform duration-400 ease-out"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover/card:translate-x-full transition-transform duration-500 ease-in-out" />
+                    <div className="absolute inset-0 bg-primary/0 group-hover/card:bg-primary/5 transition-colors duration-200" />
+                  </div>
 
-                    {/* Label */}
-                    <div className={`relative bg-gradient-to-br ${cat.accent} px-4 py-3.5 text-center`}>
-                      <span className="text-white font-bold text-sm block leading-snug">
-                        {cat.name}
-                      </span>
-                      <span className="text-white/70 text-[11px] block mt-0.5">
-                        {categoryCounts[cat.search] !== undefined
-                          ? `${categoryCounts[cat.search]} صنف`
-                          : "..."}
-                      </span>
-                      <ChevronLeft className="w-4 h-4 text-white/70 mx-auto mt-1 group-hover/card:text-white group-hover/card:-translate-x-1.5 transition-all duration-250" />
-                    </div>
-                  </motion.div>
-                </Link>
-              </motion.div>
+                  {/* Label */}
+                  <div className={`relative bg-gradient-to-br ${cat.accent} px-4 py-3.5 text-center`}>
+                    <span className="text-white font-bold text-sm block leading-snug">
+                      {cat.name}
+                    </span>
+                    <span className="text-white/70 text-[11px] block mt-0.5">
+                      {categoryCounts[cat.search] !== undefined
+                        ? `${categoryCounts[cat.search]} صنف`
+                        : "..."}
+                    </span>
+                    <ChevronLeft className="w-4 h-4 text-white/70 mx-auto mt-1 group-hover/card:text-white group-hover/card:-translate-x-1.5 transition-all duration-250" />
+                  </div>
+                </motion.div>
+              </Link>
             ))}
-          </div>
-        </div>
-
-        {/* Progress bar + navigation */}
-        <div className="flex items-center justify-center gap-4 mt-6">
-          {/* Progress dots */}
-          <div className="flex items-center gap-1.5">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <motion.div
-                key={i}
-                className={`rounded-full transition-all duration-300 ${
-                  Math.round(scrollProgress * 4) === i
-                    ? "w-6 h-2 bg-primary"
-                    : "w-2 h-2 bg-muted-foreground/25"
-                }`}
-                layout
-              />
-            ))}
-          </div>
-
-          {/* Arrow buttons */}
-          <div className="flex items-center gap-2.5">
-            <motion.button
-              whileHover={{ scale: 1.15 }}
-              whileTap={{ scale: 0.85 }}
-              onClick={() => scroll("right")}
-              className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md shadow-primary/30 hover:shadow-lg hover:shadow-primary/40 transition-all duration-300"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.15 }}
-              whileTap={{ scale: 0.85 }}
-              onClick={() => scroll("left")}
-              className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md shadow-primary/30 hover:shadow-lg hover:shadow-primary/40 transition-all duration-300"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </motion.button>
           </div>
         </div>
       </div>
