@@ -11,6 +11,7 @@ interface DealerAccount {
   is_active: boolean;
   custom_discount: number | null;
   min_order_amount: number | null;
+  vehicle_types: string[];
 }
 
 interface AuthContextType {
