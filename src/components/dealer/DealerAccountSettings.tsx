@@ -32,6 +32,8 @@ const DealerAccountSettings = () => {
   const [profile, setProfile] = useState({ full_name: "", phone: "", email: "" });
   const [soundOn, setSoundOn] = useState(isSoundEnabled());
   const [fontSize, setFontSize] = useState(getFontSize());
+  const [vehicleTypes, setVehicleTypes] = useState<string[]>((dealerAccount as any)?.vehicle_types || []);
+  const [savingVehicle, setSavingVehicle] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
