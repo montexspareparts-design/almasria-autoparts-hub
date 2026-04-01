@@ -62,7 +62,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 const PaymentPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   const orderId = searchParams.get("order_id");
   const amount = searchParams.get("amount");
