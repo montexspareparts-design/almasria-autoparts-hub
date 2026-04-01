@@ -16,7 +16,7 @@ async function sendWhatsApp(phone: string, message: string) {
   const phoneNumberId = Deno.env.get("META_WHATSAPP_PHONE_NUMBER_ID");
   if (!accessToken || !phoneNumberId) return;
 
-  let formatted = phone.replace(/[\s\-\(\)]/g, "");
+  let formatted = phone.replace(/[\s\-()]/g, "");
   if (formatted.startsWith("+")) formatted = formatted.slice(1);
   if (formatted.startsWith("0")) formatted = "2" + formatted;
   if (/^\d{10}$/.test(formatted)) formatted = "2" + formatted;

@@ -132,7 +132,7 @@ Deno.serve(async (req) => {
 
     const { data: order, error: orderErr } = await supabase
       .from("orders")
-      .select("id, user_id, total_amount, order_number, shipping_address, shipping_governorate, order_items(quantity, unit_price, products(name_ar, sku))")
+      .select("id, user_id, total_amount, order_number, status, shipping_address, shipping_governorate, order_items(quantity, unit_price, products(name_ar, sku))")
       .eq("id", orderId)
       .single();
 
@@ -192,7 +192,11 @@ Deno.serve(async (req) => {
     // Step 2: Create order on Paymob
     // ========================================
     console.log("Step 2: Creating Paymob order...");
-    const items = (order.order_items || []).map((item: any) => ({
+    const items = (order.order_items || []).map((item: {
+      quantity: number;
+      unit_price: number;
+      products?: { name_ar?: string | null; sku?: string | null } | null;
+    }) => ({
       name: item.products?.name_ar || item.products?.sku || "منتج",
       amount_cents: Math.round(item.unit_price * 100),
       quantity: item.quantity,
@@ -324,10 +328,11 @@ Deno.serve(async (req) => {
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (error: any) {
-    console.error("create-payment error:", error.message);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("create-payment error:", message);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

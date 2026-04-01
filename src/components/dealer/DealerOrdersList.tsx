@@ -140,8 +140,9 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
         return;
       }
       setPaymobIframe({ orderId: order.id, iframeUrl: data.iframe_url });
-    } catch (e: any) {
-      toast({ title: "حدث خطأ", description: e.message, variant: "destructive" });
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "حدث خطأ غير متوقع";
+      toast({ title: "حدث خطأ", description: message, variant: "destructive" });
     } finally {
       setPaymobLoading(null);
     }

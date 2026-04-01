@@ -111,7 +111,7 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
       else if (selectedMethod === "wallet") { setStep("pay"); }
       else if (selectedMethod === "kiosk" && data.kiosk_bill_reference) { setKioskBillRef(data.kiosk_bill_reference); setStep("pay"); }
       else { setError("جرب طريقة دفع أخرى."); }
-    } catch (e: any) { setError(e.message || "حدث خطأ"); }
+    } catch (e: unknown) { setError(e instanceof Error ? e.message : "حدث خطأ"); }
     finally { setLoading(false); }
   };
 
@@ -144,7 +144,7 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
       if (updateErr) throw updateErr;
       setReceiptSubmitted(true);
       toast({ title: "✅ تم رفع الإيصال بنجاح" });
-    } catch (e: any) { toast({ title: "خطأ في رفع الإيصال", description: e.message, variant: "destructive" }); }
+    } catch (e: unknown) { toast({ title: "خطأ في رفع الإيصال", description: e instanceof Error ? e.message : "حدث خطأ غير متوقع", variant: "destructive" }); }
     finally { setUploadingReceipt(false); }
   };
 
