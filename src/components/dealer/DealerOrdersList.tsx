@@ -123,7 +123,6 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
   const [saving, setSaving] = useState(false);
   const [reordering, setReordering] = useState<string | null>(null);
   const [paymobLoading, setPaymobLoading] = useState<string | null>(null);
-  const [paymobIframe, setPaymobIframe] = useState<{ orderId: string; iframeUrl: string } | null>(null);
   const { addItem } = useDealerCart();
 
   const handlePaymob = async (order: Order) => {
