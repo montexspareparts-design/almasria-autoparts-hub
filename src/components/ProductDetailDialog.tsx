@@ -210,11 +210,11 @@ const ProductDetailDialog = ({
           </div>
 
           {/* Product Name */}
-          <h2 className="text-xl font-bold text-foreground leading-relaxed">
+          <h2 className="text-lg sm:text-xl font-bold text-foreground leading-relaxed">
             {product.name_ar}
           </h2>
           {product.name_en && (
-            <p className="text-sm text-muted-foreground -mt-2">{product.name_en}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground -mt-1.5 sm:-mt-2">{product.name_en}</p>
           )}
 
           <Separator />
