@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { Package, Lock, Eye, ShoppingCart, Heart, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -45,12 +44,8 @@ const ProductCard = ({
 
   if (viewMode === "list") {
     return (
-      <motion.div
-        key={product.id}
-        initial={{ opacity: 0, x: -10 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: Math.min(index * 0.02, 0.3) }}
-        className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 cursor-pointer flex group"
+      <div
+        className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 cursor-pointer flex group animate-fade-in"
         onClick={() => onProductClick(product)}
       >
         {/* Image */}
@@ -126,20 +121,16 @@ const ProductCard = ({
             )}
           </div>
         </div>
-      </motion.div>
+      </div>
     );
   }
 
   // Grid mode
   return (
-    <motion.div
-      key={product.id}
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: Math.min(index * 0.025, 0.4), duration: 0.35 }}
+    <div
       className="bg-card border border-border rounded-2xl overflow-hidden group cursor-pointer relative
         hover:border-primary/30 hover:shadow-[0_0_20px_hsl(var(--primary)/0.15),0_15px_35px_hsl(0_0%_0%/0.1)] hover:-translate-y-1.5
-        transition-all duration-400 ease-out"
+        transition-all duration-400 ease-out animate-fade-in"
       onClick={() => onProductClick(product)}
     >
       {/* ── Image Section ── */}
@@ -263,7 +254,7 @@ const ProductCard = ({
           </Button>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 };
 

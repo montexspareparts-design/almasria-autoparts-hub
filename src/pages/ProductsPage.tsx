@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, lazy, Suspense } from "react";
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
@@ -7,19 +7,20 @@ import { BreadcrumbSchema } from "@/components/SEOSchemaMarkup";
 import AutoPartsBackground from "@/components/AutoPartsBackground";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import BrandHeroBanner from "@/components/BrandHeroBanner";
 import ProductListingSection from "@/components/ProductListingSection";
-import PersonalizedProducts from "@/components/PersonalizedProducts";
 import { useProductListing } from "@/hooks/useProductListing";
 import { usePersonalization } from "@/hooks/usePersonalization";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import DealerVehicleRecommendations from "@/components/dealer/DealerVehicleRecommendations";
-
-import TrendingProducts from "@/components/TrendingProducts";
 import CategoryBrowseSlider from "@/components/CategoryBrowseSlider";
-import CarRecommendations from "@/components/CarRecommendations";
+
+// Lazy load heavy below-fold components
+const Footer = lazy(() => import("@/components/Footer"));
+const TrendingProducts = lazy(() => import("@/components/TrendingProducts"));
+const CarRecommendations = lazy(() => import("@/components/CarRecommendations"));
+const PersonalizedProducts = lazy(() => import("@/components/PersonalizedProducts"));
+const DealerVehicleRecommendations = lazy(() => import("@/components/dealer/DealerVehicleRecommendations"));
 
 import brandGenuineParts from "@/assets/brand-genuine-parts.webp";
 import brandToyotaOil from "@/assets/brand-toyota-oil.webp";
@@ -218,21 +219,33 @@ const ProductsPage = () => {
 
       <div ref={productsRef} />
       {isDealer && vehicleTypes.length > 0 && (
-        <div className="container mx-auto px-4 pt-6">
-          <DealerVehicleRecommendations vehicleTypes={vehicleTypes} compact />
-        </div>
+        <Suspense fallback={<div className="container mx-auto px-4 pt-6"><div className="h-40 bg-muted/30 rounded-xl animate-pulse" /></div>}>
+          <div className="container mx-auto px-4 pt-6">
+            <DealerVehicleRecommendations vehicleTypes={vehicleTypes} compact />
+          </div>
+        </Suspense>
       )}
       <ProductListingSection
         {...listing}
         dailyLimit={listing.DAILY_LIMIT}
         showBrands={true}
-        beforeGrid={<div className="mb-6"><PersonalizedProducts /></div>}
+        beforeGrid={
+          <Suspense fallback={null}>
+            <div className="mb-6"><PersonalizedProducts /></div>
+          </Suspense>
+        }
         sectionClassName="py-8"
       />
-      <CarRecommendations />
-      <TrendingProducts />
+      <Suspense fallback={<div className="h-40" />}>
+        <CarRecommendations />
+      </Suspense>
+      <Suspense fallback={<div className="h-40" />}>
+        <TrendingProducts />
+      </Suspense>
 
-      <Footer />
+      <Suspense fallback={null}>
+        <Footer />
+      </Suspense>
     </div>
   );
 };
