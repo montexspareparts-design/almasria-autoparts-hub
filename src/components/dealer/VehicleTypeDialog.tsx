@@ -14,7 +14,7 @@ const vehicleOptions = [
   },
   {
     id: "microbus",
-    label: "ميكروباص",
+    label: "نقل وميكروباص",
     description: "هاي اس، كوستر، هاي لوكس ...",
     icon: Bus,
   },
