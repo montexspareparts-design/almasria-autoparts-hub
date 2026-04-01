@@ -139,7 +139,8 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
         toast({ title: "حدث خطأ في بوابة الدفع", description: data?.error || "يرجى المحاولة مرة أخرى", variant: "destructive" });
         return;
       }
-      setPaymobIframe({ orderId: order.id, iframeUrl: data.iframe_url });
+      // Redirect externally — Paymob blocks iframe embedding
+      window.location.href = data.iframe_url;
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "حدث خطأ غير متوقع";
       toast({ title: "حدث خطأ", description: message, variant: "destructive" });

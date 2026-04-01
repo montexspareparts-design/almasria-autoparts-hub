@@ -106,7 +106,7 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
         body: { order_id: orderId, payment_method: selectedMethod, wallet_phone: selectedMethod === "wallet" ? walletPhone : undefined, return_url: buildPaymobReturnUrl() },
       });
       if (fnError || !data?.payment_key) { setError(data?.error || "تعذر إنشاء جلسة الدفع."); return; }
-      if (selectedMethod === "card" && data.iframe_url) { setIframeUrl(data.iframe_url); setStep("pay"); }
+      if (selectedMethod === "card" && data.iframe_url) { window.location.href = data.iframe_url; return; }
       else if (selectedMethod === "wallet" && data.wallet_redirect_url) { setWalletRedirectUrl(data.wallet_redirect_url); setStep("pay"); window.location.href = data.wallet_redirect_url; }
       else if (selectedMethod === "wallet") { setStep("pay"); }
       else if (selectedMethod === "kiosk" && data.kiosk_bill_reference) { setKioskBillRef(data.kiosk_bill_reference); setStep("pay"); }
