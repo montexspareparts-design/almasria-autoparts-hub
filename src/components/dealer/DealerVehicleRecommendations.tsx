@@ -27,7 +27,8 @@ interface DealerVehicleRecommendationsProps {
 }
 
 const DealerVehicleRecommendations = ({ vehicleTypes, compact }: DealerVehicleRecommendationsProps) => {
-  const { user, isDealer } = useAuth();
+  const { user, isDealer, dealerAccount } = useAuth();
+  const { addItem } = useDealerCart();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
