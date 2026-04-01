@@ -12,7 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
-import { ensureActiveSession } from "@/lib/paymob";
+import { buildPaymobReturnUrl, ensureActiveSession } from "@/lib/paymob";
 
 type PaymentMethod = "card" | "wallet" | "kiosk";
 
@@ -140,7 +140,7 @@ const PaymentPage = () => {
           order_id: orderId,
           payment_method: selectedMethod,
           wallet_phone: selectedMethod === "wallet" ? walletPhone : undefined,
-          return_url: `${window.location.origin}/payment-callback`,
+          return_url: buildPaymobReturnUrl(),
         },
       });
 

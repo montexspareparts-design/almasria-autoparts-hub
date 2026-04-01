@@ -14,6 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
+import { buildPaymobReturnUrl } from "@/lib/paymob";
 
 type PaymentMethod = "card" | "wallet" | "kiosk" | "instapay";
 
@@ -102,7 +103,7 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
       const { ensureActiveSession } = await import("@/lib/paymob");
       await ensureActiveSession();
       const { data, error: fnError } = await supabase.functions.invoke("create-payment", {
-        body: { order_id: orderId, payment_method: selectedMethod, wallet_phone: selectedMethod === "wallet" ? walletPhone : undefined, return_url: `${window.location.origin}/payment-callback` },
+        body: { order_id: orderId, payment_method: selectedMethod, wallet_phone: selectedMethod === "wallet" ? walletPhone : undefined, return_url: buildPaymobReturnUrl() },
       });
       if (fnError || !data?.payment_key) { setError(data?.error || "تعذر إنشاء جلسة الدفع."); return; }
       if (selectedMethod === "card" && data.iframe_url) { setIframeUrl(data.iframe_url); setStep("pay"); }

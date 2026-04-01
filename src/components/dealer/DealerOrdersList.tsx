@@ -129,11 +129,11 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
   const handlePaymob = async (order: Order) => {
     setPaymobLoading(order.id);
     try {
-      const { ensureActiveSession } = await import("@/lib/paymob");
+      const { buildPaymobReturnUrl, ensureActiveSession } = await import("@/lib/paymob");
       await ensureActiveSession();
 
       const { data, error } = await supabase.functions.invoke("create-payment", {
-        body: { order_id: order.id, return_url: `${window.location.origin}/payment-callback` },
+        body: { order_id: order.id, return_url: buildPaymobReturnUrl() },
       });
       if (error || !data?.iframe_url) {
         toast({ title: "حدث خطأ في بوابة الدفع", description: data?.error || "يرجى المحاولة مرة أخرى", variant: "destructive" });
