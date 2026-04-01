@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Package, ShoppingCart, TrendingUp, Car, Bus } from "lucide-react";
+import { Package, ShoppingCart, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import ProductDetailDialog from "@/components/ProductDetailDialog";
 import { useDealerCart } from "@/hooks/useDealerCart";
