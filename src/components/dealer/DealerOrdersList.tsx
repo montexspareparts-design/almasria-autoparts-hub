@@ -112,7 +112,7 @@ const notifyAdmins = async (orderNumber: string, action: string, details: string
   }
 };
 
-const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onNavigateToPayment?: () => void }) => {
+const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onNavigateToPayment?: (orderInfo?: { id: string; orderNumber: string; amount: number }) => void }) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
