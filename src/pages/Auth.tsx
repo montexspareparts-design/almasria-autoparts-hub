@@ -52,8 +52,12 @@ const Auth = () => {
 
   const isLogin = mode === "login";
   const phoneToEmail = (p: string) => `${p.replace(/\D/g, "")}@phone.almasria.app`;
-  const credIsPhone = isPhone(credential);
-  const getAuthEmail = () => credIsPhone ? phoneToEmail(credential) : credential.trim();
+  const getAuthEmail = () => {
+    if (isLogin) {
+      return loginMethod === "phone" ? phoneToEmail(credential) : credential.trim();
+    }
+    return credIsPhone ? phoneToEmail(credential) : credential.trim();
+  };
 
   // If session already exists (or arrives after OAuth), leave auth page immediately
   useEffect(() => {
