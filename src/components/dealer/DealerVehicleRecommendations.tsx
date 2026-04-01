@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Package, ShoppingCart, TrendingUp, Car, Bus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import ProductDetailDialog from "@/components/ProductDetailDialog";
+import { useDealerCart } from "@/hooks/useDealerCart";
+import { toast } from "sonner";
 
 // Keywords that map vehicle types to product names
 const VEHICLE_KEYWORDS: Record<string, string[]> = {
