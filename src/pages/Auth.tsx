@@ -29,8 +29,11 @@ const setRememberedFlag = (val: boolean) => {
 const markSessionActive = () => sessionStorage.setItem(SESSION_FLAG, "true");
 const isSessionActive = () => sessionStorage.getItem(SESSION_FLAG) === "true";
 
+type LoginMethod = "phone" | "email";
+
 const Auth = () => {
   const [mode, setMode] = useState<AuthMode>("login");
+  const [loginMethod, setLoginMethod] = useState<LoginMethod>("phone");
   const [credential, setCredential] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
