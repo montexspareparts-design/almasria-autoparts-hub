@@ -83,10 +83,10 @@ const ProductListingSection = ({
         onProductSelect={(p) => setSelectedProduct(p)}
       />
 
-      <section id={sectionId} className={sectionClassName || "py-4 md:py-6 bg-background"}>
+      <section id={sectionId} className={sectionClassName || "py-3 md:py-5 bg-background"}>
         <div className="container mx-auto px-4">
-          {/* Search bar + dealer badge + controls — single compact row */}
-          <div className="flex items-center gap-2 mb-3">
+          {/* Premium toolbar */}
+          <div className="flex items-center gap-2.5 mb-4 p-2.5 rounded-2xl bg-card/80 backdrop-blur-sm border border-border/60 shadow-sm">
             <ProductSearchAutocomplete
               value={filters.search}
               onChange={(v) => setFilters(prev => ({ ...prev, search: v }))}
@@ -95,27 +95,27 @@ const ProductListingSection = ({
               onCommandPaletteOpen={() => setCommandPaletteOpen(true)}
             />
 
-            {/* Dealer daily view counter — compact pill */}
+            {/* Dealer daily view counter — premium golden pill */}
             {isDealer && (
               <div
-                className={`shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+                className={`shrink-0 flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold border-2 transition-all duration-300 shadow-sm ${
                   limitReached
-                    ? "bg-gradient-to-r from-amber-500/10 via-amber-300/25 to-amber-500/10 bg-[length:200%_100%] animate-shimmer-gold border-amber-500/30 text-amber-700 dark:text-amber-400"
-                    : "bg-amber-500/5 border-amber-500/15 text-amber-700 dark:text-amber-400"
+                    ? "bg-gradient-to-r from-amber-500/15 via-yellow-300/25 to-amber-500/15 bg-[length:200%_100%] animate-shimmer-gold border-amber-400/40 text-amber-800 dark:text-amber-300 shadow-amber-500/10"
+                    : "bg-gradient-to-br from-amber-50 to-amber-100/80 dark:from-amber-900/20 dark:to-amber-800/10 border-amber-300/40 dark:border-amber-600/30 text-amber-800 dark:text-amber-300"
                 }`}
                 title={limitReached ? "استنفدت الحد اليومي" : `شاهدت ${dailyViewCount} من ${dailyLimit} صنف`}
               >
-                <Eye className="w-3.5 h-3.5" />
-                <span className="tabular-nums">{dailyViewCount}/{dailyLimit}</span>
+                <Eye className="w-4 h-4" />
+                <span className="tabular-nums tracking-wide">{dailyViewCount}<span className="text-amber-500/60 mx-0.5">/</span>{dailyLimit}</span>
               </div>
             )}
 
-            <Button variant="outline" className="lg:hidden gap-1.5 shrink-0 h-9 text-xs" onClick={() => setSidebarOpen(true)}>
-              <SlidersHorizontal className="w-3.5 h-3.5" />
+            <Button variant="outline" className="lg:hidden gap-1.5 shrink-0 h-10 text-xs rounded-xl border-border/60" onClick={() => setSidebarOpen(true)}>
+              <SlidersHorizontal className="w-4 h-4" />
               <span className="hidden sm:inline">فلاتر</span>
             </Button>
             <Select value={filters.sortBy || "newest"} onValueChange={(v) => setFilters(prev => ({ ...prev, sortBy: v }))}>
-              <SelectTrigger className="w-[110px] h-9 text-xs bg-card shrink-0">
+              <SelectTrigger className="w-[120px] h-10 text-xs bg-background/80 shrink-0 rounded-xl border-border/60 font-medium">
                 <SelectValue placeholder="ترتيب" />
               </SelectTrigger>
               <SelectContent>
