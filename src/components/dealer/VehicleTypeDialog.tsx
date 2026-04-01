@@ -14,7 +14,7 @@ const vehicleOptions = [
   },
   {
     id: "microbus",
-    label: "ميكروباص",
+    label: "نقل وميكروباص",
     description: "هاي اس، كوستر، هاي لوكس ...",
     icon: Bus,
   },
@@ -115,7 +115,7 @@ const VehicleTypeDialog = ({ open, dealerAccountId, onComplete }: VehicleTypeDia
           disabled={selected.length === 0 || saving}
           className="w-full mt-2 h-11 text-sm font-bold"
         >
-          {saving ? <Loader2 className="w-4 h-4 ml-2 animate-spin" /> : null}
+          {saving ? <Loader2 className="w-4 h-4 ml-2 animate-spin" /> : <Check className="w-4 h-4 ml-2" />}
           تأكيد الاختيار
         </Button>
       </DialogContent>

@@ -73,7 +73,7 @@ const DealerVehicleRecommendations = ({ vehicleTypes, compact }: DealerVehicleRe
   };
 
   const vehicleLabel = vehicleTypes.map((vt) =>
-    vt === "sedan" ? "ملاكي" : vt === "microbus" ? "ميكروباص" : vt
+    vt === "sedan" ? "ملاكي" : vt === "microbus" ? "نقل وميكروباص" : vt
   ).join(" و ");
 
   if (loading) {
@@ -104,7 +104,7 @@ const DealerVehicleRecommendations = ({ vehicleTypes, compact }: DealerVehicleRe
           )}
           {vehicleTypes.includes("microbus") && (
             <Badge variant="secondary" className="text-[9px] gap-1 px-1.5">
-              <Bus className="w-2.5 h-2.5" /> ميكروباص
+              <Bus className="w-2.5 h-2.5" /> نقل وميكروباص
             </Badge>
           )}
         </div>
