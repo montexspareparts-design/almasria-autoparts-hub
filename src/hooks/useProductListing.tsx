@@ -230,6 +230,7 @@ export function useProductListing(options: UseProductListingOptions = {}) {
       title: "✅ تم التسعير",
       description: "اضغط لعرض الأصناف المسعّرة اليوم",
       action: <button onClick={() => navigate("/dealer?tab=priced_today")} className="text-xs font-bold text-primary hover:underline whitespace-nowrap">عرض المسعّرة ←</button>,
+      className: "bg-green-50 border-green-200 dark:bg-green-950/50 dark:border-green-800 text-green-900 dark:text-green-100",
     });
   }, [user, isDealer, viewedProductIds, limitReached, queryClient, navigate]);
 
