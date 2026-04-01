@@ -87,7 +87,16 @@ const ProductListingSection = ({
       <section id={sectionId} className={sectionClassName || "py-3 md:py-5 bg-background"}>
         <div className="container mx-auto px-4">
           {/* Premium toolbar */}
-          <div className="flex items-center gap-2.5 mb-4 p-2.5 rounded-2xl bg-card/80 backdrop-blur-sm border border-border/60 shadow-sm relative z-[55]">
+          <div
+            className="flex items-center gap-2.5 mb-4 p-2.5 rounded-2xl bg-card/80 backdrop-blur-sm border border-border/60 shadow-sm relative z-[55] cursor-text"
+            onClick={(e) => {
+              const target = e.target as HTMLElement;
+              if (target.tagName === 'DIV' || target.tagName === 'SECTION') {
+                const searchInput = e.currentTarget.querySelector<HTMLInputElement>('input[type="text"], input[placeholder]');
+                if (searchInput) searchInput.focus();
+              }
+            }}
+          >
             <ProductSearchAutocomplete
               value={filters.search}
               onChange={(v) => setFilters(prev => ({ ...prev, search: v }))}
