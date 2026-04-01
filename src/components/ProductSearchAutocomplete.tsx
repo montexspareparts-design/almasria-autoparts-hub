@@ -118,8 +118,54 @@ const ProductSearchAutocomplete = ({
 }: Props) => {
   const [isFocused, setIsFocused] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [typingPlaceholder, setTypingPlaceholder] = useState("");
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Typing animation for placeholder
+  const placeholderPhrases = [
+    "ابحث عن فلتر زيت...",
+    "ابحث عن تيل فرامل...",
+    "ابحث برقم القطعة...",
+    "ابحث عن بوجيهات...",
+    "ابحث عن كشافات...",
+    "ابحث عن سير مكينة...",
+  ];
+
+  useEffect(() => {
+    if (value || isFocused) return;
+    let phraseIdx = 0;
+    let charIdx = 0;
+    let deleting = false;
+    let timeout: ReturnType<typeof setTimeout>;
+
+    const tick = () => {
+      const phrase = placeholderPhrases[phraseIdx];
+      if (!deleting) {
+        charIdx++;
+        setTypingPlaceholder(phrase.slice(0, charIdx));
+        if (charIdx === phrase.length) {
+          deleting = true;
+          timeout = setTimeout(tick, 1800);
+          return;
+        }
+        timeout = setTimeout(tick, 70);
+      } else {
+        charIdx--;
+        setTypingPlaceholder(phrase.slice(0, charIdx));
+        if (charIdx === 0) {
+          deleting = false;
+          phraseIdx = (phraseIdx + 1) % placeholderPhrases.length;
+          timeout = setTimeout(tick, 400);
+          return;
+        }
+        timeout = setTimeout(tick, 35);
+      }
+    };
+
+    timeout = setTimeout(tick, 500);
+    return () => clearTimeout(timeout);
+  }, [value, isFocused]);
 
   const suggestions = useMemo(() => {
     if (!value || value.length < 2) return [];
@@ -187,7 +233,7 @@ const ProductSearchAutocomplete = ({
         </div>
         <Input
           ref={inputRef}
-          placeholder={placeholder}
+          placeholder={value ? placeholder : (typingPlaceholder || placeholder)}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setIsFocused(true)}
