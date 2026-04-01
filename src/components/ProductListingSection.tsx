@@ -56,7 +56,7 @@ interface ProductListingSectionProps {
 
 const ProductListingSection = ({
   filters, setFilters, viewMode, setViewMode,
-  currentPage, setCurrentPage, totalPages,
+  hasMore, loadMore,
   products, isLoading, filteredProducts, paginatedProducts,
   visibleCategories, categoryCounts,
   user, isDealer, viewedProductIds, dailyViewCount, limitReached, dailyLimit,
