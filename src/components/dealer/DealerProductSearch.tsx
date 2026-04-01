@@ -113,9 +113,8 @@ const DealerProductSearch = ({ onNavigateToOrders }: DealerProductSearchProps) =
         setFilters={listing.setFilters}
         viewMode={listing.viewMode}
         setViewMode={listing.setViewMode}
-        currentPage={listing.currentPage}
-        setCurrentPage={listing.setCurrentPage}
-        totalPages={listing.totalPages}
+        hasMore={listing.hasMore}
+        loadMore={listing.loadMore}
         products={listing.products}
         isLoading={listing.isLoading}
         filteredProducts={listing.filteredProducts}
