@@ -348,7 +348,7 @@ const DealerPricedToday = ({ onConvertToOrder, sharedCart }: DealerPricedTodayPr
 
                             {/* Details */}
                             <button
-                              onClick={() => setDetailProduct(item.product)}
+                              onClick={(e) => { e.stopPropagation(); setDetailProduct(item.product); }}
                               className="text-[11px] text-primary hover:text-primary/80 font-semibold flex items-center gap-0.5 transition-colors"
                             >
                               <Info className="w-3 h-3" /> التفاصيل
