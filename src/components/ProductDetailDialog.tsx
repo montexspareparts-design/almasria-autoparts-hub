@@ -299,7 +299,7 @@ const ProductDetailDialog = ({
                     {product.base_price.toLocaleString("ar-EG")} ج.م
                   </div>
                 )}
-                <div className="text-primary font-black text-2xl">
+                <div className="text-primary font-black text-xl sm:text-2xl">
                   {price.toLocaleString("ar-EG")} ج.م
                 </div>
                 {priceLabel && (
