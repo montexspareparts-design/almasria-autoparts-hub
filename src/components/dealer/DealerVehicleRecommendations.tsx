@@ -30,8 +30,8 @@ const DealerVehicleRecommendations = ({ compact }: DealerVehicleRecommendationsP
   const [revealingId, setRevealingId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (vehicleTypes.length > 0) fetchRecommendations();
-  }, [vehicleTypes]);
+    fetchRecommendations();
+  }, []);
 
   useEffect(() => {
     if (user) fetchDailyViews();
