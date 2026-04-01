@@ -254,7 +254,7 @@ const ProductCard = ({
           </Button>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 };
 
