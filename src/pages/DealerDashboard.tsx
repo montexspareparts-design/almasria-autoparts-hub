@@ -120,7 +120,12 @@ const DealerDashboard = () => {
 
   const renderContent = () => {
     switch (activeTab) {
-      case "quotes": return <DealerProductSearch />;
+      case "quotes": return (
+        <div className="space-y-6">
+          {vehicleTypes.length > 0 && <DealerVehicleRecommendations vehicleTypes={vehicleTypes} compact />}
+          <DealerProductSearch />
+        </div>
+      );
       case "priced_today": return <DealerPricedToday onConvertToOrder={() => setActiveTab("cart")} sharedCart={dealerCart} />;
       case "cart": return <DealerCart onNavigateToOrders={() => setActiveTab("orders")} onNavigateToPayment={(info) => { if (info) setPaymentTarget(info); setActiveTab("payment"); }} sharedCart={dealerCart} />;
       case "quick_order": return <DealerQuickOrder />;
