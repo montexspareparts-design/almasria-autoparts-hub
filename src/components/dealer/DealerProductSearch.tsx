@@ -141,9 +141,6 @@ const DealerProductSearch = ({ onNavigateToOrders }: DealerProductSearchProps) =
         commandPaletteOpen={listing.commandPaletteOpen}
         setCommandPaletteOpen={listing.setCommandPaletteOpen}
         showBrands
-        sectionTitle={
-          <h2 className="text-lg font-bold text-foreground">ابحث عن القطعة</h2>
-        }
         beforeGrid={<CategoryBrowseSlider />}
       />
 
