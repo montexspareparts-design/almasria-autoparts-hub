@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { TrendingUp, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import ProductDetailDialog from "@/components/ProductDetailDialog";
+import { useDealerCart } from "@/hooks/useDealerCart";
+import { toast } from "sonner";
 
 interface PopularProduct {
   id: string;
