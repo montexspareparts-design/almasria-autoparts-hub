@@ -52,6 +52,7 @@ const Auth = () => {
 
   const isLogin = mode === "login";
   const phoneToEmail = (p: string) => `${p.replace(/\D/g, "")}@phone.almasria.app`;
+  const credIsPhone = isPhone(credential);
   const getAuthEmail = () => {
     if (isLogin) {
       return loginMethod === "phone" ? phoneToEmail(credential) : credential.trim();
