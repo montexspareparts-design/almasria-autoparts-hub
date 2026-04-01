@@ -171,50 +171,33 @@ const CategoryBrowseSlider = () => {
           <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-background to-transparent z-[5] pointer-events-none" />
 
           <div
-            className="flex w-max gap-5 py-2"
+            className="flex w-max gap-3 py-2"
             style={{
-              animation: `marquee-rtl ${sortedCategories.length * 3}s linear infinite`,
-              animationPlayState: isHovered ? 'paused' : 'running',
+              animation: `marquee-rtl ${sortedCategories.length * 2.5}s linear infinite`,
             }}
           >
-            {/* Duplicate items for seamless loop */}
             {[...sortedCategories, ...sortedCategories].map((cat, i) => (
               <Link
                 key={`${cat.name}-${i}`}
                 to={`/products/${cat.brand}?search=${encodeURIComponent(cat.search)}`}
-                className="group/card block relative min-w-[150px] sm:min-w-[170px] rounded-2xl overflow-hidden shadow-md hover:shadow-[0_0_20px_hsl(var(--primary)/0.35),0_15px_35px_hsl(0_0%_0%/0.15)] transition-all duration-400 shrink-0"
+                className="group/card block relative w-[120px] sm:w-[140px] rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 shrink-0"
               >
-                <motion.div
-                  whileHover={{ y: -10, scale: 1.05, rotateZ: -1 }}
-                  transition={{ type: "spring", stiffness: 350, damping: 18 }}
-                >
-                  {/* Product Image */}
-                  <div className="aspect-square bg-white p-3 relative overflow-hidden">
-                    <img
-                      src={cat.image}
-                      alt={cat.name}
-                      loading="lazy"
-                      width={512}
-                      height={512}
-                      className="w-full h-full object-contain group-hover/card:scale-115 transition-transform duration-400 ease-out"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover/card:translate-x-full transition-transform duration-500 ease-in-out" />
-                    <div className="absolute inset-0 bg-primary/0 group-hover/card:bg-primary/5 transition-colors duration-200" />
-                  </div>
-
-                  {/* Label */}
-                  <div className={`relative bg-gradient-to-br ${cat.accent} px-4 py-3.5 text-center`}>
-                    <span className="text-white font-bold text-sm block leading-snug">
-                      {cat.name}
-                    </span>
-                    <span className="text-white/70 text-[11px] block mt-0.5">
-                      {categoryCounts[cat.search] !== undefined
-                        ? `${categoryCounts[cat.search]} صنف`
-                        : "..."}
-                    </span>
-                    <ChevronLeft className="w-4 h-4 text-white/70 mx-auto mt-1 group-hover/card:text-white group-hover/card:-translate-x-1.5 transition-all duration-250" />
-                  </div>
-                </motion.div>
+                <div className="aspect-[4/3] bg-white p-2 relative overflow-hidden">
+                  <img
+                    src={cat.image}
+                    alt={cat.name}
+                    loading="lazy"
+                    width={280}
+                    height={210}
+                    className="w-full h-full object-contain group-hover/card:scale-110 transition-transform duration-300"
+                  />
+                </div>
+                <div className={`relative bg-gradient-to-br ${cat.accent} px-2.5 py-2 text-center`}>
+                  <span className="text-white font-bold text-xs block leading-snug">{cat.name}</span>
+                  <span className="text-white/70 text-[10px] block">
+                    {categoryCounts[cat.search] !== undefined ? `${categoryCounts[cat.search]} صنف` : "..."}
+                  </span>
+                </div>
               </Link>
             ))}
           </div>
