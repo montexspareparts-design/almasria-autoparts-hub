@@ -148,7 +148,7 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
   };
 
   const handleBack = () => {
-    setStep("choose"); setIframeUrl(null); setWalletRedirectUrl(null); setKioskBillRef(null);
+    setStep("choose"); setWalletRedirectUrl(null); setKioskBillRef(null);
     setReceiptFile(null); setReceiptPreview(null); setReceiptSubmitted(false); setError(null);
   };
 
