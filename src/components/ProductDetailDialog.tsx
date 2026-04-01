@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Package, ShoppingCart, ZoomIn, ZoomOut, Lock, Eye, Tag, Layers, Hash, Box, Info, Car, Sparkles } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Separator } from "@/components/ui/separator";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,6 +42,7 @@ const ProductDetailDialog = ({
   limitReached = false,
 }: ProductDetailDialogProps) => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [zoomed, setZoomed] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
   const imageRef = useRef<HTMLDivElement>(null);
@@ -125,17 +127,17 @@ const ProductDetailDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] p-0 gap-0 overflow-hidden" dir="rtl">
+      <DialogContent className="max-w-2xl max-h-[90vh] sm:max-h-[90vh] p-0 gap-0 overflow-hidden w-[95vw] sm:w-full rounded-2xl sm:rounded-lg" dir="rtl">
         <DialogHeader className="sr-only">
           <DialogTitle>{product.name_ar}</DialogTitle>
           <DialogDescription>تفاصيل المنتج</DialogDescription>
         </DialogHeader>
 
-        <div className="overflow-y-auto max-h-[90vh]">
+        <div className="overflow-y-auto max-h-[85vh] sm:max-h-[90vh]">
         <div
           ref={imageRef}
-          className="relative bg-white aspect-[3/2] cursor-crosshair overflow-hidden rounded-t-lg shrink-0"
-          onClick={() => setZoomed(!zoomed)}
+          className={`relative bg-white overflow-hidden rounded-t-2xl sm:rounded-t-lg shrink-0 ${isMobile ? 'aspect-square' : 'aspect-[3/2] cursor-crosshair'}`}
+          onClick={() => !isMobile && setZoomed(!zoomed)}
           onMouseMove={handleMouseMove}
           onMouseLeave={() => { if (zoomed) setZoomPosition({ x: 50, y: 50 }); }}
         >
@@ -143,7 +145,7 @@ const ProductDetailDialog = ({
             <img
               src={product.image_url}
               alt={product.name_ar}
-              className="w-full h-full object-contain p-6 transition-transform duration-300 mix-blend-multiply"
+              className="w-full h-full object-contain p-4 sm:p-6 transition-transform duration-300 mix-blend-multiply"
               style={
                 zoomed
                   ? {
@@ -155,17 +157,19 @@ const ProductDetailDialog = ({
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <Package className="w-20 h-20 text-muted-foreground/20" />
+              <Package className="w-14 h-14 sm:w-20 sm:h-20 text-muted-foreground/20" />
             </div>
           )}
 
-          {/* Zoom toggle */}
-          <button
-            className="absolute bottom-3 left-3 bg-background/80 backdrop-blur-sm border border-border rounded-full p-2 text-foreground hover:bg-background transition-colors"
-            onClick={(e) => { e.stopPropagation(); setZoomed(!zoomed); }}
-          >
-            {zoomed ? <ZoomOut className="w-4 h-4" /> : <ZoomIn className="w-4 h-4" />}
-          </button>
+          {/* Zoom toggle - desktop only */}
+          {!isMobile && (
+            <button
+              className="absolute bottom-3 left-3 bg-background/80 backdrop-blur-sm border border-border rounded-full p-2 text-foreground hover:bg-background transition-colors"
+              onClick={(e) => { e.stopPropagation(); setZoomed(!zoomed); }}
+            >
+              {zoomed ? <ZoomOut className="w-4 h-4" /> : <ZoomIn className="w-4 h-4" />}
+            </button>
+          )}
 
           {zoomed && (
             <div className="absolute top-3 right-3 bg-primary/90 text-primary-foreground text-[11px] px-2 py-1 rounded-full font-semibold">
@@ -182,41 +186,41 @@ const ProductDetailDialog = ({
         </div>
 
         {/* Details section */}
-        <div className="p-5 space-y-4">
+        <div className="p-4 sm:p-5 space-y-3 sm:space-y-4">
           {/* Header: SKU + Stock + Brand */}
-          <div className="flex items-center flex-wrap gap-2">
-            <Badge variant="outline" className="font-mono text-xs gap-1">
-              <Hash className="w-3 h-3" />
+          <div className="flex items-center flex-wrap gap-1.5 sm:gap-2">
+            <Badge variant="outline" className="font-mono text-[10px] sm:text-xs gap-1 px-1.5 sm:px-2">
+              <Hash className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
               {product.sku}
             </Badge>
             {product.stock_quantity > 0 ? (
-              <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200 text-xs gap-1">
-                <Box className="w-3 h-3" />
+              <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200 text-[10px] sm:text-xs gap-1 px-1.5 sm:px-2">
+                <Box className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                 متوفر
               </Badge>
             ) : (
-              <Badge variant="destructive" className="text-xs">غير متوفر</Badge>
+              <Badge variant="destructive" className="text-[10px] sm:text-xs">غير متوفر</Badge>
             )}
             {product.brand && brandLabels[product.brand] && (
-              <Badge variant="secondary" className="text-xs gap-1">
-                <Tag className="w-3 h-3" />
+              <Badge variant="secondary" className="text-[10px] sm:text-xs gap-1 px-1.5 sm:px-2">
+                <Tag className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                 {brandLabels[product.brand]}
               </Badge>
             )}
           </div>
 
           {/* Product Name */}
-          <h2 className="text-xl font-bold text-foreground leading-relaxed">
+          <h2 className="text-lg sm:text-xl font-bold text-foreground leading-relaxed">
             {product.name_ar}
           </h2>
           {product.name_en && (
-            <p className="text-sm text-muted-foreground -mt-2">{product.name_en}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground -mt-1.5 sm:-mt-2">{product.name_en}</p>
           )}
 
           <Separator />
 
           {/* Info Grid */}
-          <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 text-sm">
             {/* Category */}
             {product.product_categories && (
               <div className="flex items-center gap-2">
@@ -278,7 +282,7 @@ const ProductDetailDialog = ({
           <Separator />
 
           {/* Price Section */}
-          <div className="bg-muted/50 rounded-lg p-4">
+          <div className="bg-muted/50 rounded-xl sm:rounded-lg p-3 sm:p-4">
             {!isLoggedIn ? (
               <Button
                 variant="outline"
@@ -295,7 +299,7 @@ const ProductDetailDialog = ({
                     {product.base_price.toLocaleString("ar-EG")} ج.م
                   </div>
                 )}
-                <div className="text-primary font-black text-2xl">
+                <div className="text-primary font-black text-xl sm:text-2xl">
                   {price.toLocaleString("ar-EG")} ج.م
                 </div>
                 {priceLabel && (
