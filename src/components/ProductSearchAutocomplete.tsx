@@ -241,7 +241,7 @@ const ProductSearchAutocomplete = ({
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onKeyDown={handleKeyDown}
-          className="pr-14 pl-20 bg-card border-border/60 h-12 text-sm placeholder:text-muted-foreground/50 rounded-xl shadow-sm transition-all duration-300 focus-visible:ring-primary/30 focus-visible:ring-offset-0 focus-visible:border-primary/40 focus-visible:shadow-md focus-visible:shadow-primary/5"
+          className="pr-14 pl-20 bg-card border-border/60 h-10 sm:h-12 text-xs sm:text-sm placeholder:text-muted-foreground/50 rounded-xl shadow-sm transition-all duration-300 focus-visible:ring-primary/30 focus-visible:ring-offset-0 focus-visible:border-primary/40 focus-visible:shadow-md focus-visible:shadow-primary/5"
         />
         <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
           {value && (
