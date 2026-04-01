@@ -30,6 +30,7 @@ const AdminCustomerIntelligence = lazy(() => import("@/components/AdminCustomerI
 const AdminProductInsights = lazy(() => import("@/components/AdminProductInsights"));
 const AdminPaymobSettings = lazy(() => import("@/components/AdminPaymobSettings"));
 const AdminPaymentReminders = lazy(() => import("@/components/AdminPaymentReminders"));
+const AdminInstaPayReceipts = lazy(() => import("@/components/AdminInstaPayReceipts"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];
