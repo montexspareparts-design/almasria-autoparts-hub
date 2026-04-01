@@ -115,8 +115,8 @@ const fuzzyProductMatch = (query: string, product: Product): boolean => {
 };
 
 const ProductSearchAutocomplete = ({
-  value, onChange, products = [], onProductClick, onCommandPaletteOpen,
-  placeholder = "ابحث بالاسم أو رقم القطعة..."
+  value, onChange, products = [], onProductClick, onAddToQuote, onCommandPaletteOpen,
+  placeholder = "ابحث بالاسم أو رقم القطعة...", isDealer = false
 }: Props) => {
   const [isFocused, setIsFocused] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
