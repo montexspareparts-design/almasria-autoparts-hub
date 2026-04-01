@@ -232,26 +232,40 @@ const ProductFilterSidebar = ({
                         <span className="text-xs opacity-60">{totalResults}</span>
                       </button>
                       {categories.map((cat) => {
-                        const IconComp = cat.icon && icons[cat.icon as keyof typeof icons] ? icons[cat.icon as keyof typeof icons] : null;
+                        const catSlug = (cat as any).slug || "";
+                        const categoryIconMap: Record<string, { icon: React.ReactNode; bg: string }> = {
+                          "spark-plugs-coils": { icon: <Zap className="w-3.5 h-3.5 text-yellow-600 dark:text-yellow-400" />, bg: "bg-yellow-500/10" },
+                          "water-cooling": { icon: <Droplets className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />, bg: "bg-cyan-500/10" },
+                          "belts-bearings": { icon: <CircleDot className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />, bg: "bg-indigo-500/10" },
+                          "suspension": { icon: <Truck className="w-3.5 h-3.5 text-stone-600 dark:text-stone-400" />, bg: "bg-stone-500/10" },
+                          "brakes": { icon: <Disc3 className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />, bg: "bg-red-500/10" },
+                          "clutch": { icon: <Disc3 className="w-3.5 h-3.5 text-pink-600 dark:text-pink-400" />, bg: "bg-pink-500/10" },
+                          "steering": { icon: <Navigation className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />, bg: "bg-teal-500/10" },
+                          "filters": { icon: <Filter className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />, bg: "bg-green-500/10" },
+                          "fiber-parts": { icon: <Layers className="w-3.5 h-3.5 text-gray-600 dark:text-gray-400" />, bg: "bg-gray-500/10" },
+                          "oils-gasoline": { icon: <Fuel className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />, bg: "bg-amber-500/10" },
+                          "oils-diesel": { icon: <Fuel className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />, bg: "bg-orange-500/10" },
+                          "oils-transmission": { icon: <Cog className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />, bg: "bg-violet-500/10" },
+                        };
+                        const catIcon = categoryIconMap[catSlug];
                         const count = categoryCounts?.[cat.id];
+                        const isActive = filters.categoryId === cat.id;
                         return (
                           <button
                             key={cat.id}
-                            onClick={() => handleFilterChange("categoryId", filters.categoryId === cat.id ? null : cat.id)}
-                            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-all group ${
-                              filters.categoryId === cat.id
+                            onClick={() => handleFilterChange("categoryId", isActive ? null : cat.id)}
+                            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm transition-all group ${
+                              isActive
                                 ? "bg-primary/10 text-primary font-bold border border-primary/20"
                                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
                             }`}
                           >
                             <div className="flex items-center gap-2.5">
-                              {IconComp && (
-                                <div className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 ${
-                                  filters.categoryId === cat.id ? "bg-primary/20" : "bg-muted group-hover:bg-primary/10"
-                                }`}>
-                                  <IconComp className="w-3.5 h-3.5" />
-                                </div>
-                              )}
+                              <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                                isActive ? "bg-primary/15" : (catIcon?.bg || "bg-muted")
+                              }`}>
+                                {catIcon ? catIcon.icon : <Layers className="w-3.5 h-3.5" />}
+                              </div>
                               <span className="truncate">{cat.name_ar}</span>
                             </div>
                             {count !== undefined && (
