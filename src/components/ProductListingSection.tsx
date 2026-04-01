@@ -94,7 +94,6 @@ const ProductListingSection = ({
               onProductClick={(p) => setSelectedProduct(p)}
               onAddToQuote={(p) => {
                 recordView(p.id);
-                setSelectedProduct(p);
               }}
               onCommandPaletteOpen={() => setCommandPaletteOpen(true)}
               isDealer={isDealer}
