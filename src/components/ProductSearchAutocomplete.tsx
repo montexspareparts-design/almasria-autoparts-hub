@@ -198,7 +198,8 @@ const ProductSearchAutocomplete = ({
     return null;
   }, [value]);
 
-  const showDropdown = isFocused && (suggestions.length > 0 || didYouMean);
+  const showDropdown = isFocused && (suggestions.length > 0 || didYouMean || popularProducts.length > 0);
+  const displayProducts = suggestions.length > 0 ? suggestions : popularProducts;
 
   useEffect(() => {
     setSelectedIndex(-1);
