@@ -1,8 +1,8 @@
 import { useState, useRef } from "react";
 import {
   CreditCard, Loader2, ShieldCheck, AlertCircle, ArrowLeft,
-  Smartphone, Store, Copy, CheckCircle2, Package, Lock, ChevronDown,
-  Banknote, Upload, ExternalLink, ImageIcon
+  Smartphone, Store, Copy, CheckCircle2, Package, Lock,
+  Banknote, Upload, ExternalLink, ImageIcon, Zap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,11 +13,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
 
 type PaymentMethod = "card" | "wallet" | "kiosk" | "instapay";
 
@@ -27,14 +22,43 @@ const INSTAPAY_ADDRESS = "drmado@instapay";
 const PAYMENT_METHODS: {
   id: PaymentMethod;
   label: string;
-  labelEn: string;
+  desc: string;
   icon: typeof CreditCard;
-  color: string;
+  gradient: string;
+  iconBg: string;
 }[] = [
-  { id: "card", label: "بطاقة بنكية", labelEn: "Visa / Mastercard / Meeza", icon: CreditCard, color: "text-blue-600" },
-  { id: "wallet", label: "محفظة إلكترونية", labelEn: "Vodafone Cash / Orange / Etisalat", icon: Smartphone, color: "text-orange-600" },
-  { id: "instapay", label: "InstaPay", labelEn: "تحويل فوري من أي بنك", icon: Banknote, color: "text-violet-600" },
-  { id: "kiosk", label: "فروع أمان / مصاري", labelEn: "Aman / Masary", icon: Store, color: "text-emerald-600" },
+  {
+    id: "card",
+    label: "بطاقة بنكية",
+    desc: "Visa / Mastercard / Meeza",
+    icon: CreditCard,
+    gradient: "from-blue-600 to-blue-700",
+    iconBg: "bg-blue-600",
+  },
+  {
+    id: "wallet",
+    label: "محفظة إلكترونية",
+    desc: "Vodafone Cash / Orange / Etisalat",
+    icon: Smartphone,
+    gradient: "from-orange-500 to-orange-600",
+    iconBg: "bg-orange-500",
+  },
+  {
+    id: "instapay",
+    label: "InstaPay",
+    desc: "تحويل فوري من أي بنك",
+    icon: Banknote,
+    gradient: "from-violet-600 to-violet-700",
+    iconBg: "bg-violet-600",
+  },
+  {
+    id: "kiosk",
+    label: "فروع أمان / مصاري",
+    desc: "Aman / Masary",
+    icon: Store,
+    gradient: "from-emerald-600 to-emerald-700",
+    iconBg: "bg-emerald-600",
+  },
 ];
 
 interface DealerPaymentProps {
@@ -50,14 +74,13 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState<"choose" | "pay">("choose");
-  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const [iframeUrl, setIframeUrl] = useState<string | null>(null);
   const [walletRedirectUrl, setWalletRedirectUrl] = useState<string | null>(null);
   const [kioskBillRef, setKioskBillRef] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // InstaPay states
+  // InstaPay
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
@@ -67,12 +90,7 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
   const selectedMethodData = PAYMENT_METHODS.find((m) => m.id === selectedMethod)!;
 
   const handlePay = async (orderId: string) => {
-    // InstaPay flow — go directly to step 2
-    if (selectedMethod === "instapay") {
-      setStep("pay");
-      return;
-    }
-
+    if (selectedMethod === "instapay") { setStep("pay"); return; }
     if (selectedMethod === "wallet" && !walletPhone) {
       toast({ title: "أدخل رقم المحفظة", variant: "destructive" });
       return;
@@ -83,62 +101,29 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
       const { ensureActiveSession } = await import("@/lib/paymob");
       await ensureActiveSession();
       const { data, error: fnError } = await supabase.functions.invoke("create-payment", {
-        body: {
-          order_id: orderId,
-          payment_method: selectedMethod,
-          wallet_phone: selectedMethod === "wallet" ? walletPhone : undefined,
-          return_url: `${window.location.origin}/payment-callback`,
-        },
+        body: { order_id: orderId, payment_method: selectedMethod, wallet_phone: selectedMethod === "wallet" ? walletPhone : undefined, return_url: `${window.location.origin}/payment-callback` },
       });
-      if (fnError || !data?.payment_key) {
-        setError(data?.error || "تعذر إنشاء جلسة الدفع. يرجى المحاولة مرة أخرى.");
-        return;
-      }
-      if (selectedMethod === "card" && data.iframe_url) {
-        setIframeUrl(data.iframe_url);
-        setStep("pay");
-      } else if (selectedMethod === "wallet" && data.wallet_redirect_url) {
-        setWalletRedirectUrl(data.wallet_redirect_url);
-        setStep("pay");
-        window.location.href = data.wallet_redirect_url;
-      } else if (selectedMethod === "wallet" && !data.wallet_redirect_url) {
-        setStep("pay");
-      } else if (selectedMethod === "kiosk" && data.kiosk_bill_reference) {
-        setKioskBillRef(data.kiosk_bill_reference);
-        setStep("pay");
-      } else {
-        setError("تعذر بدء عملية الدفع بهذه الطريقة. جرب طريقة أخرى.");
-      }
-    } catch (e: any) {
-      setError(e.message || "حدث خطأ غير متوقع");
-    } finally {
-      setLoading(false);
-    }
+      if (fnError || !data?.payment_key) { setError(data?.error || "تعذر إنشاء جلسة الدفع."); return; }
+      if (selectedMethod === "card" && data.iframe_url) { setIframeUrl(data.iframe_url); setStep("pay"); }
+      else if (selectedMethod === "wallet" && data.wallet_redirect_url) { setWalletRedirectUrl(data.wallet_redirect_url); setStep("pay"); window.location.href = data.wallet_redirect_url; }
+      else if (selectedMethod === "wallet") { setStep("pay"); }
+      else if (selectedMethod === "kiosk" && data.kiosk_bill_reference) { setKioskBillRef(data.kiosk_bill_reference); setStep("pay"); }
+      else { setError("جرب طريقة دفع أخرى."); }
+    } catch (e: any) { setError(e.message || "حدث خطأ"); }
+    finally { setLoading(false); }
   };
 
-  const handleCopyBillRef = () => {
-    if (kioskBillRef) {
-      navigator.clipboard.writeText(kioskBillRef);
-      setCopied(true);
-      toast({ title: "تم نسخ رقم الفاتورة" });
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
-  const handleCopyInstaPay = () => {
-    navigator.clipboard.writeText(INSTAPAY_ADDRESS);
+  const handleCopy = (text: string, msg: string) => {
+    navigator.clipboard.writeText(text);
     setCopied(true);
-    toast({ title: "تم نسخ عنوان InstaPay" });
+    toast({ title: msg });
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleReceiptSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast({ title: "حجم الملف كبير جداً (الحد الأقصى 5 ميجا)", variant: "destructive" });
-      return;
-    }
+    if (file.size > 5 * 1024 * 1024) { toast({ title: "الحد الأقصى 5 ميجا", variant: "destructive" }); return; }
     setReceiptFile(file);
     const reader = new FileReader();
     reader.onload = (ev) => setReceiptPreview(ev.target?.result as string);
@@ -151,55 +136,31 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
     try {
       const ext = receiptFile.name.split(".").pop() || "jpg";
       const filePath = `instapay-receipts/${targetOrderId}/${Date.now()}.${ext}`;
-
-      const { error: uploadErr } = await supabase.storage
-        .from("dealer-documents")
-        .upload(filePath, receiptFile, { upsert: true });
-
+      const { error: uploadErr } = await supabase.storage.from("dealer-documents").upload(filePath, receiptFile, { upsert: true });
       if (uploadErr) throw uploadErr;
-
-      // Update order payment method and add note
-      const { error: updateErr } = await supabase
-        .from("orders")
-        .update({
-          payment_method: "instapay",
-          notes: `إيصال InstaPay: ${filePath}`,
-        })
-        .eq("id", targetOrderId)
-        .eq("user_id", user.id);
-
+      const { error: updateErr } = await supabase.from("orders").update({ payment_method: "instapay", notes: `إيصال InstaPay: ${filePath}` }).eq("id", targetOrderId).eq("user_id", user.id);
       if (updateErr) throw updateErr;
-
       setReceiptSubmitted(true);
-      toast({ title: "✅ تم رفع الإيصال بنجاح", description: "سيتم مراجعته وتأكيد الطلب قريباً" });
-    } catch (e: any) {
-      toast({ title: "خطأ في رفع الإيصال", description: e.message, variant: "destructive" });
-    } finally {
-      setUploadingReceipt(false);
-    }
+      toast({ title: "✅ تم رفع الإيصال بنجاح" });
+    } catch (e: any) { toast({ title: "خطأ في رفع الإيصال", description: e.message, variant: "destructive" }); }
+    finally { setUploadingReceipt(false); }
   };
 
   const handleBack = () => {
-    setStep("choose");
-    setIframeUrl(null);
-    setWalletRedirectUrl(null);
-    setKioskBillRef(null);
-    setReceiptFile(null);
-    setReceiptPreview(null);
-    setReceiptSubmitted(false);
-    setError(null);
+    setStep("choose"); setIframeUrl(null); setWalletRedirectUrl(null); setKioskBillRef(null);
+    setReceiptFile(null); setReceiptPreview(null); setReceiptSubmitted(false); setError(null);
   };
 
-  // ─── No order selected ───
+  // ─── Empty State ───
   if (!targetOrderId) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-        <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mb-5">
-          <Package className="w-9 h-9 text-muted-foreground/40" />
+      <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
+        <div className="w-20 h-20 rounded-3xl bg-secondary/5 flex items-center justify-center mb-6 border border-border">
+          <Package className="w-9 h-9 text-muted-foreground/30" />
         </div>
-        <h3 className="text-lg font-bold text-foreground mb-1.5">لا يوجد طلب محدد</h3>
-        <p className="text-sm text-muted-foreground max-w-xs">
-          اذهب لتبويب <span className="font-bold text-foreground">"طلباتي"</span> واختر طلب لبدء الدفع
+        <h3 className="text-lg font-bold text-foreground mb-1">لا يوجد طلب محدد</h3>
+        <p className="text-sm text-muted-foreground max-w-[260px]">
+          اختر طلب من <span className="font-bold text-foreground">"طلباتي"</span> لبدء الدفع
         </p>
       </div>
     );
@@ -208,234 +169,157 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
   // ─── Step 2: Payment in progress ───
   if (step === "pay") {
     return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4 max-w-lg mx-auto">
-        <button onClick={handleBack} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="w-3.5 h-3.5" />
-          رجوع لطرق الدفع
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-5 max-w-lg mx-auto">
+        <button onClick={handleBack} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors group">
+          <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+          رجوع
         </button>
 
-        {targetOrderNumber && (
-          <div className="flex items-center justify-between bg-muted/40 rounded-xl px-4 py-3 text-sm">
-            <span className="text-muted-foreground">طلب رقم</span>
-            <span className="font-bold font-mono text-foreground" dir="ltr">{targetOrderNumber}</span>
-          </div>
-        )}
-
-        {selectedMethod === "card" && iframeUrl && (
-          <div className="rounded-2xl border border-border overflow-hidden bg-card shadow-sm">
-            <iframe
-              src={iframeUrl}
-              className="w-full border-0"
-              style={{ minHeight: "480px", height: "65vh", maxHeight: "650px" }}
-              title="Paymob Payment"
-              allow="payment"
-            />
-          </div>
-        )}
-
-        {selectedMethod === "wallet" && (
-          <div className="bg-card border border-border rounded-2xl p-8 text-center space-y-5">
-            <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto">
-              <Smartphone className="w-8 h-8 text-orange-600" />
-            </div>
-            <div>
-              <h3 className="text-lg font-black text-foreground">
-                {walletRedirectUrl ? "جاري فتح تطبيق المحفظة..." : "في انتظار تأكيد الدفع"}
-              </h3>
-              <p className="text-sm text-muted-foreground mt-2">
-                {walletRedirectUrl
-                  ? "لو مفتحش تلقائياً، اضغط الزر:"
-                  : "افتح تطبيق المحفظة على موبايلك ووافق على عملية الدفع"}
-              </p>
-            </div>
-            {walletRedirectUrl && (
-              <Button asChild className="gap-2 h-12 rounded-xl">
-                <a href={walletRedirectUrl} target="_blank" rel="noopener noreferrer">
-                  <Smartphone className="w-4 h-4" />
-                  فتح المحفظة
-                </a>
-              </Button>
+        {/* Mini order bar */}
+        {(targetOrderNumber || targetOrderAmount) && (
+          <div className="flex items-center justify-between rounded-xl bg-secondary text-secondary-foreground px-4 py-3">
+            {targetOrderNumber && <span className="text-xs font-mono opacity-80" dir="ltr">{targetOrderNumber}</span>}
+            {targetOrderAmount != null && targetOrderAmount > 0 && (
+              <span className="text-sm font-black" dir="ltr">{targetOrderAmount.toLocaleString("ar-EG")} ج.م</span>
             )}
           </div>
         )}
 
-        {selectedMethod === "kiosk" && kioskBillRef && (
-          <div className="bg-card border border-border rounded-2xl p-8 text-center space-y-5">
-            <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto">
-              <Store className="w-8 h-8 text-emerald-600" />
-            </div>
-            <div>
-              <h3 className="text-lg font-black text-foreground">رقم فاتورة الدفع</h3>
-              <p className="text-sm text-muted-foreground mt-2">
-                اذهب لأقرب فرع أمان أو مصاري وادفع برقم الفاتورة:
-              </p>
-            </div>
-            <div className="flex items-center justify-center gap-3 bg-muted/30 rounded-xl px-6 py-5 border border-border/60">
-              <span className="text-3xl font-black font-mono text-primary tracking-widest" dir="ltr">
-                {kioskBillRef}
-              </span>
-              <button onClick={handleCopyBillRef} className="p-2 rounded-lg hover:bg-muted transition-colors">
-                {copied ? <CheckCircle2 className="w-5 h-5 text-emerald-600" /> : <Copy className="w-5 h-5 text-muted-foreground" />}
-              </button>
-            </div>
-            <p className="text-[11px] text-muted-foreground">الفاتورة صالحة لمدة 24 ساعة</p>
+        {/* Card iframe */}
+        {selectedMethod === "card" && iframeUrl && (
+          <div className="rounded-2xl border border-border overflow-hidden bg-card shadow-sm">
+            <iframe src={iframeUrl} className="w-full border-0" style={{ minHeight: "480px", height: "65vh", maxHeight: "650px" }} title="Paymob Payment" allow="payment" />
           </div>
         )}
 
-        {/* ─── InstaPay Step 2 ─── */}
+        {/* Wallet */}
+        {selectedMethod === "wallet" && (
+          <PaymentResultCard icon={Smartphone} iconClass="text-orange-500" title={walletRedirectUrl ? "جاري فتح المحفظة..." : "في انتظار التأكيد"} desc={walletRedirectUrl ? "لو مفتحش تلقائياً:" : "افتح تطبيق المحفظة ووافق على الدفع"}>
+            {walletRedirectUrl && (
+              <Button asChild size="lg" className="gap-2 rounded-xl w-full">
+                <a href={walletRedirectUrl} target="_blank" rel="noopener noreferrer"><Smartphone className="w-4 h-4" />فتح المحفظة</a>
+              </Button>
+            )}
+          </PaymentResultCard>
+        )}
+
+        {/* Kiosk */}
+        {selectedMethod === "kiosk" && kioskBillRef && (
+          <PaymentResultCard icon={Store} iconClass="text-emerald-500" title="رقم فاتورة الدفع" desc="اذهب لأقرب فرع أمان أو مصاري:">
+            <div className="flex items-center justify-center gap-3 bg-muted/40 rounded-xl px-5 py-4">
+              <span className="text-2xl font-black font-mono text-foreground tracking-[0.15em]" dir="ltr">{kioskBillRef}</span>
+              <button onClick={() => handleCopy(kioskBillRef, "تم نسخ رقم الفاتورة")} className="p-2 rounded-lg hover:bg-muted transition-colors">
+                {copied ? <CheckCircle2 className="w-4.5 h-4.5 text-emerald-600" /> : <Copy className="w-4.5 h-4.5 text-muted-foreground" />}
+              </button>
+            </div>
+            <p className="text-[11px] text-muted-foreground text-center">صالحة لمدة 24 ساعة</p>
+          </PaymentResultCard>
+        )}
+
+        {/* InstaPay */}
         {selectedMethod === "instapay" && !receiptSubmitted && (
           <div className="space-y-4">
-            {/* Amount + InstaPay info */}
-            <div className="bg-card border border-border rounded-2xl p-6 text-center space-y-4">
-              <div className="w-14 h-14 rounded-2xl bg-violet-500/10 flex items-center justify-center mx-auto">
-                <Banknote className="w-7 h-7 text-violet-600" />
-              </div>
-
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">حوّل المبلغ التالي عبر InstaPay</p>
+            <div className="bg-card border border-border rounded-2xl overflow-hidden">
+              {/* Amount header */}
+              <div className="bg-gradient-to-r from-violet-600 to-violet-700 p-5 text-white text-center">
+                <p className="text-xs opacity-80 mb-1">المبلغ المطلوب تحويله</p>
                 {targetOrderAmount != null && targetOrderAmount > 0 && (
-                  <div dir="ltr" className="text-center">
-                    <span className="text-3xl font-black text-primary">{targetOrderAmount.toLocaleString("ar-EG")}</span>
-                    <span className="text-sm text-muted-foreground mr-1.5">ج.م</span>
-                  </div>
+                  <div dir="ltr"><span className="text-3xl font-black">{targetOrderAmount.toLocaleString("ar-EG")}</span><span className="text-sm opacity-70 mr-1">ج.م</span></div>
                 )}
               </div>
-
-              {/* InstaPay Address */}
-              <div className="bg-muted/30 rounded-xl px-4 py-3 border border-border/60">
-                <p className="text-[11px] text-muted-foreground mb-1.5">إلى حساب</p>
-                <div className="flex items-center justify-center gap-2">
-                  <span className="text-base font-black font-mono text-foreground" dir="ltr">{INSTAPAY_ADDRESS}</span>
-                  <button onClick={handleCopyInstaPay} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-                    {copied ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
-                  </button>
+              {/* InstaPay address */}
+              <div className="p-5 space-y-4">
+                <div className="text-center">
+                  <p className="text-xs text-muted-foreground mb-2">حوّل إلى</p>
+                  <div className="flex items-center justify-center gap-2 bg-muted/40 rounded-xl px-4 py-3">
+                    <span className="text-sm font-black font-mono text-foreground" dir="ltr">{INSTAPAY_ADDRESS}</span>
+                    <button onClick={() => handleCopy(INSTAPAY_ADDRESS, "تم النسخ")} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                      {copied ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
+                    </button>
+                  </div>
                 </div>
+                <Button asChild className="w-full gap-2 h-12 rounded-xl bg-violet-600 hover:bg-violet-700 text-white">
+                  <a href={INSTAPAY_LINK} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="w-4 h-4" />
+                    فتح InstaPay
+                  </a>
+                </Button>
               </div>
-
-              {/* Open InstaPay button */}
-              <Button asChild className="w-full gap-2 h-12 rounded-xl bg-violet-600 hover:bg-violet-700 text-white">
-                <a href={INSTAPAY_LINK} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="w-4 h-4" />
-                  فتح InstaPay وتحويل المبلغ
-                </a>
-              </Button>
-
-              <p className="text-[11px] text-muted-foreground">
-                سيتم فتح تطبيق InstaPay مباشرة. حوّل المبلغ ثم ارجع هنا لرفع الإيصال
-              </p>
             </div>
 
-            {/* Receipt Upload */}
+            {/* Receipt upload */}
             <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
-              <div className="flex items-center gap-2">
+              <p className="text-sm font-bold text-foreground flex items-center gap-2">
                 <Upload className="w-4 h-4 text-primary" />
-                <p className="text-sm font-bold text-foreground">رفع إيصال التحويل</p>
-              </div>
-
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleReceiptSelect}
-                className="hidden"
-              />
-
+                رفع إيصال التحويل
+              </p>
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleReceiptSelect} className="hidden" />
               {receiptPreview ? (
                 <div className="space-y-3">
-                  <div className="relative rounded-xl overflow-hidden border border-border">
-                    <img src={receiptPreview} alt="إيصال التحويل" className="w-full max-h-52 object-contain bg-muted/20" />
+                  <div className="rounded-xl overflow-hidden border border-border">
+                    <img src={receiptPreview} alt="إيصال" className="w-full max-h-48 object-contain bg-muted/10" />
                   </div>
                   <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 rounded-xl"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      تغيير الصورة
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="flex-1 rounded-xl gap-1.5"
-                      onClick={handleSubmitReceipt}
-                      disabled={uploadingReceipt}
-                    >
-                      {uploadingReceipt ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          جاري الرفع...
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle2 className="w-4 h-4" />
-                          تأكيد ورفع الإيصال
-                        </>
-                      )}
+                    <Button variant="outline" size="sm" className="flex-1 rounded-xl" onClick={() => fileInputRef.current?.click()}>تغيير</Button>
+                    <Button size="sm" className="flex-1 rounded-xl gap-1.5" onClick={handleSubmitReceipt} disabled={uploadingReceipt}>
+                      {uploadingReceipt ? <><Loader2 className="w-4 h-4 animate-spin" />جاري الرفع...</> : <><CheckCircle2 className="w-4 h-4" />تأكيد</>}
                     </Button>
                   </div>
                 </div>
               ) : (
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/40 hover:bg-primary/[0.02] transition-all group"
-                >
-                  <ImageIcon className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2 group-hover:text-primary/50 transition-colors" />
-                  <p className="text-sm font-bold text-muted-foreground group-hover:text-foreground transition-colors">
-                    اضغط لرفع صورة الإيصال
-                  </p>
-                  <p className="text-[10px] text-muted-foreground/60 mt-1">PNG, JPG — حد أقصى 5 ميجا</p>
+                <button onClick={() => fileInputRef.current?.click()} className="w-full border-2 border-dashed border-border rounded-xl p-6 text-center hover:border-primary/30 transition-all group">
+                  <ImageIcon className="w-7 h-7 text-muted-foreground/30 mx-auto mb-2 group-hover:text-primary/40 transition-colors" />
+                  <p className="text-sm font-bold text-muted-foreground">اضغط لرفع صورة الإيصال</p>
+                  <p className="text-[10px] text-muted-foreground/50 mt-1">PNG, JPG — حد أقصى 5 ميجا</p>
                 </button>
               )}
             </div>
           </div>
         )}
 
-        {/* InstaPay Success */}
+        {/* InstaPay success */}
         {selectedMethod === "instapay" && receiptSubmitted && (
-          <div className="bg-card border border-border rounded-2xl p-8 text-center space-y-4">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto">
-              <CheckCircle2 className="w-8 h-8 text-emerald-600" />
-            </div>
-            <h3 className="text-lg font-black text-foreground">تم رفع الإيصال بنجاح!</h3>
-            <p className="text-sm text-muted-foreground">
-              سيتم مراجعة الإيصال وتأكيد طلبك في أقرب وقت.
-              <br />ستصلك إشعار فور تأكيد الدفع.
-            </p>
-          </div>
+          <PaymentResultCard icon={CheckCircle2} iconClass="text-emerald-500" title="تم رفع الإيصال بنجاح!" desc="سيتم مراجعته وتأكيد طلبك قريباً. ستصلك إشعار فور التأكيد." />
         )}
 
-        <SecurityBadge />
+        <SecurityFooter />
       </motion.div>
     );
   }
 
-  // ─── Step 1: Payment Sheet Style ───
+  // ─── Step 1: Choose payment ───
   return (
-    <div className="max-w-lg mx-auto space-y-5">
-      {/* Order Summary — compact hero card */}
+    <div className="max-w-lg mx-auto space-y-6">
+      {/* Amount Card — dark navy glass */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-primary/80 p-6 text-primary-foreground"
+        className="relative overflow-hidden rounded-2xl bg-secondary p-6 text-secondary-foreground"
       >
-        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.12),transparent_60%)]" />
-        <div className="relative z-10">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Lock className="w-4 h-4 opacity-80" />
-              <span className="text-xs font-bold opacity-80">دفع آمن</span>
+        {/* Subtle glow */}
+        <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-primary/20 blur-3xl" />
+        <div className="absolute -bottom-10 -left-10 w-32 h-32 rounded-full bg-primary/10 blur-2xl" />
+
+        <div className="relative z-10 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-secondary-foreground/60">
+              <ShieldCheck className="w-4 h-4" />
+              <span className="text-[11px] font-bold">دفع آمن ومشفّر</span>
             </div>
-            <ShieldCheck className="w-5 h-5 opacity-60" />
+            <Zap className="w-4 h-4 text-primary" />
           </div>
 
           {targetOrderNumber && (
-            <p className="text-xs opacity-70 mb-1">طلب رقم <span className="font-mono" dir="ltr">{targetOrderNumber}</span></p>
+            <p className="text-xs text-secondary-foreground/50 font-mono" dir="ltr">{targetOrderNumber}</p>
           )}
 
           {targetOrderAmount != null && targetOrderAmount > 0 && (
-            <div dir="ltr" className="text-left">
-              <span className="text-4xl font-black tracking-tight">{targetOrderAmount.toLocaleString("ar-EG")}</span>
-              <span className="text-sm opacity-70 mr-1.5">ج.م</span>
+            <div>
+              <p className="text-[11px] text-secondary-foreground/40 mb-1">المطلوب</p>
+              <div className="flex items-baseline gap-2" dir="ltr">
+                <span className="text-4xl font-black tracking-tight">{targetOrderAmount.toLocaleString("ar-EG")}</span>
+                <span className="text-base text-secondary-foreground/50">ج.م</span>
+              </div>
             </div>
           )}
         </div>
@@ -444,12 +328,8 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
       {/* Error */}
       <AnimatePresence>
         {error && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="flex items-start gap-3 p-4 rounded-2xl bg-destructive/5 border border-destructive/15"
-          >
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+            className="flex items-start gap-3 p-4 rounded-xl bg-destructive/5 border border-destructive/10">
             <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
             <div className="flex-1">
               <p className="text-sm text-destructive font-bold">{error}</p>
@@ -459,133 +339,83 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
         )}
       </AnimatePresence>
 
-      {/* Payment Method Selector — Drawer */}
+      {/* Payment Methods — Grid */}
       <div className="space-y-3">
-        <p className="text-xs font-bold text-muted-foreground px-1">طريقة الدفع</p>
+        <p className="text-xs font-bold text-muted-foreground">اختر طريقة الدفع</p>
+        <div className="grid grid-cols-2 gap-3">
+          {PAYMENT_METHODS.map((method, i) => {
+            const Icon = method.icon;
+            const isSelected = selectedMethod === method.id;
+            return (
+              <motion.button
+                key={method.id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                whileTap={{ scale: 0.96 }}
+                onClick={() => setSelectedMethod(method.id)}
+                className={`relative text-right p-4 rounded-2xl border-2 transition-all duration-200 ${
+                  isSelected
+                    ? "border-primary bg-primary/[0.04] shadow-sm"
+                    : "border-border/60 bg-card hover:border-border"
+                }`}
+              >
+                {/* Selection indicator */}
+                {isSelected && (
+                  <motion.div
+                    layoutId="payment-check"
+                    className="absolute top-3 left-3 w-5 h-5 rounded-full bg-primary flex items-center justify-center"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5 text-primary-foreground" />
+                  </motion.div>
+                )}
 
-        <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-          <DrawerTrigger asChild>
-            <button className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-border bg-card hover:border-primary/30 transition-all">
-              <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center shrink-0">
-                <selectedMethodData.icon className={`w-5 h-5 ${selectedMethodData.color}`} />
-              </div>
-              <div className="flex-1 text-right min-w-0">
-                <p className="font-bold text-sm text-foreground">{selectedMethodData.label}</p>
-                {selectedMethodData.id === "card" ? (
-                  <div className="flex items-center gap-1.5 mt-1">
+                <div className={`w-10 h-10 rounded-xl ${method.iconBg} flex items-center justify-center mb-3`}>
+                  <Icon className="w-5 h-5 text-white" />
+                </div>
+                <p className="font-bold text-sm text-foreground leading-tight">{method.label}</p>
+                {method.id === "card" ? (
+                  <div className="flex items-center gap-1 mt-1.5">
                     <img src={visaLogo} alt="Visa" className="h-4 w-auto object-contain" loading="lazy" />
                     <img src={mastercardLogo} alt="Mastercard" className="h-4 w-auto object-contain" loading="lazy" />
                     <img src={meezaLogo} alt="Meeza" className="h-4 w-auto object-contain" loading="lazy" />
                   </div>
                 ) : (
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{selectedMethodData.labelEn}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1 leading-tight">{method.desc}</p>
                 )}
-              </div>
-              <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
-            </button>
-          </DrawerTrigger>
-
-          <DrawerContent className="max-h-[85vh]">
-            <div className="p-5 pb-8 space-y-2">
-              <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-4" />
-              <h3 className="text-base font-black text-foreground text-center mb-4">اختر طريقة الدفع</h3>
-
-              {PAYMENT_METHODS.map((method) => {
-                const Icon = method.icon;
-                const isSelected = selectedMethod === method.id;
-                return (
-                  <motion.button
-                    key={method.id}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => {
-                      setSelectedMethod(method.id);
-                      setDrawerOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 transition-all ${
-                      isSelected
-                        ? "border-primary bg-primary/5"
-                        : "border-border/50 bg-card hover:border-border"
-                    }`}
-                  >
-                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
-                      isSelected ? "bg-primary/10" : "bg-muted"
-                    }`}>
-                      <Icon className={`w-5 h-5 ${method.color}`} />
-                    </div>
-                    <div className="flex-1 text-right min-w-0">
-                      <p className="font-bold text-sm text-foreground">{method.label}</p>
-                      {method.id === "card" ? (
-                        <div className="flex items-center gap-1.5 mt-1">
-                          <img src={visaLogo} alt="Visa" className="h-4 w-auto object-contain" loading="lazy" />
-                          <img src={mastercardLogo} alt="Mastercard" className="h-4 w-auto object-contain" loading="lazy" />
-                          <img src={meezaLogo} alt="Meeza" className="h-4 w-auto object-contain" loading="lazy" />
-                        </div>
-                      ) : (
-                        <p className="text-[11px] text-muted-foreground mt-0.5">{method.labelEn}</p>
-                      )}
-                    </div>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-                      isSelected ? "border-primary bg-primary" : "border-muted-foreground/25"
-                    }`}>
-                      {isSelected && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
-                    </div>
-                  </motion.button>
-                );
-              })}
-
-              <SecurityBadge />
-            </div>
-          </DrawerContent>
-        </Drawer>
+              </motion.button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Wallet phone input */}
       <AnimatePresence>
         {selectedMethod === "wallet" && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden"
-          >
-            <div className="bg-card border border-border/60 rounded-2xl p-4 space-y-2.5">
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+            <div className="bg-card border border-border rounded-2xl p-4 space-y-2.5">
               <label className="block text-xs font-bold text-foreground">رقم المحفظة</label>
-              <Input
-                type="tel"
-                placeholder="01xxxxxxxxx"
-                value={walletPhone}
-                onChange={(e) => setWalletPhone(e.target.value)}
-                dir="ltr"
-                className="text-base font-mono h-12 rounded-xl border-border/60"
-                maxLength={11}
-                inputMode="tel"
-              />
-              <p className="text-[10px] text-muted-foreground">
-                أدخل رقم المحفظة المسجل عليها حسابك (Vodafone Cash / Orange / Etisalat)
-              </p>
+              <Input type="tel" placeholder="01xxxxxxxxx" value={walletPhone} onChange={(e) => setWalletPhone(e.target.value)} dir="ltr" className="text-base font-mono h-12 rounded-xl" maxLength={11} inputMode="tel" />
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* CTA */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
         <Button
-          className="w-full h-14 gap-2.5 text-base font-black rounded-2xl shadow-lg shadow-primary/20 transition-all duration-300 hover:shadow-xl hover:shadow-primary/25 active:scale-[0.98]"
+          className="w-full h-14 gap-2.5 text-base font-black rounded-2xl shadow-lg shadow-primary/15 active:scale-[0.98] transition-all"
           disabled={loading}
           onClick={() => handlePay(targetOrderId)}
         >
           {loading ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              جاري تجهيز بوابة الدفع...
-            </>
+            <><Loader2 className="w-5 h-5 animate-spin" />جاري التجهيز...</>
           ) : (
             <>
-              <Lock className="w-4.5 h-4.5" />
-              {selectedMethod === "instapay" ? "متابعة للتحويل" : "ادفع الآن"}
+              <Lock className="w-4 h-4" />
+              {selectedMethod === "instapay" ? "متابعة التحويل" : "ادفع الآن"}
               {targetOrderAmount != null && targetOrderAmount > 0 && (
-                <span className="text-primary-foreground/70 text-sm font-normal mr-1">
+                <span className="text-primary-foreground/60 text-sm font-normal mr-1">
                   ({targetOrderAmount.toLocaleString("ar-EG")} ج.م)
                 </span>
               )}
@@ -594,15 +424,32 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
         </Button>
       </motion.div>
 
-      <SecurityBadge />
+      <SecurityFooter />
     </div>
   );
 };
 
-const SecurityBadge = () => (
-  <div className="flex items-center justify-center gap-2 py-2">
-    <ShieldCheck className="w-4 h-4 text-emerald-600" />
-    <span className="text-[11px] text-muted-foreground">مدعوم من Paymob — بوابة دفع معتمدة ومرخصة</span>
+// ─── Shared Components ───
+
+const PaymentResultCard = ({ icon: Icon, iconClass, title, desc, children }: {
+  icon: typeof CreditCard; iconClass: string; title: string; desc: string; children?: React.ReactNode;
+}) => (
+  <div className="bg-card border border-border rounded-2xl p-6 text-center space-y-4">
+    <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto">
+      <Icon className={`w-7 h-7 ${iconClass}`} />
+    </div>
+    <div>
+      <h3 className="text-base font-black text-foreground">{title}</h3>
+      <p className="text-sm text-muted-foreground mt-1.5">{desc}</p>
+    </div>
+    {children}
+  </div>
+);
+
+const SecurityFooter = () => (
+  <div className="flex items-center justify-center gap-1.5 pt-2 pb-1">
+    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600/70" />
+    <span className="text-[10px] text-muted-foreground/60">Powered by Paymob — بوابة دفع معتمدة</span>
   </div>
 );
 
