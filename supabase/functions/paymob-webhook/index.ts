@@ -182,11 +182,11 @@ Deno.serve(async (req) => {
         console.log(`Order ${orderNumber} moved to processing`);
       }
 
-      // In-app notification for dealer on payment success
+      // In-app notification for dealer on payment success (with WhatsApp link for inquiries)
       await supabase.from("notifications").insert({
         user_id: order.user_id,
         title: "✅ تم استلام الدفع بنجاح — طلب #" + orderNumber,
-        message: `تم تأكيد دفع ${amountEgp} ج.م عبر ${payMethod}${cardInfo} للطلب #${orderNumber}. طلبك قيد التجهيز الآن!`,
+        message: `تم تأكيد دفع ${amountEgp} ج.م عبر ${payMethod}${cardInfo} للطلب #${orderNumber}. طلبك قيد التجهيز الآن!\nللاستفسار تواصل معنا: https://wa.me/201153961008?text=${encodeURIComponent("استفسار عن طلب #" + orderNumber)}`,
         type: "payment_success",
       });
 
