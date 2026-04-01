@@ -123,7 +123,7 @@ const DealerDashboard = () => {
       case "quotes": return (
         <div className="space-y-6">
           <DealerProductSearch />
-          {vehicleTypes.length > 0 && <DealerVehicleRecommendations vehicleTypes={vehicleTypes} compact />}
+          <DealerVehicleRecommendations compact />
         </div>
       );
       case "priced_today": return <DealerPricedToday onConvertToOrder={() => setActiveTab("cart")} sharedCart={dealerCart} />;
