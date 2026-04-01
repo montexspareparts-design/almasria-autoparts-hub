@@ -135,6 +135,7 @@ const ProductListingSection = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="newest">الأحدث</SelectItem>
+                <SelectItem value="best_selling">الأكثر مبيعاً</SelectItem>
                 <SelectItem value="price_asc">السعر: الأقل</SelectItem>
                 <SelectItem value="price_desc">السعر: الأعلى</SelectItem>
                 <SelectItem value="name_asc">الاسم: أ - ي</SelectItem>
