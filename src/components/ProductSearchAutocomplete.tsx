@@ -169,12 +169,13 @@ const ProductSearchAutocomplete = ({
     return () => clearTimeout(timeout);
   }, [value, isFocused]);
 
-  const suggestions = useMemo(() => {
+  const allMatches = useMemo(() => {
     if (!value || value.length < 2) return [];
-    return products
-      .filter(p => fuzzyProductMatch(value, p))
-      .slice(0, 12);
+    return products.filter(p => fuzzyProductMatch(value, p));
   }, [value, products]);
+
+  const suggestions = useMemo(() => allMatches.slice(0, 12), [allMatches]);
+  const filteredTotal = allMatches.length;
 
   // "Did you mean?" suggestion
   const didYouMean = useMemo(() => {
