@@ -186,7 +186,7 @@ const ProductDetailDialog = ({
         </div>
 
         {/* Details section */}
-        <div className="p-5 space-y-4">
+        <div className="p-4 sm:p-5 space-y-3 sm:space-y-4">
           {/* Header: SKU + Stock + Brand */}
           <div className="flex items-center flex-wrap gap-2">
             <Badge variant="outline" className="font-mono text-xs gap-1">
