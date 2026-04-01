@@ -77,7 +77,7 @@ const PaymentCallback = () => {
     if (orderId) {
       navigate(`/payment?order_id=${orderId}`);
     } else {
-      navigate("/my-orders");
+      navigate("/");
     }
   };
 
@@ -133,7 +133,7 @@ const PaymentCallback = () => {
                 </p>
               )}
               <div className="flex flex-col gap-2 pt-1 sm:pt-2">
-                <Button onClick={() => navigate("/my-orders")} className="gap-2 h-10 sm:h-11 text-sm">
+                <Button onClick={() => navigate("/")} className="gap-2 h-10 sm:h-11 text-sm">
                   <ShoppingBag className="w-4 h-4" />
                   عرض طلباتي
                 </Button>
@@ -163,7 +163,7 @@ const PaymentCallback = () => {
                   رقم الطلب: <span className="font-bold text-foreground" dir="ltr">{orderNumber}</span>
                 </p>
               )}
-              <Button onClick={() => navigate("/my-orders")} className="gap-2 h-10 sm:h-11 text-sm">
+              <Button onClick={() => navigate("/")} className="gap-2 h-10 sm:h-11 text-sm">
                 <ShoppingBag className="w-4 h-4" />
                 عرض طلباتي
               </Button>
@@ -210,7 +210,7 @@ const PaymentCallback = () => {
                   <CreditCard className="w-4 h-4" />
                   ادفع مرة أخرى
                 </Button>
-                <Button variant="outline" onClick={() => navigate("/my-orders")} className="gap-2 h-10 sm:h-11 text-sm">
+                <Button variant="outline" onClick={() => navigate("/")} className="gap-2 h-10 sm:h-11 text-sm">
                   <ShoppingBag className="w-4 h-4" />
                   عرض طلباتي
                 </Button>

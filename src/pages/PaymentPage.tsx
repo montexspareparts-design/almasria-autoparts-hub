@@ -435,7 +435,7 @@ const PaymentPage = () => {
                     <p className="text-[10px] sm:text-xs text-muted-foreground">
                       بعد الدفع هيتم تحديث حالة طلبك تلقائياً
                     </p>
-                    <Button variant="outline" onClick={() => navigate("/my-orders")} className="gap-2 h-10 sm:h-11">
+                    <Button variant="outline" onClick={() => navigate("/")} className="gap-2 h-10 sm:h-11">
                       عرض طلباتي
                     </Button>
                   </div>
@@ -471,7 +471,7 @@ const PaymentPage = () => {
                     <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-2.5 sm:p-3 text-xs sm:text-sm text-amber-800 dark:text-amber-300">
                       ⚠️ يجب الدفع خلال 48 ساعة — بعدها يتم إلغاء الفاتورة تلقائياً
                     </div>
-                    <Button variant="outline" onClick={() => navigate("/my-orders")} className="gap-2 h-10 sm:h-11">
+                    <Button variant="outline" onClick={() => navigate("/")} className="gap-2 h-10 sm:h-11">
                       عرض طلباتي
                     </Button>
                   </div>
@@ -497,7 +497,7 @@ const PaymentPage = () => {
           {/* Back Link */}
           <div className="text-center mt-3 sm:mt-4 pb-4">
             <Button variant="ghost" size="sm" asChild className="gap-2 text-muted-foreground text-xs sm:text-sm">
-              <Link to="/my-orders">
+              <Link to="/">
                 <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 العودة لطلباتي
               </Link>
