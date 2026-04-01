@@ -254,25 +254,25 @@ const ProductFilterSidebar = ({
                           <button
                             key={cat.id}
                             onClick={() => handleFilterChange("categoryId", isActive ? null : cat.id)}
-                            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm transition-all group ${
+                            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm transition-all duration-300 group ${
                               isActive
-                                ? "bg-primary/10 text-primary font-bold border border-primary/20"
-                                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                ? "bg-primary/10 text-primary font-bold border border-primary/20 shadow-sm"
+                                : "text-muted-foreground hover:bg-muted/80 hover:text-foreground hover:translate-x-[-4px] hover:shadow-sm"
                             }`}
                           >
                             <div className="flex items-center gap-2.5">
-                              <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                                isActive ? "bg-primary/15" : (catIcon?.bg || "bg-muted")
+                              <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-hover:shadow-md ${
+                                isActive ? "bg-primary/15 scale-110 shadow-md" : (catIcon?.bg || "bg-muted")
                               }`}>
                                 {catIcon ? catIcon.icon : <Layers className="w-3.5 h-3.5" />}
                               </div>
-                              <span className="truncate">{cat.name_ar}</span>
+                              <span className="truncate transition-colors duration-200">{cat.name_ar}</span>
                             </div>
                             {count !== undefined && (
-                              <span className={`text-[11px] min-w-[22px] h-[22px] flex items-center justify-center rounded-full px-1.5 font-semibold ${
+                              <span className={`text-[11px] min-w-[22px] h-[22px] flex items-center justify-center rounded-full px-1.5 font-semibold transition-all duration-300 group-hover:scale-110 ${
                                 filters.categoryId === cat.id
                                   ? "bg-primary/20 text-primary"
-                                  : "bg-muted text-muted-foreground"
+                                  : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
                               }`}>
                                 {count}
                               </span>
