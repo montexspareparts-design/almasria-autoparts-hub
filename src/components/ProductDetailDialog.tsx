@@ -157,7 +157,7 @@ const ProductDetailDialog = ({
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <Package className="w-20 h-20 text-muted-foreground/20" />
+              <Package className="w-14 h-14 sm:w-20 sm:h-20 text-muted-foreground/20" />
             </div>
           )}
 
