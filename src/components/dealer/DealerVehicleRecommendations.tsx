@@ -114,7 +114,8 @@ const DealerVehicleRecommendations = ({ vehicleTypes, compact }: DealerVehicleRe
         {products.map((product) => (
           <div
             key={product.id}
-            className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/30 hover:shadow-md transition-all duration-200 group"
+            className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/30 hover:shadow-md transition-all duration-200 group cursor-pointer"
+            onClick={() => setSelectedProduct(product)}
           >
             <div className="aspect-square bg-white relative overflow-hidden p-3">
               {product.image_url ? (
