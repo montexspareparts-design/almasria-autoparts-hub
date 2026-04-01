@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   CreditCard, Loader2, ShieldCheck, AlertCircle, ArrowLeft,
-  Smartphone, Store, Copy, CheckCircle2, Package, Lock, ChevronDown
+  Smartphone, Store, Copy, CheckCircle2, Package, Lock, ChevronDown,
+  Banknote, Upload, ExternalLink, ImageIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +19,10 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 
-type PaymentMethod = "card" | "wallet" | "kiosk";
+type PaymentMethod = "card" | "wallet" | "kiosk" | "instapay";
+
+const INSTAPAY_LINK = "https://ipn.eg/S/drmado/instapay/0AGxRP";
+const INSTAPAY_ADDRESS = "drmado@instapay";
 
 const PAYMENT_METHODS: {
   id: PaymentMethod;
@@ -29,6 +33,7 @@ const PAYMENT_METHODS: {
 }[] = [
   { id: "card", label: "بطاقة بنكية", labelEn: "Visa / Mastercard / Meeza", icon: CreditCard, color: "text-blue-600" },
   { id: "wallet", label: "محفظة إلكترونية", labelEn: "Vodafone Cash / Orange / Etisalat", icon: Smartphone, color: "text-orange-600" },
+  { id: "instapay", label: "InstaPay", labelEn: "تحويل فوري من أي بنك", icon: Banknote, color: "text-violet-600" },
   { id: "kiosk", label: "فروع أمان / مصاري", labelEn: "Aman / Masary", icon: Store, color: "text-emerald-600" },
 ];
 
@@ -52,9 +57,22 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
   const [kioskBillRef, setKioskBillRef] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  // InstaPay states
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+  const [uploadingReceipt, setUploadingReceipt] = useState(false);
+  const [receiptSubmitted, setReceiptSubmitted] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const selectedMethodData = PAYMENT_METHODS.find((m) => m.id === selectedMethod)!;
 
   const handlePay = async (orderId: string) => {
+    // InstaPay flow — go directly to step 2
+    if (selectedMethod === "instapay") {
+      setStep("pay");
+      return;
+    }
+
     if (selectedMethod === "wallet" && !walletPhone) {
       toast({ title: "أدخل رقم المحفظة", variant: "destructive" });
       return;
@@ -107,11 +125,68 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
     }
   };
 
+  const handleCopyInstaPay = () => {
+    navigator.clipboard.writeText(INSTAPAY_ADDRESS);
+    setCopied(true);
+    toast({ title: "تم نسخ عنوان InstaPay" });
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleReceiptSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "حجم الملف كبير جداً (الحد الأقصى 5 ميجا)", variant: "destructive" });
+      return;
+    }
+    setReceiptFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setReceiptPreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleSubmitReceipt = async () => {
+    if (!receiptFile || !targetOrderId || !user) return;
+    setUploadingReceipt(true);
+    try {
+      const ext = receiptFile.name.split(".").pop() || "jpg";
+      const filePath = `instapay-receipts/${targetOrderId}/${Date.now()}.${ext}`;
+
+      const { error: uploadErr } = await supabase.storage
+        .from("dealer-documents")
+        .upload(filePath, receiptFile, { upsert: true });
+
+      if (uploadErr) throw uploadErr;
+
+      // Update order payment method and add note
+      const { error: updateErr } = await supabase
+        .from("orders")
+        .update({
+          payment_method: "instapay",
+          notes: `إيصال InstaPay: ${filePath}`,
+        })
+        .eq("id", targetOrderId)
+        .eq("user_id", user.id);
+
+      if (updateErr) throw updateErr;
+
+      setReceiptSubmitted(true);
+      toast({ title: "✅ تم رفع الإيصال بنجاح", description: "سيتم مراجعته وتأكيد الطلب قريباً" });
+    } catch (e: any) {
+      toast({ title: "خطأ في رفع الإيصال", description: e.message, variant: "destructive" });
+    } finally {
+      setUploadingReceipt(false);
+    }
+  };
+
   const handleBack = () => {
     setStep("choose");
     setIframeUrl(null);
     setWalletRedirectUrl(null);
     setKioskBillRef(null);
+    setReceiptFile(null);
+    setReceiptPreview(null);
+    setReceiptSubmitted(false);
     setError(null);
   };
 
@@ -130,7 +205,7 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
     );
   }
 
-  // ─── Step 2: Payment in progress (full view) ───
+  // ─── Step 2: Payment in progress ───
   if (step === "pay") {
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4 max-w-lg mx-auto">
@@ -204,6 +279,128 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
               </button>
             </div>
             <p className="text-[11px] text-muted-foreground">الفاتورة صالحة لمدة 24 ساعة</p>
+          </div>
+        )}
+
+        {/* ─── InstaPay Step 2 ─── */}
+        {selectedMethod === "instapay" && !receiptSubmitted && (
+          <div className="space-y-4">
+            {/* Amount + InstaPay info */}
+            <div className="bg-card border border-border rounded-2xl p-6 text-center space-y-4">
+              <div className="w-14 h-14 rounded-2xl bg-violet-500/10 flex items-center justify-center mx-auto">
+                <Banknote className="w-7 h-7 text-violet-600" />
+              </div>
+
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">حوّل المبلغ التالي عبر InstaPay</p>
+                {targetOrderAmount != null && targetOrderAmount > 0 && (
+                  <div dir="ltr" className="text-center">
+                    <span className="text-3xl font-black text-primary">{targetOrderAmount.toLocaleString("ar-EG")}</span>
+                    <span className="text-sm text-muted-foreground mr-1.5">ج.م</span>
+                  </div>
+                )}
+              </div>
+
+              {/* InstaPay Address */}
+              <div className="bg-muted/30 rounded-xl px-4 py-3 border border-border/60">
+                <p className="text-[11px] text-muted-foreground mb-1.5">إلى حساب</p>
+                <div className="flex items-center justify-center gap-2">
+                  <span className="text-base font-black font-mono text-foreground" dir="ltr">{INSTAPAY_ADDRESS}</span>
+                  <button onClick={handleCopyInstaPay} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                    {copied ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Open InstaPay button */}
+              <Button asChild className="w-full gap-2 h-12 rounded-xl bg-violet-600 hover:bg-violet-700 text-white">
+                <a href={INSTAPAY_LINK} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="w-4 h-4" />
+                  فتح InstaPay وتحويل المبلغ
+                </a>
+              </Button>
+
+              <p className="text-[11px] text-muted-foreground">
+                سيتم فتح تطبيق InstaPay مباشرة. حوّل المبلغ ثم ارجع هنا لرفع الإيصال
+              </p>
+            </div>
+
+            {/* Receipt Upload */}
+            <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
+              <div className="flex items-center gap-2">
+                <Upload className="w-4 h-4 text-primary" />
+                <p className="text-sm font-bold text-foreground">رفع إيصال التحويل</p>
+              </div>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleReceiptSelect}
+                className="hidden"
+              />
+
+              {receiptPreview ? (
+                <div className="space-y-3">
+                  <div className="relative rounded-xl overflow-hidden border border-border">
+                    <img src={receiptPreview} alt="إيصال التحويل" className="w-full max-h-52 object-contain bg-muted/20" />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 rounded-xl"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      تغيير الصورة
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="flex-1 rounded-xl gap-1.5"
+                      onClick={handleSubmitReceipt}
+                      disabled={uploadingReceipt}
+                    >
+                      {uploadingReceipt ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          جاري الرفع...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="w-4 h-4" />
+                          تأكيد ورفع الإيصال
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/40 hover:bg-primary/[0.02] transition-all group"
+                >
+                  <ImageIcon className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2 group-hover:text-primary/50 transition-colors" />
+                  <p className="text-sm font-bold text-muted-foreground group-hover:text-foreground transition-colors">
+                    اضغط لرفع صورة الإيصال
+                  </p>
+                  <p className="text-[10px] text-muted-foreground/60 mt-1">PNG, JPG — حد أقصى 5 ميجا</p>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* InstaPay Success */}
+        {selectedMethod === "instapay" && receiptSubmitted && (
+          <div className="bg-card border border-border rounded-2xl p-8 text-center space-y-4">
+            <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto">
+              <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+            </div>
+            <h3 className="text-lg font-black text-foreground">تم رفع الإيصال بنجاح!</h3>
+            <p className="text-sm text-muted-foreground">
+              سيتم مراجعة الإيصال وتأكيد طلبك في أقرب وقت.
+              <br />ستصلك إشعار فور تأكيد الدفع.
+            </p>
           </div>
         )}
 
@@ -290,7 +487,6 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
 
           <DrawerContent className="max-h-[85vh]">
             <div className="p-5 pb-8 space-y-2">
-              {/* Drawer handle */}
               <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-4" />
               <h3 className="text-base font-black text-foreground text-center mb-4">اختر طريقة الدفع</h3>
 
@@ -372,7 +568,7 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
         )}
       </AnimatePresence>
 
-      {/* CTA — Fixed-feel pay button */}
+      {/* CTA */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
         <Button
           className="w-full h-14 gap-2.5 text-base font-black rounded-2xl shadow-lg shadow-primary/20 transition-all duration-300 hover:shadow-xl hover:shadow-primary/25 active:scale-[0.98]"
@@ -387,7 +583,7 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
           ) : (
             <>
               <Lock className="w-4.5 h-4.5" />
-              ادفع الآن
+              {selectedMethod === "instapay" ? "متابعة للتحويل" : "ادفع الآن"}
               {targetOrderAmount != null && targetOrderAmount > 0 && (
                 <span className="text-primary-foreground/70 text-sm font-normal mr-1">
                   ({targetOrderAmount.toLocaleString("ar-EG")} ج.م)
