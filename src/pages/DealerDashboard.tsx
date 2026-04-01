@@ -27,6 +27,8 @@ import DealerShoppingLists from "@/components/dealer/DealerShoppingLists";
 import DealerProductCompare from "@/components/dealer/DealerProductCompare";
 import DealerPricedToday from "@/components/dealer/DealerPricedToday";
 import DealerCart from "@/components/dealer/DealerCart";
+import VehicleTypeDialog from "@/components/dealer/VehicleTypeDialog";
+import DealerVehicleRecommendations from "@/components/dealer/DealerVehicleRecommendations";
 
 const DealerDashboard = () => {
   const { user, dealerAccount, isDealer, loading: authLoading, signOut } = useAuth();
