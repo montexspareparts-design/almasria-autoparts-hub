@@ -112,7 +112,7 @@ const notifyAdmins = async (orderNumber: string, action: string, details: string
   }
 };
 
-const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onNavigateToPayment?: () => void }) => {
+const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onNavigateToPayment?: (orderInfo?: { id: string; orderNumber: string; amount: number }) => void }) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
@@ -379,7 +379,7 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
                               <div key={stage.key} className="flex items-center flex-1 min-w-0">
                                 <div
                                   className={cn("flex flex-col items-center gap-1.5 min-w-[48px]", canClickPayment && "cursor-pointer group")}
-                                  onClick={canClickPayment ? () => onNavigateToPayment?.() : undefined}
+                                  onClick={canClickPayment ? () => onNavigateToPayment?.({ id: order.id, orderNumber: order.order_number, amount: Number(order.total_amount) }) : undefined}
                                 >
                                   <div className={cn(
                                     "w-10 h-10 rounded-xl flex items-center justify-center transition-all",

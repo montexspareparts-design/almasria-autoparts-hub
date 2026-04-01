@@ -32,7 +32,7 @@ const statusConfig: Record<string, { label: string; color: string; icon: typeof 
 
 interface DealerRecentOrdersProps {
   onNavigateToOrders: () => void;
-  onNavigateToPayment: () => void;
+  onNavigateToPayment: (orderInfo?: { id: string; orderNumber: string; amount: number }) => void;
 }
 
 const DealerRecentOrders = ({ onNavigateToOrders, onNavigateToPayment }: DealerRecentOrdersProps) => {
@@ -130,7 +130,7 @@ const DealerRecentOrders = ({ onNavigateToOrders, onNavigateToPayment }: DealerR
                   className="h-7 text-[10px] gap-1 text-emerald-700 border-emerald-200 hover:bg-emerald-50"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onNavigateToPayment();
+                    onNavigateToPayment({ id: order.id, orderNumber: order.order_number, amount: Number(order.total_amount) });
                   }}
                 >
                   <Wallet className="w-3 h-3" />
