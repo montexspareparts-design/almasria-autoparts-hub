@@ -198,7 +198,7 @@ const ProductListingSection = ({
                       <List className="w-4 h-4" />
                     </button>
                   </div>
-                  {totalPages > 1 && <p className="text-xs text-muted-foreground">صفحة {currentPage} من {totalPages}</p>}
+                  <p className="text-xs text-muted-foreground">{paginatedProducts.length} من {filteredProducts.length} منتج</p>
                 </div>
               </div>
 
