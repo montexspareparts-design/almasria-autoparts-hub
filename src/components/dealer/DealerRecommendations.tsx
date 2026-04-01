@@ -118,6 +118,12 @@ const DealerRecommendations = ({ userId, tier, onNavigateToQuotes }: { userId: s
           </div>
         ))}
       </div>
+
+      <ProductDetailDialog
+        product={selectedProduct}
+        open={!!selectedProduct}
+        onOpenChange={(open) => !open && setSelectedProduct(null)}
+      />
     </div>
   );
 };

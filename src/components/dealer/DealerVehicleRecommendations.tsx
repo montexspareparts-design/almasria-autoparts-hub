@@ -153,6 +153,12 @@ const DealerVehicleRecommendations = ({ vehicleTypes, compact }: DealerVehicleRe
           </div>
         ))}
       </div>
+
+      <ProductDetailDialog
+        product={selectedProduct}
+        open={!!selectedProduct}
+        onOpenChange={(open) => !open && setSelectedProduct(null)}
+      />
     </div>
   );
 };
