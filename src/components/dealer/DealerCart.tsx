@@ -68,6 +68,28 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
   const vat = subtotal * 0.14;
   const total = subtotal + vat;
 
+  // Auto-clear cart when a pending payment order is confirmed
+  useEffect(() => {
+    const checkPendingPayment = async () => {
+      const pendingOrderId = localStorage.getItem("dealer_pending_payment_order");
+      if (!pendingOrderId || !user) return;
+
+      const { data } = await supabase
+        .from("orders")
+        .select("status")
+        .eq("id", pendingOrderId)
+        .eq("user_id", user.id)
+        .single();
+
+      if (data && !["pending", "awaiting_payment"].includes(data.status)) {
+        await clearCart();
+        localStorage.removeItem("dealer_pending_payment_order");
+        toast({ title: "✅ تم الدفع بنجاح", description: "تم تفريغ السلة تلقائياً" });
+      }
+    };
+    checkPendingPayment();
+  }, [user]);
+
   const createOrder = async (): Promise<{ id: string; order_number: string } | null> => {
     if (!user || items.length === 0) return null;
     const orderNumber = await generateOrderNumber();
@@ -97,7 +119,6 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
       }))
     );
 
-    await clearCart();
     pushOrderToERP((order as any).id);
     notifyNewOrderWhatsApp(orderNumber, total);
     return { id: (order as any).id, order_number: orderNumber };
@@ -112,6 +133,7 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
         toast({ title: "خطأ في إنشاء الطلب", variant: "destructive" });
         return;
       }
+      await clearCart();
       toast({ title: "✅ تم إرسال الطلب بنجاح", description: `رقم الطلب: ${order.order_number}` });
       setNotes(""); setShippingAddress(""); setShippingGovernorate("");
       onNavigateToOrders();
@@ -131,6 +153,8 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
         toast({ title: "خطأ في إنشاء الطلب", variant: "destructive" });
         return;
       }
+      // Keep cart items — will auto-clear when payment is confirmed
+      localStorage.setItem("dealer_pending_payment_order", order.id);
       toast({ title: "✅ تم إنشاء الطلب", description: `رقم الطلب: ${order.order_number} — جاري التوجيه للدفع...` });
       setNotes(""); setShippingAddress(""); setShippingGovernorate("");
       onNavigateToPayment({ id: order.id, orderNumber: order.order_number, amount: total });
