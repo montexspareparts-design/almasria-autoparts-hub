@@ -15,9 +15,8 @@ interface ProductListingSectionProps {
   setFilters: (filters: ProductFilters | ((prev: ProductFilters) => ProductFilters)) => void;
   viewMode: "grid" | "list";
   setViewMode: (mode: "grid" | "list") => void;
-  currentPage: number;
-  setCurrentPage: (page: number | ((p: number) => number)) => void;
-  totalPages: number;
+  hasMore: boolean;
+  loadMore: () => void;
   products: any[] | undefined;
   isLoading: boolean;
   filteredProducts: any[];
