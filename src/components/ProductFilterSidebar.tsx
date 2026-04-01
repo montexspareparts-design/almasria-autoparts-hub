@@ -134,7 +134,54 @@ const ProductFilterSidebar = ({
         </div>
 
         <div className="p-4 space-y-1">
-          {/* ── Categories Section ── */}
+          {/* ── Brands Section (first) ── */}
+          {showBrands && (
+            <div>
+              <button
+                onClick={() => toggleSection("brands")}
+                className="flex items-center justify-between w-full py-2.5 text-sm font-bold text-foreground hover:text-primary transition-colors"
+              >
+                <span className="flex items-center gap-1.5"><Layers className="w-3.5 h-3.5" />الماركة</span>
+                {expandedSections.brands ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+              <AnimatePresence>
+                {expandedSections.brands && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="space-y-0.5 pb-3">
+                      <button
+                        onClick={() => updateFilter("brandKey", null)}
+                        className={`w-full text-right px-3 py-2 rounded-lg text-sm transition-all ${
+                          !filters.brandKey ? "bg-primary/10 text-primary font-bold border border-primary/20" : "text-muted-foreground hover:bg-muted"
+                        }`}
+                      >
+                        جميع الماركات
+                      </button>
+                      {BRAND_OPTIONS.map((b) => (
+                        <button
+                          key={b.value}
+                          onClick={() => updateFilter("brandKey", filters.brandKey === b.value ? null : b.value)}
+                          className={`w-full text-right px-3 py-2 rounded-lg text-sm transition-all ${
+                            filters.brandKey === b.value ? "bg-primary/10 text-primary font-bold border border-primary/20" : "text-muted-foreground hover:bg-muted"
+                          }`}
+                        >
+                          {b.label}
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              <Separator className="my-1" />
+            </div>
+          )}
+
+          {/* ── Categories Section (second) ── */}
           {categories && categories.length > 0 && (
             <div>
               <button
@@ -154,7 +201,6 @@ const ProductFilterSidebar = ({
                     className="overflow-hidden"
                   >
                     <div className="space-y-0.5 pb-3">
-                      {/* All */}
                       <button
                         onClick={() => handleFilterChange("categoryId", null)}
                         className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-all ${
@@ -201,53 +247,6 @@ const ProductFilterSidebar = ({
                           </button>
                         );
                       })}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              <Separator className="my-1" />
-            </div>
-          )}
-
-          {/* ── Brands Section ── */}
-          {showBrands && (
-            <div>
-              <button
-                onClick={() => toggleSection("brands")}
-                className="flex items-center justify-between w-full py-2.5 text-sm font-bold text-foreground hover:text-primary transition-colors"
-              >
-                <span className="flex items-center gap-1.5"><Layers className="w-3.5 h-3.5" />الماركة</span>
-                {expandedSections.brands ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              </button>
-              <AnimatePresence>
-                {expandedSections.brands && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="space-y-0.5 pb-3">
-                      <button
-                        onClick={() => updateFilter("brandKey", null)}
-                        className={`w-full text-right px-3 py-2 rounded-lg text-sm transition-all ${
-                          !filters.brandKey ? "bg-primary/10 text-primary font-bold border border-primary/20" : "text-muted-foreground hover:bg-muted"
-                        }`}
-                      >
-                        جميع الماركات
-                      </button>
-                      {BRAND_OPTIONS.map((b) => (
-                        <button
-                          key={b.value}
-                          onClick={() => updateFilter("brandKey", filters.brandKey === b.value ? null : b.value)}
-                          className={`w-full text-right px-3 py-2 rounded-lg text-sm transition-all ${
-                            filters.brandKey === b.value ? "bg-primary/10 text-primary font-bold border border-primary/20" : "text-muted-foreground hover:bg-muted"
-                          }`}
-                        >
-                          {b.label}
-                        </button>
-                      ))}
                     </div>
                   </motion.div>
                 )}
