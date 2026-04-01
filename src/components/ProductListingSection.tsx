@@ -1,5 +1,5 @@
 import { Link, useSearchParams } from "react-router-dom";
-import { ShieldCheck, Eye, Package, Grid3X3, List, ChevronLeft, ChevronRight, SlidersHorizontal, Search, X } from "lucide-react";
+import { ShieldCheck, Eye, Package, Grid3X3, List, ChevronLeft, SlidersHorizontal, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ProductCard from "@/components/ProductCard";
@@ -15,9 +15,8 @@ interface ProductListingSectionProps {
   setFilters: (filters: ProductFilters | ((prev: ProductFilters) => ProductFilters)) => void;
   viewMode: "grid" | "list";
   setViewMode: (mode: "grid" | "list") => void;
-  currentPage: number;
-  setCurrentPage: (page: number | ((p: number) => number)) => void;
-  totalPages: number;
+  hasMore: boolean;
+  loadMore: () => void;
   products: any[] | undefined;
   isLoading: boolean;
   filteredProducts: any[];
@@ -57,7 +56,7 @@ interface ProductListingSectionProps {
 
 const ProductListingSection = ({
   filters, setFilters, viewMode, setViewMode,
-  currentPage, setCurrentPage, totalPages,
+  hasMore, loadMore,
   products, isLoading, filteredProducts, paginatedProducts,
   visibleCategories, categoryCounts,
   user, isDealer, viewedProductIds, dailyViewCount, limitReached, dailyLimit,
@@ -199,7 +198,7 @@ const ProductListingSection = ({
                       <List className="w-4 h-4" />
                     </button>
                   </div>
-                  {totalPages > 1 && <p className="text-xs text-muted-foreground">صفحة {currentPage} من {totalPages}</p>}
+                  <p className="text-xs text-muted-foreground">{paginatedProducts.length} من {filteredProducts.length} منتج</p>
                 </div>
               </div>
 
@@ -249,29 +248,20 @@ const ProductListingSection = ({
                 </div>
               )}
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-10">
-                  <Button variant="outline" size="sm" disabled={currentPage <= 1} onClick={() => { setCurrentPage((p: number) => p - 1); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="gap-1">
-                    <ChevronRight className="w-4 h-4" />السابق
-                  </Button>
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                      let page: number;
-                      if (totalPages <= 7) page = i + 1;
-                      else if (currentPage <= 4) page = i + 1;
-                      else if (currentPage >= totalPages - 3) page = totalPages - 6 + i;
-                      else page = currentPage - 3 + i;
-                      return (
-                        <button key={page} onClick={() => { setCurrentPage(page); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                          className={`w-9 h-9 rounded-lg text-sm font-medium transition-all ${currentPage === page ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
-                          {page}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <Button variant="outline" size="sm" disabled={currentPage >= totalPages} onClick={() => { setCurrentPage((p: number) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="gap-1">
-                    التالي<ChevronLeft className="w-4 h-4" />
+              {/* Load More */}
+              {hasMore && (
+                <div className="flex flex-col items-center gap-3 mt-10">
+                  <p className="text-sm text-muted-foreground">
+                    عرض {paginatedProducts.length} من {filteredProducts.length} منتج
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={loadMore}
+                    className="gap-2 px-8 rounded-full border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground transition-all"
+                  >
+                    تحميل المزيد
+                    <ChevronLeft className="w-4 h-4" />
                   </Button>
                 </div>
               )}

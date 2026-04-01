@@ -460,12 +460,15 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     return () => clearTimeout(timer);
   }, [filters.search, filters.brandKey, filters.model, filters.year, filters.categoryId, user?.id, filteredProducts.length]);
 
-  /* ── Pagination ── */
+  /* ── Load More ── */
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const hasMore = currentPage < totalPages;
   const paginatedProducts = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredProducts.slice(start, start + ITEMS_PER_PAGE);
+    return filteredProducts.slice(0, currentPage * ITEMS_PER_PAGE);
   }, [filteredProducts, currentPage]);
+  const loadMore = useCallback(() => {
+    if (hasMore) setCurrentPage(p => p + 1);
+  }, [hasMore]);
 
   /* ── Category counts & visible categories ── */
   const categoryCounts = useMemo(() => {
@@ -507,8 +510,8 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     filters, setFilters,
     // View
     viewMode, setViewMode,
-    // Pagination
-    currentPage, setCurrentPage, totalPages, ITEMS_PER_PAGE,
+    // Load More
+    currentPage, setCurrentPage, totalPages, ITEMS_PER_PAGE, hasMore, loadMore,
     // Products
     products, isLoading, filteredProducts, paginatedProducts,
     // Categories
