@@ -32,7 +32,7 @@ const statusConfig: Record<string, { label: string; color: string; icon: typeof 
 
 interface DealerRecentOrdersProps {
   onNavigateToOrders: () => void;
-  onNavigateToPayment: () => void;
+  onNavigateToPayment: (orderInfo?: { id: string; orderNumber: string; amount: number }) => void;
 }
 
 const DealerRecentOrders = ({ onNavigateToOrders, onNavigateToPayment }: DealerRecentOrdersProps) => {
