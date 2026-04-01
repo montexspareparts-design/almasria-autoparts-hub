@@ -130,8 +130,14 @@ const NotificationBell = () => {
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
-          setNotifications((prev) => [payload.new as Notification, ...prev]);
-          playNotificationSound();
+          const newNotif = payload.new as Notification;
+          setNotifications((prev) => [newNotif, ...prev]);
+          // Play different sound for payment success
+          if (newNotif.type === "payment_success") {
+            playPaymentSuccessSound();
+          } else {
+            playNotificationSound();
+          }
         }
       )
       .subscribe();
