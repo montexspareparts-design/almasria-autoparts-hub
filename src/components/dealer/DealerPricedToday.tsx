@@ -274,11 +274,12 @@ const DealerPricedToday = ({ onConvertToOrder, sharedCart }: DealerPricedTodayPr
                     exit={{ opacity: 0, x: 80, height: 0, marginBottom: 0 }}
                     transition={{ delay: idx * 0.02 }}
                     className={cn(
-                      "rounded-xl border bg-card p-3 sm:p-4 transition-all duration-200",
+                      "rounded-xl border bg-card p-3 sm:p-4 transition-all duration-200 cursor-pointer",
                       isSelected
                         ? "border-primary/30 bg-primary/[0.02] shadow-sm"
                         : "border-border/40 hover:border-border/60"
                     )}
+                    onClick={() => toggleSelect(item.product_id)}
                   >
                     <div className="flex gap-3">
                       {/* Checkbox */}
