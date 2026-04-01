@@ -225,7 +225,7 @@ const ProductSearchAutocomplete = ({
             transition={{ duration: 0.15 }}
             className="absolute top-full left-0 right-0 mt-1.5 bg-card border border-border rounded-xl shadow-xl shadow-black/10 overflow-hidden z-50"
           >
-            <div className="p-1.5">
+            <div className="p-1.5 max-h-[420px] overflow-y-auto">
               {/* "Did you mean?" hint */}
               {didYouMean && (
                 <button
