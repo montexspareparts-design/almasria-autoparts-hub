@@ -240,9 +240,13 @@ const ProductSearchAutocomplete = ({
   return (
     <div ref={wrapperRef} className="relative flex-1">
       <div className="relative group">
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-primary/10 group-focus-within:bg-primary/20 flex items-center justify-center transition-all duration-300 group-focus-within:scale-110 pointer-events-none">
+        <button
+          type="button"
+          onClick={() => { setIsFocused(true); inputRef.current?.focus(); }}
+          className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-primary/10 group-focus-within:bg-primary/20 flex items-center justify-center transition-all duration-300 group-focus-within:scale-110"
+        >
           <Search className="w-4.5 h-4.5 text-primary/70 group-focus-within:text-primary transition-colors duration-300" />
-        </div>
+        </button>
         <Input
           ref={inputRef}
           placeholder={value ? placeholder : (typingPlaceholder || placeholder)}
