@@ -77,7 +77,6 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
   const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState<"choose" | "pay">("choose");
 
-  const [iframeUrl, setIframeUrl] = useState<string | null>(null);
   const [walletRedirectUrl, setWalletRedirectUrl] = useState<string | null>(null);
   const [kioskBillRef, setKioskBillRef] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -106,7 +105,7 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
         body: { order_id: orderId, payment_method: selectedMethod, wallet_phone: selectedMethod === "wallet" ? walletPhone : undefined, return_url: buildPaymobReturnUrl() },
       });
       if (fnError || !data?.payment_key) { setError(data?.error || "تعذر إنشاء جلسة الدفع."); return; }
-      if (selectedMethod === "card" && data.iframe_url) { setIframeUrl(data.iframe_url); setStep("pay"); }
+      if (selectedMethod === "card" && data.iframe_url) { window.location.href = data.iframe_url; return; }
       else if (selectedMethod === "wallet" && data.wallet_redirect_url) { setWalletRedirectUrl(data.wallet_redirect_url); setStep("pay"); window.location.href = data.wallet_redirect_url; }
       else if (selectedMethod === "wallet") { setStep("pay"); }
       else if (selectedMethod === "kiosk" && data.kiosk_bill_reference) { setKioskBillRef(data.kiosk_bill_reference); setStep("pay"); }
@@ -149,7 +148,7 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
   };
 
   const handleBack = () => {
-    setStep("choose"); setIframeUrl(null); setWalletRedirectUrl(null); setKioskBillRef(null);
+    setStep("choose"); setWalletRedirectUrl(null); setKioskBillRef(null);
     setReceiptFile(null); setReceiptPreview(null); setReceiptSubmitted(false); setError(null);
   };
 
@@ -187,12 +186,6 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
           </div>
         )}
 
-        {/* Card iframe */}
-        {selectedMethod === "card" && iframeUrl && (
-          <div className="rounded-2xl border border-border overflow-hidden bg-card shadow-sm">
-            <iframe src={iframeUrl} className="w-full border-0" style={{ minHeight: "480px", height: "65vh", maxHeight: "650px" }} title="Paymob Payment" allow="payment" />
-          </div>
-        )}
 
         {/* Wallet */}
         {selectedMethod === "wallet" && (

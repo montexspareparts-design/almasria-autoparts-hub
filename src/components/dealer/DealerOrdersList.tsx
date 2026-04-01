@@ -123,7 +123,6 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
   const [saving, setSaving] = useState(false);
   const [reordering, setReordering] = useState<string | null>(null);
   const [paymobLoading, setPaymobLoading] = useState<string | null>(null);
-  const [paymobIframe, setPaymobIframe] = useState<{ orderId: string; iframeUrl: string } | null>(null);
   const { addItem } = useDealerCart();
 
   const handlePaymob = async (order: Order) => {
@@ -139,7 +138,8 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
         toast({ title: "حدث خطأ في بوابة الدفع", description: data?.error || "يرجى المحاولة مرة أخرى", variant: "destructive" });
         return;
       }
-      setPaymobIframe({ orderId: order.id, iframeUrl: data.iframe_url });
+      // Redirect externally — Paymob blocks iframe embedding
+      window.location.href = data.iframe_url;
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "حدث خطأ غير متوقع";
       toast({ title: "حدث خطأ", description: message, variant: "destructive" });
@@ -482,24 +482,6 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
                     {/* ─── Payment CTA ─── */}
                     {["confirmed", "awaiting_payment", "pending"].includes(order.status) && (
                       <div className="space-y-3">
-                        {paymobIframe && paymobIframe.orderId === order.id ? (
-                          <div className="rounded-xl overflow-hidden border border-border">
-                            <div className="p-3 flex items-center justify-between bg-muted/30">
-                              <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
-                                <CreditCard className="w-4 h-4 text-primary" />
-                                إتمام الدفع
-                              </h4>
-                              <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setPaymobIframe(null)}>✕ إغلاق</Button>
-                            </div>
-                            <iframe
-                              src={paymobIframe.iframeUrl}
-                              className="w-full border-0"
-                              style={{ minHeight: "450px", height: "55vh", maxHeight: "600px" }}
-                              title="Paymob Payment"
-                              allow="payment"
-                            />
-                          </div>
-                        ) : (
                           <div className="rounded-xl overflow-hidden border border-primary/20">
                             <div className="bg-gradient-to-l from-primary/5 to-primary/10 p-4 space-y-3">
                               <div className="flex items-center gap-3">
@@ -527,7 +509,6 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
                               </Button>
                             </div>
                           </div>
-                        )}
                       </div>
                     )}
 
