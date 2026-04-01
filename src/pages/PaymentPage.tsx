@@ -86,6 +86,7 @@ const PaymentPage = () => {
 
   // Fetch order info on mount
   useEffect(() => {
+    if (authLoading) return; // Wait for auth to finish loading
     if (!user) {
       toast({ title: "يجب تسجيل الدخول أولاً", variant: "destructive" });
       navigate("/auth");
@@ -112,7 +113,7 @@ const PaymentPage = () => {
       }
     };
     fetchOrder();
-  }, [orderId, user, navigate]);
+  }, [orderId, user, authLoading, navigate]);
 
   const displayAmount = amount
     ? Number(amount).toLocaleString("ar-EG")
