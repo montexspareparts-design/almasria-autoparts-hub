@@ -322,6 +322,7 @@ Deno.serve(async (req) => {
         payment_key: paymentKey,
         payment_method: paymentMethod,
         iframe_url: iframeUrl,
+        order_url: orderUrl,
         iframe_id: iframeId || null,
         wallet_redirect_url: walletRedirectUrl,
         kiosk_bill_reference: kioskBillReference,
