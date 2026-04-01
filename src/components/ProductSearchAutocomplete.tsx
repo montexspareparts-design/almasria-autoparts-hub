@@ -301,14 +301,14 @@ const ProductSearchAutocomplete = ({
                     setIsFocused(false);
                   }}
                   onMouseEnter={() => setSelectedIndex(idx)}
-                  className={`w-full flex items-center gap-3 px-2.5 py-2 rounded-lg transition-all ${
+                  className={`w-full flex items-center gap-2 sm:gap-3 px-2 sm:px-2.5 py-1.5 sm:py-2 rounded-lg transition-all ${
                     selectedIndex === idx
                       ? "bg-primary/10 text-foreground"
                       : "hover:bg-muted text-foreground"
                   }`}
                 >
                   {/* Product image */}
-                  <div className="w-10 h-10 rounded-lg bg-white border border-border shrink-0 flex items-center justify-center overflow-hidden">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white border border-border shrink-0 flex items-center justify-center overflow-hidden">
                     {product.image_url ? (
                       <img src={product.image_url} alt="" className="w-full h-full object-contain p-1" />
                     ) : (
