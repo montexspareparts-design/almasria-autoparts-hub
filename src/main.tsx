@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import { setupLazyImportRecovery } from "@/lib/lazyImportRecovery";
 
 // Remove splash screen as soon as React app mounts
 const removeSplash = () => {
@@ -11,6 +12,15 @@ const removeSplash = () => {
   }
 };
 
+const disposeLazyImportRecovery = setupLazyImportRecovery();
+
 createRoot(document.getElementById("root")!).render(<App />);
 // Remove splash immediately after first render commit
 requestAnimationFrame(removeSplash);
+
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    disposeLazyImportRecovery?.();
+  });
+}
+
