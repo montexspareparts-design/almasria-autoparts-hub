@@ -73,6 +73,11 @@ const DealerDashboard = () => {
     setOrders(ordersRes.data || []);
     setUnreadCount(notifRes.data?.length || 0);
     setLoadingData(false);
+
+    // Show vehicle type dialog if dealer hasn't chosen yet
+    const vt = dealerAccount?.vehicle_types || [];
+    setVehicleTypes(vt);
+    if (vt.length === 0) setShowVehicleDialog(true);
   };
 
   if (authLoading || loadingData || !user || !isDealer) {
