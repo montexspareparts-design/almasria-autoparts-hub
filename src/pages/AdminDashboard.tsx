@@ -88,6 +88,7 @@ const sidebarGroups: SidebarGroup[] = [
     {
       label: "التنبيهات والربط",
       items: [
+        { id: "instapay-receipts", label: "إيصالات InstaPay", icon: Banknote },
         { id: "payment-reminders", label: "متابعة التذكيرات", icon: Clock },
         { id: "push-notifications", label: "إشعارات Push", icon: Bell },
         { id: "erp", label: "ربط ERP", icon: Zap },
