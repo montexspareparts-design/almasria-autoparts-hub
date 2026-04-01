@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
-import { User, Phone, Save, Loader2, Shield, Volume2, VolumeX, Sun, Moon, Monitor, Type, Minus, Plus, Palette } from "lucide-react";
+import { User, Phone, Save, Loader2, Shield, Volume2, VolumeX, Sun, Moon, Monitor, Type, Minus, Plus, Palette, Car, Bus, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { isSoundEnabled, setSoundEnabled, playPricingSound } from "@/lib/pricingSound";
 import { useTheme } from "next-themes";
