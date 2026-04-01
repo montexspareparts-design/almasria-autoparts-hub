@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Package, ShoppingCart, TrendingUp, Car, Bus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import ProductDetailDialog from "@/components/ProductDetailDialog";
 
 // Keywords that map vehicle types to product names
 const VEHICLE_KEYWORDS: Record<string, string[]> = {
@@ -27,6 +28,7 @@ const DealerVehicleRecommendations = ({ vehicleTypes, compact }: DealerVehicleRe
   const { user, isDealer } = useAuth();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   useEffect(() => {
     if (vehicleTypes.length > 0) fetchRecommendations();
@@ -112,7 +114,8 @@ const DealerVehicleRecommendations = ({ vehicleTypes, compact }: DealerVehicleRe
         {products.map((product) => (
           <div
             key={product.id}
-            className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/30 hover:shadow-md transition-all duration-200 group"
+            className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/30 hover:shadow-md transition-all duration-200 group cursor-pointer"
+            onClick={() => setSelectedProduct(product)}
           >
             <div className="aspect-square bg-white relative overflow-hidden p-3">
               {product.image_url ? (
@@ -150,6 +153,13 @@ const DealerVehicleRecommendations = ({ vehicleTypes, compact }: DealerVehicleRe
           </div>
         ))}
       </div>
+
+      <ProductDetailDialog
+        product={selectedProduct}
+        open={!!selectedProduct}
+        onOpenChange={(open) => !open && setSelectedProduct(null)}
+        price={selectedProduct?.base_price ?? null}
+      />
     </div>
   );
 };

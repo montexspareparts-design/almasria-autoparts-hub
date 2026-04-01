@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TrendingUp, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import ProductDetailDialog from "@/components/ProductDetailDialog";
 
 interface PopularProduct {
   id: string;
@@ -24,6 +25,7 @@ const brandLabels: Record<string, string> = {
 const DealerRecommendations = ({ userId, tier, onNavigateToQuotes }: { userId: string; tier?: string; onNavigateToQuotes?: () => void }) => {
   const [products, setProducts] = useState<PopularProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   useEffect(() => {
     fetchPopular();
@@ -83,7 +85,8 @@ const DealerRecommendations = ({ userId, tier, onNavigateToQuotes }: { userId: s
         {products.map(p => (
           <div
             key={p.id}
-            className="bg-card border border-border rounded-lg overflow-hidden hover:border-primary/30 hover:shadow-sm transition-all group"
+            className="bg-card border border-border rounded-lg overflow-hidden hover:border-primary/30 hover:shadow-sm transition-all group cursor-pointer"
+            onClick={() => setSelectedProduct(p)}
           >
             <div className="aspect-square bg-muted/50 relative overflow-hidden">
               <img
@@ -115,6 +118,13 @@ const DealerRecommendations = ({ userId, tier, onNavigateToQuotes }: { userId: s
           </div>
         ))}
       </div>
+
+      <ProductDetailDialog
+        product={selectedProduct}
+        open={!!selectedProduct}
+        onOpenChange={(open) => !open && setSelectedProduct(null)}
+        price={null}
+      />
     </div>
   );
 };
