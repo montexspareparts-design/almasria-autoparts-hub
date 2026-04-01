@@ -111,7 +111,7 @@ const DealerDashboard = () => {
   const renderContent = () => {
     switch (activeTab) {
       case "quotes": return <DealerProductSearch />;
-      case "priced_today": return <DealerPricedToday onConvertToOrder={() => setActiveTab("cart")} />;
+      case "priced_today": return <DealerPricedToday onConvertToOrder={() => setActiveTab("cart")} sharedCart={dealerCart} />;
       case "cart": return <DealerCart onNavigateToOrders={() => setActiveTab("orders")} onNavigateToPayment={() => setActiveTab("payment")} sharedCart={dealerCart} />;
       case "quick_order": return <DealerQuickOrder />;
       case "orders": return <DealerOrdersList userId={user!.id} onNavigateToPayment={() => setActiveTab("payment")} />;
