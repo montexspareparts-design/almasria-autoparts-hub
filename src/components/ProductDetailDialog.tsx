@@ -127,17 +127,17 @@ const ProductDetailDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] p-0 gap-0 overflow-hidden" dir="rtl">
+      <DialogContent className="max-w-2xl max-h-[90vh] sm:max-h-[90vh] p-0 gap-0 overflow-hidden w-[95vw] sm:w-full rounded-2xl sm:rounded-lg" dir="rtl">
         <DialogHeader className="sr-only">
           <DialogTitle>{product.name_ar}</DialogTitle>
           <DialogDescription>تفاصيل المنتج</DialogDescription>
         </DialogHeader>
 
-        <div className="overflow-y-auto max-h-[90vh]">
+        <div className="overflow-y-auto max-h-[85vh] sm:max-h-[90vh]">
         <div
           ref={imageRef}
-          className="relative bg-white aspect-[3/2] cursor-crosshair overflow-hidden rounded-t-lg shrink-0"
-          onClick={() => setZoomed(!zoomed)}
+          className={`relative bg-white overflow-hidden rounded-t-2xl sm:rounded-t-lg shrink-0 ${isMobile ? 'aspect-square' : 'aspect-[3/2] cursor-crosshair'}`}
+          onClick={() => !isMobile && setZoomed(!zoomed)}
           onMouseMove={handleMouseMove}
           onMouseLeave={() => { if (zoomed) setZoomPosition({ x: 50, y: 50 }); }}
         >
