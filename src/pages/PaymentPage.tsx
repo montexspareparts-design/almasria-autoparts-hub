@@ -206,6 +206,15 @@ const PaymentPage = () => {
     setError(null);
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-[100svh] bg-background flex flex-col items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <p className="text-muted-foreground mt-3 text-sm">جاري التحميل...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-[100svh] bg-background flex flex-col">
       <Navbar />
