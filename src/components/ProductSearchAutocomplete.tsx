@@ -341,6 +341,17 @@ const ProductSearchAutocomplete = ({
                   )}
                 </button>
               ))}
+
+              {/* Show all results button */}
+              {suggestions.length > 0 && (
+                <button
+                  onClick={() => setIsFocused(false)}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 mt-1 rounded-xl bg-primary/5 hover:bg-primary/10 text-primary text-xs font-bold border border-primary/10 hover:border-primary/20 transition-all"
+                >
+                  عرض كل النتائج ({filteredTotal})
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
           </motion.div>
         )}
