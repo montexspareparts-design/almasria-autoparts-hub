@@ -285,9 +285,9 @@ const ProductSearchAutocomplete = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.98 }}
             transition={{ duration: 0.15 }}
-            className="absolute top-full left-0 right-0 mt-1.5 bg-card border border-border rounded-xl shadow-xl shadow-black/10 overflow-hidden z-[60]"
+            className="absolute top-full right-0 mt-1.5 w-[min(92vw,24rem)] max-w-[calc(100vw-1rem)] sm:left-0 sm:right-0 sm:w-auto bg-card border border-border rounded-2xl shadow-xl shadow-black/10 overflow-hidden z-[60]"
           >
-            <div className="p-1 sm:p-1.5 max-h-[60vh] sm:max-h-[420px] overflow-y-auto">
+            <div className="p-1.5 sm:p-1.5 max-h-[60vh] sm:max-h-[420px] overflow-y-auto">
               {/* "Did you mean?" hint */}
               {didYouMean && (
                 <button
@@ -314,27 +314,30 @@ const ProductSearchAutocomplete = ({
                     setIsFocused(false);
                   }}
                   onMouseEnter={() => setSelectedIndex(idx)}
-                  className={`w-full flex flex-row-reverse items-center gap-2 px-2 sm:px-2.5 py-1.5 sm:py-2 rounded-lg transition-all ${
+                  className={`w-full flex flex-row-reverse items-center gap-2.5 px-2.5 py-2 rounded-xl transition-colors ${
                     selectedIndex === idx
                       ? "bg-primary/10 text-foreground"
                       : "hover:bg-muted text-foreground"
                   }`}
                 >
                   {/* Product image */}
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-white border border-border shrink-0 flex items-center justify-center overflow-hidden">
+                  <div className="w-10 h-10 rounded-xl bg-background border border-border/80 shrink-0 flex items-center justify-center overflow-hidden">
                     {product.image_url ? (
-                      <img src={product.image_url} alt="" className="w-full h-full object-contain p-0.5" />
+                      <img src={product.image_url} alt="" className="w-full h-full object-contain p-1" />
                     ) : (
                       <Package className="w-5 h-5 text-muted-foreground/30" />
                     )}
                   </div>
 
                   {/* Product info */}
-                  <div className="flex-1 text-right min-w-0">
-                    <p className="text-[11px] sm:text-xs font-bold truncate leading-tight">{product.name_ar}</p>
-                    <p className="text-[10px] font-mono text-muted-foreground mt-0.5 truncate direction-ltr text-right">
-                      {product.sku}
-                    </p>
+                  <div className="flex-1 min-w-0 text-right">
+                    <p className="text-xs font-bold truncate leading-tight">{product.name_ar}</p>
+                    <div className="mt-1 flex items-center gap-1 min-w-0 text-muted-foreground">
+                      <Hash className="w-3 h-3 shrink-0" />
+                      <span dir="ltr" className="block min-w-0 flex-1 truncate text-[10px] font-mono text-left">
+                        {product.sku}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Add to quote button for dealers */}
@@ -344,7 +347,7 @@ const ProductSearchAutocomplete = ({
                         e.stopPropagation();
                         onAddToQuote(product);
                       }}
-                      className="shrink-0 p-1.5 rounded-full bg-primary/10 hover:bg-primary/20 text-primary transition-all"
+                      className="shrink-0 flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/15 transition-colors"
                       title="أضف لعرض السعر"
                     >
                       <PlusCircle className="w-4 h-4" />
