@@ -77,7 +77,6 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
   const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState<"choose" | "pay">("choose");
 
-  const [iframeUrl, setIframeUrl] = useState<string | null>(null);
   const [walletRedirectUrl, setWalletRedirectUrl] = useState<string | null>(null);
   const [kioskBillRef, setKioskBillRef] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
