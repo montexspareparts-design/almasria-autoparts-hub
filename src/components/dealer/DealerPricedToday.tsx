@@ -364,7 +364,7 @@ const DealerPricedToday = ({ onConvertToOrder, sharedCart }: DealerPricedTodayPr
                               </button>
                               <span className="text-sm font-bold w-8 text-center text-foreground">{item.quantity}</span>
                               <button
-                                onClick={() => updateQuantity(item.product_id, 1)}
+                                onClick={(e) => { e.stopPropagation(); updateQuantity(item.product_id, 1); }}
                                 className="w-7 h-7 rounded-md bg-background flex items-center justify-center text-foreground hover:bg-accent transition-colors shadow-sm"
                               >
                                 <Plus className="w-3 h-3" />
