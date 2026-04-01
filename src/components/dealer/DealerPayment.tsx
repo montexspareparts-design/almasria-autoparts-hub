@@ -138,7 +138,7 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
       const filePath = `instapay-receipts/${targetOrderId}/${Date.now()}.${ext}`;
       const { error: uploadErr } = await supabase.storage.from("dealer-documents").upload(filePath, receiptFile, { upsert: true });
       if (uploadErr) throw uploadErr;
-      const { error: updateErr } = await supabase.from("orders").update({ payment_method: "instapay", notes: `إيصال InstaPay: ${filePath}` }).eq("id", targetOrderId).eq("user_id", user.id);
+      const { error: updateErr } = await supabase.from("orders").update({ payment_method: "instapay", notes: `instapay_receipt: ${filePath}` }).eq("id", targetOrderId).eq("user_id", user.id);
       if (updateErr) throw updateErr;
       setReceiptSubmitted(true);
       toast({ title: "✅ تم رفع الإيصال بنجاح" });
