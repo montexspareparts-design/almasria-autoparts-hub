@@ -52,7 +52,7 @@ const paymentMethods = [
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const { items, subtotal, vat, discount, couponCode, couponDiscount, total, clearCart, setShippingCost } = useCart();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   const [shipping, setShipping] = useState("standard");
   const [payment, setPayment] = useState("cod");
@@ -73,6 +73,15 @@ const CheckoutPage = () => {
 
   const selectedShipping = shippingOptions.find((s) => s.id === shipping)!;
   const orderTotal = total;
+
+  // Loading guard: prevent auto-logout during auth check
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   const handleShippingChange = (val: string) => {
     setShipping(val);
