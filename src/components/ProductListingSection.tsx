@@ -83,35 +83,10 @@ const ProductListingSection = ({
         onProductSelect={(p) => setSelectedProduct(p)}
       />
 
-      <section id={sectionId} className={sectionClassName || "py-12 md:py-16 bg-background border-y border-border"}>
+      <section id={sectionId} className={sectionClassName || "py-4 md:py-6 bg-background"}>
         <div className="container mx-auto px-4">
-          {/* Section title */}
-          {sectionTitle && (
-            <div className="text-center mb-10">
-              {sectionTitle}
-            </div>
-          )}
-
-          {/* Dealer banners */}
-
-          {isDealer && (
-            <div className={`rounded-xl p-3.5 mb-4 flex items-center justify-between flex-wrap gap-3 border ${limitReached ? "bg-destructive/5 border-destructive/20" : "bg-muted/50 border-primary/15"}`}>
-              <div className="flex items-center gap-2.5">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${limitReached ? "bg-destructive/10" : "bg-primary/10"}`}>
-                  <Eye className="w-4 h-4 text-primary" />
-                </div>
-                <p className="text-foreground text-sm">
-                  {limitReached
-                    ? <><strong>استنفدت الحد اليومي.</strong> يمكنك مشاهدة أسعار جديدة غداً.</>
-                    : <>شاهدت <strong>{dailyViewCount}</strong> من <strong>{dailyLimit}</strong> صنف اليوم</>
-                  }
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Search bar + controls */}
-          <div className="flex items-center gap-2 mb-5">
+          {/* Search bar + dealer badge + controls — single compact row */}
+          <div className="flex items-center gap-2 mb-3">
             <ProductSearchAutocomplete
               value={filters.search}
               onChange={(v) => setFilters(prev => ({ ...prev, search: v }))}
@@ -119,12 +94,28 @@ const ProductListingSection = ({
               onProductClick={(p) => setSelectedProduct(p)}
               onCommandPaletteOpen={() => setCommandPaletteOpen(true)}
             />
-            <Button variant="outline" className="lg:hidden gap-2 shrink-0 h-11" onClick={() => setSidebarOpen(true)}>
-              <SlidersHorizontal className="w-4 h-4" />
+
+            {/* Dealer daily view counter — compact pill */}
+            {isDealer && (
+              <div
+                className={`shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+                  limitReached
+                    ? "bg-destructive/10 border-destructive/20 text-destructive"
+                    : "bg-primary/5 border-primary/15 text-primary"
+                }`}
+                title={limitReached ? "استنفدت الحد اليومي" : `شاهدت ${dailyViewCount} من ${dailyLimit} صنف`}
+              >
+                <Eye className="w-3.5 h-3.5" />
+                <span className="tabular-nums">{dailyViewCount}/{dailyLimit}</span>
+              </div>
+            )}
+
+            <Button variant="outline" className="lg:hidden gap-1.5 shrink-0 h-9 text-xs" onClick={() => setSidebarOpen(true)}>
+              <SlidersHorizontal className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">فلاتر</span>
             </Button>
             <Select value={filters.sortBy || "newest"} onValueChange={(v) => setFilters(prev => ({ ...prev, sortBy: v }))}>
-              <SelectTrigger className="w-[130px] h-11 text-xs bg-card shrink-0">
+              <SelectTrigger className="w-[110px] h-9 text-xs bg-card shrink-0">
                 <SelectValue placeholder="ترتيب" />
               </SelectTrigger>
               <SelectContent>
