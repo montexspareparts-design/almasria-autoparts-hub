@@ -133,7 +133,7 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
       }
       toast({ title: "✅ تم إنشاء الطلب", description: `رقم الطلب: ${order.order_number} — جاري التوجيه للدفع...` });
       setNotes(""); setShippingAddress(""); setShippingGovernorate("");
-      onNavigateToPayment();
+      onNavigateToPayment({ id: order.id, orderNumber: order.order_number, amount: total });
     } catch {
       toast({ title: "حدث خطأ", variant: "destructive" });
     } finally {

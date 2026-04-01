@@ -113,11 +113,11 @@ const DealerDashboard = () => {
     switch (activeTab) {
       case "quotes": return <DealerProductSearch />;
       case "priced_today": return <DealerPricedToday onConvertToOrder={() => setActiveTab("cart")} sharedCart={dealerCart} />;
-      case "cart": return <DealerCart onNavigateToOrders={() => setActiveTab("orders")} onNavigateToPayment={() => setActiveTab("payment")} sharedCart={dealerCart} />;
+      case "cart": return <DealerCart onNavigateToOrders={() => setActiveTab("orders")} onNavigateToPayment={(info) => { if (info) setPaymentTarget(info); setActiveTab("payment"); }} sharedCart={dealerCart} />;
       case "quick_order": return <DealerQuickOrder />;
       case "orders": return <DealerOrdersList userId={user!.id} onNavigateToPayment={() => setActiveTab("payment")} />;
       case "invoices": return <DealerInvoices userId={user!.id} />;
-      case "payment": return <DealerPayment />;
+      case "payment": return <DealerPayment targetOrderId={paymentTarget?.id} targetOrderNumber={paymentTarget?.orderNumber} targetOrderAmount={paymentTarget?.amount} />;
       case "price_lists": return <DealerPriceLists onNavigateToQuotes={() => setActiveTab("quotes")} editingQuoteData={priceListQuoteData} onClearEditingQuote={() => setPriceListQuoteData(null)} />;
       case "favorites": return <DealerFavorites />;
       case "notifications": return <DealerNotificationsList userId={user!.id} onNavigate={(tab) => setActiveTab(tab as DealerTab)} />;
