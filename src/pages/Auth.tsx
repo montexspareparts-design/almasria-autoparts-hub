@@ -29,8 +29,11 @@ const setRememberedFlag = (val: boolean) => {
 const markSessionActive = () => sessionStorage.setItem(SESSION_FLAG, "true");
 const isSessionActive = () => sessionStorage.getItem(SESSION_FLAG) === "true";
 
+type LoginMethod = "phone" | "email";
+
 const Auth = () => {
   const [mode, setMode] = useState<AuthMode>("login");
+  const [loginMethod, setLoginMethod] = useState<LoginMethod>("phone");
   const [credential, setCredential] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -50,7 +53,12 @@ const Auth = () => {
   const isLogin = mode === "login";
   const phoneToEmail = (p: string) => `${p.replace(/\D/g, "")}@phone.almasria.app`;
   const credIsPhone = isPhone(credential);
-  const getAuthEmail = () => credIsPhone ? phoneToEmail(credential) : credential.trim();
+  const getAuthEmail = () => {
+    if (isLogin) {
+      return loginMethod === "phone" ? phoneToEmail(credential) : credential.trim();
+    }
+    return credIsPhone ? phoneToEmail(credential) : credential.trim();
+  };
 
   // If session already exists (or arrives after OAuth), leave auth page immediately
   useEffect(() => {
@@ -224,10 +232,27 @@ const Auth = () => {
                 <div className="relative flex justify-center text-[11px]"><span className="bg-card px-3 text-muted-foreground/60">أو</span></div>
               </div>
 
-              {/* Unified credential hint */}
-              <p className="text-[11px] text-muted-foreground/50 text-center mb-5">
-                يمكنك الدخول برقم الهاتف أو البريد الإلكتروني
-              </p>
+              {/* Phone / Email Toggle */}
+              {isLogin && (
+                <div className="flex gap-2 mb-5">
+                  <Button
+                    type="button"
+                    variant={loginMethod === "phone" ? "default" : "outline"}
+                    className="flex-1 gap-2 h-11 rounded-xl font-bold text-sm"
+                    onClick={() => { setLoginMethod("phone"); setCredential(""); }}
+                  >
+                    <Phone className="w-4 h-4" /> رقم الهاتف
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={loginMethod === "email" ? "default" : "outline"}
+                    className="flex-1 gap-2 h-11 rounded-xl font-bold text-sm"
+                    onClick={() => { setLoginMethod("email"); setCredential(""); }}
+                  >
+                    <Mail className="w-4 h-4" /> البريد الإلكتروني
+                  </Button>
+                </div>
+              )}
             </>
           )}
 
@@ -246,17 +271,19 @@ const Auth = () => {
               )}
 
               <div className="space-y-2">
-                <Label className="text-xs font-semibold text-foreground/80 text-right block">رقم الهاتف أو البريد الإلكتروني <span className="text-primary">*</span></Label>
+                <Label className="text-xs font-semibold text-foreground/80 text-right block">
+                  {isLogin ? (loginMethod === "phone" ? "رقم الهاتف" : "البريد الإلكتروني") : "رقم الهاتف أو البريد الإلكتروني"} <span className="text-primary">*</span>
+                </Label>
                 <div className="relative">
                   <Input 
                     value={credential} 
                     onChange={e => setCredential(e.target.value)} 
-                    placeholder="01xxxxxxxxx أو example@email.com" 
+                    placeholder={isLogin ? (loginMethod === "phone" ? "01xxxxxxxxx" : "example@email.com") : "01xxxxxxxxx أو example@email.com"}
                     required 
                     dir="ltr" 
                     className="bg-muted/40 border-border/40 h-11 text-sm pl-10 focus:border-primary/50 focus:ring-primary/20 transition-all" 
                   />
-                  {credIsPhone ? (
+                  {(isLogin ? loginMethod === "phone" : credIsPhone) ? (
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30" />
                   ) : (
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30" />
