@@ -188,22 +188,22 @@ const ProductDetailDialog = ({
         {/* Details section */}
         <div className="p-4 sm:p-5 space-y-3 sm:space-y-4">
           {/* Header: SKU + Stock + Brand */}
-          <div className="flex items-center flex-wrap gap-2">
-            <Badge variant="outline" className="font-mono text-xs gap-1">
-              <Hash className="w-3 h-3" />
+          <div className="flex items-center flex-wrap gap-1.5 sm:gap-2">
+            <Badge variant="outline" className="font-mono text-[10px] sm:text-xs gap-1 px-1.5 sm:px-2">
+              <Hash className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
               {product.sku}
             </Badge>
             {product.stock_quantity > 0 ? (
-              <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200 text-xs gap-1">
-                <Box className="w-3 h-3" />
+              <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200 text-[10px] sm:text-xs gap-1 px-1.5 sm:px-2">
+                <Box className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                 متوفر
               </Badge>
             ) : (
-              <Badge variant="destructive" className="text-xs">غير متوفر</Badge>
+              <Badge variant="destructive" className="text-[10px] sm:text-xs">غير متوفر</Badge>
             )}
             {product.brand && brandLabels[product.brand] && (
-              <Badge variant="secondary" className="text-xs gap-1">
-                <Tag className="w-3 h-3" />
+              <Badge variant="secondary" className="text-[10px] sm:text-xs gap-1 px-1.5 sm:px-2">
+                <Tag className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                 {brandLabels[product.brand]}
               </Badge>
             )}
