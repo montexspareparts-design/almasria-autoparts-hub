@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,7 +26,8 @@ interface DealerCartProps {
 const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: DealerCartProps) => {
   const { user, dealerAccount } = useAuth();
   const fallbackCart = useDealerCart();
-  const { items, loading, updateQuantity, removeItem, clearCart, fetchCart } = sharedCart || fallbackCart;
+  const cart = sharedCart || fallbackCart;
+  const { items, loading, updateQuantity, removeItem, clearCart, fetchCart } = cart;
   const [tierPrices, setTierPrices] = useState<Record<string, number>>({});
   const [loadingPrices, setLoadingPrices] = useState(false);
   const [notes, setNotes] = useState("");
@@ -34,6 +35,11 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
   const [submittingPayment, setSubmittingPayment] = useState(false);
   const [shippingAddress, setShippingAddress] = useState("");
   const [shippingGovernorate, setShippingGovernorate] = useState("");
+
+  // Refetch cart when component mounts to ensure fresh data
+  useEffect(() => {
+    fetchCart();
+  }, [fetchCart]);
 
   // Fetch tier prices for all items
   const fetchTierPrices = async () => {
@@ -54,8 +60,8 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
     setLoadingPrices(false);
   };
 
-  // Fetch prices on mount when items change
-  useState(() => { fetchTierPrices(); });
+  // Fetch tier prices when items change
+  useEffect(() => { fetchTierPrices(); }, [items.length]);
 
   const getPrice = (item: typeof items[0]) => {
     if (tierPrices[item.product_id]) return tierPrices[item.product_id];
