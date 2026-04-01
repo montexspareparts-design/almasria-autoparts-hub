@@ -30,6 +30,7 @@ export const useDealerCart = () => {
 
   const fetchCart = useCallback(async () => {
     if (!user || !isDealer) { setItems([]); setLoading(false); return; }
+    setLoading(true);
     const { data } = await supabase
       .from("dealer_cart_items")
       .select("id, product_id, quantity")
