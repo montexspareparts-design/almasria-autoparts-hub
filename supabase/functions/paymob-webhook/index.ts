@@ -238,19 +238,14 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Send WhatsApp to customer on payment success
+      // Fetch customer profile for admin WhatsApp notification
       const { data: customerProfile } = await supabase
         .from("profiles")
         .select("phone, full_name")
         .eq("user_id", order.user_id)
         .maybeSingle();
 
-      if (customerProfile?.phone) {
-        const msg = `تم استلام الدفع بنجاح ✅\nطلبك رقم ${orderNumber} جاري التجهيز`;
-        await sendWhatsApp(customerProfile.phone, msg);
-      }
-
-      // Send WhatsApp to admins on payment success
+      // Send WhatsApp to admins only (customer gets in-app notification + bank SMS)
       const { data: adminRoles } = await supabase
         .from("user_roles")
         .select("user_id")
