@@ -125,11 +125,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setTimeout(async () => {
             const { data: dealer } = await supabase
               .from("dealer_accounts")
-              .select("id, tier, is_active, custom_discount, min_order_amount")
+              .select("id, tier, is_active, custom_discount, min_order_amount, vehicle_types")
               .eq("user_id", session.user.id)
               .eq("is_active", true)
               .maybeSingle();
-            setDealerAccount(dealer);
+            setDealerAccount(dealer as any);
 
             // If dealer, register session and start monitoring
             if (dealer) {
