@@ -220,7 +220,7 @@ const ProductDetailDialog = ({
           <Separator />
 
           {/* Info Grid */}
-          <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 text-sm">
             {/* Category */}
             {product.product_categories && (
               <div className="flex items-center gap-2">
