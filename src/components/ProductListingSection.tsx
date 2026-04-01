@@ -1,4 +1,5 @@
 import { Link, useSearchParams } from "react-router-dom";
+import { toast } from "@/hooks/use-toast";
 import { ShieldCheck, Eye, Package, Grid3X3, List, ChevronLeft, SlidersHorizontal, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -94,6 +95,7 @@ const ProductListingSection = ({
               onProductClick={(p) => setSelectedProduct(p)}
               onAddToQuote={(p) => {
                 recordView(p.id);
+                toast({ title: "✅ تم التسعير بنجاح", description: p.name_ar || "تم إضافة المنتج لقائمة التسعير" });
               }}
               onCommandPaletteOpen={() => setCommandPaletteOpen(true)}
               isDealer={isDealer}
