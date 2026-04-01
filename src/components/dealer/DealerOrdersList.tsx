@@ -99,7 +99,7 @@ const notifyAdmins = async (orderNumber: string, action: string, details: string
   const { data: adminRoles } = await supabase
     .from("user_roles")
     .select("user_id")
-    .eq("role", "admin" as any);
+    .eq("role", "admin");
 
   if (adminRoles && adminRoles.length > 0) {
     const notifications = adminRoles.map(admin => ({
