@@ -9,7 +9,7 @@ const config: CapacitorConfig = {
     cleartext: true,
   },
   ios: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#FFFFFF',
     contentInset: 'automatic',
     preferredContentMode: 'mobile',
     scheme: 'المصرية جروب',
