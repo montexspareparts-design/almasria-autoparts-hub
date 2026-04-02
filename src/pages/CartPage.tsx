@@ -26,7 +26,7 @@ const CartPage = () => {
             <h1 className="text-2xl font-bold text-foreground mb-3">سلة المشتريات فارغة</h1>
             <p className="text-muted-foreground mb-6">لم تقم بإضافة أي منتجات بعد</p>
             <Button asChild>
-              <Link to="/#products">تصفح المنتجات</Link>
+              <Link to="/products">تصفح المنتجات</Link>
             </Button>
           </div>
         </div>
