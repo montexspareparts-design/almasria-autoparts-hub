@@ -81,12 +81,12 @@ const HeroSection = () => {
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
 
-  // Skip video entirely on mobile to save bandwidth
+  // Load video after idle (mobile gets a slightly longer delay)
   useEffect(() => {
-    if (isMobile) return;
+    const delay = isMobile ? 3000 : 1500;
     const id = typeof requestIdleCallback !== 'undefined'
-      ? requestIdleCallback(() => setShouldLoadVideo(true), { timeout: 2000 })
-      : setTimeout(() => setShouldLoadVideo(true), 1500) as unknown as number;
+      ? requestIdleCallback(() => setShouldLoadVideo(true), { timeout: delay })
+      : setTimeout(() => setShouldLoadVideo(true), delay) as unknown as number;
     return () => {
       if (typeof cancelIdleCallback !== 'undefined') cancelIdleCallback(id);
       else clearTimeout(id);
