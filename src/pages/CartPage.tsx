@@ -139,38 +139,41 @@ const CartPage = () => {
                           </span>
                         </div>
 
-                        <div className="flex items-end justify-between mt-4">
-                          {/* Price */}
-                          <div>
-                            <p className="text-[11px] text-muted-foreground mb-0.5">سعر الوحدة</p>
-                            <p className="text-primary font-black text-xl leading-none tracking-tight">
-                              {item.unit_price.toLocaleString("ar-EG")}
-                              <span className="text-xs font-semibold mr-1">ج.م</span>
-                            </p>
-                          </div>
+                        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mt-4 gap-3">
+                          {/* Price + Quantity row on mobile */}
+                          <div className="flex items-end justify-between sm:justify-start sm:gap-5 w-full sm:w-auto">
+                            {/* Price */}
+                            <div>
+                              <p className="text-[11px] text-muted-foreground mb-0.5">سعر الوحدة</p>
+                              <p className="text-primary font-black text-lg sm:text-xl leading-none tracking-tight">
+                                {item.unit_price.toLocaleString("ar-EG")}
+                                <span className="text-xs font-semibold mr-1">ج.م</span>
+                              </p>
+                            </div>
 
-                          {/* Quantity Controls - Luxury */}
-                          <div className="flex items-center rounded-xl border border-border overflow-hidden shadow-sm bg-card">
-                            <button
-                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                              disabled={item.quantity >= item.stock_quantity}
-                              className="w-10 h-10 flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors disabled:opacity-30"
-                            >
-                              <Plus className="w-4 h-4" />
-                            </button>
-                            <span className="text-sm font-black min-w-[3rem] text-center border-x border-border py-2.5 bg-muted/20">{item.quantity}</span>
-                            <button
-                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                              className="w-10 h-10 flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors"
-                            >
-                              <Minus className="w-4 h-4" />
-                            </button>
+                            {/* Quantity Controls */}
+                            <div className="flex items-center rounded-xl border border-border overflow-hidden shadow-sm bg-card">
+                              <button
+                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                disabled={item.quantity >= item.stock_quantity}
+                                className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors disabled:opacity-30"
+                              >
+                                <Plus className="w-4 h-4" />
+                              </button>
+                              <span className="text-sm font-black min-w-[2.5rem] sm:min-w-[3rem] text-center border-x border-border py-2 sm:py-2.5 bg-muted/20">{item.quantity}</span>
+                              <button
+                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors"
+                              >
+                                <Minus className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
 
                           {/* Item Total */}
-                          <div className="text-left">
-                            <p className="text-[11px] text-muted-foreground mb-0.5">الإجمالي</p>
-                            <p className="text-lg md:text-xl font-black text-foreground leading-none">
+                          <div className="flex items-center justify-between sm:block sm:text-left bg-muted/20 sm:bg-transparent rounded-lg px-3 py-2 sm:p-0">
+                            <p className="text-[11px] text-muted-foreground mb-0 sm:mb-0.5">الإجمالي</p>
+                            <p className="text-lg sm:text-xl font-black text-foreground leading-none">
                               {(item.unit_price * item.quantity).toLocaleString("ar-EG")}
                               <span className="text-xs font-semibold mr-1">ج.م</span>
                             </p>

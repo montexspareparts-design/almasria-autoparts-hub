@@ -253,18 +253,18 @@ const CheckoutPage = () => {
               </div>
 
               {/* Progress Steps - minimal elegant */}
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 overflow-x-auto">
                 {[
                   { n: 1, l: "البيانات" },
                   { n: 2, l: "الشحن" },
                   { n: 3, l: "الدفع" },
                 ].map((s, idx) => (
-                  <div key={s.n} className="flex items-center gap-1">
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card border border-border">
+                  <div key={s.n} className="flex items-center gap-1 shrink-0">
+                    <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-card border border-border">
                       <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-black flex items-center justify-center">{s.n}</span>
                       <span className="text-[11px] font-bold text-foreground">{s.l}</span>
                     </div>
-                    {idx < 2 && <div className="w-4 h-px bg-border" />}
+                    {idx < 2 && <div className="w-3 sm:w-4 h-px bg-border" />}
                   </div>
                 ))}
               </div>
