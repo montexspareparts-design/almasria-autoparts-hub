@@ -1,6 +1,10 @@
 import { Link, useSearchParams } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { ShieldCheck, Eye, Package, Grid3X3, List, ChevronLeft, SlidersHorizontal, Search, X } from "lucide-react";
+import { lazy, Suspense } from "react";
+
+const ImageSearchDialog = lazy(() => import("@/components/ImageSearchDialog"));
+const VINScannerDialog = lazy(() => import("@/components/VINScannerDialog"));
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ProductCard from "@/components/ProductCard";
@@ -109,6 +113,12 @@ const ProductListingSection = ({
               onCommandPaletteOpen={() => setCommandPaletteOpen(true)}
               isDealer={isDealer}
             />
+
+            {/* AI Search Tools */}
+            <Suspense fallback={null}>
+              <ImageSearchDialog onProductFound={(term) => setFilters(prev => ({ ...prev, search: term }))} />
+              <VINScannerDialog onProductFound={(term) => setFilters(prev => ({ ...prev, search: term }))} />
+            </Suspense>
 
             {/* Dealer daily view counter — premium golden pill */}
             {isDealer && (
