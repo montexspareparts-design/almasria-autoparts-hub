@@ -159,7 +159,7 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
 
   useEffect(() => {
     if (!isOpen) {
-      synthRef.current.cancel();
+      synthRef.current?.cancel();
       setSpeakingMsgIndex(null);
       if (isListening) {
         recognitionRef.current?.stop();
