@@ -1,6 +1,10 @@
 import { Link, useSearchParams } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { ShieldCheck, Eye, Package, Grid3X3, List, ChevronLeft, SlidersHorizontal, Search, X } from "lucide-react";
+import { lazy, Suspense } from "react";
+
+const ImageSearchDialog = lazy(() => import("@/components/ImageSearchDialog"));
+const VINScannerDialog = lazy(() => import("@/components/VINScannerDialog"));
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ProductCard from "@/components/ProductCard";
