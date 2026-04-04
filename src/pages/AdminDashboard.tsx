@@ -31,6 +31,7 @@ const AdminProductInsights = lazy(() => import("@/components/AdminProductInsight
 const AdminPaymobSettings = lazy(() => import("@/components/AdminPaymobSettings"));
 const AdminPaymentReminders = lazy(() => import("@/components/AdminPaymentReminders"));
 const AdminInstaPayReceipts = lazy(() => import("@/components/AdminInstaPayReceipts"));
+const AdminMaintenanceBundles = lazy(() => import("@/components/AdminMaintenanceBundles"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];
@@ -74,6 +75,7 @@ const sidebarGroups: SidebarGroup[] = [
       { id: "qty-discounts", label: "خصومات الكمية", icon: Layers },
       { id: "price-lists", label: "عروض الأسعار", icon: FileText },
       { id: "catalogs", label: "الكتالوجات", icon: FileText },
+      { id: "bundles", label: "باقات الصيانة", icon: Package },
     ],
   },
   {
@@ -452,6 +454,8 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminERPSync /></Suspense>;
       case "paymob":
         return <Suspense fallback={<SectionLoader />}><AdminPaymobSettings /></Suspense>;
+      case "bundles":
+        return <Suspense fallback={<SectionLoader />}><AdminMaintenanceBundles /></Suspense>;
       default:
         return <Suspense fallback={<SectionLoader />}><AdminAnalytics /></Suspense>;
     }
