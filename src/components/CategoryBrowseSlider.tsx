@@ -47,7 +47,11 @@ const categories = [
   { name: "تيل فرامل", image: catBrakePads, search: "طقم تيل", accent: "from-pink-500/80 to-rose-700/90", brand: "fbk" },
 ];
 
-const CategoryBrowseSlider = () => {
+interface CategoryBrowseSliderProps {
+  currentBrand?: string; // e.g., "toyota-genuine", "toyota-oils", etc.
+}
+
+const CategoryBrowseSlider = ({ currentBrand }: CategoryBrowseSliderProps = {}) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
