@@ -25,7 +25,6 @@ const WhatsAppFloat = lazy(() => import("@/components/WhatsAppFloat"));
 const BackToTop = lazy(() => import("@/components/BackToTop"));
 const CarRecommendations = lazy(() => import("@/components/CarRecommendations"));
 const CarProfilePopup = lazy(() => import("@/components/CarProfilePopup"));
-const OilProduct3DViewer = lazy(() => import("@/components/OilProduct3DViewer"));
 
 const SectionFallback = () => (
   <div className="flex items-center justify-center py-20">
@@ -70,7 +69,7 @@ const Index = () => {
       <Suspense fallback={<SectionFallback />}><ProductsShowcase /></Suspense>
       <Suspense fallback={null}><SectionDivider variant="light" /></Suspense>
       <Suspense fallback={<SectionFallback />}><FeaturedProducts /></Suspense>
-      <Suspense fallback={<SectionFallback />}><OilProduct3DViewer /></Suspense>
+      
       <Suspense fallback={null}><CarRecommendations /></Suspense>
       <Suspense fallback={<SectionFallback />}><MaintenanceBundles /></Suspense>
       <Suspense fallback={<SectionFallback />}><WhyChooseUs /></Suspense>
