@@ -140,7 +140,7 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
-  const synthRef = useRef(window.speechSynthesis);
+  const synthRef = useRef(typeof window !== 'undefined' ? window.speechSynthesis : null);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -152,14 +152,14 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
   // Cleanup speech on unmount or close
   useEffect(() => {
     return () => {
-      synthRef.current.cancel();
+      synthRef.current?.cancel();
       recognitionRef.current?.stop();
     };
   }, []);
 
   useEffect(() => {
     if (!isOpen) {
-      synthRef.current.cancel();
+      synthRef.current?.cancel();
       setSpeakingMsgIndex(null);
       if (isListening) {
         recognitionRef.current?.stop();
