@@ -25,7 +25,6 @@ const WhatsAppFloat = lazy(() => import("@/components/WhatsAppFloat"));
 const BackToTop = lazy(() => import("@/components/BackToTop"));
 const CarRecommendations = lazy(() => import("@/components/CarRecommendations"));
 const CarProfilePopup = lazy(() => import("@/components/CarProfilePopup"));
-const CarProfilePopup = lazy(() => import("@/components/CarProfilePopup"));
 
 const SectionFallback = () => (
   <div className="flex items-center justify-center py-20">
