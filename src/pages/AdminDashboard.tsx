@@ -75,6 +75,7 @@ const sidebarGroups: SidebarGroup[] = [
       { id: "qty-discounts", label: "خصومات الكمية", icon: Layers },
       { id: "price-lists", label: "عروض الأسعار", icon: FileText },
       { id: "catalogs", label: "الكتالوجات", icon: FileText },
+      { id: "bundles", label: "باقات الصيانة", icon: Package },
     ],
   },
   {
