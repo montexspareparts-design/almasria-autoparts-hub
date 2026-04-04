@@ -213,7 +213,7 @@ const ProductsPage = () => {
         backgroundImage={config.backgroundImage} logoScale={config.logoScale}
       />
 
-      <CategoryBrowseSlider currentBrand={brand} />
+      <CategoryBrowseSlider />
 
       
 
