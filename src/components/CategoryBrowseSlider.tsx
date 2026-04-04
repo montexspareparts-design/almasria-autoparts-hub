@@ -134,7 +134,10 @@ const CategoryBrowseSlider = ({ currentBrand }: CategoryBrowseSliderProps = {}) 
     setTimeout(checkScroll, 400);
   };
 
-  const sortedCategories = [...categories].filter((cat) => (categoryCounts[cat.search] ?? 0) > 0).sort((a, b) => (categoryCounts[b.search] ?? 0) - (categoryCounts[a.search] ?? 0));
+  const sortedCategories = [...categories]
+    .filter((cat) => (categoryCounts[cat.search] ?? 0) > 0)
+    .filter((cat) => !currentBrand || cat.brand === currentBrand)
+    .sort((a, b) => (categoryCounts[b.search] ?? 0) - (categoryCounts[a.search] ?? 0));
 
   return (
     <section className="py-14 bg-gradient-to-b from-background to-muted/40">
