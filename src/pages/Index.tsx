@@ -18,6 +18,7 @@ const DistributionNetwork = lazy(() => import("@/components/DistributionNetwork"
 const MTXSection = lazy(() => import("@/components/MTXSection"));
 const OurClientsSection = lazy(() => import("@/components/OurClientsSection"));
 const MaintenanceTipsSection = lazy(() => import("@/components/MaintenanceTipsSection"));
+const MaintenanceBundles = lazy(() => import("@/components/MaintenanceBundles"));
 const ContactSimple = lazy(() => import("@/components/ContactSimple"));
 const Footer = lazy(() => import("@/components/Footer"));
 const WhatsAppFloat = lazy(() => import("@/components/WhatsAppFloat"));
