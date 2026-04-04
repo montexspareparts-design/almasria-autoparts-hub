@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Hash, Search, Loader2, Car, Calendar, MapPin, AlertCircle, Package, ChevronDown, ChevronUp } from "lucide-react";
+import { useState, useRef } from "react";
+import { Hash, Search, Loader2, Car, Calendar, AlertCircle, Package, ChevronDown, ChevronUp, Camera, Upload, X, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -35,9 +35,14 @@ const VINScannerDialog = ({ onProductFound }: Props) => {
   const [open, setOpen] = useState(false);
   const [vin, setVin] = useState("");
   const [loading, setLoading] = useState(false);
+  const [ocrLoading, setOcrLoading] = useState(false);
   const [decoded, setDecoded] = useState<DecodedVIN | null>(null);
   const [products, setProducts] = useState<VINProduct[]>([]);
   const [showAll, setShowAll] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const handleScan = async () => {
     const cleanVin = vin.trim().replace(/[^A-Za-z0-9]/g, "");
@@ -72,6 +77,58 @@ const VINScannerDialog = ({ onProductFound }: Props) => {
     }
   };
 
+  const handleImageUpload = async (file: File) => {
+    if (!file || !file.type.startsWith("image/")) {
+      toast({ title: "يرجى اختيار صورة", variant: "destructive" });
+      return;
+    }
+
+    // Show preview
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const dataUrl = e.target?.result as string;
+      setPreviewImage(dataUrl);
+
+      // Extract base64
+      const base64 = dataUrl.split(",")[1];
+      setOcrLoading(true);
+
+      try {
+        const { data, error } = await supabase.functions.invoke("ocr-vin", {
+          body: { image_base64: base64 },
+        });
+
+        if (error) throw error;
+
+        if (data?.vin) {
+          setVin(data.vin);
+          toast({ title: "تم التعرف على رقم الشاسيه ✅", description: data.vin });
+        } else {
+          toast({
+            title: "لم يتم التعرف على الرقم",
+            description: data?.error || "حاول التقاط صورة أوضح",
+            variant: "destructive",
+          });
+        }
+      } catch (err) {
+        console.error("OCR error:", err);
+        toast({ title: "حدث خطأ في قراءة الصورة", variant: "destructive" });
+      } finally {
+        setOcrLoading(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCopyVin = () => {
+    if (vin) {
+      navigator.clipboard.writeText(vin);
+      setCopied(true);
+      toast({ title: "تم نسخ رقم الشاسيه ✅" });
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
   const handleApplySearch = (keyword: string) => {
     onProductFound?.(keyword);
     setOpen(false);
@@ -82,6 +139,8 @@ const VINScannerDialog = ({ onProductFound }: Props) => {
     setDecoded(null);
     setProducts([]);
     setShowAll(false);
+    setPreviewImage(null);
+    setCopied(false);
   };
 
   const displayedProducts = showAll ? products : products.slice(0, 6);
@@ -93,7 +152,7 @@ const VINScannerDialog = ({ onProductFound }: Props) => {
           <Hash className="w-4 h-4 text-primary" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-right">
             <Car className="w-5 h-5 text-primary" />
@@ -103,19 +162,101 @@ const VINScannerDialog = ({ onProductFound }: Props) => {
 
         <div className="space-y-4">
           <div className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3 leading-relaxed">
-            أدخل رقم الشاسيه المكون من 17 حرف/رقم لتحديد موديل سيارتك والعثور على القطع المتوافقة تلقائياً.
+            أدخل رقم الشاسيه يدوياً أو <strong>صوّره بالكاميرا / ارفع صورة</strong> وهنتعرف عليه تلقائياً بالذكاء الاصطناعي.
+          </div>
+
+          {/* Image Upload Section */}
+          <div className="flex gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
+            />
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
+            />
+
+            <Button
+              variant="outline"
+              className="flex-1 gap-2 border-dashed border-primary/30 hover:border-primary/60 hover:bg-primary/5 h-12"
+              onClick={() => cameraInputRef.current?.click()}
+              disabled={ocrLoading}
+            >
+              <Camera className="w-5 h-5 text-primary" />
+              <span className="text-sm font-bold">صوّر الرقم</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 gap-2 border-dashed border-primary/30 hover:border-primary/60 hover:bg-primary/5 h-12"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={ocrLoading}
+            >
+              <Upload className="w-5 h-5 text-primary" />
+              <span className="text-sm font-bold">ارفع صورة</span>
+            </Button>
+          </div>
+
+          {/* Image Preview */}
+          <AnimatePresence>
+            {previewImage && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="relative rounded-xl overflow-hidden border border-border"
+              >
+                <img src={previewImage} alt="VIN" className="w-full max-h-40 object-contain bg-muted/30" />
+                {ocrLoading && (
+                  <div className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center gap-2">
+                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                    <span className="text-xs font-bold text-primary">جاري قراءة الرقم بالذكاء الاصطناعي...</span>
+                  </div>
+                )}
+                <button
+                  onClick={() => setPreviewImage(null)}
+                  className="absolute top-2 left-2 w-6 h-6 rounded-full bg-background/80 flex items-center justify-center hover:bg-background transition-colors"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px bg-border" />
+            <span className="text-[10px] text-muted-foreground font-bold">أو أدخل يدوياً</span>
+            <div className="flex-1 h-px bg-border" />
           </div>
 
           {/* VIN Input */}
           <div className="flex gap-2">
-            <Input
-              value={vin}
-              onChange={(e) => setVin(e.target.value.toUpperCase())}
-              placeholder="مثال: JTDKN3DU5A0123456"
-              className="font-mono text-sm tracking-wider"
-              dir="ltr"
-              maxLength={17}
-            />
+            <div className="relative flex-1">
+              <Input
+                value={vin}
+                onChange={(e) => setVin(e.target.value.toUpperCase())}
+                placeholder="مثال: JTDKN3DU5A0123456"
+                className="font-mono text-sm tracking-wider pr-9"
+                dir="ltr"
+                maxLength={17}
+              />
+              {vin.length > 0 && (
+                <button
+                  onClick={handleCopyVin}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-muted transition-colors"
+                  title="نسخ"
+                >
+                  {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5 text-muted-foreground" />}
+                </button>
+              )}
+            </div>
             <Button onClick={handleScan} disabled={loading || vin.length < 17} className="gap-1.5 shrink-0">
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
               فك
@@ -123,8 +264,22 @@ const VINScannerDialog = ({ onProductFound }: Props) => {
           </div>
 
           {/* VIN character count */}
-          <div className="text-xs text-muted-foreground text-left" dir="ltr">
-            {vin.replace(/[^A-Za-z0-9]/g, "").length}/17
+          <div className="flex items-center justify-between">
+            <div className="text-xs text-muted-foreground text-left" dir="ltr">
+              <span className={vin.replace(/[^A-Za-z0-9]/g, "").length === 17 ? "text-green-500 font-bold" : ""}>
+                {vin.replace(/[^A-Za-z0-9]/g, "").length}
+              </span>
+              /17
+            </div>
+            {vin.length === 17 && !loading && !decoded && (
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-xs text-primary font-bold"
+              >
+                ✅ جاهز — اضغط "فك"
+              </motion.span>
+            )}
           </div>
 
           {/* Decoded info */}
