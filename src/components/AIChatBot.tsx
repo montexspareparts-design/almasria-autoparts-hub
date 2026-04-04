@@ -152,7 +152,7 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
   // Cleanup speech on unmount or close
   useEffect(() => {
     return () => {
-      synthRef.current.cancel();
+      synthRef.current?.cancel();
       recognitionRef.current?.stop();
     };
   }, []);
