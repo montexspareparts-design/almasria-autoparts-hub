@@ -114,6 +114,12 @@ const ProductListingSection = ({
               isDealer={isDealer}
             />
 
+            {/* AI Search Tools */}
+            <Suspense fallback={null}>
+              <ImageSearchDialog onProductFound={(term) => setFilters(prev => ({ ...prev, search: term }))} />
+              <VINScannerDialog onProductFound={(term) => setFilters(prev => ({ ...prev, search: term }))} />
+            </Suspense>
+
             {/* Dealer daily view counter — premium golden pill */}
             {isDealer && (
               <div
