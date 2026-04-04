@@ -70,7 +70,7 @@ const Index = () => {
       <Suspense fallback={<SectionFallback />}><ProductsShowcase /></Suspense>
       <Suspense fallback={null}><SectionDivider variant="light" /></Suspense>
       <Suspense fallback={<SectionFallback />}><FeaturedProducts /></Suspense>
-      <Suspense fallback={<SectionFallback />}><OilProduct3DViewer /></Suspense>
+      
       <Suspense fallback={null}><CarRecommendations /></Suspense>
       <Suspense fallback={<SectionFallback />}><MaintenanceBundles /></Suspense>
       <Suspense fallback={<SectionFallback />}><WhyChooseUs /></Suspense>
