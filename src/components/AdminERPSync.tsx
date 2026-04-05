@@ -85,6 +85,7 @@ const AdminERPSync = () => {
 
   useEffect(() => {
     fetchData();
+    fetchMappingProducts();
   }, []);
 
   const fetchData = async () => {
