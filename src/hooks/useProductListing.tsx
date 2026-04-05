@@ -307,6 +307,7 @@ export function useProductListing(options: UseProductListingOptions = {}) {
         .from("products")
         .select("id, name_ar, name_en, sku, image_url, base_price, stock_quantity, brand, category_id, is_active, is_featured, is_on_sale, sale_price, min_order_qty, compatible_models, description_ar, year_from, year_to, product_categories(name_ar)")
         .eq("is_active", true)
+        .gt("stock_quantity", 0)
         .order("created_at", { ascending: false })
         .limit(800);
       if (error) throw error;
