@@ -167,8 +167,24 @@ const AdminDashboard = () => {
     }
   };
 
+  const fetchErpCustomerName = async (code: string) => {
+    if (!code.trim()) { setApproveErpName(""); return; }
+    setFetchingApproveErpName(true);
+    try {
+      const { data } = await supabase.functions.invoke("erp-sync-outbound", {
+        body: { action: "fetch_erp_customers", erp_customer_code: code.trim() },
+      });
+      setApproveErpName(data?.customer_name || "");
+    } catch { setApproveErpName(""); }
+    setFetchingApproveErpName(false);
+  };
+
   const handleApprove = async (app: DealerApplication) => {
     if (!assignedTier) { toast({ title: "يرجى تحديد فئة التاجر", variant: "destructive" }); return; }
+    if (!isNewCustomer && !approveErpCode.trim()) {
+      toast({ title: "يرجى إدخال كود العميل في الفيصل أو تحديد أنه عميل جديد", variant: "destructive" });
+      return;
+    }
     setProcessing(true);
 
     await supabase
@@ -186,6 +202,10 @@ const AdminDashboard = () => {
       user_id: app.user_id,
       application_id: app.id,
       tier: assignedTier as CustomerTier,
+      ...(isNewCustomer ? {} : {
+        erp_customer_code: approveErpCode.trim(),
+        erp_customer_name: approveErpName || null,
+      }),
     });
 
     await sendNotification(app, "approved");
@@ -198,6 +218,9 @@ const AdminDashboard = () => {
     setSelectedApp(null);
     setAssignedTier("");
     setReviewNotes("");
+    setApproveErpCode("");
+    setApproveErpName("");
+    setIsNewCustomer(false);
     fetchApplications();
     setProcessing(false);
   };
