@@ -1555,6 +1555,7 @@ export type Database = {
       }
     }
     Functions: {
+      bulk_import_products: { Args: { _items: Json }; Returns: Json }
       bulk_sync_stock: { Args: { _items: Json }; Returns: Json }
       bulk_update_product_prices: { Args: { _items: Json }; Returns: Json }
       check_dealer_application_exists: {
