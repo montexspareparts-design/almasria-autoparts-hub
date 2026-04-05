@@ -620,10 +620,33 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
                     )}
                     {msg.role === "assistant" ? (
                       <>
-                        <div className="prose prose-sm max-w-none [&_p]:m-0 [&_ul]:my-1 [&_li]:my-0">
-                          <ReactMarkdown>{getTextContent(msg.content)}</ReactMarkdown>
-                        </div>
-                        {/* TTS button for assistant messages */}
+                        {(() => {
+                          const rawText = getTextContent(msg.content);
+                          const { cleanText, choices } = parseChoices(rawText);
+                          const isLastMsg = i === messages.length - 1;
+                          return (
+                            <>
+                              <div className="prose prose-sm max-w-none [&_p]:m-0 [&_ul]:my-1 [&_li]:my-0">
+                                <ReactMarkdown>{cleanText}</ReactMarkdown>
+                              </div>
+                              {/* Interactive quick-reply choices */}
+                              {isLastMsg && !isLoading && choices.length > 0 && (
+                                <div className="mt-2 flex flex-wrap gap-1.5">
+                                  {choices.map((choice, ci) => (
+                                    <button
+                                      key={ci}
+                                      onClick={() => sendMessage(choice)}
+                                      className="text-[11px] px-2.5 py-1.5 rounded-full border border-primary/30 bg-primary/5 text-primary hover:bg-primary/15 hover:border-primary/50 transition-colors leading-tight"
+                                    >
+                                      {choice}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
+                        {/* TTS button */}
                         {!isLoading && (
                           <button
                             onClick={() => speakMessage(getTextContent(msg.content), i)}
@@ -631,15 +654,9 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
                             title={speakingMsgIndex === i ? "إيقاف القراءة" : "اسمع الرد بالصوت"}
                           >
                             {speakingMsgIndex === i ? (
-                              <>
-                                <VolumeX className="w-3 h-3" />
-                                <span>إيقاف</span>
-                              </>
+                              <><VolumeX className="w-3 h-3" /><span>إيقاف</span></>
                             ) : (
-                              <>
-                                <Volume2 className="w-3 h-3" />
-                                <span>اسمع</span>
-                              </>
+                              <><Volume2 className="w-3 h-3" /><span>اسمع</span></>
                             )}
                           </button>
                         )}
