@@ -113,12 +113,12 @@ const BrandCard = ({ brand, index }: { brand: typeof brands[0]; index: number })
           className="relative"
         >
           {/* Glass card */}
-          <div className="bg-white/[0.06] backdrop-blur-md rounded-2xl overflow-hidden shadow-lg shadow-black/20 group-hover:shadow-xl group-hover:shadow-primary/20 transition-all duration-300 border border-secondary-foreground/10 group-hover:border-primary/30 group-hover:bg-white/[0.1]">
+          <div className="bg-white/[0.06]  rounded-2xl overflow-hidden shadow-lg shadow-black/20 group-hover:shadow-xl group-hover:shadow-primary/20 transition-all duration-300 border border-secondary-foreground/10 group-hover:border-primary/30 group-hover:bg-white/[0.1]">
             {/* Red accent bar */}
             <div className="h-1 bg-gradient-to-r from-primary via-primary/80 to-primary" />
             
             {/* Logo container */}
-            <div className="aspect-[4/3] flex items-center justify-center p-6 bg-white/95 backdrop-blur-sm">
+            <div className="aspect-[4/3] flex items-center justify-center p-6 bg-white/95 ">
               <img
                 src={brand.logo}
                 alt={brand.nameAr}

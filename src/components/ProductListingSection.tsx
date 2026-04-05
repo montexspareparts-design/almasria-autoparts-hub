@@ -92,7 +92,7 @@ const ProductListingSection = ({
         <div className="container mx-auto px-4">
           {/* Premium toolbar */}
           <div
-            className="flex items-center gap-2.5 mb-4 p-2.5 rounded-2xl bg-card/80 backdrop-blur-sm border border-border/60 shadow-sm relative z-[55] cursor-text"
+            className="flex items-center gap-2.5 mb-4 p-2.5 rounded-2xl bg-card/80  border border-border/60 shadow-sm relative z-[55] cursor-text"
             onClick={(e) => {
               const target = e.target as HTMLElement;
               if (target.tagName === 'DIV' || target.tagName === 'SECTION') {
