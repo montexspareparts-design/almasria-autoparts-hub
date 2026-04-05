@@ -165,6 +165,36 @@ const AdminProducts = () => {
       </CardHeader>
 
       <CardContent className="space-y-4">
+        {/* Sync Progress */}
+        {syncProgress && (
+          <div className="border border-border rounded-lg p-4 space-y-3 bg-muted/30">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-foreground">{syncProgress.label}</span>
+              {syncProgress.done && !syncProgress.error && (
+                <Button variant="ghost" size="sm" onClick={() => setSyncProgress(null)} className="h-6 px-2 text-xs">✕</Button>
+              )}
+              {syncProgress.error && (
+                <Button variant="ghost" size="sm" onClick={() => setSyncProgress(null)} className="h-6 px-2 text-xs">✕</Button>
+              )}
+            </div>
+            <Progress value={(syncProgress.step / syncProgress.total) * 100} className="h-2" />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>الخطوة {syncProgress.step} من {syncProgress.total}</span>
+              <span>{Math.round((syncProgress.step / syncProgress.total) * 100)}%</span>
+            </div>
+            {syncProgress.details.length > 0 && (
+              <div className="space-y-1">
+                {syncProgress.details.map((d, i) => (
+                  <p key={i} className="text-xs text-muted-foreground">{d}</p>
+                ))}
+              </div>
+            )}
+            {syncProgress.error && (
+              <p className="text-xs text-destructive">❌ {syncProgress.error}</p>
+            )}
+          </div>
+        )}
+
         {/* Form */}
         {showForm && (
           <AdminProductForm
