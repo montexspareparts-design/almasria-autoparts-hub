@@ -556,7 +556,7 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
                     </div>
                   )}
                   <div className="space-y-2">
-                    {(user ? QUICK_QUESTIONS_LOGGED_IN : QUICK_QUESTIONS_GUEST).map((q) => (
+                    {(isDealer ? QUICK_QUESTIONS_DEALER : user ? QUICK_QUESTIONS_LOGGED_IN : QUICK_QUESTIONS_GUEST).map((q) => (
                       <button key={q} onClick={() => sendMessage(q)}
                         className="block w-full text-right text-xs px-3 py-2 rounded-lg border border-border hover:bg-accent/10 hover:border-primary/30 transition-colors text-foreground">
                         {q}
