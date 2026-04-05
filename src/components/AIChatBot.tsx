@@ -342,6 +342,7 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
       body: JSON.stringify({
         messages: apiMessages,
         isLoggedIn: !!user,
+        isDealer: !!isDealer,
         userInterests: consent ? {
           topCategories: getTopCategories(3),
           topBrands: getTopBrands(2),
