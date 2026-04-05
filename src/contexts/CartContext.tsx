@@ -119,9 +119,14 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     setItems((prev) =>
-      prev.map((i) =>
-        i.id === id ? { ...i, quantity: Math.min(quantity, i.stock_quantity) } : i
-      )
+      prev.map((i) => {
+        if (i.id !== id) return i;
+        const cappedQty = Math.min(quantity, i.stock_quantity);
+        if (quantity > i.stock_quantity) {
+          toast.info(`الحد الأقصى المسموح لـ "${i.name_ar}" هو ${i.stock_quantity} قطعة (50% من المتاح)`);
+        }
+        return { ...i, quantity: cappedQty };
+      })
     );
   }, []);
 
