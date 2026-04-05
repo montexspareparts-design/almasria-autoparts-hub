@@ -229,28 +229,51 @@ const AdminERPSync = () => {
   const testWebhook = async () => {
     setSyncing("webhook_test");
     try {
-      const payload = JSON.parse(testPayload);
-      const { data, error } = await supabase.functions.invoke("erp-webhook", {
+      let payload: any;
+      try {
+        payload = JSON.parse(testPayload);
+      } catch {
+        toast({ title: "خطأ في الاختبار", description: "صيغة JSON غير صالحة", variant: "destructive" });
+        setSyncing(null);
+        return;
+      }
+
+      const res = await supabase.functions.invoke("erp-webhook", {
         body: payload,
         headers: { "x-webhook-secret": config.webhook_secret },
       });
-      if (error) {
-        // Extract meaningful message from edge function error
-        const errMsg = typeof error === "object" && error.message ? error.message : JSON.stringify(error);
+
+      if (res.error) {
+        // Try to get body text from the error context
+        let errMsg = "حدث خطأ غير متوقع";
+        try {
+          if (res.error.context && typeof res.error.context.json === "function") {
+            const body = await res.error.context.json();
+            errMsg = body?.error || JSON.stringify(body);
+          } else {
+            errMsg = res.error.message || String(res.error);
+          }
+        } catch {
+          errMsg = res.error.message || String(res.error);
+        }
         toast({
           title: "خطأ في الاختبار",
-          description: errMsg,
+          description: String(errMsg).slice(0, 200),
           variant: "destructive",
         });
       } else {
         toast({
           title: "تم اختبار الـ Webhook ✓",
-          description: JSON.stringify(data),
+          description: JSON.stringify(res.data)?.slice(0, 200),
         });
       }
       fetchData();
     } catch (err: any) {
-      toast({ title: "خطأ في الاختبار", description: err.message || "حدث خطأ غير متوقع", variant: "destructive" });
+      toast({
+        title: "خطأ في الاختبار",
+        description: String(err?.message || "حدث خطأ غير متوقع").slice(0, 200),
+        variant: "destructive",
+      });
     }
     setSyncing(null);
   };
