@@ -139,7 +139,7 @@ const fuzzyMatchWord = (word: string, ...texts: string[]): boolean => {
 };
 
 const ITEMS_PER_PAGE = 48;
-const DAILY_LIMIT = 30;
+const DAILY_LIMIT = 20;
 
 interface UseProductListingOptions {
   /** Filter by specific brand key (e.g., "toyota_genuine") */

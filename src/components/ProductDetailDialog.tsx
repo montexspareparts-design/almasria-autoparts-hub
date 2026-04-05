@@ -318,7 +318,7 @@ const ProductDetailDialog = ({
             ) : isDealer && limitReached ? (
               <div className="flex items-center gap-2 text-muted-foreground text-sm justify-center py-1">
                 <Lock className="w-4 h-4" />
-                <span><span>استنفدت الحد اليومي (30 صنف)</span></span>
+                <span><span><span>استنفدت الحد اليومي (20 صنف)</span></span></span>
               </div>
             ) : null}
           </div>

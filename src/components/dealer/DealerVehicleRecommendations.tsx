@@ -90,8 +90,8 @@ const DealerVehicleRecommendations = ({ compact }: DealerVehicleRecommendationsP
     e.stopPropagation();
     if (!user || revealedPrices[productId] !== undefined) return;
 
-    if (dailyViewCount >= 30) {
-      toast.error("تم استنفاد الحد اليومي (30 صنف)");
+    if (dailyViewCount >= 20) {
+      toast.error("تم استنفاد الحد اليومي (20 صنف)");
       return;
     }
 
@@ -121,7 +121,7 @@ const DealerVehicleRecommendations = ({ compact }: DealerVehicleRecommendationsP
     setRevealingId(null);
   }, [user, revealedPrices, dailyViewCount, allProducts]);
 
-  const remainingViews = 30 - dailyViewCount;
+  const remainingViews = 20 - dailyViewCount;
   const products = allProducts.slice(0, visibleCount);
   const hasMore = visibleCount < allProducts.length;
 
