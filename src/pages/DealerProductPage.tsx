@@ -75,6 +75,7 @@ const DealerProductPage = () => {
         .select("*")
         .eq("id", productId)
         .eq("is_active", true)
+        .gt("stock_quantity", 0)
         .single();
       
       if (data) {
