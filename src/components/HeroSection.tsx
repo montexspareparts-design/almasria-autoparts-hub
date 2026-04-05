@@ -1,7 +1,6 @@
-import { useScroll, useTransform } from "framer-motion";
 import { ShieldCheck, Package, MapPin, Cog, LayoutDashboard, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -44,16 +43,10 @@ const HeroSection = () => {
   const { t } = useLanguage();
   const { user, dealerAccount, isDealer } = useAuth();
   const isMobile = useIsMobile();
-  const sectionRef = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end start"] });
-  // Skip parallax transforms on mobile for performance
-  const contentOpacity = useTransform(scrollYProgress, [0, 0.5], [1, isMobile ? 1 : 0]);
-  const contentY = useTransform(scrollYProgress, [0, 0.5], [0, isMobile ? 0 : -50]);
-  const bgScale = useTransform(scrollYProgress, [0, 1], [1, isMobile ? 1 : 1.15]);
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
 
-  // Load video after idle (mobile gets a slightly longer delay)
+  // Load video after idle
   useEffect(() => {
     const delay = isMobile ? 3000 : 1500;
     const id = typeof requestIdleCallback !== 'undefined'
@@ -88,9 +81,9 @@ const HeroSection = () => {
   ];
 
   return (
-    <section ref={sectionRef} id="hero" className="relative min-h-[100svh] flex flex-col justify-end overflow-hidden">
-      {/* Background with parallax */}
-      <motion.div className="absolute inset-0 z-0" style={{ scale: bgScale }}>
+    <section id="hero" className="relative min-h-[100svh] flex flex-col justify-end overflow-hidden">
+      {/* Background — no parallax for perf */}
+      <div className="absolute inset-0 z-0">
         <img
           src={heroBg}
           alt=""
@@ -122,7 +115,7 @@ const HeroSection = () => {
             src={videoSrc}
           />
         )}
-      </motion.div>
+      </div>
 
       {/* Cinematic Overlays */}
       <div className="absolute inset-0 z-[1]" style={{
@@ -131,164 +124,104 @@ const HeroSection = () => {
       <div className="absolute inset-0 z-[1]" style={{
         background: "linear-gradient(to left, transparent 30%, rgba(0,0,0,0.5) 100%)"
       }} />
-      {/* Subtle red vignette */}
       <div className="absolute inset-0 z-[1] opacity-30" style={{
         background: "radial-gradient(ellipse at 80% 80%, hsl(var(--primary) / 0.15), transparent 60%)"
       }} />
 
-      {/* Grid overlay */}
-      <div className="absolute inset-0 z-[2] opacity-[0.02]" style={{
-        backgroundImage: `linear-gradient(hsl(var(--primary) / 0.5) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary) / 0.5) 1px, transparent 1px)`,
-        backgroundSize: "80px 80px"
-      }} />
-
-      {/* Floating particles */}
-      <div className="absolute inset-0 z-[3] hidden md:block">
-        {floatingParts.map((part, i) => <FloatingParticle key={i} part={part} />)}
+      {/* Corner accent glow */}
+      <div className="absolute top-0 right-0 w-[400px] h-[400px] z-[2] animate-fade-in">
+        <div className="w-full h-full bg-gradient-to-bl from-primary/8 via-transparent to-transparent" />
       </div>
 
-      {/* Corner accent glow */}
-      <motion.div
-        className="absolute top-0 right-0 w-[400px] h-[400px] z-[2]"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 2, delay: 0.5 }}
-      >
-        <div className="w-full h-full bg-gradient-to-bl from-primary/8 via-transparent to-transparent" />
-      </motion.div>
-
       {/* ── Main Content ── */}
-      <motion.div
-        className="container mx-auto px-4 md:px-6 relative z-10 pb-8 md:pb-12"
-        style={{ opacity: contentOpacity, y: contentY }}
-      >
+      <div className="container mx-auto px-4 md:px-6 relative z-10 pb-8 md:pb-12 animate-fade-in">
         <div className="max-w-[820px]">
           {/* Accent line */}
-          <motion.div
-            className="w-14 h-[3px] bg-gradient-to-r from-primary to-primary/40 rounded-full mb-7"
-            initial={{ scaleX: 0, originX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-          />
+          <div className="w-14 h-[3px] bg-gradient-to-r from-primary to-primary/40 rounded-full mb-7" />
 
           {/* Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            transition={{ duration: 0.7, delay: 0.3 }}
-            className="inline-flex items-center gap-2.5 border border-white/10 rounded-full px-5 py-2.5 mb-8 bg-white/[0.04] backdrop-blur-xl"
-          >
-            <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 10, repeat: Infinity, ease: "linear" }}>
-              <Cog className="w-4 h-4 text-primary" />
-            </motion.div>
+          <div className="inline-flex items-center gap-2.5 border border-white/10 rounded-full px-5 py-2.5 mb-8 bg-white/[0.06]">
+            <Cog className="w-4 h-4 text-primary animate-spin" style={{ animationDuration: "10s" }} />
             <span className="text-[13px] font-bold text-white/80 tracking-wider uppercase">
               {t("hero.badge")}
             </span>
             <ShieldCheck className="w-4 h-4 text-primary" />
-          </motion.div>
+          </div>
 
-          {/* Title - no initial hidden state to avoid LCP render delay */}
-          <h1
-            className="text-[1.75rem] sm:text-[2rem] md:text-[2.75rem] lg:text-[3.5rem] font-black text-white leading-[1.45] md:leading-[1.4] tracking-tight mb-6"
-          >
+          {/* Title */}
+          <h1 className="text-[1.75rem] sm:text-[2rem] md:text-[2.75rem] lg:text-[3.5rem] font-black text-white leading-[1.45] md:leading-[1.4] tracking-tight mb-6">
             <span className="inline-block">{t("hero.title1")}</span>
             <br />
             <span className="inline-block">{t("hero.title2")} </span>
             <span className="inline-block relative">
-              <span className="relative z-10 text-primary drop-shadow-[0_0_20px_hsl(var(--primary)/0.3)]">
+              <span className="relative z-10 text-primary" style={{ textShadow: "0 0 20px hsl(var(--primary) / 0.3)" }}>
                 {t("hero.title3")}
               </span>
-              <motion.span
-                className="absolute -bottom-1.5 left-0 right-0 h-[5px] bg-primary/15 rounded-full"
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: 1 }}
-                transition={{ duration: 0.6, delay: 1.3, ease: [0.22, 1, 0.36, 1] }}
-                style={{ originX: 0 }}
-              />
+              <span className="absolute -bottom-1.5 left-0 right-0 h-[5px] bg-primary/15 rounded-full" />
             </span>
             <span className="inline-block"> {t("hero.title4")}</span>
           </h1>
 
           {/* Description */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.7 }}
-            className="text-white/70 text-[15px] md:text-[1.1rem] leading-[2] max-w-[640px] mb-10 font-medium"
+          <p
+            className="text-white/70 text-[15px] md:text-[1.1rem] leading-[2] max-w-[640px] mb-10 font-medium animate-fade-in"
+            style={{ animationDelay: "0.3s", animationFillMode: "both" }}
             dangerouslySetInnerHTML={{ __html: t("hero.desc") }}
           />
 
           {/* CTA Buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.85 }}
-            className="flex flex-col sm:flex-row gap-3 mb-12"
-          >
+          <div className="flex flex-col sm:flex-row gap-3 mb-12 animate-fade-in" style={{ animationDelay: "0.5s", animationFillMode: "both" }}>
             {isDealer ? (
               <>
-                <motion.div whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.97 }}>
-                  <Button
-                    size="lg"
-                    className="text-[15px] px-8 py-6 gap-2.5 font-bold bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 w-full sm:w-auto shadow-[0_8px_30px_-4px_hsl(var(--primary)/0.4)] hover:shadow-[0_12px_40px_-4px_hsl(var(--primary)/0.5)]"
-                    asChild
-                  >
-                    <Link to="/dealer">
-                      <LayoutDashboard className="w-5 h-5" />
-                      {t("hero.dealer_dashboard") || "لوحة التحكم"}
-                    </Link>
-                  </Button>
-                </motion.div>
-                <motion.div whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.97 }}>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="text-[15px] px-8 py-6 gap-2.5 font-bold border border-white/10 text-white bg-white/[0.03] backdrop-blur-xl hover:bg-white/[0.08] hover:border-white/20 transition-all duration-300 w-full sm:w-auto cursor-pointer"
-                    asChild
-                  >
-                    <Link to="/products">
-                      <ShoppingCart className="w-5 h-5" />
-                      {t("hero.quick_order") || "اطلب الآن"}
-                    </Link>
-                  </Button>
-                </motion.div>
+                <Button
+                  size="lg"
+                  className="text-[15px] px-8 py-6 gap-2.5 font-bold bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 w-full sm:w-auto shadow-[0_8px_30px_-4px_hsl(var(--primary)/0.4)] hover:shadow-[0_12px_40px_-4px_hsl(var(--primary)/0.5)] hover:-translate-y-0.5 active:scale-[0.97]"
+                  asChild
+                >
+                  <Link to="/dealer">
+                    <LayoutDashboard className="w-5 h-5" />
+                    {t("hero.dealer_dashboard") || "لوحة التحكم"}
+                  </Link>
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="text-[15px] px-8 py-6 gap-2.5 font-bold border border-white/10 text-white bg-white/[0.06] hover:bg-white/[0.12] hover:border-white/20 transition-all duration-300 w-full sm:w-auto cursor-pointer hover:-translate-y-0.5 active:scale-[0.97]"
+                  asChild
+                >
+                  <Link to="/products">
+                    <ShoppingCart className="w-5 h-5" />
+                    {t("hero.quick_order") || "اطلب الآن"}
+                  </Link>
+                </Button>
               </>
             ) : (
               <>
-                <motion.div whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.97 }}>
-                  <Button
-                    size="lg"
-                    className="text-[15px] px-8 py-6 gap-2.5 font-bold bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 w-full sm:w-auto shadow-[0_8px_30px_-4px_hsl(var(--primary)/0.4)] hover:shadow-[0_12px_40px_-4px_hsl(var(--primary)/0.5)]"
-                    asChild
-                  >
-                    <Link to="/products">
-                      <Package className="w-5 h-5" />
-                      {t("hero.browse_products")}
-                    </Link>
-                  </Button>
-                </motion.div>
-                <motion.div whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.97 }}>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="text-[15px] px-8 py-6 gap-2.5 font-bold border border-white/10 text-white bg-white/[0.03] backdrop-blur-xl hover:bg-white/[0.08] hover:border-white/20 transition-all duration-300 w-full sm:w-auto cursor-pointer"
-                    onClick={() => document.getElementById("coverage")?.scrollIntoView({ behavior: "smooth" })}
-                  >
-                    <MapPin className="w-5 h-5" />
-                    {t("hero.our_branches")}
-                  </Button>
-                </motion.div>
+                <Button
+                  size="lg"
+                  className="text-[15px] px-8 py-6 gap-2.5 font-bold bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 w-full sm:w-auto shadow-[0_8px_30px_-4px_hsl(var(--primary)/0.4)] hover:shadow-[0_12px_40px_-4px_hsl(var(--primary)/0.5)] hover:-translate-y-0.5 active:scale-[0.97]"
+                  asChild
+                >
+                  <Link to="/products">
+                    <Package className="w-5 h-5" />
+                    {t("hero.browse_products")}
+                  </Link>
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="text-[15px] px-8 py-6 gap-2.5 font-bold border border-white/10 text-white bg-white/[0.06] hover:bg-white/[0.12] hover:border-white/20 transition-all duration-300 w-full sm:w-auto cursor-pointer hover:-translate-y-0.5 active:scale-[0.97]"
+                  onClick={() => document.getElementById("coverage")?.scrollIntoView({ behavior: "smooth" })}
+                >
+                  <MapPin className="w-5 h-5" />
+                  {t("hero.our_branches")}
+                </Button>
               </>
             )}
-          </motion.div>
+          </div>
 
           {/* Stats */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 1.05 }}
-            className="flex items-center gap-0"
-          >
+          <div className="flex items-center gap-0 animate-fade-in" style={{ animationDelay: "0.7s", animationFillMode: "both" }}>
             {stats.map((stat, i) => (
               <div key={stat.label} className="flex items-center">
                 <div className="flex flex-col items-center px-5 md:px-7">
@@ -302,55 +235,21 @@ const HeroSection = () => {
                 )}
               </div>
             ))}
-
-            {/* Animated dots */}
-            <motion.div
-              className="hidden md:flex items-center gap-1.5 mr-auto pr-6"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 2.5 }}
-            >
-              {[0, 1, 2].map((i) => (
-                <motion.div
-                  key={i}
-                  className="w-1.5 h-1.5 rounded-full bg-primary/30"
-                  animate={{ scale: [1, 1.6, 1], opacity: [0.3, 0.7, 0.3] }}
-                  transition={{ duration: 2.5, delay: i * 0.35, repeat: Infinity }}
-                />
-              ))}
-            </motion.div>
-          </motion.div>
+          </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Bottom red accent line */}
-      <motion.div
-        className="absolute bottom-0 left-0 right-0 h-[2px] z-20"
-        initial={{ scaleX: 0 }}
-        animate={{ scaleX: 1 }}
-        transition={{ duration: 1.4, delay: 1.2, ease: [0.22, 1, 0.36, 1] }}
-        style={{ originX: 0 }}
-      >
+      <div className="absolute bottom-0 left-0 right-0 h-[2px] z-20">
         <div className="w-full h-full bg-gradient-to-r from-primary/60 via-primary to-primary/60" />
-      </motion.div>
+      </div>
 
       {/* Scroll indicator */}
-      <motion.div
-        className="absolute bottom-5 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 2.2, duration: 0.8 }}
-      >
-        <motion.div
-          className="w-6 h-9 rounded-full border-2 border-white/15 flex items-start justify-center p-1.5"
-        >
-          <motion.div
-            className="w-1 h-2 bg-primary rounded-full"
-            animate={{ y: [0, 12, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          />
-        </motion.div>
-      </motion.div>
+      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center animate-fade-in" style={{ animationDelay: "2s", animationFillMode: "both" }}>
+        <div className="w-6 h-9 rounded-full border-2 border-white/15 flex items-start justify-center p-1.5">
+          <div className="w-1 h-2 bg-primary rounded-full animate-bounce" />
+        </div>
+      </div>
     </section>
   );
 };
