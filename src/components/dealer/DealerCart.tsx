@@ -98,7 +98,7 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
     checkPendingPayment();
   }, [user]);
 
-  const createOrder = async (): Promise<{ id: string; order_number: string } | null> => {
+  const createOrder = async (): Promise<{ id: string; order_number: string; erpCodePromise: Promise<string | null> } | null> => {
     if (!user || items.length === 0) return null;
     const orderNumber = await generateOrderNumber();
     const { data: order, error } = await supabase
