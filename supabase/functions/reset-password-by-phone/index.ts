@@ -20,6 +20,25 @@ Deno.serve(async (req) => {
       );
     }
 
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseRL = createClient(supabaseUrl, serviceRoleKey);
+
+    // Rate limit: max 3 password reset attempts per phone per 15 minutes
+    const { data: allowed } = await supabaseRL.rpc("check_rate_limit", {
+      _identifier: phone,
+      _action: "reset_password",
+      _max_requests: 3,
+      _window_seconds: 900,
+    });
+
+    if (!allowed) {
+      return new Response(
+        JSON.stringify({ success: false, error: "محاولات كثيرة. حاول بعد 15 دقيقة." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (new_password.length < 6) {
       return new Response(
         JSON.stringify({ success: false, error: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" }),

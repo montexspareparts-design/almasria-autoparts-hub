@@ -41,6 +41,22 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    // Rate limit: 20 messages per minute per user/IP
+    const rateLimitId = authenticatedUserId || req.headers.get("x-forwarded-for") || "unknown";
+    const { data: allowed } = await supabase.rpc("check_rate_limit", {
+      _identifier: rateLimitId,
+      _action: "chat",
+      _max_requests: 20,
+      _window_seconds: 60,
+    });
+
+    if (!allowed) {
+      return new Response(
+        JSON.stringify({ error: "محاولات كثيرة. حاول بعد دقيقة." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Handle callback request action
     if (action === "request_callback") {
       const lastUserMsg = messages?.find((m: any) => m.role === "user");
