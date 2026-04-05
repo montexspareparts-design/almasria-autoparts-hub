@@ -112,6 +112,31 @@ const AdminERPSync = () => {
     setLoading(false);
   };
 
+  const fetchMappingProducts = async () => {
+    const { data } = await supabase
+      .from("products")
+      .select("id, sku, name_ar, erp_item_code, stock_quantity, base_price")
+      .eq("is_active", true)
+      .order("name_ar");
+    setMappingProducts(data || []);
+  };
+
+  const saveMappings = async () => {
+    setSavingMapping(true);
+    let count = 0;
+    for (const [productId, erpCode] of Object.entries(mappingEdits)) {
+      const { error } = await supabase
+        .from("products")
+        .update({ erp_item_code: erpCode || null } as any)
+        .eq("id", productId);
+      if (!error) count++;
+    }
+    toast({ title: `تم حفظ ${count} ربط ✓` });
+    setMappingEdits({});
+    fetchMappingProducts();
+    setSavingMapping(false);
+  };
+
   const saveConfig = async () => {
     setSavingConfig(true);
     for (const [key, value] of Object.entries(config)) {
