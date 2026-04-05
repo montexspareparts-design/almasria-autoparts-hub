@@ -155,15 +155,17 @@ Deno.serve(async (req) => {
       // Map to Al Faisal CreateOrder format
       const payload = {
         orderNumber: data.order_number,
+        customerCode: data.erp_customer_code || "",
         customerName: data.customer_name,
         customerPhone: data.customer_phone,
+        customerTier: data.customer_tier || "retail",
         shippingAddress: data.shipping_address || "",
         shippingGovernorate: data.shipping_governorate || "",
         paymentMethod: data.payment_method || "",
         notes: data.notes || "",
         totalAmount: data.total_amount,
         items: data.items?.map((item: any) => ({
-          itemCode: item.sku,
+          itemCode: item.erp_item_code || item.sku,
           itemName: item.name_ar,
           quantity: item.quantity,
           unitPrice: item.unit_price,
