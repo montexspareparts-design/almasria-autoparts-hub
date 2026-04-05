@@ -50,12 +50,15 @@ interface DealerWithDetails {
 
 const AdminCustomerProfile = () => {
   const [searchParams] = useSearchParams();
+  const { toast } = useToast();
   const [dealers, setDealers] = useState<DealerApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [selectedDealer, setSelectedDealer] = useState<DealerWithDetails | null>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+  const [erpCode, setErpCode] = useState("");
+  const [savingErpCode, setSavingErpCode] = useState(false);
 
   useEffect(() => {
     fetchDealers();
