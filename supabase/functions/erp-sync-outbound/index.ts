@@ -580,6 +580,38 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ─── DEBUG: Show raw ERP fields for specific items ───
+    else if (action === "debug_raw") {
+      if (isMock) {
+        result = { success: true, message: "Debug not available in mock mode" };
+      } else {
+        if (!baseUrl) throw new Error("ERP base URL is not configured");
+        const erpResponse = await erpFetch(baseUrl, "/Ecommerce/products");
+        const items = Array.isArray(erpResponse)
+          ? erpResponse
+          : (erpResponse.data || erpResponse.items || []);
+
+        // Find specific items and show ALL their fields
+        const targetIds = data?.ids || ["11162", "10503"];
+        const matched = items.filter((i: any) => {
+          const itemId = (i.id || i.itemCode || i.sku || i.code || "").toString().trim();
+          return targetIds.includes(itemId);
+        });
+
+        // Also show keys of first item to understand the schema
+        const firstItem = items[0] || {};
+        
+        result = {
+          success: true,
+          total_items: items.length,
+          all_keys_in_first_item: Object.keys(firstItem),
+          first_item_raw: firstItem,
+          matched_items: matched.length > 0 ? matched : "No items matched the target IDs",
+          target_ids: targetIds,
+        };
+      }
+    }
+
     else {
       throw new Error(`Unknown action: ${action}`);
     }
