@@ -157,7 +157,7 @@ const AdminProductForm = ({ product, onClose, onSaved }: Props) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <div className="space-y-1">
           <Label>السعر الأساسي</Label>
           <Input type="number" value={form.base_price} onChange={e => set("base_price", e.target.value)} dir="ltr" />
@@ -169,6 +169,16 @@ const AdminProductForm = ({ product, onClose, onSaved }: Props) => {
         <div className="space-y-1">
           <Label>المخزون</Label>
           <Input type="number" value={form.stock_quantity} onChange={e => set("stock_quantity", e.target.value)} dir="ltr" />
+        </div>
+        <div className="space-y-1">
+          <Label>حد الأمان (Safety Stock)</Label>
+          <Input type="number" value={form.safety_stock} onChange={e => set("safety_stock", e.target.value)} dir="ltr" placeholder="0" />
+          <p className="text-[10px] text-muted-foreground">الكمية المحجوزة كاحتياطي — لا تُباع</p>
+        </div>
+        <div className="space-y-1">
+          <Label>أقصى كمية للطلب</Label>
+          <Input type="number" value={form.max_order_cap} onChange={e => set("max_order_cap", e.target.value)} dir="ltr" placeholder="بدون حد" />
+          <p className="text-[10px] text-muted-foreground">أقصى كمية يطلبها عميل واحد</p>
         </div>
         <div className="space-y-1">
           <Label>أقل كمية طلب</Label>
