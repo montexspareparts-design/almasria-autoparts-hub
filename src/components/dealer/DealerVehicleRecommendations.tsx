@@ -3,13 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Package, TrendingUp, Eye, ChevronDown, Lock, Check } from "lucide-react";
+import { Package, TrendingUp, Eye, ChevronDown, Lock, Check, ShoppingCart } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import ProductDetailDialog from "@/components/ProductDetailDialog";
 import { useDealerCart } from "@/hooks/useDealerCart";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-
 
 const INITIAL_COUNT = 4;
 const LOAD_MORE_COUNT = 4;
@@ -42,7 +41,6 @@ const DealerVehicleRecommendations = ({ compact }: DealerVehicleRecommendationsP
     const { data } = await supabase.rpc("get_daily_view_count", { _user_id: user.id });
     setDailyViewCount(data || 0);
 
-    // Get already revealed products today
     const { data: views } = await supabase
       .from("dealer_price_views")
       .select("product_id")
@@ -51,7 +49,6 @@ const DealerVehicleRecommendations = ({ compact }: DealerVehicleRecommendationsP
 
     if (views && views.length > 0) {
       const revealedIds = views.map((v) => v.product_id);
-      // Fetch prices for already revealed products
       const { data: prods } = await supabase
         .from("products")
         .select("id, base_price, sale_price, is_on_sale")
@@ -69,7 +66,6 @@ const DealerVehicleRecommendations = ({ compact }: DealerVehicleRecommendationsP
 
   const fetchRecommendations = async () => {
     setLoading(true);
-
     const { data: matchingProducts } = await supabase
       .from("products")
       .select("id, name_ar, sku, image_url, base_price, stock_quantity, brand, is_on_sale, sale_price")
@@ -79,8 +75,6 @@ const DealerVehicleRecommendations = ({ compact }: DealerVehicleRecommendationsP
       .limit(24);
 
     if (!matchingProducts) { setLoading(false); return; }
-
-    // Shuffle slightly so it doesn't look static
     const shuffled = [...matchingProducts].sort(() => Math.random() - 0.5);
     setAllProducts(shuffled.slice(0, 24));
     setLoading(false);
@@ -96,8 +90,6 @@ const DealerVehicleRecommendations = ({ compact }: DealerVehicleRecommendationsP
     }
 
     setRevealingId(productId);
-
-    // Record the view
     const { error } = await supabase.from("dealer_price_views").insert({
       user_id: user.id,
       product_id: productId,
@@ -109,8 +101,6 @@ const DealerVehicleRecommendations = ({ compact }: DealerVehicleRecommendationsP
         const price = product.is_on_sale && product.sale_price ? product.sale_price : product.base_price;
         setRevealedPrices((prev) => ({ ...prev, [productId]: price }));
         setDailyViewCount((prev) => prev + 1);
-
-        // Play cha-ching sound
         try {
           const audio = new Audio("/sounds/cha-ching.mp3");
           audio.volume = 0.3;
@@ -131,7 +121,7 @@ const DealerVehicleRecommendations = ({ compact }: DealerVehicleRecommendationsP
         <Skeleton className="h-8 w-56 rounded-lg" />
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-52 rounded-2xl" />
+            <Skeleton key={i} className="h-64 rounded-2xl" />
           ))}
         </div>
       </div>
@@ -174,87 +164,129 @@ const DealerVehicleRecommendations = ({ compact }: DealerVehicleRecommendationsP
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index < INITIAL_COUNT ? index * 0.05 : 0, duration: 0.3 }}
-                className="bg-card border border-border/60 rounded-2xl overflow-hidden hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 group cursor-pointer relative"
+                className="bg-card rounded-2xl overflow-hidden group cursor-pointer relative
+                  border border-border/40
+                  hover:border-primary/30 hover:shadow-[0_8px_30px_hsl(var(--primary)/0.08),0_4px_12px_hsl(0_0%_0%/0.06)]
+                  hover:-translate-y-0.5
+                  transition-all duration-300 ease-out"
                 onClick={() => setSelectedProduct(product)}
               >
                 {/* Image */}
-                <div className="aspect-[4/3] bg-white relative overflow-hidden p-3">
+                <div className="aspect-[4/3] bg-gradient-to-br from-white via-white to-muted/10 relative overflow-hidden">
+                  {/* Shimmer */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out z-10 pointer-events-none" />
+
                   {product.image_url ? (
                     <img
                       src={product.image_url}
                       alt={product.name_ar}
-                      className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500"
+                      className="w-full h-full object-contain p-4 mix-blend-multiply group-hover:scale-[1.06] transition-transform duration-500"
                       loading="lazy"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <Package className="w-10 h-10 text-muted-foreground/10" />
+                      <Package className="w-12 h-12 text-muted-foreground/10" />
                     </div>
                   )}
 
-                  {/* Stock indicator */}
-                  <div className={`absolute top-2 right-2 w-2.5 h-2.5 rounded-full ring-2 ring-white shadow-sm ${
-                    product.stock_quantity > 0 ? "bg-emerald-500" : "bg-red-400"
+                  {/* Stock dot */}
+                  <div className={`absolute top-2.5 right-2.5 w-1.5 h-1.5 rounded-full ring-[1.5px] ring-white shadow-sm z-20 ${
+                    product.stock_quantity > 0 ? "bg-green-500" : "bg-red-400"
                   }`} />
 
                   {/* Sale badge */}
                   {product.is_on_sale && (
-                    <Badge className="absolute top-2 left-2 bg-destructive text-destructive-foreground text-[8px] px-1.5 py-0 h-4 shadow-sm">
+                    <Badge className="absolute top-2.5 left-2.5 bg-destructive text-destructive-foreground text-[8px] font-bold px-2 py-0.5 shadow-lg shadow-destructive/25 z-20 rounded-md">
                       تخفيض
                     </Badge>
                   )}
 
-                  {/* Revealed badge */}
+                  {/* Priced badge */}
                   {isRevealed && (
-                    <div className="absolute bottom-2 left-2">
-                      <Badge className="bg-emerald-500/90 text-white text-[8px] px-1.5 py-0 h-4 gap-0.5 shadow-sm">
+                    <div className="absolute bottom-2 left-2 z-20">
+                      <span className="inline-flex items-center gap-0.5 bg-green-500/90 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-md shadow-sm">
                         <Check className="w-2.5 h-2.5" /> مسعّر
-                      </Badge>
+                      </span>
                     </div>
                   )}
                 </div>
 
+                {/* Divider */}
+                <div className="h-px bg-border/40" />
+
                 {/* Info */}
-                <div className="p-2.5 space-y-1.5">
-                  <p className="text-[9px] font-mono text-muted-foreground/70 tracking-wide">{product.sku}</p>
-                  <h4 className="text-[11px] font-bold text-card-foreground line-clamp-2 leading-snug min-h-[28px]">
+                <div className="p-3 space-y-2" onClick={(e) => e.stopPropagation()}>
+                  {/* SKU */}
+                  <div className="flex items-center justify-between">
+                    <span className={`inline-flex items-center gap-0.5 text-[8px] px-1.5 py-0.5 rounded-md font-semibold leading-none ${
+                      product.stock_quantity > 0
+                        ? "text-green-700 bg-green-50/80 dark:text-green-400 dark:bg-green-950/30"
+                        : "text-red-600 bg-red-50/80 dark:text-red-400 dark:bg-red-950/30"
+                    }`}>
+                      {product.stock_quantity > 0 ? "متوفر" : "غير متوفر"}
+                    </span>
+                    <span className="text-[8px] font-mono text-muted-foreground/50 tracking-wider">{product.sku}</span>
+                  </div>
+
+                  {/* Name */}
+                  <h4 className="text-[11px] font-bold text-card-foreground line-clamp-2 leading-snug min-h-[2.5em] group-hover:text-primary transition-colors duration-200">
                     {product.name_ar}
                   </h4>
 
                   {/* Price / Reveal Button */}
-                  <div className="pt-1">
+                  <div className="pt-0.5">
                     {isRevealed ? (
                       <motion.div
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="flex items-baseline gap-1"
+                        className="space-y-0.5"
                       >
-                        <span className="text-sm font-black text-primary">
-                          {revealedPrices[product.id]?.toLocaleString("ar-EG")}
-                        </span>
-                        <span className="text-[9px] text-muted-foreground">ج.م</span>
+                        <div className="text-primary font-black text-base tracking-tight leading-tight">
+                          {revealedPrices[product.id]?.toLocaleString("ar-EG")} <span className="text-[10px] font-bold text-primary/70">ج.م</span>
+                        </div>
+                        <p className="text-[8px] font-medium text-green-600 dark:text-green-400">✓ سعر الجملة الخاص بك</p>
                       </motion.div>
                     ) : (
                       <button
                         onClick={(e) => handleRevealPrice(product.id, e)}
                         disabled={limitReached || isRevealing}
-                        className={`w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all duration-200 ${
+                        className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl text-[10px] font-bold transition-all duration-200 ${
                           limitReached
-                            ? "bg-muted text-muted-foreground cursor-not-allowed"
-                            : "bg-primary/10 text-primary hover:bg-primary/20 active:scale-95"
+                            ? "bg-muted/30 text-muted-foreground/60 cursor-not-allowed"
+                            : "bg-primary/8 text-primary border border-primary/15 hover:bg-primary/15 hover:border-primary/25 active:scale-[0.98]"
                         }`}
                       >
                         {isRevealing ? (
-                          <div className="w-3 h-3 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                          <div className="w-3.5 h-3.5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
                         ) : limitReached ? (
                           <Lock className="w-3 h-3" />
                         ) : (
-                          <Eye className="w-3 h-3" />
+                          <Eye className="w-3.5 h-3.5" />
                         )}
-                        {limitReached ? "تم استنفاد الحد" : "اضغط لعرض السعر"}
+                        <span>{limitReached ? "استنفدت الحد اليومي" : "اعرض السعر"}</span>
+                        {!limitReached && (
+                          <span className="text-primary/50 text-[9px]">({remainingViews} متبقي)</span>
+                        )}
                       </button>
                     )}
                   </div>
+
+                  {/* Add to cart for revealed */}
+                  {isRevealed && dealerAccount?.is_active && (
+                    <Button
+                      size="sm"
+                      className="w-full gap-1.5 text-[10px] h-8 rounded-xl font-bold
+                        shadow-sm hover:shadow-md hover:shadow-primary/15 active:scale-[0.98] transition-all duration-200"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addItem(product.id, 1);
+                        toast.success("تمت الإضافة للسلة");
+                      }}
+                    >
+                      <ShoppingCart className="w-3.5 h-3.5" />
+                      أضف للسلة
+                    </Button>
+                  )}
                 </div>
               </motion.div>
             );
