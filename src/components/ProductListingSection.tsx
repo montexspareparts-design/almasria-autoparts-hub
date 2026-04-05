@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { ShieldCheck, Eye, Package, Grid3X3, List, ChevronLeft, SlidersHorizontal, Search, X } from "lucide-react";
