@@ -660,6 +660,14 @@ const AdminProductImages = () => {
             ) : null}
           </DialogContent>
         </Dialog>
+          </TabsContent>
+
+          <TabsContent value="storage">
+            <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>}>
+              <StorageImageGallery />
+            </Suspense>
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );
