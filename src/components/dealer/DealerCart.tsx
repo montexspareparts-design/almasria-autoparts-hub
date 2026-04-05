@@ -13,8 +13,14 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import {
   ShoppingCart, Trash2, Minus, Plus, Package, Loader2,
-  ArrowRight, FileText, XCircle, CheckCircle2, MessageCircle, CreditCard, Shield
+  ArrowRight, FileText, XCircle, CheckCircle2, MessageCircle, CreditCard, Shield, Copy, Check
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 
 interface DealerCartProps {
@@ -33,6 +39,8 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submittingPayment, setSubmittingPayment] = useState(false);
+  const [erpDialog, setErpDialog] = useState<{ open: boolean; erpCode: string; orderNumber: string }>({ open: false, erpCode: "", orderNumber: "" });
+  const [copied, setCopied] = useState(false);
   const [shippingAddress, setShippingAddress] = useState("");
   const [shippingGovernorate, setShippingGovernorate] = useState("");
 
@@ -90,7 +98,7 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
     checkPendingPayment();
   }, [user]);
 
-  const createOrder = async (): Promise<{ id: string; order_number: string } | null> => {
+  const createOrder = async (): Promise<{ id: string; order_number: string; erpCodePromise: Promise<string | null> } | null> => {
     if (!user || items.length === 0) return null;
     const orderNumber = await generateOrderNumber();
     const { data: order, error } = await supabase
@@ -119,9 +127,9 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
       }))
     );
 
-    pushOrderToERP((order as any).id);
+    const erpCodePromise = pushOrderToERP((order as any).id);
     notifyNewOrderWhatsApp(orderNumber, total);
-    return { id: (order as any).id, order_number: orderNumber };
+    return { id: (order as any).id, order_number: orderNumber, erpCodePromise };
   };
 
   const handleSubmitOrder = async () => {
@@ -134,9 +142,12 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
         return;
       }
       await clearCart();
-      toast({ title: "✅ تم إرسال الطلب بنجاح", description: `رقم الطلب: ${order.order_number}` });
       setNotes(""); setShippingAddress(""); setShippingGovernorate("");
-      onNavigateToOrders();
+
+      // Wait for ERP order code
+      const erpCode = await order.erpCodePromise;
+      const displayCode = erpCode || order.order_number;
+      setErpDialog({ open: true, erpCode: displayCode, orderNumber: order.order_number });
     } catch {
       toast({ title: "حدث خطأ", variant: "destructive" });
     } finally {
@@ -422,6 +433,49 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
           <span>قطع أصلية 100%</span>
         </div>
       </div>
+
+      {/* ERP Order Code Dialog */}
+      <Dialog open={erpDialog.open} onOpenChange={(open) => {
+        if (!open) {
+          setErpDialog({ open: false, erpCode: "", orderNumber: "" });
+          setCopied(false);
+          onNavigateToOrders();
+        }
+      }}>
+        <DialogContent className="sm:max-w-md text-center" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black text-center flex items-center justify-center gap-2">
+              <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+              تم إرسال الطلب بنجاح
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-muted-foreground">
+              كود الطلبية الخاص بك — احتفظ به عند السؤال عن طلبيتك
+            </p>
+            <div className="relative mx-auto w-fit">
+              <div className="text-4xl font-black tracking-widest text-primary bg-primary/5 border-2 border-primary/20 rounded-2xl px-8 py-4">
+                {erpDialog.erpCode}
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              className="gap-2 mx-auto"
+              onClick={() => {
+                navigator.clipboard.writeText(erpDialog.erpCode);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }}
+            >
+              {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+              {copied ? "تم النسخ!" : "نسخ الكود"}
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              رقم الطلب الداخلي: {erpDialog.orderNumber}
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

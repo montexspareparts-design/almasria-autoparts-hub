@@ -819,6 +819,7 @@ export type Database = {
           coupon_code: string | null
           coupon_discount: number | null
           created_at: string
+          erp_order_code: string | null
           id: string
           invoice_url: string | null
           notes: string | null
@@ -835,6 +836,7 @@ export type Database = {
           coupon_code?: string | null
           coupon_discount?: number | null
           created_at?: string
+          erp_order_code?: string | null
           id?: string
           invoice_url?: string | null
           notes?: string | null
@@ -851,6 +853,7 @@ export type Database = {
           coupon_code?: string | null
           coupon_discount?: number | null
           created_at?: string
+          erp_order_code?: string | null
           id?: string
           invoice_url?: string | null
           notes?: string | null
