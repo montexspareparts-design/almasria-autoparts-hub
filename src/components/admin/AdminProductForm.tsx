@@ -50,6 +50,8 @@ const AdminProductForm = ({ product, onClose, onSaved }: Props) => {
     base_price: product?.base_price?.toString() || "0",
     sale_price: product?.sale_price?.toString() || "",
     stock_quantity: product?.stock_quantity?.toString() || "0",
+    safety_stock: (product as any)?.safety_stock?.toString() || "0",
+    max_order_cap: (product as any)?.max_order_cap?.toString() || "",
     min_order_qty: product?.min_order_qty?.toString() || "1",
     image_url: product?.image_url || "",
     is_active: product?.is_active ?? true,
@@ -83,6 +85,8 @@ const AdminProductForm = ({ product, onClose, onSaved }: Props) => {
       base_price: parseFloat(form.base_price) || 0,
       sale_price: form.sale_price ? parseFloat(form.sale_price) : null,
       stock_quantity: parseInt(form.stock_quantity) || 0,
+      safety_stock: parseInt(form.safety_stock) || 0,
+      max_order_cap: form.max_order_cap ? parseInt(form.max_order_cap) : null,
       min_order_qty: parseInt(form.min_order_qty) || 1,
       image_url: form.image_url.trim() || null,
       is_active: form.is_active,
@@ -153,7 +157,7 @@ const AdminProductForm = ({ product, onClose, onSaved }: Props) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <div className="space-y-1">
           <Label>السعر الأساسي</Label>
           <Input type="number" value={form.base_price} onChange={e => set("base_price", e.target.value)} dir="ltr" />
@@ -165,6 +169,16 @@ const AdminProductForm = ({ product, onClose, onSaved }: Props) => {
         <div className="space-y-1">
           <Label>المخزون</Label>
           <Input type="number" value={form.stock_quantity} onChange={e => set("stock_quantity", e.target.value)} dir="ltr" />
+        </div>
+        <div className="space-y-1">
+          <Label>حد الأمان (Safety Stock)</Label>
+          <Input type="number" value={form.safety_stock} onChange={e => set("safety_stock", e.target.value)} dir="ltr" placeholder="0" />
+          <p className="text-[10px] text-muted-foreground">الكمية المحجوزة كاحتياطي — لا تُباع</p>
+        </div>
+        <div className="space-y-1">
+          <Label>أقصى كمية للطلب</Label>
+          <Input type="number" value={form.max_order_cap} onChange={e => set("max_order_cap", e.target.value)} dir="ltr" placeholder="بدون حد" />
+          <p className="text-[10px] text-muted-foreground">أقصى كمية يطلبها عميل واحد</p>
         </div>
         <div className="space-y-1">
           <Label>أقل كمية طلب</Label>

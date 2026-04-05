@@ -292,9 +292,25 @@ const AdminProducts = () => {
                       <span>•</span>
                       <span>{product.base_price} ج.م</span>
                       <span>•</span>
-                      <span className={product.stock_quantity <= 0 ? "text-destructive font-medium" : product.stock_quantity < 10 ? "text-amber-500 font-medium" : "text-emerald-600 font-medium"}>
-                        رصيد: {product.stock_quantity}
-                      </span>
+                      {(() => {
+                        const safetyStock = (product as any).safety_stock || 0;
+                        const available = Math.max(0, product.stock_quantity - safetyStock);
+                        const maxCap = (product as any).max_order_cap;
+                        return (
+                          <>
+                            <span className={available <= 0 ? "text-destructive font-medium" : available < 10 ? "text-amber-500 font-medium" : "text-emerald-600 font-medium"}>
+                              متاح: {available}
+                            </span>
+                            <span className="text-muted-foreground">(إجمالي: {product.stock_quantity})</span>
+                            {safetyStock > 0 && (
+                              <span className="text-blue-500 text-[10px]">🛡️ أمان: {safetyStock}</span>
+                            )}
+                            {maxCap && (
+                              <span className="text-orange-500 text-[10px]">⬆ حد: {maxCap}</span>
+                            )}
+                          </>
+                        );
+                      })()}
                       {!product.is_active && (
                         <>
                           <span>•</span>
