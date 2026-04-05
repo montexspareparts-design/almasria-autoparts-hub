@@ -33,6 +33,7 @@ const AdminPaymentReminders = lazy(() => import("@/components/AdminPaymentRemind
 const AdminInstaPayReceipts = lazy(() => import("@/components/AdminInstaPayReceipts"));
 const AdminMaintenanceBundles = lazy(() => import("@/components/AdminMaintenanceBundles"));
 const AdminAuditLog = lazy(() => import("@/components/AdminAuditLog"));
+const AdminBulkImport = lazy(() => import("@/components/AdminBulkImport"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];
@@ -71,6 +72,7 @@ const sidebarGroups: SidebarGroup[] = [
     label: "المنتجات والطلبات",
     items: [
       { id: "products", label: "إدارة المنتجات", icon: Package },
+      { id: "bulk-import", label: "استيراد جماعي", icon: ArrowLeftRight },
       { id: "orders", label: "إدارة الطلبات", icon: ShoppingBag },
       { id: "coupons", label: "الكوبونات", icon: Tag },
       { id: "qty-discounts", label: "خصومات الكمية", icon: Layers },
@@ -428,6 +430,8 @@ const AdminDashboard = () => {
         return renderDealersSection();
       case "products":
         return <Suspense fallback={<SectionLoader />}><AdminProducts /></Suspense>;
+      case "bulk-import":
+        return <Suspense fallback={<SectionLoader />}><AdminBulkImport /></Suspense>;
       case "orders":
         return <Suspense fallback={<SectionLoader />}><AdminOrders /></Suspense>;
       case "coupons":
