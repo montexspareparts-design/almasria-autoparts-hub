@@ -1230,9 +1230,11 @@ export type Database = {
           is_active: boolean
           is_featured: boolean
           is_on_sale: boolean
+          max_order_cap: number | null
           min_order_qty: number
           name_ar: string
           name_en: string | null
+          safety_stock: number
           sale_price: number | null
           sku: string
           stock_quantity: number
@@ -1254,9 +1256,11 @@ export type Database = {
           is_active?: boolean
           is_featured?: boolean
           is_on_sale?: boolean
+          max_order_cap?: number | null
           min_order_qty?: number
           name_ar: string
           name_en?: string | null
+          safety_stock?: number
           sale_price?: number | null
           sku: string
           stock_quantity?: number
@@ -1278,9 +1282,11 @@ export type Database = {
           is_active?: boolean
           is_featured?: boolean
           is_on_sale?: boolean
+          max_order_cap?: number | null
           min_order_qty?: number
           name_ar?: string
           name_en?: string | null
+          safety_stock?: number
           sale_price?: number | null
           sku?: string
           stock_quantity?: number
