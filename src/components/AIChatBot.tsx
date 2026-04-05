@@ -400,6 +400,21 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
   const sendMessage = async (text: string) => {
     if ((!text.trim() && !pendingImage) || isLoading) return;
 
+    // Check if asking for support team
+    if (text.includes("تواصل مع فريق الدعم")) {
+      const supportMsg = "📞 **فريق الدعم الفني جاهز لخدمتك!**\n\n" +
+        "🔹 **واتساب (أسرع طريقة):**\n[اضغط هنا للتواصل عبر واتساب](https://wa.me/201032104861)\n\n" +
+        "🔹 **تليفون:**\n📞 فرع القاهرة: 01032104861\n📞 فرع الجيزة: 01153961008\n📞 فرع الأقصر: 01016177204\n\n" +
+        "⏰ **مواعيد العمل:** 9 صباحاً - 7 مساءً\n\n" +
+        "أو اكتب مشكلتك هنا وأنا هحاول أساعدك فوراً! 💪";
+      setMessages(prev => [
+        ...prev,
+        { role: "user", content: text },
+        { role: "assistant", content: supportMsg }
+      ]);
+      return;
+    }
+
     // Check if asking for nearest branch - use geolocation
     const branchKeywords = ["أقرب فرع", "فرع قريب", "أقرب فرع ليا", "فين فروعكم"];
     if (branchKeywords.some(kw => text.includes(kw))) {
