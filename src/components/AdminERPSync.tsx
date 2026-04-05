@@ -61,6 +61,11 @@ const AdminERPSync = () => {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState<string | null>(null);
   const [savingConfig, setSavingConfig] = useState(false);
+  // Mapping state
+  const [mappingProducts, setMappingProducts] = useState<any[]>([]);
+  const [mappingSearch, setMappingSearch] = useState("");
+  const [mappingEdits, setMappingEdits] = useState<Record<string, string>>({});
+  const [savingMapping, setSavingMapping] = useState(false);
   const [testPayload, setTestPayload] = useState(
     JSON.stringify(
       {
