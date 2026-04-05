@@ -711,6 +711,55 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ─── TEST ENDPOINTS (temporary discovery) ───
+    else if (action === "test_endpoints") {
+      if (!baseUrl) throw new Error("No ERP base URL configured");
+      
+      const endpoints = [
+        "/Ecommerce/GetPriceList",
+        "/Ecommerce/GetPriceLists",
+        "/Ecommerce/PriceList",
+        "/Ecommerce/GetCustomerPrices",
+        "/Ecommerce/CustomerPrices",
+        "/Ecommerce/GetProductPrices",
+        "/Ecommerce/ProductPrices",
+        "/Ecommerce/GetWholesalePrices",
+        "/Ecommerce/GetRetailPrices",
+        "/Ecommerce/GetCategories",
+        "/Ecommerce/GetCustomers",
+      ];
+      
+      const results: Record<string, any> = {};
+      const token = await getErpToken(baseUrl);
+      
+      for (const ep of endpoints) {
+        try {
+          const res = await fetch(`${baseUrl}${ep}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({}),
+          });
+          const text = await res.text();
+          let parsed: any;
+          try { parsed = JSON.parse(text); } catch { parsed = text.substring(0, 300); }
+          
+          results[ep] = {
+            status: res.status,
+            preview: typeof parsed === 'object' 
+              ? { keys: Object.keys(parsed), isArray: Array.isArray(parsed), length: Array.isArray(parsed) ? parsed.length : undefined, sample: Array.isArray(parsed) ? parsed.slice(0, 2) : parsed }
+              : String(parsed).substring(0, 200),
+          };
+        } catch (e: any) {
+          results[ep] = { error: e.message };
+        }
+      }
+      
+      result = { success: true, endpoints: results };
+    }
+
     else {
       throw new Error(`Unknown action: ${action}`);
     }
