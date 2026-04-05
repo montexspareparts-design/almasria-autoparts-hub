@@ -78,19 +78,13 @@ const ProductCard = memo(({
             <span className="text-[8px] sm:text-[10px] font-mono bg-muted text-muted-foreground px-1 sm:px-2 py-0.5 rounded leading-none">{product.sku}</span>
             <span className="hidden sm:inline"><StockBadge available={stockAvailable} /></span>
             {brandRouteMap[product.brand] && (
-              <TooltipProvider delayDuration={200}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span
-                      className={`text-[7px] sm:text-[9px] font-bold px-1 sm:px-1.5 py-px sm:py-0.5 rounded cursor-pointer hover:opacity-80 transition-opacity ${brandRouteMap[product.brand].color}`}
-                      onClick={(e) => { e.stopPropagation(); navigate(brandRouteMap[product.brand].path); }}
-                    >
-                      {brandRouteMap[product.brand].label}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="text-xs">انتقل لصفحة الماركة</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Link
+                to={brandRouteMap[product.brand].path}
+                className={`text-[7px] sm:text-[9px] font-bold px-1 sm:px-1.5 py-px sm:py-0.5 rounded hover:opacity-80 transition-opacity ${brandRouteMap[product.brand].color}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {brandRouteMap[product.brand].label}
+              </Link>
             )}
           </div>
           <h3 className="font-bold text-card-foreground text-[11px] sm:text-sm leading-snug sm:leading-relaxed line-clamp-2 group-hover:text-primary transition-colors">
