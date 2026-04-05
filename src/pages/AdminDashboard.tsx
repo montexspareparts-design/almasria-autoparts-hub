@@ -100,6 +100,7 @@ const sidebarGroups: SidebarGroup[] = [
         { id: "payment-reminders", label: "متابعة التذكيرات", icon: Clock },
         { id: "push-notifications", label: "إشعارات Push", icon: Bell },
         { id: "erp", label: "ربط ERP", icon: Zap },
+        { id: "erp-customers", label: "ربط عملاء الفيصل", icon: Users },
         { id: "paymob", label: "إعدادات Paymob", icon: Briefcase },
         { id: "audit-log", label: "سجل المراجعة", icon: Shield },
       ],
