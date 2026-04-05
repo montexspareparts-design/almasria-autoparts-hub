@@ -319,11 +319,18 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
   const streamChat = async (allMessages: Message[]) => {
     const apiMessages = allMessages.map(({ role, content }) => ({ role, content }));
 
+    // Send user's session token if logged in, otherwise anon key
+    let authToken = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) authToken = session.access_token;
+    } catch { /* use anon key */ }
+
     const resp = await fetch(CHAT_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        Authorization: `Bearer ${authToken}`,
       },
       body: JSON.stringify({
         messages: apiMessages,
