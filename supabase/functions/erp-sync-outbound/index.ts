@@ -30,17 +30,29 @@ async function getErpToken(baseUrl: string): Promise<string> {
   });
 
   const text = await res.text();
-  let data: any;
+  let jwt: string | null = null;
+  let expiresIn: number | null = null;
+
+  // Try parsing as JSON first
   try {
-    data = JSON.parse(text);
+    const data = JSON.parse(text);
+    // Al Faisal may return { jwtToken, token, expiresIn } or just a string
+    if (typeof data === "string") {
+      jwt = data;
+    } else {
+      jwt = data.jwtToken || data.token || data.access_token || null;
+      expiresIn = data.expiresIn || data.expires_in || null;
+    }
   } catch {
-    throw new Error(`ERP Auth returned non-JSON (status ${res.status}): ${text.substring(0, 200)}`);
+    // Response might be a raw JWT string (not JSON)
+    const trimmed = text.trim().replace(/^"|"$/g, "");
+    if (trimmed.length > 20 && trimmed.split(".").length >= 2) {
+      jwt = trimmed;
+    }
   }
 
-  // Al Faisal returns "jwtToken" not "token"
-  const jwt = data.jwtToken || data.token;
   if (!res.ok || !jwt) {
-    throw new Error(`ERP Authentication failed [${res.status}]: ${JSON.stringify(data)}`);
+    throw new Error(`ERP Authentication failed [${res.status}]: ${text.substring(0, 300)}`);
   }
 
   cachedToken = jwt;
