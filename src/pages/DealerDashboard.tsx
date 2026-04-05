@@ -147,7 +147,7 @@ const DealerDashboard = () => {
               </Button>
             </div>
           </div>
-          <DealerProductSearch />
+          <DealerProductSearch onNavigateToCart={() => setActiveTab("cart")} sharedCart={dealerCart} />
           <DealerVehicleRecommendations compact />
         </div>
       );
