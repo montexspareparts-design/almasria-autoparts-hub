@@ -266,8 +266,21 @@ export function useProductListing(options: UseProductListingOptions = {}) {
       return;
     }
 
-    const effectiveMax = maxCap ? Math.min(availableQty, maxCap) : availableQty;
-    const finalQty = Math.min(qty, effectiveMax);
+    // 50% cap rule: max allowed per order = 50% of available stock
+    const fiftyPercentCap = Math.max(1, Math.floor(availableQty * 0.5));
+    let effectiveMax = Math.min(availableQty, fiftyPercentCap);
+    if (maxCap) effectiveMax = Math.min(effectiveMax, maxCap);
+
+    let finalQty = Math.min(qty, effectiveMax);
+
+    // If requested qty exceeds 50% cap, suggest the max allowed
+    if (qty > effectiveMax) {
+      toast({
+        title: "⚠️ تم تعديل الكمية تلقائياً",
+        description: `الحد الأقصى المسموح لهذا الصنف هو ${effectiveMax} قطعة (50% من الرصيد المتاح: ${availableQty})`,
+      });
+      finalQty = effectiveMax;
+    }
 
     const cartItem: CartItem = {
       id: product.id, name_ar: product.name_ar, sku: product.sku, image_url: product.image_url,
