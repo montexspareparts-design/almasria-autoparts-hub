@@ -746,6 +746,115 @@ const AdminERPSync = () => {
             })
           )}
         </TabsContent>
+
+        {/* ─── UNLINKED PRODUCTS REPORT ─── */}
+        <TabsContent value="unlinked" className="space-y-4 mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between flex-wrap gap-3">
+                <span className="flex items-center gap-2 text-base">
+                  <Package className="w-5 h-5 text-destructive" />
+                  أصناف بدون كود فيصل ({(() => {
+                    let filtered = unlinkedProducts;
+                    if (unlinkedBrandFilter !== "all") filtered = filtered.filter(p => p.brand === unlinkedBrandFilter);
+                    if (unlinkedSearch.trim()) filtered = filtered.filter(p => p.name_ar?.includes(unlinkedSearch) || p.sku?.includes(unlinkedSearch));
+                    return filtered.length;
+                  })()})
+                </span>
+                <Button size="sm" variant="outline" onClick={fetchUnlinkedProducts} disabled={unlinkedLoading}>
+                  <RefreshCw className={`w-4 h-4 ml-1 ${unlinkedLoading ? "animate-spin" : ""}`} />
+                  تحديث
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Input
+                  value={unlinkedSearch}
+                  onChange={e => setUnlinkedSearch(e.target.value)}
+                  placeholder="بحث بالاسم أو رقم القطعة..."
+                  className="flex-1"
+                  dir="rtl"
+                />
+                <select
+                  value={unlinkedBrandFilter}
+                  onChange={e => setUnlinkedBrandFilter(e.target.value)}
+                  className="border rounded-md px-3 py-2 text-sm bg-background text-foreground"
+                >
+                  <option value="all">كل الماركات</option>
+                  <option value="toyota_genuine">تويوتا أصلي</option>
+                  <option value="toyota_oils">زيوت تويوتا</option>
+                  <option value="mtx_aftermarket">MTX</option>
+                  <option value="denso">DENSO</option>
+                  <option value="aisin">AISIN</option>
+                  <option value="fbk">FBK</option>
+                </select>
+              </div>
+
+              {unlinkedLoading ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                </div>
+              ) : (() => {
+                let filtered = unlinkedProducts;
+                if (unlinkedBrandFilter !== "all") filtered = filtered.filter(p => p.brand === unlinkedBrandFilter);
+                if (unlinkedSearch.trim()) filtered = filtered.filter(p => p.name_ar?.includes(unlinkedSearch) || p.sku?.includes(unlinkedSearch));
+                
+                if (filtered.length === 0) return (
+                  <p className="text-center text-muted-foreground py-8">🎉 كل الأصناف مربوطة بأكواد الفيصل!</p>
+                );
+
+                const grouped = filtered.reduce((acc: Record<string, any[]>, p: any) => {
+                  const brand = p.brand || "unknown";
+                  if (!acc[brand]) acc[brand] = [];
+                  acc[brand].push(p);
+                  return acc;
+                }, {});
+
+                const brandNames: Record<string, string> = {
+                  toyota_genuine: "تويوتا أصلي",
+                  toyota_oils: "زيوت تويوتا",
+                  mtx_aftermarket: "MTX",
+                  denso: "DENSO",
+                  aisin: "AISIN",
+                  fbk: "FBK",
+                };
+
+                return Object.entries(grouped).map(([brand, products]) => (
+                  <div key={brand} className="space-y-2">
+                    <h3 className="font-semibold text-sm text-muted-foreground flex items-center gap-2">
+                      <Badge variant="secondary">{brandNames[brand] || brand}</Badge>
+                      <span>({(products as any[]).length} صنف)</span>
+                    </h3>
+                    <div className="border rounded-lg divide-y">
+                      {(products as any[]).map((p: any) => (
+                        <div key={p.id} className="flex items-center justify-between p-3 hover:bg-muted/50 transition-colors">
+                          <div className="flex items-center gap-3 min-w-0">
+                            {p.image_url ? (
+                              <img src={p.image_url} alt="" className="w-8 h-8 rounded object-cover shrink-0 bg-muted" />
+                            ) : (
+                              <div className="w-8 h-8 rounded bg-muted flex items-center justify-center shrink-0">
+                                <Package className="w-4 h-4 text-muted-foreground" />
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <p className="font-medium text-sm truncate">{p.name_ar}</p>
+                              <p className="text-xs text-muted-foreground font-mono" dir="ltr">{p.sku}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-xs text-muted-foreground">{p.base_price} ج.م</span>
+                            {!p.is_active && <Badge variant="destructive" className="text-[10px]">غير نشط</Badge>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ));
+              })()}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );
