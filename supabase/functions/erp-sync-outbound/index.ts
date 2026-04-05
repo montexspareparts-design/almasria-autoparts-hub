@@ -314,7 +314,7 @@ Deno.serve(async (req) => {
           if (!erpId) continue;
 
           if (action === "sync_stock") {
-            const qty = item.quantity ?? item.stock ?? item.availableQty;
+            const qty = item.qty ?? item.quantity ?? item.stock ?? item.availableQty;
             if (qty !== undefined) {
               const { count } = await supabase
                 .from("products")
