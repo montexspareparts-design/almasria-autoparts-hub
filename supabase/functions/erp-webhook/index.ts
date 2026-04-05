@@ -146,11 +146,18 @@ Deno.serve(async (req) => {
       let updated = 0;
 
       for (const item of updates) {
-        const { error } = await supabase
-          .from("products")
-          .update({ stock_quantity: item.quantity })
-          .eq("sku", item.sku);
-        if (!error) updated++;
+        const erpCode = (item.itemCode || item.id || "").toString().trim();
+        const sku = item.sku || "";
+        
+        // Try erp_item_code first, then SKU
+        let result;
+        if (erpCode) {
+          result = await supabase.from("products").update({ stock_quantity: item.quantity }).eq("erp_item_code", erpCode);
+        }
+        if ((!erpCode || result?.error) && sku) {
+          result = await supabase.from("products").update({ stock_quantity: item.quantity }).eq("sku", sku);
+        }
+        if (!result?.error) updated++;
       }
 
       await supabase.from("erp_sync_logs").insert({
