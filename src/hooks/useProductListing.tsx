@@ -257,10 +257,22 @@ export function useProductListing(options: UseProductListingOptions = {}) {
 
   /* ── Cart ── */
   const handleAddToCart = useCallback((product: any) => {
+    const availableQty = product.available_quantity ?? product.stock_quantity;
+    const maxCap = product.max_order_cap;
+    const qty = product.min_order_qty || 1;
+
+    if (availableQty <= 0) {
+      toast({ title: "هذا المنتج غير متوفر حالياً", variant: "destructive" });
+      return;
+    }
+
+    const effectiveMax = maxCap ? Math.min(availableQty, maxCap) : availableQty;
+    const finalQty = Math.min(qty, effectiveMax);
+
     const cartItem: CartItem = {
       id: product.id, name_ar: product.name_ar, sku: product.sku, image_url: product.image_url,
-      unit_price: getProductPrice(product), quantity: product.min_order_qty || 1,
-      stock_quantity: product.stock_quantity, min_order_qty: product.min_order_qty, brand: product.brand,
+      unit_price: getProductPrice(product), quantity: finalQty,
+      stock_quantity: effectiveMax, min_order_qty: product.min_order_qty, brand: product.brand,
     };
     addItem(cartItem);
     toast({ title: "تمت الإضافة للسلة ✅", description: product.name_ar });
