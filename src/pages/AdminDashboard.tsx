@@ -36,6 +36,7 @@ const AdminInstaPayReceipts = lazy(() => import("@/components/AdminInstaPayRecei
 const AdminMaintenanceBundles = lazy(() => import("@/components/AdminMaintenanceBundles"));
 const AdminAuditLog = lazy(() => import("@/components/AdminAuditLog"));
 const AdminBulkImport = lazy(() => import("@/components/AdminBulkImport"));
+const AdminERPCustomers = lazy(() => import("@/components/AdminERPCustomers"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];
@@ -99,6 +100,7 @@ const sidebarGroups: SidebarGroup[] = [
         { id: "payment-reminders", label: "متابعة التذكيرات", icon: Clock },
         { id: "push-notifications", label: "إشعارات Push", icon: Bell },
         { id: "erp", label: "ربط ERP", icon: Zap },
+        { id: "erp-customers", label: "ربط عملاء الفيصل", icon: Users },
         { id: "paymob", label: "إعدادات Paymob", icon: Briefcase },
         { id: "audit-log", label: "سجل المراجعة", icon: Shield },
       ],
@@ -535,6 +537,8 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminPushNotifications /></Suspense>;
       case "erp":
         return <Suspense fallback={<SectionLoader />}><AdminERPSync /></Suspense>;
+      case "erp-customers":
+        return <Suspense fallback={<SectionLoader />}><AdminERPCustomers /></Suspense>;
       case "paymob":
         return <Suspense fallback={<SectionLoader />}><AdminPaymobSettings /></Suspense>;
       case "audit-log":

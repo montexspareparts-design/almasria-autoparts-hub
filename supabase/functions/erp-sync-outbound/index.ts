@@ -809,18 +809,19 @@ Deno.serve(async (req) => {
       const customers = erpResponse?.data || [];
       
       // If a specific code is requested, find it
-      const targetCode = data?.customer_code;
+      const targetCode = data?.customer_code || data?.erp_customer_code;
       if (targetCode) {
         const matched = customers.find((c: any) => c.id?.toString().trim() === targetCode.trim());
         result = {
           success: true,
+          customer_name: matched?.name?.trim() || null,
           customer: matched ? { id: matched.id?.trim(), name: matched.name?.trim() } : null,
         };
       } else {
         result = {
           success: true,
           total: customers.length,
-          customers: customers.slice(0, 100).map((c: any) => ({
+          customers: customers.map((c: any) => ({
             id: (c.id || "").toString().trim(),
             name: (c.name || "").toString().trim(),
           })),
