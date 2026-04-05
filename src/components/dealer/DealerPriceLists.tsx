@@ -39,7 +39,7 @@ interface Product {
   stock_quantity: number;
 }
 
-const DAILY_LIMIT = 20;
+const DAILY_LIMIT = 30;
 
 interface PriceListQuoteData {
   priceListTitle: string;
