@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,11 +9,11 @@ import { notifyNewOrderWhatsApp } from "@/lib/whatsapp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import {
   ShoppingCart, Trash2, Minus, Plus, Package, Loader2,
-  ArrowRight, FileText, XCircle, CheckCircle2, MessageCircle, CreditCard, Shield, Copy, Check
+  ArrowRight, CreditCard, Shield, Copy, Check,
+  Search, X, CheckCircle2, Save, Send, PlusCircle
 } from "lucide-react";
 import {
   Dialog,
@@ -33,39 +33,64 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
   const { user, dealerAccount } = useAuth();
   const fallbackCart = useDealerCart();
   const cart = sharedCart || fallbackCart;
-  const { items, loading, updateQuantity, removeItem, clearCart, fetchCart } = cart;
+  const { items, loading, updateQuantity, removeItem, clearCart, addItem } = cart;
+
   const [tierPrices, setTierPrices] = useState<Record<string, number>>({});
-  const [loadingPrices, setLoadingPrices] = useState(false);
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submittingPayment, setSubmittingPayment] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
+
+  // ERP dialog
   const [erpDialog, setErpDialog] = useState<{ open: boolean; erpCode: string; orderNumber: string }>({ open: false, erpCode: "", orderNumber: "" });
   const [copied, setCopied] = useState(false);
-  const [shippingAddress, setShippingAddress] = useState("");
-  const [shippingGovernorate, setShippingGovernorate] = useState("");
 
+  // Search
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const searchTimeout = useRef<NodeJS.Timeout>();
 
-  // Fetch tier prices for all items
-  const fetchTierPrices = async () => {
-    if (!dealerAccount?.tier || items.length === 0) return;
-    setLoadingPrices(true);
-    const productIds = items.map(i => i.product_id);
-    const { data } = await supabase
-      .from("product_tier_prices")
-      .select("product_id, price")
-      .eq("tier", dealerAccount.tier as any)
-      .in("product_id", productIds);
+  // Fetch tier prices
+  useEffect(() => {
+    const fetchTierPrices = async () => {
+      if (!dealerAccount?.tier || items.length === 0) return;
+      const productIds = items.map(i => i.product_id);
+      const { data } = await supabase
+        .from("product_tier_prices")
+        .select("product_id, price")
+        .eq("tier", dealerAccount.tier as any)
+        .in("product_id", productIds);
+      if (data) {
+        const map: Record<string, number> = {};
+        data.forEach(tp => { map[tp.product_id] = tp.price; });
+        setTierPrices(map);
+      }
+    };
+    fetchTierPrices();
+  }, [items.length, dealerAccount?.tier]);
 
-    if (data) {
-      const map: Record<string, number> = {};
-      data.forEach(tp => { map[tp.product_id] = tp.price; });
-      setTierPrices(map);
-    }
-    setLoadingPrices(false);
-  };
-
-  // Fetch tier prices when items change
-  useEffect(() => { fetchTierPrices(); }, [items.length]);
+  // Auto-clear cart on paid order
+  useEffect(() => {
+    const checkPendingPayment = async () => {
+      const pendingOrderId = localStorage.getItem("dealer_pending_payment_order");
+      if (!pendingOrderId || !user) return;
+      const { data } = await supabase
+        .from("orders")
+        .select("status")
+        .eq("id", pendingOrderId)
+        .eq("user_id", user.id)
+        .single();
+      if (data && !["pending", "awaiting_payment"].includes(data.status)) {
+        await clearCart();
+        localStorage.removeItem("dealer_pending_payment_order");
+        toast({ title: "✅ تم الدفع بنجاح", description: "تم تفريغ السلة تلقائياً" });
+      }
+    };
+    checkPendingPayment();
+  }, [user]);
 
   const getPrice = (item: typeof items[0]) => {
     if (tierPrices[item.product_id]) return tierPrices[item.product_id];
@@ -76,27 +101,40 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
   const vat = subtotal * 0.14;
   const total = subtotal + vat;
 
-  // Auto-clear cart when a pending payment order is confirmed
-  useEffect(() => {
-    const checkPendingPayment = async () => {
-      const pendingOrderId = localStorage.getItem("dealer_pending_payment_order");
-      if (!pendingOrderId || !user) return;
-
+  // Search products
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query);
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    if (!query.trim() || query.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    searchTimeout.current = setTimeout(async () => {
+      setSearching(true);
       const { data } = await supabase
-        .from("orders")
-        .select("status")
-        .eq("id", pendingOrderId)
-        .eq("user_id", user.id)
-        .single();
+        .from("products")
+        .select("id, name_ar, sku, base_price, image_url, stock_quantity, brand")
+        .eq("is_active", true)
+        .gt("stock_quantity", 0)
+        .or(`name_ar.ilike.%${query}%,sku.ilike.%${query}%`)
+        .limit(8);
+      setSearchResults(data || []);
+      setSearching(false);
+    }, 300);
+  }, []);
 
-      if (data && !["pending", "awaiting_payment"].includes(data.status)) {
-        await clearCart();
-        localStorage.removeItem("dealer_pending_payment_order");
-        toast({ title: "✅ تم الدفع بنجاح", description: "تم تفريغ السلة تلقائياً" });
-      }
-    };
-    checkPendingPayment();
-  }, [user]);
+  const handleAddFromSearch = async (product: any) => {
+    const existing = items.find(i => i.product_id === product.id);
+    if (existing) {
+      await updateQuantity(product.id, existing.quantity + 1);
+      toast({ title: "✅ تم زيادة الكمية", description: product.name_ar });
+    } else {
+      await addItem(product.id, 1);
+      toast({ title: "✅ تمت الإضافة", description: product.name_ar });
+    }
+    setSearchQuery("");
+    setSearchResults([]);
+  };
 
   const createOrder = async (): Promise<{ id: string; order_number: string; erpCodePromise: Promise<string | null> } | null> => {
     if (!user || items.length === 0) return null;
@@ -108,13 +146,10 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
         order_number: orderNumber,
         total_amount: total,
         notes: notes || null,
-        shipping_address: shippingAddress || null,
-        shipping_governorate: shippingGovernorate || null,
         status: "pending",
       })
       .select()
       .single();
-
     if (error || !order) return null;
 
     await supabase.from("order_items").insert(
@@ -132,6 +167,16 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
     return { id: (order as any).id, order_number: orderNumber, erpCodePromise };
   };
 
+  // Save draft (keep in cart, no order)
+  const handleSaveDraft = async () => {
+    setSavingDraft(true);
+    // Cart is already persisted in DB, just confirm
+    await new Promise(r => setTimeout(r, 500));
+    toast({ title: "✅ تم الحفظ", description: `${items.length} صنف محفوظ في السلة` });
+    setSavingDraft(false);
+  };
+
+  // Submit order (pay later)
   const handleSubmitOrder = async () => {
     if (!user || items.length === 0) return;
     setSubmitting(true);
@@ -142,9 +187,7 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
         return;
       }
       await clearCart();
-      setNotes(""); setShippingAddress(""); setShippingGovernorate("");
-
-      // Wait for ERP order code
+      setNotes("");
       const erpCode = await order.erpCodePromise;
       const displayCode = erpCode || order.order_number;
       setErpDialog({ open: true, erpCode: displayCode, orderNumber: order.order_number });
@@ -155,6 +198,7 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
     }
   };
 
+  // Pay now
   const handlePayNow = async () => {
     if (!user || items.length === 0) return;
     setSubmittingPayment(true);
@@ -164,10 +208,9 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
         toast({ title: "خطأ في إنشاء الطلب", variant: "destructive" });
         return;
       }
-      // Keep cart items — will auto-clear when payment is confirmed
       localStorage.setItem("dealer_pending_payment_order", order.id);
-      toast({ title: "✅ تم إنشاء الطلب", description: `رقم الطلب: ${order.order_number} — جاري التوجيه للدفع...` });
-      setNotes(""); setShippingAddress(""); setShippingGovernorate("");
+      toast({ title: "✅ تم إنشاء الطلب", description: `رقم الطلب: ${order.order_number}` });
+      setNotes("");
       onNavigateToPayment({ id: order.id, orderNumber: order.order_number, amount: total });
     } catch {
       toast({ title: "حدث خطأ", variant: "destructive" });
@@ -185,254 +228,281 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
     );
   }
 
-  if (items.length === 0) {
-    return (
-      <div className="space-y-6">
-        <div className="text-center py-12 space-y-3">
-          <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto">
-            <ShoppingCart className="w-8 h-8 text-muted-foreground/40" />
-          </div>
-          <h3 className="text-lg font-bold text-foreground">السلة فارغة</h3>
-          <p className="text-sm text-muted-foreground">أضف أصناف من البحث أو عروض الأسعار</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Determine current step for stepper
-  const currentStep = items.length > 0 ? (shippingGovernorate || shippingAddress ? 2 : 1) : 0;
-  const steps = [
-    { label: "اختيار الأصناف", icon: Package, done: items.length > 0 },
-    { label: "بيانات الشحن", icon: FileText, done: currentStep >= 2 },
-    { label: "تأكيد وإرسال", icon: CheckCircle2, done: false },
-  ];
+  const isProcessing = submitting || submittingPayment || savingDraft;
 
   return (
-    <div className="space-y-6">
-      {/* Stepper Progress */}
-      <div className="flex items-center justify-between px-2 py-4 rounded-2xl bg-card border border-border/50">
-        {steps.map((step, idx) => {
-          const StepIcon = step.icon;
-          const isActive = idx === (currentStep < 2 ? currentStep : 2);
-          const isDone = step.done && idx < currentStep;
-          return (
-            <div key={idx} className="flex items-center flex-1 last:flex-initial">
-              <div className="flex flex-col items-center gap-1.5">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-                  isDone ? "bg-emerald-500 text-white" :
-                  isActive ? "bg-primary text-primary-foreground ring-4 ring-primary/20" :
-                  "bg-muted text-muted-foreground"
-                }`}>
-                  {isDone ? <CheckCircle2 className="w-5 h-5" /> : <StepIcon className="w-5 h-5" />}
+    <div className="space-y-4 max-w-3xl mx-auto">
+      {/* Header + Search */}
+      <div className="rounded-2xl border border-border/50 bg-card p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-black text-foreground flex items-center gap-2">
+            <ShoppingCart className="w-5 h-5 text-primary" />
+            طلبية جديدة
+          </h2>
+          {items.length > 0 && (
+            <button
+              onClick={clearCart}
+              className="text-xs text-destructive hover:underline flex items-center gap-1"
+            >
+              <Trash2 className="w-3 h-3" />
+              تفريغ الكل
+            </button>
+          )}
+        </div>
+
+        {/* Inline Search */}
+        <div className="relative">
+          <div className="relative">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              ref={searchRef}
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              onFocus={() => setShowSearch(true)}
+              placeholder="ابحث عن صنف بالاسم أو رقم القطعة لإضافته..."
+              className="pr-10 pl-10 h-11 text-sm bg-muted/30 border-border/50 rounded-xl"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => { setSearchQuery(""); setSearchResults([]); }}
+                className="absolute left-3 top-1/2 -translate-y-1/2"
+              >
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
+            )}
+          </div>
+
+          {/* Search Results Dropdown */}
+          {showSearch && (searchResults.length > 0 || searching) && (
+            <div className="absolute z-50 top-full mt-1 w-full bg-card border border-border rounded-xl shadow-xl max-h-64 overflow-y-auto">
+              {searching ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                  <span className="text-xs text-muted-foreground mr-2">جاري البحث...</span>
                 </div>
-                <span className={`text-[10px] font-bold text-center ${isActive ? "text-primary" : isDone ? "text-emerald-600" : "text-muted-foreground"}`}>
-                  {step.label}
-                </span>
-              </div>
-              {idx < steps.length - 1 && (
-                <div className={`flex-1 h-0.5 mx-2 rounded-full ${isDone ? "bg-emerald-500" : "bg-border"}`} />
+              ) : (
+                searchResults.map((product) => {
+                  const alreadyInCart = items.some(i => i.product_id === product.id);
+                  return (
+                    <button
+                      key={product.id}
+                      onClick={() => handleAddFromSearch(product)}
+                      className="w-full flex items-center gap-3 p-3 hover:bg-muted/50 transition-colors border-b border-border/30 last:border-0 text-right"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-muted/50 overflow-hidden shrink-0">
+                        {product.image_url ? (
+                          <img src={product.image_url} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Package className="w-4 h-4 text-muted-foreground/30" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-foreground truncate">{product.name_ar}</p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-mono text-muted-foreground">{product.sku}</span>
+                          <span className="text-[10px] text-emerald-600 font-bold">
+                            {product.base_price.toLocaleString("ar-EG")} ج.م
+                          </span>
+                        </div>
+                      </div>
+                      <div className="shrink-0">
+                        {alreadyInCart ? (
+                          <span className="text-[10px] text-primary font-bold bg-primary/10 px-2 py-1 rounded-full">في السلة +1</span>
+                        ) : (
+                          <PlusCircle className="w-5 h-5 text-primary" />
+                        )}
+                      </div>
+                    </button>
+                  );
+                })
               )}
             </div>
-          );
-        })}
-      </div>
-
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-black text-foreground flex items-center gap-2">
-            <ShoppingCart className="w-5 h-5 text-primary" />
-            سلة المشتريات
-          </h2>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {items.length} صنف في السلة
-          </p>
+          )}
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={clearCart}
-          className="text-destructive hover:text-destructive text-xs gap-1"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-          تفريغ السلة
-        </Button>
       </div>
 
       {/* Cart Items */}
-      <div className="space-y-2">
-        <AnimatePresence>
-          {items.map((item, idx) => {
-            const price = getPrice(item);
-            const inStock = item.product.stock_quantity > 0;
+      {items.length === 0 ? (
+        <div className="text-center py-12 space-y-3 rounded-2xl border border-dashed border-border/50 bg-muted/20">
+          <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto">
+            <ShoppingCart className="w-7 h-7 text-muted-foreground/30" />
+          </div>
+          <p className="text-sm font-bold text-muted-foreground">ابدأ بالبحث عن أصناف وأضفها لطلبيتك</p>
+          <Button variant="outline" size="sm" onClick={() => searchRef.current?.focus()} className="gap-1.5">
+            <Search className="w-3.5 h-3.5" />
+            ابحث عن صنف
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {/* Items count header */}
+          <div className="flex items-center justify-between px-1">
+            <span className="text-xs font-bold text-muted-foreground">{items.length} صنف</span>
+            <span className="text-xs font-bold text-primary">
+              الإجمالي: {subtotal.toLocaleString("ar-EG")} ج.م
+            </span>
+          </div>
 
-            return (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, x: -50 }}
-                transition={{ delay: idx * 0.03 }}
-                className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-card hover:bg-muted/30 transition-all"
-              >
-                {/* Image */}
-                <div className="w-14 h-14 rounded-lg bg-muted/50 overflow-hidden shrink-0">
-                  {item.product.image_url ? (
-                    <img src={item.product.image_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Package className="w-6 h-6 text-muted-foreground/30" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-foreground truncate">{item.product.name_ar}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[10px] font-mono text-muted-foreground">{item.product.sku}</span>
-                    <span className={`inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
-                      inStock ? "text-emerald-700 bg-emerald-500/10" : "text-destructive bg-destructive/10"
-                    }`}>
-                      {inStock ? <CheckCircle2 className="w-2.5 h-2.5" /> : <XCircle className="w-2.5 h-2.5" />}
-                      {inStock ? "متوفر" : "نفد"}
-                    </span>
+          <AnimatePresence>
+            {items.map((item, idx) => {
+              const price = getPrice(item);
+              return (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, x: -80, height: 0, marginBottom: 0 }}
+                  transition={{ delay: idx * 0.02 }}
+                  className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-card"
+                >
+                  {/* Image */}
+                  <div className="w-12 h-12 rounded-lg bg-muted/50 overflow-hidden shrink-0">
+                    {item.product.image_url ? (
+                      <img src={item.product.image_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Package className="w-5 h-5 text-muted-foreground/30" />
+                      </div>
+                    )}
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">
-                    سعر الوحدة: {price.toLocaleString("ar-EG")} ج.م
-                  </p>
-                </div>
 
-                {/* Quantity Controls */}
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <button
-                    onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
-                    className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-foreground hover:bg-muted-foreground/20 transition-colors"
-                  >
-                    <Minus className="w-3.5 h-3.5" />
-                  </button>
-                  <span className="text-sm font-bold w-8 text-center text-foreground">{item.quantity}</span>
-                  <button
-                    onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
-                    className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-foreground hover:bg-muted-foreground/20 transition-colors"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-foreground truncate">{item.product.name_ar}</p>
+                    <span className="text-[10px] font-mono text-muted-foreground">{item.product.sku}</span>
+                    <p className="text-[10px] text-muted-foreground">
+                      {price.toLocaleString("ar-EG")} ج.م × {item.quantity}
+                    </p>
+                  </div>
 
-                {/* Price & Remove */}
-                <div className="text-left shrink-0 space-y-1">
-                  <p className="text-sm font-black text-primary">
-                    {(price * item.quantity).toLocaleString("ar-EG")} ج.م
-                  </p>
-                  <button
-                    onClick={() => removeItem(item.product_id)}
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors mr-auto"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
-      </div>
+                  {/* Quantity */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
+                      className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center hover:bg-destructive/10 hover:text-destructive transition-colors"
+                    >
+                      <Minus className="w-3 h-3" />
+                    </button>
+                    <input
+                      type="number"
+                      value={item.quantity}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        if (val > 0) updateQuantity(item.product_id, val);
+                      }}
+                      className="w-10 h-7 text-center text-sm font-bold bg-muted/50 border border-border/50 rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <button
+                      onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
+                      className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center hover:bg-primary/10 hover:text-primary transition-colors"
+                    >
+                      <Plus className="w-3 h-3" />
+                    </button>
+                  </div>
 
-      {/* Order Details */}
-      <div className="space-y-3 rounded-xl border border-border/50 bg-card p-4">
-        <h3 className="text-sm font-bold text-foreground">بيانات الطلب</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className="text-xs text-muted-foreground mb-1 block">المحافظة</label>
-            <Input
-              value={shippingGovernorate}
-              onChange={(e) => setShippingGovernorate(e.target.value)}
-              placeholder="مثال: القاهرة"
-              className="text-sm"
+                  {/* Total + Remove */}
+                  <div className="text-left shrink-0 flex items-center gap-2">
+                    <p className="text-sm font-black text-primary whitespace-nowrap">
+                      {(price * item.quantity).toLocaleString("ar-EG")}
+                    </p>
+                    <button
+                      onClick={() => removeItem(item.product_id)}
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
+      )}
+
+      {/* Summary + Notes + Actions (only show when cart has items) */}
+      {items.length > 0 && (
+        <>
+          {/* Notes */}
+          <div className="rounded-xl border border-border/50 bg-card p-3">
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="ملاحظات على الطلب (اختياري)..."
+              rows={2}
+              className="text-sm resize-none border-0 bg-transparent p-0 focus-visible:ring-0 shadow-none"
             />
           </div>
-          <div>
-            <label className="text-xs text-muted-foreground mb-1 block">العنوان التفصيلي</label>
-            <Input
-              value={shippingAddress}
-              onChange={(e) => setShippingAddress(e.target.value)}
-              placeholder="مثال: شارع التحرير، المعادي"
-              className="text-sm"
-            />
+
+          {/* Summary */}
+          <div className="rounded-xl bg-muted/30 border border-border/50 p-4 space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">المجموع الفرعي ({items.length} صنف)</span>
+              <span className="font-bold">{subtotal.toLocaleString("ar-EG")} ج.م</span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">ضريبة القيمة المضافة 14%</span>
+              <span className="font-bold">{vat.toLocaleString("ar-EG")} ج.م</span>
+            </div>
+            <div className="border-t border-border/50 pt-2 flex items-center justify-between">
+              <span className="font-black text-foreground">الإجمالي</span>
+              <span className="text-xl font-black text-primary">{total.toLocaleString("ar-EG")} ج.م</span>
+            </div>
           </div>
-        </div>
-        <div>
-          <label className="text-xs text-muted-foreground mb-1 block">ملاحظات (اختياري)</label>
-          <Textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="أي ملاحظات أو تعليمات خاصة بالطلب..."
-            rows={2}
-            className="text-sm resize-none"
-          />
-        </div>
-      </div>
 
-      {/* Summary */}
-      <div className="rounded-xl bg-muted/50 border border-border/50 p-4 space-y-3">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">المجموع الفرعي</span>
-          <span className="font-bold text-foreground">{subtotal.toLocaleString("ar-EG")} ج.م</span>
-        </div>
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">ضريبة القيمة المضافة (14%)</span>
-          <span className="font-bold text-foreground">{vat.toLocaleString("ar-EG")} ج.م</span>
-        </div>
-        <div className="border-t border-border/50 pt-3 flex items-center justify-between">
-          <span className="text-base font-bold text-foreground">الإجمالي</span>
-          <span className="text-xl font-black text-primary">{total.toLocaleString("ar-EG")} ج.م</span>
-        </div>
-      </div>
+          {/* Actions */}
+          <div className="space-y-2">
+            {/* Primary actions */}
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                onClick={handleSubmitOrder}
+                disabled={isProcessing}
+                className="h-12 gap-2 font-bold rounded-xl bg-primary hover:bg-primary/90"
+              >
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                أرسل للشركة
+              </Button>
+              <Button
+                onClick={handlePayNow}
+                disabled={isProcessing}
+                variant="outline"
+                className="h-12 gap-2 font-bold rounded-xl border-2 border-emerald-500 text-emerald-700 hover:bg-emerald-50"
+              >
+                {submittingPayment ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+                ادفع إلكترونياً
+              </Button>
+            </div>
 
-      {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <Button
-          className="flex-1 gap-2.5 text-base h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20"
-          onClick={handlePayNow}
-          disabled={submittingPayment || submitting || items.length === 0}
-        >
-          {submittingPayment ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
-          ) : (
-            <CreditCard className="w-5 h-5" />
-          )}
-          ادفع الآن — {total.toLocaleString("ar-EG")} ج.م
-        </Button>
-        <Button
-          variant="outline"
-          className="flex-1 gap-2.5 text-base h-14 font-bold rounded-xl border-2"
-          onClick={handleSubmitOrder}
-          disabled={submitting || submittingPayment || items.length === 0}
-        >
-          {submitting ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
-          ) : (
-            <ArrowRight className="w-5 h-5" />
-          )}
-          أرسل الطلب (ادفع لاحقاً)
-        </Button>
-      </div>
+            {/* Save draft */}
+            <Button
+              onClick={handleSaveDraft}
+              disabled={isProcessing}
+              variant="ghost"
+              className="w-full h-10 gap-2 text-sm text-muted-foreground hover:text-foreground"
+            >
+              {savingDraft ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+              حفظ كمسودة
+            </Button>
+          </div>
 
-      {/* Trust badges */}
-      <div className="flex items-center justify-center gap-4 py-2">
-        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-          <Shield className="w-3.5 h-3.5 text-emerald-500" />
-          <span>دفع آمن</span>
-        </div>
-        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-          <Package className="w-3.5 h-3.5 text-primary" />
-          <span>شحن سريع</span>
-        </div>
-        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-          <span>قطع أصلية 100%</span>
-        </div>
-      </div>
+          {/* Trust badges */}
+          <div className="flex items-center justify-center gap-4 py-1">
+            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+              <Shield className="w-3 h-3 text-emerald-500" />
+              <span>دفع آمن</span>
+            </div>
+            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+              <Package className="w-3 h-3 text-primary" />
+              <span>شحن سريع</span>
+            </div>
+            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+              <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+              <span>قطع أصلية 100%</span>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* ERP Order Code Dialog */}
       <Dialog open={erpDialog.open} onOpenChange={(open) => {
@@ -451,12 +521,10 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
           </DialogHeader>
           <div className="space-y-4 py-4">
             <p className="text-sm text-muted-foreground">
-              كود الطلبية الخاص بك — احتفظ به عند السؤال عن طلبيتك
+              كود الطلبية — احتفظ به عند السؤال عن طلبيتك
             </p>
-            <div className="relative mx-auto w-fit">
-              <div className="text-4xl font-black tracking-widest text-primary bg-primary/5 border-2 border-primary/20 rounded-2xl px-8 py-4">
-                {erpDialog.erpCode}
-              </div>
+            <div className="text-4xl font-black tracking-widest text-primary bg-primary/5 border-2 border-primary/20 rounded-2xl px-8 py-4 mx-auto w-fit">
+              {erpDialog.erpCode}
             </div>
             <Button
               variant="outline"
