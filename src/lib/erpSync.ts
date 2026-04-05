@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 /**
  * Push a new order to Al Faisal ERP system (fire-and-forget)
  */
-export const pushOrderToERP = async (orderId: string) => {
+export const pushOrderToERP = async (orderId: string): Promise<string | null> => {
   try {
     const { data: order } = await supabase
       .from("orders")
@@ -11,14 +11,14 @@ export const pushOrderToERP = async (orderId: string) => {
       .eq("id", orderId)
       .single();
 
-    if (!order) return;
+    if (!order) return null;
 
     const [profileRes, dealerRes] = await Promise.all([
       supabase.from("profiles").select("full_name, phone").eq("user_id", order.user_id).maybeSingle(),
       supabase.from("dealer_accounts").select("erp_customer_code, tier").eq("user_id", order.user_id).maybeSingle(),
     ]);
 
-    await supabase.functions.invoke("erp-sync-outbound", {
+    const { data: erpResult } = await supabase.functions.invoke("erp-sync-outbound", {
       body: {
         action: "push_order",
         data: {
@@ -45,9 +45,22 @@ export const pushOrderToERP = async (orderId: string) => {
       },
     });
 
-    console.log(`[ERP] Order ${order.order_number} pushed successfully`);
+    // Extract ERP order code from response
+    const erpOrderCode = erpResult?.erp_order_id || erpResult?.orderId || erpResult?.orderNumber || null;
+
+    // Save the ERP code to the order
+    if (erpOrderCode) {
+      await supabase
+        .from("orders")
+        .update({ erp_order_code: erpOrderCode } as any)
+        .eq("id", orderId);
+    }
+
+    console.log(`[ERP] Order ${order.order_number} pushed successfully, ERP code: ${erpOrderCode}`);
+    return erpOrderCode;
   } catch (err) {
     console.error("[ERP] Failed to push order:", err);
+    return null;
   }
 };
 
