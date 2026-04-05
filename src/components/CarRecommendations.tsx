@@ -51,8 +51,9 @@ const CarRecommendations = () => {
         const existingIds = allResults.map(p => p.id);
         const { data: fallback } = await supabase
           .from("products")
-          .select("id, name_ar, sku, brand, image_url, base_price, is_on_sale, sale_price, compatible_models, year_from, year_to")
+          .select("id, name_ar, sku, brand, image_url, base_price, is_on_sale, sale_price, compatible_models, year_from, year_to, stock_quantity")
           .eq("is_active", true)
+          .gt("stock_quantity", 0)
           .ilike("name_ar", `%${carModel}%`)
           .limit(16);
 
