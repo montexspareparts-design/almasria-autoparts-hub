@@ -134,10 +134,11 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
         .or(`name_ar.ilike.%${query}%,sku.ilike.%${query}%`)
         .limit(8);
       // Compute available and max allowed per item
+      const pct = maxOrderPct || 50;
       const enriched = (data || []).map((p: any) => {
         const available = Math.max(0, (p.stock_quantity || 0) - (p.safety_stock || 0));
-        const fiftyPct = Math.max(1, Math.floor(available * 0.5));
-        const maxAllowed = p.max_order_cap ? Math.min(fiftyPct, p.max_order_cap) : fiftyPct;
+        const pctCap = Math.max(1, Math.floor(available * pct / 100));
+        const maxAllowed = p.max_order_cap ? Math.min(pctCap, p.max_order_cap) : pctCap;
         return { ...p, available_quantity: available, max_allowed: maxAllowed };
       }).filter((p: any) => p.available_quantity > 0);
       setSearchResults(enriched);
