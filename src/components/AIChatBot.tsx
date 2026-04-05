@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback, forwardRef, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bot, X, Send, Loader2, Trash2, Share2, ImagePlus, Mic, MicOff, Volume2, VolumeX, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -78,6 +79,11 @@ const parseChoices = (text: string): { cleanText: string; choices: string[] } =>
   return { cleanText, choices };
 };
 
+// Detect if message contains cart success (added to cart)
+const hasCartAction = (text: string): boolean => {
+  return text.includes("تم إضافة") && text.includes("للسلة");
+};
+
 // Calculate distance between two coordinates (Haversine formula)
 const getDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
   const R = 6371; // Earth's radius in km
@@ -108,6 +114,7 @@ const SpeechRecognition = (window as any).SpeechRecognition || (window as any).w
 
 const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
   const { user, isDealer } = useAuth();
+  const navigate = useNavigate();
   const { consent, interests, getTopCategories, getTopBrands } = usePersonalization();
   const [isOpen, setIsOpen] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
@@ -558,9 +565,9 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
                   </div>
                   {isDealer ? (
                     <div>
-                      <p className="font-bold text-foreground">أهلاً بيك يا تاجرنا! 🤝</p>
+                      <p className="font-bold text-foreground">أهلاً بحضرتك! 🤝</p>
                       <p className="text-sm text-muted-foreground mt-1">
-                        أنا مساعدك الذكي — أقدر أساعدك في الطلبيات، الأسعار، وأي استفسار
+                        أنا مساعدك — أقدر أساعدك في الطلبيات والأسعار وأي استفسار
                       </p>
                       <p className="text-xs text-muted-foreground mt-2 flex items-center justify-center gap-1">
                         <ImagePlus className="w-3.5 h-3.5" />
@@ -624,11 +631,25 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
                           const rawText = getTextContent(msg.content);
                           const { cleanText, choices } = parseChoices(rawText);
                           const isLastMsg = i === messages.length - 1;
+                          const showCartBtn = isDealer && isLastMsg && !isLoading && hasCartAction(cleanText);
                           return (
                             <>
                               <div className="prose prose-sm max-w-none [&_p]:m-0 [&_ul]:my-1 [&_li]:my-0">
                                 <ReactMarkdown>{cleanText}</ReactMarkdown>
                               </div>
+                              {/* Cart action button */}
+                              {showCartBtn && (
+                                <button
+                                  onClick={() => {
+                                    setIsOpen(false);
+                                    // Navigate to dealer dashboard orders tab
+                                    navigate("/dealer?tab=orders");
+                                  }}
+                                  className="mt-2 w-full text-xs px-3 py-2 rounded-lg bg-primary text-primary-foreground font-bold hover:bg-primary/90 transition-colors"
+                                >
+                                  🛒 أكمل الطلبية
+                                </button>
+                              )}
                               {/* Interactive quick-reply choices */}
                               {isLastMsg && !isLoading && choices.length > 0 && (
                                 <div className="mt-2 flex flex-wrap gap-1.5">
