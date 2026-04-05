@@ -103,6 +103,7 @@ const sidebarGroups: SidebarGroup[] = [
         { id: "erp", label: "ربط ERP", icon: Zap },
         { id: "erp-customers", label: "ربط عملاء الفيصل", icon: Users },
         { id: "paymob", label: "إعدادات Paymob", icon: Briefcase },
+        { id: "stock-settings", label: "إعدادات المخزون", icon: ShieldCheck },
         { id: "audit-log", label: "سجل المراجعة", icon: Shield },
       ],
     },
