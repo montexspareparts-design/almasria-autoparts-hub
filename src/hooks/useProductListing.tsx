@@ -305,12 +305,16 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id, name_ar, name_en, sku, image_url, base_price, stock_quantity, brand, category_id, is_active, is_featured, is_on_sale, sale_price, min_order_qty, compatible_models, description_ar, year_from, year_to, product_categories(name_ar)")
+        .select("id, name_ar, name_en, sku, image_url, base_price, stock_quantity, safety_stock, max_order_cap, brand, category_id, is_active, is_featured, is_on_sale, sale_price, min_order_qty, compatible_models, description_ar, year_from, year_to, product_categories(name_ar)")
         .eq("is_active", true)
         .order("created_at", { ascending: false })
         .limit(800);
       if (error) throw error;
-      return data;
+      // Compute available_quantity for each product
+      return (data || []).map((p: any) => ({
+        ...p,
+        available_quantity: Math.max(0, (p.stock_quantity || 0) - (p.safety_stock || 0)),
+      }));
     },
     staleTime: 5 * 60 * 1000, // cache for 5 minutes
     gcTime: 10 * 60 * 1000, // keep in garbage collection for 10 minutes
