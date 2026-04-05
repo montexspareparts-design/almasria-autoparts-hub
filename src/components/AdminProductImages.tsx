@@ -375,6 +375,8 @@ const AdminProductImages = () => {
           </TabsList>
 
           <TabsContent value="products">
+        {/* Hidden file input */}
+        <input
           ref={fileInputRef}
           type="file"
           accept="image/*"
