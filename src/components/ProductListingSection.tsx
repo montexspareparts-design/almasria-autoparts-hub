@@ -60,7 +60,7 @@ interface ProductListingSectionProps {
   sectionClassName?: string;
 }
 
-const ProductListingSection = ({
+const ProductListingSection = memo(({
   filters, setFilters, viewMode, setViewMode,
   hasMore, loadMore,
   products, isLoading, filteredProducts, paginatedProducts,
