@@ -362,7 +362,6 @@ const AdminERPSync = () => {
           </Card>
         </TabsContent>
 
-        {/* ─── PRODUCT MAPPING ─── */}
         <TabsContent value="mapping" className="space-y-4 mt-4">
           <Card>
             <CardHeader>
@@ -372,39 +371,59 @@ const AdminERPSync = () => {
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-xs text-muted-foreground">
-                أدخل كود الصنف من نظام الفيصل (مثل 10003) بجانب كل منتج لربطهم. المنتجات المربوطة هتتحدث تلقائياً عند المزامنة.
+                1. اضغط "جلب أصناف الفيصل" لتحميل قائمة المنتجات من الـ ERP. 
+                2. اختر كود الفيصل المناسب لكل منتج. 
+                3. اضغط "حفظ" لتثبيت الربط.
               </p>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="بحث بالاسم أو SKU..."
-                  value={mappingSearch}
-                  onChange={(e) => setMappingSearch(e.target.value)}
-                  className="flex-1"
-                />
+
+              {/* Action buttons */}
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  onClick={fetchErpProducts}
+                  disabled={fetchingErp}
+                  className="gap-1"
+                >
+                  {fetchingErp ? <Loader2 className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
+                  جلب أصناف الفيصل {erpProducts.length > 0 && `(${erpProducts.length})`}
+                </Button>
+                {erpProducts.length > 0 && (
+                  <Button variant="outline" onClick={autoMatchByName} className="gap-1">
+                    <Zap className="w-4 h-4" />
+                    مطابقة تلقائية بالاسم
+                  </Button>
+                )}
                 <Button
                   onClick={saveMappings}
                   disabled={savingMapping || Object.keys(mappingEdits).length === 0}
-                  className="gap-1"
+                  className="gap-1 mr-auto"
                 >
                   {savingMapping ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
                   حفظ ({Object.keys(mappingEdits).length})
                 </Button>
               </div>
 
+              {/* Search */}
+              <Input
+                placeholder="بحث بالاسم أو SKU أو كود الفيصل..."
+                value={mappingSearch}
+                onChange={(e) => setMappingSearch(e.target.value)}
+              />
+
               <div className="text-xs text-muted-foreground flex gap-4">
                 <span>إجمالي: {mappingProducts.length}</span>
-                <span className="text-primary">مربوط: {mappingProducts.filter(p => p.erp_item_code).length}</span>
-                <span className="text-muted-foreground">غير مربوط: {mappingProducts.filter(p => !p.erp_item_code).length}</span>
+                <span className="text-primary">مربوط: {mappingProducts.filter(p => p.erp_item_code || mappingEdits[p.id]).length}</span>
+                <span>غير مربوط: {mappingProducts.filter(p => !p.erp_item_code && !mappingEdits[p.id]).length}</span>
               </div>
 
-              <div className="border rounded-lg overflow-hidden max-h-[400px] overflow-y-auto">
+              <div className="border rounded-lg overflow-hidden max-h-[500px] overflow-y-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-muted sticky top-0">
+                  <thead className="bg-muted sticky top-0 z-10">
                     <tr>
                       <th className="text-right p-2 font-medium">المنتج</th>
-                      <th className="text-right p-2 font-medium w-32">SKU</th>
-                      <th className="text-right p-2 font-medium w-36">كود الفيصل</th>
-                      <th className="text-center p-2 font-medium w-16">الحالة</th>
+                      <th className="text-right p-2 font-medium w-28">SKU</th>
+                      <th className="text-right p-2 font-medium w-64">كود الفيصل</th>
+                      <th className="text-center p-2 font-medium w-14">الحالة</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -412,36 +431,94 @@ const AdminERPSync = () => {
                       .filter(p => {
                         if (!mappingSearch) return true;
                         const q = mappingSearch.toLowerCase();
-                        return p.name_ar?.toLowerCase().includes(q) || p.sku?.toLowerCase().includes(q) || p.erp_item_code?.toLowerCase().includes(q);
+                        return p.name_ar?.toLowerCase().includes(q) || p.sku?.toLowerCase().includes(q) || (p.erp_item_code || "").toLowerCase().includes(q);
                       })
                       .slice(0, 100)
-                      .map((product) => (
-                        <tr key={product.id} className="border-t hover:bg-muted/30">
-                          <td className="p-2 text-xs">{product.name_ar}</td>
-                          <td className="p-2 text-xs font-mono" dir="ltr">{product.sku}</td>
-                          <td className="p-2">
-                            <Input
-                              className="h-7 text-xs font-mono"
-                              dir="ltr"
-                              placeholder="مثال: 10003"
-                              value={mappingEdits[product.id] ?? product.erp_item_code ?? ""}
-                              onChange={(e) =>
-                                setMappingEdits(prev => ({
-                                  ...prev,
-                                  [product.id]: e.target.value,
-                                }))
-                              }
-                            />
-                          </td>
-                          <td className="p-2 text-center">
-                            {(mappingEdits[product.id] ?? product.erp_item_code) ? (
-                              <Badge variant="default" className="text-[10px]">✓</Badge>
-                            ) : (
-                              <Badge variant="outline" className="text-[10px]">—</Badge>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
+                      .map((product) => {
+                        const currentValue = mappingEdits[product.id] ?? product.erp_item_code ?? "";
+                        const searchTerm = (erpSearchFilter[product.id] || "").toLowerCase();
+                        const filteredErp = erpProducts.filter(ep =>
+                          !searchTerm || ep.id.includes(searchTerm) || (ep.name || "").toLowerCase().includes(searchTerm)
+                        ).slice(0, 20);
+
+                        return (
+                          <tr key={product.id} className="border-t hover:bg-muted/30">
+                            <td className="p-2 text-xs">{product.name_ar}</td>
+                            <td className="p-2 text-xs font-mono" dir="ltr">{product.sku}</td>
+                            <td className="p-2">
+                              {erpProducts.length > 0 ? (
+                                <div className="relative">
+                                  <Input
+                                    className="h-7 text-xs font-mono"
+                                    dir="ltr"
+                                    placeholder="ابحث في أصناف الفيصل..."
+                                    value={erpSearchFilter[product.id] !== undefined ? erpSearchFilter[product.id] : currentValue}
+                                    onChange={(e) => {
+                                      setErpSearchFilter(prev => ({ ...prev, [product.id]: e.target.value }));
+                                    }}
+                                    onFocus={() => {
+                                      if (erpSearchFilter[product.id] === undefined) {
+                                        setErpSearchFilter(prev => ({ ...prev, [product.id]: "" }));
+                                      }
+                                    }}
+                                    onBlur={() => {
+                                      setTimeout(() => {
+                                        setErpSearchFilter(prev => {
+                                          const next = { ...prev };
+                                          delete next[product.id];
+                                          return next;
+                                        });
+                                      }, 200);
+                                    }}
+                                  />
+                                  {erpSearchFilter[product.id] !== undefined && (
+                                    <div className="absolute z-20 top-full left-0 right-0 bg-background border rounded-md shadow-lg max-h-40 overflow-y-auto mt-1">
+                                      {filteredErp.map((ep) => (
+                                        <button
+                                          key={ep.id}
+                                          className="w-full text-right px-2 py-1.5 text-xs hover:bg-muted flex justify-between items-center gap-2"
+                                          onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            setMappingEdits(prev => ({ ...prev, [product.id]: ep.id }));
+                                            setErpSearchFilter(prev => {
+                                              const next = { ...prev };
+                                              delete next[product.id];
+                                              return next;
+                                            });
+                                          }}
+                                        >
+                                          <span className="font-mono text-primary" dir="ltr">{ep.id}</span>
+                                          <span className="truncate text-muted-foreground">{ep.name}</span>
+                                        </button>
+                                      ))}
+                                      {filteredErp.length === 0 && (
+                                        <p className="text-xs text-muted-foreground p-2 text-center">لا نتائج</p>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <Input
+                                  className="h-7 text-xs font-mono"
+                                  dir="ltr"
+                                  placeholder="مثال: 10003"
+                                  value={currentValue}
+                                  onChange={(e) =>
+                                    setMappingEdits(prev => ({ ...prev, [product.id]: e.target.value }))
+                                  }
+                                />
+                              )}
+                            </td>
+                            <td className="p-2 text-center">
+                              {currentValue ? (
+                                <Badge variant="default" className="text-[10px]">✓</Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-[10px]">—</Badge>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
                   </tbody>
                 </table>
               </div>
