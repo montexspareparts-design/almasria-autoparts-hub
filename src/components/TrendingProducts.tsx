@@ -80,7 +80,8 @@ const TrendingProducts = () => {
         .from("products")
         .select("*, product_categories(name_ar)")
         .in("id", topIds as string[])
-        .eq("is_active", true);
+        .eq("is_active", true)
+        .gt("stock_quantity", 0);
       if (error) throw error;
       // Preserve order from RPC
       const orderMap = new Map((topIds as string[]).map((id, i) => [id, i]));
