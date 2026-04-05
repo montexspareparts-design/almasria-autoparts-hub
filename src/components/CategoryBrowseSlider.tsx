@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
-import { useRef, useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -58,8 +58,6 @@ interface CategoryBrowseSliderProps {
 
 const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) => {
   const navigate = useNavigate();
-  const [, setSearchParams] = useSearchParams();
-  const scrollRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
 
   // Fetch categories + product counts from DB
@@ -92,46 +90,17 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
     staleTime: 5 * 60 * 1000,
   });
 
-  // Auto-scroll marquee
-  const rafRef = useRef<number>(0);
-  const speedRef = useRef(0);
-  const pauseUntilRef = useRef(0);
-  const targetSpeed = 1.2;
 
-  useEffect(() => {
-    if (!scrollRef.current) return;
-    let lastTime = 0;
-
-    const animate = (time: number) => {
-      if (!scrollRef.current) return;
-      const delta = lastTime ? time - lastTime : 16;
-      lastTime = time;
-
-      const paused = isHovered || Date.now() < pauseUntilRef.current;
-      const target = paused ? 0 : targetSpeed;
-      speedRef.current += (target - speedRef.current) * 0.08;
-
-      if (Math.abs(speedRef.current) > 0.01) {
-        const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-        if (scrollLeft <= -(scrollWidth - clientWidth) + 5) {
-          scrollRef.current.scrollLeft = 0;
-        } else {
-          scrollRef.current.scrollLeft -= speedRef.current * (delta / 16);
-        }
-      }
-      rafRef.current = requestAnimationFrame(animate);
-    };
-
-    rafRef.current = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [isHovered]);
 
   const handleCategoryClick = (cat: { id: string; slug: string }) => {
     if (onCategorySelect) {
       onCategorySelect(cat.id);
     } else {
-      // Navigate to products page with category filter
-      navigate(`/products/toyota-genuine?category=${cat.slug}`);
+      // Navigate to products page with category filter (use current brand path if available)
+      const currentPath = window.location.pathname;
+      const brandMatch = currentPath.match(/\/products\/([^/]+)/);
+      const targetPath = brandMatch ? `/products/${brandMatch[1]}` : "/products/toyota-genuine";
+      navigate(`${targetPath}?category=${cat.slug}`);
     }
   };
 
