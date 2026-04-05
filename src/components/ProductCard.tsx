@@ -30,12 +30,11 @@ interface ProductCardProps {
   onLoginRequired: () => void;
 }
 
-const ProductCard = ({
+const ProductCard = memo(({
   product, index, viewMode, user, isDealer, viewedProductIds,
   limitReached, dailyViewCount, dailyLimit,
   getProductPrice, onProductClick, onAddToCart, onRecordView, onLoginRequired,
 }: ProductCardProps) => {
-  const navigate = useNavigate();
 
   const stockAvailable = product.stock_quantity > 0;
   const hasViewed = viewedProductIds.includes(product.id);
