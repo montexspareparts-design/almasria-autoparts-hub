@@ -104,24 +104,14 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     const apikeyHeader = req.headers.get("apikey");
 
-    // Service role can also be passed via apikey header
     let isServiceRole = false;
     let userId: string | null = null;
 
-    if (apikeyHeader === serviceKey) {
+    // Check service role via apikey or Authorization header
+    if (apikeyHeader === serviceKey || (authHeader && authHeader.replace("Bearer ", "") === serviceKey)) {
       isServiceRole = true;
-    } else if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    } else {
+    } else if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.replace("Bearer ", "");
-
-      // Check if it's a service role call
-      if (token === serviceKey) {
-        isServiceRole = true;
-      } else {
       const userClient = createClient(
         supabaseUrl,
         Deno.env.get("SUPABASE_ANON_KEY")!,
@@ -136,7 +126,11 @@ Deno.serve(async (req) => {
         );
       }
       userId = claimsData.claims.sub as string;
-      }
+    } else {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const { action, data } = await req.json();
