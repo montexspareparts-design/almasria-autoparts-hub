@@ -213,7 +213,12 @@ const ProductsPage = () => {
         backgroundImage={config.backgroundImage} logoScale={config.logoScale}
       />
 
-      <CategoryBrowseSlider />
+      <CategoryBrowseSlider
+        onCategorySelect={(categoryId) => {
+          listing.setFilters((prev: any) => ({ ...prev, categoryId }));
+          productsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }}
+      />
 
       
 
