@@ -172,10 +172,15 @@ Deno.serve(async (req) => {
         };
       } else {
         if (!baseUrl) throw new Error("ERP base URL is not configured");
-        result = await erpFetch(baseUrl, "/Ecommerce/CreateOrder", {
+        const erpRes = await erpFetch(baseUrl, "/Ecommerce/CreateOrder", {
           method: "POST",
           body: JSON.stringify(payload),
         });
+        // Al Faisal returns 200 OK even on failure; message=0 means success, message=1 means error
+        if (erpRes.message === 1) {
+          throw new Error(`ERP CreateOrder failed: ${erpRes.extramessage || "Unknown business error"}`);
+        }
+        result = { ...erpRes, success: true };
       }
 
       await supabase.from("erp_sync_logs").insert({
@@ -215,11 +220,14 @@ Deno.serve(async (req) => {
         };
       } else {
         if (!baseUrl) throw new Error("ERP base URL is not configured");
-        // Use CreateOrder for quotes too if no separate endpoint
-        result = await erpFetch(baseUrl, "/Ecommerce/CreateOrder", {
+        const erpRes = await erpFetch(baseUrl, "/Ecommerce/CreateOrder", {
           method: "POST",
           body: JSON.stringify(payload),
         });
+        if (erpRes.message === 1) {
+          throw new Error(`ERP CreateOrder (quote) failed: ${erpRes.extramessage || "Unknown business error"}`);
+        }
+        result = { ...erpRes, success: true };
       }
 
       await supabase.from("erp_sync_logs").insert({
