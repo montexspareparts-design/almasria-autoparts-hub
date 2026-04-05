@@ -227,10 +227,20 @@ const AdminERPSync = () => {
         body: { action, data: {} },
       });
       if (error) throw error;
-      toast({
-        title: "تمت المزامنة ✓",
-        description: data?.message || `تم تنفيذ ${action} بنجاح`,
-      });
+      
+      // Handle ERP_ALL_ZERO_STOCK warning
+      if (data?.warning === "ERP_ALL_ZERO_STOCK") {
+        toast({
+          title: "⚠️ الأرصدة غير متاحة من الـ ERP",
+          description: data?.message || "استخدم رفع ملف Excel لتحديث الأرصدة",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "تمت المزامنة ✓",
+          description: data?.message || `تم تنفيذ ${action} بنجاح — تم تحديث ${data?.updated_count || 0} صنف`,
+        });
+      }
       fetchData();
     } catch (err: any) {
       toast({ title: "خطأ في المزامنة", description: err.message, variant: "destructive" });
