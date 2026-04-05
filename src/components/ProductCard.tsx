@@ -121,15 +121,13 @@ const ProductCard = memo(({
   // Grid mode
   return (
     <div
-      className="bg-card border border-border rounded-2xl overflow-hidden group cursor-pointer relative
-        hover:border-primary/30 hover:shadow-[0_0_20px_hsl(var(--primary)/0.15),0_15px_35px_hsl(0_0%_0%/0.1)] hover:-translate-y-1.5
-        transition-all duration-400 ease-out animate-fade-in"
+      className="bg-card border border-border rounded-xl overflow-hidden group cursor-pointer relative
+        hover:border-primary/30 hover:shadow-[0_0_20px_hsl(var(--primary)/0.12),0_8px_24px_hsl(0_0%_0%/0.08)] hover:-translate-y-1
+        transition-all duration-300 ease-out animate-fade-in"
       onClick={() => onProductClick(product)}
     >
       {/* ── Image Section ── */}
-      <div className="aspect-square bg-white relative overflow-hidden">
-        {/* Gradient overlay on hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400 z-10 pointer-events-none" />
+      <div className="aspect-[4/3] bg-white relative overflow-hidden">
         {/* Shimmer sweep on hover */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out z-10 pointer-events-none" />
 
@@ -137,50 +135,41 @@ const ProductCard = memo(({
           <img
             src={product.image_url}
             alt={product.name_ar}
-            className="w-full h-full object-contain p-4 mix-blend-multiply
-              group-hover:scale-110 transition-transform duration-600 ease-out"
+            className="w-full h-full object-contain p-3 sm:p-4 mix-blend-multiply
+              group-hover:scale-105 transition-transform duration-500 ease-out"
             loading="lazy"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-muted/30">
-            <Package className="w-14 h-14 text-muted-foreground/15" />
+            <Package className="w-10 h-10 text-muted-foreground/15" />
           </div>
         )}
 
         {/* Sale badge */}
         {product.is_on_sale && (
-          <Badge className="absolute top-2.5 left-2.5 bg-destructive text-destructive-foreground text-[10px] font-bold px-2 py-0.5 shadow-lg shadow-destructive/20 z-20">
+          <Badge className="absolute top-2 left-2 bg-destructive text-destructive-foreground text-[9px] font-bold px-1.5 py-0.5 shadow-md shadow-destructive/20 z-20">
             تخفيض
           </Badge>
         )}
 
-        {/* Quick view overlay */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 z-20">
-          <div className="bg-foreground/80 backdrop-blur-sm text-background text-xs font-semibold px-4 py-2 rounded-full flex items-center gap-1.5 shadow-xl
-            translate-y-3 group-hover:translate-y-0 group-hover:animate-[pulse_1.5s_ease-in-out_infinite] transition-transform duration-300">
-            <ExternalLink className="w-3.5 h-3.5" />
-            عرض التفاصيل
-          </div>
-        </div>
-
         {/* Stock indicator dot */}
-        <div className={`absolute top-2.5 right-2.5 w-2.5 h-2.5 rounded-full z-20 ring-2 ring-white shadow-sm ${
+        <div className={`absolute top-2 right-2 w-2 h-2 rounded-full z-20 ring-2 ring-white shadow-sm ${
           stockAvailable ? "bg-green-500" : "bg-red-400"
         }`} />
       </div>
 
       {/* ── Content Section ── */}
-      <div className="p-2.5 sm:p-4 space-y-1.5 sm:space-y-2" onClick={(e) => e.stopPropagation()}>
-        {/* SKU + Stock + Brand */}
-        <div className="flex items-center justify-between flex-wrap gap-0.5 sm:gap-1">
-          <span className="text-[9px] sm:text-[11px] font-mono text-muted-foreground/70 tracking-tight leading-none">
+      <div className="p-2.5 sm:p-3 space-y-1.5" onClick={(e) => e.stopPropagation()}>
+        {/* SKU + Brand */}
+        <div className="flex items-center justify-between gap-1">
+          <span className="text-[8px] sm:text-[10px] font-mono text-muted-foreground/60 tracking-tight leading-none truncate">
             {product.sku}
           </span>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 shrink-0">
             {brandRouteMap[product.brand] && (
               <Link
                 to={brandRouteMap[product.brand].path}
-                className={`text-[7px] sm:text-[9px] font-bold px-1 sm:px-1.5 py-px sm:py-0.5 rounded hover:opacity-80 transition-opacity ${brandRouteMap[product.brand].color}`}
+                className={`text-[7px] sm:text-[8px] font-bold px-1 sm:px-1.5 py-px rounded hover:opacity-80 transition-opacity ${brandRouteMap[product.brand].color}`}
                 onClick={(e) => e.stopPropagation()}
               >
                 {brandRouteMap[product.brand].label}
@@ -191,21 +180,17 @@ const ProductCard = memo(({
         </div>
 
         {/* Name */}
-        <h3 className="font-bold text-card-foreground text-[11px] sm:text-sm leading-snug sm:leading-relaxed line-clamp-2
+        <h3 className="font-bold text-card-foreground text-[10px] sm:text-[13px] leading-snug line-clamp-2
           group-hover:text-primary transition-colors duration-200">
           {product.name_ar}
         </h3>
 
         {/* Category */}
         {product.product_categories && (
-          <p className="text-[9px] sm:text-xs text-muted-foreground/80 flex items-center gap-1 leading-none">
-            <span className="w-1 h-1 rounded-full bg-primary/40 shrink-0" />
+          <p className="text-[8px] sm:text-[10px] text-muted-foreground/70 leading-none truncate">
             {(product.product_categories as any).name_ar}
           </p>
         )}
-
-        {/* Divider */}
-        <div className="h-px bg-border/60" />
 
         {/* Price */}
         <PriceSection
@@ -221,18 +206,11 @@ const ProductCard = memo(({
           onLoginRequired={onLoginRequired}
         />
 
-        {/* Min order */}
-        {product.min_order_qty > 1 && (
-          <p className="text-[9px] sm:text-[10px] text-muted-foreground/60">
-            الحد الأدنى: {product.min_order_qty} قطعة
-          </p>
-        )}
-
         {/* Add to cart */}
         {stockAvailable && canSeePrice && (
           <Button
             size="sm"
-            className="w-full gap-1.5 sm:gap-2 text-[10px] sm:text-xs h-7 sm:h-9 rounded-lg font-semibold
+            className="w-full gap-1.5 text-[10px] sm:text-xs h-7 sm:h-8 rounded-lg font-semibold
               shadow-sm hover:shadow-md hover:shadow-primary/10 transition-shadow duration-200"
             onClick={() => onAddToCart(product)}
           >
