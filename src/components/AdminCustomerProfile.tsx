@@ -306,15 +306,10 @@ const AdminCustomerProfile = () => {
                       setFetchingErpName(true);
                       try {
                         const res = await supabase.functions.invoke("erp-sync-outbound", {
-                          body: { action: "test_endpoints" },
+                          body: { action: "fetch_erp_customers", data: { customer_code: erpCode.trim() } },
                         });
-                        const customersEndpoint = res.data?.endpoints?.["/Ecommerce/GetCustomers"];
-                        if (customersEndpoint?.status === 200) {
-                          const customers = customersEndpoint.preview?.sample?.data || [];
-                          const matched = customers.find((c: any) => c.id?.toString().trim() === erpCode.trim());
-                          if (matched) {
-                            customerName = matched.name?.trim() || "";
-                          }
+                        if (res.data?.customer?.name) {
+                          customerName = res.data.customer.name;
                         }
                       } catch (e) {
                         console.error("Failed to fetch ERP customer name:", e);
