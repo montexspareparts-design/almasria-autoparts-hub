@@ -1,0 +1,1 @@
+ALTER TABLE public.dealer_accounts ADD COLUMN IF NOT EXISTS erp_customer_name text;

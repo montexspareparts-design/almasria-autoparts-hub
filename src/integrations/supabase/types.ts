@@ -256,6 +256,7 @@ export type Database = {
           credit_limit: number | null
           custom_discount: number | null
           erp_customer_code: string | null
+          erp_customer_name: string | null
           id: string
           is_active: boolean
           min_order_amount: number | null
@@ -272,6 +273,7 @@ export type Database = {
           credit_limit?: number | null
           custom_discount?: number | null
           erp_customer_code?: string | null
+          erp_customer_name?: string | null
           id?: string
           is_active?: boolean
           min_order_amount?: number | null
@@ -288,6 +290,7 @@ export type Database = {
           credit_limit?: number | null
           custom_discount?: number | null
           erp_customer_code?: string | null
+          erp_customer_name?: string | null
           id?: string
           is_active?: boolean
           min_order_amount?: number | null
