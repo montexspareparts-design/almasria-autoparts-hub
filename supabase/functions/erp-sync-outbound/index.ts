@@ -429,8 +429,13 @@ Deno.serve(async (req) => {
             })),
           };
         } else {
-          // Price sync — use existing bulk_update_product_prices
-          const bulkItems = items
+          // Price sync — fetch products from ERP
+          const erpResponse = await erpFetch(baseUrl, "/Ecommerce/products");
+          const priceItems = Array.isArray(erpResponse)
+            ? erpResponse
+            : (erpResponse.data || erpResponse.items || []);
+
+          const bulkItems = priceItems
             .filter((item: any) => {
               const id = (item.id || item.itemCode || item.sku || item.code || "").toString().trim();
               const price = item.price ?? item.unitPrice ?? item.basePrice;
@@ -451,9 +456,9 @@ Deno.serve(async (req) => {
           result = {
             success: true,
             updated_count: bulkResult?.updated || 0,
-            total_erp_items: items.length,
+            total_erp_items: priceItems.length,
             matched_items: bulkResult?.updated || 0,
-            sample: items.slice(0, 3).map((i: any) => ({
+            sample: priceItems.slice(0, 3).map((i: any) => ({
               id: (i.id || "").toString().trim(),
               name: i.name,
               price: i.price,
