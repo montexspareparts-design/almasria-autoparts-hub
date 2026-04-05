@@ -102,21 +102,26 @@ Deno.serve(async (req) => {
 
     // ─── Authentication Check ─────────────────────────────────────
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
+    const apikeyHeader = req.headers.get("apikey");
+
+    // Service role can also be passed via apikey header
+    let isServiceRole = false;
+    let userId: string | null = null;
+
+    if (apikeyHeader === serviceKey) {
+      isServiceRole = true;
+    } else if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
-    }
-
-    const token = authHeader.replace("Bearer ", "");
-    let userId: string | null = null;
-    let isServiceRole = false;
-
-    // Check if it's a service role call (token matches service key)
-    if (token === serviceKey) {
-      isServiceRole = true;
     } else {
+      const token = authHeader.replace("Bearer ", "");
+
+      // Check if it's a service role call
+      if (token === serviceKey) {
+        isServiceRole = true;
+      } else {
       const userClient = createClient(
         supabaseUrl,
         Deno.env.get("SUPABASE_ANON_KEY")!,
