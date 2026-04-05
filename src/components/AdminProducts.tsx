@@ -127,7 +127,7 @@ const AdminProducts = () => {
     setProducts(data || []);
     setTotalCount(count || 0);
     setLoading(false);
-  }, [page, search, brandFilter]);
+  }, [page, search, brandFilter, stockFilter]);
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
