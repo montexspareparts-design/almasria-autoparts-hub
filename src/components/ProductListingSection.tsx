@@ -80,6 +80,36 @@ const ProductListingSection = memo(({
     });
   };
 
+  // Virtual scrolling setup
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const cols = viewMode === "grid" ? (typeof window !== "undefined" && window.innerWidth >= 1024 ? 3 : 2) : 1;
+  const ROW_HEIGHT = viewMode === "grid" ? 320 : 120;
+  const GAP = viewMode === "grid" ? 16 : 12;
+
+  const rows = useMemo(() => {
+    const result: any[][] = [];
+    for (let i = 0; i < paginatedProducts.length; i += cols) {
+      result.push(paginatedProducts.slice(i, i + cols));
+    }
+    return result;
+  }, [paginatedProducts, cols]);
+
+  const virtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => scrollContainerRef.current,
+    estimateSize: () => ROW_HEIGHT + GAP,
+    overscan: 5,
+  });
+
+  // Auto-load more when scrolling near bottom
+  useEffect(() => {
+    const items = virtualizer.getVirtualItems();
+    const lastItem = items[items.length - 1];
+    if (lastItem && lastItem.index >= rows.length - 3 && hasMore) {
+      loadMore();
+    }
+  }, [virtualizer.getVirtualItems(), rows.length, hasMore, loadMore]);
+
   return (
     <>
       {/* Command Palette */}
