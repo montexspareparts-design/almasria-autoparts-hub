@@ -69,6 +69,15 @@ const getTextContent = (content: MessageContent): string => {
   return content.filter((c) => c.type === "text").map((c) => (c as any).text).join("");
 };
 
+// Parse quick reply choices from AI response: 【choice1|choice2|choice3】
+const parseChoices = (text: string): { cleanText: string; choices: string[] } => {
+  const match = text.match(/【([^】]+)】\s*$/);
+  if (!match) return { cleanText: text, choices: [] };
+  const choices = match[1].split("|").map(c => c.trim()).filter(Boolean);
+  const cleanText = text.replace(/【[^】]+】\s*$/, "").trim();
+  return { cleanText, choices };
+};
+
 // Calculate distance between two coordinates (Haversine formula)
 const getDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
   const R = 6371; // Earth's radius in km
@@ -611,10 +620,33 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
                     )}
                     {msg.role === "assistant" ? (
                       <>
-                        <div className="prose prose-sm max-w-none [&_p]:m-0 [&_ul]:my-1 [&_li]:my-0">
-                          <ReactMarkdown>{getTextContent(msg.content)}</ReactMarkdown>
-                        </div>
-                        {/* TTS button for assistant messages */}
+                        {(() => {
+                          const rawText = getTextContent(msg.content);
+                          const { cleanText, choices } = parseChoices(rawText);
+                          const isLastMsg = i === messages.length - 1;
+                          return (
+                            <>
+                              <div className="prose prose-sm max-w-none [&_p]:m-0 [&_ul]:my-1 [&_li]:my-0">
+                                <ReactMarkdown>{cleanText}</ReactMarkdown>
+                              </div>
+                              {/* Interactive quick-reply choices */}
+                              {isLastMsg && !isLoading && choices.length > 0 && (
+                                <div className="mt-2 flex flex-wrap gap-1.5">
+                                  {choices.map((choice, ci) => (
+                                    <button
+                                      key={ci}
+                                      onClick={() => sendMessage(choice)}
+                                      className="text-[11px] px-2.5 py-1.5 rounded-full border border-primary/30 bg-primary/5 text-primary hover:bg-primary/15 hover:border-primary/50 transition-colors leading-tight"
+                                    >
+                                      {choice}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
+                        {/* TTS button */}
                         {!isLoading && (
                           <button
                             onClick={() => speakMessage(getTextContent(msg.content), i)}
@@ -622,15 +654,9 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
                             title={speakingMsgIndex === i ? "إيقاف القراءة" : "اسمع الرد بالصوت"}
                           >
                             {speakingMsgIndex === i ? (
-                              <>
-                                <VolumeX className="w-3 h-3" />
-                                <span>إيقاف</span>
-                              </>
+                              <><VolumeX className="w-3 h-3" /><span>إيقاف</span></>
                             ) : (
-                              <>
-                                <Volume2 className="w-3 h-3" />
-                                <span>اسمع</span>
-                              </>
+                              <><Volume2 className="w-3 h-3" /><span>اسمع</span></>
                             )}
                           </button>
                         )}
