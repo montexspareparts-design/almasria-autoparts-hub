@@ -149,12 +149,26 @@ const AdminERPSync = () => {
   };
 
   const fetchMappingProducts = async () => {
-    const { data } = await supabase
-      .from("products")
-      .select("id, sku, name_ar, erp_item_code, stock_quantity, base_price")
-      .eq("is_active", true)
-      .order("name_ar");
-    setMappingProducts(data || []);
+    // Fetch all active products (handle Supabase 1000 row default limit)
+    let allProducts: any[] = [];
+    let from = 0;
+    const PAGE_SIZE = 1000;
+    
+    while (true) {
+      const { data } = await supabase
+        .from("products")
+        .select("id, sku, name_ar, erp_item_code, stock_quantity, base_price")
+        .eq("is_active", true)
+        .order("name_ar")
+        .range(from, from + PAGE_SIZE - 1);
+      
+      if (!data || data.length === 0) break;
+      allProducts = [...allProducts, ...data];
+      if (data.length < PAGE_SIZE) break;
+      from += PAGE_SIZE;
+    }
+    
+    setMappingProducts(allProducts);
   };
 
   const fetchErpProducts = async () => {
