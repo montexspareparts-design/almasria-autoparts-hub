@@ -24,24 +24,18 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    const { data, error } = await supabase
-      .from("otp_codes")
-      .select("*")
-      .eq("phone", phone)
-      .eq("code", code)
-      .gt("expires_at", new Date().toISOString())
-      .eq("verified", false)
-      .maybeSingle();
+    // Use the secure verify_otp_code function that compares bcrypt hashes
+    const { data: isValid, error } = await supabase.rpc("verify_otp_code", {
+      _phone: phone,
+      _code: code,
+    });
 
-    if (error || !data) {
+    if (error || !isValid) {
       return new Response(
         JSON.stringify({ valid: false, error: "كود التحقق غير صحيح أو منتهي الصلاحية" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    // Mark as verified
-    await supabase.from("otp_codes").update({ verified: true }).eq("id", data.id);
 
     return new Response(
       JSON.stringify({ valid: true }),

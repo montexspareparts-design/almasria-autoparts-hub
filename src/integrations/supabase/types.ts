@@ -1491,6 +1491,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      verify_otp_code: {
+        Args: { _code: string; _phone: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
