@@ -104,6 +104,7 @@ const AdminCustomerProfile = () => {
       profile: profileRes.data,
     });
     setErpCode((accountRes.data as any)?.erp_customer_code || "");
+    setErpName((accountRes.data as any)?.erp_customer_name || "");
     setLoadingDetails(false);
   };
 
