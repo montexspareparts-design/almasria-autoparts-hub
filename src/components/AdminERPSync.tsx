@@ -294,6 +294,7 @@ const AdminERPSync = () => {
         <TabsList className="w-full flex-wrap">
           <TabsTrigger value="actions" className="flex-1">⚡ المزامنة</TabsTrigger>
           <TabsTrigger value="mapping" className="flex-1">🔗 ربط الأصناف</TabsTrigger>
+          <TabsTrigger value="unlinked" className="flex-1">⚠️ غير مربوطة</TabsTrigger>
           <TabsTrigger value="webhook" className="flex-1">📡 Webhook</TabsTrigger>
           <TabsTrigger value="config" className="flex-1">⚙️ الإعدادات</TabsTrigger>
           <TabsTrigger value="logs" className="flex-1">📋 السجلات</TabsTrigger>
