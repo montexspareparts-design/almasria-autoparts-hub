@@ -246,13 +246,6 @@ const AdminProducts = () => {
               <SelectItem value="out_of_stock">نفد</SelectItem>
             </SelectContent>
           </Select>
-            <SelectContent>
-              <SelectItem value="all">كل الماركات</SelectItem>
-              {Object.entries(brandLabels).map(([k, v]) => (
-                <SelectItem key={k} value={k}>{v}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
 
         {/* Product List */}
