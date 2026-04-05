@@ -430,6 +430,8 @@ const AdminDashboard = () => {
         return renderDealersSection();
       case "products":
         return <Suspense fallback={<SectionLoader />}><AdminProducts /></Suspense>;
+      case "bulk-import":
+        return <Suspense fallback={<SectionLoader />}><AdminBulkImport /></Suspense>;
       case "orders":
         return <Suspense fallback={<SectionLoader />}><AdminOrders /></Suspense>;
       case "coupons":
