@@ -39,6 +39,7 @@ const syncTypeLabels: Record<string, { label: string; icon: typeof Package }> = 
   order_update: { label: "تحديث طلبية", icon: RefreshCw },
   stock_update: { label: "تحديث مخزون", icon: Database },
   price_update: { label: "تحديث أسعار", icon: DollarSign },
+  product_import: { label: "استيراد أصناف", icon: Play },
   error: { label: "خطأ", icon: XCircle },
 };
 
