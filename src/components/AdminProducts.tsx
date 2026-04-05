@@ -235,6 +235,24 @@ const AdminProducts = () => {
               ))}
             </SelectContent>
           </Select>
+          <Select value={stockFilter} onValueChange={setStockFilter}>
+            <SelectTrigger className="w-full sm:w-40">
+              <SelectValue placeholder="حالة الرصيد" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">كل الأرصدة</SelectItem>
+              <SelectItem value="in_stock">متوفر</SelectItem>
+              <SelectItem value="low_stock">رصيد قليل (&lt;10)</SelectItem>
+              <SelectItem value="out_of_stock">نفد</SelectItem>
+            </SelectContent>
+          </Select>
+            <SelectContent>
+              <SelectItem value="all">كل الماركات</SelectItem>
+              {Object.entries(brandLabels).map(([k, v]) => (
+                <SelectItem key={k} value={k}>{v}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Product List */}
