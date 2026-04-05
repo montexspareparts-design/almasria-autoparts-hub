@@ -69,6 +69,7 @@ const TrendingProducts = () => {
           .from("products")
           .select("*, product_categories(name_ar)")
           .eq("is_active", true)
+          .gt("stock_quantity", 0)
           .eq("is_featured", true)
           .limit(8);
         if (error) throw error;
