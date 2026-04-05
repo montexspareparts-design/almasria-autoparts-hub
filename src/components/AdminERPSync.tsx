@@ -322,6 +322,41 @@ const AdminERPSync = () => {
 
         {/* ─── SYNC ACTIONS ─── */}
         <TabsContent value="actions" className="space-y-4 mt-4">
+          {/* Import Products Card - Full Width */}
+          <Card className="border-2 border-primary/30 hover:border-primary/60 transition-colors bg-primary/5">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                  <Play className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-foreground">🚀 استيراد الأصناف من الفيصل</h3>
+                  <p className="text-xs text-muted-foreground">
+                    جلب جميع المنتجات من نظام الفيصل وإضافتها تلقائياً — المنتجات الموجودة يتم تحديث أسعارها ومخزونها
+                  </p>
+                </div>
+              </div>
+              {syncing === "import_products" && (
+                <div className="mb-3 p-3 rounded-lg bg-muted/50 text-sm text-muted-foreground flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  جاري استيراد الأصناف... قد يستغرق بضع دقائق حسب عدد المنتجات
+                </div>
+              )}
+              <Button
+                className="w-full gap-2"
+                onClick={() => runSync("import_products")}
+                disabled={syncing !== null}
+              >
+                {syncing === "import_products" ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Database className="w-4 h-4" />
+                )}
+                استيراد الأصناف الآن
+              </Button>
+            </CardContent>
+          </Card>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Card className="border-2 hover:border-primary/40 transition-colors">
               <CardContent className="p-5">

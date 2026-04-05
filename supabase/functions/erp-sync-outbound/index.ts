@@ -354,6 +354,139 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ─── IMPORT ALL ERP PRODUCTS INTO DB ───
+    else if (action === "import_products") {
+      const { data: isAdmin } = await supabase.rpc("has_role", {
+        _user_id: userId,
+        _role: "admin",
+      });
+      if (!isAdmin) {
+        return new Response(
+          JSON.stringify({ error: "Forbidden — admin only" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      syncType = "product_import";
+      let items: any[] = [];
+
+      if (isMock) {
+        items = [
+          { id: "10001", name: "فلتر زيت كورولا", price: 120, qty: 50, itemcatid: "filters" },
+          { id: "10002", name: "فلتر هواء كامري", price: 85, qty: 30, itemcatid: "filters" },
+          { id: "10003", name: "بواجي يارس", price: 45, qty: 100, itemcatid: "spark_plugs" },
+          { id: "10004", name: "سير مروحة هايلكس", price: 150, qty: 20, itemcatid: "belts" },
+          { id: "10005", name: "طقم فرامل لاندكروزر", price: 350, qty: 15, itemcatid: "brakes" },
+        ];
+      } else {
+        if (!baseUrl) throw new Error("ERP base URL is not configured");
+        const erpResponse = await erpFetch(baseUrl, "/Ecommerce/products");
+        items = Array.isArray(erpResponse)
+          ? erpResponse
+          : (erpResponse.data || erpResponse.items || []);
+      }
+
+      let imported = 0;
+      let updated = 0;
+      let skipped = 0;
+      const errors: string[] = [];
+
+      for (const item of items) {
+        const erpId = (item.id || item.itemCode || item.sku || item.code || "").toString().trim();
+        if (!erpId) { skipped++; continue; }
+
+        const name = (item.name || item.itemName || "").toString().trim();
+        if (!name) { skipped++; continue; }
+
+        const price = Number(item.price ?? item.unitPrice ?? item.basePrice ?? 0);
+        const qty = Number(item.qty ?? item.quantity ?? item.stock ?? item.availableQty ?? 0);
+
+        // Check if product already exists by erp_item_code
+        const { data: existing } = await supabase
+          .from("products")
+          .select("id")
+          .eq("erp_item_code", erpId)
+          .maybeSingle();
+
+        if (existing) {
+          // Update price and stock
+          const { error: updErr } = await supabase
+            .from("products")
+            .update({
+              base_price: price,
+              stock_quantity: qty,
+              name_ar: name,
+              is_active: true,
+            })
+            .eq("id", existing.id);
+          if (updErr) {
+            errors.push(`Update ${erpId}: ${updErr.message}`);
+          } else {
+            updated++;
+          }
+        } else {
+          // Insert new product
+          const sku = erpId; // Use ERP code as SKU
+          const { error: insErr } = await supabase
+            .from("products")
+            .insert({
+              sku,
+              erp_item_code: erpId,
+              name_ar: name,
+              base_price: price,
+              stock_quantity: qty,
+              brand: "toyota_genuine",
+              is_active: true,
+            });
+          if (insErr) {
+            // Could be duplicate SKU
+            if (insErr.message?.includes("duplicate") || insErr.code === "23505") {
+              // Try with prefixed SKU
+              const { error: insErr2 } = await supabase
+                .from("products")
+                .insert({
+                  sku: `ERP-${erpId}`,
+                  erp_item_code: erpId,
+                  name_ar: name,
+                  base_price: price,
+                  stock_quantity: qty,
+                  brand: "toyota_genuine",
+                  is_active: true,
+                });
+              if (insErr2) {
+                errors.push(`Insert ${erpId}: ${insErr2.message}`);
+              } else {
+                imported++;
+              }
+            } else {
+              errors.push(`Insert ${erpId}: ${insErr.message}`);
+            }
+          } else {
+            imported++;
+          }
+        }
+      }
+
+      result = {
+        success: true,
+        total_erp_items: items.length,
+        imported,
+        updated,
+        skipped,
+        errors_count: errors.length,
+        errors: errors.slice(0, 10),
+        message: `تم استيراد ${imported} صنف جديد وتحديث ${updated} صنف من إجمالي ${items.length}`,
+      };
+
+      await supabase.from("erp_sync_logs").insert({
+        sync_type: syncType,
+        direction: "inbound",
+        payload: { action, total: items.length },
+        response: result,
+        status: isMock ? "mock" : "success",
+      });
+    }
+
     // ─── FETCH ERP PRODUCTS LIST (for mapping) ───
     else if (action === "fetch_erp_products") {
       const { data: isAdmin } = await supabase.rpc("has_role", {
