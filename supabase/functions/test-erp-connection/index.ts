@@ -60,17 +60,19 @@ Deno.serve(async (req) => {
       authData = { raw: authText.substring(0, 500) };
     }
 
+    const jwt = authData?.jwtToken || authData?.token;
+
     results.steps.push({
       step: "2. Authenticate",
       status: authRes.status,
       duration_ms: Date.now() - authStart,
-      has_token: !!authData?.token,
+      has_token: !!jwt,
       response_preview: typeof authData === "object"
-        ? { ...authData, token: authData?.token ? authData.token.substring(0, 20) + "..." : null }
+        ? { ...authData, jwtToken: jwt ? jwt.substring(0, 20) + "..." : null }
         : authData,
     });
 
-    if (!authRes.ok || !authData?.token) {
+    if (!authRes.ok || !jwt) {
       results.error = `Authentication failed (status ${authRes.status})`;
       return new Response(JSON.stringify(results, null, 2), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
