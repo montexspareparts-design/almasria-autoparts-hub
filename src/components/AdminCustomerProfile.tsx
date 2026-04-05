@@ -101,6 +101,7 @@ const AdminCustomerProfile = () => {
       orders: ordersWithItems,
       profile: profileRes.data,
     });
+    setErpCode((accountRes.data as any)?.erp_customer_code || "");
     setLoadingDetails(false);
   };
 
