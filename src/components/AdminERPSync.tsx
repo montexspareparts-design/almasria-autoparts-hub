@@ -244,7 +244,7 @@ const AdminERPSync = () => {
 
     try {
       // Phase 1: Fetch all ERP products
-      const { data: fetchData, error: fetchErr } = await supabase.functions.invoke("erp-sync-outbound", {
+      const { data: erpFetchData, error: fetchErr } = await supabase.functions.invoke("erp-sync-outbound", {
         body: { action: "fetch_erp_products", data: {} },
       });
       if (fetchErr) throw fetchErr;
