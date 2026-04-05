@@ -315,7 +315,7 @@ Deno.serve(async (req) => {
               const { count } = await supabase
                 .from("products")
                 .update({ stock_quantity: Number(qty) })
-                .eq("sku", erpId)
+                .eq("erp_item_code", erpId)
                 .select("id", { count: "exact", head: true });
               if (count && count > 0) { updated++; matched++; }
             }
@@ -325,7 +325,7 @@ Deno.serve(async (req) => {
               const { count } = await supabase
                 .from("products")
                 .update({ base_price: Number(price) })
-                .eq("sku", erpId)
+                .eq("erp_item_code", erpId)
                 .select("id", { count: "exact", head: true });
               if (count && count > 0) { updated++; matched++; }
             }
