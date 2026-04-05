@@ -85,6 +85,8 @@ const AdminProductForm = ({ product, onClose, onSaved }: Props) => {
       base_price: parseFloat(form.base_price) || 0,
       sale_price: form.sale_price ? parseFloat(form.sale_price) : null,
       stock_quantity: parseInt(form.stock_quantity) || 0,
+      safety_stock: parseInt(form.safety_stock) || 0,
+      max_order_cap: form.max_order_cap ? parseInt(form.max_order_cap) : null,
       min_order_qty: parseInt(form.min_order_qty) || 1,
       image_url: form.image_url.trim() || null,
       is_active: form.is_active,
