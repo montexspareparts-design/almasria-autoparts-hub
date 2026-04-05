@@ -362,8 +362,19 @@ const AdminProductImages = () => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {/* Hidden file input */}
-        <input
+        <Tabs defaultValue="products" dir="rtl">
+          <TabsList className="mb-4 w-full justify-start">
+            <TabsTrigger value="products" className="gap-1.5">
+              <ImageIcon className="w-3.5 h-3.5" />
+              صور المنتجات
+            </TabsTrigger>
+            <TabsTrigger value="storage" className="gap-1.5">
+              <FolderOpen className="w-3.5 h-3.5" />
+              معرض الـ Storage
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="products">
           ref={fileInputRef}
           type="file"
           accept="image/*"
