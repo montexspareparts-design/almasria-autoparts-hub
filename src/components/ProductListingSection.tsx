@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { ShieldCheck, Eye, Package, Grid3X3, List, ChevronLeft, SlidersHorizontal, Search, X } from "lucide-react";
@@ -59,7 +60,7 @@ interface ProductListingSectionProps {
   sectionClassName?: string;
 }
 
-const ProductListingSection = ({
+const ProductListingSection = memo(({
   filters, setFilters, viewMode, setViewMode,
   hasMore, loadMore,
   products, isLoading, filteredProducts, paginatedProducts,
@@ -276,6 +277,8 @@ const ProductListingSection = ({
       />
     </>
   );
-};
+});
+
+ProductListingSection.displayName = "ProductListingSection";
 
 export default ProductListingSection;

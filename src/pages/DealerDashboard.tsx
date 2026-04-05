@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { useDealerCart } from "@/hooks/useDealerCart";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,33 +9,33 @@ import dealerLogo from "@/assets/logo.webp";
 import DealerSidebar, { type DealerTab } from "@/components/dealer/DealerSidebar";
 import DealerMobileNav from "@/components/dealer/DealerMobileNav";
 
-import DealerOrdersList from "@/components/dealer/DealerOrdersList";
-import DealerNotificationsList from "@/components/dealer/DealerNotificationsList";
-import DealerOffers from "@/components/dealer/DealerOffers";
-
-import DealerProductSearch from "@/components/dealer/DealerProductSearch";
-import DealerQuoteBuilder, { type PriceListQuoteData } from "@/components/dealer/DealerQuoteBuilder";
-import DealerPriceLists from "@/components/dealer/DealerPriceLists";
-import DealerFavorites from "@/components/dealer/DealerFavorites";
-import DealerQuickOrder from "@/components/dealer/DealerQuickOrder";
-import DealerInvoices from "@/components/dealer/DealerInvoices";
-import DealerAccountSettings from "@/components/dealer/DealerAccountSettings";
-import DealerStatement from "@/components/dealer/DealerStatement";
-import DealerPayment from "@/components/dealer/DealerPayment";
-import DealerStockAlerts from "@/components/dealer/DealerStockAlerts";
-import DealerShoppingLists from "@/components/dealer/DealerShoppingLists";
-import DealerProductCompare from "@/components/dealer/DealerProductCompare";
-import DealerPricedToday from "@/components/dealer/DealerPricedToday";
-import DealerCart from "@/components/dealer/DealerCart";
-import VehicleTypeDialog from "@/components/dealer/VehicleTypeDialog";
-import DealerVehicleRecommendations from "@/components/dealer/DealerVehicleRecommendations";
+// Lazy load all tab components for faster initial load
+const DealerOrdersList = lazy(() => import("@/components/dealer/DealerOrdersList"));
+const DealerNotificationsList = lazy(() => import("@/components/dealer/DealerNotificationsList"));
+const DealerOffers = lazy(() => import("@/components/dealer/DealerOffers"));
+const DealerProductSearch = lazy(() => import("@/components/dealer/DealerProductSearch"));
+const DealerQuoteBuilder = lazy(() => import("@/components/dealer/DealerQuoteBuilder"));
+const DealerPriceLists = lazy(() => import("@/components/dealer/DealerPriceLists"));
+const DealerFavorites = lazy(() => import("@/components/dealer/DealerFavorites"));
+const DealerQuickOrder = lazy(() => import("@/components/dealer/DealerQuickOrder"));
+const DealerInvoices = lazy(() => import("@/components/dealer/DealerInvoices"));
+const DealerAccountSettings = lazy(() => import("@/components/dealer/DealerAccountSettings"));
+const DealerStatement = lazy(() => import("@/components/dealer/DealerStatement"));
+const DealerPayment = lazy(() => import("@/components/dealer/DealerPayment"));
+const DealerStockAlerts = lazy(() => import("@/components/dealer/DealerStockAlerts"));
+const DealerShoppingLists = lazy(() => import("@/components/dealer/DealerShoppingLists"));
+const DealerProductCompare = lazy(() => import("@/components/dealer/DealerProductCompare"));
+const DealerPricedToday = lazy(() => import("@/components/dealer/DealerPricedToday"));
+const DealerCart = lazy(() => import("@/components/dealer/DealerCart"));
+const VehicleTypeDialog = lazy(() => import("@/components/dealer/VehicleTypeDialog"));
+const DealerVehicleRecommendations = lazy(() => import("@/components/dealer/DealerVehicleRecommendations"));
 
 const DealerDashboard = () => {
   const { user, dealerAccount, isDealer, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<DealerTab>((searchParams.get("tab") as DealerTab) || "quotes");
-  const [priceListQuoteData, setPriceListQuoteData] = useState<PriceListQuoteData | null>(null);
+  const [priceListQuoteData, setPriceListQuoteData] = useState<any | null>(null);
   const [paymentTarget, setPaymentTarget] = useState<{ id: string; orderNumber: string; amount: number } | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
@@ -201,7 +201,9 @@ const DealerDashboard = () => {
         />
         <main className="flex-1 overflow-y-auto pb-20 lg:pb-6">
           <div className="p-4 md:p-6 lg:p-8 max-w-7xl">
-            {renderContent()}
+            <Suspense fallback={<div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>}>
+              {renderContent()}
+            </Suspense>
           </div>
         </main>
       </div>
@@ -209,14 +211,16 @@ const DealerDashboard = () => {
       <DealerMobileNav activeTab={activeTab} onTabChange={setActiveTab} unreadCount={unreadCount} cartItemCount={cartItemCount} />
 
       {dealerAccount && (
-        <VehicleTypeDialog
-          open={showVehicleDialog}
-          dealerAccountId={dealerAccount.id}
-          onComplete={(types) => {
-            setVehicleTypes(types);
-            setShowVehicleDialog(false);
-          }}
-        />
+        <Suspense fallback={null}>
+          <VehicleTypeDialog
+            open={showVehicleDialog}
+            dealerAccountId={dealerAccount.id}
+            onComplete={(types) => {
+              setVehicleTypes(types);
+              setShowVehicleDialog(false);
+            }}
+          />
+        </Suspense>
       )}
     </div>
   );

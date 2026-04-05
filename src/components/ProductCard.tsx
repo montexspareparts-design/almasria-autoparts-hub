@@ -1,8 +1,8 @@
+import { memo, useCallback } from "react";
 import { Package, Lock, Eye, ShoppingCart, Heart, ExternalLink } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const brandRouteMap: Record<string, { label: string; color: string; path: string }> = {
   toyota_genuine: { label: "تويوتا أصلي", color: "bg-red-500/90 text-white", path: "/products/toyota-genuine" },
@@ -30,12 +30,11 @@ interface ProductCardProps {
   onLoginRequired: () => void;
 }
 
-const ProductCard = ({
+const ProductCard = memo(({
   product, index, viewMode, user, isDealer, viewedProductIds,
   limitReached, dailyViewCount, dailyLimit,
   getProductPrice, onProductClick, onAddToCart, onRecordView, onLoginRequired,
 }: ProductCardProps) => {
-  const navigate = useNavigate();
 
   const stockAvailable = product.stock_quantity > 0;
   const hasViewed = viewedProductIds.includes(product.id);
@@ -79,19 +78,13 @@ const ProductCard = ({
             <span className="text-[8px] sm:text-[10px] font-mono bg-muted text-muted-foreground px-1 sm:px-2 py-0.5 rounded leading-none">{product.sku}</span>
             <span className="hidden sm:inline"><StockBadge available={stockAvailable} /></span>
             {brandRouteMap[product.brand] && (
-              <TooltipProvider delayDuration={200}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span
-                      className={`text-[7px] sm:text-[9px] font-bold px-1 sm:px-1.5 py-px sm:py-0.5 rounded cursor-pointer hover:opacity-80 transition-opacity ${brandRouteMap[product.brand].color}`}
-                      onClick={(e) => { e.stopPropagation(); navigate(brandRouteMap[product.brand].path); }}
-                    >
-                      {brandRouteMap[product.brand].label}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="text-xs">انتقل لصفحة الماركة</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Link
+                to={brandRouteMap[product.brand].path}
+                className={`text-[7px] sm:text-[9px] font-bold px-1 sm:px-1.5 py-px sm:py-0.5 rounded hover:opacity-80 transition-opacity ${brandRouteMap[product.brand].color}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {brandRouteMap[product.brand].label}
+              </Link>
             )}
           </div>
           <h3 className="font-bold text-card-foreground text-[11px] sm:text-sm leading-snug sm:leading-relaxed line-clamp-2 group-hover:text-primary transition-colors">
@@ -185,19 +178,13 @@ const ProductCard = ({
           </span>
           <div className="flex items-center gap-1">
             {brandRouteMap[product.brand] && (
-              <TooltipProvider delayDuration={200}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span
-                      className={`text-[7px] sm:text-[9px] font-bold px-1 sm:px-1.5 py-px sm:py-0.5 rounded cursor-pointer hover:opacity-80 transition-opacity ${brandRouteMap[product.brand].color}`}
-                      onClick={(e) => { e.stopPropagation(); navigate(brandRouteMap[product.brand].path); }}
-                    >
-                      {brandRouteMap[product.brand].label}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="text-xs">انتقل لصفحة الماركة</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Link
+                to={brandRouteMap[product.brand].path}
+                className={`text-[7px] sm:text-[9px] font-bold px-1 sm:px-1.5 py-px sm:py-0.5 rounded hover:opacity-80 transition-opacity ${brandRouteMap[product.brand].color}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {brandRouteMap[product.brand].label}
+              </Link>
             )}
             <StockBadge available={stockAvailable} />
           </div>
@@ -256,7 +243,9 @@ const ProductCard = ({
       </div>
     </div>
   );
-};
+});
+
+ProductCard.displayName = "ProductCard";
 
 /* ── Sub-components ── */
 
