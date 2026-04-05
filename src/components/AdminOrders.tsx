@@ -39,6 +39,8 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; i
 const statusFlow = ["pending", "confirmed", "awaiting_payment", "processing", "shipped", "delivered"];
 const PAGE_SIZE = 15;
 
+const shippingCompanies = ["أرامكس", "بوسطة", "mylerz", "J&T", "DHL", "FedEx", "سعاة خاصين", "استلام من الفرع"];
+
 const AdminOrders = () => {
   const { toast } = useToast();
   const [orders, setOrders] = useState<OrderWithItems[]>([]);
@@ -55,6 +57,7 @@ const AdminOrders = () => {
   const [editedItems, setEditedItems] = useState<Record<string, { id: string; quantity: number; unit_price: number; total_price: number; product_id: string; product?: any }[]>>({});
   const [autoExpandFirst, setAutoExpandFirst] = useState(false);
   const ordersListRef = useRef<HTMLDivElement>(null);
+  const [shippingInfo, setShippingInfo] = useState<Record<string, { tracking_number: string; shipping_company: string }>>({});
 
   // Stats fetched once
   const [stats, setStats] = useState({ total: 0, pending: 0, processing: 0, shipped: 0, delivered: 0, totalRevenue: 0 });
