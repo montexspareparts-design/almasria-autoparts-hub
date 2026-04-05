@@ -1,5 +1,5 @@
-import { motion, useScroll, useTransform } from "framer-motion";
-import { ShieldCheck, Package, MapPin, Cog, Wrench, Droplets, ChevronDown, LayoutDashboard, ShoppingCart } from "lucide-react";
+import { useScroll, useTransform } from "framer-motion";
+import { ShieldCheck, Package, MapPin, Cog, LayoutDashboard, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRef, useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
@@ -9,31 +9,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 import heroBg from "@/assets/hero-corporate.webp";
-
-/* ── Floating Mechanical Parts ── */
-const floatingParts = [
-  { icon: Cog, size: 28, x: "6%", y: "15%", duration: 22, delay: 0, rotate: 360 },
-  { icon: Cog, size: 16, x: "88%", y: "20%", duration: 26, delay: 2, rotate: -360 },
-  { icon: Wrench, size: 18, x: "82%", y: "68%", duration: 18, delay: 3.5, rotate: 12 },
-  { icon: Droplets, size: 14, x: "94%", y: "42%", duration: 16, delay: 5, rotate: 0 },
-];
-
-const FloatingParticle = ({ part }: { part: typeof floatingParts[0] }) => (
-  <motion.div
-    className="absolute pointer-events-none"
-    style={{ left: part.x, top: part.y }}
-    initial={{ opacity: 0, scale: 0 }}
-    animate={{
-      opacity: [0, 0.1, 0.06, 0.1, 0],
-      scale: [0.5, 1, 0.85, 1, 0.5],
-      y: [0, -25, 12, -18, 0],
-      rotate: [0, part.rotate],
-    }}
-    transition={{ duration: part.duration, delay: part.delay, repeat: Infinity, ease: "linear" }}
-  >
-    <part.icon className="text-primary/15" style={{ width: part.size, height: part.size }} strokeWidth={1} />
-  </motion.div>
-);
 
 /* ── Animated Counter ── */
 const AnimatedCounter = ({ value, suffix, delay }: { value: number; suffix: string; delay: number }) => {
