@@ -102,6 +102,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       }
       return [...prev, item];
     });
+
+    // Show suggestion if quantity was capped
+    if (item.quantity < (item.min_order_qty || 1)) {
+      toast.info(`الحد الأقصى المسموح لـ "${item.name_ar}" هو ${item.stock_quantity} قطعة`);
+    }
   }, [user]);
 
   const removeItem = useCallback((id: string) => {
