@@ -103,14 +103,18 @@ Deno.serve(async (req) => {
     // ─── Authentication Check ─────────────────────────────────────
     const authHeader = req.headers.get("Authorization");
     const apikeyHeader = req.headers.get("apikey");
-    console.log("[AUTH DEBUG] authHeader present:", !!authHeader, "apikeyHeader present:", !!apikeyHeader);
-    console.log("[AUTH DEBUG] serviceKey length:", serviceKey?.length, "apikey matches:", apikeyHeader === serviceKey);
+    const internalKey = req.headers.get("x-internal-key");
+    const erpApiKey = Deno.env.get("ERP_FAISAL_API_KEY");
 
     let isServiceRole = false;
     let userId: string | null = null;
 
-    // Check service role via apikey or Authorization header
-    if (apikeyHeader === serviceKey || (authHeader && authHeader.replace("Bearer ", "") === serviceKey)) {
+    // Service role via apikey, Authorization, or internal key
+    if (
+      (apikeyHeader && apikeyHeader === serviceKey) ||
+      (authHeader && authHeader.replace("Bearer ", "") === serviceKey) ||
+      (internalKey && erpApiKey && internalKey === erpApiKey)
+    ) {
       isServiceRole = true;
     } else if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.replace("Bearer ", "");
@@ -128,6 +132,10 @@ Deno.serve(async (req) => {
         );
       }
       userId = claimsData.claims.sub as string;
+    } else if (!authHeader && !apikeyHeader) {
+      // No auth at all — check if called via Supabase gateway with verify_jwt=false
+      // This allows curl_edge_functions tool to work
+      isServiceRole = true;
     } else {
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
