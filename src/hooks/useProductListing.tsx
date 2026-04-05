@@ -157,6 +157,20 @@ export function useProductListing(options: UseProductListingOptions = {}) {
   const { addItem } = useCart();
   const queryClient = useQueryClient();
 
+  // Fetch max order percentage from site_settings
+  const { data: maxOrderPct } = useQuery({
+    queryKey: ["site_settings", "max_order_percentage"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "max_order_percentage")
+        .maybeSingle();
+      return parseInt(data?.value || "50") || 50;
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+
   const initialSearch = searchParams.get("search") || "";
   const initialCategory = searchParams.get("category") || null;
 
