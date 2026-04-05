@@ -16,7 +16,6 @@ interface DealerProductSearchProps {
 
 const DealerProductSearch = ({ onNavigateToOrders, onNavigateToCart, sharedCart }: DealerProductSearchProps) => {
   const listing = useProductListing();
-  const { user } = useAuth();
   const fallbackCart = useDealerCart();
   const cart = sharedCart || fallbackCart;
 
@@ -27,15 +26,9 @@ const DealerProductSearch = ({ onNavigateToOrders, onNavigateToCart, sharedCart 
         title: "✅ تمت الإضافة للطلبية",
         description: product.name_ar,
         action: onNavigateToCart ? (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onNavigateToCart}
-            className="gap-1 text-xs h-7 shrink-0"
-          >
-            <ShoppingCart className="w-3 h-3" />
+          <ToastAction altText="فتح السلة" onClick={onNavigateToCart}>
             فتح السلة
-          </Button>
+          </ToastAction>
         ) : undefined,
       });
     } catch {
