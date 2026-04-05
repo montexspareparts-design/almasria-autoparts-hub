@@ -50,6 +50,13 @@ const QUICK_QUESTIONS_LOGGED_IN = [
   "📍 أقرب فرع ليا",
 ];
 
+const QUICK_QUESTIONS_DEALER = [
+  "عايز أعرف حالة طلبي الأخير",
+  "إيه العروض المتاحة دلوقتي؟",
+  "محتاج مساعدة في طلبية جديدة",
+  "💬 تواصل مع فريق الدعم",
+];
+
 const QUICK_QUESTIONS_GUEST = [
   "إيه الماركات المتوفرة عندكم؟",
   "📍 أقرب فرع ليا",
@@ -90,7 +97,7 @@ const findNearestBranch = (userLat: number, userLng: number) => {
 const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
 const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
-  const { user } = useAuth();
+  const { user, isDealer } = useAuth();
   const { consent, interests, getTopCategories, getTopBrands } = usePersonalization();
   const [isOpen, setIsOpen] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
@@ -393,6 +400,21 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
   const sendMessage = async (text: string) => {
     if ((!text.trim() && !pendingImage) || isLoading) return;
 
+    // Check if asking for support team
+    if (text.includes("تواصل مع فريق الدعم")) {
+      const supportMsg = "📞 **فريق الدعم الفني جاهز لخدمتك!**\n\n" +
+        "🔹 **واتساب (أسرع طريقة):**\n[اضغط هنا للتواصل عبر واتساب](https://wa.me/201032104861)\n\n" +
+        "🔹 **تليفون:**\n📞 فرع القاهرة: 01032104861\n📞 فرع الجيزة: 01153961008\n📞 فرع الأقصر: 01016177204\n\n" +
+        "⏰ **مواعيد العمل:** 9 صباحاً - 7 مساءً\n\n" +
+        "أو اكتب مشكلتك هنا وأنا هحاول أساعدك فوراً! 💪";
+      setMessages(prev => [
+        ...prev,
+        { role: "user", content: text },
+        { role: "assistant", content: supportMsg }
+      ]);
+      return;
+    }
+
     // Check if asking for nearest branch - use geolocation
     const branchKeywords = ["أقرب فرع", "فرع قريب", "أقرب فرع ليا", "فين فروعكم"];
     if (branchKeywords.some(kw => text.includes(kw))) {
@@ -516,7 +538,18 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
                   <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
                     <Bot className="w-8 h-8 text-primary" />
                   </div>
-                  {user ? (
+                  {isDealer ? (
+                    <div>
+                      <p className="font-bold text-foreground">أهلاً بيك يا تاجرنا! 🤝</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        أنا مساعدك الذكي — أقدر أساعدك في الطلبيات، الأسعار، وأي استفسار
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2 flex items-center justify-center gap-1">
+                        <ImagePlus className="w-3.5 h-3.5" />
+                        ابعتلي صورة القطعة وأعرّفها لك
+                      </p>
+                    </div>
+                  ) : user ? (
                     <div>
                       <p className="font-bold text-foreground">أهلاً بيك! 👋</p>
                       <p className="text-sm text-muted-foreground mt-1">
@@ -549,7 +582,7 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
                     </div>
                   )}
                   <div className="space-y-2">
-                    {(user ? QUICK_QUESTIONS_LOGGED_IN : QUICK_QUESTIONS_GUEST).map((q) => (
+                    {(isDealer ? QUICK_QUESTIONS_DEALER : user ? QUICK_QUESTIONS_LOGGED_IN : QUICK_QUESTIONS_GUEST).map((q) => (
                       <button key={q} onClick={() => sendMessage(q)}
                         className="block w-full text-right text-xs px-3 py-2 rounded-lg border border-border hover:bg-accent/10 hover:border-primary/30 transition-colors text-foreground">
                         {q}
