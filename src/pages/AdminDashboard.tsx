@@ -333,6 +333,54 @@ const AdminDashboard = () => {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {/* ERP Customer Code */}
+                  <div className="space-y-3 border border-border rounded-lg p-4 bg-muted/30">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="w-4 h-4 text-primary" />
+                      <label className="text-sm font-medium text-foreground">ربط حساب الفيصل</label>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="isNewCustomer"
+                        checked={isNewCustomer}
+                        onCheckedChange={(checked) => {
+                          setIsNewCustomer(!!checked);
+                          if (checked) { setApproveErpCode(""); setApproveErpName(""); }
+                        }}
+                      />
+                      <label htmlFor="isNewCustomer" className="text-sm text-muted-foreground cursor-pointer">
+                        عميل جديد (لم يُسجّل في الفيصل بعد)
+                      </label>
+                    </div>
+
+                    {!isNewCustomer && (
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <Input
+                            value={approveErpCode}
+                            onChange={(e) => setApproveErpCode(e.target.value)}
+                            placeholder="أدخل كود العميل في الفيصل (إلزامي)"
+                            className="flex-1"
+                            dir="ltr"
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => fetchErpCustomerName(approveErpCode)}
+                            disabled={!approveErpCode.trim() || fetchingApproveErpName}
+                          >
+                            {fetchingApproveErpName ? <Loader2 className="w-4 h-4 animate-spin" /> : "تحقق"}
+                          </Button>
+                        </div>
+                        {approveErpName && (
+                          <p className="text-sm text-green-600 font-medium">🏢 الفيصل: {approveErpName}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">ملاحظات المراجعة</label>
                     <Textarea value={reviewNotes} onChange={(e) => setReviewNotes(e.target.value)} placeholder="أضف ملاحظاتك هنا..." />
