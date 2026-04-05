@@ -20,6 +20,7 @@ const SpecialOffers = ({ brandKey }: Props) => {
         .from("products")
         .select("*, product_categories(name_ar)")
         .eq("is_active", true)
+        .gt("stock_quantity", 0)
         .eq("is_on_sale", true)
         .not("sale_price", "is", null)
         .order("created_at", { ascending: false })
