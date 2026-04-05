@@ -323,58 +323,73 @@ Deno.serve(async (req) => {
 
         const erpResponse = await erpFetch(baseUrl, "/Ecommerce/products");
 
+        // Al Faisal returns { message: 0, data: [...] }
         const items = Array.isArray(erpResponse)
           ? erpResponse
           : (erpResponse.data || erpResponse.items || []);
 
-        let updated = 0;
-        let matched = 0;
-
-        // Batch updates: process in chunks of 50 using Promise.all
-        const BATCH_SIZE = 50;
-        for (let i = 0; i < items.length; i += BATCH_SIZE) {
-          const batch = items.slice(i, i + BATCH_SIZE);
-          const promises = batch.map(async (item: any) => {
-            const erpId = (item.id || item.itemCode || item.sku || item.code || "").toString().trim();
-            if (!erpId) return;
-
-            if (action === "sync_stock") {
+        if (action === "sync_stock") {
+          // Build bulk payload for SQL function
+          const bulkItems = items
+            .filter((item: any) => {
+              const id = (item.id || item.itemCode || item.sku || item.code || "").toString().trim();
               const qty = item.qty ?? item.quantity ?? item.stock ?? item.availableQty;
-              if (qty !== undefined) {
-                const { count } = await supabase
-                  .from("products")
-                  .update({ stock_quantity: Number(qty) })
-                  .eq("erp_item_code", erpId)
-                  .select("id", { count: "exact", head: true });
-                if (count && count > 0) { updated++; matched++; }
-              }
-            } else {
-              const price = item.price ?? item.unitPrice ?? item.basePrice;
-              if (price !== undefined) {
-                const { count } = await supabase
-                  .from("products")
-                  .update({ base_price: Number(price) })
-                  .eq("erp_item_code", erpId)
-                  .select("id", { count: "exact", head: true });
-                if (count && count > 0) { updated++; matched++; }
-              }
-            }
-          });
-          await Promise.all(promises);
-        }
+              return id && qty !== undefined;
+            })
+            .map((item: any) => ({
+              id: (item.id || item.itemCode || item.sku || item.code).toString().trim(),
+              qty: Number(item.qty ?? item.quantity ?? item.stock ?? item.availableQty),
+            }));
 
-        result = {
-          success: true,
-          updated_count: updated,
-          total_erp_items: items.length,
-          matched_items: matched,
-          sample: items.slice(0, 3).map((i: any) => ({
-            id: (i.id || "").toString().trim(),
-            name: i.name,
-            price: i.price,
-            quantity: i.qty ?? i.quantity,
-          })),
-        };
+          const { data: bulkResult, error: bulkErr } = await supabase.rpc("bulk_sync_stock", {
+            _items: bulkItems,
+          });
+
+          if (bulkErr) throw new Error(`Bulk stock sync failed: ${bulkErr.message}`);
+
+          result = {
+            success: true,
+            updated_count: bulkResult?.updated || 0,
+            total_erp_items: items.length,
+            matched_items: bulkResult?.updated || 0,
+            sample: items.slice(0, 3).map((i: any) => ({
+              id: (i.id || "").toString().trim(),
+              name: i.name,
+              qty: i.qty ?? i.quantity,
+            })),
+          };
+        } else {
+          // Price sync — use existing bulk_update_product_prices
+          const bulkItems = items
+            .filter((item: any) => {
+              const id = (item.id || item.itemCode || item.sku || item.code || "").toString().trim();
+              const price = item.price ?? item.unitPrice ?? item.basePrice;
+              return id && price !== undefined;
+            })
+            .map((item: any) => ({
+              id: (item.id || item.itemCode || item.sku || item.code).toString().trim(),
+              price: Number(item.price ?? item.unitPrice ?? item.basePrice),
+              quantity: Number(item.qty ?? item.quantity ?? item.stock ?? 0),
+            }));
+
+          const { data: bulkResult, error: bulkErr } = await supabase.rpc("bulk_update_product_prices", {
+            _items: bulkItems,
+          });
+
+          if (bulkErr) throw new Error(`Bulk price sync failed: ${bulkErr.message}`);
+
+          result = {
+            success: true,
+            updated_count: bulkResult?.updated || 0,
+            total_erp_items: items.length,
+            matched_items: bulkResult?.updated || 0,
+            sample: items.slice(0, 3).map((i: any) => ({
+              id: (i.id || "").toString().trim(),
+              name: i.name,
+              price: i.price,
+            })),
+          };
+        }
       }
 
       await supabase.from("erp_sync_logs").insert({
