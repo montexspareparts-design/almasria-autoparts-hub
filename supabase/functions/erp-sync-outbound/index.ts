@@ -183,13 +183,13 @@ Deno.serve(async (req) => {
 
       // Map to Al Faisal CreateOrder format (per API docs)
       const payload = {
-        customerId: data.erp_customer_code || "",
-        customerName: data.customer_name,
-        phone: data.customer_phone || "",
+        customerId: data.erp_customer_code ? String(data.erp_customer_code) : "",
+        customerName: data.erp_customer_code ? "" : (data.customer_name || ""),
+        phone: data.customer_phone || "0000000000",
         items: data.items?.map((item: any) => ({
-          productId: item.erp_item_code || item.sku,
-          quantity: item.quantity,
-          price: item.unit_price,
+          productId: String(item.erp_item_code || item.sku || ""),
+          quantity: Number(item.quantity) || 1,
+          price: Number(item.unit_price) || 0,
         })),
       };
 
