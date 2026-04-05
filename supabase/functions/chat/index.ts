@@ -681,15 +681,6 @@ ${userInterests ? `## اهتمامات العميل:
           console.error("Tool call error:", e);
         }
       }
-              return new Response(followUpResponse.body, {
-                headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
-              });
-            }
-          } catch (e) {
-            console.error("Tool call error:", e);
-          }
-        }
-      }
 
       const fallbackContent = fullContent || "تم إرسال طلبك لفريق المبيعات وسيتواصلون معك في أقرب وقت! 📞";
       const fallbackSSE = `data: ${JSON.stringify({ choices: [{ delta: { content: fallbackContent }, finish_reason: "stop" }] })}\n\ndata: [DONE]\n\n`;
