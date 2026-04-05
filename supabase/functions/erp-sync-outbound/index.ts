@@ -294,39 +294,56 @@ Deno.serve(async (req) => {
         if (!baseUrl) throw new Error("ERP base URL is not configured");
 
         // Fetch all products from Al Faisal API
-        const erpProducts = await erpFetch(baseUrl, "/Ecommerce/products");
+        // Response format: { message, data: [{ id, name, price, quantity }] }
+        const erpResponse = await erpFetch(baseUrl, "/Ecommerce/products");
 
-        // erpProducts is expected to be an array of products
-        const items = Array.isArray(erpProducts) ? erpProducts : (erpProducts.items || erpProducts.data || []);
+        const items = Array.isArray(erpResponse)
+          ? erpResponse
+          : (erpResponse.data || erpResponse.items || []);
 
         let updated = 0;
+        let matched = 0;
 
         for (const item of items) {
-          const sku = item.itemCode || item.sku || item.code;
-          if (!sku) continue;
+          // Al Faisal uses "id" as item code, trim whitespace
+          const erpId = (item.id || item.itemCode || item.sku || item.code || "").toString().trim();
+          if (!erpId) continue;
 
           if (action === "sync_stock") {
             const qty = item.quantity ?? item.stock ?? item.availableQty;
             if (qty !== undefined) {
-              const { error } = await supabase
+              const { count } = await supabase
                 .from("products")
                 .update({ stock_quantity: Number(qty) })
-                .eq("sku", sku);
-              if (!error) updated++;
+                .eq("sku", erpId)
+                .select("id", { count: "exact", head: true });
+              if (count && count > 0) { updated++; matched++; }
             }
           } else {
             const price = item.price ?? item.unitPrice ?? item.basePrice;
             if (price !== undefined) {
-              const { error } = await supabase
+              const { count } = await supabase
                 .from("products")
                 .update({ base_price: Number(price) })
-                .eq("sku", sku);
-              if (!error) updated++;
+                .eq("sku", erpId)
+                .select("id", { count: "exact", head: true });
+              if (count && count > 0) { updated++; matched++; }
             }
           }
         }
 
-        result = { success: true, updated_count: updated, total_erp_items: items.length };
+        result = {
+          success: true,
+          updated_count: updated,
+          total_erp_items: items.length,
+          matched_items: matched,
+          sample: items.slice(0, 3).map((i: any) => ({
+            id: (i.id || "").toString().trim(),
+            name: i.name,
+            price: i.price,
+            quantity: i.quantity,
+          })),
+        };
       }
 
       await supabase.from("erp_sync_logs").insert({
