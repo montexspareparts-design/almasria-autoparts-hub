@@ -58,7 +58,9 @@ const AdminCustomerProfile = () => {
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [erpCode, setErpCode] = useState("");
+  const [erpName, setErpName] = useState("");
   const [savingErpCode, setSavingErpCode] = useState(false);
+  const [fetchingErpName, setFetchingErpName] = useState(false);
 
   useEffect(() => {
     fetchDealers();
@@ -102,6 +104,7 @@ const AdminCustomerProfile = () => {
       profile: profileRes.data,
     });
     setErpCode((accountRes.data as any)?.erp_customer_code || "");
+    setErpName((accountRes.data as any)?.erp_customer_name || "");
     setLoadingDetails(false);
   };
 
@@ -154,6 +157,9 @@ const AdminCustomerProfile = () => {
                 <div>
                   <h2 className="text-xl font-bold text-foreground">{app.business_name}</h2>
                   <p className="text-sm text-muted-foreground">{app.legal_name}</p>
+                  {erpName && (
+                    <p className="text-sm text-primary font-medium mt-1">🏢 الفيصل: {erpName}</p>
+                  )}
                 </div>
 
                 <div className="flex flex-wrap gap-2">
@@ -282,7 +288,7 @@ const AdminCustomerProfile = () => {
               </p>
               <div className="flex gap-2">
                 <Input
-                  placeholder="كود العميل في الفيصل (مثال: C-10045)"
+                  placeholder="كود العميل في الفيصل (مثال: 10000001)"
                   value={erpCode}
                   onChange={(e) => setErpCode(e.target.value)}
                   className="max-w-xs font-mono"
@@ -290,26 +296,51 @@ const AdminCustomerProfile = () => {
                 />
                 <Button
                   size="sm"
-                  disabled={savingErpCode}
+                  disabled={savingErpCode || fetchingErpName}
                   onClick={async () => {
                     setSavingErpCode(true);
+                    let customerName = "";
+
+                    // Try to fetch customer name from Al-Faisal
+                    if (erpCode) {
+                      setFetchingErpName(true);
+                      try {
+                        const res = await supabase.functions.invoke("erp-sync-outbound", {
+                          body: { action: "fetch_erp_customers", data: { customer_code: erpCode.trim() } },
+                        });
+                        if (res.data?.customer?.name) {
+                          customerName = res.data.customer.name;
+                        }
+                      } catch (e) {
+                        console.error("Failed to fetch ERP customer name:", e);
+                      }
+                      setFetchingErpName(false);
+                    }
+
                     const { error } = await supabase
                       .from("dealer_accounts")
-                      .update({ erp_customer_code: erpCode || null } as any)
+                      .update({ 
+                        erp_customer_code: erpCode || null,
+                        erp_customer_name: customerName || null,
+                      } as any)
                       .eq("id", account.id);
                     if (!error) {
-                      toast({ title: "تم حفظ كود الفيصل ✓" });
+                      setErpName(customerName);
+                      toast({ title: customerName ? `تم الربط بنجاح ✓ — ${customerName}` : "تم حفظ كود الفيصل ✓" });
                     } else {
                       toast({ title: "خطأ", description: error.message, variant: "destructive" });
                     }
                     setSavingErpCode(false);
                   }}
                 >
-                  {savingErpCode ? <Loader2 className="w-4 h-4 animate-spin" /> : "حفظ"}
+                  {savingErpCode || fetchingErpName ? <Loader2 className="w-4 h-4 animate-spin" /> : "ربط وحفظ"}
                 </Button>
               </div>
               {erpCode && (
-                <p className="text-xs text-primary mt-2">✓ مربوط بحساب الفيصل: {erpCode}</p>
+                <div className="mt-2 space-y-1">
+                  <p className="text-xs text-primary">✓ مربوط بحساب الفيصل: {erpCode}</p>
+                  {erpName && <p className="text-xs font-medium text-foreground">🏢 {erpName}</p>}
+                </div>
               )}
             </CardContent>
           </Card>

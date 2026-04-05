@@ -802,6 +802,32 @@ Deno.serve(async (req) => {
       };
     }
 
+    // ─── FETCH ERP CUSTOMERS ───
+    else if (action === "fetch_erp_customers") {
+      if (!baseUrl) throw new Error("ERP base URL is not configured");
+      const erpResponse = await erpFetch(baseUrl, "/Ecommerce/GetCustomers");
+      const customers = erpResponse?.data || [];
+      
+      // If a specific code is requested, find it
+      const targetCode = data?.customer_code;
+      if (targetCode) {
+        const matched = customers.find((c: any) => c.id?.toString().trim() === targetCode.trim());
+        result = {
+          success: true,
+          customer: matched ? { id: matched.id?.trim(), name: matched.name?.trim() } : null,
+        };
+      } else {
+        result = {
+          success: true,
+          total: customers.length,
+          customers: customers.slice(0, 100).map((c: any) => ({
+            id: (c.id || "").toString().trim(),
+            name: (c.name || "").toString().trim(),
+          })),
+        };
+      }
+    }
+
     else {
       throw new Error(`Unknown action: ${action}`);
     }
