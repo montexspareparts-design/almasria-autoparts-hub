@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, Search, Pencil, Trash2, Package, ChevronRight, ChevronLeft, Copy, Check } from "lucide-react";
+import { Loader2, Plus, Search, Pencil, Trash2, Package, ChevronRight, ChevronLeft, Copy, Check, RefreshCw } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import AdminProductForm from "@/components/admin/AdminProductForm";
 import type { Database } from "@/integrations/supabase/types";
@@ -35,6 +35,32 @@ const AdminProducts = () => {
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [copiedSku, setCopiedSku] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
+
+  const handleErpSync = async () => {
+    setSyncing(true);
+    try {
+      const [stockRes, priceRes] = await Promise.all([
+        supabase.functions.invoke("erp-sync-outbound", { body: { action: "sync_stock" } }),
+        supabase.functions.invoke("erp-sync-outbound", { body: { action: "sync_prices" } }),
+      ]);
+
+      const stockData = stockRes.data;
+      const priceData = priceRes.data;
+
+      const stockUpdated = stockData?.updated ?? stockData?.result?.updated ?? 0;
+      const priceUpdated = priceData?.updated ?? priceData?.result?.updated ?? 0;
+
+      toast({
+        title: "✅ تمت المزامنة بنجاح",
+        description: `أرصدة: ${stockUpdated} صنف | أسعار: ${priceUpdated} صنف`,
+      });
+      fetchProducts();
+    } catch (err: any) {
+      toast({ title: "خطأ في المزامنة", description: err.message, variant: "destructive" });
+    }
+    setSyncing(false);
+  };
 
   const handleCopySku = (sku: string) => {
     navigator.clipboard.writeText(sku);
@@ -94,10 +120,16 @@ const AdminProducts = () => {
           إدارة المنتجات
           <span className="text-sm font-normal text-muted-foreground">({totalCount} منتج)</span>
         </CardTitle>
-        <Button size="sm" className="gap-2" onClick={() => { setEditProduct(null); setShowForm(true); }}>
-          <Plus className="w-4 h-4" />
-          إضافة منتج
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" className="gap-2" onClick={handleErpSync} disabled={syncing}>
+            {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+            مزامنة الفيصل
+          </Button>
+          <Button size="sm" className="gap-2" onClick={() => { setEditProduct(null); setShowForm(true); }}>
+            <Plus className="w-4 h-4" />
+            إضافة منتج
+          </Button>
+        </div>
       </CardHeader>
 
       <CardContent className="space-y-4">
