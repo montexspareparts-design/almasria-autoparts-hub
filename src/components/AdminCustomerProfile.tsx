@@ -58,7 +58,9 @@ const AdminCustomerProfile = () => {
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [erpCode, setErpCode] = useState("");
+  const [erpName, setErpName] = useState("");
   const [savingErpCode, setSavingErpCode] = useState(false);
+  const [fetchingErpName, setFetchingErpName] = useState(false);
 
   useEffect(() => {
     fetchDealers();
