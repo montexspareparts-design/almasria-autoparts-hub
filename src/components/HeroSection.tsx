@@ -12,13 +12,10 @@ import heroBg from "@/assets/hero-corporate.webp";
 
 /* ── Floating Mechanical Parts ── */
 const floatingParts = [
-  { icon: Cog, size: 32, x: "6%", y: "15%", duration: 22, delay: 0, rotate: 360 },
-  { icon: Cog, size: 18, x: "88%", y: "20%", duration: 26, delay: 2, rotate: -360 },
-  { icon: Wrench, size: 20, x: "82%", y: "68%", duration: 18, delay: 3.5, rotate: 12 },
-  { icon: Cog, size: 14, x: "12%", y: "78%", duration: 24, delay: 1.5, rotate: 360 },
-  { icon: Droplets, size: 16, x: "94%", y: "42%", duration: 16, delay: 5, rotate: 0 },
-  { icon: Cog, size: 22, x: "50%", y: "88%", duration: 28, delay: 0.8, rotate: -360 },
-  { icon: Wrench, size: 14, x: "65%", y: "8%", duration: 20, delay: 3, rotate: -15 },
+  { icon: Cog, size: 28, x: "6%", y: "15%", duration: 22, delay: 0, rotate: 360 },
+  { icon: Cog, size: 16, x: "88%", y: "20%", duration: 26, delay: 2, rotate: -360 },
+  { icon: Wrench, size: 18, x: "82%", y: "68%", duration: 18, delay: 3.5, rotate: 12 },
+  { icon: Droplets, size: 14, x: "94%", y: "42%", duration: 16, delay: 5, rotate: 0 },
 ];
 
 const FloatingParticle = ({ part }: { part: typeof floatingParts[0] }) => (
