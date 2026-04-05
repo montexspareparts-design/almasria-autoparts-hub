@@ -1388,6 +1388,27 @@ export type Database = {
           },
         ]
       }
+      rate_limit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          identifier: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          identifier: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          identifier?: string
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           id: string
@@ -1513,6 +1534,15 @@ export type Database = {
       check_dealer_application_exists: {
         Args: { _email?: string; _phone?: string }
         Returns: Json
+      }
+      check_rate_limit: {
+        Args: {
+          _action: string
+          _identifier: string
+          _max_requests: number
+          _window_seconds?: number
+        }
+        Returns: boolean
       }
       generate_order_number: { Args: never; Returns: string }
       get_best_selling_products: {

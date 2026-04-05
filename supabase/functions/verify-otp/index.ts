@@ -24,6 +24,21 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+    // Rate limit: max 5 verify attempts per phone per 5 minutes
+    const { data: allowed } = await supabase.rpc("check_rate_limit", {
+      _identifier: phone,
+      _action: "verify_otp",
+      _max_requests: 5,
+      _window_seconds: 300,
+    });
+
+    if (!allowed) {
+      return new Response(
+        JSON.stringify({ valid: false, error: "محاولات كثيرة. حاول بعد 5 دقائق." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Use the secure verify_otp_code function that compares bcrypt hashes
     const { data: isValid, error } = await supabase.rpc("verify_otp_code", {
       _phone: phone,

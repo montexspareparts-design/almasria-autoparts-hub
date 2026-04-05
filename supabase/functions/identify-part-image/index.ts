@@ -22,6 +22,25 @@ serve(async (req) => {
       );
     }
 
+    // Rate limit: 10 image identifications per IP per 5 minutes
+    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseRL = createClient(supabaseUrl, serviceKey);
+    const { data: allowed } = await supabaseRL.rpc("check_rate_limit", {
+      _identifier: clientIp,
+      _action: "identify_part_image",
+      _max_requests: 10,
+      _window_seconds: 300,
+    });
+
+    if (!allowed) {
+      return new Response(
+        JSON.stringify({ error: "محاولات كثيرة. حاول بعد 5 دقائق." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       return new Response(

@@ -60,6 +60,23 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Rate limit: max 10 payment attempts per user per 10 minutes
+    const serviceRoleKeyRL = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseRL = createClient(supabaseUrl, serviceRoleKeyRL);
+    const { data: allowed } = await supabaseRL.rpc("check_rate_limit", {
+      _identifier: userId,
+      _action: "create_payment",
+      _max_requests: 10,
+      _window_seconds: 600,
+    });
+
+    if (!allowed) {
+      return new Response(JSON.stringify({ error: "Too many payment attempts. Try again later." }), {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // --- Parse body ---
     const rawBody = await req.json().catch(() => null);
     const parsedBody = RequestSchema.safeParse(rawBody);
