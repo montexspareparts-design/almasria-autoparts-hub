@@ -345,7 +345,7 @@ Deno.serve(async (req) => {
             id: (i.id || "").toString().trim(),
             name: i.name,
             price: i.price,
-            quantity: i.quantity,
+            quantity: i.qty ?? i.quantity,
           })),
         };
       }
