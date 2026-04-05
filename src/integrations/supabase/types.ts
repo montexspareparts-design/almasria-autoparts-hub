@@ -1203,6 +1203,7 @@ export type Database = {
           created_at: string
           description_ar: string | null
           description_en: string | null
+          erp_item_code: string | null
           id: string
           image_url: string | null
           is_active: boolean
@@ -1226,6 +1227,7 @@ export type Database = {
           created_at?: string
           description_ar?: string | null
           description_en?: string | null
+          erp_item_code?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
@@ -1249,6 +1251,7 @@ export type Database = {
           created_at?: string
           description_ar?: string | null
           description_en?: string | null
+          erp_item_code?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
