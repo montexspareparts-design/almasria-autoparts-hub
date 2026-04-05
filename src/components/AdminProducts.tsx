@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,28 +37,59 @@ const AdminProducts = () => {
   const [showForm, setShowForm] = useState(false);
   const [copiedSku, setCopiedSku] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [syncProgress, setSyncProgress] = useState<{
+    step: number;
+    total: number;
+    label: string;
+    details: string[];
+    done: boolean;
+    error?: string;
+  } | null>(null);
 
   const handleErpSync = async () => {
     setSyncing(true);
+    setSyncProgress({ step: 0, total: 3, label: "جاري الاتصال بنظام الفيصل...", details: [], done: false });
+
     try {
-      const [stockRes, priceRes] = await Promise.all([
-        supabase.functions.invoke("erp-sync-outbound", { body: { action: "sync_stock" } }),
-        supabase.functions.invoke("erp-sync-outbound", { body: { action: "sync_prices" } }),
-      ]);
-
+      // Step 1: Sync stock
+      setSyncProgress(p => ({ ...p!, step: 1, label: "مزامنة الأرصدة..." }));
+      const stockRes = await supabase.functions.invoke("erp-sync-outbound", { body: { action: "sync_stock" } });
       const stockData = stockRes.data;
-      const priceData = priceRes.data;
-
       const stockUpdated = stockData?.updated ?? stockData?.result?.updated ?? 0;
-      const priceUpdated = priceData?.updated ?? priceData?.result?.updated ?? 0;
+      const stockTotal = stockData?.total ?? stockData?.result?.total ?? 0;
 
-      toast({
-        title: "✅ تمت المزامنة بنجاح",
-        description: `أرصدة: ${stockUpdated} صنف | أسعار: ${priceUpdated} صنف`,
-      });
+      setSyncProgress(p => ({
+        ...p!,
+        step: 2,
+        label: "مزامنة الأسعار...",
+        details: [`✅ الأرصدة: تم تحديث ${stockUpdated} من ${stockTotal} صنف`],
+      }));
+
+      // Step 2: Sync prices
+      const priceRes = await supabase.functions.invoke("erp-sync-outbound", { body: { action: "sync_prices" } });
+      const priceData = priceRes.data;
+      const priceUpdated = priceData?.updated ?? priceData?.result?.updated ?? 0;
+      const priceTotal = priceData?.total ?? priceData?.result?.total ?? 0;
+
+      setSyncProgress(p => ({
+        ...p!,
+        step: 3,
+        label: "اكتملت المزامنة بنجاح!",
+        details: [
+          ...p!.details,
+          `✅ الأسعار: تم تحديث ${priceUpdated} من ${priceTotal} صنف`,
+        ],
+        done: true,
+      }));
+
       fetchProducts();
     } catch (err: any) {
-      toast({ title: "خطأ في المزامنة", description: err.message, variant: "destructive" });
+      setSyncProgress(p => ({
+        ...p!,
+        label: "فشلت المزامنة",
+        error: err.message,
+        done: true,
+      }));
     }
     setSyncing(false);
   };
@@ -133,6 +165,36 @@ const AdminProducts = () => {
       </CardHeader>
 
       <CardContent className="space-y-4">
+        {/* Sync Progress */}
+        {syncProgress && (
+          <div className="border border-border rounded-lg p-4 space-y-3 bg-muted/30">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-foreground">{syncProgress.label}</span>
+              {syncProgress.done && !syncProgress.error && (
+                <Button variant="ghost" size="sm" onClick={() => setSyncProgress(null)} className="h-6 px-2 text-xs">✕</Button>
+              )}
+              {syncProgress.error && (
+                <Button variant="ghost" size="sm" onClick={() => setSyncProgress(null)} className="h-6 px-2 text-xs">✕</Button>
+              )}
+            </div>
+            <Progress value={(syncProgress.step / syncProgress.total) * 100} className="h-2" />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>الخطوة {syncProgress.step} من {syncProgress.total}</span>
+              <span>{Math.round((syncProgress.step / syncProgress.total) * 100)}%</span>
+            </div>
+            {syncProgress.details.length > 0 && (
+              <div className="space-y-1">
+                {syncProgress.details.map((d, i) => (
+                  <p key={i} className="text-xs text-muted-foreground">{d}</p>
+                ))}
+              </div>
+            )}
+            {syncProgress.error && (
+              <p className="text-xs text-destructive">❌ {syncProgress.error}</p>
+            )}
+          </div>
+        )}
+
         {/* Form */}
         {showForm && (
           <AdminProductForm
