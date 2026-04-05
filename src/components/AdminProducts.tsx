@@ -120,10 +120,16 @@ const AdminProducts = () => {
           إدارة المنتجات
           <span className="text-sm font-normal text-muted-foreground">({totalCount} منتج)</span>
         </CardTitle>
-        <Button size="sm" className="gap-2" onClick={() => { setEditProduct(null); setShowForm(true); }}>
-          <Plus className="w-4 h-4" />
-          إضافة منتج
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" className="gap-2" onClick={handleErpSync} disabled={syncing}>
+            {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+            مزامنة الفيصل
+          </Button>
+          <Button size="sm" className="gap-2" onClick={() => { setEditProduct(null); setShowForm(true); }}>
+            <Plus className="w-4 h-4" />
+            إضافة منتج
+          </Button>
+        </div>
       </CardHeader>
 
       <CardContent className="space-y-4">
