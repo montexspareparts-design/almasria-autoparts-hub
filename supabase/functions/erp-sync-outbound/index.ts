@@ -363,15 +363,17 @@ Deno.serve(async (req) => {
 
     // ─── IMPORT ALL ERP PRODUCTS INTO DB ───
     else if (action === "import_products") {
-      const { data: isAdmin } = await supabase.rpc("has_role", {
-        _user_id: userId,
-        _role: "admin",
-      });
-      if (!isAdmin) {
-        return new Response(
-          JSON.stringify({ error: "Forbidden — admin only" }),
-          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+      if (!isServiceRole) {
+        const { data: isAdmin } = await supabase.rpc("has_role", {
+          _user_id: userId!,
+          _role: "admin",
+        });
+        if (!isAdmin) {
+          return new Response(
+            JSON.stringify({ error: "Forbidden — admin only" }),
+            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
       }
 
       syncType = "product_import";
