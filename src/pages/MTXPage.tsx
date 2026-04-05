@@ -74,7 +74,7 @@ const MTXPage = () => {
         <title>MTX | العلامة التابعة للمصرية جروب والمتخصصة في استيراد قطع غيار تويوتا</title>
         <meta name="description" content="MTX إحدى شركات المصرية جروب، توفر قطع غيار تويوتا مستوردة من أفضل الموردين العالميين بجودة تضاهي الأصلية وبسعر تنافسي، لخدمة التجار ومراكز الصيانة والشركات." />
         <meta name="keywords" content="MTX, قطع غيار تويوتا, استيراد قطع غيار, موزع معتمد, أفترماركت, جودة تضاهي الأصلية, DENSO, AISIN" />
-        <link rel="canonical" href="https://almasriaautoparts.com/mtx" />
+        <link rel="canonical" href="https://www.almasriaautoparts.com/mtx" />
       </Helmet>
       <Navbar />
 

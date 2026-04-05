@@ -119,7 +119,7 @@ const ProductsPage = () => {
         <Helmet>
           <title>منتجاتنا | المصرية جروب — قطع غيار وزيوت تويوتا الأصلية</title>
           <meta name="description" content="تصفح كتالوج المصرية جروب: قطع غيار تويوتا الأصلية، زيوت تويوتا، MTX Aftermarket، DENSO، و AISIN. أكثر من 960 صنف متاح." />
-          <link rel="canonical" href="https://almasriaautoparts.com/products" />
+          <link rel="canonical" href="https://www.almasriaautoparts.com/products" />
         </Helmet>
         <Navbar />
         <section className="min-h-screen pt-24 pb-20 relative overflow-hidden flex flex-col">
@@ -199,12 +199,12 @@ const ProductsPage = () => {
       <Helmet>
         <title>{config.title} | المصرية جروب</title>
         <meta name="description" content={config.description} />
-        <link rel="canonical" href={`https://almasriaautoparts.com/products/${brand}`} />
+        <link rel="canonical" href={`https://www.almasriaautoparts.com/products/${brand}`} />
       </Helmet>
       <BreadcrumbSchema items={[
-        { name: "الرئيسية", url: "https://almasriaautoparts.com/" },
-        { name: "المنتجات", url: "https://almasriaautoparts.com/products" },
-        { name: config.title, url: `https://almasriaautoparts.com/products/${brand}` },
+        { name: "الرئيسية", url: "https://www.almasriaautoparts.com/" },
+        { name: "المنتجات", url: "https://www.almasriaautoparts.com/products" },
+        { name: config.title, url: `https://www.almasriaautoparts.com/products/${brand}` },
       ]} />
       <Navbar />
       <BrandHeroBanner

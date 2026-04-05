@@ -70,7 +70,7 @@ const Index = () => {
       <Helmet>
         <title>المصرية جروب | موزع معتمد لقطع غيار وزيوت تويوتا الأصلية في مصر</title>
         <meta name="description" content="منذ 1999 نقدم توزيعًا مؤسسيًا لقطع غيار وزيوت تويوتا الأصلية عبر شبكة تغطي مصر، تسليم خلال 48 ساعة، وعلامتنا MTX بجودة تضاهي المواصفات الأصلية." />
-        <link rel="canonical" href="https://almasriaautoparts.com/" />
+        <link rel="canonical" href="https://www.almasriaautoparts.com/" />
       </Helmet>
       <OrganizationSchema />
       <WebSiteSchema />

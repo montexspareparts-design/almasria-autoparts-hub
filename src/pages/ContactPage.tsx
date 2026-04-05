@@ -33,7 +33,7 @@ const ContactPage = () => {
       <Helmet>
         <title>اتصل بنا | المصرية جروب — موزع قطع غيار تويوتا</title>
         <meta name="description" content="تواصل مع المصرية جروب عبر الهاتف أو البريد أو واتساب." />
-        <link rel="canonical" href="https://almasriaautoparts.com/contact" />
+        <link rel="canonical" href="https://www.almasriaautoparts.com/contact" />
       </Helmet>
       <Navbar />
 

@@ -35,7 +35,7 @@ const ToyotaPartsEgypt = () => {
           name="description"
           content="المصرية جروب موزع معتمد لقطع غيار تويوتا الأصلية وزيوت تويوتا في مصر. شحن لجميع المحافظات وخدمة تجار الجملة والشركات ومراكز الصيانة والقطاعي."
         />
-        <link rel="canonical" href="https://almasriaautoparts.com/toyota-genuine-parts-egypt" />
+        <link rel="canonical" href="https://www.almasriaautoparts.com/toyota-genuine-parts-egypt" />
       </Helmet>
 
       <Navbar />

@@ -7,7 +7,7 @@ import Footer from "@/components/Footer";
 
 import { BreadcrumbSchema, ItemListSchema } from "@/components/SEOSchemaMarkup";
 
-const SITE = "https://almasriaautoparts.com";
+const SITE = "https://www.almasriaautoparts.com";
 
 interface PartTypeData {
   slug: string;
