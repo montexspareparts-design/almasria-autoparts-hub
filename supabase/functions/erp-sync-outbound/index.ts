@@ -580,6 +580,47 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ─── EXPLORE: Try multiple ERP endpoints ───
+    else if (action === "explore_endpoints") {
+      if (!baseUrl) throw new Error("ERP base URL is not configured");
+      const token = await getErpToken(baseUrl);
+      const endpoints = data?.endpoints || [
+        "/Ecommerce/stock",
+        "/Ecommerce/inventory",
+        "/Ecommerce/warehouses",
+        "/Ecommerce/getstock",
+        "/Ecommerce/GetStock",
+        "/Ecommerce/GetInventory",
+        "/Ecommerce/ProductStock",
+        "/Ecommerce/product-stock",
+        "/Ecommerce/balances",
+        "/Ecommerce/items",
+        "/Ecommerce/GetProducts",
+      ];
+      
+      const results: any[] = [];
+      for (const ep of endpoints) {
+        try {
+          const res = await fetch(`${baseUrl}${ep}`, {
+            headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          });
+          const text = await res.text();
+          let body: any;
+          try { body = JSON.parse(text); } catch { body = text.substring(0, 300); }
+          results.push({
+            endpoint: ep,
+            status: res.status,
+            preview: typeof body === 'object' 
+              ? { keys: Object.keys(body), itemCount: Array.isArray(body) ? body.length : (Array.isArray(body?.data) ? body.data.length : null), sample: Array.isArray(body) ? body[0] : (Array.isArray(body?.data) ? body.data[0] : body) }
+              : body,
+          });
+        } catch (e: any) {
+          results.push({ endpoint: ep, status: "error", message: e.message });
+        }
+      }
+      result = { success: true, results };
+    }
+
     // ─── DEBUG: Show raw ERP fields for specific items ───
     else if (action === "debug_raw") {
       if (isMock) {
