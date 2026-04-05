@@ -157,6 +157,9 @@ const AdminCustomerProfile = () => {
                 <div>
                   <h2 className="text-xl font-bold text-foreground">{app.business_name}</h2>
                   <p className="text-sm text-muted-foreground">{app.legal_name}</p>
+                  {erpName && (
+                    <p className="text-sm text-primary font-medium mt-1">🏢 الفيصل: {erpName}</p>
+                  )}
                 </div>
 
                 <div className="flex flex-wrap gap-2">
