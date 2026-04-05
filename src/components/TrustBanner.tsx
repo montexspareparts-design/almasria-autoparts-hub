@@ -102,7 +102,7 @@ const TrustBanner = () => {
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ delay: 0.5 + i * 0.15, type: "spring", stiffness: 100 }}
               whileHover={{ y: -6, borderColor: "hsl(var(--primary) / 0.5)" }}
-              className="bg-secondary-foreground/5 backdrop-blur-sm border border-secondary-foreground/10 rounded-2xl p-6 text-center transition-colors group"
+              className="bg-secondary-foreground/5  border border-secondary-foreground/10 rounded-2xl p-6 text-center transition-colors group"
             >
               <motion.div
                 className="w-14 h-14 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-4"

@@ -117,7 +117,7 @@ const AboutBrief = () => {
                 </Button>
               </motion.div>
               <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.97 }} transition={{ duration: 0.2 }}>
-                <Button size="lg" variant="outline" className="gap-2.5 font-black px-8 py-6 text-base border-2 border-white/40 text-white bg-white/10 hover:bg-white/20 hover:border-white/60 backdrop-blur-sm" asChild>
+                <Button size="lg" variant="outline" className="gap-2.5 font-black px-8 py-6 text-base border-2 border-white/40 text-white bg-white/10 hover:bg-white/20 hover:border-white/60 " asChild>
                   <Link to="/what-sets-us-apart">
                     {t("about.what_sets_us_apart")}
                     <Award className="w-5 h-5" />

@@ -144,8 +144,8 @@ const Navbar = () => {
       transition={{ duration: 0.5, type: "spring", stiffness: 100, damping: 20 }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "bg-secondary/98 backdrop-blur-xl shadow-lg shadow-black/20 border-b border-primary/10"
-          : "bg-secondary/95 backdrop-blur-md border-b border-primary/15"
+          ? "bg-secondary shadow-lg shadow-black/20 border-b border-primary/10"
+          : "bg-secondary/95 border-b border-primary/15"
       }`}
     >
       <div className="container mx-auto px-3 md:px-5">
