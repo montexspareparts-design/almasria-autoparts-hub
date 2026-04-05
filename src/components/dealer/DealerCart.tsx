@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import {
   ShoppingCart, Trash2, Minus, Plus, Package, Loader2,
-  ArrowRight, FileText, XCircle, CheckCircle2, MessageCircle, CreditCard
+  ArrowRight, FileText, XCircle, CheckCircle2, MessageCircle, CreditCard, Shield
 } from "lucide-react";
 
 
