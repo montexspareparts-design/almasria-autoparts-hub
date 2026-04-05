@@ -124,6 +124,10 @@ const AdminDashboard = () => {
   const [assignedTier, setAssignedTier] = useState<string>("");
   const [reviewNotes, setReviewNotes] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [approveErpCode, setApproveErpCode] = useState("");
+  const [approveErpName, setApproveErpName] = useState("");
+  const [isNewCustomer, setIsNewCustomer] = useState(false);
+  const [fetchingApproveErpName, setFetchingApproveErpName] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const activeSection = searchParams.get("section") || "analytics";
