@@ -63,6 +63,17 @@ const AdminERPSync = () => {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState<string | null>(null);
   const [savingConfig, setSavingConfig] = useState(false);
+  const [importProgress, setImportProgress] = useState<{
+    phase: string;
+    currentBatch: number;
+    totalBatches: number;
+    imported: number;
+    updated: number;
+    skipped: number;
+    totalItems: number;
+    done: boolean;
+    error?: string;
+  } | null>(null);
   // Mapping state
   const [mappingProducts, setMappingProducts] = useState<any[]>([]);
   const [mappingSearch, setMappingSearch] = useState("");
