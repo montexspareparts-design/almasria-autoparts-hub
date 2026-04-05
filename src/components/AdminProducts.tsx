@@ -33,6 +33,7 @@ const AdminProducts = () => {
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState("");
   const [brandFilter, setBrandFilter] = useState("all");
+  const [stockFilter, setStockFilter] = useState("all");
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [copiedSku, setCopiedSku] = useState<string | null>(null);
