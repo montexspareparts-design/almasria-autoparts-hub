@@ -379,37 +379,49 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
       </div>
 
       {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-2">
+      <div className="flex flex-col sm:flex-row gap-3">
         <Button
-          className="flex-1 gap-2 text-sm h-12 bg-emerald-600 hover:bg-emerald-700 text-white"
+          className="flex-1 gap-2.5 text-base h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20"
           onClick={handlePayNow}
           disabled={submittingPayment || submitting || items.length === 0}
         >
           {submittingPayment ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
-            <CreditCard className="w-4 h-4" />
+            <CreditCard className="w-5 h-5" />
           )}
-          ادفع الآن
+          ادفع الآن — {total.toLocaleString("ar-EG")} ج.م
         </Button>
         <Button
           variant="outline"
-          className="flex-1 gap-2 text-sm h-12"
+          className="flex-1 gap-2.5 text-base h-14 font-bold rounded-xl border-2"
           onClick={handleSubmitOrder}
           disabled={submitting || submittingPayment || items.length === 0}
         >
           {submitting ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-5 h-5" />
           )}
           أرسل الطلب (ادفع لاحقاً)
         </Button>
       </div>
 
-      <p className="text-[10px] text-muted-foreground text-center">
-        "ادفع الآن" ينقلك مباشرة للدفع الإلكتروني — "أرسل الطلب" يرسله للمراجعة والدفع لاحقاً
-      </p>
+      {/* Trust badges */}
+      <div className="flex items-center justify-center gap-4 py-2">
+        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+          <Shield className="w-3.5 h-3.5 text-emerald-500" />
+          <span>دفع آمن</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+          <Package className="w-3.5 h-3.5 text-primary" />
+          <span>شحن سريع</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+          <span>قطع أصلية 100%</span>
+        </div>
+      </div>
     </div>
   );
 };
