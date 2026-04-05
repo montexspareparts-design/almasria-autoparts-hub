@@ -142,9 +142,12 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
         return;
       }
       await clearCart();
-      toast({ title: "✅ تم إرسال الطلب بنجاح", description: `رقم الطلب: ${order.order_number}` });
       setNotes(""); setShippingAddress(""); setShippingGovernorate("");
-      onNavigateToOrders();
+
+      // Wait for ERP order code
+      const erpCode = await order.erpCodePromise;
+      const displayCode = erpCode || order.order_number;
+      setErpDialog({ open: true, erpCode: displayCode, orderNumber: order.order_number });
     } catch {
       toast({ title: "حدث خطأ", variant: "destructive" });
     } finally {
