@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePersonalization } from "@/hooks/usePersonalization";
+import { supabase } from "@/integrations/supabase/client";
 
 type MessageContent =
   | string
