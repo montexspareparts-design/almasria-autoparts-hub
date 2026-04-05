@@ -79,6 +79,11 @@ const parseChoices = (text: string): { cleanText: string; choices: string[] } =>
   return { cleanText, choices };
 };
 
+// Detect if message contains cart success (added to cart)
+const hasCartAction = (text: string): boolean => {
+  return text.includes("تم إضافة") && text.includes("للسلة");
+};
+
 // Calculate distance between two coordinates (Haversine formula)
 const getDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
   const R = 6371; // Earth's radius in km
