@@ -288,7 +288,7 @@ const AdminCustomerProfile = () => {
               </p>
               <div className="flex gap-2">
                 <Input
-                  placeholder="كود العميل في الفيصل (مثال: C-10045)"
+                  placeholder="كود العميل في الفيصل (مثال: 10000001)"
                   value={erpCode}
                   onChange={(e) => setErpCode(e.target.value)}
                   className="max-w-xs font-mono"
@@ -296,26 +296,56 @@ const AdminCustomerProfile = () => {
                 />
                 <Button
                   size="sm"
-                  disabled={savingErpCode}
+                  disabled={savingErpCode || fetchingErpName}
                   onClick={async () => {
                     setSavingErpCode(true);
+                    let customerName = "";
+
+                    // Try to fetch customer name from Al-Faisal
+                    if (erpCode) {
+                      setFetchingErpName(true);
+                      try {
+                        const res = await supabase.functions.invoke("erp-sync-outbound", {
+                          body: { action: "test_endpoints" },
+                        });
+                        const customersEndpoint = res.data?.endpoints?.["/Ecommerce/GetCustomers"];
+                        if (customersEndpoint?.status === 200) {
+                          const customers = customersEndpoint.preview?.sample?.data || [];
+                          const matched = customers.find((c: any) => c.id?.toString().trim() === erpCode.trim());
+                          if (matched) {
+                            customerName = matched.name?.trim() || "";
+                          }
+                        }
+                      } catch (e) {
+                        console.error("Failed to fetch ERP customer name:", e);
+                      }
+                      setFetchingErpName(false);
+                    }
+
                     const { error } = await supabase
                       .from("dealer_accounts")
-                      .update({ erp_customer_code: erpCode || null } as any)
+                      .update({ 
+                        erp_customer_code: erpCode || null,
+                        erp_customer_name: customerName || null,
+                      } as any)
                       .eq("id", account.id);
                     if (!error) {
-                      toast({ title: "تم حفظ كود الفيصل ✓" });
+                      setErpName(customerName);
+                      toast({ title: customerName ? `تم الربط بنجاح ✓ — ${customerName}` : "تم حفظ كود الفيصل ✓" });
                     } else {
                       toast({ title: "خطأ", description: error.message, variant: "destructive" });
                     }
                     setSavingErpCode(false);
                   }}
                 >
-                  {savingErpCode ? <Loader2 className="w-4 h-4 animate-spin" /> : "حفظ"}
+                  {savingErpCode || fetchingErpName ? <Loader2 className="w-4 h-4 animate-spin" /> : "ربط وحفظ"}
                 </Button>
               </div>
               {erpCode && (
-                <p className="text-xs text-primary mt-2">✓ مربوط بحساب الفيصل: {erpCode}</p>
+                <div className="mt-2 space-y-1">
+                  <p className="text-xs text-primary">✓ مربوط بحساب الفيصل: {erpCode}</p>
+                  {erpName && <p className="text-xs font-medium text-foreground">🏢 {erpName}</p>}
+                </div>
               )}
             </CardContent>
           </Card>
