@@ -58,6 +58,8 @@ const AdminOrders = () => {
   const [autoExpandFirst, setAutoExpandFirst] = useState(false);
   const ordersListRef = useRef<HTMLDivElement>(null);
   const [shippingInfo, setShippingInfo] = useState<Record<string, { tracking_number: string; shipping_company: string }>>({});
+  const [editingShipping, setEditingShipping] = useState<string | null>(null);
+  const [savingShipping, setSavingShipping] = useState(false);
 
   // Stats fetched once
   const [stats, setStats] = useState({ total: 0, pending: 0, processing: 0, shipped: 0, delivered: 0, totalRevenue: 0 });
@@ -711,32 +713,116 @@ const AdminOrders = () => {
                         )}
 
                         {/* Shipping Tracking Info (displayed for shipped/delivered) */}
-                        {(order.status === "shipped" || order.status === "delivered") && (order as any).shipping_company && (
+                        {(order.status === "shipped" || order.status === "delivered") && (
                           <div className="bg-purple-500/5 border border-purple-500/20 rounded-xl p-4 space-y-2">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Truck className="w-4.5 h-4.5 text-purple-600" />
-                              <span className="text-sm font-bold text-foreground">بيانات الشحن</span>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
-                              <div>
-                                <span className="text-muted-foreground">شركة الشحن: </span>
-                                <span className="font-semibold text-foreground">{(order as any).shipping_company}</span>
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <Truck className="w-4.5 h-4.5 text-purple-600" />
+                                <span className="text-sm font-bold text-foreground">بيانات الشحن</span>
                               </div>
-                              {(order as any).tracking_number && (
-                                <div>
-                                  <span className="text-muted-foreground">رقم البوليصة: </span>
-                                  <span className="font-mono font-bold text-foreground" dir="ltr">{(order as any).tracking_number}</span>
-                                </div>
-                              )}
-                              {(order as any).shipped_at && (
-                                <div>
-                                  <span className="text-muted-foreground">تاريخ الشحن: </span>
-                                  <span className="font-semibold text-foreground">
-                                    {new Date((order as any).shipped_at).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-                                  </span>
+                              {editingShipping !== order.id ? (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 text-xs gap-1 text-muted-foreground hover:text-primary"
+                                  onClick={() => {
+                                    setEditingShipping(order.id);
+                                    setShippingInfo(prev => ({
+                                      ...prev,
+                                      [order.id]: {
+                                        shipping_company: (order as any).shipping_company || "",
+                                        tracking_number: (order as any).tracking_number || "",
+                                      }
+                                    }));
+                                  }}
+                                >
+                                  <Edit3 className="w-3 h-3" />
+                                  تعديل
+                                </Button>
+                              ) : (
+                                <div className="flex gap-1">
+                                  <Button
+                                    size="sm"
+                                    className="h-7 text-xs gap-1"
+                                    disabled={savingShipping}
+                                    onClick={async () => {
+                                      setSavingShipping(true);
+                                      const info = shippingInfo[order.id];
+                                      const { error } = await supabase.from("orders").update({
+                                        shipping_company: info?.shipping_company || null,
+                                        tracking_number: info?.tracking_number || null,
+                                      }).eq("id", order.id);
+                                      if (error) {
+                                        toast({ title: "حدث خطأ أثناء التحديث", variant: "destructive" });
+                                      } else {
+                                        toast({ title: "تم تحديث بيانات الشحن ✓" });
+                                        setEditingShipping(null);
+                                        fetchOrders();
+                                      }
+                                      setSavingShipping(false);
+                                    }}
+                                  >
+                                    {savingShipping ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                                    حفظ
+                                  </Button>
+                                  <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setEditingShipping(null)}>
+                                    <X className="w-3 h-3" />
+                                  </Button>
                                 </div>
                               )}
                             </div>
+
+                            {editingShipping === order.id ? (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <Select
+                                  value={shippingInfo[order.id]?.shipping_company || ""}
+                                  onValueChange={(v) => setShippingInfo(prev => ({ ...prev, [order.id]: { ...prev[order.id], shipping_company: v } }))}
+                                >
+                                  <SelectTrigger className="text-sm">
+                                    <SelectValue placeholder="اختر شركة الشحن" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {shippingCompanies.map(c => (
+                                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <Input
+                                  placeholder="رقم البوليصة / التتبع"
+                                  value={shippingInfo[order.id]?.tracking_number || ""}
+                                  onChange={(e) => setShippingInfo(prev => ({ ...prev, [order.id]: { ...prev[order.id], tracking_number: e.target.value } }))}
+                                  className="text-sm"
+                                  dir="ltr"
+                                />
+                              </div>
+                            ) : (
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                                {(order as any).shipping_company && (
+                                  <div>
+                                    <span className="text-muted-foreground">شركة الشحن: </span>
+                                    <span className="font-semibold text-foreground">{(order as any).shipping_company}</span>
+                                  </div>
+                                )}
+                                {(order as any).tracking_number && (
+                                  <div>
+                                    <span className="text-muted-foreground">رقم البوليصة: </span>
+                                    <span className="font-mono font-bold text-foreground" dir="ltr">{(order as any).tracking_number}</span>
+                                  </div>
+                                )}
+                                {(order as any).shipped_at && (
+                                  <div>
+                                    <span className="text-muted-foreground">تاريخ الشحن: </span>
+                                    <span className="font-semibold text-foreground">
+                                      {new Date((order as any).shipped_at).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                                    </span>
+                                  </div>
+                                )}
+                                {!(order as any).shipping_company && !(order as any).tracking_number && (
+                                  <span className="text-muted-foreground text-xs">لم يتم إدخال بيانات شحن — اضغط "تعديل" لإضافتها</span>
+                                )}
+                              </div>
+                            )}
+
                             {order.status === "delivered" && (order as any).delivered_at && (
                               <div className="text-sm pt-1 border-t border-purple-500/10 mt-2">
                                 <span className="text-muted-foreground">تاريخ التسليم: </span>
@@ -747,8 +833,6 @@ const AdminOrders = () => {
                             )}
                           </div>
                         )}
-
-                        {/* Status Update */}
                         {order.status !== "cancelled" && order.status !== "delivered" && (
                           <div className="border-t border-border pt-4 space-y-3">
                             {/* Shipping form — show when processing (about to ship) */}
