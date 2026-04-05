@@ -819,16 +819,20 @@ export type Database = {
           coupon_code: string | null
           coupon_discount: number | null
           created_at: string
+          delivered_at: string | null
           erp_order_code: string | null
           id: string
           invoice_url: string | null
           notes: string | null
           order_number: string
           payment_method: string | null
+          shipped_at: string | null
           shipping_address: string | null
+          shipping_company: string | null
           shipping_governorate: string | null
           status: string
           total_amount: number
+          tracking_number: string | null
           updated_at: string
           user_id: string
         }
@@ -836,16 +840,20 @@ export type Database = {
           coupon_code?: string | null
           coupon_discount?: number | null
           created_at?: string
+          delivered_at?: string | null
           erp_order_code?: string | null
           id?: string
           invoice_url?: string | null
           notes?: string | null
           order_number: string
           payment_method?: string | null
+          shipped_at?: string | null
           shipping_address?: string | null
+          shipping_company?: string | null
           shipping_governorate?: string | null
           status?: string
           total_amount?: number
+          tracking_number?: string | null
           updated_at?: string
           user_id: string
         }
@@ -853,16 +861,20 @@ export type Database = {
           coupon_code?: string | null
           coupon_discount?: number | null
           created_at?: string
+          delivered_at?: string | null
           erp_order_code?: string | null
           id?: string
           invoice_url?: string | null
           notes?: string | null
           order_number?: string
           payment_method?: string | null
+          shipped_at?: string | null
           shipping_address?: string | null
+          shipping_company?: string | null
           shipping_governorate?: string | null
           status?: string
           total_amount?: number
+          tracking_number?: string | null
           updated_at?: string
           user_id?: string
         }

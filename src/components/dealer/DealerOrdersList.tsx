@@ -30,6 +30,10 @@ interface Order {
   shipping_governorate?: string | null;
   payment_method?: string | null;
   notes?: string | null;
+  tracking_number?: string | null;
+  shipping_company?: string | null;
+  shipped_at?: string | null;
+  delivered_at?: string | null;
 }
 
 interface OrderItem {
@@ -410,6 +414,44 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
                               </div>
                             );
                           })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ─── Shipping Tracking Info ─── */}
+                    {(order.status === "shipped" || order.status === "delivered") && order.shipping_company && (
+                      <div className="bg-purple-500/5 border border-purple-500/20 rounded-xl p-4 space-y-2">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Truck className="w-4.5 h-4.5 text-purple-600" />
+                          <span className="text-sm font-bold text-foreground">تتبع الشحنة</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">شركة الشحن: </span>
+                            <span className="font-semibold text-foreground">{order.shipping_company}</span>
+                          </div>
+                          {order.tracking_number && (
+                            <div>
+                              <span className="text-muted-foreground">رقم البوليصة: </span>
+                              <span className="font-mono font-bold text-foreground" dir="ltr">{order.tracking_number}</span>
+                            </div>
+                          )}
+                          {order.shipped_at && (
+                            <div>
+                              <span className="text-muted-foreground">تاريخ الشحن: </span>
+                              <span className="font-semibold text-foreground">
+                                {new Date(order.shipped_at).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                              </span>
+                            </div>
+                          )}
+                          {order.status === "delivered" && order.delivered_at && (
+                            <div>
+                              <span className="text-muted-foreground">تاريخ التسليم: </span>
+                              <span className="font-semibold text-green-600">
+                                {new Date(order.delivered_at).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}

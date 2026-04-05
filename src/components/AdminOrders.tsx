@@ -39,6 +39,8 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; i
 const statusFlow = ["pending", "confirmed", "awaiting_payment", "processing", "shipped", "delivered"];
 const PAGE_SIZE = 15;
 
+const shippingCompanies = ["أرامكس", "بوسطة", "mylerz", "J&T", "DHL", "FedEx", "سعاة خاصين", "استلام من الفرع"];
+
 const AdminOrders = () => {
   const { toast } = useToast();
   const [orders, setOrders] = useState<OrderWithItems[]>([]);
@@ -55,6 +57,7 @@ const AdminOrders = () => {
   const [editedItems, setEditedItems] = useState<Record<string, { id: string; quantity: number; unit_price: number; total_price: number; product_id: string; product?: any }[]>>({});
   const [autoExpandFirst, setAutoExpandFirst] = useState(false);
   const ordersListRef = useRef<HTMLDivElement>(null);
+  const [shippingInfo, setShippingInfo] = useState<Record<string, { tracking_number: string; shipping_company: string }>>({});
 
   // Stats fetched once
   const [stats, setStats] = useState({ total: 0, pending: 0, processing: 0, shipped: 0, delivered: 0, totalRevenue: 0 });
@@ -198,13 +201,35 @@ const AdminOrders = () => {
     const updateData: any = { status: newStatus };
     if (adminNotes[orderId]) updateData.notes = adminNotes[orderId];
 
+    // Add shipping info when marking as shipped
+    if (newStatus === "shipped") {
+      const info = shippingInfo[orderId];
+      if (info?.shipping_company) updateData.shipping_company = info.shipping_company;
+      if (info?.tracking_number) updateData.tracking_number = info.tracking_number;
+      updateData.shipped_at = new Date().toISOString();
+    }
+
+    // Add delivered timestamp
+    if (newStatus === "delivered") {
+      updateData.delivered_at = new Date().toISOString();
+    }
     const { error } = await supabase.from("orders").update(updateData).eq("id", orderId);
 
     if (error) {
       toast({ title: "حدث خطأ أثناء تحديث الحالة", variant: "destructive" });
     } else {
       const order = orders.find(o => o.id === orderId);
-      const notifData = statusNotificationMessages[newStatus];
+      let notifData = statusNotificationMessages[newStatus];
+      // Enrich shipped notification with tracking info
+      if (newStatus === "shipped" && notifData) {
+        const info = shippingInfo[orderId];
+        const trackParts: string[] = [];
+        if (info?.shipping_company) trackParts.push(`شركة الشحن: ${info.shipping_company}`);
+        if (info?.tracking_number) trackParts.push(`رقم البوليصة: ${info.tracking_number}`);
+        if (trackParts.length > 0) {
+          notifData = { ...notifData, message: notifData.message + "\n" + trackParts.join(" — ") };
+        }
+      }
       if (order && notifData) await notifyCustomerWhatsApp(order, notifData.title, notifData.message);
       toast({ title: `تم تحديث حالة الطلب إلى: ${statusConfig[newStatus]?.label || newStatus}` });
       fetchOrders();
@@ -685,9 +710,79 @@ const AdminOrders = () => {
                           </div>
                         )}
 
+                        {/* Shipping Tracking Info (displayed for shipped/delivered) */}
+                        {(order.status === "shipped" || order.status === "delivered") && (order as any).shipping_company && (
+                          <div className="bg-purple-500/5 border border-purple-500/20 rounded-xl p-4 space-y-2">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Truck className="w-4.5 h-4.5 text-purple-600" />
+                              <span className="text-sm font-bold text-foreground">بيانات الشحن</span>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                              <div>
+                                <span className="text-muted-foreground">شركة الشحن: </span>
+                                <span className="font-semibold text-foreground">{(order as any).shipping_company}</span>
+                              </div>
+                              {(order as any).tracking_number && (
+                                <div>
+                                  <span className="text-muted-foreground">رقم البوليصة: </span>
+                                  <span className="font-mono font-bold text-foreground" dir="ltr">{(order as any).tracking_number}</span>
+                                </div>
+                              )}
+                              {(order as any).shipped_at && (
+                                <div>
+                                  <span className="text-muted-foreground">تاريخ الشحن: </span>
+                                  <span className="font-semibold text-foreground">
+                                    {new Date((order as any).shipped_at).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            {order.status === "delivered" && (order as any).delivered_at && (
+                              <div className="text-sm pt-1 border-t border-purple-500/10 mt-2">
+                                <span className="text-muted-foreground">تاريخ التسليم: </span>
+                                <span className="font-semibold text-green-600">
+                                  {new Date((order as any).delivered_at).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         {/* Status Update */}
                         {order.status !== "cancelled" && order.status !== "delivered" && (
                           <div className="border-t border-border pt-4 space-y-3">
+                            {/* Shipping form — show when processing (about to ship) */}
+                            {(order.status === "processing" || statusFlow.indexOf(order.status) >= statusFlow.indexOf("processing")) && order.status !== "shipped" && (
+                              <div className="bg-purple-500/5 border border-purple-500/20 rounded-xl p-4 space-y-3">
+                                <div className="flex items-center gap-2">
+                                  <Truck className="w-4 h-4 text-purple-600" />
+                                  <span className="text-sm font-bold text-foreground">بيانات الشحن (اختياري)</span>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  <Select
+                                    value={shippingInfo[order.id]?.shipping_company || ""}
+                                    onValueChange={(v) => setShippingInfo(prev => ({ ...prev, [order.id]: { ...prev[order.id], shipping_company: v, tracking_number: prev[order.id]?.tracking_number || "" } }))}
+                                  >
+                                    <SelectTrigger className="text-sm">
+                                      <SelectValue placeholder="اختر شركة الشحن" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {shippingCompanies.map(c => (
+                                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <Input
+                                    placeholder="رقم البوليصة / التتبع"
+                                    value={shippingInfo[order.id]?.tracking_number || ""}
+                                    onChange={(e) => setShippingInfo(prev => ({ ...prev, [order.id]: { ...prev[order.id], tracking_number: e.target.value, shipping_company: prev[order.id]?.shipping_company || "" } }))}
+                                    className="text-sm"
+                                    dir="ltr"
+                                  />
+                                </div>
+                              </div>
+                            )}
+
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-sm font-medium text-foreground">تحديث الحالة:</span>
                               {statusFlow
