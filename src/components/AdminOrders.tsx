@@ -219,7 +219,17 @@ const AdminOrders = () => {
       toast({ title: "حدث خطأ أثناء تحديث الحالة", variant: "destructive" });
     } else {
       const order = orders.find(o => o.id === orderId);
-      const notifData = statusNotificationMessages[newStatus];
+      let notifData = statusNotificationMessages[newStatus];
+      // Enrich shipped notification with tracking info
+      if (newStatus === "shipped" && notifData) {
+        const info = shippingInfo[orderId];
+        const trackParts: string[] = [];
+        if (info?.shipping_company) trackParts.push(`شركة الشحن: ${info.shipping_company}`);
+        if (info?.tracking_number) trackParts.push(`رقم البوليصة: ${info.tracking_number}`);
+        if (trackParts.length > 0) {
+          notifData = { ...notifData, message: notifData.message + "\n" + trackParts.join(" — ") };
+        }
+      }
       if (order && notifData) await notifyCustomerWhatsApp(order, notifData.title, notifData.message);
       toast({ title: `تم تحديث حالة الطلب إلى: ${statusConfig[newStatus]?.label || newStatus}` });
       fetchOrders();
