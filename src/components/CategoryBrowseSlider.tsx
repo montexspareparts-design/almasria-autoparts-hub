@@ -91,39 +91,7 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
     staleTime: 5 * 60 * 1000,
   });
 
-  // Auto-scroll marquee
-  const rafRef = useRef<number>(0);
-  const speedRef = useRef(0);
-  const pauseUntilRef = useRef(0);
-  const targetSpeed = 1.2;
 
-  useEffect(() => {
-    if (!scrollRef.current) return;
-    let lastTime = 0;
-
-    const animate = (time: number) => {
-      if (!scrollRef.current) return;
-      const delta = lastTime ? time - lastTime : 16;
-      lastTime = time;
-
-      const paused = isHovered || Date.now() < pauseUntilRef.current;
-      const target = paused ? 0 : targetSpeed;
-      speedRef.current += (target - speedRef.current) * 0.08;
-
-      if (Math.abs(speedRef.current) > 0.01) {
-        const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-        if (scrollLeft <= -(scrollWidth - clientWidth) + 5) {
-          scrollRef.current.scrollLeft = 0;
-        } else {
-          scrollRef.current.scrollLeft -= speedRef.current * (delta / 16);
-        }
-      }
-      rafRef.current = requestAnimationFrame(animate);
-    };
-
-    rafRef.current = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [isHovered]);
 
   const handleCategoryClick = (cat: { id: string; slug: string }) => {
     if (onCategorySelect) {
