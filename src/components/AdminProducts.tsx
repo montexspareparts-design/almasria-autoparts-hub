@@ -132,7 +132,7 @@ const AdminProducts = () => {
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
   // Reset page on filter change
-  useEffect(() => { setPage(0); }, [search, brandFilter]);
+  useEffect(() => { setPage(0); }, [search, brandFilter, stockFilter]);
 
   const handleDelete = async (product: Product) => {
     const { error } = await supabase.from("products").delete().eq("id", product.id);
