@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, XCircle, Clock, Eye, LogOut, Trash2, Users, ShoppingBag, Video, FileText, Image, Brain, Zap, Bell, ListVideo, Menu, X, ChevronRight, Package, BarChart3, Tag, Layers, TrendingUp, ArrowLeftRight, Briefcase, Banknote, Shield } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Clock, Eye, LogOut, Trash2, Users, ShoppingBag, Video, FileText, Image, Brain, Zap, Bell, ListVideo, Menu, X, ChevronRight, Package, BarChart3, Tag, Layers, TrendingUp, ArrowLeftRight, Briefcase, Banknote, Shield, Building2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -122,6 +124,10 @@ const AdminDashboard = () => {
   const [assignedTier, setAssignedTier] = useState<string>("");
   const [reviewNotes, setReviewNotes] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [approveErpCode, setApproveErpCode] = useState("");
+  const [approveErpName, setApproveErpName] = useState("");
+  const [isNewCustomer, setIsNewCustomer] = useState(false);
+  const [fetchingApproveErpName, setFetchingApproveErpName] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const activeSection = searchParams.get("section") || "analytics";
@@ -161,8 +167,24 @@ const AdminDashboard = () => {
     }
   };
 
+  const fetchErpCustomerName = async (code: string) => {
+    if (!code.trim()) { setApproveErpName(""); return; }
+    setFetchingApproveErpName(true);
+    try {
+      const { data } = await supabase.functions.invoke("erp-sync-outbound", {
+        body: { action: "fetch_erp_customers", erp_customer_code: code.trim() },
+      });
+      setApproveErpName(data?.customer_name || "");
+    } catch { setApproveErpName(""); }
+    setFetchingApproveErpName(false);
+  };
+
   const handleApprove = async (app: DealerApplication) => {
     if (!assignedTier) { toast({ title: "يرجى تحديد فئة التاجر", variant: "destructive" }); return; }
+    if (!isNewCustomer && !approveErpCode.trim()) {
+      toast({ title: "يرجى إدخال كود العميل في الفيصل أو تحديد أنه عميل جديد", variant: "destructive" });
+      return;
+    }
     setProcessing(true);
 
     await supabase
@@ -180,6 +202,10 @@ const AdminDashboard = () => {
       user_id: app.user_id,
       application_id: app.id,
       tier: assignedTier as CustomerTier,
+      ...(isNewCustomer ? {} : {
+        erp_customer_code: approveErpCode.trim(),
+        erp_customer_name: approveErpName || null,
+      }),
     });
 
     await sendNotification(app, "approved");
@@ -192,6 +218,9 @@ const AdminDashboard = () => {
     setSelectedApp(null);
     setAssignedTier("");
     setReviewNotes("");
+    setApproveErpCode("");
+    setApproveErpName("");
+    setIsNewCustomer(false);
     fetchApplications();
     setProcessing(false);
   };
@@ -304,6 +333,54 @@ const AdminDashboard = () => {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {/* ERP Customer Code */}
+                  <div className="space-y-3 border border-border rounded-lg p-4 bg-muted/30">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="w-4 h-4 text-primary" />
+                      <label className="text-sm font-medium text-foreground">ربط حساب الفيصل</label>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="isNewCustomer"
+                        checked={isNewCustomer}
+                        onCheckedChange={(checked) => {
+                          setIsNewCustomer(!!checked);
+                          if (checked) { setApproveErpCode(""); setApproveErpName(""); }
+                        }}
+                      />
+                      <label htmlFor="isNewCustomer" className="text-sm text-muted-foreground cursor-pointer">
+                        عميل جديد (لم يُسجّل في الفيصل بعد)
+                      </label>
+                    </div>
+
+                    {!isNewCustomer && (
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <Input
+                            value={approveErpCode}
+                            onChange={(e) => setApproveErpCode(e.target.value)}
+                            placeholder="أدخل كود العميل في الفيصل (إلزامي)"
+                            className="flex-1"
+                            dir="ltr"
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => fetchErpCustomerName(approveErpCode)}
+                            disabled={!approveErpCode.trim() || fetchingApproveErpName}
+                          >
+                            {fetchingApproveErpName ? <Loader2 className="w-4 h-4 animate-spin" /> : "تحقق"}
+                          </Button>
+                        </div>
+                        {approveErpName && (
+                          <p className="text-sm text-green-600 font-medium">🏢 الفيصل: {approveErpName}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">ملاحظات المراجعة</label>
                     <Textarea value={reviewNotes} onChange={(e) => setReviewNotes(e.target.value)} placeholder="أضف ملاحظاتك هنا..." />
