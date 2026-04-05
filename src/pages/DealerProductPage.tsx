@@ -97,7 +97,7 @@ const DealerProductPage = () => {
       // Reviews
       supabase.from("product_reviews_public").select("id, rating, comment, reviewer_name, created_at").eq("product_id", product.id).eq("is_approved", true).order("created_at", { ascending: false }).limit(10),
       // Related products (same category)
-      product.category_id ? supabase.from("products").select("id, name_ar, name_en, sku, image_url, base_price, sale_price, is_on_sale, stock_quantity, brand, min_order_qty, description_ar, description_en, compatible_models, year_from, year_to, category_id").eq("is_active", true).eq("category_id", product.category_id).neq("id", product.id).limit(6) : null,
+      product.category_id ? supabase.from("products").select("id, name_ar, name_en, sku, image_url, base_price, sale_price, is_on_sale, stock_quantity, brand, min_order_qty, description_ar, description_en, compatible_models, year_from, year_to, category_id").eq("is_active", true).gt("stock_quantity", 0).eq("category_id", product.category_id).neq("id", product.id).limit(6) : null,
       // Favorite check
       supabase.from("dealer_favorites").select("id").eq("user_id", user.id).eq("product_id", product.id).maybeSingle(),
       // Record price view
