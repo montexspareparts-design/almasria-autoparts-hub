@@ -37,12 +37,14 @@ async function getErpToken(baseUrl: string): Promise<string> {
     throw new Error(`ERP Auth returned non-JSON (status ${res.status}): ${text.substring(0, 200)}`);
   }
 
-  if (!res.ok || !data.token) {
+  // Al Faisal returns "jwtToken" not "token"
+  const jwt = data.jwtToken || data.token;
+  if (!res.ok || !jwt) {
     throw new Error(`ERP Authentication failed [${res.status}]: ${JSON.stringify(data)}`);
   }
 
-  cachedToken = data.token;
-  // Default token validity: 24 hours (adjust if API returns expiry)
+  cachedToken = jwt;
+  // Token validity from API response, default 24 hours
   tokenExpiry = Date.now() + (data.expiresIn ? data.expiresIn * 1000 : 24 * 60 * 60 * 1000);
 
   return cachedToken!;
