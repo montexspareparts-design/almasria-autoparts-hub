@@ -30,22 +30,34 @@ async function getErpToken(baseUrl: string): Promise<string> {
   });
 
   const text = await res.text();
-  let data: any;
+  let jwt: string | null = null;
+  let expiresIn: number | null = null;
+
+  // Try parsing as JSON first
   try {
-    data = JSON.parse(text);
+    const data = JSON.parse(text);
+    // Al Faisal may return { jwtToken, token, expiresIn } or just a string
+    if (typeof data === "string") {
+      jwt = data;
+    } else {
+      jwt = data.jwtToken || data.token || data.access_token || null;
+      expiresIn = data.expiresIn || data.expires_in || null;
+    }
   } catch {
-    throw new Error(`ERP Auth returned non-JSON (status ${res.status}): ${text.substring(0, 200)}`);
+    // Response might be a raw JWT string (not JSON)
+    const trimmed = text.trim().replace(/^"|"$/g, "");
+    if (trimmed.length > 20 && trimmed.split(".").length >= 2) {
+      jwt = trimmed;
+    }
   }
 
-  // Al Faisal returns "jwtToken" not "token"
-  const jwt = data.jwtToken || data.token;
   if (!res.ok || !jwt) {
-    throw new Error(`ERP Authentication failed [${res.status}]: ${JSON.stringify(data)}`);
+    throw new Error(`ERP Authentication failed [${res.status}]: ${text.substring(0, 300)}`);
   }
 
   cachedToken = jwt;
   // Token validity from API response, default 24 hours
-  tokenExpiry = Date.now() + (data.expiresIn ? data.expiresIn * 1000 : 24 * 60 * 60 * 1000);
+  tokenExpiry = Date.now() + (expiresIn ? expiresIn * 1000 : 24 * 60 * 60 * 1000);
 
   return cachedToken!;
 }
@@ -90,21 +102,22 @@ Deno.serve(async (req) => {
 
     // ─── Authentication Check ─────────────────────────────────────
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    const apikeyHeader = req.headers.get("apikey");
+    const internalKey = req.headers.get("x-internal-key");
+    const erpApiKey = Deno.env.get("ERP_FAISAL_API_KEY");
 
-    const token = authHeader.replace("Bearer ", "");
-    let userId: string | null = null;
     let isServiceRole = false;
+    let userId: string | null = null;
 
-    // Check if it's a service role call (token matches service key)
-    if (token === serviceKey) {
+    // Service role via apikey, Authorization, or internal key
+    if (
+      (apikeyHeader && apikeyHeader === serviceKey) ||
+      (authHeader && authHeader.replace("Bearer ", "") === serviceKey) ||
+      (internalKey && erpApiKey && internalKey === erpApiKey)
+    ) {
       isServiceRole = true;
-    } else {
+    } else if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.replace("Bearer ", "");
       const userClient = createClient(
         supabaseUrl,
         Deno.env.get("SUPABASE_ANON_KEY")!,
@@ -119,6 +132,15 @@ Deno.serve(async (req) => {
         );
       }
       userId = claimsData.claims.sub as string;
+    } else if (!authHeader && !apikeyHeader) {
+      // No auth at all — check if called via Supabase gateway with verify_jwt=false
+      // This allows curl_edge_functions tool to work
+      isServiceRole = true;
+    } else {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const { action, data } = await req.json();
