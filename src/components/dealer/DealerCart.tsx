@@ -113,12 +113,19 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
       setSearching(true);
       const { data } = await supabase
         .from("products")
-        .select("id, name_ar, sku, base_price, image_url, stock_quantity, brand")
+        .select("id, name_ar, sku, base_price, image_url, stock_quantity, safety_stock, max_order_cap, brand")
         .eq("is_active", true)
         .gt("stock_quantity", 0)
         .or(`name_ar.ilike.%${query}%,sku.ilike.%${query}%`)
         .limit(8);
-      setSearchResults(data || []);
+      // Compute available and max allowed per item
+      const enriched = (data || []).map((p: any) => {
+        const available = Math.max(0, (p.stock_quantity || 0) - (p.safety_stock || 0));
+        const fiftyPct = Math.max(1, Math.floor(available * 0.5));
+        const maxAllowed = p.max_order_cap ? Math.min(fiftyPct, p.max_order_cap) : fiftyPct;
+        return { ...p, available_quantity: available, max_allowed: maxAllowed };
+      }).filter((p: any) => p.available_quantity > 0);
+      setSearchResults(enriched);
       setSearching(false);
     }, 300);
   }, []);
