@@ -538,19 +538,118 @@ ${userInterests ? `## اهتمامات العميل:
     }
 
     if (toolCalls.length > 0) {
+      // Generic function to do follow-up AI call after tool execution
+      const doFollowUp = async (tc: any, toolResult: any) => {
+        const followUpMessages = [
+          { role: "system", content: SYSTEM_PROMPT },
+          ...messages,
+          { role: "assistant", content: null, tool_calls: [{ id: tc.id, type: "function", function: { name: tc.function.name, arguments: tc.function.arguments } }] },
+          { role: "tool", tool_call_id: tc.id, content: JSON.stringify(toolResult) },
+        ];
+        const followUpResponse = await fetch(
+          "https://ai.gateway.lovable.dev/v1/chat/completions",
+          {
+            method: "POST",
+            headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ model: "google/gemini-3-flash-preview", messages: followUpMessages, stream: true }),
+          }
+        );
+        if (followUpResponse.ok) {
+          return new Response(followUpResponse.body, { headers: { ...corsHeaders, "Content-Type": "text/event-stream" } });
+        }
+        return null;
+      };
+
       for (const tc of toolCalls) {
-        if (tc.function.name === "request_callback") {
-          try {
-            const args = JSON.parse(tc.function.arguments);
+        try {
+          const args = JSON.parse(tc.function.arguments);
+
+          // ── add_to_cart ──
+          if (tc.function.name === "add_to_cart" && authenticatedUserId) {
+            const sku = (args.sku || "").trim();
+            const qty = Math.max(1, args.quantity || 1);
+
+            // Find product by SKU
+            const { data: product } = await supabase
+              .from("products")
+              .select("id, name_ar, sku, stock_quantity")
+              .eq("sku", sku)
+              .eq("is_active", true)
+              .maybeSingle();
+
+            if (!product) {
+              const resp = await doFollowUp(tc, { success: false, error: `لم يتم العثور على منتج برقم القطعة "${sku}"` });
+              if (resp) return resp;
+              continue;
+            }
+
+            if (product.stock_quantity < qty) {
+              const resp = await doFollowUp(tc, { success: false, error: `الكمية المطلوبة (${qty}) غير متوفرة حالياً للمنتج "${product.name_ar}"` });
+              if (resp) return resp;
+              continue;
+            }
+
+            // Check if already in cart
+            const { data: existing } = await supabase
+              .from("dealer_cart_items")
+              .select("id, quantity")
+              .eq("user_id", authenticatedUserId)
+              .eq("product_id", product.id)
+              .maybeSingle();
+
+            if (existing) {
+              await supabase
+                .from("dealer_cart_items")
+                .update({ quantity: existing.quantity + qty })
+                .eq("id", existing.id);
+            } else {
+              await supabase
+                .from("dealer_cart_items")
+                .insert({ user_id: authenticatedUserId, product_id: product.id, quantity: qty });
+            }
+
+            const resp = await doFollowUp(tc, {
+              success: true,
+              message: `تم إضافة "${product.name_ar}" (${product.sku}) × ${qty} للسلة بنجاح`,
+              product_name: product.name_ar,
+              sku: product.sku,
+              quantity: qty,
+            });
+            if (resp) return resp;
+          }
+
+          // ── view_cart ──
+          if (tc.function.name === "view_cart" && authenticatedUserId) {
+            const { data: cartItems } = await supabase
+              .from("dealer_cart_items")
+              .select("quantity, product_id, products(name_ar, sku)")
+              .eq("user_id", authenticatedUserId);
+
+            const items = (cartItems || []).map((ci: any) => ({
+              name: ci.products?.name_ar || "—",
+              sku: ci.products?.sku || "—",
+              quantity: ci.quantity,
+            }));
+
+            const resp = await doFollowUp(tc, {
+              success: true,
+              items,
+              total_items: items.length,
+              message: items.length > 0
+                ? `السلة فيها ${items.length} صنف. يمكنك إكمال الطلبية من تبويب "طلباتي" في لوحة التحكم.`
+                : "السلة فاضية حالياً.",
+              navigate_action: items.length > 0 ? "orders" : null,
+            });
+            if (resp) return resp;
+          }
+
+          // ── request_callback ──
+          if (tc.function.name === "request_callback") {
             const phone = args.customer_phone || "";
             const name = args.customer_name || "عميل من الشات بوت";
             const notes = args.notes || "";
 
-            const { data: adminRoles } = await supabase
-              .from("user_roles")
-              .select("user_id")
-              .eq("role", "admin");
-
+            const { data: adminRoles } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
             if (adminRoles && adminRoles.length > 0) {
               const notifications = adminRoles.map((admin: any) => ({
                 user_id: admin.user_id,
@@ -569,45 +668,19 @@ ${userInterests ? `## اهتمامات العميل:
                 const waMessage = `🚨 *طلب تواصل من الشات بوت*\n\n👤 ${name}\n📱 ${phone}\n📝 ${notes}\n⏰ ${new Date().toLocaleString("ar-EG", { timeZone: "Africa/Cairo" })}`;
                 await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_SID}/Messages.json`, {
                   method: "POST",
-                  headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                    Authorization: `Basic ${btoa(`${TWILIO_SID}:${TWILIO_TOKEN}`)}`,
-                  },
-                  body: new URLSearchParams({
-                    From: `whatsapp:${TWILIO_PHONE}`,
-                    To: "whatsapp:+201153961008",
-                    Body: waMessage,
-                  }).toString(),
+                  headers: { "Content-Type": "application/x-www-form-urlencoded", Authorization: `Basic ${btoa(`${TWILIO_SID}:${TWILIO_TOKEN}`)}` },
+                  body: new URLSearchParams({ From: `whatsapp:${TWILIO_PHONE}`, To: "whatsapp:+201153961008", Body: waMessage }).toString(),
                 });
               }
-            } catch (waErr) {
-              console.error("WhatsApp error:", waErr);
-            }
+            } catch (waErr) { console.error("WhatsApp error:", waErr); }
 
-            const followUpMessages = [
-              { role: "system", content: SYSTEM_PROMPT },
-              ...messages,
-              { role: "assistant", content: null, tool_calls: [{ id: tc.id, type: "function", function: { name: tc.function.name, arguments: tc.function.arguments } }] },
-              { role: "tool", tool_call_id: tc.id, content: JSON.stringify({ success: true, message: `تم إرسال طلب التواصل. اسم: ${name}, رقم: ${phone}` }) },
-            ];
-
-            const followUpResponse = await fetch(
-              "https://ai.gateway.lovable.dev/v1/chat/completions",
-              {
-                method: "POST",
-                headers: {
-                  Authorization: `Bearer ${LOVABLE_API_KEY}`,
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  model: "google/gemini-3-flash-preview",
-                  messages: followUpMessages,
-                  stream: true,
-                }),
-              }
-            );
-
-            if (followUpResponse.ok) {
+            const resp = await doFollowUp(tc, { success: true, message: `تم إرسال طلب التواصل. اسم: ${name}, رقم: ${phone}` });
+            if (resp) return resp;
+          }
+        } catch (e) {
+          console.error("Tool call error:", e);
+        }
+      }
               return new Response(followUpResponse.body, {
                 headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
               });
