@@ -353,7 +353,51 @@ Deno.serve(async (req) => {
         response: result,
         status: isMock ? "mock" : "success",
       });
-    } else {
+    }
+
+    // ─── FETCH ERP PRODUCTS LIST (for mapping) ───
+    else if (action === "fetch_erp_products") {
+      const { data: isAdmin } = await supabase.rpc("has_role", {
+        _user_id: userId,
+        _role: "admin",
+      });
+      if (!isAdmin) {
+        return new Response(
+          JSON.stringify({ error: "Forbidden — admin only" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      if (isMock) {
+        result = {
+          success: true,
+          products: [
+            { id: "10001", name: "فلتر زيت كورولا", price: 120, quantity: 50 },
+            { id: "10002", name: "فلتر هواء كامري", price: 85, quantity: 30 },
+            { id: "10003", name: "بواجي يارس", price: 45, quantity: 100 },
+          ],
+        };
+      } else {
+        if (!baseUrl) throw new Error("ERP base URL is not configured");
+        const erpResponse = await erpFetch(baseUrl, "/Ecommerce/products");
+        const items = Array.isArray(erpResponse)
+          ? erpResponse
+          : (erpResponse.data || erpResponse.items || []);
+
+        result = {
+          success: true,
+          total: items.length,
+          products: items.map((i: any) => ({
+            id: (i.id || i.itemCode || "").toString().trim(),
+            name: i.name || i.itemName || "",
+            price: i.price ?? i.unitPrice ?? 0,
+            quantity: i.quantity ?? i.stock ?? 0,
+          })),
+        };
+      }
+    }
+
+    else {
       throw new Error(`Unknown action: ${action}`);
     }
 
