@@ -69,6 +69,11 @@ const AdminERPSync = () => {
   const [erpProducts, setErpProducts] = useState<{ id: string; name: string; price: number; quantity: number }[]>([]);
   const [fetchingErp, setFetchingErp] = useState(false);
   const [erpSearchFilter, setErpSearchFilter] = useState<Record<string, string>>({});
+  // Unlinked products state
+  const [unlinkedProducts, setUnlinkedProducts] = useState<any[]>([]);
+  const [unlinkedLoading, setUnlinkedLoading] = useState(false);
+  const [unlinkedBrandFilter, setUnlinkedBrandFilter] = useState("all");
+  const [unlinkedSearch, setUnlinkedSearch] = useState("");
   const [testPayload, setTestPayload] = useState(
     JSON.stringify(
       {
