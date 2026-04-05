@@ -142,7 +142,8 @@ const DealerProductPage = () => {
         .from("products")
         .select("id, name_ar, name_en, sku, image_url, base_price, sale_price, is_on_sale, stock_quantity, brand, min_order_qty, description_ar, description_en, compatible_models, year_from, year_to, category_id")
         .in("id", topIds)
-        .eq("is_active", true);
+        .eq("is_active", true)
+        .gt("stock_quantity", 0);
 
       if (prods) setAlsoOrdered(prods as Product[]);
     })();
