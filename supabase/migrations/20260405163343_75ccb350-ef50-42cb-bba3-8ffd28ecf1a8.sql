@@ -1,0 +1,1 @@
+ALTER TABLE public.orders ADD COLUMN erp_order_code text;
