@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import {
   Loader2, RefreshCw, ArrowUpRight, ArrowDownLeft, CheckCircle,
@@ -62,6 +63,17 @@ const AdminERPSync = () => {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState<string | null>(null);
   const [savingConfig, setSavingConfig] = useState(false);
+  const [importProgress, setImportProgress] = useState<{
+    phase: string;
+    currentBatch: number;
+    totalBatches: number;
+    imported: number;
+    updated: number;
+    skipped: number;
+    totalItems: number;
+    done: boolean;
+    error?: string;
+  } | null>(null);
   // Mapping state
   const [mappingProducts, setMappingProducts] = useState<any[]>([]);
   const [mappingSearch, setMappingSearch] = useState("");
@@ -226,6 +238,86 @@ const AdminERPSync = () => {
     setSyncing(null);
   };
 
+  const handleBatchImport = async () => {
+    setSyncing("import_products");
+    setImportProgress({ phase: "جاري جلب الأصناف من الفيصل...", currentBatch: 0, totalBatches: 0, imported: 0, updated: 0, skipped: 0, totalItems: 0, done: false });
+
+    try {
+      // Phase 1: Fetch all ERP products
+      const { data: erpFetchData, error: fetchErr } = await supabase.functions.invoke("erp-sync-outbound", {
+        body: { action: "fetch_erp_products", data: {} },
+      });
+      if (fetchErr) throw fetchErr;
+
+      const products = erpFetchData?.products || [];
+      if (products.length === 0) {
+        setImportProgress(p => ({ ...p!, phase: "لم يتم العثور على أصناف", done: true }));
+        setSyncing(null);
+        return;
+      }
+
+      // Phase 2: Send in batches
+      const BATCH_SIZE = 500;
+      const totalBatches = Math.ceil(products.length / BATCH_SIZE);
+      let totalImported = 0, totalUpdated = 0, totalSkipped = 0;
+
+      setImportProgress(p => ({ ...p!, phase: "جاري استيراد الأصناف...", totalBatches, totalItems: products.length }));
+
+      for (let i = 0; i < products.length; i += BATCH_SIZE) {
+        const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+        const batch = products.slice(i, i + BATCH_SIZE);
+
+        setImportProgress(p => ({
+          ...p!,
+          currentBatch: batchNum,
+          phase: `جاري معالجة الدفعة ${batchNum} من ${totalBatches}...`,
+        }));
+
+        const { data: batchResult, error: batchErr } = await supabase.functions.invoke("erp-sync-outbound", {
+          body: { action: "import_products_batch", data: { items: batch } },
+        });
+
+        if (batchErr) {
+          console.error(`Batch ${batchNum} error:`, batchErr);
+        } else {
+          totalImported += batchResult?.imported || 0;
+          totalUpdated += batchResult?.updated || 0;
+          totalSkipped += batchResult?.skipped || 0;
+        }
+
+        setImportProgress(p => ({
+          ...p!,
+          imported: totalImported,
+          updated: totalUpdated,
+          skipped: totalSkipped,
+        }));
+      }
+
+      setImportProgress(p => ({
+        ...p!,
+        currentBatch: totalBatches,
+        phase: "✅ اكتمل الاستيراد بنجاح!",
+        done: true,
+      }));
+
+      toast({
+        title: "تم استيراد الأصناف ✓",
+        description: `جديد: ${totalImported} | محدّث: ${totalUpdated} | تخطي: ${totalSkipped}`,
+      });
+
+      fetchData();
+    } catch (err: any) {
+      setImportProgress(p => ({
+        ...p!,
+        phase: "❌ فشل الاستيراد",
+        error: err.message,
+        done: true,
+      }));
+      toast({ title: "خطأ في الاستيراد", description: err.message, variant: "destructive" });
+    }
+    setSyncing(null);
+  };
+
   const testWebhook = async () => {
     setSyncing("webhook_test");
     try {
@@ -366,15 +458,56 @@ const AdminERPSync = () => {
                   </p>
                 </div>
               </div>
-              {syncing === "import_products" && (
-                <div className="mb-3 p-3 rounded-lg bg-muted/50 text-sm text-muted-foreground flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  جاري استيراد الأصناف... قد يستغرق بضع دقائق حسب عدد المنتجات
+
+              {/* Import Progress Bar */}
+              {importProgress && (
+                <div className="mb-3 p-4 rounded-lg bg-muted/50 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground flex items-center gap-2">
+                      {!importProgress.done && <Loader2 className="w-4 h-4 animate-spin" />}
+                      {importProgress.phase}
+                    </span>
+                    {importProgress.done && (
+                      <Button variant="ghost" size="sm" onClick={() => setImportProgress(null)} className="h-6 px-2 text-xs">✕</Button>
+                    )}
+                  </div>
+
+                  {importProgress.totalBatches > 0 && (
+                    <>
+                      <Progress value={(importProgress.currentBatch / importProgress.totalBatches) * 100} className="h-2" />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>الدفعة {importProgress.currentBatch} من {importProgress.totalBatches}</span>
+                        <span>{Math.round((importProgress.currentBatch / importProgress.totalBatches) * 100)}%</span>
+                      </div>
+                    </>
+                  )}
+
+                  {importProgress.totalItems > 0 && (
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div className="bg-background rounded p-2 text-center">
+                        <p className="font-bold text-foreground">{importProgress.imported}</p>
+                        <p className="text-muted-foreground">جديد</p>
+                      </div>
+                      <div className="bg-background rounded p-2 text-center">
+                        <p className="font-bold text-foreground">{importProgress.updated}</p>
+                        <p className="text-muted-foreground">محدّث</p>
+                      </div>
+                      <div className="bg-background rounded p-2 text-center">
+                        <p className="font-bold text-foreground">{importProgress.skipped}</p>
+                        <p className="text-muted-foreground">تخطي</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {importProgress.error && (
+                    <p className="text-xs text-destructive">❌ {importProgress.error}</p>
+                  )}
                 </div>
               )}
+
               <Button
                 className="w-full gap-2"
-                onClick={() => runSync("import_products")}
+                onClick={handleBatchImport}
                 disabled={syncing !== null}
               >
                 {syncing === "import_products" ? (

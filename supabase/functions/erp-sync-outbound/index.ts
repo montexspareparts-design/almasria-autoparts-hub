@@ -507,6 +507,43 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ─── IMPORT PRODUCTS BATCH (client sends items chunk) ───
+    else if (action === "import_products_batch") {
+      if (!isServiceRole) {
+        const { data: isAdmin } = await supabase.rpc("has_role", {
+          _user_id: userId!,
+          _role: "admin",
+        });
+        if (!isAdmin) {
+          return new Response(
+            JSON.stringify({ error: "Forbidden — admin only" }),
+            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
+
+      const batchItems = (data.items || []).map((item: any) => ({
+        id: (item.id || item.itemCode || item.sku || item.code || "").toString().trim(),
+        name: (item.name || item.itemName || "").toString().trim(),
+        price: Number(item.price ?? item.unitPrice ?? item.basePrice ?? 0),
+        qty: Number(item.qty ?? item.quantity ?? item.stock ?? item.availableQty ?? 0),
+      }));
+
+      const { data: batchResult, error: batchErr } = await supabase.rpc("bulk_import_products", {
+        _items: batchItems,
+      });
+
+      if (batchErr) throw new Error(`Batch import failed: ${batchErr.message}`);
+
+      result = {
+        success: true,
+        imported: batchResult?.imported || 0,
+        updated: batchResult?.updated || 0,
+        skipped: batchResult?.skipped || 0,
+        batch_size: batchItems.length,
+      };
+    }
+
     // ─── FETCH ERP PRODUCTS LIST (for mapping) ───
     else if (action === "fetch_erp_products") {
       if (!isServiceRole) {
