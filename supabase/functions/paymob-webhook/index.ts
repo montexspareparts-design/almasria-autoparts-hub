@@ -188,6 +188,88 @@ Deno.serve(async (req) => {
         console.log(`Order ${orderNumber} moved to processing`);
       }
 
+      // ─── Push order to Al Faisal ERP ────────────────────────────────────
+      try {
+        const { data: orderFull } = await supabase
+          .from("orders")
+          .select("*, order_items(*, products:product_id(name_ar, sku, erp_item_code))")
+          .eq("id", order.id)
+          .single();
+
+        if (orderFull) {
+          const [profileRes, dealerRes] = await Promise.all([
+            supabase.from("profiles").select("full_name, phone").eq("user_id", order.user_id).maybeSingle(),
+            supabase.from("dealer_accounts").select("erp_customer_code, tier").eq("user_id", order.user_id).maybeSingle(),
+          ]);
+
+          const erpBaseUrl = "https://api.alfaysalerp.com";
+          const erpUsername = Deno.env.get("ERP_FAISAL_USERNAME");
+          const erpPassword = Deno.env.get("ERP_FAISAL_PASSWORD");
+
+          if (erpUsername && erpPassword) {
+            // Authenticate with ERP
+            const authRes = await fetch(`${erpBaseUrl}/Ecommerce/Authenticate`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ username: erpUsername, password: erpPassword }),
+            });
+            const authText = await authRes.text();
+            let erpToken: string | null = null;
+            try {
+              const authData = JSON.parse(authText);
+              erpToken = typeof authData === "string" ? authData : (authData.jwtToken || authData.token || null);
+            } catch {
+              const trimmed = authText.trim().replace(/^"|"$/g, "");
+              if (trimmed.length > 20) erpToken = trimmed;
+            }
+
+            if (erpToken) {
+              const erpPayload = {
+                customercode: dealerRes.data?.erp_customer_code || "",
+                notes: `طلب إلكتروني #${orderNumber} - ${profileRes.data?.full_name || "عميل"}`,
+                items: (orderFull.order_items || []).map((item: any) => ({
+                  itemcode: item.products?.erp_item_code || item.products?.sku || "",
+                  quantity: item.quantity,
+                  price: item.unit_price,
+                })),
+              };
+
+              const createRes = await fetch(`${erpBaseUrl}/Ecommerce/CreateOrder`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${erpToken}`,
+                },
+                body: JSON.stringify(erpPayload),
+              });
+              const erpResult = await createRes.json();
+              console.log(`[ERP] Order push result for ${orderNumber}:`, JSON.stringify(erpResult));
+
+              // Extract ERP order code
+              const erpOrderCode = erpResult?.docno || erpResult?.erp_order_id || erpResult?.orderId || null;
+              if (erpOrderCode) {
+                await supabase.from("orders").update({ erp_order_code: String(erpOrderCode) }).eq("id", order.id);
+                console.log(`[ERP] Order ${orderNumber} linked to ERP code: ${erpOrderCode}`);
+              }
+
+              // Log sync
+              await supabase.from("erp_sync_logs").insert({
+                sync_type: "order_push_payment",
+                direction: "outbound",
+                reference_id: order.id,
+                reference_number: orderNumber,
+                status: createRes.ok ? "success" : "error",
+                payload: erpPayload,
+                response: erpResult,
+                error_message: createRes.ok ? null : JSON.stringify(erpResult),
+              });
+            }
+          }
+        }
+      } catch (erpErr) {
+        console.error(`[ERP] Failed to push order ${orderNumber} after payment:`, erpErr);
+      }
+
       // In-app notification for dealer on payment success (with WhatsApp link for inquiries)
       await supabase.from("notifications").insert({
         user_id: order.user_id,
