@@ -1,0 +1,1 @@
+UPDATE products SET image_url = 'https://hcpfjhcfhfjqusbjnkfa.supabase.co/storage/v1/object/public/product-images/brand-logos/denso-logo.webp' WHERE brand = 'denso';
