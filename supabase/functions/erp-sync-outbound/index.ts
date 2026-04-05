@@ -395,7 +395,7 @@ Deno.serve(async (req) => {
             id: (i.id || i.itemCode || "").toString().trim(),
             name: i.name || i.itemName || "",
             price: i.price ?? i.unitPrice ?? 0,
-            quantity: i.quantity ?? i.stock ?? 0,
+            quantity: i.qty ?? i.quantity ?? i.stock ?? 0,
           })),
         };
       }
