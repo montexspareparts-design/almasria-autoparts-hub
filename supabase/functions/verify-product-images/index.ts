@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 serve(async (req) => {
@@ -12,16 +12,46 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    // ── Auth: Admin only ──
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const authClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+    }
+    const userId = claimsData.claims.sub as string;
+
+    // Check admin role
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
+    const { data: roleData } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    if (!roleData) {
+      return new Response(JSON.stringify({ error: "Forbidden: admin only" }), { status: 403, headers: corsHeaders });
+    }
+
+    // ── Business logic ──
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+
     const { productIds } = await req.json();
 
-    // Fetch products with images
     let query = supabase
       .from("products")
       .select("id, sku, name_ar, image_url, brand")
@@ -97,25 +127,17 @@ Respond in JSON format:
           
           if (aiResponse.status === 429) {
             results.push({
-              productId: product.id,
-              sku: product.sku,
-              name: product.name_ar,
-              imageUrl: product.image_url,
-              confidence: "error",
+              productId: product.id, sku: product.sku, name: product.name_ar,
+              imageUrl: product.image_url, confidence: "error",
               reason: "تم تجاوز الحد المسموح — حاول لاحقاً",
             });
-            // Wait before continuing
             await new Promise(r => setTimeout(r, 2000));
             continue;
           }
           
           results.push({
-            productId: product.id,
-            sku: product.sku,
-            name: product.name_ar,
-            imageUrl: product.image_url,
-            confidence: "error",
-            reason: "خطأ في التحليل",
+            productId: product.id, sku: product.sku, name: product.name_ar,
+            imageUrl: product.image_url, confidence: "error", reason: "خطأ في التحليل",
           });
           continue;
         }
@@ -123,7 +145,6 @@ Respond in JSON format:
         const aiData = await aiResponse.json();
         const content = aiData.choices?.[0]?.message?.content || "";
 
-        // Parse JSON from response
         let parsed;
         try {
           const jsonMatch = content.match(/\{[\s\S]*\}/);
@@ -133,11 +154,8 @@ Respond in JSON format:
         }
 
         results.push({
-          productId: product.id,
-          sku: product.sku,
-          name: product.name_ar,
-          imageUrl: product.image_url,
-          brand: product.brand,
+          productId: product.id, sku: product.sku, name: product.name_ar,
+          imageUrl: product.image_url, brand: product.brand,
           confidence: parsed?.confidence || "uncertain",
           reason: parsed?.reason || "لم يتمكن من التحليل",
           imageDescription: parsed?.imageDescription || "",
@@ -146,17 +164,12 @@ Respond in JSON format:
           nameMatch: parsed?.nameMatch || false,
         });
 
-        // Small delay between requests to avoid rate limiting
         await new Promise(r => setTimeout(r, 500));
       } catch (e) {
         console.error(`Error processing ${product.sku}:`, e);
         results.push({
-          productId: product.id,
-          sku: product.sku,
-          name: product.name_ar,
-          imageUrl: product.image_url,
-          confidence: "error",
-          reason: "خطأ غير متوقع",
+          productId: product.id, sku: product.sku, name: product.name_ar,
+          imageUrl: product.image_url, confidence: "error", reason: "خطأ غير متوقع",
         });
       }
     }
