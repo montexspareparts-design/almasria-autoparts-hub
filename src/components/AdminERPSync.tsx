@@ -568,6 +568,9 @@ const AdminERPSync = () => {
                   )}
                   مزامنة الآن
                 </Button>
+                <p className="text-[10px] text-muted-foreground mt-2 text-center">
+                  💡 إذا لم تتوفر الأرصدة من الـ API، استخدم "استيراد جماعي" لرفع ملف Excel
+                </p>
               </CardContent>
             </Card>
 
