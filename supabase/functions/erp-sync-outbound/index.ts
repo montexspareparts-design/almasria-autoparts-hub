@@ -477,12 +477,23 @@ Deno.serve(async (req) => {
         const price = Number(item.price ?? item.unitPrice ?? item.basePrice ?? 0);
         const qty = Number(item.qty ?? item.quantity ?? item.stock ?? item.availableQty ?? 0);
 
-        // Check if product already exists by erp_item_code
-        const { data: existing } = await supabase
+        // Check if product already exists by SKU first, then erp_item_code
+        let existing: any = null;
+        const { data: skuMatch } = await supabase
           .from("products")
           .select("id")
-          .eq("erp_item_code", erpId)
+          .eq("sku", erpId)
           .maybeSingle();
+        existing = skuMatch;
+        
+        if (!existing) {
+          const { data: erpMatch } = await supabase
+            .from("products")
+            .select("id")
+            .eq("erp_item_code", erpId)
+            .maybeSingle();
+          existing = erpMatch;
+        }
 
         if (existing) {
           // Update price and stock

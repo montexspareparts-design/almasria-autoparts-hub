@@ -128,7 +128,8 @@ const AdminBulkImport = () => {
 
           rows.forEach(row => {
             if (row.status === "error") return;
-            const product = (row.erp_code && erpMap.get(row.erp_code)) || (row.sku && skuMap.get(row.sku));
+            // Match by SKU (part number) first, then erp_item_code
+            const product = (row.sku && skuMap.get(row.sku)) || (row.erp_code && erpMap.get(row.erp_code));
             if (product) {
               row.matched = true;
               row.productId = product.id;

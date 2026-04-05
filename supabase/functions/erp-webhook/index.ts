@@ -149,14 +149,14 @@ Deno.serve(async (req) => {
         const erpCode = (item.itemCode || item.id || "").toString().trim();
         const sku = item.sku || "";
         
-        // Try erp_item_code first, then SKU
+        // Try SKU (part number) first, then erp_item_code
         let result;
         const stockQty = item.qty ?? item.quantity;
-        if (erpCode) {
-          result = await supabase.from("products").update({ stock_quantity: stockQty }).eq("erp_item_code", erpCode);
-        }
-        if ((!erpCode || result?.error) && sku) {
+        if (sku) {
           result = await supabase.from("products").update({ stock_quantity: stockQty }).eq("sku", sku);
+        }
+        if ((!sku || result?.error) && erpCode) {
+          result = await supabase.from("products").update({ stock_quantity: stockQty }).eq("erp_item_code", erpCode);
         }
         if (!result?.error) updated++;
       }
@@ -187,12 +187,13 @@ Deno.serve(async (req) => {
         const erpCode = (item.itemCode || item.id || "").toString().trim();
         const sku = item.sku || "";
 
+        // Try SKU (part number) first, then erp_item_code
         let result;
-        if (erpCode) {
-          result = await supabase.from("products").update(updateData).eq("erp_item_code", erpCode);
-        }
-        if ((!erpCode || result?.error) && sku) {
+        if (sku) {
           result = await supabase.from("products").update(updateData).eq("sku", sku);
+        }
+        if ((!sku || result?.error) && erpCode) {
+          result = await supabase.from("products").update(updateData).eq("erp_item_code", erpCode);
         }
         if (!result?.error) updated++;
       }
