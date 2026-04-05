@@ -24,6 +24,7 @@ const PersonalizedProducts = () => {
         .from("products")
         .select("id, name_ar, sku, brand, image_url, base_price, is_on_sale, sale_price, product_categories(name_ar)")
         .eq("is_active", true)
+        .gt("stock_quantity", 0)
         .limit(8);
 
       // Filter by top categories OR top brands

@@ -40,7 +40,7 @@ const ProductCompare = () => {
   useEffect(() => {
     const fetchData = async () => {
       const [{ data: prods }, { data: cats }] = await Promise.all([
-        supabase.from("products").select("id, name_ar, sku, brand, image_url, is_on_sale, stock_quantity, category_id").eq("is_active", true).limit(500),
+        supabase.from("products").select("id, name_ar, sku, brand, image_url, is_on_sale, stock_quantity, category_id").eq("is_active", true).gt("stock_quantity", 0).limit(500),
         supabase.from("product_categories").select("id, name_ar"),
       ]);
       if (prods) setProducts(prods);

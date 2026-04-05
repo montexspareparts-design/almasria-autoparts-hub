@@ -69,6 +69,7 @@ const TrendingProducts = () => {
           .from("products")
           .select("*, product_categories(name_ar)")
           .eq("is_active", true)
+          .gt("stock_quantity", 0)
           .eq("is_featured", true)
           .limit(8);
         if (error) throw error;
@@ -79,7 +80,8 @@ const TrendingProducts = () => {
         .from("products")
         .select("*, product_categories(name_ar)")
         .in("id", topIds as string[])
-        .eq("is_active", true);
+        .eq("is_active", true)
+        .gt("stock_quantity", 0);
       if (error) throw error;
       // Preserve order from RPC
       const orderMap = new Map((topIds as string[]).map((id, i) => [id, i]));
@@ -95,6 +97,7 @@ const TrendingProducts = () => {
         .from("products")
         .select("*, product_categories(name_ar)")
         .eq("is_active", true)
+        .gt("stock_quantity", 0)
         .eq("is_on_sale", true)
         .order("created_at", { ascending: false })
         .limit(8);
@@ -111,6 +114,7 @@ const TrendingProducts = () => {
         .from("products")
         .select("*, product_categories(name_ar)")
         .eq("is_active", true)
+        .gt("stock_quantity", 0)
         .order("created_at", { ascending: false })
         .limit(8);
       if (error) throw error;
