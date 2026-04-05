@@ -537,6 +537,8 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminPushNotifications /></Suspense>;
       case "erp":
         return <Suspense fallback={<SectionLoader />}><AdminERPSync /></Suspense>;
+      case "erp-customers":
+        return <Suspense fallback={<SectionLoader />}><AdminERPCustomers /></Suspense>;
       case "paymob":
         return <Suspense fallback={<SectionLoader />}><AdminPaymobSettings /></Suspense>;
       case "audit-log":
