@@ -64,6 +64,7 @@ const CategoryBrowseSlider = () => {
             .from("products")
             .select("id", { count: "exact", head: true })
             .eq("is_active", true)
+            .gt("stock_quantity", 0)
             .ilike("name_ar", `%${cat.search}%`);
           return { search: cat.search, count: count ?? 0 };
         })
