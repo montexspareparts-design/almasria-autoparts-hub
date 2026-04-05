@@ -631,11 +631,25 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
                           const rawText = getTextContent(msg.content);
                           const { cleanText, choices } = parseChoices(rawText);
                           const isLastMsg = i === messages.length - 1;
+                          const showCartBtn = isDealer && isLastMsg && !isLoading && hasCartAction(cleanText);
                           return (
                             <>
                               <div className="prose prose-sm max-w-none [&_p]:m-0 [&_ul]:my-1 [&_li]:my-0">
                                 <ReactMarkdown>{cleanText}</ReactMarkdown>
                               </div>
+                              {/* Cart action button */}
+                              {showCartBtn && (
+                                <button
+                                  onClick={() => {
+                                    setIsOpen(false);
+                                    // Navigate to dealer dashboard orders tab
+                                    navigate("/dealer?tab=orders");
+                                  }}
+                                  className="mt-2 w-full text-xs px-3 py-2 rounded-lg bg-primary text-primary-foreground font-bold hover:bg-primary/90 transition-colors"
+                                >
+                                  🛒 أكمل الطلبية
+                                </button>
+                              )}
                               {/* Interactive quick-reply choices */}
                               {isLastMsg && !isLoading && choices.length > 0 && (
                                 <div className="mt-2 flex flex-wrap gap-1.5">
