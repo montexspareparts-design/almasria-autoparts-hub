@@ -11,7 +11,7 @@ import { useState, useCallback } from "react";
 import ProductDetailDialog from "@/components/ProductDetailDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const DAILY_LIMIT = 20;
+const DAILY_LIMIT = 30;
 
 const TrendingProducts = () => {
   const { addItem } = useCart();

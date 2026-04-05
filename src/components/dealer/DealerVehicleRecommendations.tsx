@@ -121,7 +121,7 @@ const DealerVehicleRecommendations = ({ compact }: DealerVehicleRecommendationsP
     setRevealingId(null);
   }, [user, revealedPrices, dailyViewCount, allProducts]);
 
-  const remainingViews = 20 - dailyViewCount;
+  const remainingViews = 30 - dailyViewCount;
   const products = allProducts.slice(0, visibleCount);
   const hasMore = visibleCount < allProducts.length;
 

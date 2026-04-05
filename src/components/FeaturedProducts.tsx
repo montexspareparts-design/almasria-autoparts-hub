@@ -10,7 +10,7 @@ import { useState, useCallback } from "react";
 import ProductDetailDialog from "@/components/ProductDetailDialog";
 import { Link } from "react-router-dom";
 
-const DAILY_LIMIT = 20;
+const DAILY_LIMIT = 30;
 
 const FeaturedProducts = () => {
   const { addItem } = useCart();
