@@ -149,12 +149,26 @@ const AdminERPSync = () => {
   };
 
   const fetchMappingProducts = async () => {
-    const { data } = await supabase
-      .from("products")
-      .select("id, sku, name_ar, erp_item_code, stock_quantity, base_price")
-      .eq("is_active", true)
-      .order("name_ar");
-    setMappingProducts(data || []);
+    // Fetch all active products (handle Supabase 1000 row default limit)
+    let allProducts: any[] = [];
+    let from = 0;
+    const PAGE_SIZE = 1000;
+    
+    while (true) {
+      const { data } = await supabase
+        .from("products")
+        .select("id, sku, name_ar, erp_item_code, stock_quantity, base_price")
+        .eq("is_active", true)
+        .order("name_ar")
+        .range(from, from + PAGE_SIZE - 1);
+      
+      if (!data || data.length === 0) break;
+      allProducts = [...allProducts, ...data];
+      if (data.length < PAGE_SIZE) break;
+      from += PAGE_SIZE;
+    }
+    
+    setMappingProducts(allProducts);
   };
 
   const fetchErpProducts = async () => {
@@ -227,10 +241,20 @@ const AdminERPSync = () => {
         body: { action, data: {} },
       });
       if (error) throw error;
-      toast({
-        title: "تمت المزامنة ✓",
-        description: data?.message || `تم تنفيذ ${action} بنجاح`,
-      });
+      
+      // Handle ERP_ALL_ZERO_STOCK warning
+      if (data?.warning === "ERP_ALL_ZERO_STOCK") {
+        toast({
+          title: "⚠️ الأرصدة غير متاحة من الـ ERP",
+          description: data?.message || "استخدم رفع ملف Excel لتحديث الأرصدة",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "تمت المزامنة ✓",
+          description: data?.message || `تم تنفيذ ${action} بنجاح — تم تحديث ${data?.updated_count || 0} صنف`,
+        });
+      }
       fetchData();
     } catch (err: any) {
       toast({ title: "خطأ في المزامنة", description: err.message, variant: "destructive" });
@@ -544,6 +568,9 @@ const AdminERPSync = () => {
                   )}
                   مزامنة الآن
                 </Button>
+                <p className="text-[10px] text-muted-foreground mt-2 text-center">
+                  💡 إذا لم تتوفر الأرصدة من الـ API، استخدم "استيراد جماعي" لرفع ملف Excel
+                </p>
               </CardContent>
             </Card>
 
