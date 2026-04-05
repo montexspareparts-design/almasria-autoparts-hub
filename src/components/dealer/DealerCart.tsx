@@ -39,6 +39,8 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submittingPayment, setSubmittingPayment] = useState(false);
+  const [erpDialog, setErpDialog] = useState<{ open: boolean; erpCode: string; orderNumber: string }>({ open: false, erpCode: "", orderNumber: "" });
+  const [copied, setCopied] = useState(false);
   const [shippingAddress, setShippingAddress] = useState("");
   const [shippingGovernorate, setShippingGovernorate] = useState("");
 
