@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
       // Find the order
       const { data: order } = await supabase
         .from("orders")
-        .select("*, order_items(*, product:products(name_ar, sku))")
+        .select("*, order_items(*, product:products(name_ar, sku, erp_item_code))")
         .eq("order_number", orderNumber)
         .maybeSingle();
 
@@ -58,20 +58,24 @@ Deno.serve(async (req) => {
       // Update order items if provided
       if (data.items && Array.isArray(data.items)) {
         for (const erpItem of data.items) {
-          // Match by SKU
+          // Match by erp_item_code first, then SKU
           const matchingItem = order.order_items?.find(
-            (i: any) => i.product?.sku === erpItem.sku
+            (i: any) => 
+              (erpItem.itemCode && i.product?.erp_item_code === erpItem.itemCode) ||
+              (erpItem.sku && i.product?.sku === erpItem.sku)
           );
 
           if (matchingItem) {
             if (erpItem.removed) {
               await supabase.from("order_items").delete().eq("id", matchingItem.id);
             } else if (erpItem.quantity !== undefined) {
+              const newUnitPrice = erpItem.unitPrice !== undefined ? Number(erpItem.unitPrice) : Number(matchingItem.unit_price);
               await supabase
                 .from("order_items")
                 .update({
                   quantity: erpItem.quantity,
-                  total_price: erpItem.quantity * Number(matchingItem.unit_price),
+                  unit_price: newUnitPrice,
+                  total_price: erpItem.quantity * newUnitPrice,
                 })
                 .eq("id", matchingItem.id);
             }
@@ -142,11 +146,18 @@ Deno.serve(async (req) => {
       let updated = 0;
 
       for (const item of updates) {
-        const { error } = await supabase
-          .from("products")
-          .update({ stock_quantity: item.quantity })
-          .eq("sku", item.sku);
-        if (!error) updated++;
+        const erpCode = (item.itemCode || item.id || "").toString().trim();
+        const sku = item.sku || "";
+        
+        // Try erp_item_code first, then SKU
+        let result;
+        if (erpCode) {
+          result = await supabase.from("products").update({ stock_quantity: item.quantity }).eq("erp_item_code", erpCode);
+        }
+        if ((!erpCode || result?.error) && sku) {
+          result = await supabase.from("products").update({ stock_quantity: item.quantity }).eq("sku", sku);
+        }
+        if (!result?.error) updated++;
       }
 
       await supabase.from("erp_sync_logs").insert({
