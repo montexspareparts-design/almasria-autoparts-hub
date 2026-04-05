@@ -54,6 +54,20 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
   const searchRef = useRef<HTMLInputElement>(null);
   const searchTimeout = useRef<NodeJS.Timeout>();
 
+  // Fetch max order percentage setting
+  const { data: maxOrderPct } = useQuery({
+    queryKey: ["site_settings", "max_order_percentage"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "max_order_percentage")
+        .maybeSingle();
+      return parseInt(data?.value || "50") || 50;
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+
   // Fetch tier prices
   useEffect(() => {
     const fetchTierPrices = async () => {
