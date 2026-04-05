@@ -109,6 +109,7 @@ const SpeechRecognition = (window as any).SpeechRecognition || (window as any).w
 
 const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
   const { user, isDealer } = useAuth();
+  const navigate = useNavigate();
   const { consent, interests, getTopCategories, getTopBrands } = usePersonalization();
   const [isOpen, setIsOpen] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
