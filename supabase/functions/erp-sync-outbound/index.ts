@@ -103,6 +103,10 @@ Deno.serve(async (req) => {
     // ─── Authentication Check ─────────────────────────────────────
     const authHeader = req.headers.get("Authorization");
     const apikeyHeader = req.headers.get("apikey");
+    console.log("[AUTH DEBUG] authHeader present:", !!authHeader, "apikeyHeader present:", !!apikeyHeader);
+    console.log("[AUTH DEBUG] authHeader starts with Bearer:", authHeader?.startsWith("Bearer "));
+    console.log("[AUTH DEBUG] serviceKey length:", serviceKey?.length, "apikey matches:", apikeyHeader === serviceKey);
+    const apikeyHeader = req.headers.get("apikey");
 
     let isServiceRole = false;
     let userId: string | null = null;
