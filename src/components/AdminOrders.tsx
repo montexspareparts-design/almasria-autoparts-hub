@@ -201,6 +201,18 @@ const AdminOrders = () => {
     const updateData: any = { status: newStatus };
     if (adminNotes[orderId]) updateData.notes = adminNotes[orderId];
 
+    // Add shipping info when marking as shipped
+    if (newStatus === "shipped") {
+      const info = shippingInfo[orderId];
+      if (info?.shipping_company) updateData.shipping_company = info.shipping_company;
+      if (info?.tracking_number) updateData.tracking_number = info.tracking_number;
+      updateData.shipped_at = new Date().toISOString();
+    }
+
+    // Add delivered timestamp
+    if (newStatus === "delivered") {
+      updateData.delivered_at = new Date().toISOString();
+    }
     const { error } = await supabase.from("orders").update(updateData).eq("id", orderId);
 
     if (error) {
