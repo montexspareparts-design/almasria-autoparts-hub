@@ -277,6 +277,8 @@ const ProductListingSection = memo(({
       />
     </>
   );
-};
+});
+
+ProductListingSection.displayName = "ProductListingSection";
 
 export default ProductListingSection;
