@@ -112,6 +112,13 @@ const AdminProducts = () => {
     if (brandFilter !== "all") {
       query = query.eq("brand", brandFilter as ProductBrand);
     }
+    if (stockFilter === "in_stock") {
+      query = query.gt("stock_quantity", 0);
+    } else if (stockFilter === "out_of_stock") {
+      query = query.lte("stock_quantity", 0);
+    } else if (stockFilter === "low_stock") {
+      query = query.gt("stock_quantity", 0).lt("stock_quantity", 10);
+    }
 
     const { data, count } = await query
       .order("created_at", { ascending: false })
