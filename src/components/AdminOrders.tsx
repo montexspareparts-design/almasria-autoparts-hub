@@ -58,6 +58,8 @@ const AdminOrders = () => {
   const [autoExpandFirst, setAutoExpandFirst] = useState(false);
   const ordersListRef = useRef<HTMLDivElement>(null);
   const [shippingInfo, setShippingInfo] = useState<Record<string, { tracking_number: string; shipping_company: string }>>({});
+  const [editingShipping, setEditingShipping] = useState<string | null>(null);
+  const [savingShipping, setSavingShipping] = useState(false);
 
   // Stats fetched once
   const [stats, setStats] = useState({ total: 0, pending: 0, processing: 0, shipped: 0, delivered: 0, totalRevenue: 0 });
