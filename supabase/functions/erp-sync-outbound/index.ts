@@ -298,7 +298,7 @@ Deno.serve(async (req) => {
         if (!baseUrl) throw new Error("ERP base URL is not configured");
 
         // Fetch all products from Al Faisal API
-        // Response format: { message, data: [{ id, name, price, quantity }] }
+        // Response format: { message, data: [{ id, name, price, qty, itemcatid, ... }] }
         const erpResponse = await erpFetch(baseUrl, "/Ecommerce/products");
 
         const items = Array.isArray(erpResponse)
@@ -314,7 +314,7 @@ Deno.serve(async (req) => {
           if (!erpId) continue;
 
           if (action === "sync_stock") {
-            const qty = item.quantity ?? item.stock ?? item.availableQty;
+            const qty = item.qty ?? item.quantity ?? item.stock ?? item.availableQty;
             if (qty !== undefined) {
               const { count } = await supabase
                 .from("products")
@@ -345,7 +345,7 @@ Deno.serve(async (req) => {
             id: (i.id || "").toString().trim(),
             name: i.name,
             price: i.price,
-            quantity: i.quantity,
+            quantity: i.qty ?? i.quantity,
           })),
         };
       }
@@ -395,7 +395,7 @@ Deno.serve(async (req) => {
             id: (i.id || i.itemCode || "").toString().trim(),
             name: i.name || i.itemName || "",
             price: i.price ?? i.unitPrice ?? 0,
-            quantity: i.quantity ?? i.stock ?? 0,
+            quantity: i.qty ?? i.quantity ?? i.stock ?? 0,
           })),
         };
       }
