@@ -127,9 +127,9 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
       }))
     );
 
-    pushOrderToERP((order as any).id);
+    const erpCodePromise = pushOrderToERP((order as any).id);
     notifyNewOrderWhatsApp(orderNumber, total);
-    return { id: (order as any).id, order_number: orderNumber };
+    return { id: (order as any).id, order_number: orderNumber, erpCodePromise };
   };
 
   const handleSubmitOrder = async () => {
