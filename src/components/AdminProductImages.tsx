@@ -1,12 +1,15 @@
-import { useState, useRef } from "react";
+import { useState, useRef, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Upload, X, Package, Loader2, ImageIcon, Wand2, ExternalLink, Check, Copy } from "lucide-react";
+import { Search, Upload, X, Package, Loader2, ImageIcon, Wand2, ExternalLink, Check, Copy, FolderOpen } from "lucide-react";
+
+const StorageImageGallery = lazy(() => import("@/components/admin/StorageImageGallery"));
 
 const AdminProductImages = () => {
   const { toast } = useToast();
