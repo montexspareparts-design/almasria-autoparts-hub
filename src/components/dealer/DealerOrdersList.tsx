@@ -456,6 +456,7 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
                       </div>
                     )}
 
+                    {order.status === "cancelled" && (
                       <div className="flex items-center gap-2.5 p-3.5 rounded-xl bg-destructive/8 border border-destructive/15">
                         <XCircle className="w-5 h-5 text-destructive shrink-0" />
                         <span className="text-sm text-destructive font-bold">تم إلغاء الطلب</span>
