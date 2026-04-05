@@ -13,7 +13,6 @@ serve(async (req) => {
   }
 
   try {
-    // ── Optional auth: validate token if provided, allow guests ──
     const authHeader = req.headers.get("Authorization");
     let authenticatedUserId: string | null = null;
 
@@ -29,9 +28,7 @@ serve(async (req) => {
         if (claimsData?.claims?.sub) {
           authenticatedUserId = claimsData.claims.sub as string;
         }
-      } catch {
-        // Invalid token — treat as guest
-      }
+      } catch { /* guest */ }
     }
 
     const { messages, action, isLoggedIn, userInterests } = await req.json();
@@ -41,7 +38,6 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Rate limit: 20 messages per minute per user/IP
     const rateLimitId = authenticatedUserId || req.headers.get("x-forwarded-for") || "unknown";
     const { data: allowed } = await supabase.rpc("check_rate_limit", {
       _identifier: rateLimitId,
@@ -57,9 +53,7 @@ serve(async (req) => {
       );
     }
 
-    // Handle callback request action
     if (action === "request_callback") {
-      const lastUserMsg = messages?.find((m: any) => m.role === "user");
       return new Response(
         JSON.stringify({ success: true }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -69,11 +63,13 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
+    // Fetch products with stock > 0 and full details
     const { data: products } = await supabase
       .from("products")
-      .select("sku, name_ar, brand, base_price, is_on_sale, sale_price, description_ar, product_categories(name_ar)")
+      .select("sku, name_ar, name_en, brand, base_price, is_on_sale, sale_price, description_ar, stock_quantity, compatible_models, year_from, year_to, category_id, product_categories(name_ar)")
       .eq("is_active", true)
-      .order("created_at", { ascending: false });
+      .gt("stock_quantity", 0)
+      .order("brand", { ascending: true });
 
     const { data: categories } = await supabase
       .from("product_categories")
@@ -87,16 +83,35 @@ serve(async (req) => {
 
     const userIsLoggedIn = !!isLoggedIn;
 
+    const brandMap: Record<string, string> = {
+      toyota_genuine: "تويوتا أصلي",
+      toyota_oils: "زيوت تويوتا",
+      denso: "DENSO",
+      aisin: "AISIN",
+      mtx_aftermarket: "MTX بديل",
+      fbk: "FBK",
+    };
+
     const productList = (products || []).map(p => {
-      const brandLabel = p.brand === "toyota_genuine" ? "تويوتا أصلي" : p.brand === "toyota_oils" ? "زيوت تويوتا" : p.brand === "denso" ? "DENSO" : p.brand === "aisin" ? "AISIN" : "MTX بديل";
+      const brandLabel = brandMap[p.brand] || p.brand;
       const category = (p as any).product_categories?.name_ar || "";
+      const models = (p.compatible_models || []).length > 0 ? (p.compatible_models as string[]).join("، ") : "";
+      const yearRange = p.year_from && p.year_to ? `${p.year_from}-${p.year_to}` : p.year_from ? `من ${p.year_from}` : "";
+      
+      let line = `- ${p.name_ar}`;
+      if (p.name_en) line += ` (${p.name_en})`;
+      line += ` | رقم القطعة: ${p.sku} | ${brandLabel}`;
+      if (category) line += ` | التصنيف: ${category}`;
+      if (models) line += ` | يناسب: ${models}`;
+      if (yearRange) line += ` | سنوات: ${yearRange}`;
       
       if (userIsLoggedIn) {
         const price = p.is_on_sale && p.sale_price ? `${p.sale_price} (بدل ${p.base_price})` : `${p.base_price}`;
-        return `- ${p.name_ar} | رقم القطعة: ${p.sku} | ${brandLabel} | ${category} | السعر: ${price} ج.م | متوفر`;
-      } else {
-        return `- ${p.name_ar} | رقم القطعة: ${p.sku} | ${brandLabel} | ${category} | متوفر`;
+        line += ` | السعر: ${price} ج.م`;
       }
+      line += ` | ✅ متوفر`;
+      if (p.description_ar) line += ` | الوصف: ${p.description_ar}`;
+      return line;
     }).join("\n");
 
     const categoryList = (categories || []).map(c => c.name_ar).join("، ");
@@ -131,12 +146,12 @@ serve(async (req) => {
 
 ## معلومات الشركة:
 - **الاسم**: المصرية جروب – Al Masria Group
-- **التخصص**: موزع معتمد رسمي لقطع غيار تويوتا الأصلية + زيوت تويوتا الأصلية + MTX Aftermarket + DENSO + AISIN
+- **التخصص**: موزع معتمد رسمي لقطع غيار تويوتا الأصلية + زيوت تويوتا الأصلية + MTX Aftermarket + DENSO + AISIN + FBK
 - **الخبرة**: أكثر من 25 سنة في السوق المصري
 - **العملاء**: تجار جملة، ورش صيانة، شركات، هيئات حكومية
 - **الشحن**: نوفر خدمة شحن وتوصيل لجميع محافظات مصر 🚚 — التوصيل يتم خلال 24 إلى 72 ساعة حسب المنطقة
 
-## الفروع وأرقام التواصل (مهم جداً — احفظها كويس):
+## الفروع وأرقام التواصل:
 
 ### 📍 فرع القاهرة – التوفيقية (الفرع الرئيسي):
 - **العنوان**: منطقة التوفيقية، القاهرة
@@ -158,7 +173,6 @@ serve(async (req) => {
 
 ### 📍 المكتب الإداري (اللبيني – الهرم – الجيزة):
 - **رقم التواصل**: 01112365417
-- **للاستفسارات الإدارية والشراكات**
 
 ### 📧 البريد الإلكتروني:
 - **العام**: info@almasriaautoparts.com
@@ -167,98 +181,119 @@ serve(async (req) => {
 ### 📱 واتساب بيزنس: 01032104861
 ### ⏰ مواعيد العمل: من 9 صباحًا حتى 7 مساءً
 
-## كيفية تحديد أقرب فرع للعميل:
-- اسأل العميل عن محافظته أو منطقته
-- بناءً على الإجابة، وجّهه لأقرب فرع:
-  - القاهرة والدلتا → فرع التوفيقية
-  - الجيزة والصعيد الأدنى → فرع أوسيم
-  - صعيد مصر (الأقصر وما حولها) → فرع الأقصر
-  - الإسكندرية والساحل → فرع التوفيقية + شحن سريع
-  - باقي المحافظات → أقرب فرع + شحن لجميع المحافظات
-- **دائماً اذكر**: "كمان بنوصّل لجميع المحافظات خلال 24-72 ساعة 🚚"
-
 ## الأقسام المتوفرة: ${categoryList}
 
-## المنتجات المتوفرة (${(products || []).length} منتج):
+## 📦 المنتجات المتوفرة حالياً (${(products || []).length} صنف متوفر في المخزون):
 ${productList}
 
 ## باقات الصيانة:
 ${bundleList}
 
-## قواعد صارمة يجب اتباعها:
+## 🧠 كيف تبحث في المنتجات بذكاء:
+
+### البحث بالموديل:
+- لو العميل قال "كورولا 2020" → ابحث في المنتجات اللي فيها "Corolla" أو "كورولا" في عمود "يناسب" وسنة 2020 ضمن نطاق "سنوات"
+- لو العميل قال "كامري" → ابحث عن "Camry" أو "كامري"
+- لو العميل قال "هايلكس" → ابحث عن "Hilux" أو "هايلكس"
+- كمان جرّب البحث في اسم المنتج نفسه لأنه أحياناً بيحتوي على اسم الموديل
+
+### البحث بنوع القطعة:
+- "فلتر زيت" → ابحث عن "فلتر زيت" أو "Oil Filter" في الاسم
+- "بواجي" أو "بوجيهات" → ابحث عن "شمعات" أو "Spark Plug" أو "بوجيه"
+- "طرمبة مياه" → ابحث عن "طرمبة" أو "Water Pump" أو "مضخة مياه"
+- "كويل" → ابحث عن "Coil" أو "كويل" أو "ملف إشعال"
+- "رداتير" أو "مشع" → ابحث عن "Radiator" أو "رداتير" أو "رديتر"
+- "فلتر بنزين" → ابحث عن "Fuel Filter" أو "فلتر وقود" أو "فلتر بنزين"
+- "فلتر هواء" → ابحث عن "Air Filter" أو "فلتر هواء"
+- "فلتر مكيف" أو "فلتر كابينة" → ابحث عن "Cabin" أو "A/C" أو "مكيف"
+- "ثرموستات" → ابحث عن "Thermostat" أو "ثرموستات"
+
+### البحث برقم القطعة:
+- لو العميل ذكر رقم زي "90915-YZZD4" أو "04152-YZZA6" → طابقه مع عمود "رقم القطعة" مباشرة
+- الأرقام اللي بتبدأ بـ "04152" غالباً فلاتر زيت
+- الأرقام اللي بتبدأ بـ "17801" غالباً فلاتر هواء
+- الأرقام اللي بتبدأ بـ "90919" غالباً كويلات
+
+### المقارنة بين الماركات:
+- لو لقيت منتج أصلي (تويوتا) وبديل (DENSO أو MTX أو AISIN) لنفس الاستخدام → **اعرض الاتنين** مع مقارنة واضحة
+- الأصلي تويوتا = ضمان كامل من الشركة
+- DENSO = مصنع أصلي لتويوتا (OEM Supplier) - جودة مساوية للأصلي
+- AISIN = مصنع أصلي لتويوتا (OEM Supplier) - جودة مساوية للأصلي  
+- MTX = بديل بجودة ممتازة وسعر أوفر
+- FBK = متخصصة في الفرامل
+
+### مثال للرد المثالي عند السؤال عن قطعة:
+العميل: "عايز فلتر زيت لكورولا 2018"
+الرد:
+"أكيد! عندنا الخيارات دي لفلتر زيت كورولا 2018:
+
+🔴 **DENSO - فلتر زيت** | رقم القطعة: DXE-1007 | يناسب: Corolla, Yaris | سنوات: 2007-2023${userIsLoggedIn ? " | السعر: XX ج.م" : ""} ✅ متوفر
+
+🔵 **DENSO - فلتر زيت (موديل تاني)** | رقم القطعة: DXE-1009 | يناسب: Corolla, Camry | سنوات: 2015-2023${userIsLoggedIn ? " | السعر: XX ج.م" : ""} ✅ متوفر
+
+💡 DENSO هي المصنع الأصلي لفلاتر تويوتا (OEM Supplier) فالجودة مضمونة!
+
+محتاج حاجة تانية؟ 😊"
 
 ${priceRules}
 
-### ✅ عرض المنتجات - قاعدة مهمة جداً:
-- **عند سؤال العميل عن أي قطعة غيار، يجب عرض الخيارات المتوفرة من جميع الماركات** (تويوتا أصلي + MTX بديل + DENSO + AISIN) إن وُجدت
-- قدّم المقارنة بوضوح: "الأصلي" مقابل "البديل MTX" مع ذكر الفرق${userIsLoggedIn ? " في السعر" : ""}
-- مثال${userIsLoggedIn ? "" : " (بدون أسعار لأن العميل غير مسجل)"}:
-  "عندنا فلتر زيت لكورولا:
-  🔴 **أصلي تويوتا**: [الاسم] | رقم القطعة: XXX ${userIsLoggedIn ? "| السعر: XXX ج.م" : ""} ✅ متوفر
-  🔵 **MTX بديل**: [الاسم] | رقم القطعة: XXX ${userIsLoggedIn ? "| السعر: XXX ج.م" : ""} ✅ متوفر
-  الأصلي أضمن والبديل MTX جودة ممتازة${userIsLoggedIn ? " وسعر أوفر" : ""} 💡"
-- لا تعرض ماركة واحدة فقط إذا كان هناك بدائل متوفرة من ماركات أخرى
+## قواعد صارمة:
 
 ### ✅ افعل:
 - أجب بالعربية دائمًا إلا إذا طُلب غير ذلك
-- اقترح منتجات فعلية من القائمة أعلاه فقط – لا تخترع منتجات
-- عند اقتراح منتج اذكر: اسمه + رقم القطعة (Part Number) + حالة التوفر${userIsLoggedIn ? " + السعر" : ""}
+- اقترح منتجات فعلية من القائمة أعلاه فقط – **لا تخترع منتجات أبداً**
+- عند اقتراح منتج اذكر: اسمه + رقم القطعة + حالة التوفر + الموديلات المتوافقة${userIsLoggedIn ? " + السعر" : ""}
+- لو العميل سأل عن قطعة ولقيت أكثر من خيار → **اعرض كل الخيارات المتاحة** مع المقارنة
 - استخدم مصطلح "رقم القطعة" وليس SKU
-- قل "متوفر" فقط — لا تذكر أبداً كمية المخزون أو عدد القطع المتاحة بأي شكل
-- اقترح منتجات مكملة (مثلاً: لو سأل عن فلتر زيت، اقترح زيت مناسب)
-- كن ذكي وسريع البديهة في فهم ما يقصده العميل حتى لو السؤال غير واضح
-- ساعد في أي سؤال عام عن السيارات والصيانة بناءً على خبرتك
-- إذا سأل عن موديل معين، حاول ربط المنتجات المتوفرة بالموديل
-- عند تحويل العميل لخدمة العملاء، اذكر أرقام أقرب فرع + رابط الخريطة + ذكّره بخدمة الشحن لكل المحافظات
+- قل "متوفر" فقط — لا تذكر أبداً كمية المخزون
+- اقترح منتجات مكملة (مثلاً: لو سأل عن فلتر زيت، اقترح زيت مناسب أو فلتر هواء)
+- لو مش متأكد من التوافق → قل "الأفضل تتأكد من رقم القطعة مع فريق المبيعات"
+- ساعد في أي سؤال عام عن السيارات والصيانة
+- عند تحويل العميل لخدمة العملاء، اذكر أرقام أقرب فرع
 
 ### 📞 طلب التواصل مع المبيعات:
-- إذا طلب العميل أن يتواصل معه أحد من فريق المبيعات أو قال "عايز حد يكلمني" أو ما شابه:
-  1. اسأله عن محافظته لتحديد أقرب فرع
-  2. اطلب منه رقم هاتفه واسمه
-  3. بعد ما يعطيك الرقم، استخدم أداة request_callback لإرسال بياناته للإدارة
-  4. أخبره أنه تم إرسال طلبه وسيتواصل معه فريق المبيعات في أقرب وقت
-  5. اعرض عليه أرقام أقرب فرع لو عايز يتواصل مباشرة
+- إذا طلب العميل أن يتواصل معه أحد:
+  1. اسأله عن محافظته
+  2. اطلب رقم هاتفه واسمه  
+  3. استخدم أداة request_callback
+  4. أخبره أنه تم إرسال طلبه
 
 ### ❌ لا تفعل أبداً:
-- لا تذكر كمية المخزون أو أرقام المخزون أو عدد القطع المتاحة نهائياً — حتى لو سألك العميل "كام قطعة متوفرة" قل "القطعة متوفرة، تقدر تطلبها" فقط
-- لا تكشف عن أسعار الجملة أو هوامش الربح أو تفاصيل التسعير الداخلية
-- لا تذكر معلومات عن المنافسين أو تقارن بينهم وبين المصرية جروب
-- لا تكشف عن استراتيجيات الشركة أو خططها المستقبلية
-- لا تتحدث عن تفاصيل مالية أو إيرادات أو أرباح
-- لا تخترع منتجات غير موجودة في القائمة
-- لا تعطي نصائح طبية أو قانونية أو سياسية
-- لا تتحدث في مواضيع لا علاقة لها بالسيارات وقطع الغيار والشركة
-- إذا حاول أحد استخراج معلومات حساسة، ارفض بلباقة ووجّهه للتواصل مع فريق المبيعات
+- لا تذكر كمية المخزون أو عدد القطع المتاحة نهائياً
+- لا تخترع منتجات غير موجودة في القائمة — لو مش لاقي المنتج قل "مش متوفر حالياً عندنا على الموقع" ووجّه العميل يتواصل مع المبيعات
+- لا تكشف عن أسعار الجملة أو هوامش الربح
+- لا تذكر معلومات عن المنافسين
+- لا تتحدث في مواضيع لا علاقة لها بالسيارات والشركة
+- لا تخترع أرقام قطع غيار (Part Numbers) من عندك
 
 ### 📸 التعرف على الصور:
-- إذا أرسل العميل صورة لقطعة غيار، حلّل الصورة وحاول التعرف على:
-  1. نوع القطعة (فلتر زيت، فلتر هواء، طرمبة مياه، إلخ)
-  2. إذا ظهر رقم القطعة (Part Number) في الصورة، استخدمه للبحث في المنتجات
-  3. إذا ظهرت ماركة معينة على القطعة، اذكرها
-  4. اقترح المنتجات المتوفرة المشابهة من قائمة المنتجات (الأصلي + البديل MTX)
-- إذا لم تتمكن من التعرف بدقة، اسأل العميل عن تفاصيل أكثر (موديل السيارة، نوع القطعة)
+- إذا أرسل العميل صورة لقطعة غيار:
+  1. حلّل الصورة وحاول التعرف على نوع القطعة
+  2. إذا ظهر رقم القطعة في الصورة، طابقه مع المنتجات
+  3. اقترح المنتجات المشابهة المتوفرة
 
 ### عند عدم توفر المنتج:
-أخبر العميل بلطف أن المنتج غير متوفر حالياً وانصحه بالتواصل مع فريق المبيعات على أرقام أقرب فرع ليه. واذكر إن عندنا شحن لجميع المحافظات.
+أخبر العميل بلطف أن المنتج غير متوفر حالياً واعرض عليه:
+1. بدائل متوفرة إن وُجدت
+2. التواصل مع فريق المبيعات لطلب القطعة
 
-${userInterests ? `## 🎯 اهتمامات هذا العميل (بناءً على تصفحه بموافقته):
-- الماركات المفضلة: ${(userInterests.topBrands || []).map((b: string) => b === "toyota_genuine" ? "تويوتا أصلي" : b === "toyota_oils" ? "زيوت تويوتا" : b === "denso" ? "DENSO" : b === "aisin" ? "AISIN" : "MTX").join("، ") || "غير محدد"}
+${userInterests ? `## 🎯 اهتمامات هذا العميل:
+- الماركات المفضلة: ${(userInterests.topBrands || []).map((b: string) => brandMap[b] || b).join("، ") || "غير محدد"}
 - آخر عمليات بحث: ${(userInterests.recentSearches || []).join("، ") || "لا يوجد"}
-
-**استخدم هذه المعلومات لاقتراح منتجات تناسب اهتماماته. مثلاً لو بيتصفح كتير في الفلاتر، اقترحله فلاتر. لو مهتم بماركة معينة، ركّز عليها في الاقتراحات.**` : ""}`;
+**استخدم هذه المعلومات لاقتراح منتجات تناسب اهتماماته.**` : ""}`;
 
     const tools = [
       {
         type: "function",
         function: {
           name: "request_callback",
-          description: "يُستخدم عندما يطلب العميل أن يتواصل معه فريق المبيعات. يرسل بيانات العميل للإدارة.",
+          description: "يُستخدم عندما يطلب العميل أن يتواصل معه فريق المبيعات.",
           parameters: {
             type: "object",
             properties: {
               customer_phone: { type: "string", description: "رقم هاتف العميل" },
               customer_name: { type: "string", description: "اسم العميل (اختياري)" },
-              notes: { type: "string", description: "ملاحظات أو تفاصيل عن استفسار العميل" },
+              notes: { type: "string", description: "ملاحظات عن استفسار العميل" },
             },
             required: ["customer_phone"],
             additionalProperties: false,
@@ -289,7 +324,6 @@ ${userInterests ? `## 🎯 اهتمامات هذا العميل (بناءً عل
 
     if (!response.ok) {
       if (response.status === 429 || response.status === 402) {
-        console.error("AI gateway limit:", response.status);
         const fallbackMsg = "المساعد الذكي مشغول حالياً 😊\n\nتقدر تتواصل مع فريق المبيعات مباشرة:\n\n📞 **فرع القاهرة**: 01032104861\n📞 **فرع الجيزة**: 01153961008\n📞 **فرع الأقصر**: 01016177204\n📱 **واتساب**: 01032104861\n\n⏰ من 9 صباحًا لـ 7 مساءً";
         const fallbackSSE = `data: ${JSON.stringify({ choices: [{ delta: { content: fallbackMsg }, finish_reason: "stop" }] })}\n\ndata: [DONE]\n\n`;
         return new Response(fallbackSSE, {
@@ -304,7 +338,7 @@ ${userInterests ? `## 🎯 اهتمامات هذا العميل (بناءً عل
       );
     }
 
-    // Read the entire stream to check for tool calls
+    // Read entire stream to check for tool calls
     const reader = response.body!.getReader();
     const decoder = new TextDecoder();
     let fullContent = "";
@@ -345,7 +379,7 @@ ${userInterests ? `## 🎯 اهتمامات هذا العميل (بناءً عل
       } catch { /* skip */ }
     }
 
-    // If there are tool calls, execute them
+    // Execute tool calls
     if (toolCalls.length > 0) {
       for (const tc of toolCalls) {
         if (tc.function.name === "request_callback") {
@@ -355,7 +389,6 @@ ${userInterests ? `## 🎯 اهتمامات هذا العميل (بناءً عل
             const name = args.customer_name || "عميل من الشات بوت";
             const notes = args.notes || "";
 
-            // 1. Send in-app notifications to admins
             const { data: adminRoles } = await supabase
               .from("user_roles")
               .select("user_id")
@@ -371,7 +404,7 @@ ${userInterests ? `## 🎯 اهتمامات هذا العميل (بناءً عل
               await supabase.from("notifications").insert(notifications);
             }
 
-            // 2. Send WhatsApp message to sales (01153961008)
+            // WhatsApp notification
             const waMessage = `🚨 *طلب تواصل عاجل من الشات بوت*\n\n👤 الاسم: ${name}\n📱 الرقم: ${phone}\n📝 الملاحظات: ${notes}\n\n⏰ الوقت: ${new Date().toLocaleString("ar-EG", { timeZone: "Africa/Cairo" })}`;
             try {
               const TWILIO_SID = Deno.env.get("TWILIO_ACCOUNT_SID");
@@ -390,9 +423,6 @@ ${userInterests ? `## 🎯 اهتمامات هذا العميل (بناءً عل
                     Body: waMessage,
                   }).toString(),
                 });
-                console.log("WhatsApp notification sent to sales");
-              } else {
-                console.log("Twilio not configured, skipping WhatsApp notification");
               }
             } catch (waErr) {
               console.error("WhatsApp notification error:", waErr);
