@@ -124,6 +124,42 @@ const AdminERPSync = () => {
     setMappingProducts(data || []);
   };
 
+  const fetchErpProducts = async () => {
+    setFetchingErp(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("erp-sync-outbound", {
+        body: { action: "fetch_erp_products", data: {} },
+      });
+      if (error) throw error;
+      setErpProducts(data?.products || []);
+      toast({ title: `تم جلب ${data?.products?.length || 0} صنف من الفيصل ✓` });
+    } catch (err: any) {
+      toast({ title: "خطأ في جلب أصناف الفيصل", description: err.message, variant: "destructive" });
+    }
+    setFetchingErp(false);
+  };
+
+  const autoMatchByName = () => {
+    if (erpProducts.length === 0) return;
+    let matched = 0;
+    const edits: Record<string, string> = { ...mappingEdits };
+    for (const product of mappingProducts) {
+      if (product.erp_item_code) continue; // already mapped
+      // Try to find ERP product with similar name
+      const nameWords = (product.name_ar || "").split(/\s+/).filter((w: string) => w.length > 2);
+      const match = erpProducts.find((ep) => {
+        const epName = ep.name || "";
+        return nameWords.some((w: string) => epName.includes(w));
+      });
+      if (match) {
+        edits[product.id] = match.id;
+        matched++;
+      }
+    }
+    setMappingEdits(edits);
+    toast({ title: `تم مطابقة ${matched} صنف تلقائياً` });
+  };
+
   const saveMappings = async () => {
     setSavingMapping(true);
     let count = 0;
