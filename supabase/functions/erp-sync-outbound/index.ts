@@ -98,28 +98,35 @@ Deno.serve(async (req) => {
     }
 
     const token = authHeader.replace("Bearer ", "");
-    const userClient = createClient(
-      supabaseUrl,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
-    const { data: claimsData, error: authError } = await userClient.auth.getClaims(token);
+    let userId: string | null = null;
+    let isServiceRole = false;
 
-    if (authError || !claimsData?.claims?.sub) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    // Check if it's a service role call (token matches service key)
+    if (token === serviceKey) {
+      isServiceRole = true;
+    } else {
+      const userClient = createClient(
+        supabaseUrl,
+        Deno.env.get("SUPABASE_ANON_KEY")!,
+        { global: { headers: { Authorization: authHeader } } }
       );
-    }
+      const { data: claimsData, error: authError } = await userClient.auth.getClaims(token);
 
-    const userId = claimsData.claims.sub as string;
+      if (authError || !claimsData?.claims?.sub) {
+        return new Response(
+          JSON.stringify({ error: "Unauthorized" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      userId = claimsData.claims.sub as string;
+    }
 
     const { action, data } = await req.json();
 
-    // Admin-only actions
-    if (action === "sync_stock" || action === "sync_prices") {
+    // Admin-only actions (service role bypasses)
+    if (!isServiceRole && (action === "sync_stock" || action === "sync_prices")) {
       const { data: isAdmin } = await supabase.rpc("has_role", {
-        _user_id: userId,
+        _user_id: userId!,
         _role: "admin",
       });
       if (!isAdmin) {
