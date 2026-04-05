@@ -458,15 +458,56 @@ const AdminERPSync = () => {
                   </p>
                 </div>
               </div>
-              {syncing === "import_products" && (
-                <div className="mb-3 p-3 rounded-lg bg-muted/50 text-sm text-muted-foreground flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  جاري استيراد الأصناف... قد يستغرق بضع دقائق حسب عدد المنتجات
+
+              {/* Import Progress Bar */}
+              {importProgress && (
+                <div className="mb-3 p-4 rounded-lg bg-muted/50 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground flex items-center gap-2">
+                      {!importProgress.done && <Loader2 className="w-4 h-4 animate-spin" />}
+                      {importProgress.phase}
+                    </span>
+                    {importProgress.done && (
+                      <Button variant="ghost" size="sm" onClick={() => setImportProgress(null)} className="h-6 px-2 text-xs">✕</Button>
+                    )}
+                  </div>
+
+                  {importProgress.totalBatches > 0 && (
+                    <>
+                      <Progress value={(importProgress.currentBatch / importProgress.totalBatches) * 100} className="h-2" />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>الدفعة {importProgress.currentBatch} من {importProgress.totalBatches}</span>
+                        <span>{Math.round((importProgress.currentBatch / importProgress.totalBatches) * 100)}%</span>
+                      </div>
+                    </>
+                  )}
+
+                  {importProgress.totalItems > 0 && (
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div className="bg-background rounded p-2 text-center">
+                        <p className="font-bold text-foreground">{importProgress.imported}</p>
+                        <p className="text-muted-foreground">جديد</p>
+                      </div>
+                      <div className="bg-background rounded p-2 text-center">
+                        <p className="font-bold text-foreground">{importProgress.updated}</p>
+                        <p className="text-muted-foreground">محدّث</p>
+                      </div>
+                      <div className="bg-background rounded p-2 text-center">
+                        <p className="font-bold text-foreground">{importProgress.skipped}</p>
+                        <p className="text-muted-foreground">تخطي</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {importProgress.error && (
+                    <p className="text-xs text-destructive">❌ {importProgress.error}</p>
+                  )}
                 </div>
               )}
+
               <Button
                 className="w-full gap-2"
-                onClick={() => runSync("import_products")}
+                onClick={handleBatchImport}
                 disabled={syncing !== null}
               >
                 {syncing === "import_products" ? (
