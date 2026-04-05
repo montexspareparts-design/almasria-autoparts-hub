@@ -1537,6 +1537,7 @@ export type Database = {
       }
     }
     Functions: {
+      bulk_update_product_prices: { Args: { _items: Json }; Returns: Json }
       check_dealer_application_exists: {
         Args: { _email?: string; _phone?: string }
         Returns: Json
