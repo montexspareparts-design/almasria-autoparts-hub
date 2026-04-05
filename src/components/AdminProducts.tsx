@@ -272,6 +272,10 @@ const AdminProducts = () => {
                       </span>
                       <span>•</span>
                       <span>{product.base_price} ج.م</span>
+                      <span>•</span>
+                      <span className={product.stock_quantity <= 0 ? "text-destructive font-medium" : product.stock_quantity < 10 ? "text-amber-500 font-medium" : "text-emerald-600 font-medium"}>
+                        رصيد: {product.stock_quantity}
+                      </span>
                       {!product.is_active && (
                         <>
                           <span>•</span>
