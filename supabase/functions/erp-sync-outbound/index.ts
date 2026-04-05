@@ -341,6 +341,32 @@ Deno.serve(async (req) => {
               qty: Number(item.qty ?? item.quantity ?? item.stock ?? item.availableQty),
             }));
 
+          // ─── SAFETY CHECK: If ALL items have qty=0, ERP is likely not sending real stock ───
+          const itemsWithPositiveQty = bulkItems.filter((i: any) => i.qty > 0);
+          if (bulkItems.length > 50 && itemsWithPositiveQty.length === 0) {
+            result = {
+              success: false,
+              warning: "ERP_ALL_ZERO_STOCK",
+              message: "تم إلغاء المزامنة: جميع الأرصدة من الفيصل = 0. هذا يشير إلى أن API لا ترسل الأرصدة الحقيقية. استخدم رفع ملف Excel بدلاً من المزامنة التلقائية.",
+              total_erp_items: items.length,
+              items_with_stock: itemsWithPositiveQty.length,
+              skipped: true,
+            };
+
+            await supabase.from("erp_sync_logs").insert({
+              sync_type: syncType,
+              direction: "inbound",
+              payload: { action, safety_blocked: true },
+              response: result,
+              status: "blocked",
+              error_message: "All ERP items returned quantity=0 — sync aborted to protect stock data",
+            });
+
+            return new Response(JSON.stringify(result), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+
           const { data: bulkResult, error: bulkErr } = await supabase.rpc("bulk_sync_stock", {
             _items: bulkItems,
           });
@@ -352,6 +378,7 @@ Deno.serve(async (req) => {
             updated_count: bulkResult?.updated || 0,
             total_erp_items: items.length,
             matched_items: bulkResult?.updated || 0,
+            items_with_positive_stock: itemsWithPositiveQty.length,
             sample: items.slice(0, 3).map((i: any) => ({
               id: (i.id || "").toString().trim(),
               name: i.name,
