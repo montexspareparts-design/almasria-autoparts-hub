@@ -1,12 +1,15 @@
-import { useState, useRef } from "react";
+import { useState, useRef, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Upload, X, Package, Loader2, ImageIcon, Wand2, ExternalLink, Check, Copy } from "lucide-react";
+import { Search, Upload, X, Package, Loader2, ImageIcon, Wand2, ExternalLink, Check, Copy, FolderOpen } from "lucide-react";
+
+const StorageImageGallery = lazy(() => import("@/components/admin/StorageImageGallery"));
 
 const AdminProductImages = () => {
   const { toast } = useToast();
@@ -359,6 +362,19 @@ const AdminProductImages = () => {
         </CardTitle>
       </CardHeader>
       <CardContent>
+        <Tabs defaultValue="products" dir="rtl">
+          <TabsList className="mb-4 w-full justify-start">
+            <TabsTrigger value="products" className="gap-1.5">
+              <ImageIcon className="w-3.5 h-3.5" />
+              صور المنتجات
+            </TabsTrigger>
+            <TabsTrigger value="storage" className="gap-1.5">
+              <FolderOpen className="w-3.5 h-3.5" />
+              معرض الـ Storage
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="products">
         {/* Hidden file input */}
         <input
           ref={fileInputRef}
@@ -644,6 +660,14 @@ const AdminProductImages = () => {
             ) : null}
           </DialogContent>
         </Dialog>
+          </TabsContent>
+
+          <TabsContent value="storage">
+            <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>}>
+              <StorageImageGallery />
+            </Suspense>
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );
