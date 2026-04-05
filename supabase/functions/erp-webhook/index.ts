@@ -183,11 +183,17 @@ Deno.serve(async (req) => {
         const updateData: any = { base_price: item.price };
         if (item.sale_price !== undefined) updateData.sale_price = item.sale_price;
 
-        const { error } = await supabase
-          .from("products")
-          .update(updateData)
-          .eq("sku", item.sku);
-        if (!error) updated++;
+        const erpCode = (item.itemCode || item.id || "").toString().trim();
+        const sku = item.sku || "";
+
+        let result;
+        if (erpCode) {
+          result = await supabase.from("products").update(updateData).eq("erp_item_code", erpCode);
+        }
+        if ((!erpCode || result?.error) && sku) {
+          result = await supabase.from("products").update(updateData).eq("sku", sku);
+        }
+        if (!result?.error) updated++;
       }
 
       // Notify dealers about price changes
