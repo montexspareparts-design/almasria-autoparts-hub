@@ -94,7 +94,22 @@ const AdminERPSync = () => {
   useEffect(() => {
     fetchData();
     fetchMappingProducts();
+    fetchUnlinkedProducts();
   }, []);
+
+  const fetchUnlinkedProducts = async () => {
+    setUnlinkedLoading(true);
+    let query = supabase
+      .from("products")
+      .select("id, sku, name_ar, brand, base_price, is_active, image_url")
+      .is("erp_item_code", null)
+      .order("brand")
+      .order("name_ar");
+
+    const { data } = await query;
+    setUnlinkedProducts(data || []);
+    setUnlinkedLoading(false);
+  };
 
   const fetchData = async () => {
     setLoading(true);
