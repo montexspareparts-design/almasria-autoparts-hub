@@ -74,7 +74,7 @@ const DealerVehicleRecommendations = ({ compact }: DealerVehicleRecommendationsP
       .from("products")
       .select("id, name_ar, sku, image_url, base_price, stock_quantity, brand, is_on_sale, sale_price")
       .eq("is_active", true)
-      .gt("stock_quantity", 20)
+      .gt("stock_quantity", 0)
       .order("stock_quantity", { ascending: false })
       .limit(24);
 

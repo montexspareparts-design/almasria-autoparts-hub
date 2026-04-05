@@ -42,7 +42,7 @@ const DealerRecommendations = ({ userId, tier, onNavigateToQuotes }: { userId: s
         .from("products")
         .select("id, name_ar, sku, image_url, brand, stock_quantity")
         .eq("is_active", true)
-        .gt("stock_quantity", 20)
+        .gt("stock_quantity", 0)
         .order("stock_quantity", { ascending: false })
         .limit(8);
 
