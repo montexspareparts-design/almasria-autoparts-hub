@@ -71,6 +71,7 @@ const sidebarGroups: SidebarGroup[] = [
     label: "المنتجات والطلبات",
     items: [
       { id: "products", label: "إدارة المنتجات", icon: Package },
+      { id: "bulk-import", label: "استيراد جماعي", icon: ArrowLeftRight },
       { id: "orders", label: "إدارة الطلبات", icon: ShoppingBag },
       { id: "coupons", label: "الكوبونات", icon: Tag },
       { id: "qty-discounts", label: "خصومات الكمية", icon: Layers },
