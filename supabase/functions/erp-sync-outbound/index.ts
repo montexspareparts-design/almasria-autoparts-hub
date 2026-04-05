@@ -57,7 +57,7 @@ async function getErpToken(baseUrl: string): Promise<string> {
 
   cachedToken = jwt;
   // Token validity from API response, default 24 hours
-  tokenExpiry = Date.now() + (data.expiresIn ? data.expiresIn * 1000 : 24 * 60 * 60 * 1000);
+  tokenExpiry = Date.now() + (expiresIn ? expiresIn * 1000 : 24 * 60 * 60 * 1000);
 
   return cachedToken!;
 }
