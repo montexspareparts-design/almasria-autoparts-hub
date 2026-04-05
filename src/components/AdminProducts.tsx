@@ -35,6 +35,32 @@ const AdminProducts = () => {
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [copiedSku, setCopiedSku] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
+
+  const handleErpSync = async () => {
+    setSyncing(true);
+    try {
+      const [stockRes, priceRes] = await Promise.all([
+        supabase.functions.invoke("erp-sync-outbound", { body: { action: "sync_stock" } }),
+        supabase.functions.invoke("erp-sync-outbound", { body: { action: "sync_prices" } }),
+      ]);
+
+      const stockData = stockRes.data;
+      const priceData = priceRes.data;
+
+      const stockUpdated = stockData?.updated ?? stockData?.result?.updated ?? 0;
+      const priceUpdated = priceData?.updated ?? priceData?.result?.updated ?? 0;
+
+      toast({
+        title: "✅ تمت المزامنة بنجاح",
+        description: `أرصدة: ${stockUpdated} صنف | أسعار: ${priceUpdated} صنف`,
+      });
+      fetchProducts();
+    } catch (err: any) {
+      toast({ title: "خطأ في المزامنة", description: err.message, variant: "destructive" });
+    }
+    setSyncing(false);
+  };
 
   const handleCopySku = (sku: string) => {
     navigator.clipboard.writeText(sku);
