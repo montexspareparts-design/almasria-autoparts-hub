@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, XCircle, Clock, Eye, LogOut, Trash2, Users, ShoppingBag, Video, FileText, Image, Brain, Zap, Bell, ListVideo, Menu, X, ChevronRight, Package, BarChart3, Tag, Layers, TrendingUp, ArrowLeftRight, Briefcase, Banknote, Shield, Building2 } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Clock, Eye, LogOut, Trash2, Users, ShoppingBag, Video, FileText, Image, Brain, Zap, Bell, ListVideo, Menu, X, ChevronRight, Package, BarChart3, Tag, Layers, TrendingUp, ArrowLeftRight, Briefcase, Banknote, Shield, Building2, ShieldCheck } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -37,6 +37,7 @@ const AdminMaintenanceBundles = lazy(() => import("@/components/AdminMaintenance
 const AdminAuditLog = lazy(() => import("@/components/AdminAuditLog"));
 const AdminBulkImport = lazy(() => import("@/components/AdminBulkImport"));
 const AdminERPCustomers = lazy(() => import("@/components/AdminERPCustomers"));
+const AdminStockSettings = lazy(() => import("@/components/AdminStockSettings"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];
@@ -102,6 +103,7 @@ const sidebarGroups: SidebarGroup[] = [
         { id: "erp", label: "ربط ERP", icon: Zap },
         { id: "erp-customers", label: "ربط عملاء الفيصل", icon: Users },
         { id: "paymob", label: "إعدادات Paymob", icon: Briefcase },
+        { id: "stock-settings", label: "إعدادات المخزون", icon: ShieldCheck },
         { id: "audit-log", label: "سجل المراجعة", icon: Shield },
       ],
     },
@@ -541,6 +543,8 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminERPCustomers /></Suspense>;
       case "paymob":
         return <Suspense fallback={<SectionLoader />}><AdminPaymobSettings /></Suspense>;
+      case "stock-settings":
+        return <Suspense fallback={<SectionLoader />}><AdminStockSettings /></Suspense>;
       case "audit-log":
         return <Suspense fallback={<SectionLoader />}><AdminAuditLog /></Suspense>;
       case "bundles":

@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -52,6 +53,20 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
   const [showSearch, setShowSearch] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const searchTimeout = useRef<NodeJS.Timeout>();
+
+  // Fetch max order percentage setting
+  const { data: maxOrderPct } = useQuery({
+    queryKey: ["site_settings", "max_order_percentage"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "max_order_percentage")
+        .maybeSingle();
+      return parseInt(data?.value || "50") || 50;
+    },
+    staleTime: 10 * 60 * 1000,
+  });
 
   // Fetch tier prices
   useEffect(() => {
@@ -119,10 +134,11 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
         .or(`name_ar.ilike.%${query}%,sku.ilike.%${query}%`)
         .limit(8);
       // Compute available and max allowed per item
+      const pct = maxOrderPct || 50;
       const enriched = (data || []).map((p: any) => {
         const available = Math.max(0, (p.stock_quantity || 0) - (p.safety_stock || 0));
-        const fiftyPct = Math.max(1, Math.floor(available * 0.5));
-        const maxAllowed = p.max_order_cap ? Math.min(fiftyPct, p.max_order_cap) : fiftyPct;
+        const pctCap = Math.max(1, Math.floor(available * pct / 100));
+        const maxAllowed = p.max_order_cap ? Math.min(pctCap, p.max_order_cap) : pctCap;
         return { ...p, available_quantity: available, max_allowed: maxAllowed };
       }).filter((p: any) => p.available_quantity > 0);
       setSearchResults(enriched);

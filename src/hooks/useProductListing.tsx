@@ -157,6 +157,20 @@ export function useProductListing(options: UseProductListingOptions = {}) {
   const { addItem } = useCart();
   const queryClient = useQueryClient();
 
+  // Fetch max order percentage from site_settings
+  const { data: maxOrderPct } = useQuery({
+    queryKey: ["site_settings", "max_order_percentage"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "max_order_percentage")
+        .maybeSingle();
+      return parseInt(data?.value || "50") || 50;
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+
   const initialSearch = searchParams.get("search") || "";
   const initialCategory = searchParams.get("category") || null;
 
@@ -260,24 +274,24 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     const availableQty = product.available_quantity ?? product.stock_quantity;
     const maxCap = product.max_order_cap;
     const qty = product.min_order_qty || 1;
+    const pct = maxOrderPct || 50;
 
     if (availableQty <= 0) {
       toast({ title: "هذا المنتج غير متوفر حالياً", variant: "destructive" });
       return;
     }
 
-    // 50% cap rule: max allowed per order = 50% of available stock
-    const fiftyPercentCap = Math.max(1, Math.floor(availableQty * 0.5));
-    let effectiveMax = Math.min(availableQty, fiftyPercentCap);
+    // Dynamic percentage cap rule
+    const pctCap = Math.max(1, Math.floor(availableQty * pct / 100));
+    let effectiveMax = Math.min(availableQty, pctCap);
     if (maxCap) effectiveMax = Math.min(effectiveMax, maxCap);
 
     let finalQty = Math.min(qty, effectiveMax);
 
-    // If requested qty exceeds 50% cap, suggest the max allowed
     if (qty > effectiveMax) {
       toast({
         title: "⚠️ تم تعديل الكمية تلقائياً",
-        description: `الحد الأقصى المسموح لهذا الصنف هو ${effectiveMax} قطعة (50% من الرصيد المتاح: ${availableQty})`,
+        description: `الحد الأقصى المسموح لهذا الصنف هو ${effectiveMax} قطعة (${pct}% من الرصيد المتاح: ${availableQty})`,
       });
       finalQty = effectiveMax;
     }
@@ -289,7 +303,7 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     };
     addItem(cartItem);
     toast({ title: "تمت الإضافة للسلة ✅", description: product.name_ar });
-  }, [addItem, getProductPrice]);
+  }, [addItem, getProductPrice, maxOrderPct]);
 
   const handleLoginRequired = useCallback(() => {
     toast({ title: "يجب تسجيل الدخول أولاً", description: "سجل دخولك لتتمكن من عرض أسعار المنتجات" });
