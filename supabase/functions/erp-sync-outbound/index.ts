@@ -321,8 +321,6 @@ Deno.serve(async (req) => {
       } else {
         if (!baseUrl) throw new Error("ERP base URL is not configured");
 
-        // Fetch all products from Al Faisal API
-        // Response format: { message, data: [{ id, name, price, qty, itemcatid, ... }] }
         const erpResponse = await erpFetch(baseUrl, "/Ecommerce/products");
 
         const items = Array.isArray(erpResponse)
@@ -332,32 +330,37 @@ Deno.serve(async (req) => {
         let updated = 0;
         let matched = 0;
 
-        for (const item of items) {
-          // Al Faisal uses "id" as item code, trim whitespace
-          const erpId = (item.id || item.itemCode || item.sku || item.code || "").toString().trim();
-          if (!erpId) continue;
+        // Batch updates: process in chunks of 50 using Promise.all
+        const BATCH_SIZE = 50;
+        for (let i = 0; i < items.length; i += BATCH_SIZE) {
+          const batch = items.slice(i, i + BATCH_SIZE);
+          const promises = batch.map(async (item: any) => {
+            const erpId = (item.id || item.itemCode || item.sku || item.code || "").toString().trim();
+            if (!erpId) return;
 
-          if (action === "sync_stock") {
-            const qty = item.qty ?? item.quantity ?? item.stock ?? item.availableQty;
-            if (qty !== undefined) {
-              const { count } = await supabase
-                .from("products")
-                .update({ stock_quantity: Number(qty) })
-                .eq("erp_item_code", erpId)
-                .select("id", { count: "exact", head: true });
-              if (count && count > 0) { updated++; matched++; }
+            if (action === "sync_stock") {
+              const qty = item.qty ?? item.quantity ?? item.stock ?? item.availableQty;
+              if (qty !== undefined) {
+                const { count } = await supabase
+                  .from("products")
+                  .update({ stock_quantity: Number(qty) })
+                  .eq("erp_item_code", erpId)
+                  .select("id", { count: "exact", head: true });
+                if (count && count > 0) { updated++; matched++; }
+              }
+            } else {
+              const price = item.price ?? item.unitPrice ?? item.basePrice;
+              if (price !== undefined) {
+                const { count } = await supabase
+                  .from("products")
+                  .update({ base_price: Number(price) })
+                  .eq("erp_item_code", erpId)
+                  .select("id", { count: "exact", head: true });
+                if (count && count > 0) { updated++; matched++; }
+              }
             }
-          } else {
-            const price = item.price ?? item.unitPrice ?? item.basePrice;
-            if (price !== undefined) {
-              const { count } = await supabase
-                .from("products")
-                .update({ base_price: Number(price) })
-                .eq("erp_item_code", erpId)
-                .select("id", { count: "exact", head: true });
-              if (count && count > 0) { updated++; matched++; }
-            }
-          }
+          });
+          await Promise.all(promises);
         }
 
         result = {
