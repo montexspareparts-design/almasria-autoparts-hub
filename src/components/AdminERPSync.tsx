@@ -238,6 +238,86 @@ const AdminERPSync = () => {
     setSyncing(null);
   };
 
+  const handleBatchImport = async () => {
+    setSyncing("import_products");
+    setImportProgress({ phase: "جاري جلب الأصناف من الفيصل...", currentBatch: 0, totalBatches: 0, imported: 0, updated: 0, skipped: 0, totalItems: 0, done: false });
+
+    try {
+      // Phase 1: Fetch all ERP products
+      const { data: fetchData, error: fetchErr } = await supabase.functions.invoke("erp-sync-outbound", {
+        body: { action: "fetch_erp_products", data: {} },
+      });
+      if (fetchErr) throw fetchErr;
+
+      const products = fetchData?.products || [];
+      if (products.length === 0) {
+        setImportProgress(p => ({ ...p!, phase: "لم يتم العثور على أصناف", done: true }));
+        setSyncing(null);
+        return;
+      }
+
+      // Phase 2: Send in batches
+      const BATCH_SIZE = 500;
+      const totalBatches = Math.ceil(products.length / BATCH_SIZE);
+      let totalImported = 0, totalUpdated = 0, totalSkipped = 0;
+
+      setImportProgress(p => ({ ...p!, phase: "جاري استيراد الأصناف...", totalBatches, totalItems: products.length }));
+
+      for (let i = 0; i < products.length; i += BATCH_SIZE) {
+        const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+        const batch = products.slice(i, i + BATCH_SIZE);
+
+        setImportProgress(p => ({
+          ...p!,
+          currentBatch: batchNum,
+          phase: `جاري معالجة الدفعة ${batchNum} من ${totalBatches}...`,
+        }));
+
+        const { data: batchResult, error: batchErr } = await supabase.functions.invoke("erp-sync-outbound", {
+          body: { action: "import_products_batch", data: { items: batch } },
+        });
+
+        if (batchErr) {
+          console.error(`Batch ${batchNum} error:`, batchErr);
+        } else {
+          totalImported += batchResult?.imported || 0;
+          totalUpdated += batchResult?.updated || 0;
+          totalSkipped += batchResult?.skipped || 0;
+        }
+
+        setImportProgress(p => ({
+          ...p!,
+          imported: totalImported,
+          updated: totalUpdated,
+          skipped: totalSkipped,
+        }));
+      }
+
+      setImportProgress(p => ({
+        ...p!,
+        currentBatch: totalBatches,
+        phase: "✅ اكتمل الاستيراد بنجاح!",
+        done: true,
+      }));
+
+      toast({
+        title: "تم استيراد الأصناف ✓",
+        description: `جديد: ${totalImported} | محدّث: ${totalUpdated} | تخطي: ${totalSkipped}`,
+      });
+
+      fetchData();
+    } catch (err: any) {
+      setImportProgress(p => ({
+        ...p!,
+        phase: "❌ فشل الاستيراد",
+        error: err.message,
+        done: true,
+      }));
+      toast({ title: "خطأ في الاستيراد", description: err.message, variant: "destructive" });
+    }
+    setSyncing(null);
+  };
+
   const testWebhook = async () => {
     setSyncing("webhook_test");
     try {
