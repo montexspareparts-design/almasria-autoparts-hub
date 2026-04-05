@@ -298,7 +298,7 @@ Deno.serve(async (req) => {
         if (!baseUrl) throw new Error("ERP base URL is not configured");
 
         // Fetch all products from Al Faisal API
-        // Response format: { message, data: [{ id, name, price, quantity }] }
+        // Response format: { message, data: [{ id, name, price, qty, itemcatid, ... }] }
         const erpResponse = await erpFetch(baseUrl, "/Ecommerce/products");
 
         const items = Array.isArray(erpResponse)
