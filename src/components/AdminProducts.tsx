@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, Search, Pencil, Trash2, Package, ChevronRight, ChevronLeft, Copy, Check } from "lucide-react";
+import { Loader2, Plus, Search, Pencil, Trash2, Package, ChevronRight, ChevronLeft, Copy, Check, RefreshCw } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import AdminProductForm from "@/components/admin/AdminProductForm";
 import type { Database } from "@/integrations/supabase/types";
