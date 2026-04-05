@@ -558,9 +558,9 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
                   </div>
                   {isDealer ? (
                     <div>
-                      <p className="font-bold text-foreground">أهلاً بيك يا تاجرنا! 🤝</p>
+                      <p className="font-bold text-foreground">أهلاً بحضرتك! 🤝</p>
                       <p className="text-sm text-muted-foreground mt-1">
-                        أنا مساعدك الذكي — أقدر أساعدك في الطلبيات، الأسعار، وأي استفسار
+                        أنا مساعدك — أقدر أساعدك في الطلبيات والأسعار وأي استفسار
                       </p>
                       <p className="text-xs text-muted-foreground mt-2 flex items-center justify-center gap-1">
                         <ImagePlus className="w-3.5 h-3.5" />
