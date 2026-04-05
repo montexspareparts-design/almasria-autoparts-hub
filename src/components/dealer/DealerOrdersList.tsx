@@ -30,6 +30,10 @@ interface Order {
   shipping_governorate?: string | null;
   payment_method?: string | null;
   notes?: string | null;
+  tracking_number?: string | null;
+  shipping_company?: string | null;
+  shipped_at?: string | null;
+  delivered_at?: string | null;
 }
 
 interface OrderItem {
