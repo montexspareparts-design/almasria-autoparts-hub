@@ -1,8 +1,8 @@
+import { memo, useCallback } from "react";
 import { Package, Lock, Eye, ShoppingCart, Heart, ExternalLink } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const brandRouteMap: Record<string, { label: string; color: string; path: string }> = {
   toyota_genuine: { label: "تويوتا أصلي", color: "bg-red-500/90 text-white", path: "/products/toyota-genuine" },
