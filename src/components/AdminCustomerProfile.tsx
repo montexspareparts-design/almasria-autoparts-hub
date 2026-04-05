@@ -267,6 +267,54 @@ const AdminCustomerProfile = () => {
           </Card>
         )}
 
+        {/* ERP Customer Code */}
+        {account && (
+          <Card className="border-primary/20">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Link2 className="w-4 h-4 text-primary" />
+                ربط حساب الفيصل ERP
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground mb-3">
+                أدخل كود العميل من نظام الفيصل لربط الطلبيات وعروض الأسعار تلقائياً
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="كود العميل في الفيصل (مثال: C-10045)"
+                  value={erpCode}
+                  onChange={(e) => setErpCode(e.target.value)}
+                  className="max-w-xs font-mono"
+                  dir="ltr"
+                />
+                <Button
+                  size="sm"
+                  disabled={savingErpCode}
+                  onClick={async () => {
+                    setSavingErpCode(true);
+                    const { error } = await supabase
+                      .from("dealer_accounts")
+                      .update({ erp_customer_code: erpCode || null } as any)
+                      .eq("id", account.id);
+                    if (!error) {
+                      toast({ title: "تم حفظ كود الفيصل ✓" });
+                    } else {
+                      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+                    }
+                    setSavingErpCode(false);
+                  }}
+                >
+                  {savingErpCode ? <Loader2 className="w-4 h-4 animate-spin" /> : "حفظ"}
+                </Button>
+              </div>
+              {erpCode && (
+                <p className="text-xs text-primary mt-2">✓ مربوط بحساب الفيصل: {erpCode}</p>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Orders History */}
         <Card>
           <CardHeader>
