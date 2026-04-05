@@ -195,19 +195,15 @@ Deno.serve(async (req) => {
       referenceId = data.quote_id;
       referenceNumber = data.quote_number;
 
+      // Map to Al Faisal CreateOrder format (quotes use same endpoint)
       const payload = {
-        quoteNumber: data.quote_number,
-        customerCode: data.erp_customer_code || "",
+        customerId: data.erp_customer_code || "",
         customerName: data.customer_name,
-        customerTier: data.customer_tier || "retail",
-        notes: data.notes || "",
-        totalAmount: data.total_amount,
+        phone: data.customer_phone || "",
         items: data.items?.map((item: any) => ({
-          itemCode: item.erp_item_code || item.sku,
-          itemName: item.name_ar,
+          productId: item.erp_item_code || item.sku,
           quantity: item.quantity,
-          unitPrice: item.unit_price,
-          totalPrice: item.total_price,
+          price: item.unit_price,
         })),
       };
 
