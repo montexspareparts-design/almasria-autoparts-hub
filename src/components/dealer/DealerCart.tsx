@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import {
   ShoppingCart, Trash2, Minus, Plus, Package, Loader2,
-  ArrowRight, FileText, XCircle, CheckCircle2, MessageCircle, CreditCard
+  ArrowRight, FileText, XCircle, CheckCircle2, MessageCircle, CreditCard, Shield
 } from "lucide-react";
 
 
@@ -188,8 +188,44 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
     );
   }
 
+  // Determine current step for stepper
+  const currentStep = items.length > 0 ? (shippingGovernorate || shippingAddress ? 2 : 1) : 0;
+  const steps = [
+    { label: "اختيار الأصناف", icon: Package, done: items.length > 0 },
+    { label: "بيانات الشحن", icon: FileText, done: currentStep >= 2 },
+    { label: "تأكيد وإرسال", icon: CheckCircle2, done: false },
+  ];
+
   return (
     <div className="space-y-6">
+      {/* Stepper Progress */}
+      <div className="flex items-center justify-between px-2 py-4 rounded-2xl bg-card border border-border/50">
+        {steps.map((step, idx) => {
+          const StepIcon = step.icon;
+          const isActive = idx === (currentStep < 2 ? currentStep : 2);
+          const isDone = step.done && idx < currentStep;
+          return (
+            <div key={idx} className="flex items-center flex-1 last:flex-initial">
+              <div className="flex flex-col items-center gap-1.5">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                  isDone ? "bg-emerald-500 text-white" :
+                  isActive ? "bg-primary text-primary-foreground ring-4 ring-primary/20" :
+                  "bg-muted text-muted-foreground"
+                }`}>
+                  {isDone ? <CheckCircle2 className="w-5 h-5" /> : <StepIcon className="w-5 h-5" />}
+                </div>
+                <span className={`text-[10px] font-bold text-center ${isActive ? "text-primary" : isDone ? "text-emerald-600" : "text-muted-foreground"}`}>
+                  {step.label}
+                </span>
+              </div>
+              {idx < steps.length - 1 && (
+                <div className={`flex-1 h-0.5 mx-2 rounded-full ${isDone ? "bg-emerald-500" : "bg-border"}`} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -343,37 +379,49 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
       </div>
 
       {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-2">
+      <div className="flex flex-col sm:flex-row gap-3">
         <Button
-          className="flex-1 gap-2 text-sm h-12 bg-emerald-600 hover:bg-emerald-700 text-white"
+          className="flex-1 gap-2.5 text-base h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20"
           onClick={handlePayNow}
           disabled={submittingPayment || submitting || items.length === 0}
         >
           {submittingPayment ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
-            <CreditCard className="w-4 h-4" />
+            <CreditCard className="w-5 h-5" />
           )}
-          ادفع الآن
+          ادفع الآن — {total.toLocaleString("ar-EG")} ج.م
         </Button>
         <Button
           variant="outline"
-          className="flex-1 gap-2 text-sm h-12"
+          className="flex-1 gap-2.5 text-base h-14 font-bold rounded-xl border-2"
           onClick={handleSubmitOrder}
           disabled={submitting || submittingPayment || items.length === 0}
         >
           {submitting ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-5 h-5" />
           )}
           أرسل الطلب (ادفع لاحقاً)
         </Button>
       </div>
 
-      <p className="text-[10px] text-muted-foreground text-center">
-        "ادفع الآن" ينقلك مباشرة للدفع الإلكتروني — "أرسل الطلب" يرسله للمراجعة والدفع لاحقاً
-      </p>
+      {/* Trust badges */}
+      <div className="flex items-center justify-center gap-4 py-2">
+        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+          <Shield className="w-3.5 h-3.5 text-emerald-500" />
+          <span>دفع آمن</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+          <Package className="w-3.5 h-3.5 text-primary" />
+          <span>شحن سريع</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+          <span>قطع أصلية 100%</span>
+        </div>
+      </div>
     </div>
   );
 };

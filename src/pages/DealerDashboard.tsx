@@ -4,7 +4,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { LogOut, Loader2 } from "lucide-react";
+import { LogOut, Loader2, ShoppingCart, Zap } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import dealerLogo from "@/assets/logo.webp";
 import DealerSidebar, { type DealerTab } from "@/components/dealer/DealerSidebar";
 import DealerMobileNav from "@/components/dealer/DealerMobileNav";
@@ -122,6 +123,30 @@ const DealerDashboard = () => {
     switch (activeTab) {
       case "quotes": return (
         <div className="space-y-6">
+          {/* Prominent New Order CTA */}
+          <div className="flex flex-col sm:flex-row gap-3 p-4 rounded-2xl bg-gradient-to-l from-primary/10 via-primary/5 to-transparent border border-primary/20">
+            <div className="flex-1">
+              <h2 className="text-lg font-black text-foreground">ابدأ طلبية جديدة</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">ابحث عن القطع وأضفها للسلة، ثم أرسل الطلب أو ادفع مباشرة</p>
+            </div>
+            <div className="flex gap-2 shrink-0">
+              <Button
+                onClick={() => setActiveTab("cart")}
+                variant="outline"
+                className="gap-2 h-11 text-sm"
+              >
+                <ShoppingCart className="w-4 h-4" />
+                طلباتي {cartItemCount > 0 && <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{cartItemCount}</Badge>}
+              </Button>
+              <Button
+                onClick={() => setActiveTab("quick_order")}
+                className="gap-2 h-11 text-sm bg-primary hover:bg-primary/90"
+              >
+                <Zap className="w-4 h-4" />
+                طلب سريع
+              </Button>
+            </div>
+          </div>
           <DealerProductSearch />
           <DealerVehicleRecommendations compact />
         </div>
