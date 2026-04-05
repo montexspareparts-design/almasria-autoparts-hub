@@ -136,6 +136,7 @@ Deno.serve(async (req) => {
         );
       }
       userId = claimsData.claims.sub as string;
+      }
     }
 
     const { action, data } = await req.json();
