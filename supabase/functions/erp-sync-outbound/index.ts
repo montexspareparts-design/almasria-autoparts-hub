@@ -418,10 +418,11 @@ Deno.serve(async (req) => {
           result = {
             success: true,
             updated_count: bulkResult?.updated || 0,
-            total_erp_items: items.length,
+            total_erp_items: stockItems.length,
             matched_items: bulkResult?.updated || 0,
             items_with_positive_stock: itemsWithPositiveQty.length,
-            sample: items.slice(0, 3).map((i: any) => ({
+            used_endpoint: usedEndpoint,
+            sample: stockItems.slice(0, 3).map((i: any) => ({
               id: (i.id || "").toString().trim(),
               name: i.name,
               qty: i.qty ?? i.quantity,
