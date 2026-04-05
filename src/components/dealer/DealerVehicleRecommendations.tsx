@@ -90,8 +90,8 @@ const DealerVehicleRecommendations = ({ compact }: DealerVehicleRecommendationsP
     e.stopPropagation();
     if (!user || revealedPrices[productId] !== undefined) return;
 
-    if (dailyViewCount >= 20) {
-      toast.error("تم استنفاد الحد اليومي (20 صنف)");
+    if (dailyViewCount >= 30) {
+      toast.error("تم استنفاد الحد اليومي (30 صنف)");
       return;
     }
 
