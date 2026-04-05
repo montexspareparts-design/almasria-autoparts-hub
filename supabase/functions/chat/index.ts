@@ -408,7 +408,7 @@ ${userInterests ? `## اهتمامات العميل:
 ماركات: ${(userInterests.topBrands || []).map((b: string) => brandMap[b] || b).join("، ") || "—"}
 بحث أخير: ${(userInterests.recentSearches || []).join("، ") || "—"}` : ""}`;
 
-    const tools = [
+    const tools: any[] = [
       {
         type: "function",
         function: {
@@ -427,6 +427,40 @@ ${userInterests ? `## اهتمامات العميل:
         },
       },
     ];
+
+    // Add cart tools for dealers only
+    if (userIsDealer && authenticatedUserId) {
+      tools.push(
+        {
+          type: "function",
+          function: {
+            name: "add_to_cart",
+            description: "إضافة منتج لسلة التاجر. استخدمها لما التاجر يطلب إضافة صنف للسلة أو للطلبية.",
+            parameters: {
+              type: "object",
+              properties: {
+                sku: { type: "string", description: "رقم القطعة (SKU) للمنتج" },
+                quantity: { type: "integer", description: "الكمية المطلوبة (افتراضي 1)", default: 1 },
+              },
+              required: ["sku"],
+              additionalProperties: false,
+            },
+          },
+        },
+        {
+          type: "function",
+          function: {
+            name: "view_cart",
+            description: "عرض محتويات سلة التاجر الحالية. استخدمها لما يسأل عن السلة أو يريد إكمال الطلبية.",
+            parameters: {
+              type: "object",
+              properties: {},
+              additionalProperties: false,
+            },
+          },
+        }
+      );
+    }
 
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
