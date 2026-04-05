@@ -69,6 +69,15 @@ const getTextContent = (content: MessageContent): string => {
   return content.filter((c) => c.type === "text").map((c) => (c as any).text).join("");
 };
 
+// Parse quick reply choices from AI response: 【choice1|choice2|choice3】
+const parseChoices = (text: string): { cleanText: string; choices: string[] } => {
+  const match = text.match(/【([^】]+)】\s*$/);
+  if (!match) return { cleanText: text, choices: [] };
+  const choices = match[1].split("|").map(c => c.trim()).filter(Boolean);
+  const cleanText = text.replace(/【[^】]+】\s*$/, "").trim();
+  return { cleanText, choices };
+};
+
 // Calculate distance between two coordinates (Haversine formula)
 const getDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
   const R = 6371; // Earth's radius in km
