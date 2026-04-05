@@ -760,6 +760,37 @@ Deno.serve(async (req) => {
       result = { success: true, endpoints: results };
     }
 
+    // ─── SEARCH ERP PRODUCTS by keywords ───
+    else if (action === "search_erp_products") {
+      if (!baseUrl) throw new Error("ERP base URL is not configured");
+      const keywords: string[] = data?.keywords || [];
+      if (!keywords.length) throw new Error("No keywords provided");
+
+      const erpResponse = await erpFetch(baseUrl, "/Ecommerce/products");
+      const items = Array.isArray(erpResponse) ? erpResponse : (erpResponse.data || erpResponse.items || []);
+
+      const matched = items.filter((i: any) => {
+        const name = (i.name || i.itemName || "").toString().toLowerCase();
+        const id = (i.id || i.itemCode || "").toString().toLowerCase();
+        return keywords.some((kw: string) => name.includes(kw.toLowerCase()) || id.includes(kw.toLowerCase()));
+      });
+
+      result = {
+        success: true,
+        total_erp: items.length,
+        matched_count: matched.length,
+        items: matched.map((i: any) => ({
+          id: (i.id || i.itemCode || "").toString().trim(),
+          name: i.name || i.itemName || "",
+          price: i.price ?? i.unitPrice ?? 0,
+          wholesaleprice: i.wholesaleprice ?? null,
+          halfwholesaleprice: i.halfwholesaleprice ?? null,
+          consumerprice: i.consumerprice ?? null,
+          quantity: i.qty ?? i.quantity ?? i.stock ?? 0,
+        })),
+      };
+    }
+
     else {
       throw new Error(`Unknown action: ${action}`);
     }
