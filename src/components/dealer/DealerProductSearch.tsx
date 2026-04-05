@@ -71,7 +71,13 @@ const DealerProductSearch = ({ onNavigateToOrders, onNavigateToCart, sharedCart 
         commandPaletteOpen={listing.commandPaletteOpen}
         setCommandPaletteOpen={listing.setCommandPaletteOpen}
         showBrands
-        beforeGrid={<CategoryBrowseSlider />}
+        beforeGrid={
+          <CategoryBrowseSlider
+            onCategorySelect={(categoryId) => {
+              listing.setFilters((prev: any) => ({ ...prev, categoryId }));
+            }}
+          />
+        }
       />
 
       {/* Floating Cart Bar */}
