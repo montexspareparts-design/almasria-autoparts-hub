@@ -1,18 +1,13 @@
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { useProductListing } from "@/hooks/useProductListing";
 import ProductListingSection from "@/components/ProductListingSection";
 import CategoryBrowseSlider from "@/components/CategoryBrowseSlider";
-import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { useDealerCart } from "@/hooks/useDealerCart";
-import {
-  ShoppingCart, Save, Loader2, Trash2, X, FileText, Minus, Plus, Package, ArrowLeft,
-} from "lucide-react";
+import { ShoppingCart, ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-
+import { ToastAction } from "@/components/ui/toast";
 interface DealerProductSearchProps {
   onNavigateToOrders?: () => void;
   onNavigateToCart?: () => void;
