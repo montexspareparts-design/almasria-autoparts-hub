@@ -6,6 +6,76 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// ─── Al Faisal ERP Authentication ───────────────────────────────
+let cachedToken: string | null = null;
+let tokenExpiry = 0;
+
+async function getErpToken(baseUrl: string): Promise<string> {
+  // Reuse token if still valid (with 5 min buffer)
+  if (cachedToken && Date.now() < tokenExpiry - 300_000) {
+    return cachedToken;
+  }
+
+  const username = Deno.env.get("ERP_FAISAL_USERNAME");
+  const password = Deno.env.get("ERP_FAISAL_PASSWORD");
+
+  if (!username || !password) {
+    throw new Error("ERP credentials (username/password) are not configured");
+  }
+
+  const res = await fetch(`${baseUrl}/Ecommerce/Authenticate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+  });
+
+  const text = await res.text();
+  let data: any;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error(`ERP Auth returned non-JSON (status ${res.status}): ${text.substring(0, 200)}`);
+  }
+
+  if (!res.ok || !data.token) {
+    throw new Error(`ERP Authentication failed [${res.status}]: ${JSON.stringify(data)}`);
+  }
+
+  cachedToken = data.token;
+  // Default token validity: 24 hours (adjust if API returns expiry)
+  tokenExpiry = Date.now() + (data.expiresIn ? data.expiresIn * 1000 : 24 * 60 * 60 * 1000);
+
+  return cachedToken!;
+}
+
+// ─── Helper: Authenticated fetch to ERP ─────────────────────────
+async function erpFetch(baseUrl: string, path: string, options: RequestInit = {}): Promise<any> {
+  const token = await getErpToken(baseUrl);
+
+  const res = await fetch(`${baseUrl}${path}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      ...(options.headers || {}),
+    },
+  });
+
+  const text = await res.text();
+  let result: any;
+  try {
+    result = JSON.parse(text);
+  } catch {
+    throw new Error(`ERP returned non-JSON (status ${res.status}): ${text.substring(0, 200)}`);
+  }
+
+  if (!res.ok) {
+    throw new Error(`ERP API error [${res.status}]: ${JSON.stringify(result)}`);
+  }
+
+  return result;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -41,7 +111,6 @@ Deno.serve(async (req) => {
     }
 
     const userId = claimsData.claims.sub as string;
-    // ─── End Auth Check ─────────────────────────────────────────────────
 
     const { action, data } = await req.json();
 
@@ -69,90 +138,35 @@ Deno.serve(async (req) => {
 
     const isMock = config.erp_mode === "mock";
     const baseUrl = config.erp_base_url || "";
-    const apiKey = Deno.env.get("ERP_FAISAL_API_KEY") || config.erp_api_key || "";
 
     let result: any = null;
     let syncType = "";
     let referenceId = "";
     let referenceNumber = "";
 
-    // ─── PUSH QUOTE TO ERP ───
-    if (action === "push_quote") {
-      syncType = "quote_push";
-      referenceId = data.quote_id;
-      referenceNumber = data.quote_number;
-
-      const payload = {
-        quote_number: data.quote_number,
-        customer_name: data.customer_name,
-        items: data.items?.map((item: any) => ({
-          sku: item.sku,
-          name: item.name_ar,
-          quantity: item.quantity,
-          unit_price: item.unit_price,
-          total: item.total_price,
-        })),
-        total_amount: data.total_amount,
-        notes: data.notes || "",
-      };
-
-      if (isMock) {
-        result = {
-          success: true,
-          erp_quote_id: `ERP-Q-${Date.now()}`,
-          message: "Quote created in ERP (MOCK MODE)",
-        };
-      } else {
-        if (!baseUrl) throw new Error("ERP base URL is not configured");
-        const res = await fetch(`${baseUrl}/quotes`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify(payload),
-        });
-        const text = await res.text();
-        try { result = JSON.parse(text); } catch {
-          throw new Error(`ERP returned non-JSON (status ${res.status}): ${text.substring(0, 200)}`);
-        }
-        if (!res.ok)
-          throw new Error(`ERP API error [${res.status}]: ${JSON.stringify(result)}`);
-      }
-
-      await supabase.from("erp_sync_logs").insert({
-        sync_type: syncType,
-        direction: "outbound",
-        reference_id: referenceId,
-        reference_number: referenceNumber,
-        payload,
-        response: result,
-        status: isMock ? "mock" : "success",
-      });
-    }
-
-    // ─── PUSH ORDER TO ERP ───
-    else if (action === "push_order") {
+    // ─── PUSH ORDER TO ERP (CreateOrder) ───
+    if (action === "push_order") {
       syncType = "order_push";
       referenceId = data.order_id;
       referenceNumber = data.order_number;
 
+      // Map to Al Faisal CreateOrder format
       const payload = {
-        order_number: data.order_number,
-        customer_name: data.customer_name,
-        customer_phone: data.customer_phone,
-        shipping_address: data.shipping_address,
-        shipping_governorate: data.shipping_governorate,
-        payment_method: data.payment_method,
-        items: data.items?.map((item: any) => ({
-          sku: item.sku,
-          name: item.name_ar,
-          quantity: item.quantity,
-          unit_price: item.unit_price,
-          total: item.total_price,
-        })),
-        total_amount: data.total_amount,
+        orderNumber: data.order_number,
+        customerName: data.customer_name,
+        customerPhone: data.customer_phone,
+        shippingAddress: data.shipping_address || "",
+        shippingGovernorate: data.shipping_governorate || "",
+        paymentMethod: data.payment_method || "",
         notes: data.notes || "",
+        totalAmount: data.total_amount,
+        items: data.items?.map((item: any) => ({
+          itemCode: item.sku,
+          itemName: item.name_ar,
+          quantity: item.quantity,
+          unitPrice: item.unit_price,
+          totalPrice: item.total_price,
+        })),
       };
 
       if (isMock) {
@@ -163,20 +177,10 @@ Deno.serve(async (req) => {
         };
       } else {
         if (!baseUrl) throw new Error("ERP base URL is not configured");
-        const res = await fetch(`${baseUrl}/orders`, {
+        result = await erpFetch(baseUrl, "/Ecommerce/CreateOrder", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-          },
           body: JSON.stringify(payload),
         });
-        const text = await res.text();
-        try { result = JSON.parse(text); } catch {
-          throw new Error(`ERP returned non-JSON (status ${res.status}): ${text.substring(0, 200)}`);
-        }
-        if (!res.ok)
-          throw new Error(`ERP API error [${res.status}]: ${JSON.stringify(result)}`);
       }
 
       await supabase.from("erp_sync_logs").insert({
@@ -190,125 +194,143 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ─── SYNC STOCK FROM ERP ───
-    else if (action === "sync_stock") {
-      syncType = "stock_update";
+    // ─── PUSH QUOTE TO ERP ───
+    else if (action === "push_quote") {
+      syncType = "quote_push";
+      referenceId = data.quote_id;
+      referenceNumber = data.quote_number;
+
+      const payload = {
+        quoteNumber: data.quote_number,
+        customerName: data.customer_name,
+        notes: data.notes || "",
+        totalAmount: data.total_amount,
+        items: data.items?.map((item: any) => ({
+          itemCode: item.sku,
+          itemName: item.name_ar,
+          quantity: item.quantity,
+          unitPrice: item.unit_price,
+          totalPrice: item.total_price,
+        })),
+      };
 
       if (isMock) {
-        const { data: products } = await supabase
-          .from("products")
-          .select("id, sku, stock_quantity")
-          .eq("is_active", true)
-          .limit(10);
-
-        const updates = (products || []).map((p: any) => ({
-          sku: p.sku,
-          old_qty: p.stock_quantity,
-          new_qty: Math.floor(Math.random() * 100) + 5,
-        }));
-
-        for (const u of updates) {
-          await supabase
-            .from("products")
-            .update({ stock_quantity: u.new_qty })
-            .eq("sku", u.sku);
-        }
-
         result = {
           success: true,
-          updated_count: updates.length,
-          updates,
-          message: "Stock synced from ERP (MOCK MODE)",
+          erp_quote_id: `ERP-Q-${Date.now()}`,
+          message: "Quote created in ERP (MOCK MODE)",
         };
       } else {
         if (!baseUrl) throw new Error("ERP base URL is not configured");
-        const res = await fetch(`${baseUrl}/stock`, {
-          headers: { Authorization: `Bearer ${apiKey}` },
+        // Use CreateOrder for quotes too if no separate endpoint
+        result = await erpFetch(baseUrl, "/Ecommerce/CreateOrder", {
+          method: "POST",
+          body: JSON.stringify(payload),
         });
-        const text = await res.text();
-        let erpStock: any;
-        try { erpStock = JSON.parse(text); } catch {
-          throw new Error(`ERP returned non-JSON (status ${res.status}): ${text.substring(0, 200)}`);
-        }
-        if (!res.ok) throw new Error(`ERP API error: ${JSON.stringify(erpStock)}`);
-
-        let updated = 0;
-        for (const item of erpStock.items || []) {
-          const { error } = await supabase
-            .from("products")
-            .update({ stock_quantity: item.quantity })
-            .eq("sku", item.sku);
-          if (!error) updated++;
-        }
-        result = { success: true, updated_count: updated };
       }
 
       await supabase.from("erp_sync_logs").insert({
         sync_type: syncType,
-        direction: "inbound",
-        payload: { action: "sync_stock" },
+        direction: "outbound",
+        reference_id: referenceId,
+        reference_number: referenceNumber,
+        payload,
         response: result,
         status: isMock ? "mock" : "success",
       });
     }
 
-    // ─── SYNC PRICES FROM ERP ───
-    else if (action === "sync_prices") {
-      syncType = "price_update";
+    // ─── SYNC PRODUCTS (Stock + Prices) FROM ERP ───
+    else if (action === "sync_stock" || action === "sync_prices") {
+      syncType = action === "sync_stock" ? "stock_update" : "price_update";
 
       if (isMock) {
         const { data: products } = await supabase
           .from("products")
-          .select("id, sku, base_price")
+          .select("id, sku, stock_quantity, base_price")
           .eq("is_active", true)
           .limit(10);
 
-        const updates = (products || []).map((p: any) => ({
-          sku: p.sku,
-          old_price: p.base_price,
-          new_price: Math.round(p.base_price * (0.9 + Math.random() * 0.2)),
-        }));
-
-        for (const u of updates) {
-          await supabase
-            .from("products")
-            .update({ base_price: u.new_price })
-            .eq("sku", u.sku);
+        if (action === "sync_stock") {
+          const updates = (products || []).map((p: any) => ({
+            sku: p.sku,
+            old_qty: p.stock_quantity,
+            new_qty: Math.floor(Math.random() * 100) + 5,
+          }));
+          for (const u of updates) {
+            await supabase
+              .from("products")
+              .update({ stock_quantity: u.new_qty })
+              .eq("sku", u.sku);
+          }
+          result = {
+            success: true,
+            updated_count: updates.length,
+            updates,
+            message: "Stock synced from ERP (MOCK MODE)",
+          };
+        } else {
+          const updates = (products || []).map((p: any) => ({
+            sku: p.sku,
+            old_price: p.base_price,
+            new_price: Math.round(p.base_price * (0.9 + Math.random() * 0.2)),
+          }));
+          for (const u of updates) {
+            await supabase
+              .from("products")
+              .update({ base_price: u.new_price })
+              .eq("sku", u.sku);
+          }
+          result = {
+            success: true,
+            updated_count: updates.length,
+            updates,
+            message: "Prices synced from ERP (MOCK MODE)",
+          };
         }
-
-        result = {
-          success: true,
-          updated_count: updates.length,
-          updates,
-          message: "Prices synced from ERP (MOCK MODE)",
-        };
       } else {
         if (!baseUrl) throw new Error("ERP base URL is not configured");
-        const res = await fetch(`${baseUrl}/prices`, {
-          headers: { Authorization: `Bearer ${apiKey}` },
-        });
-        const text = await res.text();
-        let erpPrices: any;
-        try { erpPrices = JSON.parse(text); } catch {
-          throw new Error(`ERP returned non-JSON (status ${res.status}): ${text.substring(0, 200)}`);
-        }
-        if (!res.ok) throw new Error(`ERP API error: ${JSON.stringify(erpPrices)}`);
+
+        // Fetch all products from Al Faisal API
+        const erpProducts = await erpFetch(baseUrl, "/Ecommerce/products");
+
+        // erpProducts is expected to be an array of products
+        const items = Array.isArray(erpProducts) ? erpProducts : (erpProducts.items || erpProducts.data || []);
 
         let updated = 0;
-        for (const item of erpPrices.items || []) {
-          const { error } = await supabase
-            .from("products")
-            .update({ base_price: item.price })
-            .eq("sku", item.sku);
-          if (!error) updated++;
+
+        for (const item of items) {
+          const sku = item.itemCode || item.sku || item.code;
+          if (!sku) continue;
+
+          if (action === "sync_stock") {
+            const qty = item.quantity ?? item.stock ?? item.availableQty;
+            if (qty !== undefined) {
+              const { error } = await supabase
+                .from("products")
+                .update({ stock_quantity: Number(qty) })
+                .eq("sku", sku);
+              if (!error) updated++;
+            }
+          } else {
+            const price = item.price ?? item.unitPrice ?? item.basePrice;
+            if (price !== undefined) {
+              const { error } = await supabase
+                .from("products")
+                .update({ base_price: Number(price) })
+                .eq("sku", sku);
+              if (!error) updated++;
+            }
+          }
         }
-        result = { success: true, updated_count: updated };
+
+        result = { success: true, updated_count: updated, total_erp_items: items.length };
       }
 
       await supabase.from("erp_sync_logs").insert({
         sync_type: syncType,
         direction: "inbound",
-        payload: { action: "sync_prices" },
+        payload: { action },
         response: result,
         status: isMock ? "mock" : "success",
       });
@@ -323,7 +345,6 @@ Deno.serve(async (req) => {
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("ERP sync error:", message);
 
-    // Log failure
     try {
       const supabase = createClient(
         Deno.env.get("SUPABASE_URL")!,
