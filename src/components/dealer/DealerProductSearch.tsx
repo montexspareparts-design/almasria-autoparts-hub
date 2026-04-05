@@ -1,18 +1,13 @@
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { useProductListing } from "@/hooks/useProductListing";
 import ProductListingSection from "@/components/ProductListingSection";
 import CategoryBrowseSlider from "@/components/CategoryBrowseSlider";
-import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { useDealerCart } from "@/hooks/useDealerCart";
-import {
-  ShoppingCart, Save, Loader2, Trash2, X, FileText, Minus, Plus, Package, ArrowLeft,
-} from "lucide-react";
+import { ShoppingCart, ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-
+import { ToastAction } from "@/components/ui/toast";
 interface DealerProductSearchProps {
   onNavigateToOrders?: () => void;
   onNavigateToCart?: () => void;
@@ -21,7 +16,6 @@ interface DealerProductSearchProps {
 
 const DealerProductSearch = ({ onNavigateToOrders, onNavigateToCart, sharedCart }: DealerProductSearchProps) => {
   const listing = useProductListing();
-  const { user } = useAuth();
   const fallbackCart = useDealerCart();
   const cart = sharedCart || fallbackCart;
 
@@ -32,15 +26,9 @@ const DealerProductSearch = ({ onNavigateToOrders, onNavigateToCart, sharedCart 
         title: "✅ تمت الإضافة للطلبية",
         description: product.name_ar,
         action: onNavigateToCart ? (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onNavigateToCart}
-            className="gap-1 text-xs h-7 shrink-0"
-          >
-            <ShoppingCart className="w-3 h-3" />
+          <ToastAction altText="فتح السلة" onClick={onNavigateToCart}>
             فتح السلة
-          </Button>
+          </ToastAction>
         ) : undefined,
       });
     } catch {
