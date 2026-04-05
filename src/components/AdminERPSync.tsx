@@ -221,11 +221,12 @@ const AdminERPSync = () => {
       </div>
 
       <Tabs defaultValue="actions" dir="rtl">
-        <TabsList className="w-full">
-          <TabsTrigger value="actions" className="flex-1">⚡ إجراءات المزامنة</TabsTrigger>
-          <TabsTrigger value="webhook" className="flex-1">🔗 اختبار Webhook</TabsTrigger>
+        <TabsList className="w-full flex-wrap">
+          <TabsTrigger value="actions" className="flex-1">⚡ المزامنة</TabsTrigger>
+          <TabsTrigger value="mapping" className="flex-1">🔗 ربط الأصناف</TabsTrigger>
+          <TabsTrigger value="webhook" className="flex-1">📡 Webhook</TabsTrigger>
           <TabsTrigger value="config" className="flex-1">⚙️ الإعدادات</TabsTrigger>
-          <TabsTrigger value="logs" className="flex-1">📋 سجل العمليات</TabsTrigger>
+          <TabsTrigger value="logs" className="flex-1">📋 السجلات</TabsTrigger>
         </TabsList>
 
         {/* ─── SYNC ACTIONS ─── */}
