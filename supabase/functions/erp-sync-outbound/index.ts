@@ -580,6 +580,37 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ─── DEEP STOCK CHECK: Find items with qty > 0 ───
+    else if (action === "deep_stock_check") {
+      if (!baseUrl) throw new Error("ERP base URL is not configured");
+      const erpResponse = await erpFetch(baseUrl, "/Ecommerce/products");
+      const items = Array.isArray(erpResponse) ? erpResponse : (erpResponse.data || erpResponse.items || []);
+      
+      const withStock = items.filter((i: any) => {
+        const q = i.qty ?? i.quantity ?? i.stock ?? i.availableQty ?? i.balance ?? i.onHand ?? i.inStock;
+        return q && Number(q) > 0;
+      });
+      
+      // Check ALL numeric fields across all items
+      const firstItem = items[0] || {};
+      const allFields = Object.entries(firstItem).map(([k, v]) => ({ key: k, type: typeof v, value: v }));
+      
+      // Find items 10503 and 11162 and show ALL their fields
+      const targets = items.filter((i: any) => {
+        const id = (i.id || "").toString().trim();
+        return id === "10503" || id === "11162";
+      });
+
+      result = {
+        success: true,
+        total: items.length,
+        items_with_positive_qty: withStock.length,
+        sample_with_stock: withStock.slice(0, 5),
+        all_fields_schema: allFields,
+        targets_full: targets,
+      };
+    }
+
     // ─── EXPLORE: Try multiple ERP endpoints ───
     else if (action === "explore_endpoints") {
       if (!baseUrl) throw new Error("ERP base URL is not configured");
