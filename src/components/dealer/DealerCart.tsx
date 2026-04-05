@@ -188,8 +188,44 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
     );
   }
 
+  // Determine current step for stepper
+  const currentStep = items.length > 0 ? (shippingGovernorate || shippingAddress ? 2 : 1) : 0;
+  const steps = [
+    { label: "اختيار الأصناف", icon: Package, done: items.length > 0 },
+    { label: "بيانات الشحن", icon: FileText, done: currentStep >= 2 },
+    { label: "تأكيد وإرسال", icon: CheckCircle2, done: false },
+  ];
+
   return (
     <div className="space-y-6">
+      {/* Stepper Progress */}
+      <div className="flex items-center justify-between px-2 py-4 rounded-2xl bg-card border border-border/50">
+        {steps.map((step, idx) => {
+          const StepIcon = step.icon;
+          const isActive = idx === (currentStep < 2 ? currentStep : 2);
+          const isDone = step.done && idx < currentStep;
+          return (
+            <div key={idx} className="flex items-center flex-1 last:flex-initial">
+              <div className="flex flex-col items-center gap-1.5">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                  isDone ? "bg-emerald-500 text-white" :
+                  isActive ? "bg-primary text-primary-foreground ring-4 ring-primary/20" :
+                  "bg-muted text-muted-foreground"
+                }`}>
+                  {isDone ? <CheckCircle2 className="w-5 h-5" /> : <StepIcon className="w-5 h-5" />}
+                </div>
+                <span className={`text-[10px] font-bold text-center ${isActive ? "text-primary" : isDone ? "text-emerald-600" : "text-muted-foreground"}`}>
+                  {step.label}
+                </span>
+              </div>
+              {idx < steps.length - 1 && (
+                <div className={`flex-1 h-0.5 mx-2 rounded-full ${isDone ? "bg-emerald-500" : "bg-border"}`} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
