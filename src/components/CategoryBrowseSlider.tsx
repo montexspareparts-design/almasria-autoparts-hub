@@ -59,7 +59,6 @@ interface CategoryBrowseSliderProps {
 const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) => {
   const navigate = useNavigate();
   const [, setSearchParams] = useSearchParams();
-  const scrollRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
 
   // Fetch categories + product counts from DB
