@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
     const prodRes = await fetch(`${baseUrl}/Ecommerce/products`, {
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${authData.token}`,
+        Authorization: `Bearer ${jwt}`,
       },
     });
 
