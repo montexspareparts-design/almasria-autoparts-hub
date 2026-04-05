@@ -1,8 +1,9 @@
-import { memo } from "react";
+import { memo, useRef, useCallback, useEffect, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { ShieldCheck, Eye, Package, Grid3X3, List, ChevronLeft, SlidersHorizontal, Search, X } from "lucide-react";
 import { lazy, Suspense } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 const ImageSearchDialog = lazy(() => import("@/components/ImageSearchDialog"));
 const VINScannerDialog = lazy(() => import("@/components/VINScannerDialog"));
@@ -78,6 +79,36 @@ const ProductListingSection = memo(({
       categoryId: null, brandKey: null, priceMin: "", priceMax: "", sortBy: "newest",
     });
   };
+
+  // Virtual scrolling setup
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const cols = viewMode === "grid" ? (typeof window !== "undefined" && window.innerWidth >= 1024 ? 3 : 2) : 1;
+  const ROW_HEIGHT = viewMode === "grid" ? 320 : 120;
+  const GAP = viewMode === "grid" ? 16 : 12;
+
+  const rows = useMemo(() => {
+    const result: any[][] = [];
+    for (let i = 0; i < paginatedProducts.length; i += cols) {
+      result.push(paginatedProducts.slice(i, i + cols));
+    }
+    return result;
+  }, [paginatedProducts, cols]);
+
+  const virtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => scrollContainerRef.current,
+    estimateSize: () => ROW_HEIGHT + GAP,
+    overscan: 5,
+  });
+
+  // Auto-load more when scrolling near bottom
+  useEffect(() => {
+    const items = virtualizer.getVirtualItems();
+    const lastItem = items[items.length - 1];
+    if (lastItem && lastItem.index >= rows.length - 3 && hasMore) {
+      loadMore();
+    }
+  }, [virtualizer.getVirtualItems(), rows.length, hasMore, loadMore]);
 
   return (
     <>
@@ -191,7 +222,7 @@ const ProductListingSection = memo(({
                 </div>
               </div>
 
-              {/* Loading state */}
+               {/* Loading state */}
               {isLoading ? (
                 <div className={viewMode === "grid" ? "grid grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}>
                   {Array.from({ length: 12 }).map((_, i) => (
@@ -213,45 +244,71 @@ const ProductListingSection = memo(({
                   <Button variant="outline" size="sm" onClick={clearFilters}>مسح جميع الفلاتر</Button>
                 </div>
               ) : (
-                /* Product grid */
-                <div className={viewMode === "grid" ? "grid grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}>
-                  {paginatedProducts.map((product, i) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      index={i}
-                      viewMode={viewMode}
-                      user={user}
-                      isDealer={isDealer}
-                      viewedProductIds={viewedProductIds}
-                      limitReached={limitReached}
-                      dailyViewCount={dailyViewCount}
-                      dailyLimit={dailyLimit}
-                      getProductPrice={getProductPrice}
-                      onProductClick={setSelectedProduct}
-                      onAddToCart={handleAddToCart}
-                      onRecordView={recordView}
-                      onLoginRequired={handleLoginRequired}
-                    />
-                  ))}
+                /* Virtualized product grid */
+                <div
+                  ref={scrollContainerRef}
+                  className="overflow-y-auto"
+                  style={{ height: Math.min(rows.length * (ROW_HEIGHT + GAP), 800), maxHeight: "80vh" }}
+                >
+                  <div
+                    style={{
+                      height: `${virtualizer.getTotalSize()}px`,
+                      width: "100%",
+                      position: "relative",
+                    }}
+                  >
+                    {virtualizer.getVirtualItems().map((virtualRow) => {
+                      const rowProducts = rows[virtualRow.index];
+                      return (
+                        <div
+                          key={virtualRow.key}
+                          style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: `${virtualRow.size}px`,
+                            transform: `translateY(${virtualRow.start}px)`,
+                          }}
+                        >
+                          <div className={viewMode === "grid" ? "grid grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}>
+                            {rowProducts.map((product, colIdx) => (
+                              <ProductCard
+                                key={product.id}
+                                product={product}
+                                index={virtualRow.index * cols + colIdx}
+                                viewMode={viewMode}
+                                user={user}
+                                isDealer={isDealer}
+                                viewedProductIds={viewedProductIds}
+                                limitReached={limitReached}
+                                dailyViewCount={dailyViewCount}
+                                dailyLimit={dailyLimit}
+                                getProductPrice={getProductPrice}
+                                onProductClick={setSelectedProduct}
+                                onAddToCart={handleAddToCart}
+                                onRecordView={recordView}
+                                onLoginRequired={handleLoginRequired}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
 
-              {/* Load More */}
+              {/* Load More / Auto-loading indicator */}
               {hasMore && (
-                <div className="flex flex-col items-center gap-3 mt-10">
+                <div className="flex flex-col items-center gap-3 mt-6">
                   <p className="text-sm text-muted-foreground">
                     عرض {paginatedProducts.length} من {filteredProducts.length} منتج
                   </p>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={loadMore}
-                    className="gap-2 px-8 rounded-full border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground transition-all"
-                  >
-                    تحميل المزيد
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                    يتم تحميل المزيد تلقائياً عند التمرير...
+                  </div>
                 </div>
               )}
             </div>
