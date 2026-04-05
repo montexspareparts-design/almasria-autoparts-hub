@@ -151,11 +151,12 @@ Deno.serve(async (req) => {
         
         // Try erp_item_code first, then SKU
         let result;
+        const stockQty = item.qty ?? item.quantity;
         if (erpCode) {
-          result = await supabase.from("products").update({ stock_quantity: item.quantity }).eq("erp_item_code", erpCode);
+          result = await supabase.from("products").update({ stock_quantity: stockQty }).eq("erp_item_code", erpCode);
         }
         if ((!erpCode || result?.error) && sku) {
-          result = await supabase.from("products").update({ stock_quantity: item.quantity }).eq("sku", sku);
+          result = await supabase.from("products").update({ stock_quantity: stockQty }).eq("sku", sku);
         }
         if (!result?.error) updated++;
       }
