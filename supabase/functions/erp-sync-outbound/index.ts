@@ -206,11 +206,13 @@ Deno.serve(async (req) => {
 
       const payload = {
         quoteNumber: data.quote_number,
+        customerCode: data.erp_customer_code || "",
         customerName: data.customer_name,
+        customerTier: data.customer_tier || "retail",
         notes: data.notes || "",
         totalAmount: data.total_amount,
         items: data.items?.map((item: any) => ({
-          itemCode: item.sku,
+          itemCode: item.erp_item_code || item.sku,
           itemName: item.name_ar,
           quantity: item.quantity,
           unitPrice: item.unit_price,
