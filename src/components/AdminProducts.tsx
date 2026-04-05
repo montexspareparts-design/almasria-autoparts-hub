@@ -33,6 +33,7 @@ const AdminProducts = () => {
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState("");
   const [brandFilter, setBrandFilter] = useState("all");
+  const [stockFilter, setStockFilter] = useState("all");
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [copiedSku, setCopiedSku] = useState<string | null>(null);
@@ -111,6 +112,13 @@ const AdminProducts = () => {
     if (brandFilter !== "all") {
       query = query.eq("brand", brandFilter as ProductBrand);
     }
+    if (stockFilter === "in_stock") {
+      query = query.gt("stock_quantity", 0);
+    } else if (stockFilter === "out_of_stock") {
+      query = query.lte("stock_quantity", 0);
+    } else if (stockFilter === "low_stock") {
+      query = query.gt("stock_quantity", 0).lt("stock_quantity", 10);
+    }
 
     const { data, count } = await query
       .order("created_at", { ascending: false })
@@ -119,12 +127,12 @@ const AdminProducts = () => {
     setProducts(data || []);
     setTotalCount(count || 0);
     setLoading(false);
-  }, [page, search, brandFilter]);
+  }, [page, search, brandFilter, stockFilter]);
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
   // Reset page on filter change
-  useEffect(() => { setPage(0); }, [search, brandFilter]);
+  useEffect(() => { setPage(0); }, [search, brandFilter, stockFilter]);
 
   const handleDelete = async (product: Product) => {
     const { error } = await supabase.from("products").delete().eq("id", product.id);
@@ -225,6 +233,17 @@ const AdminProducts = () => {
               {Object.entries(brandLabels).map(([k, v]) => (
                 <SelectItem key={k} value={k}>{v}</SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+          <Select value={stockFilter} onValueChange={setStockFilter}>
+            <SelectTrigger className="w-full sm:w-40">
+              <SelectValue placeholder="حالة الرصيد" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">كل الأرصدة</SelectItem>
+              <SelectItem value="in_stock">متوفر</SelectItem>
+              <SelectItem value="low_stock">رصيد قليل (&lt;10)</SelectItem>
+              <SelectItem value="out_of_stock">نفد</SelectItem>
             </SelectContent>
           </Select>
         </div>
