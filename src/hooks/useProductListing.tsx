@@ -572,18 +572,23 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     if (hasMore) setCurrentPage(p => p + 1);
   }, [hasMore]);
 
-  /* ── Category counts & visible categories ── */
+  /* ── Category counts & visible categories (respect brand filter) ── */
+  const brandFilteredProducts = useMemo(() => {
+    if (!products) return [];
+    if (!filters.brandKey) return products;
+    return products.filter(p => p.brand === filters.brandKey);
+  }, [products, filters.brandKey]);
+
   const categoryCounts = useMemo(() => {
-    if (!products) return {};
-    return products.reduce((acc, p) => {
+    return brandFilteredProducts.reduce((acc, p) => {
       if (p.category_id) acc[p.category_id] = (acc[p.category_id] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-  }, [products]);
+  }, [brandFilteredProducts]);
 
   const visibleCategories = useMemo(() => {
-    return dbCategories?.filter(cat => products?.some(p => p.category_id === cat.id));
-  }, [dbCategories, products]);
+    return dbCategories?.filter(cat => brandFilteredProducts.some(p => p.category_id === cat.id));
+  }, [dbCategories, brandFilteredProducts]);
 
   /* ── Product detail dialog price helpers ── */
   const getDialogPrice = useCallback((product: any) => {
