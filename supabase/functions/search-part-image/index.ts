@@ -13,6 +13,40 @@ serve(async (req) => {
   }
 
   try {
+    // ── Auth: Admin only ──
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ success: false, error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const authClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ success: false, error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+    }
+    const userId = claimsData.claims.sub as string;
+
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, serviceKey);
+
+    const { data: roleData } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    if (!roleData) {
+      return new Response(JSON.stringify({ success: false, error: "Forbidden: admin only" }), { status: 403, headers: corsHeaders });
+    }
+
+    // ── Business logic ──
     const { partNumber, productId } = await req.json();
 
     if (!partNumber || !productId) {
@@ -32,7 +66,6 @@ serve(async (req) => {
 
     console.log("Searching images for part:", partNumber);
 
-    // Search for the part number image using Firecrawl
     const searchResponse = await fetch("https://api.firecrawl.dev/v1/search", {
       method: "POST",
       headers: {
@@ -42,9 +75,7 @@ serve(async (req) => {
       body: JSON.stringify({
         query: `${partNumber} toyota genuine part image`,
         limit: 5,
-        scrapeOptions: {
-          formats: ["links", "markdown"],
-        },
+        scrapeOptions: { formats: ["links", "markdown"] },
       }),
     });
 
@@ -58,12 +89,10 @@ serve(async (req) => {
       );
     }
 
-    // Extract image URLs from search results
     const imageUrls: string[] = [];
     const results = searchData.data || searchData.results || [];
 
     for (const result of results) {
-      // Check markdown content for image URLs
       const markdown = result.markdown || "";
       const imgRegex = /!\[.*?\]\((https?:\/\/[^\s)]+\.(jpg|jpeg|png|webp|gif)[^\s)]*)\)/gi;
       let match;
@@ -71,7 +100,6 @@ serve(async (req) => {
         if (!imageUrls.includes(match[1])) imageUrls.push(match[1]);
       }
 
-      // Also check for raw image URLs in content
       const urlRegex = /(https?:\/\/[^\s"'<>]+\.(jpg|jpeg|png|webp)(\?[^\s"'<>]*)?)/gi;
       while ((match = urlRegex.exec(markdown)) !== null) {
         if (!imageUrls.includes(match[1]) && !match[1].includes("logo") && !match[1].includes("icon")) {
@@ -80,7 +108,6 @@ serve(async (req) => {
       }
     }
 
-    // Also try to scrape a known parts catalog
     try {
       const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
         method: "POST",

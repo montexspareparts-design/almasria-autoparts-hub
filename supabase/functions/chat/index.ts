@@ -13,6 +13,27 @@ serve(async (req) => {
   }
 
   try {
+    // ── Optional auth: validate token if provided, allow guests ──
+    const authHeader = req.headers.get("Authorization");
+    let authenticatedUserId: string | null = null;
+
+    if (authHeader?.startsWith("Bearer ")) {
+      try {
+        const authClient = createClient(
+          Deno.env.get("SUPABASE_URL")!,
+          Deno.env.get("SUPABASE_ANON_KEY")!,
+          { global: { headers: { Authorization: authHeader } } }
+        );
+        const token = authHeader.replace("Bearer ", "");
+        const { data: claimsData } = await authClient.auth.getClaims(token);
+        if (claimsData?.claims?.sub) {
+          authenticatedUserId = claimsData.claims.sub as string;
+        }
+      } catch {
+        // Invalid token — treat as guest
+      }
+    }
+
     const { messages, action, isLoggedIn, userInterests } = await req.json();
 
     const supabase = createClient(

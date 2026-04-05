@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, forwardRef } from "react";
+import { useState, useRef, useEffect, useCallback, forwardRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bot, X, Send, Loader2, Trash2, Share2, ImagePlus, Mic, MicOff, Volume2, VolumeX, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePersonalization } from "@/hooks/usePersonalization";
+import { supabase } from "@/integrations/supabase/client";
 
 type MessageContent =
   | string
@@ -318,11 +319,18 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
   const streamChat = async (allMessages: Message[]) => {
     const apiMessages = allMessages.map(({ role, content }) => ({ role, content }));
 
+    // Send user's session token if logged in, otherwise anon key
+    let authToken = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) authToken = session.access_token;
+    } catch { /* use anon key */ }
+
     const resp = await fetch(CHAT_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        Authorization: `Bearer ${authToken}`,
       },
       body: JSON.stringify({
         messages: apiMessages,
