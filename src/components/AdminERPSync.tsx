@@ -323,6 +323,93 @@ const AdminERPSync = () => {
           </Card>
         </TabsContent>
 
+        {/* ─── PRODUCT MAPPING ─── */}
+        <TabsContent value="mapping" className="space-y-4 mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                🔗 ربط أصناف الموقع بأكواد الفيصل
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-xs text-muted-foreground">
+                أدخل كود الصنف من نظام الفيصل (مثل 10003) بجانب كل منتج لربطهم. المنتجات المربوطة هتتحدث تلقائياً عند المزامنة.
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="بحث بالاسم أو SKU..."
+                  value={mappingSearch}
+                  onChange={(e) => setMappingSearch(e.target.value)}
+                  className="flex-1"
+                />
+                <Button
+                  onClick={saveMappings}
+                  disabled={savingMapping || Object.keys(mappingEdits).length === 0}
+                  className="gap-1"
+                >
+                  {savingMapping ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                  حفظ ({Object.keys(mappingEdits).length})
+                </Button>
+              </div>
+
+              <div className="text-xs text-muted-foreground flex gap-4">
+                <span>إجمالي: {mappingProducts.length}</span>
+                <span className="text-primary">مربوط: {mappingProducts.filter(p => p.erp_item_code).length}</span>
+                <span className="text-muted-foreground">غير مربوط: {mappingProducts.filter(p => !p.erp_item_code).length}</span>
+              </div>
+
+              <div className="border rounded-lg overflow-hidden max-h-[400px] overflow-y-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted sticky top-0">
+                    <tr>
+                      <th className="text-right p-2 font-medium">المنتج</th>
+                      <th className="text-right p-2 font-medium w-32">SKU</th>
+                      <th className="text-right p-2 font-medium w-36">كود الفيصل</th>
+                      <th className="text-center p-2 font-medium w-16">الحالة</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {mappingProducts
+                      .filter(p => {
+                        if (!mappingSearch) return true;
+                        const q = mappingSearch.toLowerCase();
+                        return p.name_ar?.toLowerCase().includes(q) || p.sku?.toLowerCase().includes(q) || p.erp_item_code?.toLowerCase().includes(q);
+                      })
+                      .slice(0, 100)
+                      .map((product) => (
+                        <tr key={product.id} className="border-t hover:bg-muted/30">
+                          <td className="p-2 text-xs">{product.name_ar}</td>
+                          <td className="p-2 text-xs font-mono" dir="ltr">{product.sku}</td>
+                          <td className="p-2">
+                            <Input
+                              className="h-7 text-xs font-mono"
+                              dir="ltr"
+                              placeholder="مثال: 10003"
+                              value={mappingEdits[product.id] ?? product.erp_item_code ?? ""}
+                              onChange={(e) =>
+                                setMappingEdits(prev => ({
+                                  ...prev,
+                                  [product.id]: e.target.value,
+                                }))
+                              }
+                            />
+                          </td>
+                          <td className="p-2 text-center">
+                            {(mappingEdits[product.id] ?? product.erp_item_code) ? (
+                              <Badge variant="default" className="text-[10px]">✓</Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-[10px]">—</Badge>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* ─── WEBHOOK TEST ─── */}
         <TabsContent value="webhook" className="space-y-4 mt-4">
           <Card>
