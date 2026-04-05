@@ -178,19 +178,13 @@ const ProductCard = memo(({
           </span>
           <div className="flex items-center gap-1">
             {brandRouteMap[product.brand] && (
-              <TooltipProvider delayDuration={200}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span
-                      className={`text-[7px] sm:text-[9px] font-bold px-1 sm:px-1.5 py-px sm:py-0.5 rounded cursor-pointer hover:opacity-80 transition-opacity ${brandRouteMap[product.brand].color}`}
-                      onClick={(e) => { e.stopPropagation(); navigate(brandRouteMap[product.brand].path); }}
-                    >
-                      {brandRouteMap[product.brand].label}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="text-xs">انتقل لصفحة الماركة</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Link
+                to={brandRouteMap[product.brand].path}
+                className={`text-[7px] sm:text-[9px] font-bold px-1 sm:px-1.5 py-px sm:py-0.5 rounded hover:opacity-80 transition-opacity ${brandRouteMap[product.brand].color}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {brandRouteMap[product.brand].label}
+              </Link>
             )}
             <StockBadge available={stockAvailable} />
           </div>
