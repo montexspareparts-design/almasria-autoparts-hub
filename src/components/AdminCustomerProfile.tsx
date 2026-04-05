@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, ArrowRight, Phone, Mail, MapPin, Building2, Calendar, ShoppingBag, CreditCard, FileText, TrendingUp, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2, Search, ArrowRight, Phone, Mail, MapPin, Building2, Calendar, ShoppingBag, CreditCard, FileText, TrendingUp, ChevronDown, ChevronUp, ExternalLink, Link2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
