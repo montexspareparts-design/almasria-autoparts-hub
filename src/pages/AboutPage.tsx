@@ -71,7 +71,7 @@ const AboutPage = () => {
           name="description"
           content="المصرية جروب مجموعة توزيع رائدة منذ 1999، موزع معتمد لقطع غيار وزيوت تويوتا الأصلية. شبكة +2000 عميل، توصيل سريع خلال 48 ساعة، وعلامة MTX."
         />
-        <link rel="canonical" href="https://almasriaautoparts.com/about" />
+        <link rel="canonical" href="https://www.almasriaautoparts.com/about" />
       </Helmet>
 
       <Navbar />

@@ -131,7 +131,7 @@ const ClientSegmentPage = () => {
       <Helmet>
         <title>{data.metaTitle}</title>
         <meta name="description" content={data.metaDesc} />
-        <link rel="canonical" href={`https://almasriaautoparts.com/clients/${segment}`} />
+        <link rel="canonical" href={`https://www.almasriaautoparts.com/clients/${segment}`} />
       </Helmet>
 
       <Navbar />

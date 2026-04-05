@@ -41,7 +41,7 @@ const GenuinePartsPage = () => {
       <Helmet>
         <title>قطع غيار تويوتا الأصلية في مصر | المصرية جروب (موزع معتمد)</title>
         <meta name="description" content="المصرية جروب موزع معتمد لقطع غيار تويوتا الأصلية في مصر. توريد عبر قنوات رسمية، تغطية وطنية، وتسليم خلال 48 ساعة عبر شبكة توزيع منظمة." />
-        <link rel="canonical" href="https://almasriaautoparts.com/products/genuine-toyota-parts" />
+        <link rel="canonical" href="https://www.almasriaautoparts.com/products/genuine-toyota-parts" />
       </Helmet>
       <Navbar />
 

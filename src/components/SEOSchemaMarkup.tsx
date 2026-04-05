@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 
-const SITE_URL = "https://almasriaautoparts.com";
+const SITE_URL = "https://www.almasriaautoparts.com";
 
 /* ── Organization (global, rendered once on homepage) ── */
 export const OrganizationSchema = () => (

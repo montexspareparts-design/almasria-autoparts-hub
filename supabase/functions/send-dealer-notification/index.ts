@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
           <div style="background: #ffffff; padding: 30px; border: 1px solid #eee; border-radius: 0 0 8px 8px;">
             <h2 style="color: ${isApproved ? "#16a34a" : "#dc2626"};">${title}</h2>
             <p style="color: #333; line-height: 1.8; font-size: 16px;">${message}</p>
-            ${isApproved ? `<a href="https://almasriaautoparts.com/dealer" style="display: inline-block; background: #e94560; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; margin-top: 16px;">الدخول إلى حسابك</a>` : ""}
+            ${isApproved ? `<a href="https://www.almasriaautoparts.com/dealer" style="display: inline-block; background: #e94560; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; margin-top: 16px;">الدخول إلى حسابك</a>` : ""}
           </div>
           <p style="text-align: center; color: #999; font-size: 12px; margin-top: 16px;">المصرية جروب لقطع غيار السيارات</p>
         </div>

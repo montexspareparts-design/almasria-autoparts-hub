@@ -118,7 +118,7 @@ Deno.serve(async (req) => {
         `📄 *المصرية جروب - كتالوج جديد*\n\n` +
         `تم إضافة كتالوج جديد: *${catalogTitle}*\n` +
         (catalogCategory ? `الفئة: ${catalogCategory}\n` : "") +
-        `\nيمكنك الاطلاع عليه من خلال حسابك:\nhttps://almasriaautoparts.com/catalogs`;
+        `\nيمكنك الاطلاع عليه من خلال حسابك:\nhttps://www.almasriaautoparts.com/catalogs`;
 
       for (const dealer of dealers) {
         const profile = profileMap.get(dealer.user_id);
