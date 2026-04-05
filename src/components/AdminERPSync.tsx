@@ -234,14 +234,23 @@ const AdminERPSync = () => {
         body: payload,
         headers: { "x-webhook-secret": config.webhook_secret },
       });
-      if (error) throw error;
-      toast({
-        title: "تم اختبار الـ Webhook ✓",
-        description: JSON.stringify(data),
-      });
+      if (error) {
+        // Extract meaningful message from edge function error
+        const errMsg = typeof error === "object" && error.message ? error.message : JSON.stringify(error);
+        toast({
+          title: "خطأ في الاختبار",
+          description: errMsg,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "تم اختبار الـ Webhook ✓",
+          description: JSON.stringify(data),
+        });
+      }
       fetchData();
     } catch (err: any) {
-      toast({ title: "خطأ في الاختبار", description: err.message, variant: "destructive" });
+      toast({ title: "خطأ في الاختبار", description: err.message || "حدث خطأ غير متوقع", variant: "destructive" });
     }
     setSyncing(null);
   };
