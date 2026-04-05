@@ -50,6 +50,8 @@ const AdminProductForm = ({ product, onClose, onSaved }: Props) => {
     base_price: product?.base_price?.toString() || "0",
     sale_price: product?.sale_price?.toString() || "",
     stock_quantity: product?.stock_quantity?.toString() || "0",
+    safety_stock: (product as any)?.safety_stock?.toString() || "0",
+    max_order_cap: (product as any)?.max_order_cap?.toString() || "",
     min_order_qty: product?.min_order_qty?.toString() || "1",
     image_url: product?.image_url || "",
     is_active: product?.is_active ?? true,
