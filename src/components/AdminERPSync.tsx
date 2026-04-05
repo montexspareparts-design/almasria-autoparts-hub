@@ -249,7 +249,7 @@ const AdminERPSync = () => {
       });
       if (fetchErr) throw fetchErr;
 
-      const products = fetchData?.products || [];
+      const products = erpFetchData?.products || [];
       if (products.length === 0) {
         setImportProgress(p => ({ ...p!, phase: "لم يتم العثور على أصناف", done: true }));
         setSyncing(null);
