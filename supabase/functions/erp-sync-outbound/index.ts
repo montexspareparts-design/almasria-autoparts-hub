@@ -321,24 +321,53 @@ Deno.serve(async (req) => {
       } else {
         if (!baseUrl) throw new Error("ERP base URL is not configured");
 
-        const erpResponse = await erpFetch(baseUrl, "/Ecommerce/products");
-
-        // Al Faisal returns { message: 0, data: [...] }
-        const items = Array.isArray(erpResponse)
-          ? erpResponse
-          : (erpResponse.data || erpResponse.items || []);
-
         if (action === "sync_stock") {
+          // Try multiple ERP endpoints for stock data
+          let stockItems: any[] = [];
+          let usedEndpoint = "/Ecommerce/products";
+          
+          // Try dedicated stock endpoints first
+          const stockEndpoints = [
+            "/Ecommerce/GetStock",
+            "/Ecommerce/GetInventory", 
+            "/Ecommerce/stock",
+            "/Ecommerce/inventory",
+          ];
+          
+          for (const endpoint of stockEndpoints) {
+            try {
+              const stockResponse = await erpFetch(baseUrl, endpoint);
+              const items = Array.isArray(stockResponse)
+                ? stockResponse
+                : (stockResponse.data || stockResponse.items || []);
+              if (items.length > 0) {
+                stockItems = items;
+                usedEndpoint = endpoint;
+                break;
+              }
+            } catch {
+              // Endpoint doesn't exist, try next
+            }
+          }
+          
+          // Fallback to /Ecommerce/products if no stock endpoint found
+          if (stockItems.length === 0) {
+            const erpResponse = await erpFetch(baseUrl, "/Ecommerce/products");
+            stockItems = Array.isArray(erpResponse)
+              ? erpResponse
+              : (erpResponse.data || erpResponse.items || []);
+          }
+
           // Build bulk payload for SQL function
-          const bulkItems = items
+          const bulkItems = stockItems
             .filter((item: any) => {
               const id = (item.id || item.itemCode || item.sku || item.code || "").toString().trim();
-              const qty = item.qty ?? item.quantity ?? item.stock ?? item.availableQty;
+              const qty = item.qty ?? item.quantity ?? item.stock ?? item.availableQty ?? item.balance ?? item.onHand;
               return id && qty !== undefined;
             })
             .map((item: any) => ({
               id: (item.id || item.itemCode || item.sku || item.code).toString().trim(),
-              qty: Number(item.qty ?? item.quantity ?? item.stock ?? item.availableQty),
+              qty: Number(item.qty ?? item.quantity ?? item.stock ?? item.availableQty ?? item.balance ?? item.onHand),
             }));
 
           // ─── SAFETY CHECK: If ALL items have qty=0, ERP is likely not sending real stock ───
@@ -347,20 +376,33 @@ Deno.serve(async (req) => {
             result = {
               success: false,
               warning: "ERP_ALL_ZERO_STOCK",
-              message: "تم إلغاء المزامنة: جميع الأرصدة من الفيصل = 0. هذا يشير إلى أن API لا ترسل الأرصدة الحقيقية. استخدم رفع ملف Excel بدلاً من المزامنة التلقائية.",
-              total_erp_items: items.length,
-              items_with_stock: itemsWithPositiveQty.length,
+              message: "⚠️ الـ API لا ترسل بيانات الأرصدة. جميع الكميات = 0. استخدم رفع ملف Excel لتحديث الأرصدة من تبويب 'استيراد جماعي'.",
+              total_erp_items: stockItems.length,
+              items_with_stock: 0,
               skipped: true,
+              tried_endpoints: [usedEndpoint, ...stockEndpoints],
+              erp_sample_fields: stockItems[0] ? Object.keys(stockItems[0]) : [],
             };
 
-            await supabase.from("erp_sync_logs").insert({
-              sync_type: syncType,
-              direction: "inbound",
-              payload: { action, safety_blocked: true },
-              response: result,
-              status: "blocked",
-              error_message: "All ERP items returned quantity=0 — sync aborted to protect stock data",
-            });
+            // Only log once per hour to avoid spamming
+            const { data: recentBlock } = await supabase
+              .from("erp_sync_logs")
+              .select("id")
+              .eq("sync_type", "stock_update")
+              .eq("status", "blocked")
+              .gte("created_at", new Date(Date.now() - 3600_000).toISOString())
+              .limit(1);
+
+            if (!recentBlock || recentBlock.length === 0) {
+              await supabase.from("erp_sync_logs").insert({
+                sync_type: syncType,
+                direction: "inbound",
+                payload: { action, safety_blocked: true, tried_endpoints: [usedEndpoint, ...stockEndpoints] },
+                response: result,
+                status: "blocked",
+                error_message: "ERP API does not provide stock data — use Excel import instead",
+              });
+            }
 
             return new Response(JSON.stringify(result), {
               headers: { ...corsHeaders, "Content-Type": "application/json" },
