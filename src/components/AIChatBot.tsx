@@ -51,9 +51,10 @@ const QUICK_QUESTIONS_LOGGED_IN = [
 ];
 
 const QUICK_QUESTIONS_DEALER = [
+  "وريني أحدث كشوف الأسعار",
   "عايز أعرف حالة طلبي الأخير",
   "إيه العروض المتاحة دلوقتي؟",
-  "محتاج مساعدة في طلبية جديدة",
+  "عايز أعمل طلبية جديدة",
   "💬 تواصل مع فريق الدعم",
 ];
 
@@ -102,22 +103,29 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
   const [isOpen, setIsOpen] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
 
-  // Show unread badge after 5 seconds for guests (without opening the chat)
+  // Show unread badge after 5 seconds (without opening the chat)
   useEffect(() => {
     const shown = sessionStorage.getItem("chatbot_shown");
-    if (!shown && !user) {
+    if (!shown) {
       const timer = setTimeout(() => {
         setHasUnread(true);
         sessionStorage.setItem("chatbot_shown", "true");
-        // Prepare intro message so it's ready when user opens
-        setMessages([{
-          role: "assistant",
-          content: "أهلاً بيك في المصرية جروب! 👋\n\nأنا مساعدك الذكي، هساعدك تلاقي قطع الغيار الأصلية والبديلة لعربيتك.\n\n🔹 اسألني عن أي قطعة غيار\n🔹 ابعتلي صورة القطعة وأعرّفهالك\n🔹 اعرف أقرب فرع ليك\n\nإزاي أقدر أساعدك النهاردة؟"
-        }]);
+        // Prepare intro message based on user type
+        if (isDealer) {
+          setMessages([{
+            role: "assistant",
+            content: "أهلاً بيك يا باشا! 👋🏪\n\nأنا مساعدك الذكي في المصرية جروب. كتاجر معتمد، أقدر أساعدك في:\n\n📋 **كشوف الأسعار** — أحدث الكشوف متاحة ليك\n💰 **تسعير الأصناف** — دوّر على أي صنف وسعّره\n🛒 **عمل طلبية** — ساعدك تطلب بسرعة\n📦 **متابعة طلباتك** — حالة طلباتك الحالية\n🔍 **البحث عن قطعة** — هلاقيلك أي قطعة\n\nإزاي أقدر أساعدك النهاردة؟"
+          }]);
+        } else {
+          setMessages([{
+            role: "assistant",
+            content: "أهلاً بيك في المصرية جروب! 👋\n\nأنا مساعدك الذكي، هساعدك تلاقي قطع الغيار الأصلية والبديلة لعربيتك.\n\n🔹 اسألني عن أي قطعة غيار\n🔹 ابعتلي صورة القطعة وأعرّفهالك\n🔹 اعرف أقرب فرع ليك\n\nإزاي أقدر أساعدك النهاردة؟"
+          }]);
+        }
       }, 5000);
       return () => clearTimeout(timer);
     }
-  }, [user]);
+  }, [user, isDealer]);
 
   // Listen for global open event
   useEffect(() => {
@@ -342,6 +350,7 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
       body: JSON.stringify({
         messages: apiMessages,
         isLoggedIn: !!user,
+        isDealer: !!isDealer,
         userInterests: consent ? {
           topCategories: getTopCategories(3),
           topBrands: getTopBrands(2),
