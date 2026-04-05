@@ -238,33 +238,30 @@ const AdminERPSync = () => {
         return;
       }
 
-      const res = await supabase.functions.invoke("erp-webhook", {
-        body: payload,
-        headers: { "x-webhook-secret": config.webhook_secret },
+      // Use raw fetch to avoid supabase-js throwing on non-2xx
+      const webhookEndpoint = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/erp-webhook`;
+      const response = await fetch(webhookEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-webhook-secret": config.webhook_secret,
+          "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify(payload),
       });
 
-      if (res.error) {
-        // Try to get body text from the error context
-        let errMsg = "حدث خطأ غير متوقع";
-        try {
-          if (res.error.context && typeof res.error.context.json === "function") {
-            const body = await res.error.context.json();
-            errMsg = body?.error || JSON.stringify(body);
-          } else {
-            errMsg = res.error.message || String(res.error);
-          }
-        } catch {
-          errMsg = res.error.message || String(res.error);
-        }
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
         toast({
           title: "خطأ في الاختبار",
-          description: String(errMsg).slice(0, 200),
+          description: String(data?.error || data?.message || `HTTP ${response.status}`).slice(0, 200),
           variant: "destructive",
         });
       } else {
         toast({
           title: "تم اختبار الـ Webhook ✓",
-          description: JSON.stringify(res.data)?.slice(0, 200),
+          description: JSON.stringify(data)?.slice(0, 200),
         });
       }
       fetchData();
