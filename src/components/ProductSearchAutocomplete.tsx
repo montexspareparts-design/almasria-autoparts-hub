@@ -165,6 +165,14 @@ const ProductSearchAutocomplete = ({
     if (!value || value.length < 2) return [];
 
     return [...products]
+      .filter((p) => {
+        // For dealers, hide out-of-stock products
+        if (isDealer) {
+          const available = (p.available_quantity ?? ((p.stock_quantity ?? 0) - (p.safety_stock ?? 0)));
+          if (available <= 0) return false;
+        }
+        return true;
+      })
       .map((product) => ({
         product,
         score: getSearchRelevanceScore(value, product),
@@ -177,7 +185,7 @@ const ProductSearchAutocomplete = ({
         return bStock - aStock;
       })
       .map(({ product }) => product);
-  }, [value, products]);
+  }, [value, products, isDealer]);
 
   const suggestions = useMemo(() => allMatches.slice(0, 12), [allMatches]);
   const filteredTotal = allMatches.length;
