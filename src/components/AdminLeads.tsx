@@ -545,6 +545,8 @@ const AdminLeads = () => {
                   <th className="px-4 py-3 font-medium">المحل</th>
                   <th className="px-4 py-3 font-medium">النوع</th>
                   <th className="px-4 py-3 font-medium">كود الفيصل</th>
+                  <th className="px-4 py-3 font-medium">اسم المستخدم</th>
+                  <th className="px-4 py-3 font-medium">كلمة المرور</th>
                   <th className="px-4 py-3 font-medium">الحالة</th>
                   <th className="px-4 py-3 font-medium">إجراءات</th>
                 </tr>
