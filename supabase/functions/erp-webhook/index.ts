@@ -149,6 +149,12 @@ Deno.serve(async (req) => {
 
     // ─── STOCK UPDATE FROM ERP ───
     else if (event === "stock.updated") {
+      if (stockSyncFlag?.value === "false") {
+        return new Response(
+          JSON.stringify({ success: false, message: "⛔ مزامنة الأرصدة متوقفة حالياً" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
       const updates = data.items || [];
       let updated = 0;
 
