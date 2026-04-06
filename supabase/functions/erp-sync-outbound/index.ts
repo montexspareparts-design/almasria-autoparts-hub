@@ -284,6 +284,13 @@ Deno.serve(async (req) => {
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+      // Block price sync if disabled (prices managed from uploaded files)
+      if (action === "sync_prices" && isPriceSyncDisabled) {
+        return new Response(
+          JSON.stringify({ success: false, message: "⛔ مزامنة الأسعار متوقفة — الأسعار تُدار من الملفات المرفوعة. فعّلها من إعدادات ERP (erp_price_sync_enabled)." }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
       syncType = action === "sync_stock" ? "stock_update" : "price_update";
 
       if (isMock) {
