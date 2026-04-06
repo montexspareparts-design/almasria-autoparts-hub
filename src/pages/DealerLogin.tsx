@@ -83,7 +83,7 @@ const DealerLogin = () => {
     } catch (err) { console.error(err); } finally { setCheckingStatus(false); }
   };
 
-  const phoneToEmail = (p: string) => `${p.replace(/\D/g, "")}@phone.almasria.app`;
+  const phoneToEmail = (p: string) => `${p.replace(/\D/g, "")}@phone.almasria.local`;
   const isPhone = (val: string) => /^[\d\s+()-]+$/.test(val.trim()) && val.replace(/\D/g, "").length >= 8;
   const getAuthEmail = () => isPhone(identifier) ? phoneToEmail(identifier) : identifier.trim();
 
