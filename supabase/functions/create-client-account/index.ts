@@ -130,9 +130,30 @@ serve(async (req) => {
     const cleanPhone = phone.replace(/\D/g, "");
     const email = `${cleanPhone}@phone.almasria.local`;
 
-    // Check if user already exists
-    const { data: existingUsers } = await adminClient.auth.admin.listUsers();
-    const existingUser = existingUsers?.users?.find(u => u.email === email);
+    // Check if user already exists via dealer_accounts first, then auth
+    const { data: existingDealer } = await adminClient
+      .from("dealer_accounts")
+      .select("user_id")
+      .eq("erp_customer_code", erp_customer_code)
+      .maybeSingle();
+
+    if (existingDealer) {
+      return new Response(JSON.stringify({ error: "هذا العميل مسجل بالفعل في النظام" }), {
+        status: 409,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Also check auth by email
+    let existingUser = null;
+    let pg = 1;
+    while (!existingUser) {
+      const { data: usersPage } = await adminClient.auth.admin.listUsers({ page: pg, perPage: 100 });
+      if (!usersPage?.users?.length) break;
+      existingUser = usersPage.users.find((u: any) => u.email === email);
+      if (usersPage.users.length < 100) break;
+      pg++;
+    }
 
     if (existingUser) {
       return new Response(JSON.stringify({ error: "هذا الرقم مسجل بالفعل في النظام" }), {
