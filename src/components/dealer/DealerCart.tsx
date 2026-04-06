@@ -451,6 +451,8 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
           <AnimatePresence>
             {items.map((item, idx) => {
               const price = getPrice(item);
+              const violation = violationMap[item.product_id];
+              const hasItemViolation = violation !== undefined;
               return (
                 <motion.div
                   key={item.id}
@@ -458,65 +460,76 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -80, height: 0, marginBottom: 0 }}
                   transition={{ delay: idx * 0.02 }}
-                  className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-card"
+                  className={`rounded-xl border bg-card ${hasItemViolation ? 'border-destructive/50 bg-destructive/5' : 'border-border/50'}`}
                 >
-                  {/* Image */}
-                  <div className="w-12 h-12 rounded-lg bg-muted/50 overflow-hidden shrink-0">
-                    {item.product.image_url ? (
-                      <img src={item.product.image_url} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Package className="w-5 h-5 text-muted-foreground/30" />
-                      </div>
-                    )}
-                  </div>
+                  <div className="flex items-center gap-3 p-3">
+                    {/* Image */}
+                    <div className="w-12 h-12 rounded-lg bg-muted/50 overflow-hidden shrink-0">
+                      {item.product.image_url ? (
+                        <img src={item.product.image_url} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Package className="w-5 h-5 text-muted-foreground/30" />
+                        </div>
+                      )}
+                    </div>
 
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-foreground truncate">{item.product.name_ar}</p>
-                    <span className="text-[10px] font-mono text-muted-foreground">{item.product.sku}</span>
-                    <p className="text-[10px] text-muted-foreground">
-                      {price.toLocaleString("ar-EG")} ج.م × {item.quantity}
-                    </p>
-                  </div>
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-foreground truncate">{item.product.name_ar}</p>
+                      <span className="text-[10px] font-mono text-muted-foreground">{item.product.sku}</span>
+                      <p className="text-[10px] text-muted-foreground">
+                        {price.toLocaleString("ar-EG")} ج.م × {item.quantity}
+                      </p>
+                    </div>
 
-                  {/* Quantity */}
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
-                      className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center hover:bg-destructive/10 hover:text-destructive transition-colors"
-                    >
-                      <Minus className="w-3 h-3" />
-                    </button>
-                    <input
-                      type="number"
-                      value={item.quantity}
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value);
-                        if (val > 0) updateQuantity(item.product_id, val);
-                      }}
-                      className="w-10 h-7 text-center text-sm font-bold bg-muted/50 border border-border/50 rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    />
-                    <button
-                      onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
-                      className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center hover:bg-primary/10 hover:text-primary transition-colors"
-                    >
-                      <Plus className="w-3 h-3" />
-                    </button>
-                  </div>
+                    {/* Quantity */}
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
+                        className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center hover:bg-destructive/10 hover:text-destructive transition-colors"
+                      >
+                        <Minus className="w-3 h-3" />
+                      </button>
+                      <input
+                        type="number"
+                        value={item.quantity}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value);
+                          if (val > 0) updateQuantity(item.product_id, val);
+                        }}
+                        className={`w-10 h-7 text-center text-sm font-bold bg-muted/50 border rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${hasItemViolation ? 'border-destructive text-destructive' : 'border-border/50'}`}
+                      />
+                      <button
+                        onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
+                        className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center hover:bg-primary/10 hover:text-primary transition-colors"
+                      >
+                        <Plus className="w-3 h-3" />
+                      </button>
+                    </div>
 
-                  {/* Total + Remove */}
-                  <div className="text-left shrink-0 flex items-center gap-2">
-                    <p className="text-sm font-black text-primary whitespace-nowrap">
-                      {(price * item.quantity).toLocaleString("ar-EG")}
-                    </p>
-                    <button
-                      onClick={() => removeItem(item.product_id)}
-                      className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
+                    {/* Total + Remove */}
+                    <div className="text-left shrink-0 flex items-center gap-2">
+                      <p className="text-sm font-black text-primary whitespace-nowrap">
+                        {(price * item.quantity).toLocaleString("ar-EG")}
+                      </p>
+                      <button
+                        onClick={() => removeItem(item.product_id)}
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
+                  {/* Inline violation warning */}
+                  {hasItemViolation && (
+                    <div className="flex items-center gap-1.5 px-3 pb-2.5 -mt-1">
+                      <AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0" />
+                      <p className="text-[11px] text-destructive font-medium">
+                        من فضلك خفّض الكمية إلى <strong>{violation}</strong> قطعة كحد أقصى (الصنف #{item.product.sku})
+                      </p>
+                    </div>
+                  )}
                 </motion.div>
               );
             })}
