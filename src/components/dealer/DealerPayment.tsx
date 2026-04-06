@@ -68,9 +68,10 @@ interface DealerPaymentProps {
   targetOrderNumber?: string;
   targetOrderAmount?: number;
   onNavigateToOrders?: () => void;
+  onNavigateToCart?: () => void;
 }
 
-const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount, onNavigateToOrders }: DealerPaymentProps) => {
+const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount, onNavigateToOrders, onNavigateToCart }: DealerPaymentProps) => {
   const { user } = useAuth();
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("card");
   const [walletPhone, setWalletPhone] = useState("");
