@@ -858,6 +858,66 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ─── FETCH PRICE LIST (wholesale, half-wholesale, consumer) ───
+    else if (action === "fetch_price_list") {
+      if (!baseUrl) throw new Error("ERP base URL is not configured");
+      const erpResponse = await erpFetch(baseUrl, "/Ecommerce/GetPriceList");
+      const priceItems = erpResponse?.data || [];
+
+      // If specific erp_item_codes requested, filter
+      const targetCodes: string[] = data?.erp_item_codes || [];
+      
+      let filtered = priceItems;
+      if (targetCodes.length > 0) {
+        const codeSet = new Set(targetCodes.map((c: string) => c.trim()));
+        filtered = priceItems.filter((i: any) => codeSet.has((i.itemid || "").toString().trim()));
+      }
+
+      const items = filtered.map((i: any) => ({
+        itemid: (i.itemid || "").toString().trim(),
+        wholesaleprice: Number(i.wholesaleprice ?? 0),
+        halfwholesaleprice: Number(i.halfwholesaleprice ?? 0),
+        consumerprice: Number(i.consumerprice ?? 0),
+      }));
+
+      // If update_db flag is set, update base_price with wholesale price
+      if (data?.update_db && items.length > 0) {
+        let updatedCount = 0;
+        for (const item of items) {
+          if (item.wholesaleprice > 0) {
+            const { data: updated } = await supabase
+              .from("products")
+              .update({ base_price: item.wholesaleprice } as any)
+              .eq("erp_item_code", item.itemid)
+              .select("id");
+            if (updated && updated.length > 0) updatedCount++;
+          }
+        }
+        result = {
+          success: true,
+          total_price_list: priceItems.length,
+          filtered: items.length,
+          updated_in_db: updatedCount,
+          items,
+        };
+
+        await supabase.from("erp_sync_logs").insert({
+          sync_type: "price_list_update",
+          direction: "inbound",
+          payload: { action, target_codes: targetCodes, update_db: true },
+          response: { updated: updatedCount, total: items.length },
+          status: "success",
+        });
+      } else {
+        result = {
+          success: true,
+          total_price_list: priceItems.length,
+          filtered: items.length,
+          items,
+        };
+      }
+    }
+
     else {
       throw new Error(`Unknown action: ${action}`);
     }
