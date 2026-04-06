@@ -13,6 +13,7 @@ import { motion } from "framer-motion";
 import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 import logo from "@/assets/logo.webp";
 import { isPhoneLike, phoneToInternalEmail } from "@/lib/phoneAuth";
+import { buildLoginEmailCandidates, signInWithPossibleEmails } from "@/lib/loginCredentials";
 
 const isPhone = isPhoneLike;
 type AuthMode = "login" | "register";
@@ -126,7 +127,11 @@ const Auth = () => {
     const authEmail = getAuthEmail();
 
     if (isLogin) {
-      const { error } = await supabase.auth.signInWithPassword({ email: authEmail, password });
+      const loginEmailCandidates = buildLoginEmailCandidates(credential, loginMethod === "phone");
+      const { error } = await signInWithPossibleEmails(
+        loginEmailCandidates.length ? loginEmailCandidates : [authEmail],
+        password,
+      );
       if (error) {
         const attempts = loginAttempts + 1;
         setLoginAttempts(attempts);

@@ -13,6 +13,7 @@ import { lovable } from "@/integrations/lovable";
 import { useToast } from "@/hooks/use-toast";
 import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 import { phoneToInternalEmail } from "@/lib/phoneAuth";
+import { buildLoginEmailCandidates, signInWithPossibleEmails } from "@/lib/loginCredentials";
 
 type AuthMethod = "phone" | "email";
 
@@ -65,7 +66,11 @@ const DealerAuthDialog = ({ open, onOpenChange, defaultTab = "login" }: DealerAu
     setLoading(true);
 
     const authEmail = authMethod === "email" ? email.trim() : phoneToEmail(phone);
-    const { data, error } = await supabase.auth.signInWithPassword({ email: authEmail, password });
+    const loginEmailCandidates = buildLoginEmailCandidates(phone, authMethod === "phone");
+    const { data, error } = await signInWithPossibleEmails(
+      authMethod === "phone" && loginEmailCandidates.length ? loginEmailCandidates : [authEmail],
+      password,
+    );
 
     if (error) {
       toast({

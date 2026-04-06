@@ -14,6 +14,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 import { isPhoneLike, phoneToInternalEmail } from "@/lib/phoneAuth";
+import { buildLoginEmailCandidates, signInWithPossibleEmails } from "@/lib/loginCredentials";
 
 type AuthMethod = "phone" | "email" | "auto";
 const REMEMBER_KEY = "almasria_remember_me";
@@ -88,12 +89,14 @@ const DealerLogin = () => {
   const isPhone = isPhoneLike;
   const getAuthEmail = () => isPhone(identifier) ? phoneToEmail(identifier) : identifier.trim();
 
-  const performLogin = async (authEmail: string, pwd: string) => supabase.auth.signInWithPassword({ email: authEmail, password: pwd });
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault(); setLoading(true);
     const authEmail = getAuthEmail();
-    const { data, error } = await performLogin(authEmail, password);
+    const loginEmailCandidates = buildLoginEmailCandidates(identifier, isPhone(identifier));
+    const { data, error } = await signInWithPossibleEmails(
+      loginEmailCandidates.length ? loginEmailCandidates : [authEmail],
+      password,
+    );
     if (error) { toast({ title: "بيانات غير صحيحة", description: "رقم الهاتف/البريد أو كلمة المرور خطأ", variant: "destructive" }); }
     else if (data.user) {
       setRemembered(rememberMe);
