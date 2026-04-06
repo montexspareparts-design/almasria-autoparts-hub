@@ -31,6 +31,20 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ─── KILL SWITCH: Block all ERP sync if disabled ───
+    const { data: syncFlag } = await supabase
+      .from("erp_config")
+      .select("value")
+      .eq("key", "erp_sync_enabled")
+      .maybeSingle();
+
+    if (syncFlag?.value === "false") {
+      return new Response(
+        JSON.stringify({ success: false, message: "⛔ مزامنة الفيصل متوقفة حالياً" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const body = await req.json();
     const { event, data } = body;
 
