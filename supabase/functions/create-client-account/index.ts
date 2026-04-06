@@ -61,14 +61,40 @@ serve(async (req) => {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      // Find user by email
-      const { data: users } = await adminClient.auth.admin.listUsers();
-      const targetUser = users?.users?.find(u => u.email === email);
+
+      // Find user by email - search through paginated results
+      let targetUser = null;
+      let page = 1;
+      const perPage = 100;
+      while (!targetUser) {
+        const { data: usersPage, error: listErr } = await adminClient.auth.admin.listUsers({ page, perPage });
+        if (listErr || !usersPage?.users?.length) break;
+        targetUser = usersPage.users.find((u: any) => u.email === email);
+        if (usersPage.users.length < perPage) break;
+        page++;
+      }
+
+      if (!targetUser) {
+        // Try to find via dealer_accounts + erp_customer_code as fallback
+        if (erpCode) {
+          const { data: dealerAcc } = await adminClient
+            .from("dealer_accounts")
+            .select("user_id")
+            .eq("erp_customer_code", erpCode)
+            .maybeSingle();
+          if (dealerAcc?.user_id) {
+            const { data: userData } = await adminClient.auth.admin.getUserById(dealerAcc.user_id);
+            if (userData?.user) targetUser = userData.user;
+          }
+        }
+      }
+
       if (!targetUser) {
         return new Response(JSON.stringify({ error: "المستخدم غير موجود" }), {
           status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+
       // Update password
       const { error: updateErr } = await adminClient.auth.admin.updateUserById(targetUser.id, { password: new_password });
       if (updateErr) {
@@ -104,9 +130,30 @@ serve(async (req) => {
     const cleanPhone = phone.replace(/\D/g, "");
     const email = `${cleanPhone}@phone.almasria.local`;
 
-    // Check if user already exists
-    const { data: existingUsers } = await adminClient.auth.admin.listUsers();
-    const existingUser = existingUsers?.users?.find(u => u.email === email);
+    // Check if user already exists via dealer_accounts first, then auth
+    const { data: existingDealer } = await adminClient
+      .from("dealer_accounts")
+      .select("user_id")
+      .eq("erp_customer_code", erp_customer_code)
+      .maybeSingle();
+
+    if (existingDealer) {
+      return new Response(JSON.stringify({ error: "هذا العميل مسجل بالفعل في النظام" }), {
+        status: 409,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Also check auth by email
+    let existingUser = null;
+    let pg = 1;
+    while (!existingUser) {
+      const { data: usersPage } = await adminClient.auth.admin.listUsers({ page: pg, perPage: 100 });
+      if (!usersPage?.users?.length) break;
+      existingUser = usersPage.users.find((u: any) => u.email === email);
+      if (usersPage.users.length < 100) break;
+      pg++;
+    }
 
     if (existingUser) {
       return new Response(JSON.stringify({ error: "هذا الرقم مسجل بالفعل في النظام" }), {
