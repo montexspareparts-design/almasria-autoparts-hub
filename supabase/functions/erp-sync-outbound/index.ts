@@ -167,14 +167,9 @@ Deno.serve(async (req) => {
     const config: Record<string, string> = {};
     configs?.forEach((c: any) => (config[c.key] = c.value));
 
-    // ─── KILL SWITCH: Block all ERP sync if disabled ───
-    const isSyncEnabled = config.erp_sync_enabled !== "false";
-    if (!isSyncEnabled) {
-      return new Response(
-        JSON.stringify({ success: false, message: "⛔ مزامنة الفيصل متوقفة حالياً. فعّلها من إعدادات ERP." }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    // ─── STOCK SYNC KILL SWITCH ───
+    const isStockSyncDisabled = config.erp_stock_sync_enabled === "false";
+
 
     const isMock = config.erp_mode === "mock";
     const baseUrl = config.erp_base_url || "";
@@ -281,6 +276,13 @@ Deno.serve(async (req) => {
 
     // ─── SYNC PRODUCTS (Stock + Prices) FROM ERP ───
     else if (action === "sync_stock" || action === "sync_prices") {
+      // Block stock sync if disabled
+      if (action === "sync_stock" && isStockSyncDisabled) {
+        return new Response(
+          JSON.stringify({ success: false, message: "⛔ مزامنة الأرصدة متوقفة حالياً. فعّلها من إعدادات ERP (erp_stock_sync_enabled)." }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
       syncType = action === "sync_stock" ? "stock_update" : "price_update";
 
       if (isMock) {
