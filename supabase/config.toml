@@ -45,3 +45,6 @@ verify_jwt = false
 
 [functions.erp-sync-outbound]
 verify_jwt = false
+
+[functions.notify-order-status-push]
+verify_jwt = false
