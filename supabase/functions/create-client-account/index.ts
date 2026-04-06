@@ -109,13 +109,14 @@ serve(async (req) => {
     // Determine tier based on client_type
     const tier = client_type === "wholesale" ? "wholesale_tier2" : "retail";
 
-    // Create dealer account linked to ERP
+    // Create dealer account linked to ERP (store initial password for admin retrieval)
     await adminClient.from("dealer_accounts").insert({
       user_id: userId,
       erp_customer_code: erp_customer_code,
       erp_customer_name: shop_name || name,
       tier,
       is_active: true,
+      initial_password: password,
     });
 
     // Update lead status if lead_id provided
