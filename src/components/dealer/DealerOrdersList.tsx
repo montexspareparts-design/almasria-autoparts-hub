@@ -328,7 +328,9 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
       const q = searchQuery.trim().toLowerCase();
       result = result.filter(o =>
         o.order_number.toLowerCase().includes(q) ||
-        o.notes?.toLowerCase().includes(q)
+        (o as any).erp_order_code?.toLowerCase().includes(q) ||
+        o.notes?.toLowerCase().includes(q) ||
+        o.total_amount?.toString().includes(q)
       );
     }
     return result;
