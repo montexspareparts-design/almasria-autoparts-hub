@@ -1,0 +1,141 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2/cors";
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  try {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    // Verify the caller is an admin
+    const userClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user: caller } } = await userClient.auth.getUser();
+    if (!caller) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const adminClient = createClient(supabaseUrl, serviceRoleKey);
+    const { data: isAdmin } = await adminClient.rpc("has_role", {
+      _user_id: caller.id,
+      _role: "admin",
+    });
+    if (!isAdmin) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const body = await req.json();
+    const { name, phone, shop_name, erp_customer_code, client_type, lead_id } = body;
+
+    if (!name || !phone || !erp_customer_code) {
+      return new Response(JSON.stringify({ error: "Missing required fields" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Generate password (8 chars)
+    const password = Array.from(crypto.getRandomValues(new Uint8Array(6)))
+      .map(b => b.toString(36).padStart(2, "0"))
+      .join("")
+      .slice(0, 8);
+
+    // Create email from phone (same convention as auth system)
+    const cleanPhone = phone.replace(/\D/g, "");
+    const email = `${cleanPhone}@phone.almasria.local`;
+
+    // Check if user already exists
+    const { data: existingUsers } = await adminClient.auth.admin.listUsers();
+    const existingUser = existingUsers?.users?.find(u => u.email === email);
+
+    if (existingUser) {
+      return new Response(JSON.stringify({ error: "هذا الرقم مسجل بالفعل في النظام" }), {
+        status: 409,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Create user
+    const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { full_name: name },
+    });
+
+    if (createError || !newUser?.user) {
+      console.error("Create user error:", createError);
+      return new Response(JSON.stringify({ error: createError?.message || "Failed to create user" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const userId = newUser.user.id;
+
+    // Update profile with phone
+    await adminClient
+      .from("profiles")
+      .update({ phone: cleanPhone, full_name: name })
+      .eq("user_id", userId);
+
+    // Determine tier based on client_type
+    const tier = client_type === "wholesale" ? "wholesale_tier2" : "retail";
+
+    // Create dealer account linked to ERP
+    await adminClient.from("dealer_accounts").insert({
+      user_id: userId,
+      erp_customer_code: erp_customer_code,
+      erp_customer_name: shop_name || name,
+      tier,
+      is_active: true,
+    });
+
+    // Update lead status if lead_id provided
+    if (lead_id) {
+      await adminClient
+        .from("leads")
+        .update({ status: "converted" })
+        .eq("id", lead_id);
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        username: phone,
+        password,
+        user_id: userId,
+        tier,
+      }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
+  } catch (err) {
+    console.error("Error:", err);
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});
