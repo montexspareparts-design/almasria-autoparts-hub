@@ -140,6 +140,34 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
   const vat = subtotal * 0.14;
   const total = subtotal + vat;
 
+  // Per-item validation: check if any item exceeds 25% limit
+  const itemViolations = useMemo(() => {
+    const pct = maxOrderPct || 25;
+    const violations: { product_id: string; sku: string; name: string; quantity: number; maxAllowed: number }[] = [];
+    for (const item of items) {
+      const available = Math.max(0, (item.product.stock_quantity || 0) - (item.product.safety_stock || 0));
+      const pctCap = Math.max(1, Math.floor(available * pct / 100));
+      const maxAllowed = item.product.max_order_cap ? Math.min(pctCap, item.product.max_order_cap) : pctCap;
+      if (item.quantity > maxAllowed) {
+        violations.push({
+          product_id: item.product_id,
+          sku: item.product.sku,
+          name: item.product.name_ar,
+          quantity: item.quantity,
+          maxAllowed,
+        });
+      }
+    }
+    return violations;
+  }, [items, maxOrderPct]);
+
+  const hasViolations = itemViolations.length > 0;
+  const violationMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    itemViolations.forEach(v => { map[v.product_id] = v.maxAllowed; });
+    return map;
+  }, [itemViolations]);
+
   // Search products
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
