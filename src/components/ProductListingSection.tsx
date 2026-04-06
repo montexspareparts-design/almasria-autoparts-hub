@@ -14,6 +14,7 @@ import ProductSearchAutocomplete from "@/components/ProductSearchAutocomplete";
 import ProductCommandPalette from "@/components/ProductCommandPalette";
 import ProductDetailDialog from "@/components/ProductDetailDialog";
 import { ProductFilters } from "@/components/AdvancedProductFilter";
+import WeeklyBestSellers from "@/components/WeeklyBestSellers";
 
 interface ProductListingSectionProps {
   filters: ProductFilters;
