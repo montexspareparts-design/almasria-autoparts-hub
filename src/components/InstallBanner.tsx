@@ -12,6 +12,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 const DISMISS_KEY = "pwa-banner-dismissed";
+const SHOWN_ONCE_KEY = "pwa-banner-shown-once";
 
 const InstallBanner = forwardRef<HTMLDivElement>((_, ref) => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -34,7 +35,10 @@ const InstallBanner = forwardRef<HTMLDivElement>((_, ref) => {
     const ios = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
     setIsIOS(ios);
 
-    // Already dismissed recently (24h cooldown)
+    // Already shown once — never show again
+    if (localStorage.getItem(SHOWN_ONCE_KEY)) return;
+
+    // Already dismissed recently (24h cooldown) — kept as fallback
     const dismissed = localStorage.getItem(DISMISS_KEY);
     if (dismissed) {
       const dismissedAt = parseInt(dismissed, 10);
@@ -42,7 +46,10 @@ const InstallBanner = forwardRef<HTMLDivElement>((_, ref) => {
     }
 
     // Show after a short delay for better UX
-    const timer = setTimeout(() => setShow(true), ios ? 2000 : 0);
+    const timer = setTimeout(() => {
+      setShow(true);
+      localStorage.setItem(SHOWN_ONCE_KEY, "1");
+    }, ios ? 2000 : 0);
 
     const handler = (e: Event) => {
       e.preventDefault();

@@ -155,9 +155,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               }
             }
 
-            // Check if Google user needs to complete phone
+            // Check if Google user needs to complete phone (only once)
+            const COMPLETE_PROFILE_KEY = "complete-profile-shown";
             const provider = session.user.app_metadata?.provider;
-            if (provider === "google") {
+            if (provider === "google" && !localStorage.getItem(COMPLETE_PROFILE_KEY)) {
               const { data: profile } = await supabase
                 .from("profiles")
                 .select("phone")
@@ -165,6 +166,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 .maybeSingle();
               if (!profile?.phone) {
                 setShowCompleteProfile(true);
+                localStorage.setItem(COMPLETE_PROFILE_KEY, "1");
               }
             }
           }, 0);

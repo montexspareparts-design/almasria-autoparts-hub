@@ -19,8 +19,14 @@ const CarProfilePopup = () => {
   useEffect(() => {
     if (!user) return;
 
+    // Already shown once — never show again
+    const SHOWN_KEY = "car-profile-popup-shown";
+    if (localStorage.getItem(SHOWN_KEY)) {
+      setIsDealer(false); // prevent null guard from blocking render
+      return;
+    }
+
     const checkProfile = async () => {
-      // Check if user is a dealer — dealers skip this popup
       const { data: dealerData } = await supabase
         .from("dealer_accounts")
         .select("id")
@@ -42,6 +48,7 @@ const CarProfilePopup = () => {
 
       if (data && !data.car_model) {
         setTimeout(() => setOpen(true), 3000);
+        localStorage.setItem(SHOWN_KEY, "1");
       }
     };
     checkProfile();
