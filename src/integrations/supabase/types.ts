@@ -508,6 +508,41 @@ export type Database = {
           },
         ]
       }
+      dealer_product_order_locks: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          quantity_ordered: number
+          stock_at_order: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          quantity_ordered?: number
+          stock_at_order: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          quantity_ordered?: number
+          stock_at_order?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dealer_product_order_locks_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dealer_quote_items: {
         Row: {
           id: string

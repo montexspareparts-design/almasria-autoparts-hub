@@ -64,10 +64,33 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
         .select("value")
         .eq("key", "max_order_percentage")
         .maybeSingle();
-      return parseInt(data?.value || "50") || 50;
+      return parseInt(data?.value || "25") || 25;
     },
     staleTime: 10 * 60 * 1000,
   });
+
+  // Fetch product order locks (products the dealer already ordered at current stock level)
+  const { data: productLocks, refetch: refetchLocks } = useQuery({
+    queryKey: ["dealer_product_order_locks", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data } = await supabase
+        .from("dealer_product_order_locks" as any)
+        .select("product_id, stock_at_order, quantity_ordered")
+        .eq("user_id", user.id);
+      return (data as unknown as { product_id: string; stock_at_order: number; quantity_ordered: number }[]) || [];
+    },
+    enabled: !!user,
+    staleTime: 30 * 1000,
+  });
+
+  // Check if a product is locked (ordered before and stock hasn't increased)
+  const isProductLocked = useCallback((productId: string, currentStock: number) => {
+    if (!productLocks) return false;
+    return productLocks.some(
+      lock => lock.product_id === productId && currentStock <= lock.stock_at_order
+    );
+  }, [productLocks]);
 
   // Fetch tier prices
   useEffect(() => {
@@ -134,28 +157,38 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
         .or(`name_ar.ilike.%${query}%,sku.ilike.%${query}%`)
         .limit(10);
       // Compute available and max allowed per item
-      const pct = maxOrderPct || 50;
+      const pct = maxOrderPct || 25;
       const enriched = (data || [])
         .map((p: any) => {
           const available = Math.max(0, (p.stock_quantity || 0) - (p.safety_stock || 0));
           const pctCap = Math.max(1, Math.floor(available * pct / 100));
           const maxAllowed = p.max_order_cap ? Math.min(pctCap, p.max_order_cap) : pctCap;
-          return { ...p, available_quantity: available, max_allowed: maxAllowed };
+          const locked = isProductLocked(p.id, p.stock_quantity || 0);
+          return { ...p, available_quantity: available, max_allowed: maxAllowed, locked };
         })
-        .filter((p: any) => p.available_quantity > 0); // Hide out-of-stock
+        .filter((p: any) => p.available_quantity > 0 && !p.locked); // Hide out-of-stock and locked
       setSearchResults(enriched);
       setSearching(false);
     }, 300);
-  }, []);
+  }, [maxOrderPct, isProductLocked]);
 
   const handleAddFromSearch = async (product: any) => {
+    if (product.locked) {
+      toast({ title: "⚠️ هذا الصنف مقفل", description: "لقد طلبت هذا الصنف من قبل. سيتاح مجدداً عند تجديد المخزون.", variant: "destructive" });
+      return;
+    }
     const existing = items.find(i => i.product_id === product.id);
+    const maxAllowed = product.max_allowed || 1;
     if (existing) {
+      if (existing.quantity >= maxAllowed) {
+        toast({ title: "⚠️ وصلت للحد الأقصى", description: `الحد الأقصى لهذا الصنف: ${maxAllowed} قطعة (${maxOrderPct || 25}% من المتاح)`, variant: "destructive" });
+        return;
+      }
       await updateQuantity(product.id, existing.quantity + 1);
       toast({ title: "✅ تم زيادة الكمية", description: product.name_ar });
     } else {
       await addItem(product.id, 1);
-      toast({ title: "✅ تمت الإضافة", description: product.name_ar });
+      toast({ title: "✅ تمت الإضافة", description: `${product.name_ar} — الحد الأقصى: ${maxAllowed} قطعة` });
     }
     setSearchQuery("");
     setSearchResults([]);
@@ -212,6 +245,7 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
         return;
       }
       await clearCart();
+      refetchLocks();
       setNotes("");
       const erpCode = await order.erpCodePromise;
       const displayCode = erpCode || order.order_number;
@@ -330,7 +364,7 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
                           <p className="text-sm font-bold text-foreground truncate leading-tight">{product.name_ar}</p>
                           <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                             <span className="text-[10px] font-mono text-muted-foreground bg-muted/50 px-1 py-0.5 rounded" dir="ltr">#{product.sku}</span>
-                            <span className="text-[10px] text-emerald-600">متاح</span>
+                            <span className="text-[10px] text-emerald-600">أقصى {product.max_allowed} قطعة</span>
                           </div>
                         </button>
                         {/* Add button */}
@@ -465,6 +499,13 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
       {/* Summary + Notes + Actions (only show when cart has items) */}
       {items.length > 0 && (
         <>
+          {/* 25% limit info banner */}
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+            <Shield className="w-4 h-4 text-amber-600 shrink-0" />
+            <p className="text-[11px] text-amber-800 dark:text-amber-300 font-medium leading-snug">
+              الحد الأقصى للطلب: <strong>{maxOrderPct || 25}%</strong> من رصيد كل صنف. بعد تأكيد الطلب، لن تستطيع طلب نفس الصنف حتى يتم تجديد المخزون.
+            </p>
+          </div>
           {/* Notes */}
           <div className="rounded-xl border border-border/50 bg-card p-3">
             <Textarea
