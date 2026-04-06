@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import {
   CreditCard, Loader2, ShieldCheck, AlertCircle, ArrowLeft,
   Smartphone, Store, Copy, CheckCircle2, Package, Lock,
-  Banknote, Upload, ExternalLink, ImageIcon, Zap
+  Banknote, Upload, ExternalLink, ImageIcon, Zap, Inbox
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
