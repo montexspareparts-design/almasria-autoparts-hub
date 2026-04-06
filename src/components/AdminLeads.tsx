@@ -90,7 +90,11 @@ const AdminLeads = () => {
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (!error && data) setLeads(data as Lead[]);
+    if (!error && data) {
+      const leadsList = data as Lead[];
+      setLeads(leadsList);
+      fetchLeadCredentials(leadsList);
+    }
     setLoading(false);
   };
 
