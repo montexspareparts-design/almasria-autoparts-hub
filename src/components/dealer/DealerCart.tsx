@@ -64,10 +64,33 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
         .select("value")
         .eq("key", "max_order_percentage")
         .maybeSingle();
-      return parseInt(data?.value || "50") || 50;
+      return parseInt(data?.value || "25") || 25;
     },
     staleTime: 10 * 60 * 1000,
   });
+
+  // Fetch product order locks (products the dealer already ordered at current stock level)
+  const { data: productLocks, refetch: refetchLocks } = useQuery({
+    queryKey: ["dealer_product_order_locks", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data } = await supabase
+        .from("dealer_product_order_locks" as any)
+        .select("product_id, stock_at_order, quantity_ordered")
+        .eq("user_id", user.id);
+      return (data || []) as { product_id: string; stock_at_order: number; quantity_ordered: number }[];
+    },
+    enabled: !!user,
+    staleTime: 30 * 1000,
+  });
+
+  // Check if a product is locked (ordered before and stock hasn't increased)
+  const isProductLocked = useCallback((productId: string, currentStock: number) => {
+    if (!productLocks) return false;
+    return productLocks.some(
+      lock => lock.product_id === productId && currentStock <= lock.stock_at_order
+    );
+  }, [productLocks]);
 
   // Fetch tier prices
   useEffect(() => {
