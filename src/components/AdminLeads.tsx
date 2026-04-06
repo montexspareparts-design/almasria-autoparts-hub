@@ -78,6 +78,10 @@ const AdminLeads = () => {
   // Credentials dialog
   const [credentials, setCredentials] = useState<{ username: string; password: string; phone: string } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  
+  // Cached credentials per erp_customer_code for table display
+  const [leadCredentials, setLeadCredentials] = useState<Record<string, LeadCredentials>>({});
+  const [showTablePasswords, setShowTablePasswords] = useState<Record<string, boolean>>({});
 
   const fetchLeads = async () => {
     setLoading(true);
