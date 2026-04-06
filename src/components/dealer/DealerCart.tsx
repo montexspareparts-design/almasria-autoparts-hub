@@ -367,6 +367,7 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
           product={detailProduct}
           open={!!detailProduct}
           onOpenChange={(open) => { if (!open) setDetailProduct(null); }}
+          price={detailProduct?.base_price || 0}
         />
       )}
 
