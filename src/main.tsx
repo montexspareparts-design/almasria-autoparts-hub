@@ -3,7 +3,6 @@ import App from "./App.tsx";
 import "./index.css";
 import { setupLazyImportRecovery } from "@/lib/lazyImportRecovery";
 
-// Remove splash screen as soon as React app mounts
 const removeSplash = () => {
   const splash = document.getElementById("splash-screen");
   if (splash) {
@@ -12,15 +11,61 @@ const removeSplash = () => {
   }
 };
 
+const registerServiceWorkerUpdateChecks = () => {
+  if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
+    return undefined;
+  }
+
+  let isReloading = false;
+
+  const reloadOnControllerChange = () => {
+    if (isReloading) return;
+    isReloading = true;
+    window.location.reload();
+  };
+
+  const checkForUpdates = async () => {
+    try {
+      const registration = await navigator.serviceWorker.getRegistration();
+      await registration?.update();
+    } catch {
+      // Ignore transient service worker update failures
+    }
+  };
+
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === "visible") {
+      void checkForUpdates();
+    }
+  };
+
+  const handleWindowFocus = () => {
+    void checkForUpdates();
+  };
+
+  navigator.serviceWorker.addEventListener("controllerchange", reloadOnControllerChange);
+  document.addEventListener("visibilitychange", handleVisibilityChange);
+  window.addEventListener("focus", handleWindowFocus);
+
+  void checkForUpdates();
+
+  return () => {
+    navigator.serviceWorker.removeEventListener("controllerchange", reloadOnControllerChange);
+    document.removeEventListener("visibilitychange", handleVisibilityChange);
+    window.removeEventListener("focus", handleWindowFocus);
+  };
+};
+
 const disposeLazyImportRecovery = setupLazyImportRecovery();
+const disposeServiceWorkerListeners = registerServiceWorkerUpdateChecks();
 
 createRoot(document.getElementById("root")!).render(<App />);
-// Remove splash immediately after first render commit
 requestAnimationFrame(removeSplash);
 
 if (import.meta.hot) {
   import.meta.hot.dispose(() => {
     disposeLazyImportRecovery?.();
+    disposeServiceWorkerListeners?.();
   });
 }
 

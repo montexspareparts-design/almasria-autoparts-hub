@@ -1,9 +1,10 @@
-const INVISIBLE_DIRECTION_MARKS = /[\u200E\u200F\u061C\u202A-\u202E\u2066-\u2069]/g;
+const INVISIBLE_INPUT_MARKS = /[\u200B-\u200F\u061C\u202A-\u202E\u2066-\u2069\uFEFF]/g;
 const PHONE_EMAIL_DOMAIN = "@phone.almasria.local";
 
 export const normalizeNumericInput = (value: string) =>
   value
-    .replace(INVISIBLE_DIRECTION_MARKS, "")
+    .replace(INVISIBLE_INPUT_MARKS, "")
+    .replace(/\u00A0/g, " ")
     .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
     .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)));
 
@@ -43,7 +44,10 @@ const getEgyptianPhoneVariants = (value: string) => {
 
 export const isPhoneLike = (value: string) => {
   const cleanedValue = normalizeNumericInput(value).trim();
-  return /^[0-9+\s()-]+$/.test(cleanedValue) && normalizePhoneDigits(cleanedValue).length >= 8;
+  if (!cleanedValue || cleanedValue.includes("@")) return false;
+
+  const digits = normalizePhoneDigits(cleanedValue);
+  return digits.length >= 8 && digits.length <= 15;
 };
 
 export const getPhoneAuthEmailCandidates = (value: string) =>
