@@ -323,6 +323,15 @@ const ProductListingSection = memo(({
               )}
             </div>
           </div>
+
+          {/* Weekly Best Sellers Carousel - below grid */}
+          <WeeklyBestSellers
+            onProductClick={setSelectedProduct}
+            onAddToCart={handleAddToCart}
+            isDealer={isDealer}
+            user={user}
+            getProductPrice={getProductPrice}
+          />
         </div>
       </section>
 
