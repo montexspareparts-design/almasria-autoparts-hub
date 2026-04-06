@@ -52,7 +52,7 @@ const DealerAuthDialog = ({ open, onOpenChange, defaultTab = "login" }: DealerAu
 
   const phoneToEmail = (p: string) => {
     const digits = p.replace(/\D/g, "");
-    return `${digits}@phone.almasria.app`;
+    return `${digits}@phone.almasria.local`;
   };
 
   const resetForm = useCallback(() => {
