@@ -26,6 +26,11 @@ interface Lead {
   client_type: string;
 }
 
+interface LeadCredentials {
+  username: string;
+  password: string;
+}
+
 interface ERPCustomer {
   code: string;
   name: string;
