@@ -148,6 +148,21 @@ const ProductListingSection = memo(({
               </div>
             )}
 
+            {!isDealer && (
+              <Button
+                variant={filters.maintenanceOnly ? "default" : "outline"}
+                className={`shrink-0 h-10 text-xs rounded-xl gap-1.5 font-medium transition-all ${
+                  filters.maintenanceOnly
+                    ? "bg-primary text-primary-foreground shadow-md"
+                    : "border-border/60"
+                }`}
+                onClick={() => setFilters(prev => ({ ...prev, maintenanceOnly: !prev.maintenanceOnly }))}
+              >
+                <Wrench className="w-4 h-4" />
+                <span className="hidden sm:inline">صيانة سريعة</span>
+              </Button>
+            )}
+
             <Button variant="outline" className="lg:hidden gap-1.5 shrink-0 h-10 text-xs rounded-xl border-border/60" onClick={() => setSidebarOpen(true)}>
               <SlidersHorizontal className="w-4 h-4" />
               <span className="hidden sm:inline">فلاتر</span>
