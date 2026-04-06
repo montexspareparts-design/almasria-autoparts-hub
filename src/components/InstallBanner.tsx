@@ -12,6 +12,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 const DISMISS_KEY = "pwa-banner-dismissed";
+const SHOWN_ONCE_KEY = "pwa-banner-shown-once";
 
 const InstallBanner = forwardRef<HTMLDivElement>((_, ref) => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
