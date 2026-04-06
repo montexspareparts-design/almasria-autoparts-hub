@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Package, Clock, CheckCircle, Truck, XCircle, ChevronDown, ChevronUp,
   MessageCircle, Inbox, PackageCheck, Trash2, Pencil, Save, X, Loader2,
-  AlertTriangle, Wallet, CreditCard, RefreshCw, RotateCcw
+  AlertTriangle, Wallet, CreditCard, RefreshCw, RotateCcw, Search, Filter
 } from "lucide-react";
 import PaymentInstructionsBanner from "@/components/PaymentInstructionsBanner";
 import { cn } from "@/lib/utils";
@@ -127,6 +127,8 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
   const [saving, setSaving] = useState(false);
   const [reordering, setReordering] = useState<string | null>(null);
   const [paymobLoading, setPaymobLoading] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const { addItem } = useDealerCart();
 
   const handlePaymob = async (order: Order) => {
@@ -302,6 +304,45 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
     toast({ title: "تم إلغاء الطلب", description: "تم إبلاغ الإدارة بالإلغاء" });
   };
 
+  const statusFilterTabs = useMemo(() => {
+    const counts: Record<string, number> = { all: orders.length };
+    orders.forEach(o => { counts[o.status] = (counts[o.status] || 0) + 1; });
+    return [
+      { key: "all", label: "الكل", icon: Package, count: counts.all },
+      { key: "pending", label: "جديد", icon: Inbox, count: counts.pending || 0 },
+      { key: "confirmed", label: "موافق عليه", icon: CheckCircle, count: counts.confirmed || 0 },
+      { key: "awaiting_payment", label: "بانتظار الدفع", icon: Wallet, count: counts.awaiting_payment || 0 },
+      { key: "processing", label: "قيد التجهيز", icon: Package, count: counts.processing || 0 },
+      { key: "ready", label: "جاهز", icon: PackageCheck, count: counts.ready || 0 },
+      { key: "shipped", label: "تم الشحن", icon: Truck, count: counts.shipped || 0 },
+      { key: "delivered", label: "تم التسليم", icon: CheckCircle, count: counts.delivered || 0 },
+    ].filter(t => t.key === "all" || t.count > 0);
+  }, [orders]);
+
+  const filteredOrders = useMemo(() => {
+    let result = orders;
+    if (statusFilter !== "all") {
+      result = result.filter(o => o.status === statusFilter);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      result = result.filter(o =>
+        o.order_number.toLowerCase().includes(q) ||
+        o.notes?.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [orders, statusFilter, searchQuery]);
+
+  const kpis = useMemo(() => {
+    const active = orders.filter(o => !["delivered", "cancelled"].includes(o.status));
+    const activeTotal = active.reduce((s, o) => s + Number(o.total_amount), 0);
+    const delivered = orders.filter(o => o.status === "delivered");
+    const deliveredTotal = delivered.reduce((s, o) => s + Number(o.total_amount), 0);
+    const needsPayment = orders.filter(o => ["confirmed", "awaiting_payment"].includes(o.status));
+    return { activeCount: active.length, activeTotal, deliveredCount: delivered.length, deliveredTotal, needsPaymentCount: needsPayment.length };
+  }, [orders]);
+
   if (loading) {
     return (
       <div className="space-y-3">
@@ -312,21 +353,87 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-bold text-foreground">الطلبات ({orders.length})</h2>
+      {/* KPI Summary */}
+      {orders.length > 0 && (
+        <div className="grid grid-cols-3 gap-2">
+          <div className="bg-card border border-border/40 rounded-xl p-3 text-center">
+            <p className="text-lg font-black text-primary">{kpis.activeCount}</p>
+            <p className="text-[10px] text-muted-foreground">طلب نشط</p>
+            <p className="text-[10px] font-bold text-foreground mt-0.5">{kpis.activeTotal.toLocaleString("ar-EG")} ج.م</p>
+          </div>
+          <div className="bg-card border border-border/40 rounded-xl p-3 text-center">
+            <p className="text-lg font-black text-emerald-600">{kpis.deliveredCount}</p>
+            <p className="text-[10px] text-muted-foreground">تم تسليمه</p>
+            <p className="text-[10px] font-bold text-foreground mt-0.5">{kpis.deliveredTotal.toLocaleString("ar-EG")} ج.م</p>
+          </div>
+          <div className="bg-card border border-border/40 rounded-xl p-3 text-center">
+            <p className={cn("text-lg font-black", kpis.needsPaymentCount > 0 ? "text-amber-600" : "text-muted-foreground")}>{kpis.needsPaymentCount}</p>
+            <p className="text-[10px] text-muted-foreground">بانتظار الدفع</p>
+          </div>
+        </div>
+      )}
 
-      {orders.length === 0 ? (
+      {/* Search + Filter */}
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
+          <Input
+            placeholder="ابحث برقم الطلب..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pr-9 h-9 text-xs rounded-xl border-border/60"
+          />
+        </div>
+      </div>
+
+      {/* Status Filter Tabs */}
+      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
+        {statusFilterTabs.map(tab => {
+          const TabIcon = tab.icon;
+          const isActive = statusFilter === tab.key;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setStatusFilter(tab.key)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium whitespace-nowrap shrink-0 transition-all border",
+                isActive
+                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                  : "bg-card text-muted-foreground border-border/40 hover:border-border hover:text-foreground"
+              )}
+            >
+              <TabIcon className="w-3.5 h-3.5" />
+              {tab.label}
+              {tab.count > 0 && (
+                <span className={cn(
+                  "text-[10px] px-1.5 py-0 rounded-full font-bold min-w-[18px] text-center",
+                  isActive ? "bg-primary-foreground/20" : "bg-muted"
+                )}>{tab.count}</span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {filteredOrders.length === 0 ? (
         <Card className="border-dashed border-border/60">
           <CardContent className="p-10 text-center">
             <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-3">
               <Package className="w-8 h-8 text-muted-foreground/30" />
             </div>
-            <p className="text-foreground font-bold">لا توجد طلبات بعد</p>
-            <p className="text-xs text-muted-foreground mt-1">أنشئ عرض سعر وحوّله لطلب</p>
+            <p className="text-foreground font-bold">{orders.length === 0 ? "لا توجد طلبات بعد" : "لا توجد طلبات بهذا الفلتر"}</p>
+            <p className="text-xs text-muted-foreground mt-1">{orders.length === 0 ? "أنشئ عرض سعر وحوّله لطلب" : "جرب فلتر آخر أو امسح البحث"}</p>
+            {(statusFilter !== "all" || searchQuery) && (
+              <Button variant="outline" size="sm" className="mt-3 text-xs rounded-xl" onClick={() => { setStatusFilter("all"); setSearchQuery(""); }}>
+                مسح الفلاتر
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-3">
-          {orders.map(order => {
+          <p className="text-[11px] text-muted-foreground">{filteredOrders.length} طلب</p>
+          {filteredOrders.map(order => {
             const config = statusConfig[order.status] || statusConfig.pending;
             const isExpanded = expandedOrder === order.id;
             const items = orderItems[order.id];
