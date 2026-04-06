@@ -202,6 +202,33 @@ const ProductListingSection = memo(({
             </Select>
           </div>
 
+          {/* Brand quick-filter chips for dealer */}
+          {isDealer && (
+            <div className="flex gap-1.5 overflow-x-auto pb-1 mb-2 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
+              {[
+                { key: null, label: "الكل" },
+                { key: "toyota_genuine", label: "أصلي" },
+                { key: "toyota_oils", label: "زيوت" },
+                { key: "mtx_aftermarket", label: "MTX" },
+                { key: "denso", label: "DENSO" },
+                { key: "aisin", label: "AISIN" },
+                { key: "fbk", label: "FBK" },
+              ].map(b => (
+                <button
+                  key={b.key ?? "all"}
+                  onClick={() => setFilters(prev => ({ ...prev, brandKey: b.key }))}
+                  className={`px-3 py-1 rounded-xl text-[11px] font-medium whitespace-nowrap shrink-0 transition-all border ${
+                    filters.brandKey === b.key
+                      ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                      : "bg-card text-muted-foreground border-border/40 hover:border-border hover:text-foreground"
+                  }`}
+                >
+                  {b.label}
+                </button>
+              ))}
+            </div>
+          )}
+
           {beforeGrid}
 
           {/* Sidebar + Products Grid */}
