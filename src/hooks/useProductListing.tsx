@@ -112,30 +112,93 @@ const generateSearchVariants = (term: string): string[] => {
   return Array.from(variants);
 };
 
-/**
- * Check if a search word matches text using exact variants, aliases, AND fuzzy skeleton.
- */
-const fuzzyMatchWord = (word: string, ...texts: string[]): boolean => {
-  const wordVariants = generateSearchVariants(word);
-  const joined = texts.join(" ");
-
-  // 1) Exact variant match (includes alias-expanded variants)
-  if (wordVariants.some(v => joined.includes(v))) return true;
-
-  // 2) Consonant skeleton match (only for Arabic words >= 3 chars)
+const getWordMatchScore = (word: string, text: string): number => {
   const normalizedWord = normalizeArabic(word);
-  if (normalizedWord.length >= 3 && /[\u0600-\u06FF]/.test(normalizedWord)) {
+  const normalizedText = normalizeArabic(text);
+  if (!normalizedWord || !normalizedText) return 0;
+
+  const textWords = normalizedText.split(/\s+/).filter(Boolean);
+  const wordVariants = generateSearchVariants(word).map(normalizeArabic);
+  let bestScore = 0;
+
+  for (const targetWord of textWords) {
+    if (wordVariants.some((variant) => targetWord === variant)) {
+      bestScore = Math.max(bestScore, 120);
+    }
+
+    if (wordVariants.some((variant) => targetWord.startsWith(variant) || variant.startsWith(targetWord))) {
+      const lengthDiff = Math.abs(targetWord.length - normalizedWord.length);
+      if (lengthDiff <= 2) {
+        bestScore = Math.max(bestScore, 90 - lengthDiff * 10);
+      }
+    }
+
     const wordSkeleton = toConsonantSkeleton(normalizedWord);
-    if (wordSkeleton.length >= 2) {
-      const targetWords = joined.split(/\s+/);
-      return targetWords.some(tw => {
-        const twSkeleton = toConsonantSkeleton(normalizeArabic(tw));
-        return twSkeleton.length >= 2 && (twSkeleton.includes(wordSkeleton) || wordSkeleton.includes(twSkeleton));
-      });
+    const targetSkeleton = toConsonantSkeleton(targetWord);
+    if (wordSkeleton.length >= 2 && targetSkeleton.length >= 2 && wordSkeleton === targetSkeleton) {
+      bestScore = Math.max(bestScore, 75);
     }
   }
 
-  return false;
+  if (wordVariants.some((variant) => normalizedText.includes(variant))) {
+    bestScore = Math.max(bestScore, 40);
+  }
+
+  return bestScore;
+};
+
+export const getSearchRelevanceScore = (query: string, product: {
+  name_ar?: string | null;
+  name_en?: string | null;
+  description_ar?: string | null;
+  compatible_models?: string[] | null;
+  sku?: string | null;
+  available_quantity?: number | null;
+  stock_quantity?: number | null;
+  image_url?: string | null;
+}) => {
+  const rawQuery = query.trim();
+  if (!rawQuery) return 0;
+
+  const expandedQuery = expandAliases(rawQuery);
+  const normalizedQuery = normalizeArabic(expandedQuery);
+  const searchWords = normalizedQuery.split(/\s+/).filter(Boolean);
+  const normalizedName = normalizeArabic(product.name_ar || "");
+  const skuLower = (product.sku || "").toLowerCase();
+  const nameEnLower = (product.name_en || "").toLowerCase();
+  const descArNorm = normalizeArabic(product.description_ar || "");
+  const modelsText = normalizeArabic((product.compatible_models || []).join(" "));
+
+  let score = 0;
+  for (const word of searchWords) {
+    score += getWordMatchScore(word, normalizedName) * 10;
+    score += getWordMatchScore(word, skuLower) * 12;
+    score += getWordMatchScore(word, nameEnLower) * 5;
+    score += getWordMatchScore(word, descArNorm) * 3;
+    score += getWordMatchScore(word, modelsText) * 4;
+  }
+
+  if (normalizedName === normalizedQuery) score += 2000;
+  else if (normalizedName.startsWith(normalizedQuery)) score += 1400;
+  else if (normalizedName.includes(normalizedQuery)) score += 900;
+
+  if (skuLower === normalizedQuery) score += 2200;
+  else if (skuLower.startsWith(normalizedQuery)) score += 1500;
+  else if (skuLower.includes(normalizedQuery)) score += 700;
+
+  if (descArNorm.includes(normalizedQuery)) score += 120;
+  if (modelsText.includes(normalizedQuery)) score += 150;
+  if ((product.available_quantity ?? product.stock_quantity ?? 0) > 0) score += 25;
+  if (product.image_url) score += 10;
+
+  return score;
+};
+
+/**
+ * Check if a search word matches text using exact variants, aliases, AND strict skeleton equality.
+ */
+const fuzzyMatchWord = (word: string, ...texts: string[]): boolean => {
+  return texts.some((text) => getWordMatchScore(word, text) > 0);
 };
 
 const ITEMS_PER_PAGE = 48;
@@ -633,32 +696,20 @@ export function useProductListing(options: UseProductListingOptions = {}) {
           }
           result = diversified;
         } else {
-          // When searching, keep relevance order but diversify brands
-          const buckets = new Map<string, any[]>();
-          for (const p of result) {
-            const key = p.category_id || p.brand || "_";
-            if (!buckets.has(key)) buckets.set(key, []);
-            buckets.get(key)!.push(p);
-          }
-          if (buckets.size > 1) {
-            const iterators = Array.from(buckets.values());
-            const diversified: any[] = [];
-            let idx = 0;
-            while (diversified.length < result.length) {
-              const bucket = iterators[idx % iterators.length];
-              const itemIdx = Math.floor(idx / iterators.length);
-              if (itemIdx < bucket.length) {
-                diversified.push(bucket[itemIdx]);
-              }
-              idx++;
-              if (idx > result.length * 3) break;
+          result = [...result].sort((a, b) => {
+            const scoreDiff = getSearchRelevanceScore(rawSearch, b) - getSearchRelevanceScore(rawSearch, a);
+            if (scoreDiff !== 0) return scoreDiff;
+
+            const aAvailable = a.available_quantity ?? a.stock_quantity ?? 0;
+            const bAvailable = b.available_quantity ?? b.stock_quantity ?? 0;
+            if (bAvailable !== aAvailable) return bAvailable - aAvailable;
+
+            if (Boolean(b.image_url) !== Boolean(a.image_url)) {
+              return Number(Boolean(b.image_url)) - Number(Boolean(a.image_url));
             }
-            const addedIds = new Set(diversified.map(p => p.id));
-            for (const p of result) {
-              if (!addedIds.has(p.id)) diversified.push(p);
-            }
-            result = diversified;
-          }
+
+            return a.name_ar.localeCompare(b.name_ar, "ar");
+          });
         }
         break;
       }

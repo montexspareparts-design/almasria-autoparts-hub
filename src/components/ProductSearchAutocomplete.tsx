@@ -2,16 +2,20 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { Search, X, Package, Hash, Command, Lightbulb, PlusCircle, ArrowLeft, CheckCircle, XCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
-import { normalizeArabic, expandAliases } from "@/hooks/useProductListing";
+import { normalizeArabic, expandAliases, getSearchRelevanceScore } from "@/hooks/useProductListing";
 
 interface Product {
   id: string;
   name_ar: string;
+  name_en?: string | null;
+  description_ar?: string | null;
+  compatible_models?: string[] | null;
   sku: string;
   image_url: string | null;
   base_price: number;
   brand: string;
   stock_quantity?: number;
+  available_quantity?: number;
   safety_stock?: number;
 }
 
@@ -89,31 +93,9 @@ const findDidYouMean = (input: string): string | null => {
   return bestMatch;
 };
 
-/** Fuzzy product search using skeleton matching + aliases */
-const fuzzyProductMatch = (query: string, product: Product): boolean => {
-  const q = normalizeArabic(query);
-  const expanded = expandAliases(query);
-  const name = normalizeArabic(product.name_ar);
-  const sku = product.sku.toLowerCase();
-
-  // Direct match or alias-expanded match
-  if (name.includes(q) || sku.includes(q)) return true;
-  if (expanded !== q && name.includes(expanded)) return true;
-
-  // Skeleton match per word
-  const queryWords = expanded.split(/\s+/).filter(w => w.length >= 2);
-  if (queryWords.length === 0) return false;
-
-  return queryWords.every(qw => {
-    if (name.includes(qw) || sku.includes(qw)) return true;
-    const qwSkel = toSkeleton(qw);
-    if (qwSkel.length < 2) return name.includes(qw);
-    const nameWords = name.split(/\s+/);
-    return nameWords.some(nw => {
-      const nwSkel = toSkeleton(nw);
-      return nwSkel.length >= 2 && (nwSkel.includes(qwSkel) || qwSkel.includes(nwSkel));
-    });
-  });
+/** Only keep genuinely relevant matches and rank them with the shared relevance scorer */
+const isRelevantProductMatch = (query: string, product: Product): boolean => {
+  return getSearchRelevanceScore(query, product) > 0;
 };
 
 const ProductSearchAutocomplete = ({
@@ -181,18 +163,20 @@ const ProductSearchAutocomplete = ({
 
   const allMatches = useMemo(() => {
     if (!value || value.length < 2) return [];
-    const matches = products.filter(p => fuzzyProductMatch(value, p));
-    // Prioritize exact SKU matches at the top
-    const q = value.trim().toLowerCase();
-    return matches.sort((a, b) => {
-      const aSkuExact = a.sku.toLowerCase() === q ? -2 : a.sku.toLowerCase().startsWith(q) ? -1 : 0;
-      const bSkuExact = b.sku.toLowerCase() === q ? -2 : b.sku.toLowerCase().startsWith(q) ? -1 : 0;
-      if (aSkuExact !== bSkuExact) return aSkuExact - bSkuExact;
-      // Then by stock availability
-      const aStock = (a as any).stock_quantity ?? 0;
-      const bStock = (b as any).stock_quantity ?? 0;
-      return bStock - aStock;
-    });
+
+    return [...products]
+      .map((product) => ({
+        product,
+        score: getSearchRelevanceScore(value, product),
+      }))
+      .filter(({ score, product }) => score > 0 && isRelevantProductMatch(value, product))
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        const aStock = a.product.available_quantity ?? a.product.stock_quantity ?? 0;
+        const bStock = b.product.available_quantity ?? b.product.stock_quantity ?? 0;
+        return bStock - aStock;
+      })
+      .map(({ product }) => product);
   }, [value, products]);
 
   const suggestions = useMemo(() => allMatches.slice(0, 12), [allMatches]);
