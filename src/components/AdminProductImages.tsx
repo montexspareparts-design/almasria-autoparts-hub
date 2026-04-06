@@ -603,6 +603,15 @@ const AdminProductImages = () => {
                 variant="outline"
                 size="sm"
                 className="shrink-0 gap-1"
+                onClick={() => imageSearchProduct && openPartSouq(imageSearchProduct.sku)}
+              >
+                <ExternalLink className="w-3 h-3" />
+                PartSouq
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0 gap-1"
                 onClick={() => imageSearchProduct && openGoogleSearch(imageSearchProduct.sku)}
               >
                 <ExternalLink className="w-3 h-3" />
