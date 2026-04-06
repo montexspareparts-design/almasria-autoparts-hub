@@ -381,7 +381,7 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
         <div className="relative flex-1">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
           <Input
-            placeholder="ابحث برقم الطلب..."
+            placeholder="ابحث برقم الطلب أو كود الفيصل..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pr-9 h-9 text-xs rounded-xl border-border/60"
