@@ -70,6 +70,7 @@ const sidebarGroups: SidebarGroup[] = [
       { id: "product-insights", label: "تحليل الأصناف", icon: TrendingUp },
       { id: "customer-intel", label: "ذكاء العملاء", icon: Eye },
       { id: "customers", label: "ملف العملاء", icon: Users },
+      { id: "leads", label: "إدخال عملاء", icon: Building2 },
       { id: "dealers", label: "طلبات التجار", icon: Users },
     ],
   },
