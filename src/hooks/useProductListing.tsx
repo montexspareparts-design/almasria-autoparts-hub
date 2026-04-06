@@ -370,6 +370,37 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     staleTime: 5 * 60 * 1000,
   });
 
+  /* ── Most searched product IDs (boost popular items) ── */
+  const { data: mostSearchedTerms } = useQuery({
+    queryKey: ["most_searched_terms"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("customer_search_logs")
+        .select("search_query")
+        .order("created_at", { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      // Count frequency
+      const freq: Record<string, number> = {};
+      (data || []).forEach((d: any) => {
+        const q = (d.search_query || "").trim().toLowerCase();
+        if (q.length >= 2) freq[q] = (freq[q] || 0) + 1;
+      });
+      // Return top 30 terms
+      return Object.entries(freq)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 30)
+        .map(([term]) => normalizeArabic(term));
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+
+  /* ── Maintenance/quick-service category IDs (priority display) ── */
+  const maintenanceCategorySlugs = useMemo(() => new Set([
+    "filters", "oils-gasoline", "oils-diesel", "oils-transmission",
+    "brakes", "spark-plugs-coils", "belts-bearings", "water-cooling",
+  ]), []);
+
   /* ── Smart year extraction from search query ── */
   const extractYearFromSearch = (search: string): number | null => {
     const match = search.match(/\b(19|20)\d{2}\b/);
@@ -503,42 +534,119 @@ export function useProductListing(options: UseProductListingOptions = {}) {
         break;
       }
       default: {
-        // "newest" default: diversify by interleaving categories & brands
-        // Group products by category_id (or brand as fallback)
-        const buckets = new Map<string, any[]>();
-        for (const p of result) {
-          const key = p.category_id || p.brand || "_";
-          if (!buckets.has(key)) buckets.set(key, []);
-          buckets.get(key)!.push(p);
-        }
-        // Round-robin interleave from each bucket for variety
-        if (buckets.size > 1) {
-          const iterators = Array.from(buckets.values());
-          const diversified: any[] = [];
-          let idx = 0;
-          while (diversified.length < result.length) {
-            const bucket = iterators[idx % iterators.length];
-            const itemIdx = Math.floor(idx / iterators.length);
-            if (itemIdx < bucket.length) {
-              diversified.push(bucket[itemIdx]);
+        // Smart default: maintenance first → most searched → diversified mix
+        const hasActiveSearch = !!filters.search?.trim();
+        
+        if (!hasActiveSearch) {
+          // Build maintenance category IDs set
+          const maintenanceCatIds = new Set<string>();
+          dbCategories?.forEach((cat: any) => {
+            if (maintenanceCategorySlugs.has(cat.slug)) maintenanceCatIds.add(cat.id);
+          });
+
+          // Score each product for smart ordering
+          const scored = result.map(p => {
+            let score = 0;
+            // Priority 1: Maintenance categories (+300)
+            if (p.category_id && maintenanceCatIds.has(p.category_id)) score += 300;
+            // Priority 2: Best sellers (+200)
+            if (bestSellingIds?.includes(p.id)) score += 200;
+            // Priority 3: Most searched match (+100)
+            if (mostSearchedTerms) {
+              const nameNorm = normalizeArabic(p.name_ar);
+              const matchCount = mostSearchedTerms.filter(t => nameNorm.includes(t)).length;
+              score += matchCount * 100;
             }
-            idx++;
-            // Safety: prevent infinite loop
-            if (idx > result.length * 3) break;
+            // Priority 4: Has image (+50)
+            if (p.image_url) score += 50;
+            // Priority 5: In stock (+30)
+            if (p.available_quantity > 0) score += 30;
+            return { p, score };
+          });
+
+          // Sort by score desc, then diversify within same score tier
+          scored.sort((a, b) => b.score - a.score);
+
+          // Diversify: interleave brands within score tiers
+          const tiers: any[][] = [];
+          let currentTier: any[] = [];
+          let currentScore = -1;
+          for (const s of scored) {
+            if (s.score !== currentScore && currentTier.length > 0) {
+              tiers.push(currentTier);
+              currentTier = [];
+            }
+            currentScore = s.score;
+            currentTier.push(s.p);
           }
-          // Add any remaining items not yet included
-          const addedIds = new Set(diversified.map(p => p.id));
-          for (const p of result) {
-            if (!addedIds.has(p.id)) diversified.push(p);
+          if (currentTier.length > 0) tiers.push(currentTier);
+
+          // Interleave brands within each tier
+          const diversified: any[] = [];
+          for (const tier of tiers) {
+            const brandBuckets = new Map<string, any[]>();
+            for (const p of tier) {
+              const key = p.brand || "_";
+              if (!brandBuckets.has(key)) brandBuckets.set(key, []);
+              brandBuckets.get(key)!.push(p);
+            }
+            if (brandBuckets.size > 1) {
+              const bucketArrays = Array.from(brandBuckets.values());
+              let idx = 0;
+              const tierSize = tier.length;
+              while (diversified.length < diversified.length + tierSize) {
+                const bucket = bucketArrays[idx % bucketArrays.length];
+                const itemIdx = Math.floor(idx / bucketArrays.length);
+                if (itemIdx < bucket.length) {
+                  diversified.push(bucket[itemIdx]);
+                }
+                idx++;
+                if (idx > tierSize * 3) break;
+              }
+              // Add remaining
+              const addedIds = new Set(diversified.map(p => p.id));
+              for (const p of tier) {
+                if (!addedIds.has(p.id)) diversified.push(p);
+              }
+            } else {
+              diversified.push(...tier);
+            }
           }
           result = diversified;
+        } else {
+          // When searching, keep relevance order but diversify brands
+          const buckets = new Map<string, any[]>();
+          for (const p of result) {
+            const key = p.category_id || p.brand || "_";
+            if (!buckets.has(key)) buckets.set(key, []);
+            buckets.get(key)!.push(p);
+          }
+          if (buckets.size > 1) {
+            const iterators = Array.from(buckets.values());
+            const diversified: any[] = [];
+            let idx = 0;
+            while (diversified.length < result.length) {
+              const bucket = iterators[idx % iterators.length];
+              const itemIdx = Math.floor(idx / iterators.length);
+              if (itemIdx < bucket.length) {
+                diversified.push(bucket[itemIdx]);
+              }
+              idx++;
+              if (idx > result.length * 3) break;
+            }
+            const addedIds = new Set(diversified.map(p => p.id));
+            for (const p of result) {
+              if (!addedIds.has(p.id)) diversified.push(p);
+            }
+            result = diversified;
+          }
         }
         break;
       }
     }
 
     return result;
-  }, [products, filters, bestSellingIds]);
+  }, [products, filters, bestSellingIds, dbCategories, maintenanceCategorySlugs, mostSearchedTerms]);
 
   /* ── Search logging (debounced) ── */
   const lastLoggedSearch = useRef("");

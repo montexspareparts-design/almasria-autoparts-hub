@@ -1,9 +1,8 @@
-import { memo, useRef, useCallback, useEffect, useMemo } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { memo, useEffect, useMemo, useState } from "react";
 import { toast } from "@/hooks/use-toast";
-import { ShieldCheck, Eye, Package, Grid3X3, List, ChevronLeft, SlidersHorizontal, Search, X } from "lucide-react";
+import { Eye, Package, Grid3X3, List, SlidersHorizontal, ChevronDown, Sparkles } from "lucide-react";
 import { lazy, Suspense } from "react";
-import { useVirtualizer } from "@tanstack/react-virtual";
+import { motion, AnimatePresence } from "framer-motion";
 
 const ImageSearchDialog = lazy(() => import("@/components/ImageSearchDialog"));
 const VINScannerDialog = lazy(() => import("@/components/VINScannerDialog"));
@@ -17,7 +16,6 @@ import ProductDetailDialog from "@/components/ProductDetailDialog";
 import { ProductFilters } from "@/components/AdvancedProductFilter";
 
 interface ProductListingSectionProps {
-  // From useProductListing hook
   filters: ProductFilters;
   setFilters: (filters: ProductFilters | ((prev: ProductFilters) => ProductFilters)) => void;
   viewMode: "grid" | "list";
@@ -49,17 +47,14 @@ interface ProductListingSectionProps {
   setSidebarOpen: (open: boolean) => void;
   commandPaletteOpen: boolean;
   setCommandPaletteOpen: (open: boolean) => void;
-  /** Show brand filter in sidebar */
   showBrands?: boolean;
-  /** Additional content before the product grid (e.g., PersonalizedProducts) */
   beforeGrid?: React.ReactNode;
-  /** Section heading */
   sectionTitle?: React.ReactNode;
-  /** Section ID for anchor links */
   sectionId?: string;
-  /** Section className override */
   sectionClassName?: string;
 }
+
+const INITIAL_ROWS = 4;
 
 const ProductListingSection = memo(({
   filters, setFilters, viewMode, setViewMode,
@@ -73,46 +68,34 @@ const ProductListingSection = memo(({
   sidebarOpen, setSidebarOpen, commandPaletteOpen, setCommandPaletteOpen,
   showBrands = false, beforeGrid, sectionTitle, sectionId, sectionClassName,
 }: ProductListingSectionProps) => {
+  const [expanded, setExpanded] = useState(false);
+
   const clearFilters = () => {
     setFilters({
       search: "", model: null, year: null, chassisNumber: "", partNumber: "",
       categoryId: null, brandKey: null, priceMin: "", priceMax: "", sortBy: "newest",
     });
+    setExpanded(false);
   };
 
-  // Virtual scrolling setup
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const cols = viewMode === "grid" ? (typeof window !== "undefined" && window.innerWidth >= 1024 ? 3 : 2) : 1;
-  const ROW_HEIGHT = viewMode === "grid" ? 320 : 120;
-  const GAP = viewMode === "grid" ? 16 : 12;
-
-  const rows = useMemo(() => {
-    const result: any[][] = [];
-    for (let i = 0; i < paginatedProducts.length; i += cols) {
-      result.push(paginatedProducts.slice(i, i + cols));
-    }
-    return result;
-  }, [paginatedProducts, cols]);
-
-  const virtualizer = useVirtualizer({
-    count: rows.length,
-    getScrollElement: () => scrollContainerRef.current,
-    estimateSize: () => ROW_HEIGHT + GAP,
-    overscan: 5,
-  });
-
-  // Auto-load more when scrolling near bottom
+  // Reset expanded when filters change
   useEffect(() => {
-    const items = virtualizer.getVirtualItems();
-    const lastItem = items[items.length - 1];
-    if (lastItem && lastItem.index >= rows.length - 3 && hasMore) {
-      loadMore();
-    }
-  }, [virtualizer.getVirtualItems(), rows.length, hasMore, loadMore]);
+    setExpanded(false);
+  }, [filters.search, filters.categoryId, filters.brandKey, filters.sortBy]);
+
+  const cols = viewMode === "grid" ? (typeof window !== "undefined" && window.innerWidth >= 1024 ? 3 : 2) : 1;
+  const initialItemCount = INITIAL_ROWS * cols;
+
+  const visibleProducts = useMemo(() => {
+    if (expanded) return paginatedProducts;
+    return paginatedProducts.slice(0, initialItemCount);
+  }, [paginatedProducts, expanded, initialItemCount]);
+
+  const totalRemaining = filteredProducts.length - initialItemCount;
+  const showExpandButton = !expanded && paginatedProducts.length > initialItemCount;
 
   return (
     <>
-      {/* Command Palette */}
       <ProductCommandPalette
         open={commandPaletteOpen}
         onOpenChange={setCommandPaletteOpen}
@@ -124,7 +107,7 @@ const ProductListingSection = memo(({
         <div className="container mx-auto px-4">
           {/* Premium toolbar */}
           <div
-            className="flex items-center gap-2.5 mb-4 p-2.5 rounded-2xl bg-card/80  border border-border/60 shadow-sm relative z-[55] cursor-text"
+            className="flex items-center gap-2.5 mb-4 p-2.5 rounded-2xl bg-card/80 border border-border/60 shadow-sm relative z-[55] cursor-text"
             onClick={(e) => {
               const target = e.target as HTMLElement;
               if (target.tagName === 'DIV' || target.tagName === 'SECTION') {
@@ -146,13 +129,11 @@ const ProductListingSection = memo(({
               isDealer={isDealer}
             />
 
-            {/* AI Search Tools */}
             <Suspense fallback={null}>
               <ImageSearchDialog onProductFound={(term) => setFilters(prev => ({ ...prev, search: term }))} />
               <VINScannerDialog onProductFound={(term) => setFilters(prev => ({ ...prev, search: term }))} />
             </Suspense>
 
-            {/* Dealer daily view counter — premium golden pill */}
             {isDealer && (
               <div
                 className={`shrink-0 flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold border-2 transition-all duration-300 shadow-sm ${
@@ -185,9 +166,6 @@ const ProductListingSection = memo(({
             </Select>
           </div>
 
-          {/* Active search filter banner - hidden, results show inline */}
-
-          {/* Extra content before grid */}
           {beforeGrid}
 
           {/* Sidebar + Products Grid */}
@@ -207,9 +185,17 @@ const ProductListingSection = memo(({
             <div className="flex-1 min-w-0">
               {/* Results count + view toggle */}
               <div className="flex items-center justify-between mb-2.5">
-                <p className="text-xs text-muted-foreground">
-                  {isLoading ? "جاري التحميل..." : <><span className="text-foreground font-bold">{filteredProducts.length}</span> منتج</>}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-muted-foreground">
+                    {isLoading ? "جاري التحميل..." : <><span className="text-foreground font-bold">{filteredProducts.length}</span> منتج</>}
+                  </p>
+                  {!isLoading && !filters.search && !filters.categoryId && (
+                    <span className="text-[10px] text-muted-foreground/60 flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" />
+                      مرتب حسب الأكثر طلباً
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-center gap-1.5">
                   <div className="flex items-center bg-muted rounded-md p-0.5">
                     <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded transition-all ${viewMode === "grid" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
@@ -222,7 +208,7 @@ const ProductListingSection = memo(({
                 </div>
               </div>
 
-               {/* Loading state */}
+              {/* Loading state */}
               {isLoading ? (
                 <div className={viewMode === "grid" ? "grid grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}>
                   {Array.from({ length: 12 }).map((_, i) => (
@@ -234,7 +220,6 @@ const ProductListingSection = memo(({
                   ))}
                 </div>
               ) : paginatedProducts.length === 0 ? (
-                /* Empty state */
                 <div className="text-center py-24">
                   <div className="w-20 h-20 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-5">
                     <Package className="w-10 h-10 text-muted-foreground/30" />
@@ -244,71 +229,80 @@ const ProductListingSection = memo(({
                   <Button variant="outline" size="sm" onClick={clearFilters}>مسح جميع الفلاتر</Button>
                 </div>
               ) : (
-                /* Virtualized product grid */
-                <div
-                  ref={scrollContainerRef}
-                  className="overflow-y-auto"
-                  style={{ height: Math.min(rows.length * (ROW_HEIGHT + GAP), 800), maxHeight: "80vh" }}
-                >
-                  <div
-                    style={{
-                      height: `${virtualizer.getTotalSize()}px`,
-                      width: "100%",
-                      position: "relative",
-                    }}
-                  >
-                    {virtualizer.getVirtualItems().map((virtualRow) => {
-                      const rowProducts = rows[virtualRow.index];
-                      return (
-                        <div
-                          key={virtualRow.key}
-                          style={{
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                            width: "100%",
-                            height: `${virtualRow.size}px`,
-                            transform: `translateY(${virtualRow.start}px)`,
-                          }}
+                <div className="relative">
+                  {/* Product Grid */}
+                  <div className={viewMode === "grid" ? "grid grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}>
+                    <AnimatePresence mode="popLayout">
+                      {visibleProducts.map((product, idx) => (
+                        <motion.div
+                          key={product.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.2, delay: idx < initialItemCount ? Math.min(idx * 0.02, 0.3) : 0 }}
                         >
-                          <div className={viewMode === "grid" ? "grid grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}>
-                            {rowProducts.map((product, colIdx) => (
-                              <ProductCard
-                                key={product.id}
-                                product={product}
-                                index={virtualRow.index * cols + colIdx}
-                                viewMode={viewMode}
-                                user={user}
-                                isDealer={isDealer}
-                                viewedProductIds={viewedProductIds}
-                                limitReached={limitReached}
-                                dailyViewCount={dailyViewCount}
-                                dailyLimit={dailyLimit}
-                                getProductPrice={getProductPrice}
-                                onProductClick={setSelectedProduct}
-                                onAddToCart={handleAddToCart}
-                                onRecordView={recordView}
-                                onLoginRequired={handleLoginRequired}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
+                          <ProductCard
+                            product={product}
+                            index={idx}
+                            viewMode={viewMode}
+                            user={user}
+                            isDealer={isDealer}
+                            viewedProductIds={viewedProductIds}
+                            limitReached={limitReached}
+                            dailyViewCount={dailyViewCount}
+                            dailyLimit={dailyLimit}
+                            getProductPrice={getProductPrice}
+                            onProductClick={setSelectedProduct}
+                            onAddToCart={handleAddToCart}
+                            onRecordView={recordView}
+                            onLoginRequired={handleLoginRequired}
+                          />
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
                   </div>
-                </div>
-              )}
 
-              {/* Load More / Auto-loading indicator */}
-              {hasMore && (
-                <div className="flex flex-col items-center gap-3 mt-6">
-                  <p className="text-sm text-muted-foreground">
-                    عرض {paginatedProducts.length} من {filteredProducts.length} منتج
-                  </p>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                    يتم تحميل المزيد تلقائياً عند التمرير...
-                  </div>
+                  {/* Show More Button with fade overlay */}
+                  {showExpandButton && (
+                    <div className="relative mt-0">
+                      {/* Gradient fade */}
+                      <div className="absolute -top-20 left-0 right-0 h-20 bg-gradient-to-t from-background to-transparent pointer-events-none z-10" />
+                      
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex flex-col items-center gap-2 pt-4 relative z-20"
+                      >
+                        <Button
+                          onClick={() => {
+                            setExpanded(true);
+                            if (hasMore) loadMore();
+                          }}
+                          variant="outline"
+                          size="lg"
+                          className="gap-2 rounded-2xl px-8 py-3 border-2 border-primary/20 hover:border-primary/40 bg-card hover:bg-primary/5 text-primary font-bold shadow-lg shadow-primary/5 transition-all duration-300"
+                        >
+                          <ChevronDown className="w-5 h-5" />
+                          عرض المزيد ({totalRemaining > 0 ? totalRemaining : "..."} منتج)
+                        </Button>
+                        <p className="text-[11px] text-muted-foreground">
+                          عرض {visibleProducts.length} من {filteredProducts.length}
+                        </p>
+                      </motion.div>
+                    </div>
+                  )}
+
+                  {/* Load more in expanded view */}
+                  {expanded && hasMore && (
+                    <div className="flex flex-col items-center gap-2 mt-6">
+                      <Button onClick={loadMore} variant="ghost" size="sm" className="gap-2 text-muted-foreground">
+                        <ChevronDown className="w-4 h-4" />
+                        تحميل المزيد
+                      </Button>
+                      <p className="text-xs text-muted-foreground">
+                        عرض {paginatedProducts.length} من {filteredProducts.length}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -316,7 +310,6 @@ const ProductListingSection = memo(({
         </div>
       </section>
 
-      {/* Product Detail Dialog */}
       <ProductDetailDialog
         product={selectedProduct}
         open={!!selectedProduct}
