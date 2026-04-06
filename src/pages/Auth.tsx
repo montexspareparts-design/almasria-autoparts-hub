@@ -12,8 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { motion } from "framer-motion";
 import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 import logo from "@/assets/logo.webp";
+import { isPhoneLike, phoneToInternalEmail } from "@/lib/phoneAuth";
 
-const isPhone = (val: string) => /^[0-9+\s()-]+$/.test(val.trim()) && val.replace(/\D/g, "").length >= 8;
+const isPhone = isPhoneLike;
 type AuthMode = "login" | "register";
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 60_000;
@@ -51,7 +52,7 @@ const Auth = () => {
   const { toast } = useToast();
 
   const isLogin = mode === "login";
-  const phoneToEmail = (p: string) => `${p.replace(/\D/g, "")}@phone.almasria.local`;
+  const phoneToEmail = phoneToInternalEmail;
   const credIsPhone = isPhone(credential);
   const getAuthEmail = () => {
     if (isLogin) {
