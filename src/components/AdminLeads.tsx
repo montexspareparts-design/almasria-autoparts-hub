@@ -259,6 +259,47 @@ const AdminLeads = () => {
     toast({ title: "تم النسخ" });
   };
 
+  // View stored credentials for a converted lead
+  const viewCredentials = async (lead: Lead) => {
+    const { data } = await supabase
+      .from("dealer_accounts")
+      .select("initial_password, erp_customer_code")
+      .eq("erp_customer_code", lead.erp_customer_code)
+      .maybeSingle();
+    
+    if (data?.initial_password) {
+      setCredentials({ username: lead.phone, password: data.initial_password, phone: lead.phone });
+    } else {
+      toast({ title: "تنبيه", description: "كلمة المرور غير محفوظة. استخدم إعادة التعيين.", variant: "destructive" });
+    }
+  };
+
+  // Reset password for a converted lead
+  const resetPassword = async (lead: Lead) => {
+    setRegistering(lead.id);
+    try {
+      const cleanPhone = lead.phone.replace(/\D/g, "");
+      const email = `${cleanPhone}@phone.almasria.local`;
+      const newPassword = Array.from(crypto.getRandomValues(new Uint8Array(6)))
+        .map(b => b.toString(36).padStart(2, "0"))
+        .join("")
+        .slice(0, 8);
+
+      const { error } = await supabase.functions.invoke("create-client-account", {
+        body: { action: "reset_password", email, new_password: newPassword, erp_customer_code: lead.erp_customer_code },
+      });
+      if (error) {
+        toast({ title: "خطأ", description: "فشل إعادة تعيين كلمة المرور", variant: "destructive" });
+      } else {
+        setCredentials({ username: lead.phone, password: newPassword, phone: lead.phone });
+        toast({ title: "تم", description: "تم إعادة تعيين كلمة المرور بنجاح" });
+      }
+    } catch {
+      toast({ title: "خطأ", description: "حدث خطأ غير متوقع", variant: "destructive" });
+    }
+    setRegistering(null);
+  };
+
   const filtered = leads.filter(l =>
     l.name.includes(searchQuery) ||
     l.phone.includes(searchQuery) ||
