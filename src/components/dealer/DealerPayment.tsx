@@ -68,9 +68,10 @@ interface DealerPaymentProps {
   targetOrderNumber?: string;
   targetOrderAmount?: number;
   onNavigateToOrders?: () => void;
+  onNavigateToCart?: () => void;
 }
 
-const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount, onNavigateToOrders }: DealerPaymentProps) => {
+const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount, onNavigateToOrders, onNavigateToCart }: DealerPaymentProps) => {
   const { user } = useAuth();
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("card");
   const [walletPhone, setWalletPhone] = useState("");
@@ -165,7 +166,7 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount, on
           أنشئ طلبية جديدة من <span className="font-bold text-foreground">"طلباتي"</span> أو اختر طلب قائم لبدء الدفع
         </p>
         <div className="flex flex-col gap-2 w-full max-w-[220px]">
-          <Button onClick={() => onNavigateToOrders?.()} className="gap-2 rounded-xl h-11">
+          <Button onClick={() => (onNavigateToCart || onNavigateToOrders)?.()} className="gap-2 rounded-xl h-11">
             <Package className="w-4 h-4" />
             ابدأ طلبية جديدة
           </Button>
