@@ -18,6 +18,8 @@ export interface DealerCartItem {
     stock_quantity: number;
     brand: string;
     min_order_qty: number;
+    safety_stock: number;
+    max_order_cap: number | null;
   };
 }
 
