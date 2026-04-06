@@ -599,6 +599,19 @@ const AdminLeads = () => {
               <Copy className="w-4 h-4" />
               نسخ البيانات كاملة
             </Button>
+            <Button
+              className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white"
+              onClick={() => {
+                const phone = credentials?.phone?.replace(/^0/, '2') || '';
+                const msg = encodeURIComponent(
+                  `مرحباً، تم تسجيل حسابك على المصرية لقطع غيار تويوتا 🎉\n\nاسم المستخدم: ${credentials?.username}\nكلمة المرور: ${credentials?.password}\n\nرابط الدخول: https://almasria-autoparts-hub.lovable.app/dealer-login`
+                );
+                window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+              }}
+            >
+              <MessageCircle className="w-4 h-4" />
+              إرسال عبر واتساب
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
