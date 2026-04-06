@@ -1,0 +1,1 @@
+ALTER TABLE public.leads ADD COLUMN client_type text NOT NULL DEFAULT 'retail';
