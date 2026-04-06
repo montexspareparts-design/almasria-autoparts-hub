@@ -181,7 +181,18 @@ const ProductSearchAutocomplete = ({
 
   const allMatches = useMemo(() => {
     if (!value || value.length < 2) return [];
-    return products.filter(p => fuzzyProductMatch(value, p));
+    const matches = products.filter(p => fuzzyProductMatch(value, p));
+    // Prioritize exact SKU matches at the top
+    const q = value.trim().toLowerCase();
+    return matches.sort((a, b) => {
+      const aSkuExact = a.sku.toLowerCase() === q ? -2 : a.sku.toLowerCase().startsWith(q) ? -1 : 0;
+      const bSkuExact = b.sku.toLowerCase() === q ? -2 : b.sku.toLowerCase().startsWith(q) ? -1 : 0;
+      if (aSkuExact !== bSkuExact) return aSkuExact - bSkuExact;
+      // Then by stock availability
+      const aStock = (a as any).stock_quantity ?? 0;
+      const bStock = (b as any).stock_quantity ?? 0;
+      return bStock - aStock;
+    });
   }, [value, products]);
 
   const suggestions = useMemo(() => allMatches.slice(0, 12), [allMatches]);
