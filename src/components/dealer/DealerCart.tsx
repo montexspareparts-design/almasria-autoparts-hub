@@ -130,9 +130,8 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
         .from("products")
         .select("id, name_ar, sku, base_price, image_url, stock_quantity, safety_stock, max_order_cap, brand")
         .eq("is_active", true)
-        .gt("stock_quantity", 0)
         .or(`name_ar.ilike.%${query}%,sku.ilike.%${query}%`)
-        .limit(8);
+        .limit(10);
       // Compute available and max allowed per item
       const pct = maxOrderPct || 50;
       const enriched = (data || []).map((p: any) => {
@@ -140,7 +139,7 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
         const pctCap = Math.max(1, Math.floor(available * pct / 100));
         const maxAllowed = p.max_order_cap ? Math.min(pctCap, p.max_order_cap) : pctCap;
         return { ...p, available_quantity: available, max_allowed: maxAllowed };
-      }).filter((p: any) => p.available_quantity > 0);
+      });
       setSearchResults(enriched);
       setSearching(false);
     }, 300);
@@ -296,21 +295,27 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
           </div>
 
           {/* Search Results Dropdown */}
-          {showSearch && searchQuery && (searchResults.length > 0 || searching) && (
+          {showSearch && searchQuery.length >= 2 && (searchResults.length > 0 || searching || !searching) && (
             <div className="absolute z-50 top-full mt-1 w-full bg-card border border-border rounded-xl shadow-xl max-h-64 overflow-y-auto">
               {searching ? (
                 <div className="flex items-center justify-center py-4">
                   <Loader2 className="w-4 h-4 animate-spin text-primary" />
                   <span className="text-xs text-muted-foreground mr-2">جاري البحث...</span>
                 </div>
+              ) : searchResults.length === 0 ? (
+                <div className="flex items-center justify-center py-4">
+                  <span className="text-xs text-muted-foreground">لا توجد نتائج لـ "{searchQuery}"</span>
+                </div>
               ) : (
                 searchResults.map((product) => {
                   const alreadyInCart = items.some(i => i.product_id === product.id);
+                  const outOfStock = product.available_quantity <= 0;
                   return (
                     <button
                       key={product.id}
-                      onClick={() => handleAddFromSearch(product)}
-                      className="w-full flex items-center gap-3 p-3 hover:bg-muted/50 transition-colors border-b border-border/30 last:border-0 text-right"
+                      onClick={() => !outOfStock && handleAddFromSearch(product)}
+                      disabled={outOfStock}
+                      className={`w-full flex items-center gap-3 p-3 hover:bg-muted/50 transition-colors border-b border-border/30 last:border-0 text-right ${outOfStock ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       <div className="w-10 h-10 rounded-lg bg-muted/50 overflow-hidden shrink-0">
                         {product.image_url ? (
@@ -328,10 +333,13 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
                           <span className="text-[10px] text-emerald-600 font-bold">
                             {product.base_price.toLocaleString("ar-EG")} ج.م
                           </span>
+                          {outOfStock && <span className="text-[10px] text-destructive font-bold">نفد</span>}
                         </div>
                       </div>
                       <div className="shrink-0">
-                        {alreadyInCart ? (
+                        {outOfStock ? (
+                          <span className="text-[10px] text-destructive font-bold">غير متاح</span>
+                        ) : alreadyInCart ? (
                           <span className="text-[10px] text-primary font-bold bg-primary/10 px-2 py-1 rounded-full">في السلة +1</span>
                         ) : (
                           <PlusCircle className="w-5 h-5 text-primary" />
