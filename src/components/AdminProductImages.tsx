@@ -344,6 +344,10 @@ const AdminProductImages = () => {
     window.open(`https://www.google.com/search?q=${encodeURIComponent(sku + " toyota genuine part")}&tbm=isch`, "_blank");
   };
 
+  const openPartSouq = (sku: string) => {
+    window.open(`https://partsouq.com/en/search/all?q=${encodeURIComponent(sku.replace(/[\s-]/g, ""))}`, "_blank");
+  };
+
   const brandLabels: Record<string, string> = {
     toyota_genuine: "تويوتا أصلي",
     toyota_oils: "زيوت تويوتا",
