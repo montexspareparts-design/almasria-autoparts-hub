@@ -499,6 +499,13 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
       {/* Summary + Notes + Actions (only show when cart has items) */}
       {items.length > 0 && (
         <>
+          {/* 25% limit info banner */}
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+            <Shield className="w-4 h-4 text-amber-600 shrink-0" />
+            <p className="text-[11px] text-amber-800 dark:text-amber-300 font-medium leading-snug">
+              الحد الأقصى للطلب: <strong>{maxOrderPct || 25}%</strong> من رصيد كل صنف. بعد تأكيد الطلب، لن تستطيع طلب نفس الصنف حتى يتم تجديد المخزون.
+            </p>
+          </div>
           {/* Notes */}
           <div className="rounded-xl border border-border/50 bg-card p-3">
             <Textarea
