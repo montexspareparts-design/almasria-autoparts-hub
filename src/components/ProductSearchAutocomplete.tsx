@@ -152,18 +152,20 @@ const ProductSearchAutocomplete = ({
 
   const allMatches = useMemo(() => {
     if (!value || value.length < 2) return [];
-    const matches = products.filter(p => fuzzyProductMatch(value, p));
-    // Prioritize exact SKU matches at the top
-    const q = value.trim().toLowerCase();
-    return matches.sort((a, b) => {
-      const aSkuExact = a.sku.toLowerCase() === q ? -2 : a.sku.toLowerCase().startsWith(q) ? -1 : 0;
-      const bSkuExact = b.sku.toLowerCase() === q ? -2 : b.sku.toLowerCase().startsWith(q) ? -1 : 0;
-      if (aSkuExact !== bSkuExact) return aSkuExact - bSkuExact;
-      // Then by stock availability
-      const aStock = (a as any).stock_quantity ?? 0;
-      const bStock = (b as any).stock_quantity ?? 0;
-      return bStock - aStock;
-    });
+
+    return [...products]
+      .map((product) => ({
+        product,
+        score: getSearchRelevanceScore(value, product),
+      }))
+      .filter(({ score, product }) => score > 0 && isRelevantProductMatch(value, product))
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        const aStock = a.product.available_quantity ?? a.product.stock_quantity ?? 0;
+        const bStock = b.product.available_quantity ?? b.product.stock_quantity ?? 0;
+        return bStock - aStock;
+      })
+      .map(({ product }) => product);
   }, [value, products]);
 
   const suggestions = useMemo(() => allMatches.slice(0, 12), [allMatches]);

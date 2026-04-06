@@ -696,32 +696,20 @@ export function useProductListing(options: UseProductListingOptions = {}) {
           }
           result = diversified;
         } else {
-          // When searching, keep relevance order but diversify brands
-          const buckets = new Map<string, any[]>();
-          for (const p of result) {
-            const key = p.category_id || p.brand || "_";
-            if (!buckets.has(key)) buckets.set(key, []);
-            buckets.get(key)!.push(p);
-          }
-          if (buckets.size > 1) {
-            const iterators = Array.from(buckets.values());
-            const diversified: any[] = [];
-            let idx = 0;
-            while (diversified.length < result.length) {
-              const bucket = iterators[idx % iterators.length];
-              const itemIdx = Math.floor(idx / iterators.length);
-              if (itemIdx < bucket.length) {
-                diversified.push(bucket[itemIdx]);
-              }
-              idx++;
-              if (idx > result.length * 3) break;
+          result = [...result].sort((a, b) => {
+            const scoreDiff = getSearchRelevanceScore(rawSearch, b) - getSearchRelevanceScore(rawSearch, a);
+            if (scoreDiff !== 0) return scoreDiff;
+
+            const aAvailable = a.available_quantity ?? a.stock_quantity ?? 0;
+            const bAvailable = b.available_quantity ?? b.stock_quantity ?? 0;
+            if (bAvailable !== aAvailable) return bAvailable - aAvailable;
+
+            if (Boolean(b.image_url) !== Boolean(a.image_url)) {
+              return Number(Boolean(b.image_url)) - Number(Boolean(a.image_url));
             }
-            const addedIds = new Set(diversified.map(p => p.id));
-            for (const p of result) {
-              if (!addedIds.has(p.id)) diversified.push(p);
-            }
-            result = diversified;
-          }
+
+            return a.name_ar.localeCompare(b.name_ar, "ar");
+          });
         }
         break;
       }
