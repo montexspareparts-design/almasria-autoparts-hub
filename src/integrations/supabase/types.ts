@@ -706,6 +706,42 @@ export type Database = {
         }
         Relationships: []
       }
+      leads: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+          notes: string | null
+          phone: string
+          shop_name: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+          notes?: string | null
+          phone: string
+          shop_name?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string
+          shop_name?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       maintenance_bundles: {
         Row: {
           bundle_price: number
