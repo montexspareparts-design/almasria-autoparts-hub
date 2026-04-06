@@ -80,6 +80,9 @@ const DealerDashboard = () => {
     const vt = dealerAccount?.vehicle_types || [];
     setVehicleTypes(vt);
     if (vt.length === 0) setShowVehicleDialog(true);
+
+    // Request push notification permission silently
+    requestPushPermission().catch(() => {});
   };
 
   if (authLoading || loadingData || !user || !isDealer) {
