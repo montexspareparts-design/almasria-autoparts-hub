@@ -14,6 +14,7 @@ import ProductSearchAutocomplete from "@/components/ProductSearchAutocomplete";
 import ProductCommandPalette from "@/components/ProductCommandPalette";
 import ProductDetailDialog from "@/components/ProductDetailDialog";
 import { ProductFilters } from "@/components/AdvancedProductFilter";
+import WeeklyBestSellers from "@/components/WeeklyBestSellers";
 
 interface ProductListingSectionProps {
   filters: ProductFilters;
@@ -323,6 +324,15 @@ const ProductListingSection = memo(({
               )}
             </div>
           </div>
+
+          {/* Weekly Best Sellers Carousel - below grid */}
+          <WeeklyBestSellers
+            onProductClick={setSelectedProduct}
+            onAddToCart={handleAddToCart}
+            isDealer={isDealer}
+            user={user}
+            getProductPrice={getProductPrice}
+          />
         </div>
       </section>
 
