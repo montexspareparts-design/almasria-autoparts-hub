@@ -23,6 +23,7 @@ import {
 interface Order {
   id: string;
   order_number: string;
+  erp_order_code?: string | null;
   status: string;
   total_amount: number;
   created_at: string;
