@@ -1,4 +1,5 @@
 import { useEffect, useState, lazy, Suspense } from "react";
+import { requestPushPermission } from "@/lib/pushNotifications";
 import { useDealerCart } from "@/hooks/useDealerCart";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -79,6 +80,9 @@ const DealerDashboard = () => {
     const vt = dealerAccount?.vehicle_types || [];
     setVehicleTypes(vt);
     if (vt.length === 0) setShowVehicleDialog(true);
+
+    // Request push notification permission silently
+    requestPushPermission().catch(() => {});
   };
 
   if (authLoading || loadingData || !user || !isDealer) {
