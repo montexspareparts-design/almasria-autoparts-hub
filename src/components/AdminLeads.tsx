@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Phone, Store, User, Loader2, Trash2, Edit2, Check, X, Link2, UserPlus, Copy, Eye, EyeOff } from "lucide-react";
+import { Plus, Search, Phone, Store, User, Loader2, Trash2, Edit2, Check, X, Link2, UserPlus, Copy, Eye, EyeOff, MessageCircle } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -71,7 +71,7 @@ const AdminLeads = () => {
   const [erpVerified, setErpVerified] = useState(false);
 
   // Credentials dialog
-  const [credentials, setCredentials] = useState<{ username: string; password: string } | null>(null);
+  const [credentials, setCredentials] = useState<{ username: string; password: string; phone: string } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
   const fetchLeads = async () => {
@@ -244,7 +244,7 @@ const AdminLeads = () => {
       } else if (data?.error) {
         toast({ title: "خطأ", description: data.error, variant: "destructive" });
       } else if (data?.success) {
-        setCredentials({ username: data.username, password: data.password });
+        setCredentials({ username: data.username, password: data.password, phone: lead.phone });
         toast({ title: "تم التسجيل", description: "تم إنشاء حساب العميل بنجاح" });
         fetchLeads();
       }
@@ -598,6 +598,19 @@ const AdminLeads = () => {
             >
               <Copy className="w-4 h-4" />
               نسخ البيانات كاملة
+            </Button>
+            <Button
+              className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white"
+              onClick={() => {
+                const phone = credentials?.phone?.replace(/^0/, '2') || '';
+                const msg = encodeURIComponent(
+                  `مرحباً، تم تسجيل حسابك على المصرية لقطع غيار تويوتا 🎉\n\nاسم المستخدم: ${credentials?.username}\nكلمة المرور: ${credentials?.password}\n\nرابط الدخول: https://almasria-autoparts-hub.lovable.app/dealer-login`
+                );
+                window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+              }}
+            >
+              <MessageCircle className="w-4 h-4" />
+              إرسال عبر واتساب
             </Button>
           </div>
         </DialogContent>
