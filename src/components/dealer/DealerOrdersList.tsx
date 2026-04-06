@@ -304,14 +304,6 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
     toast({ title: "تم إلغاء الطلب", description: "تم إبلاغ الإدارة بالإلغاء" });
   };
 
-  if (loading) {
-    return (
-      <div className="space-y-3">
-        {[1, 2, 3].map(i => <div key={i} className="h-20 rounded-lg bg-muted/50 animate-pulse" />)}
-      </div>
-    );
-  }
-
   const statusFilterTabs = useMemo(() => {
     const counts: Record<string, number> = { all: orders.length };
     orders.forEach(o => { counts[o.status] = (counts[o.status] || 0) + 1; });
@@ -342,7 +334,6 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
     return result;
   }, [orders, statusFilter, searchQuery]);
 
-  // KPI summary
   const kpis = useMemo(() => {
     const active = orders.filter(o => !["delivered", "cancelled"].includes(o.status));
     const activeTotal = active.reduce((s, o) => s + Number(o.total_amount), 0);
@@ -351,6 +342,14 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
     const needsPayment = orders.filter(o => ["confirmed", "awaiting_payment"].includes(o.status));
     return { activeCount: active.length, activeTotal, deliveredCount: delivered.length, deliveredTotal, needsPaymentCount: needsPayment.length };
   }, [orders]);
+
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        {[1, 2, 3].map(i => <div key={i} className="h-20 rounded-lg bg-muted/50 animate-pulse" />)}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
