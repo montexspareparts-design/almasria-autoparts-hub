@@ -370,6 +370,37 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     staleTime: 5 * 60 * 1000,
   });
 
+  /* ── Most searched product IDs (boost popular items) ── */
+  const { data: mostSearchedTerms } = useQuery({
+    queryKey: ["most_searched_terms"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("customer_search_logs")
+        .select("search_query")
+        .order("created_at", { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      // Count frequency
+      const freq: Record<string, number> = {};
+      (data || []).forEach((d: any) => {
+        const q = (d.search_query || "").trim().toLowerCase();
+        if (q.length >= 2) freq[q] = (freq[q] || 0) + 1;
+      });
+      // Return top 30 terms
+      return Object.entries(freq)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 30)
+        .map(([term]) => normalizeArabic(term));
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+
+  /* ── Maintenance/quick-service category IDs (priority display) ── */
+  const maintenanceCategorySlugs = useMemo(() => new Set([
+    "filters", "oils-gasoline", "oils-diesel", "oils-transmission",
+    "brakes", "spark-plugs-coils", "belts-bearings", "water-cooling",
+  ]), []);
+
   /* ── Smart year extraction from search query ── */
   const extractYearFromSearch = (search: string): number | null => {
     const match = search.match(/\b(19|20)\d{2}\b/);
