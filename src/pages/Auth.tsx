@@ -51,7 +51,7 @@ const Auth = () => {
   const { toast } = useToast();
 
   const isLogin = mode === "login";
-  const phoneToEmail = (p: string) => `${p.replace(/\D/g, "")}@phone.almasria.app`;
+  const phoneToEmail = (p: string) => `${p.replace(/\D/g, "")}@phone.almasria.local`;
   const credIsPhone = isPhone(credential);
   const getAuthEmail = () => {
     if (isLogin) {
