@@ -46,7 +46,10 @@ const InstallBanner = forwardRef<HTMLDivElement>((_, ref) => {
     }
 
     // Show after a short delay for better UX
-    const timer = setTimeout(() => setShow(true), ios ? 2000 : 0);
+    const timer = setTimeout(() => {
+      setShow(true);
+      localStorage.setItem(SHOWN_ONCE_KEY, "1");
+    }, ios ? 2000 : 0);
 
     const handler = (e: Event) => {
       e.preventDefault();
