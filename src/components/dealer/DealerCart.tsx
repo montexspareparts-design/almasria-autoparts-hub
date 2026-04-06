@@ -22,7 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
+import ProductDetailDialog from "@/components/ProductDetailDialog";
 
 interface DealerCartProps {
   onNavigateToOrders: () => void;
