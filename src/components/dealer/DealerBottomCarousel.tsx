@@ -19,7 +19,7 @@ interface DealerBottomCarouselProps {
   onNavigateToPriceLists: () => void;
 }
 
-const ease = [0.22, 1, 0.36, 1];
+const ease = [0.22, 1, 0.36, 1] as const;
 
 const DealerBottomCarousel = ({ onNavigateToPriceLists }: DealerBottomCarouselProps) => {
   const { user } = useAuth();
