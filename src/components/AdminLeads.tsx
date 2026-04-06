@@ -92,12 +92,12 @@ const AdminLeads = () => {
     setLoadingErp(true);
     try {
       const { data } = await supabase.functions.invoke("erp-sync-outbound", {
-        body: { action: "get_customers" },
+        body: { action: "fetch_erp_customers" },
       });
       if (data?.customers && Array.isArray(data.customers)) {
         setErpCustomers(data.customers.map((c: any) => ({
-          code: c.id || c.code || c.customerId || "",
-          name: c.name || c.customerName || "",
+          code: c.id || "",
+          name: c.name || "",
         })).filter((c: ERPCustomer) => c.code));
       }
     } catch (err) {
