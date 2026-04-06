@@ -31,6 +31,7 @@ const DealerPricedToday = lazy(() => import("@/components/dealer/DealerPricedTod
 const DealerCart = lazy(() => import("@/components/dealer/DealerCart"));
 const VehicleTypeDialog = lazy(() => import("@/components/dealer/VehicleTypeDialog"));
 const DealerVehicleRecommendations = lazy(() => import("@/components/dealer/DealerVehicleRecommendations"));
+const DealerBottomCarousel = lazy(() => import("@/components/dealer/DealerBottomCarousel"));
 
 const DealerDashboard = () => {
   const { user, dealerAccount, isDealer, loading: authLoading, signOut } = useAuth();
@@ -153,6 +154,7 @@ const DealerDashboard = () => {
           </div>
           <DealerProductSearch onNavigateToCart={() => setActiveTab("cart")} sharedCart={dealerCart} />
           <DealerVehicleRecommendations compact />
+          <Suspense fallback={null}><DealerBottomCarousel onNavigateToPriceLists={() => setActiveTab("price_lists")} /></Suspense>
         </div>
       );
       case "priced_today": return <DealerPricedToday onConvertToOrder={() => setActiveTab("cart")} sharedCart={dealerCart} />;
