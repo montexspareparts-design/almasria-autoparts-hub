@@ -646,7 +646,7 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     }
 
     return result;
-  }, [products, filters, bestSellingIds]);
+  }, [products, filters, bestSellingIds, dbCategories, maintenanceCategorySlugs, mostSearchedTerms]);
 
   /* ── Search logging (debounced) ── */
   const lastLoggedSearch = useRef("");
