@@ -1,5 +1,4 @@
 import { createRoot } from "react-dom/client";
-import { registerSW } from "virtual:pwa-register";
 import App from "./App.tsx";
 import "./index.css";
 import { setupLazyImportRecovery } from "@/lib/lazyImportRecovery";
@@ -12,14 +11,26 @@ const removeSplash = () => {
   }
 };
 
-const registerServiceWorker = () => {
+const registerServiceWorkerUpdateChecks = () => {
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
     return undefined;
   }
 
+  let isReloading = false;
+
+  const reloadOnControllerChange = () => {
+    if (isReloading) return;
+    isReloading = true;
+    window.location.reload();
+  };
+
   const checkForUpdates = async () => {
-    const registration = await navigator.serviceWorker.getRegistration();
-    await registration?.update();
+    try {
+      const registration = await navigator.serviceWorker.getRegistration();
+      await registration?.update();
+    } catch {
+      // Ignore transient service worker update failures
+    }
   };
 
   const handleVisibilityChange = () => {
@@ -32,24 +43,21 @@ const registerServiceWorker = () => {
     void checkForUpdates();
   };
 
-  registerSW({
-    immediate: true,
-    onRegisteredSW() {
-      void checkForUpdates();
-    },
-  });
-
+  navigator.serviceWorker.addEventListener("controllerchange", reloadOnControllerChange);
   document.addEventListener("visibilitychange", handleVisibilityChange);
   window.addEventListener("focus", handleWindowFocus);
 
+  void checkForUpdates();
+
   return () => {
+    navigator.serviceWorker.removeEventListener("controllerchange", reloadOnControllerChange);
     document.removeEventListener("visibilitychange", handleVisibilityChange);
     window.removeEventListener("focus", handleWindowFocus);
   };
 };
 
 const disposeLazyImportRecovery = setupLazyImportRecovery();
-const disposeServiceWorkerListeners = registerServiceWorker();
+const disposeServiceWorkerListeners = registerServiceWorkerUpdateChecks();
 
 createRoot(document.getElementById("root")!).render(<App />);
 requestAnimationFrame(removeSplash);
