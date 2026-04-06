@@ -1,4 +1,4 @@
-import { useEffect, useState, lazy, Suspense, useCallback } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { requestPushPermission } from "@/lib/pushNotifications";
 import { useDealerCart } from "@/hooks/useDealerCart";
 import { useNavigate, useSearchParams } from "react-router-dom";
