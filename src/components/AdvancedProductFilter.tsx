@@ -18,6 +18,8 @@ export interface ProductFilters {
   priceMax: string;
   sortBy: string;
   maintenanceOnly?: boolean;
+  onSaleOnly?: boolean;
+  bestSellingOnly?: boolean;
 }
 
 export const BRAND_OPTIONS = [
