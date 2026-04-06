@@ -156,15 +156,30 @@ const ProductSearchAutocomplete = ({
   // Popular products to show when focused with no search
   const popularProducts = useMemo(() => {
     if (value && value.length >= 2) return [];
-    return [...products]
+    let filtered = [...products];
+    if (isDealer) {
+      filtered = filtered.filter(p => {
+        const available = (p.available_quantity ?? ((p.stock_quantity ?? 0) - (p.safety_stock ?? 0)));
+        return available > 0;
+      });
+    }
+    return filtered
       .sort((a, b) => (b as any).stock_quantity - (a as any).stock_quantity)
       .slice(0, 8);
-  }, [products, value]);
+  }, [products, value, isDealer]);
 
   const allMatches = useMemo(() => {
     if (!value || value.length < 2) return [];
 
     return [...products]
+      .filter((p) => {
+        // For dealers, hide out-of-stock products
+        if (isDealer) {
+          const available = (p.available_quantity ?? ((p.stock_quantity ?? 0) - (p.safety_stock ?? 0)));
+          if (available <= 0) return false;
+        }
+        return true;
+      })
       .map((product) => ({
         product,
         score: getSearchRelevanceScore(value, product),
@@ -177,7 +192,7 @@ const ProductSearchAutocomplete = ({
         return bStock - aStock;
       })
       .map(({ product }) => product);
-  }, [value, products]);
+  }, [value, products, isDealer]);
 
   const suggestions = useMemo(() => allMatches.slice(0, 12), [allMatches]);
   const filteredTotal = allMatches.length;
