@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Phone, Store, User, Loader2, Trash2, Edit2, Check, X, Link2, UserPlus, Copy, Eye, EyeOff, MessageCircle } from "lucide-react";
+import { Plus, Search, Phone, Store, User, Loader2, Trash2, Edit2, Check, X, Link2, UserPlus, Copy, Eye, EyeOff, MessageCircle, KeyRound, RotateCcw } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -257,6 +257,47 @@ const AdminLeads = () => {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast({ title: "تم النسخ" });
+  };
+
+  // View stored credentials for a converted lead
+  const viewCredentials = async (lead: Lead) => {
+    const { data } = await supabase
+      .from("dealer_accounts")
+      .select("initial_password, erp_customer_code")
+      .eq("erp_customer_code", lead.erp_customer_code)
+      .maybeSingle();
+    
+    if (data?.initial_password) {
+      setCredentials({ username: lead.phone, password: data.initial_password, phone: lead.phone });
+    } else {
+      toast({ title: "تنبيه", description: "كلمة المرور غير محفوظة. استخدم إعادة التعيين.", variant: "destructive" });
+    }
+  };
+
+  // Reset password for a converted lead
+  const resetPassword = async (lead: Lead) => {
+    setRegistering(lead.id);
+    try {
+      const cleanPhone = lead.phone.replace(/\D/g, "");
+      const email = `${cleanPhone}@phone.almasria.local`;
+      const newPassword = Array.from(crypto.getRandomValues(new Uint8Array(6)))
+        .map(b => b.toString(36).padStart(2, "0"))
+        .join("")
+        .slice(0, 8);
+
+      const { error } = await supabase.functions.invoke("create-client-account", {
+        body: { action: "reset_password", email, new_password: newPassword, erp_customer_code: lead.erp_customer_code },
+      });
+      if (error) {
+        toast({ title: "خطأ", description: "فشل إعادة تعيين كلمة المرور", variant: "destructive" });
+      } else {
+        setCredentials({ username: lead.phone, password: newPassword, phone: lead.phone });
+        toast({ title: "تم", description: "تم إعادة تعيين كلمة المرور بنجاح" });
+      }
+    } catch {
+      toast({ title: "خطأ", description: "حدث خطأ غير متوقع", variant: "destructive" });
+    }
+    setRegistering(null);
   };
 
   const filtered = leads.filter(l =>
@@ -523,6 +564,34 @@ const AdminLeads = () => {
                               <UserPlus className="w-3.5 h-3.5" />
                             )}
                           </Button>
+                        )}
+                        {/* View credentials & reset password - for converted leads */}
+                        {lead.status === "converted" && lead.erp_customer_code && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-blue-600 hover:text-blue-700"
+                              onClick={() => viewCredentials(lead)}
+                              title="عرض بيانات الدخول"
+                            >
+                              <KeyRound className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-amber-600 hover:text-amber-700"
+                              onClick={() => resetPassword(lead)}
+                              disabled={registering === lead.id}
+                              title="إعادة تعيين كلمة المرور"
+                            >
+                              {registering === lead.id ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <RotateCcw className="w-3.5 h-3.5" />
+                              )}
+                            </Button>
+                          </>
                         )}
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(lead)}>
                           <Edit2 className="w-3.5 h-3.5" />
