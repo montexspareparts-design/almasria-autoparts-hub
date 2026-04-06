@@ -333,6 +333,7 @@ const AdminLeads = () => {
         toast({ title: "خطأ", description: "فشل إعادة تعيين كلمة المرور", variant: "destructive" });
       } else {
         setCredentials({ username: lead.phone, password: newPassword, phone: lead.phone });
+        setLeadCredentials(prev => ({ ...prev, [lead.id]: { username: cleanPhone, password: newPassword } }));
         toast({ title: "تم", description: "تم إعادة تعيين كلمة المرور بنجاح" });
       }
     } catch {
