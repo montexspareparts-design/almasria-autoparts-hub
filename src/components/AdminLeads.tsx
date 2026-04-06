@@ -244,7 +244,7 @@ const AdminLeads = () => {
       } else if (data?.error) {
         toast({ title: "خطأ", description: data.error, variant: "destructive" });
       } else if (data?.success) {
-        setCredentials({ username: data.username, password: data.password });
+        setCredentials({ username: data.username, password: data.password, phone: lead.phone });
         toast({ title: "تم التسجيل", description: "تم إنشاء حساب العميل بنجاح" });
         fetchLeads();
       }
