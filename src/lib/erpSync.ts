@@ -45,8 +45,10 @@ export const pushOrderToERP = async (orderId: string): Promise<string | null> =>
       },
     });
 
-    // Extract ERP order code from response
-    const erpOrderCode = erpResult?.erp_order_id || erpResult?.orderId || erpResult?.orderNumber || null;
+    // Extract ERP order code from response — Al Faisal returns "docno"
+    const rawDocno = erpResult?.docno ?? erpResult?.erp_order_id ?? erpResult?.orderId ?? erpResult?.orderNumber ?? null;
+    // docno=0 means ERP didn't assign a real code yet
+    const erpOrderCode = (rawDocno && rawDocno !== 0 && rawDocno !== "0") ? String(rawDocno) : null;
 
     // Save the ERP code to the order
     if (erpOrderCode) {
