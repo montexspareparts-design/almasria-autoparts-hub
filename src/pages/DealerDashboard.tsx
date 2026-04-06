@@ -240,6 +240,7 @@ const DealerDashboard = () => {
           <VehicleTypeDialog
             open={showVehicleDialog}
             dealerAccountId={dealerAccount.id}
+            dealerName={dealerName}
             onComplete={(types) => {
               setVehicleTypes(types);
               setShowVehicleDialog(false);
