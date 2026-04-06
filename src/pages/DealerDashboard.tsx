@@ -154,6 +154,7 @@ const DealerDashboard = () => {
           </div>
           <DealerProductSearch onNavigateToCart={() => setActiveTab("cart")} sharedCart={dealerCart} />
           <DealerVehicleRecommendations compact />
+          <Suspense fallback={null}><DealerBottomCarousel onNavigateToPriceLists={() => setActiveTab("price_lists")} /></Suspense>
         </div>
       );
       case "priced_today": return <DealerPricedToday onConvertToOrder={() => setActiveTab("cart")} sharedCart={dealerCart} />;
