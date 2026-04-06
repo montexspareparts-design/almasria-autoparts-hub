@@ -124,7 +124,7 @@ const AdminLeads = () => {
   }, []);
 
   useEffect(() => { 
-    fetchLeads().then(() => {});
+    fetchLeads();
   }, []);
 
   const fetchErpCustomers = useCallback(async () => {
