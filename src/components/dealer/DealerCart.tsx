@@ -245,6 +245,7 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
         return;
       }
       await clearCart();
+      refetchLocks();
       setNotes("");
       const erpCode = await order.erpCodePromise;
       const displayCode = erpCode || order.order_number;
