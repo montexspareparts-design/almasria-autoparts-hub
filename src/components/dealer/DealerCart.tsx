@@ -78,7 +78,7 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
         .from("dealer_product_order_locks" as any)
         .select("product_id, stock_at_order, quantity_ordered")
         .eq("user_id", user.id);
-      return (data || []) as { product_id: string; stock_at_order: number; quantity_ordered: number }[];
+      return (data as unknown as { product_id: string; stock_at_order: number; quantity_ordered: number }[]) || [];
     },
     enabled: !!user,
     staleTime: 30 * 1000,
