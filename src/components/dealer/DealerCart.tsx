@@ -317,11 +317,10 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
                   </div>
                   {searchResults.map((product) => {
                     const alreadyInCart = items.some(i => i.product_id === product.id);
-                    const outOfStock = product.available_quantity <= 0;
                     return (
                       <div
                         key={product.id}
-                        className={`flex items-center gap-2 px-3 py-2.5 border-b border-border/20 last:border-0 transition-colors ${outOfStock ? 'opacity-50' : 'hover:bg-muted/40'}`}
+                        className="flex items-center gap-2 px-3 py-2.5 border-b border-border/20 last:border-0 transition-colors hover:bg-muted/40"
                       >
                         {/* Product info - clickable for details */}
                         <button
@@ -331,22 +330,14 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
                           <p className="text-sm font-bold text-foreground truncate leading-tight">{product.name_ar}</p>
                           <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                             <span className="text-[10px] font-mono text-muted-foreground bg-muted/50 px-1 py-0.5 rounded" dir="ltr">#{product.sku}</span>
-                            <span className="text-[10px] font-bold text-primary">{product.base_price.toLocaleString("ar-EG")} ج.م</span>
-                            {outOfStock ? (
-                              <span className="text-[10px] text-destructive font-bold">نفد</span>
-                            ) : (
-                              <span className="text-[10px] text-emerald-600">متاح: {product.available_quantity}</span>
-                            )}
+                            <span className="text-[10px] text-emerald-600">متاح</span>
                           </div>
                         </button>
                         {/* Add button */}
                         <button
-                          onClick={(e) => { e.stopPropagation(); if (!outOfStock) handleAddFromSearch(product); }}
-                          disabled={outOfStock}
+                          onClick={(e) => { e.stopPropagation(); handleAddFromSearch(product); }}
                           className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                            outOfStock
-                              ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                              : alreadyInCart
+                            alreadyInCart
                               ? 'bg-primary/10 text-primary'
                               : 'bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground'
                           }`}
