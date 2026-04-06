@@ -274,7 +274,20 @@ Deno.serve(async (req) => {
           body: JSON.stringify(payload),
         });
         if (erpRes.message === 1) {
-          throw new Error(`ERP CreateOrder (quote) failed: ${erpRes.extramessage || "Unknown business error"}`);
+          await supabase.from("erp_sync_logs").insert({
+            sync_type: syncType,
+            direction: "outbound",
+            reference_id: referenceId,
+            reference_number: referenceNumber,
+            payload,
+            response: erpRes,
+            status: "failed",
+            error_message: erpRes.extramessage || "ERP CreateOrder (quote) rejected",
+          });
+          return new Response(
+            JSON.stringify({ success: false, erp_error: true, message: erpRes.extramessage || "ERP rejected the quote", docno: null }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
         }
         result = { ...erpRes, success: true };
       }
