@@ -344,6 +344,10 @@ const AdminProductImages = () => {
     window.open(`https://www.google.com/search?q=${encodeURIComponent(sku + " toyota genuine part")}&tbm=isch`, "_blank");
   };
 
+  const openPartSouq = (sku: string) => {
+    window.open(`https://partsouq.com/en/search/all?q=${encodeURIComponent(sku.replace(/[\s-]/g, ""))}`, "_blank");
+  };
+
   const brandLabels: Record<string, string> = {
     toyota_genuine: "تويوتا أصلي",
     toyota_oils: "زيوت تويوتا",
@@ -595,6 +599,15 @@ const AdminProductImages = () => {
 
             {/* Manual URL input */}
             <div className="flex gap-2 mb-4">
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0 gap-1"
+                onClick={() => imageSearchProduct && openPartSouq(imageSearchProduct.sku)}
+              >
+                <ExternalLink className="w-3 h-3" />
+                PartSouq
+              </Button>
               <Button
                 variant="outline"
                 size="sm"

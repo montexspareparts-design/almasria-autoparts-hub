@@ -64,78 +64,180 @@ serve(async (req) => {
       );
     }
 
-    console.log("Searching images for part:", partNumber);
-
-    const searchResponse = await fetch("https://api.firecrawl.dev/v1/search", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        query: `${partNumber} toyota genuine part image`,
-        limit: 5,
-        scrapeOptions: { formats: ["links", "markdown"] },
-      }),
-    });
-
-    const searchData = await searchResponse.json();
-
-    if (!searchResponse.ok) {
-      console.error("Firecrawl search error:", searchData);
-      return new Response(
-        JSON.stringify({ success: false, error: searchData.error || "Search failed" }),
-        { status: searchResponse.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    const cleanPartNumber = partNumber.replace(/[\s-]/g, "");
+    console.log("Searching images for part:", partNumber, "clean:", cleanPartNumber);
 
     const imageUrls: string[] = [];
-    const results = searchData.data || searchData.results || [];
 
-    for (const result of results) {
-      const markdown = result.markdown || "";
-      const imgRegex = /!\[.*?\]\((https?:\/\/[^\s)]+\.(jpg|jpeg|png|webp|gif)[^\s)]*)\)/gi;
-      let match;
-      while ((match = imgRegex.exec(markdown)) !== null) {
-        if (!imageUrls.includes(match[1])) imageUrls.push(match[1]);
-      }
-
-      const urlRegex = /(https?:\/\/[^\s"'<>]+\.(jpg|jpeg|png|webp)(\?[^\s"'<>]*)?)/gi;
-      while ((match = urlRegex.exec(markdown)) !== null) {
-        if (!imageUrls.includes(match[1]) && !match[1].includes("logo") && !match[1].includes("icon")) {
-          imageUrls.push(match[1]);
-        }
-      }
-    }
-
+    // ── Priority 1: PartSouq.com (Toyota catalog images) ──
     try {
-      const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+      console.log("Searching PartSouq...");
+      const partsouqUrl = `https://partsouq.com/en/search/all?q=${encodeURIComponent(cleanPartNumber)}`;
+      
+      const partsouqResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          url: `https://www.amayama.com/en/part/toyota/${partNumber.replace(/\s/g, "")}`,
-          formats: ["markdown"],
+          url: partsouqUrl,
+          formats: ["markdown", "html"],
           onlyMainContent: true,
+          waitFor: 3000,
         }),
       });
 
-      if (scrapeResponse.ok) {
-        const scrapeData = await scrapeResponse.json();
-        const md = scrapeData?.data?.markdown || scrapeData?.markdown || "";
-        const urlRegex = /(https?:\/\/[^\s"'<>]+\.(jpg|jpeg|png|webp)(\?[^\s"'<>]*)?)/gi;
+      if (partsouqResponse.ok) {
+        const partsouqData = await partsouqResponse.json();
+        const md = partsouqData?.data?.markdown || partsouqData?.markdown || "";
+        const html = partsouqData?.data?.html || partsouqData?.html || "";
+        
+        // Extract image URLs from markdown
+        const imgRegex = /!\[.*?\]\((https?:\/\/[^\s)]+\.(jpg|jpeg|png|webp|gif)[^\s)]*)\)/gi;
         let match;
-        while ((match = urlRegex.exec(md)) !== null) {
-          if (!imageUrls.includes(match[1])) imageUrls.push(match[1]);
+        while ((match = imgRegex.exec(md)) !== null) {
+          const url = match[1];
+          if (!url.includes("logo") && !url.includes("icon") && !url.includes("flag") && !url.includes("sprite")) {
+            if (!imageUrls.includes(url)) imageUrls.push(url);
+          }
         }
+
+        // Extract from HTML img src
+        const htmlImgRegex = /src=["'](https?:\/\/[^"']+\.(jpg|jpeg|png|webp)(\?[^"']*)?)['"]/gi;
+        while ((match = htmlImgRegex.exec(html)) !== null) {
+          const url = match[1];
+          if (!url.includes("logo") && !url.includes("icon") && !url.includes("flag") && !url.includes("sprite") && !url.includes("placeholder")) {
+            if (!imageUrls.includes(url)) imageUrls.push(url);
+          }
+        }
+
+        // Also extract general URLs from markdown
+        const urlRegex = /(https?:\/\/[^\s"'<>]+\.(jpg|jpeg|png|webp)(\?[^\s"'<>]*)?)/gi;
+        while ((match = urlRegex.exec(md)) !== null) {
+          const url = match[1];
+          if (!url.includes("logo") && !url.includes("icon") && !url.includes("flag")) {
+            if (!imageUrls.includes(url)) imageUrls.push(url);
+          }
+        }
+        
+        console.log(`PartSouq found ${imageUrls.length} images`);
       }
     } catch (e) {
-      console.log("Amayama scrape failed (non-critical):", e);
+      console.log("PartSouq scrape failed (non-critical):", e);
     }
 
-    console.log(`Found ${imageUrls.length} images for ${partNumber}`);
+    // ── Priority 2: PartSouq direct part page ──
+    if (imageUrls.length < 3) {
+      try {
+        console.log("Trying PartSouq direct part page...");
+        const directUrl = `https://partsouq.com/en/search/all?q=${encodeURIComponent(partNumber)}`;
+        
+        const directResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            url: directUrl,
+            formats: ["markdown"],
+            onlyMainContent: true,
+            waitFor: 3000,
+          }),
+        });
+
+        if (directResponse.ok) {
+          const directData = await directResponse.json();
+          const md = directData?.data?.markdown || directData?.markdown || "";
+          const urlRegex = /(https?:\/\/[^\s"'<>]+\.(jpg|jpeg|png|webp)(\?[^\s"'<>]*)?)/gi;
+          let match;
+          while ((match = urlRegex.exec(md)) !== null) {
+            const url = match[1];
+            if (!url.includes("logo") && !url.includes("icon") && !url.includes("flag")) {
+              if (!imageUrls.includes(url)) imageUrls.push(url);
+            }
+          }
+        }
+      } catch (e) {
+        console.log("PartSouq direct page failed (non-critical):", e);
+      }
+    }
+
+    // ── Priority 3: Firecrawl search for Toyota part images ──
+    if (imageUrls.length < 3) {
+      try {
+        console.log("Searching via Firecrawl search API...");
+        const searchResponse = await fetch("https://api.firecrawl.dev/v1/search", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            query: `${partNumber} toyota genuine part image partsouq OR amayama`,
+            limit: 5,
+            scrapeOptions: { formats: ["markdown"] },
+          }),
+        });
+
+        if (searchResponse.ok) {
+          const searchData = await searchResponse.json();
+          const results = searchData.data || searchData.results || [];
+
+          for (const result of results) {
+            const markdown = result.markdown || "";
+            const imgRegex = /!\[.*?\]\((https?:\/\/[^\s)]+\.(jpg|jpeg|png|webp|gif)[^\s)]*)\)/gi;
+            let match;
+            while ((match = imgRegex.exec(markdown)) !== null) {
+              if (!imageUrls.includes(match[1])) imageUrls.push(match[1]);
+            }
+
+            const urlRegex = /(https?:\/\/[^\s"'<>]+\.(jpg|jpeg|png|webp)(\?[^\s"'<>]*)?)/gi;
+            while ((match = urlRegex.exec(markdown)) !== null) {
+              if (!imageUrls.includes(match[1]) && !match[1].includes("logo") && !match[1].includes("icon")) {
+                imageUrls.push(match[1]);
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.log("Firecrawl search failed (non-critical):", e);
+      }
+    }
+
+    // ── Priority 4: Amayama (fallback) ──
+    if (imageUrls.length < 3) {
+      try {
+        console.log("Trying Amayama...");
+        const scrapeResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            url: `https://www.amayama.com/en/part/toyota/${cleanPartNumber}`,
+            formats: ["markdown"],
+            onlyMainContent: true,
+          }),
+        });
+
+        if (scrapeResponse.ok) {
+          const scrapeData = await scrapeResponse.json();
+          const md = scrapeData?.data?.markdown || scrapeData?.markdown || "";
+          const urlRegex = /(https?:\/\/[^\s"'<>]+\.(jpg|jpeg|png|webp)(\?[^\s"'<>]*)?)/gi;
+          let match;
+          while ((match = urlRegex.exec(md)) !== null) {
+            if (!imageUrls.includes(match[1])) imageUrls.push(match[1]);
+          }
+        }
+      } catch (e) {
+        console.log("Amayama scrape failed (non-critical):", e);
+      }
+    }
+
+    console.log(`Total found ${imageUrls.length} images for ${partNumber}`);
 
     return new Response(
       JSON.stringify({ success: true, images: imageUrls.slice(0, 10) }),
