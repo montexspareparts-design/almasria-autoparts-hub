@@ -26,6 +26,11 @@ interface Lead {
   client_type: string;
 }
 
+interface LeadCredentials {
+  username: string;
+  password: string;
+}
+
 interface ERPCustomer {
   code: string;
   name: string;
@@ -73,6 +78,10 @@ const AdminLeads = () => {
   // Credentials dialog
   const [credentials, setCredentials] = useState<{ username: string; password: string; phone: string } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  
+  // Cached credentials per erp_customer_code for table display
+  const [leadCredentials, setLeadCredentials] = useState<Record<string, LeadCredentials>>({});
+  const [showTablePasswords, setShowTablePasswords] = useState<Record<string, boolean>>({});
 
   const fetchLeads = async () => {
     setLoading(true);
@@ -81,11 +90,42 @@ const AdminLeads = () => {
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (!error && data) setLeads(data as Lead[]);
+    if (!error && data) {
+      const leadsList = data as Lead[];
+      setLeads(leadsList);
+      fetchLeadCredentials(leadsList);
+    }
     setLoading(false);
   };
 
-  useEffect(() => { fetchLeads(); }, []);
+  // Fetch credentials for converted leads
+  const fetchLeadCredentials = useCallback(async (leadsList: Lead[]) => {
+    const convertedLeads = leadsList.filter(l => l.status === "converted" && l.erp_customer_code);
+    if (convertedLeads.length === 0) return;
+    
+    const erpCodes = convertedLeads.map(l => l.erp_customer_code!);
+    const { data } = await supabase
+      .from("dealer_accounts")
+      .select("erp_customer_code, initial_password")
+      .in("erp_customer_code", erpCodes);
+    
+    if (data) {
+      const creds: Record<string, LeadCredentials> = {};
+      for (const lead of convertedLeads) {
+        const account = data.find(d => d.erp_customer_code === lead.erp_customer_code);
+        const cleanPhone = lead.phone.replace(/\D/g, "");
+        creds[lead.id] = {
+          username: cleanPhone,
+          password: account?.initial_password || "غير محفوظة",
+        };
+      }
+      setLeadCredentials(creds);
+    }
+  }, []);
+
+  useEffect(() => { 
+    fetchLeads();
+  }, []);
 
   const fetchErpCustomers = useCallback(async () => {
     if (erpCustomers.length > 0) return;
@@ -245,6 +285,7 @@ const AdminLeads = () => {
         toast({ title: "خطأ", description: data.error, variant: "destructive" });
       } else if (data?.success) {
         setCredentials({ username: data.username, password: data.password, phone: lead.phone });
+        setLeadCredentials(prev => ({ ...prev, [lead.id]: { username: lead.phone.replace(/\D/g, ""), password: data.password } }));
         toast({ title: "تم التسجيل", description: "تم إنشاء حساب العميل بنجاح" });
         fetchLeads();
       }
@@ -292,6 +333,7 @@ const AdminLeads = () => {
         toast({ title: "خطأ", description: "فشل إعادة تعيين كلمة المرور", variant: "destructive" });
       } else {
         setCredentials({ username: lead.phone, password: newPassword, phone: lead.phone });
+        setLeadCredentials(prev => ({ ...prev, [lead.id]: { username: cleanPhone, password: newPassword } }));
         toast({ title: "تم", description: "تم إعادة تعيين كلمة المرور بنجاح" });
       }
     } catch {
@@ -505,6 +547,8 @@ const AdminLeads = () => {
                   <th className="px-4 py-3 font-medium">المحل</th>
                   <th className="px-4 py-3 font-medium">النوع</th>
                   <th className="px-4 py-3 font-medium">كود الفيصل</th>
+                  <th className="px-4 py-3 font-medium">اسم المستخدم</th>
+                  <th className="px-4 py-3 font-medium">كلمة المرور</th>
                   <th className="px-4 py-3 font-medium">الحالة</th>
                   <th className="px-4 py-3 font-medium">إجراءات</th>
                 </tr>
@@ -530,6 +574,35 @@ const AdminLeads = () => {
                         </div>
                       ) : (
                         <span className="text-muted-foreground text-xs">غير مربوط</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {leadCredentials[lead.id] ? (
+                        <div className="flex items-center gap-1">
+                          <span className="font-mono text-xs" dir="ltr">{leadCredentials[lead.id].username}</span>
+                          <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => copyToClipboard(leadCredentials[lead.id].username)}>
+                            <Copy className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {leadCredentials[lead.id] ? (
+                        <div className="flex items-center gap-1">
+                          <span className="font-mono text-xs" dir="ltr">
+                            {showTablePasswords[lead.id] ? leadCredentials[lead.id].password : "••••••"}
+                          </span>
+                          <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => setShowTablePasswords(p => ({ ...p, [lead.id]: !p[lead.id] }))}>
+                            {showTablePasswords[lead.id] ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => copyToClipboard(leadCredentials[lead.id].password)}>
+                            <Copy className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3">
