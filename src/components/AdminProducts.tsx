@@ -56,29 +56,37 @@ const AdminProducts = () => {
       setSyncProgress(p => ({ ...p!, step: 1, label: "مزامنة الأرصدة..." }));
       const stockRes = await supabase.functions.invoke("erp-sync-outbound", { body: { action: "sync_stock" } });
       const stockData = stockRes.data;
+      const stockSuccess = stockData?.success !== false;
       const stockUpdated = stockData?.updated ?? stockData?.result?.updated ?? 0;
       const stockTotal = stockData?.total ?? stockData?.result?.total ?? 0;
+      const stockMsg = stockSuccess
+        ? `✅ الأرصدة: تم تحديث ${stockUpdated} من ${stockTotal} صنف`
+        : `⚠️ الأرصدة: ${stockData?.message || "متوقفة"}`;
 
       setSyncProgress(p => ({
         ...p!,
         step: 2,
         label: "مزامنة الأسعار...",
-        details: [`✅ الأرصدة: تم تحديث ${stockUpdated} من ${stockTotal} صنف`],
+        details: [stockMsg],
       }));
 
       // Step 2: Sync prices
       const priceRes = await supabase.functions.invoke("erp-sync-outbound", { body: { action: "sync_prices" } });
       const priceData = priceRes.data;
+      const priceSuccess = priceData?.success !== false;
       const priceUpdated = priceData?.updated ?? priceData?.result?.updated ?? 0;
       const priceTotal = priceData?.total ?? priceData?.result?.total ?? 0;
+      const priceMsg = priceSuccess
+        ? `✅ الأسعار: تم تحديث ${priceUpdated} من ${priceTotal} صنف`
+        : `⚠️ الأسعار: ${priceData?.message || "متوقفة"}`;
 
       setSyncProgress(p => ({
         ...p!,
         step: 3,
-        label: "اكتملت المزامنة بنجاح!",
+        label: "اكتملت المزامنة!",
         details: [
           ...p!.details,
-          `✅ الأسعار: تم تحديث ${priceUpdated} من ${priceTotal} صنف`,
+          priceMsg,
         ],
         done: true,
       }));
