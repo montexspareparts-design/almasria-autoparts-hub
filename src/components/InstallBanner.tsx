@@ -35,7 +35,10 @@ const InstallBanner = forwardRef<HTMLDivElement>((_, ref) => {
     const ios = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
     setIsIOS(ios);
 
-    // Already dismissed recently (24h cooldown)
+    // Already shown once — never show again
+    if (localStorage.getItem(SHOWN_ONCE_KEY)) return;
+
+    // Already dismissed recently (24h cooldown) — kept as fallback
     const dismissed = localStorage.getItem(DISMISS_KEY);
     if (dismissed) {
       const dismissedAt = parseInt(dismissed, 10);
