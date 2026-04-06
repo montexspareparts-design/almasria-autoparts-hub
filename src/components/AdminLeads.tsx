@@ -8,8 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Phone, Store, User, Loader2, Trash2, Edit2, Check, X, Link2 } from "lucide-react";
+import { Plus, Search, Phone, Store, User, Loader2, Trash2, Edit2, Check, X, Link2, UserPlus, Copy, Eye, EyeOff } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Lead {
   id: string;
@@ -22,6 +23,7 @@ interface Lead {
   created_at: string;
   updated_at: string;
   erp_customer_code: string | null;
+  client_type: string;
 }
 
 interface ERPCustomer {
@@ -43,6 +45,11 @@ const statusColors: Record<string, string> = {
   rejected: "bg-red-500/15 text-red-700",
 };
 
+const clientTypeLabels: Record<string, string> = {
+  wholesale: "جملة",
+  retail: "قطاعي",
+};
+
 const AdminLeads = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -52,14 +59,20 @@ const AdminLeads = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [registering, setRegistering] = useState<string | null>(null);
 
-  const [form, setForm] = useState({ name: "", phone: "", shop_name: "", notes: "", erp_customer_code: "" });
+  const [form, setForm] = useState({ name: "", phone: "", shop_name: "", notes: "", erp_customer_code: "", client_type: "retail" });
 
-  // ERP customers for linking
+  // ERP customers
   const [erpCustomers, setErpCustomers] = useState<ERPCustomer[]>([]);
   const [erpSearch, setErpSearch] = useState("");
   const [loadingErp, setLoadingErp] = useState(false);
   const [showErpDropdown, setShowErpDropdown] = useState(false);
+  const [erpVerified, setErpVerified] = useState(false);
+
+  // Credentials dialog
+  const [credentials, setCredentials] = useState<{ username: string; password: string } | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const fetchLeads = async () => {
     setLoading(true);
@@ -74,9 +87,8 @@ const AdminLeads = () => {
 
   useEffect(() => { fetchLeads(); }, []);
 
-  // Fetch ERP customers from Al Faisal
   const fetchErpCustomers = useCallback(async () => {
-    if (erpCustomers.length > 0) return; // already loaded
+    if (erpCustomers.length > 0) return;
     setLoadingErp(true);
     try {
       const { data } = await supabase.functions.invoke("erp-sync-outbound", {
@@ -110,6 +122,10 @@ const AdminLeads = () => {
       toast({ title: "خطأ", description: "رقم الهاتف غير صحيح (يجب أن يبدأ بـ 01 ويتكون من 11 رقم)", variant: "destructive" });
       return;
     }
+    if (!form.erp_customer_code.trim() || !erpVerified) {
+      toast({ title: "خطأ", description: "يجب اختيار كود العميل من نظام الفيصل", variant: "destructive" });
+      return;
+    }
 
     setSaving(true);
 
@@ -118,7 +134,8 @@ const AdminLeads = () => {
       phone: form.phone.trim(),
       shop_name: form.shop_name.trim() || null,
       notes: form.notes.trim() || null,
-      erp_customer_code: form.erp_customer_code.trim() || null,
+      erp_customer_code: form.erp_customer_code.trim(),
+      client_type: form.client_type,
     };
 
     if (editingId) {
@@ -151,11 +168,12 @@ const AdminLeads = () => {
   };
 
   const resetForm = () => {
-    setForm({ name: "", phone: "", shop_name: "", notes: "", erp_customer_code: "" });
+    setForm({ name: "", phone: "", shop_name: "", notes: "", erp_customer_code: "", client_type: "retail" });
     setShowForm(false);
     setEditingId(null);
     setErpSearch("");
     setShowErpDropdown(false);
+    setErpVerified(false);
   };
 
   const startEdit = (lead: Lead) => {
@@ -165,7 +183,10 @@ const AdminLeads = () => {
       shop_name: lead.shop_name || "",
       notes: lead.notes || "",
       erp_customer_code: lead.erp_customer_code || "",
+      client_type: lead.client_type || "retail",
     });
+    setErpVerified(!!lead.erp_customer_code);
+    setErpSearch(lead.erp_customer_code || "");
     setEditingId(lead.id);
     setShowForm(true);
   };
@@ -190,12 +211,52 @@ const AdminLeads = () => {
     setForm(f => ({ ...f, erp_customer_code: customer.code }));
     setErpSearch(customer.code + " — " + customer.name);
     setShowErpDropdown(false);
+    setErpVerified(true);
   };
 
   const getErpName = (code: string | null) => {
     if (!code) return null;
     const found = erpCustomers.find(c => c.code === code);
     return found?.name || null;
+  };
+
+  // Register client as a user account
+  const registerClient = async (lead: Lead) => {
+    if (!lead.erp_customer_code) {
+      toast({ title: "خطأ", description: "يجب ربط العميل بكود الفيصل أولاً", variant: "destructive" });
+      return;
+    }
+    setRegistering(lead.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-client-account", {
+        body: {
+          name: lead.name,
+          phone: lead.phone,
+          shop_name: lead.shop_name,
+          erp_customer_code: lead.erp_customer_code,
+          client_type: lead.client_type || "retail",
+          lead_id: lead.id,
+        },
+      });
+
+      if (error) {
+        toast({ title: "خطأ", description: "فشل إنشاء الحساب", variant: "destructive" });
+      } else if (data?.error) {
+        toast({ title: "خطأ", description: data.error, variant: "destructive" });
+      } else if (data?.success) {
+        setCredentials({ username: data.username, password: data.password });
+        toast({ title: "تم التسجيل", description: "تم إنشاء حساب العميل بنجاح" });
+        fetchLeads();
+      }
+    } catch (err) {
+      toast({ title: "خطأ", description: "حدث خطأ غير متوقع", variant: "destructive" });
+    }
+    setRegistering(null);
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: "تم النسخ" });
   };
 
   const filtered = leads.filter(l =>
@@ -211,7 +272,7 @@ const AdminLeads = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-bold">إدخال بيانات العملاء</h2>
-          <p className="text-sm text-muted-foreground">إدارة العملاء المحتملين الذين أرسلوا بياناتهم للموظفين</p>
+          <p className="text-sm text-muted-foreground">إدارة العملاء المحتملين وربطهم بنظام الفيصل وتسجيلهم</p>
         </div>
         <Button onClick={() => { resetForm(); setShowForm(!showForm); }} size="sm" className="gap-1.5">
           {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
@@ -226,7 +287,7 @@ const AdminLeads = () => {
             <CardTitle className="text-base">{editingId ? "تعديل بيانات العميل" : "إضافة عميل جديد"}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">الاسم *</label>
                 <div className="relative">
@@ -264,16 +325,37 @@ const AdminLeads = () => {
                   />
                 </div>
               </div>
-              {/* ERP Customer Code */}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Client Type */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">نوع العميل *</label>
+                <Select value={form.client_type} onValueChange={v => setForm(f => ({ ...f, client_type: v }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="wholesale">جملة</SelectItem>
+                    <SelectItem value="retail">قطاعي</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* ERP Customer Code - MANDATORY */}
               <div className="space-y-1.5 relative">
-                <label className="text-sm font-medium">كود الفيصل (ERP)</label>
+                <label className="text-sm font-medium">
+                  كود الفيصل (ERP) *
+                  {erpVerified && <Check className="inline w-4 h-4 text-emerald-600 mr-1" />}
+                </label>
                 <div className="relative">
                   <Link2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     value={erpSearch || form.erp_customer_code}
                     onChange={e => {
                       setErpSearch(e.target.value);
-                      setForm(f => ({ ...f, erp_customer_code: e.target.value }));
+                      setForm(f => ({ ...f, erp_customer_code: "" }));
+                      setErpVerified(false);
                       if (!showErpDropdown) {
                         setShowErpDropdown(true);
                         fetchErpCustomers();
@@ -284,7 +366,7 @@ const AdminLeads = () => {
                       fetchErpCustomers();
                     }}
                     placeholder="ابحث بالكود أو الاسم..."
-                    className="pr-9"
+                    className={`pr-9 ${erpVerified ? "border-emerald-500 ring-1 ring-emerald-500/20" : ""}`}
                     dir="ltr"
                   />
                   {form.erp_customer_code && (
@@ -294,12 +376,16 @@ const AdminLeads = () => {
                       onClick={() => {
                         setForm(f => ({ ...f, erp_customer_code: "" }));
                         setErpSearch("");
+                        setErpVerified(false);
                       }}
                     >
                       <X className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive" />
                     </button>
                   )}
                 </div>
+                {!erpVerified && form.erp_customer_code === "" && (
+                  <p className="text-[11px] text-amber-600">يجب اختيار كود العميل من القائمة للتحقق</p>
+                )}
                 {showErpDropdown && (
                   <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border rounded-lg shadow-lg max-h-48 overflow-y-auto">
                     {loadingErp ? (
@@ -309,7 +395,7 @@ const AdminLeads = () => {
                       </div>
                     ) : filteredErpCustomers.length === 0 ? (
                       <div className="px-3 py-2 text-sm text-muted-foreground">
-                        {erpSearch ? "لا توجد نتائج" : "اكتب للبحث..."}
+                        {erpSearch ? "لا توجد نتائج — تأكد من الكود" : "اكتب للبحث..."}
                       </div>
                     ) : (
                       filteredErpCustomers.map(c => (
@@ -328,6 +414,7 @@ const AdminLeads = () => {
                 )}
               </div>
             </div>
+
             <div className="space-y-1.5">
               <label className="text-sm font-medium">ملاحظات</label>
               <Textarea
@@ -339,7 +426,7 @@ const AdminLeads = () => {
             </div>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" size="sm" onClick={resetForm}>إلغاء</Button>
-              <Button size="sm" onClick={handleSubmit} disabled={saving} className="gap-1.5">
+              <Button size="sm" onClick={handleSubmit} disabled={saving || !erpVerified} className="gap-1.5">
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                 {editingId ? "تحديث" : "حفظ"}
               </Button>
@@ -354,7 +441,7 @@ const AdminLeads = () => {
         <Input
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
-          placeholder="بحث بالاسم أو الهاتف أو المحل أو كود الفيصل..."
+          placeholder="بحث بالاسم أو الهاتف أو كود الفيصل..."
           className="pr-9"
         />
       </div>
@@ -375,9 +462,9 @@ const AdminLeads = () => {
                   <th className="px-4 py-3 font-medium">الاسم</th>
                   <th className="px-4 py-3 font-medium">الهاتف</th>
                   <th className="px-4 py-3 font-medium">المحل</th>
+                  <th className="px-4 py-3 font-medium">النوع</th>
                   <th className="px-4 py-3 font-medium">كود الفيصل</th>
                   <th className="px-4 py-3 font-medium">الحالة</th>
-                  <th className="px-4 py-3 font-medium">التاريخ</th>
                   <th className="px-4 py-3 font-medium">إجراءات</th>
                 </tr>
               </thead>
@@ -387,6 +474,11 @@ const AdminLeads = () => {
                     <td className="px-4 py-3 font-medium">{lead.name}</td>
                     <td className="px-4 py-3 font-mono text-xs" dir="ltr">{lead.phone}</td>
                     <td className="px-4 py-3">{lead.shop_name || "—"}</td>
+                    <td className="px-4 py-3">
+                      <Badge variant="outline" className="text-[10px]">
+                        {clientTypeLabels[lead.client_type] || lead.client_type}
+                      </Badge>
+                    </td>
                     <td className="px-4 py-3">
                       {lead.erp_customer_code ? (
                         <div>
@@ -413,11 +505,25 @@ const AdminLeads = () => {
                         </SelectContent>
                       </Select>
                     </td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground">
-                      {new Date(lead.created_at).toLocaleDateString("ar-EG")}
-                    </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-1">
+                        {/* Register button - only for non-converted leads with ERP code */}
+                        {lead.status !== "converted" && lead.erp_customer_code && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-emerald-600 hover:text-emerald-700"
+                            onClick={() => registerClient(lead)}
+                            disabled={registering === lead.id}
+                            title="تسجيل كتاجر"
+                          >
+                            {registering === lead.id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <UserPlus className="w-3.5 h-3.5" />
+                            )}
+                          </Button>
+                        )}
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(lead)}>
                           <Edit2 className="w-3.5 h-3.5" />
                         </Button>
@@ -448,7 +554,56 @@ const AdminLeads = () => {
         </div>
       )}
 
-      {/* Click outside handler */}
+      {/* Credentials Dialog */}
+      <Dialog open={!!credentials} onOpenChange={() => { setCredentials(null); setShowPassword(false); }}>
+        <DialogContent className="max-w-sm" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-center">✅ تم إنشاء الحساب بنجاح</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground text-center">
+              تم تسجيل العميل وربطه بنظام الفيصل. أرسل هذه البيانات للعميل:
+            </p>
+            <div className="space-y-3 bg-muted/50 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">اسم المستخدم:</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-mono text-sm" dir="ltr">{credentials?.username}</span>
+                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => copyToClipboard(credentials?.username || "")}>
+                    <Copy className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">كلمة المرور:</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-mono text-sm" dir="ltr">
+                    {showPassword ? credentials?.password : "••••••••"}
+                  </span>
+                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setShowPassword(!showPassword)}>
+                    {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => copyToClipboard(credentials?.password || "")}>
+                    <Copy className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <Button
+              className="w-full gap-2"
+              onClick={() => {
+                const text = `اسم المستخدم: ${credentials?.username}\nكلمة المرور: ${credentials?.password}`;
+                copyToClipboard(text);
+              }}
+            >
+              <Copy className="w-4 h-4" />
+              نسخ البيانات كاملة
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Click outside handler for ERP dropdown */}
       {showErpDropdown && (
         <div className="fixed inset-0 z-40" onClick={() => setShowErpDropdown(false)} />
       )}
