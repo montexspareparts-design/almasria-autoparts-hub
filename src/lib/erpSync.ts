@@ -45,6 +45,12 @@ export const pushOrderToERP = async (orderId: string): Promise<string | null> =>
       },
     });
 
+    // Handle soft ERP failure (order saved locally, ERP rejected)
+    if (erpResult?.erp_error) {
+      console.warn(`[ERP] Order ${order.order_number} — ERP rejected: ${erpResult.message}`);
+      return null;
+    }
+
     // Extract ERP order code from response — Al Faisal returns "docno"
     const rawDocno = erpResult?.docno ?? erpResult?.erp_order_id ?? erpResult?.orderId ?? erpResult?.orderNumber ?? null;
     // docno=0 means ERP didn't assign a real code yet

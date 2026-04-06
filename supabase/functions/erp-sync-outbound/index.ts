@@ -212,7 +212,22 @@ Deno.serve(async (req) => {
         });
         // Al Faisal returns 200 OK even on failure; message=0 means success, message=1 means error
         if (erpRes.message === 1) {
-          throw new Error(`ERP CreateOrder failed: ${erpRes.extramessage || "Unknown business error"}`);
+          // Log the failure but don't crash — let the order proceed
+          await supabase.from("erp_sync_logs").insert({
+            sync_type: syncType,
+            direction: "outbound",
+            reference_id: referenceId,
+            reference_number: referenceNumber,
+            payload,
+            response: erpRes,
+            status: "failed",
+            error_message: erpRes.extramessage || "ERP CreateOrder rejected",
+          });
+          // Return soft failure — order is saved locally, ERP sync failed
+          return new Response(
+            JSON.stringify({ success: false, erp_error: true, message: erpRes.extramessage || "ERP rejected the order", docno: null }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
         }
         result = { ...erpRes, success: true };
       }
@@ -259,7 +274,20 @@ Deno.serve(async (req) => {
           body: JSON.stringify(payload),
         });
         if (erpRes.message === 1) {
-          throw new Error(`ERP CreateOrder (quote) failed: ${erpRes.extramessage || "Unknown business error"}`);
+          await supabase.from("erp_sync_logs").insert({
+            sync_type: syncType,
+            direction: "outbound",
+            reference_id: referenceId,
+            reference_number: referenceNumber,
+            payload,
+            response: erpRes,
+            status: "failed",
+            error_message: erpRes.extramessage || "ERP CreateOrder (quote) rejected",
+          });
+          return new Response(
+            JSON.stringify({ success: false, erp_error: true, message: erpRes.extramessage || "ERP rejected the quote", docno: null }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
         }
         result = { ...erpRes, success: true };
       }
