@@ -167,8 +167,9 @@ Deno.serve(async (req) => {
     const config: Record<string, string> = {};
     configs?.forEach((c: any) => (config[c.key] = c.value));
 
-    // ─── STOCK SYNC KILL SWITCH ───
+    // ─── SYNC KILL SWITCHES ───
     const isStockSyncDisabled = config.erp_stock_sync_enabled === "false";
+    const isPriceSyncDisabled = config.erp_price_sync_enabled === "false";
 
 
     const isMock = config.erp_mode === "mock";
