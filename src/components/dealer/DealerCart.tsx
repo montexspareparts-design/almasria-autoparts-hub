@@ -302,14 +302,20 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
                   <Loader2 className="w-4 h-4 animate-spin text-primary" />
                   <span className="text-xs text-muted-foreground mr-2">جاري البحث...</span>
                 </div>
+              ) : searchResults.length === 0 ? (
+                <div className="flex items-center justify-center py-4">
+                  <span className="text-xs text-muted-foreground">لا توجد نتائج لـ "{searchQuery}"</span>
+                </div>
               ) : (
                 searchResults.map((product) => {
                   const alreadyInCart = items.some(i => i.product_id === product.id);
+                  const outOfStock = product.available_quantity <= 0;
                   return (
                     <button
                       key={product.id}
-                      onClick={() => handleAddFromSearch(product)}
-                      className="w-full flex items-center gap-3 p-3 hover:bg-muted/50 transition-colors border-b border-border/30 last:border-0 text-right"
+                      onClick={() => !outOfStock && handleAddFromSearch(product)}
+                      disabled={outOfStock}
+                      className={`w-full flex items-center gap-3 p-3 hover:bg-muted/50 transition-colors border-b border-border/30 last:border-0 text-right ${outOfStock ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       <div className="w-10 h-10 rounded-lg bg-muted/50 overflow-hidden shrink-0">
                         {product.image_url ? (
@@ -327,10 +333,13 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
                           <span className="text-[10px] text-emerald-600 font-bold">
                             {product.base_price.toLocaleString("ar-EG")} ج.م
                           </span>
+                          {outOfStock && <span className="text-[10px] text-destructive font-bold">نفد</span>}
                         </div>
                       </div>
                       <div className="shrink-0">
-                        {alreadyInCart ? (
+                        {outOfStock ? (
+                          <span className="text-[10px] text-destructive font-bold">غير متاح</span>
+                        ) : alreadyInCart ? (
                           <span className="text-[10px] text-primary font-bold bg-primary/10 px-2 py-1 rounded-full">في السلة +1</span>
                         ) : (
                           <PlusCircle className="w-5 h-5 text-primary" />
