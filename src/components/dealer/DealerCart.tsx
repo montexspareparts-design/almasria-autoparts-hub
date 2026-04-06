@@ -14,7 +14,7 @@ import { toast } from "@/hooks/use-toast";
 import {
   ShoppingCart, Trash2, Minus, Plus, Package, Loader2,
   ArrowRight, CreditCard, Shield, Copy, Check,
-  Search, X, CheckCircle2, Save, Send, PlusCircle
+  Search, X, CheckCircle2, Save, Send, PlusCircle, AlertTriangle
 } from "lucide-react";
 import {
   Dialog,
