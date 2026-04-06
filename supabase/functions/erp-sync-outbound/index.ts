@@ -167,6 +167,15 @@ Deno.serve(async (req) => {
     const config: Record<string, string> = {};
     configs?.forEach((c: any) => (config[c.key] = c.value));
 
+    // ─── KILL SWITCH: Block all ERP sync if disabled ───
+    const isSyncEnabled = config.erp_sync_enabled !== "false";
+    if (!isSyncEnabled) {
+      return new Response(
+        JSON.stringify({ success: false, message: "⛔ مزامنة الفيصل متوقفة حالياً. فعّلها من إعدادات ERP." }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const isMock = config.erp_mode === "mock";
     const baseUrl = config.erp_base_url || "";
 
