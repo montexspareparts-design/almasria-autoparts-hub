@@ -150,39 +150,7 @@ const ProductListingSection = memo(({
               </div>
             )}
 
-            {/* Quick filter buttons — shared for dealer & retail */}
-            <div className="flex items-center gap-1.5 shrink-0">
-              <Button
-                variant={filters.maintenanceOnly ? "default" : "outline"}
-                className={`shrink-0 h-9 text-[11px] rounded-xl gap-1 font-medium transition-all px-2.5 ${
-                  filters.maintenanceOnly ? "shadow-md" : "border-border/60"
-                }`}
-                onClick={() => setFilters(prev => ({ ...prev, maintenanceOnly: !prev.maintenanceOnly, onSaleOnly: false, bestSellingOnly: false }))}
-              >
-                <Wrench className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">صيانة</span>
-              </Button>
-              <Button
-                variant={filters.onSaleOnly ? "default" : "outline"}
-                className={`shrink-0 h-9 text-[11px] rounded-xl gap-1 font-medium transition-all px-2.5 ${
-                  filters.onSaleOnly ? "shadow-md" : "border-border/60"
-                }`}
-                onClick={() => setFilters(prev => ({ ...prev, onSaleOnly: !prev.onSaleOnly, maintenanceOnly: false, bestSellingOnly: false }))}
-              >
-                <Flame className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">عروض</span>
-              </Button>
-              <Button
-                variant={filters.bestSellingOnly ? "default" : "outline"}
-                className={`shrink-0 h-9 text-[11px] rounded-xl gap-1 font-medium transition-all px-2.5 ${
-                  filters.bestSellingOnly ? "shadow-md" : "border-border/60"
-                }`}
-                onClick={() => setFilters(prev => ({ ...prev, bestSellingOnly: !prev.bestSellingOnly, maintenanceOnly: false, onSaleOnly: false }))}
-              >
-                <TrendingUp className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">الأكثر مبيعاً</span>
-              </Button>
-            </div>
+            {/* Quick filter buttons removed per user request */}
 
             <Button variant="outline" className="lg:hidden gap-1.5 shrink-0 h-10 text-xs rounded-xl border-border/60" onClick={() => setSidebarOpen(true)}>
               <SlidersHorizontal className="w-4 h-4" />
