@@ -1,0 +1,1 @@
+ALTER TABLE public.leads ADD COLUMN erp_customer_code text DEFAULT NULL;
