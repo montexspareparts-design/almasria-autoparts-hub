@@ -468,6 +468,16 @@ export function useProductListing(options: UseProductListingOptions = {}) {
         if (!p.category_id || !maintenanceCatIds.has(p.category_id)) return false;
       }
 
+      // On-sale filter
+      if (filters.onSaleOnly) {
+        if (!p.is_on_sale) return false;
+      }
+
+      // Best-selling filter
+      if (filters.bestSellingOnly) {
+        if (!bestSellingIds?.includes(p.id)) return false;
+      }
+
       return matchesBrand && matchesSearch && matchesCategory && matchesModel && matchesYear && matchesPartNumber && matchesPriceMin && matchesPriceMax;
     };
 
