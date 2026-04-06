@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
+import { isPhoneLike, phoneToInternalEmail } from "@/lib/phoneAuth";
 
 type AuthMethod = "phone" | "email" | "auto";
 const REMEMBER_KEY = "almasria_remember_me";
@@ -83,8 +84,8 @@ const DealerLogin = () => {
     } catch (err) { console.error(err); } finally { setCheckingStatus(false); }
   };
 
-  const phoneToEmail = (p: string) => `${p.replace(/\D/g, "")}@phone.almasria.local`;
-  const isPhone = (val: string) => /^[\d\s+()-]+$/.test(val.trim()) && val.replace(/\D/g, "").length >= 8;
+  const phoneToEmail = phoneToInternalEmail;
+  const isPhone = isPhoneLike;
   const getAuthEmail = () => isPhone(identifier) ? phoneToEmail(identifier) : identifier.trim();
 
   const performLogin = async (authEmail: string, pwd: string) => supabase.auth.signInWithPassword({ email: authEmail, password: pwd });

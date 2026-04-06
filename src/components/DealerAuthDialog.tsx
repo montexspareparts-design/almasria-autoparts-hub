@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { useToast } from "@/hooks/use-toast";
 import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
+import { phoneToInternalEmail } from "@/lib/phoneAuth";
 
 type AuthMethod = "phone" | "email";
 
@@ -50,10 +51,7 @@ const DealerAuthDialog = ({ open, onOpenChange, defaultTab = "login" }: DealerAu
   const [showRegPassword, setShowRegPassword] = useState(false);
   const [regAuthMethod, setRegAuthMethod] = useState<AuthMethod>("email");
 
-  const phoneToEmail = (p: string) => {
-    const digits = p.replace(/\D/g, "");
-    return `${digits}@phone.almasria.local`;
-  };
+  const phoneToEmail = phoneToInternalEmail;
 
   const resetForm = useCallback(() => {
     setPhone(""); setEmail(""); setPassword("");

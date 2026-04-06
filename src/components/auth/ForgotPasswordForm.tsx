@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Phone, Loader2, KeyRound, Eye, EyeOff, ArrowRight, MessageCircle } from "lucide-react";
+import { normalizePhoneDigits } from "@/lib/phoneAuth";
 
 type ResetMethod = "email" | "phone" | "whatsapp";
 type PhoneStep = "phone" | "otp" | "new-password";
@@ -46,7 +47,7 @@ const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
   };
 
   const formatPhone = (raw: string) => {
-    let cleaned = raw.replace(/\D/g, "");
+    let cleaned = normalizePhoneDigits(raw);
     // Handle international prefix 002 or 0020
     if (cleaned.startsWith("002")) {
       cleaned = cleaned.substring(2); // Remove leading "00", keep "20..."
