@@ -94,7 +94,34 @@ const AdminLeads = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchLeads(); }, []);
+  // Fetch credentials for converted leads
+  const fetchLeadCredentials = useCallback(async (leadsList: Lead[]) => {
+    const convertedLeads = leadsList.filter(l => l.status === "converted" && l.erp_customer_code);
+    if (convertedLeads.length === 0) return;
+    
+    const erpCodes = convertedLeads.map(l => l.erp_customer_code!);
+    const { data } = await supabase
+      .from("dealer_accounts")
+      .select("erp_customer_code, initial_password")
+      .in("erp_customer_code", erpCodes);
+    
+    if (data) {
+      const creds: Record<string, LeadCredentials> = {};
+      for (const lead of convertedLeads) {
+        const account = data.find(d => d.erp_customer_code === lead.erp_customer_code);
+        const cleanPhone = lead.phone.replace(/\D/g, "");
+        creds[lead.id] = {
+          username: cleanPhone,
+          password: account?.initial_password || "غير محفوظة",
+        };
+      }
+      setLeadCredentials(creds);
+    }
+  }, []);
+
+  useEffect(() => { 
+    fetchLeads().then(() => {});
+  }, []);
 
   const fetchErpCustomers = useCallback(async () => {
     if (erpCustomers.length > 0) return;
