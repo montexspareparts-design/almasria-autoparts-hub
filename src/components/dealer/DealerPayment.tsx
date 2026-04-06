@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import {
   CreditCard, Loader2, ShieldCheck, AlertCircle, ArrowLeft,
   Smartphone, Store, Copy, CheckCircle2, Package, Lock,
-  Banknote, Upload, ExternalLink, ImageIcon, Zap
+  Banknote, Upload, ExternalLink, ImageIcon, Zap, Inbox
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -67,9 +67,10 @@ interface DealerPaymentProps {
   targetOrderId?: string;
   targetOrderNumber?: string;
   targetOrderAmount?: number;
+  onNavigateToOrders?: () => void;
 }
 
-const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: DealerPaymentProps) => {
+const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount, onNavigateToOrders }: DealerPaymentProps) => {
   const { user } = useAuth();
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("card");
   const [walletPhone, setWalletPhone] = useState("");
@@ -159,10 +160,20 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount }: 
         <div className="w-20 h-20 rounded-3xl bg-secondary/5 flex items-center justify-center mb-6 border border-border">
           <Package className="w-9 h-9 text-muted-foreground/30" />
         </div>
-        <h3 className="text-lg font-bold text-foreground mb-1">لا يوجد طلب محدد</h3>
-        <p className="text-sm text-muted-foreground max-w-[260px]">
-          اختر طلب من <span className="font-bold text-foreground">"طلباتي"</span> لبدء الدفع
+        <h3 className="text-lg font-bold text-foreground mb-1">لا توجد طلبات لتدفعها</h3>
+        <p className="text-sm text-muted-foreground max-w-[280px] mb-5">
+          أنشئ طلبية جديدة من <span className="font-bold text-foreground">"طلباتي"</span> أو اختر طلب قائم لبدء الدفع
         </p>
+        <div className="flex flex-col gap-2 w-full max-w-[220px]">
+          <Button onClick={() => onNavigateToOrders?.()} className="gap-2 rounded-xl h-11">
+            <Package className="w-4 h-4" />
+            ابدأ طلبية جديدة
+          </Button>
+          <Button variant="outline" onClick={() => onNavigateToOrders?.()} className="gap-2 rounded-xl h-10 text-xs">
+            <Inbox className="w-3.5 h-3.5" />
+            عرض طلباتي
+          </Button>
+        </div>
       </div>
     );
   }

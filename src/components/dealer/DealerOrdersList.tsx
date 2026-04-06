@@ -23,6 +23,7 @@ import {
 interface Order {
   id: string;
   order_number: string;
+  erp_order_code?: string | null;
   status: string;
   total_amount: number;
   created_at: string;
@@ -328,7 +329,9 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
       const q = searchQuery.trim().toLowerCase();
       result = result.filter(o =>
         o.order_number.toLowerCase().includes(q) ||
-        o.notes?.toLowerCase().includes(q)
+        o.erp_order_code?.toLowerCase().includes(q) ||
+        o.notes?.toLowerCase().includes(q) ||
+        o.total_amount?.toString().includes(q)
       );
     }
     return result;
@@ -378,7 +381,7 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
         <div className="relative flex-1">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
           <Input
-            placeholder="ابحث برقم الطلب..."
+            placeholder="ابحث برقم الطلب أو كود الفيصل..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pr-9 h-9 text-xs rounded-xl border-border/60"
