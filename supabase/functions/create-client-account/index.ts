@@ -52,6 +52,39 @@ serve(async (req) => {
     }
 
     const body = await req.json();
+
+    // Handle password reset action
+    if (body.action === "reset_password") {
+      const { email, new_password, erp_customer_code: erpCode } = body;
+      if (!email || !new_password) {
+        return new Response(JSON.stringify({ error: "Missing fields" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      // Find user by email
+      const { data: users } = await adminClient.auth.admin.listUsers();
+      const targetUser = users?.users?.find(u => u.email === email);
+      if (!targetUser) {
+        return new Response(JSON.stringify({ error: "المستخدم غير موجود" }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      // Update password
+      const { error: updateErr } = await adminClient.auth.admin.updateUserById(targetUser.id, { password: new_password });
+      if (updateErr) {
+        return new Response(JSON.stringify({ error: updateErr.message }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      // Update stored password
+      if (erpCode) {
+        await adminClient.from("dealer_accounts").update({ initial_password: new_password }).eq("erp_customer_code", erpCode);
+      }
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { name, phone, shop_name, erp_customer_code, client_type, lead_id } = body;
 
     if (!name || !phone || !erp_customer_code) {
