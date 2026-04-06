@@ -258,6 +258,7 @@ export type Database = {
           erp_customer_code: string | null
           erp_customer_name: string | null
           id: string
+          initial_password: string | null
           is_active: boolean
           min_order_amount: number | null
           notes: string | null
@@ -275,6 +276,7 @@ export type Database = {
           erp_customer_code?: string | null
           erp_customer_name?: string | null
           id?: string
+          initial_password?: string | null
           is_active?: boolean
           min_order_amount?: number | null
           notes?: string | null
@@ -292,6 +294,7 @@ export type Database = {
           erp_customer_code?: string | null
           erp_customer_name?: string | null
           id?: string
+          initial_password?: string | null
           is_active?: boolean
           min_order_amount?: number | null
           notes?: string | null
