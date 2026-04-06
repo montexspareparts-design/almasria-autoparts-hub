@@ -575,6 +575,35 @@ const AdminLeads = () => {
                       )}
                     </td>
                     <td className="px-4 py-3">
+                      {leadCredentials[lead.id] ? (
+                        <div className="flex items-center gap-1">
+                          <span className="font-mono text-xs" dir="ltr">{leadCredentials[lead.id].username}</span>
+                          <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => copyToClipboard(leadCredentials[lead.id].username)}>
+                            <Copy className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {leadCredentials[lead.id] ? (
+                        <div className="flex items-center gap-1">
+                          <span className="font-mono text-xs" dir="ltr">
+                            {showTablePasswords[lead.id] ? leadCredentials[lead.id].password : "••••••"}
+                          </span>
+                          <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => setShowTablePasswords(p => ({ ...p, [lead.id]: !p[lead.id] }))}>
+                            {showTablePasswords[lead.id] ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => copyToClipboard(leadCredentials[lead.id].password)}>
+                            <Copy className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
                       <Select value={lead.status} onValueChange={v => updateStatus(lead.id, v)}>
                         <SelectTrigger className="h-7 text-xs w-[130px]">
                           <Badge className={`${statusColors[lead.status]} text-[10px] border-0`}>
