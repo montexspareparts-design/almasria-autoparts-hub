@@ -565,6 +565,34 @@ const AdminLeads = () => {
                             )}
                           </Button>
                         )}
+                        {/* View credentials & reset password - for converted leads */}
+                        {lead.status === "converted" && lead.erp_customer_code && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-blue-600 hover:text-blue-700"
+                              onClick={() => viewCredentials(lead)}
+                              title="عرض بيانات الدخول"
+                            >
+                              <KeyRound className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-amber-600 hover:text-amber-700"
+                              onClick={() => resetPassword(lead)}
+                              disabled={registering === lead.id}
+                              title="إعادة تعيين كلمة المرور"
+                            >
+                              {registering === lead.id ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <RotateCcw className="w-3.5 h-3.5" />
+                              )}
+                            </Button>
+                          </>
+                        )}
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(lead)}>
                           <Edit2 className="w-3.5 h-3.5" />
                         </Button>
