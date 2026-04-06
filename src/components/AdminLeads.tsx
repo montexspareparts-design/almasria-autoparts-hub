@@ -285,6 +285,7 @@ const AdminLeads = () => {
         toast({ title: "خطأ", description: data.error, variant: "destructive" });
       } else if (data?.success) {
         setCredentials({ username: data.username, password: data.password, phone: lead.phone });
+        setLeadCredentials(prev => ({ ...prev, [lead.id]: { username: lead.phone.replace(/\D/g, ""), password: data.password } }));
         toast({ title: "تم التسجيل", description: "تم إنشاء حساب العميل بنجاح" });
         fetchLeads();
       }
