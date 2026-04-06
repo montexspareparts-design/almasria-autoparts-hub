@@ -75,7 +75,7 @@ const ProductListingSection = memo(({
     setFilters({
       search: "", model: null, year: null, chassisNumber: "", partNumber: "",
       categoryId: null, brandKey: null, priceMin: "", priceMax: "", sortBy: "newest",
-      maintenanceOnly: false,
+      maintenanceOnly: false, onSaleOnly: false, bestSellingOnly: false,
     });
     setExpanded(false);
   };
