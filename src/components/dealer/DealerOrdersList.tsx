@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,12 +8,17 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Package, Clock, CheckCircle, Truck, XCircle, ChevronDown, ChevronUp,
   MessageCircle, Inbox, PackageCheck, Trash2, Pencil, Save, X, Loader2,
-  AlertTriangle, Wallet, CreditCard, RefreshCw, RotateCcw
+  AlertTriangle, Wallet, CreditCard, RefreshCw, RotateCcw, Search, Filter
 } from "lucide-react";
 import PaymentInstructionsBanner from "@/components/PaymentInstructionsBanner";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { useDealerCart } from "@/hooks/useDealerCart";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogTrigger
+} from "@/components/ui/alert-dialog";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
