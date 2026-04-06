@@ -344,12 +344,27 @@ const ProductSearchAutocomplete = ({
 
                   {/* Product info */}
                   <div className="flex-1 min-w-0 text-right">
-                    <p className="text-xs font-bold truncate leading-tight">{product.name_ar}</p>
-                    <div className="mt-1 flex items-center gap-1 min-w-0 text-muted-foreground">
-                      <Hash className="w-3 h-3 shrink-0" />
-                      <span dir="ltr" className="block min-w-0 flex-1 truncate text-[10px] font-mono text-left">
-                        {product.sku}
+                    <p className="text-xs font-bold line-clamp-2 leading-tight">{product.name_ar}</p>
+                    <div className="mt-1 flex items-center gap-2 min-w-0 text-muted-foreground">
+                      <span className="flex items-center gap-0.5">
+                        <Hash className="w-3 h-3 shrink-0" />
+                        <span dir="ltr" className="text-[10px] font-mono">{product.sku}</span>
                       </span>
+                      {isDealer && (
+                        <>
+                          {((product as any).stock_quantity ?? 0) > ((product as any).safety_stock ?? 0) ? (
+                            <span className="flex items-center gap-0.5 text-emerald-600 dark:text-emerald-400">
+                              <CheckCircle className="w-3 h-3" />
+                              <span className="text-[10px]">متوفر</span>
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-0.5 text-destructive">
+                              <XCircle className="w-3 h-3" />
+                              <span className="text-[10px]">نفد</span>
+                            </span>
+                          )}
+                        </>
+                      )}
                     </div>
                   </div>
 
