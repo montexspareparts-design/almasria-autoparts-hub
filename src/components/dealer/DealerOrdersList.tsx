@@ -127,6 +127,8 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
   const [saving, setSaving] = useState(false);
   const [reordering, setReordering] = useState<string | null>(null);
   const [paymobLoading, setPaymobLoading] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const { addItem } = useDealerCart();
 
   const handlePaymob = async (order: Order) => {
