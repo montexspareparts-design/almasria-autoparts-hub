@@ -364,7 +364,7 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
                           <p className="text-sm font-bold text-foreground truncate leading-tight">{product.name_ar}</p>
                           <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                             <span className="text-[10px] font-mono text-muted-foreground bg-muted/50 px-1 py-0.5 rounded" dir="ltr">#{product.sku}</span>
-                            <span className="text-[10px] text-emerald-600">متاح</span>
+                            <span className="text-[10px] text-emerald-600">أقصى {product.max_allowed} قطعة</span>
                           </div>
                         </button>
                         {/* Add button */}
