@@ -44,7 +44,7 @@ export const useDealerCart = () => {
     const productIds = data.map(d => d.product_id);
     const { data: products } = await supabase
       .from("products")
-      .select("id, name_ar, name_en, sku, image_url, base_price, stock_quantity, brand, min_order_qty")
+      .select("id, name_ar, name_en, sku, image_url, base_price, stock_quantity, brand, min_order_qty, safety_stock, max_order_cap")
       .in("id", productIds)
       .eq("is_active", true);
 
