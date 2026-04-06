@@ -295,7 +295,7 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
           </div>
 
           {/* Search Results Dropdown */}
-          {showSearch && searchQuery && (searchResults.length > 0 || searching) && (
+          {showSearch && searchQuery.length >= 2 && (searchResults.length > 0 || searching || !searching) && (
             <div className="absolute z-50 top-full mt-1 w-full bg-card border border-border rounded-xl shadow-xl max-h-64 overflow-y-auto">
               {searching ? (
                 <div className="flex items-center justify-center py-4">
