@@ -22,7 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
+import ProductDetailDialog from "@/components/ProductDetailDialog";
 
 interface DealerCartProps {
   onNavigateToOrders: () => void;
@@ -51,6 +51,7 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [detailProduct, setDetailProduct] = useState<any>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const searchTimeout = useRef<NodeJS.Timeout>();
 
@@ -295,64 +296,80 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
           </div>
 
           {/* Search Results Dropdown */}
-          {showSearch && searchQuery.length >= 2 && (searchResults.length > 0 || searching || !searching) && (
-            <div className="absolute z-50 top-full mt-1 w-full bg-card border border-border rounded-xl shadow-xl max-h-64 overflow-y-auto">
+          {showSearch && searchQuery.length >= 2 && (
+            <div className="absolute z-50 top-full mt-1 w-full bg-card border border-border rounded-xl shadow-xl max-h-72 overflow-y-auto">
               {searching ? (
-                <div className="flex items-center justify-center py-4">
+                <div className="flex items-center justify-center py-6 gap-2">
                   <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                  <span className="text-xs text-muted-foreground mr-2">جاري البحث...</span>
+                  <span className="text-xs text-muted-foreground">جاري البحث...</span>
                 </div>
               ) : searchResults.length === 0 ? (
-                <div className="flex items-center justify-center py-4">
+                <div className="flex flex-col items-center justify-center py-6 gap-1">
+                  <Search className="w-5 h-5 text-muted-foreground/40" />
                   <span className="text-xs text-muted-foreground">لا توجد نتائج لـ "{searchQuery}"</span>
                 </div>
               ) : (
-                searchResults.map((product) => {
-                  const alreadyInCart = items.some(i => i.product_id === product.id);
-                  const outOfStock = product.available_quantity <= 0;
-                  return (
-                    <button
-                      key={product.id}
-                      onClick={() => !outOfStock && handleAddFromSearch(product)}
-                      disabled={outOfStock}
-                      className={`w-full flex items-center gap-3 p-3 hover:bg-muted/50 transition-colors border-b border-border/30 last:border-0 text-right ${outOfStock ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                      <div className="w-10 h-10 rounded-lg bg-muted/50 overflow-hidden shrink-0">
-                        {product.image_url ? (
-                          <img src={product.image_url} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Package className="w-4 h-4 text-muted-foreground/30" />
+                <>
+                  <div className="px-3 py-1.5 border-b border-border/30">
+                    <span className="text-[10px] font-bold text-muted-foreground">{searchResults.length} نتيجة</span>
+                  </div>
+                  {searchResults.map((product) => {
+                    const alreadyInCart = items.some(i => i.product_id === product.id);
+                    const outOfStock = product.available_quantity <= 0;
+                    return (
+                      <div
+                        key={product.id}
+                        className={`flex items-center gap-2 px-3 py-2.5 border-b border-border/20 last:border-0 transition-colors ${outOfStock ? 'opacity-50' : 'hover:bg-muted/40'}`}
+                      >
+                        {/* Product info - clickable for details */}
+                        <button
+                          onClick={() => setDetailProduct(product)}
+                          className="flex-1 min-w-0 text-right"
+                        >
+                          <p className="text-sm font-bold text-foreground truncate leading-tight">{product.name_ar}</p>
+                          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                            <span className="text-[10px] font-mono text-muted-foreground bg-muted/50 px-1 py-0.5 rounded" dir="ltr">#{product.sku}</span>
+                            <span className="text-[10px] font-bold text-primary">{product.base_price.toLocaleString("ar-EG")} ج.م</span>
+                            {outOfStock ? (
+                              <span className="text-[10px] text-destructive font-bold">نفد</span>
+                            ) : (
+                              <span className="text-[10px] text-emerald-600">متاح: {product.available_quantity}</span>
+                            )}
                           </div>
-                        )}
+                        </button>
+                        {/* Add button */}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); if (!outOfStock) handleAddFromSearch(product); }}
+                          disabled={outOfStock}
+                          className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                            outOfStock
+                              ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                              : alreadyInCart
+                              ? 'bg-primary/10 text-primary'
+                              : 'bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground'
+                          }`}
+                        >
+                          {alreadyInCart ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                        </button>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-foreground truncate">{product.name_ar}</p>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-mono text-muted-foreground">{product.sku}</span>
-                          <span className="text-[10px] text-emerald-600 font-bold">
-                            {product.base_price.toLocaleString("ar-EG")} ج.م
-                          </span>
-                          {outOfStock && <span className="text-[10px] text-destructive font-bold">نفد</span>}
-                        </div>
-                      </div>
-                      <div className="shrink-0">
-                        {outOfStock ? (
-                          <span className="text-[10px] text-destructive font-bold">غير متاح</span>
-                        ) : alreadyInCart ? (
-                          <span className="text-[10px] text-primary font-bold bg-primary/10 px-2 py-1 rounded-full">في السلة +1</span>
-                        ) : (
-                          <PlusCircle className="w-5 h-5 text-primary" />
-                        )}
-                      </div>
-                    </button>
-                  );
-                })
+                    );
+                  })}
+                </>
               )}
             </div>
           )}
         </div>
       </div>
+
+      {/* Product Detail Dialog */}
+      {detailProduct && (
+        <ProductDetailDialog
+          product={detailProduct}
+          open={!!detailProduct}
+          onOpenChange={(open) => { if (!open) setDetailProduct(null); }}
+          price={detailProduct?.base_price || 0}
+        />
+      )}
 
       {/* Cart Items */}
       {items.length === 0 ? (
