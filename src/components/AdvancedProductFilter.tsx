@@ -17,6 +17,7 @@ export interface ProductFilters {
   priceMin: string;
   priceMax: string;
   sortBy: string;
+  maintenanceOnly?: boolean;
 }
 
 export const BRAND_OPTIONS = [

@@ -459,6 +459,15 @@ export function useProductListing(options: UseProductListingOptions = {}) {
       const matchesPriceMin = !filters.priceMin || price >= Number(filters.priceMin);
       const matchesPriceMax = !filters.priceMax || price <= Number(filters.priceMax);
 
+      // Maintenance-only filter
+      if (filters.maintenanceOnly) {
+        const maintenanceCatIds = new Set<string>();
+        dbCategories?.forEach((cat: any) => {
+          if (maintenanceCategorySlugs.has(cat.slug)) maintenanceCatIds.add(cat.id);
+        });
+        if (!p.category_id || !maintenanceCatIds.has(p.category_id)) return false;
+      }
+
       return matchesBrand && matchesSearch && matchesCategory && matchesModel && matchesYear && matchesPartNumber && matchesPriceMin && matchesPriceMax;
     };
 
