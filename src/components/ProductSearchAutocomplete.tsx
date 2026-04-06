@@ -11,6 +11,8 @@ interface Product {
   image_url: string | null;
   base_price: number;
   brand: string;
+  stock_quantity?: number;
+  safety_stock?: number;
 }
 
 interface Props {
