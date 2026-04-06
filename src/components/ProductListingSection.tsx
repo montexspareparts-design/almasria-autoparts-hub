@@ -150,40 +150,39 @@ const ProductListingSection = memo(({
               </div>
             )}
 
-            {!isDealer && (
-              <div className="flex items-center gap-1.5 shrink-0">
-                <Button
-                  variant={filters.maintenanceOnly ? "default" : "outline"}
-                  className={`shrink-0 h-9 text-[11px] rounded-xl gap-1 font-medium transition-all px-2.5 ${
-                    filters.maintenanceOnly ? "shadow-md" : "border-border/60"
-                  }`}
-                  onClick={() => setFilters(prev => ({ ...prev, maintenanceOnly: !prev.maintenanceOnly, onSaleOnly: false, bestSellingOnly: false }))}
-                >
-                  <Wrench className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">صيانة</span>
-                </Button>
-                <Button
-                  variant={filters.onSaleOnly ? "default" : "outline"}
-                  className={`shrink-0 h-9 text-[11px] rounded-xl gap-1 font-medium transition-all px-2.5 ${
-                    filters.onSaleOnly ? "shadow-md" : "border-border/60"
-                  }`}
-                  onClick={() => setFilters(prev => ({ ...prev, onSaleOnly: !prev.onSaleOnly, maintenanceOnly: false, bestSellingOnly: false }))}
-                >
-                  <Flame className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">عروض</span>
-                </Button>
-                <Button
-                  variant={filters.bestSellingOnly ? "default" : "outline"}
-                  className={`shrink-0 h-9 text-[11px] rounded-xl gap-1 font-medium transition-all px-2.5 ${
-                    filters.bestSellingOnly ? "shadow-md" : "border-border/60"
-                  }`}
-                  onClick={() => setFilters(prev => ({ ...prev, bestSellingOnly: !prev.bestSellingOnly, maintenanceOnly: false, onSaleOnly: false }))}
-                >
-                  <TrendingUp className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">الأكثر مبيعاً</span>
-                </Button>
-              </div>
-            )}
+            {/* Quick filter buttons — shared for dealer & retail */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <Button
+                variant={filters.maintenanceOnly ? "default" : "outline"}
+                className={`shrink-0 h-9 text-[11px] rounded-xl gap-1 font-medium transition-all px-2.5 ${
+                  filters.maintenanceOnly ? "shadow-md" : "border-border/60"
+                }`}
+                onClick={() => setFilters(prev => ({ ...prev, maintenanceOnly: !prev.maintenanceOnly, onSaleOnly: false, bestSellingOnly: false }))}
+              >
+                <Wrench className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">صيانة</span>
+              </Button>
+              <Button
+                variant={filters.onSaleOnly ? "default" : "outline"}
+                className={`shrink-0 h-9 text-[11px] rounded-xl gap-1 font-medium transition-all px-2.5 ${
+                  filters.onSaleOnly ? "shadow-md" : "border-border/60"
+                }`}
+                onClick={() => setFilters(prev => ({ ...prev, onSaleOnly: !prev.onSaleOnly, maintenanceOnly: false, bestSellingOnly: false }))}
+              >
+                <Flame className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">عروض</span>
+              </Button>
+              <Button
+                variant={filters.bestSellingOnly ? "default" : "outline"}
+                className={`shrink-0 h-9 text-[11px] rounded-xl gap-1 font-medium transition-all px-2.5 ${
+                  filters.bestSellingOnly ? "shadow-md" : "border-border/60"
+                }`}
+                onClick={() => setFilters(prev => ({ ...prev, bestSellingOnly: !prev.bestSellingOnly, maintenanceOnly: false, onSaleOnly: false }))}
+              >
+                <TrendingUp className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">الأكثر مبيعاً</span>
+              </Button>
+            </div>
 
             <Button variant="outline" className="lg:hidden gap-1.5 shrink-0 h-10 text-xs rounded-xl border-border/60" onClick={() => setSidebarOpen(true)}>
               <SlidersHorizontal className="w-4 h-4" />
@@ -202,6 +201,33 @@ const ProductListingSection = memo(({
               </SelectContent>
             </Select>
           </div>
+
+          {/* Brand quick-filter chips for dealer */}
+          {isDealer && (
+            <div className="flex gap-1.5 overflow-x-auto pb-1 mb-2 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
+              {[
+                { key: null, label: "الكل" },
+                { key: "toyota_genuine", label: "أصلي" },
+                { key: "toyota_oils", label: "زيوت" },
+                { key: "mtx_aftermarket", label: "MTX" },
+                { key: "denso", label: "DENSO" },
+                { key: "aisin", label: "AISIN" },
+                { key: "fbk", label: "FBK" },
+              ].map(b => (
+                <button
+                  key={b.key ?? "all"}
+                  onClick={() => setFilters(prev => ({ ...prev, brandKey: b.key }))}
+                  className={`px-3 py-1 rounded-xl text-[11px] font-medium whitespace-nowrap shrink-0 transition-all border ${
+                    filters.brandKey === b.key
+                      ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                      : "bg-card text-muted-foreground border-border/40 hover:border-border hover:text-foreground"
+                  }`}
+                >
+                  {b.label}
+                </button>
+              ))}
+            </div>
+          )}
 
           {beforeGrid}
 

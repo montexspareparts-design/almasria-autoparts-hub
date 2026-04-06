@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Search, X, Package, Hash, Command, Lightbulb, PlusCircle, ArrowLeft } from "lucide-react";
+import { Search, X, Package, Hash, Command, Lightbulb, PlusCircle, ArrowLeft, CheckCircle, XCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
 import { normalizeArabic, expandAliases } from "@/hooks/useProductListing";
@@ -11,6 +11,8 @@ interface Product {
   image_url: string | null;
   base_price: number;
   brand: string;
+  stock_quantity?: number;
+  safety_stock?: number;
 }
 
 interface Props {
@@ -179,7 +181,18 @@ const ProductSearchAutocomplete = ({
 
   const allMatches = useMemo(() => {
     if (!value || value.length < 2) return [];
-    return products.filter(p => fuzzyProductMatch(value, p));
+    const matches = products.filter(p => fuzzyProductMatch(value, p));
+    // Prioritize exact SKU matches at the top
+    const q = value.trim().toLowerCase();
+    return matches.sort((a, b) => {
+      const aSkuExact = a.sku.toLowerCase() === q ? -2 : a.sku.toLowerCase().startsWith(q) ? -1 : 0;
+      const bSkuExact = b.sku.toLowerCase() === q ? -2 : b.sku.toLowerCase().startsWith(q) ? -1 : 0;
+      if (aSkuExact !== bSkuExact) return aSkuExact - bSkuExact;
+      // Then by stock availability
+      const aStock = (a as any).stock_quantity ?? 0;
+      const bStock = (b as any).stock_quantity ?? 0;
+      return bStock - aStock;
+    });
   }, [value, products]);
 
   const suggestions = useMemo(() => allMatches.slice(0, 12), [allMatches]);
@@ -331,12 +344,27 @@ const ProductSearchAutocomplete = ({
 
                   {/* Product info */}
                   <div className="flex-1 min-w-0 text-right">
-                    <p className="text-xs font-bold truncate leading-tight">{product.name_ar}</p>
-                    <div className="mt-1 flex items-center gap-1 min-w-0 text-muted-foreground">
-                      <Hash className="w-3 h-3 shrink-0" />
-                      <span dir="ltr" className="block min-w-0 flex-1 truncate text-[10px] font-mono text-left">
-                        {product.sku}
+                    <p className="text-xs font-bold line-clamp-2 leading-tight">{product.name_ar}</p>
+                    <div className="mt-1 flex items-center gap-2 min-w-0 text-muted-foreground">
+                      <span className="flex items-center gap-0.5">
+                        <Hash className="w-3 h-3 shrink-0" />
+                        <span dir="ltr" className="text-[10px] font-mono">{product.sku}</span>
                       </span>
+                      {isDealer && (
+                        <>
+                          {((product as any).stock_quantity ?? 0) > ((product as any).safety_stock ?? 0) ? (
+                            <span className="flex items-center gap-0.5 text-emerald-600 dark:text-emerald-400">
+                              <CheckCircle className="w-3 h-3" />
+                              <span className="text-[10px]">متوفر</span>
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-0.5 text-destructive">
+                              <XCircle className="w-3 h-3" />
+                              <span className="text-[10px]">نفد</span>
+                            </span>
+                          )}
+                        </>
+                      )}
                     </div>
                   </div>
 
