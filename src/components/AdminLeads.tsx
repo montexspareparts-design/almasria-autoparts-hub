@@ -71,7 +71,7 @@ const AdminLeads = () => {
   const [erpVerified, setErpVerified] = useState(false);
 
   // Credentials dialog
-  const [credentials, setCredentials] = useState<{ username: string; password: string } | null>(null);
+  const [credentials, setCredentials] = useState<{ username: string; password: string; phone: string } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
   const fetchLeads = async () => {
