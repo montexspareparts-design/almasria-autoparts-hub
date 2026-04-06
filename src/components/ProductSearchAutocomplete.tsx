@@ -19,6 +19,17 @@ interface Product {
   safety_stock?: number;
 }
 
+interface Props {
+  value: string;
+  onChange: (value: string) => void;
+  products?: Product[];
+  onProductClick?: (product: Product) => void;
+  onAddToQuote?: (product: Product) => void;
+  onCommandPaletteOpen?: () => void;
+  placeholder?: string;
+  isDealer?: boolean;
+}
+
 /* ── Common model names & parts for "did you mean?" ── */
 const knownTerms = [
   // موديلات تويوتا
