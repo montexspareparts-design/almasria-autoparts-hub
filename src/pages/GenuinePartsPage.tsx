@@ -11,7 +11,7 @@ import { useProductListing } from "@/hooks/useProductListing";
 import heroBg from "@/assets/parts-bg.jpg";
 
 const Footer = lazy(() => import("@/components/Footer"));
-const WhatsAppFloat = lazy(() => import("@/components/WhatsAppFloat"));
+
 const BackToTop = lazy(() => import("@/components/BackToTop"));
 
 const whyOem = [
@@ -148,7 +148,7 @@ const GenuinePartsPage = () => {
       </section>
 
       <Suspense fallback={null}><Footer /></Suspense>
-      <Suspense fallback={null}><WhatsAppFloat /></Suspense>
+      
       <Suspense fallback={null}><BackToTop /></Suspense>
     </div>
   );

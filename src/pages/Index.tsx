@@ -25,7 +25,7 @@ const OurClientsSection = lazy(() => import("@/components/OurClientsSection"));
 const MaintenanceTipsSection = lazy(() => import("@/components/MaintenanceTipsSection"));
 const ContactSimple = lazy(() => import("@/components/ContactSimple"));
 const Footer = lazy(() => import("@/components/Footer"));
-const WhatsAppFloat = lazy(() => import("@/components/WhatsAppFloat"));
+
 const BackToTop = lazy(() => import("@/components/BackToTop"));
 const CarProfilePopup = lazy(() => import("@/components/CarProfilePopup"));
 
@@ -98,7 +98,7 @@ const Index = () => {
       <LazySection><MaintenanceTipsSection /></LazySection>
       <LazySection><ContactSimple /></LazySection>
       <LazySection fallback={null}><Footer /></LazySection>
-      <Suspense fallback={null}><WhatsAppFloat /></Suspense>
+      
       <Suspense fallback={null}><BackToTop /></Suspense>
       <Suspense fallback={null}><CarProfilePopup /></Suspense>
     </div>

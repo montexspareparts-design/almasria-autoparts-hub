@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 const AIChatBot = lazy(() => import("@/components/AIChatBot"));
 const InstallBannerLazy = lazy(() => import("@/components/InstallBanner"));
+const WhatsAppFloat = lazy(() => import("@/components/WhatsAppFloat"));
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -77,6 +78,7 @@ const App = () => (
             <CartProvider>
               <DeferredComponent delay={2000}><InstallBannerLazy /></DeferredComponent>
               <DeferredComponent delay={4000}><AIChatBot /></DeferredComponent>
+              <DeferredComponent delay={2500}><WhatsAppFloat /></DeferredComponent>
                <Suspense fallback={<PageLoader />}>
                   <Routes>
                     <Route path="/" element={<Index />} />

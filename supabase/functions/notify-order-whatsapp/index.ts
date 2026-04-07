@@ -66,16 +66,21 @@ Deno.serve(async (req) => {
       ? Number(totalAmount).toLocaleString("ar-EG")
       : "—";
 
-    let msg = `طلبك جاهز 👌\nرقم الطلب: ${orderNumber}\nالإجمالي: ${amountFormatted} جنيه`;
+    const clientName = customerName || "عميل";
+
+    // Customer message
+    let msg = `أهلاً ${clientName} 👋\nتم استلام طلبك بنجاح ✅\nرقم الطلب: ${orderNumber}\nالإجمالي: ${amountFormatted} جنيه`;
 
     if (paymentLink) {
       msg += `\n\nادفع الآن لتأكيد الطلب فورًا:\n${paymentLink}`;
     }
 
+    msg += `\n\nشكراً لتعاملك مع المصرية جروب 🚗`;
+
     // Send to customer
     await sendWhatsApp(customerPhone, msg);
 
-    // Send to all admin phones
+    // Send to all admin/staff phones
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
@@ -91,8 +96,7 @@ Deno.serve(async (req) => {
         .select("phone")
         .in("user_id", admins.map((a: { user_id: string }) => a.user_id));
 
-      const clientName = customerName || customerPhone;
-      const adminMsg = `🆕 طلب جديد #${orderNumber}\nالعميل: ${clientName}\nالإجمالي: ${amountFormatted} جنيه`;
+      const adminMsg = `🆕 طلب جديد #${orderNumber}\nالعميل: ${clientName}\nالتليفون: ${customerPhone}\nالإجمالي: ${amountFormatted} جنيه`;
       for (const p of adminProfiles || []) {
         if (p.phone) await sendWhatsApp(p.phone, adminMsg);
       }

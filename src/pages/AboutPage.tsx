@@ -12,7 +12,7 @@ import Navbar from "@/components/Navbar";
 import heroBg from "@/assets/hero-corporate.webp";
 
 const Footer = lazy(() => import("@/components/Footer"));
-const WhatsAppFloat = lazy(() => import("@/components/WhatsAppFloat"));
+
 const BackToTop = lazy(() => import("@/components/BackToTop"));
 
 const SectionFallback = () => (
@@ -312,7 +312,7 @@ const AboutPage = () => {
       </section>
 
       <Suspense fallback={null}><Footer /></Suspense>
-      <Suspense fallback={null}><WhatsAppFloat /></Suspense>
+      
       <Suspense fallback={null}><BackToTop /></Suspense>
     </div>
   );
