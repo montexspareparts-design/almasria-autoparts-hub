@@ -6,8 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   ClipboardList, ShoppingCart, Users, AlertTriangle,
-  Clock, TrendingUp, CheckCircle, Loader2, ArrowLeft
+  Clock, TrendingUp, CheckCircle, Loader2, ArrowLeft,
+  Search, UserX, MessageCircle
 } from "lucide-react";
+import WhatsAppQuickChat from "./WhatsAppQuickChat";
 
 interface DashboardStats {
   pendingOrders: number;
@@ -20,6 +22,15 @@ interface DashboardStats {
   totalLeadsConverted: number;
 }
 
+interface BehavioralAlert {
+  type: "high_search" | "inactive";
+  userId: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  detail: string;
+}
+
 interface StaffDailyDashboardProps {
   onNavigate?: (section: string) => void;
 }
@@ -27,10 +38,12 @@ interface StaffDailyDashboardProps {
 export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardProps) {
   const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [alerts, setAlerts] = useState<BehavioralAlert[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchStats();
+    fetchBehavioralAlerts();
   }, []);
 
   const fetchStats = async () => {
@@ -72,6 +85,104 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
     setLoading(false);
   };
 
+  const fetchBehavioralAlerts = async () => {
+    const behavioralAlerts: BehavioralAlert[] = [];
+
+    // 1) High search, no orders — users with 5+ searches and 0 orders
+    const { data: searchLogs } = await supabase
+      .from("customer_search_logs")
+      .select("user_id")
+      .not("user_id", "is", null);
+
+    if (searchLogs && searchLogs.length > 0) {
+      // Count searches per user
+      const searchCounts: Record<string, number> = {};
+      for (const log of searchLogs) {
+        if (log.user_id) {
+          searchCounts[log.user_id] = (searchCounts[log.user_id] || 0) + 1;
+        }
+      }
+
+      // Filter users with 5+ searches
+      const highSearchUsers = Object.entries(searchCounts)
+        .filter(([, count]) => count >= 5)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 20);
+
+      for (const [userId, count] of highSearchUsers) {
+        // Check if they have any orders
+        const { count: orderCount } = await supabase
+          .from("orders")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", userId);
+
+        if ((orderCount || 0) === 0) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("full_name, phone, email")
+            .eq("user_id", userId)
+            .maybeSingle();
+
+          if (profile) {
+            behavioralAlerts.push({
+              type: "high_search",
+              userId,
+              name: profile.full_name || profile.email || "مستخدم",
+              phone: profile.phone,
+              email: profile.email,
+              detail: `بحث ${count} مرة بدون أي طلب`,
+            });
+          }
+        }
+      }
+    }
+
+    // 2) Inactive dealers — had orders but none in last 30 days
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: activeDealers } = await supabase
+      .from("dealer_accounts")
+      .select("user_id, erp_customer_name")
+      .eq("is_active", true);
+
+    if (activeDealers) {
+      for (const dealer of activeDealers.slice(0, 30)) {
+        // Check if they have ANY order
+        const { count: totalOrders } = await supabase
+          .from("orders")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", dealer.user_id);
+
+        if ((totalOrders || 0) > 0) {
+          // Check recent orders
+          const { count: recentOrders } = await supabase
+            .from("orders")
+            .select("*", { count: "exact", head: true })
+            .eq("user_id", dealer.user_id)
+            .gte("created_at", thirtyDaysAgo);
+
+          if ((recentOrders || 0) === 0) {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("full_name, phone, email")
+              .eq("user_id", dealer.user_id)
+              .maybeSingle();
+
+            behavioralAlerts.push({
+              type: "inactive",
+              userId: dealer.user_id,
+              name: dealer.erp_customer_name || profile?.full_name || "تاجر",
+              phone: profile?.phone || null,
+              email: profile?.email || null,
+              detail: `لم يطلب منذ أكثر من 30 يوم (إجمالي طلباته: ${totalOrders})`,
+            });
+          }
+        }
+      }
+    }
+
+    setAlerts(behavioralAlerts);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-16">
@@ -88,6 +199,9 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
     { label: "طلبات معلقة أكثر من 48 ساعة ⚠️", count: stats.staleOrders, icon: AlertTriangle, color: "text-red-600", bg: "bg-red-50", section: "orders" },
     { label: "عملاء محتملين جدد", count: stats.newLeads, icon: Users, color: "text-emerald-600", bg: "bg-emerald-50", section: "leads" },
   ].filter(t => t.count > 0);
+
+  const highSearchAlerts = alerts.filter(a => a.type === "high_search");
+  const inactiveAlerts = alerts.filter(a => a.type === "inactive");
 
   return (
     <div className="space-y-6">
@@ -130,6 +244,95 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
             <p className="text-sm text-emerald-600">كل شيء تحت السيطرة</p>
           </CardContent>
         </Card>
+      )}
+
+      {/* Behavioral Alerts */}
+      {(highSearchAlerts.length > 0 || inactiveAlerts.length > 0) && (
+        <div className="space-y-4">
+          <h3 className="text-base font-bold flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-amber-500" />
+            تنبيهات سلوكية
+          </h3>
+
+          {/* High search, no orders */}
+          {highSearchAlerts.length > 0 && (
+            <Card className="border-orange-200">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-bold flex items-center gap-2 text-orange-700">
+                  <Search className="w-4 h-4" />
+                  بيبحث كتير ومش بيطلب ({highSearchAlerts.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {highSearchAlerts.slice(0, 5).map((alert, i) => (
+                  <div key={i} className="flex items-center justify-between gap-3 p-3 bg-orange-50/50 rounded-lg border border-orange-100">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm text-foreground truncate">{alert.name}</p>
+                      <p className="text-xs text-muted-foreground">{alert.detail}</p>
+                      {alert.email && <p className="text-xs text-muted-foreground truncate">{alert.email}</p>}
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {alert.phone && (
+                        <WhatsAppQuickChat
+                          phone={alert.phone}
+                          customerName={alert.name}
+                          context="متابعة"
+                        />
+                      )}
+                      <Badge variant="outline" className="text-orange-600 border-orange-300 text-[10px]">
+                        فرصة تحويل
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+                {highSearchAlerts.length > 5 && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    +{highSearchAlerts.length - 5} عميل آخر
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Inactive dealers */}
+          {inactiveAlerts.length > 0 && (
+            <Card className="border-red-200">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-bold flex items-center gap-2 text-red-700">
+                  <UserX className="w-4 h-4" />
+                  تاجر توقف من شهر ({inactiveAlerts.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {inactiveAlerts.slice(0, 5).map((alert, i) => (
+                  <div key={i} className="flex items-center justify-between gap-3 p-3 bg-red-50/50 rounded-lg border border-red-100">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm text-foreground truncate">{alert.name}</p>
+                      <p className="text-xs text-muted-foreground">{alert.detail}</p>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {alert.phone && (
+                        <WhatsAppQuickChat
+                          phone={alert.phone}
+                          customerName={alert.name}
+                          context="متابعة عميل خامل"
+                        />
+                      )}
+                      <Badge variant="outline" className="text-red-600 border-red-300 text-[10px]">
+                        خامل
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+                {inactiveAlerts.length > 5 && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    +{inactiveAlerts.length - 5} تاجر آخر
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </div>
       )}
 
       {/* Performance Summary */}
