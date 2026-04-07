@@ -39,6 +39,7 @@ const AdminBulkImport = lazy(() => import("@/components/AdminBulkImport"));
 const AdminERPCustomers = lazy(() => import("@/components/AdminERPCustomers"));
 const AdminStockSettings = lazy(() => import("@/components/AdminStockSettings"));
 const AdminLeads = lazy(() => import("@/components/AdminLeads"));
+const AdminStaffRoles = lazy(() => import("@/components/AdminStaffRoles"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];
