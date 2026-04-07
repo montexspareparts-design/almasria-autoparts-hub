@@ -278,6 +278,9 @@ const AdminCustomerProfile = () => {
           </Card>
         )}
 
+        {/* Communication Log */}
+        <CustomerCommunicationLog customerUserId={app.user_id} />
+
         {/* Internal Notes */}
         <CustomerNotes customerUserId={app.user_id} />
 
