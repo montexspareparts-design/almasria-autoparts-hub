@@ -19,6 +19,7 @@ interface ProductCardProps {
   viewMode: "grid" | "list";
   user: any;
   isDealer: boolean;
+  isRetailTier?: boolean;
   viewedProductIds: string[];
   limitReached: boolean;
   dailyViewCount: number;
@@ -31,15 +32,15 @@ interface ProductCardProps {
 }
 
 const ProductCard = memo(({
-  product, index, viewMode, user, isDealer, viewedProductIds,
+  product, index, viewMode, user, isDealer, isRetailTier = false, viewedProductIds,
   limitReached, dailyViewCount, dailyLimit,
   getProductPrice, onProductClick, onAddToCart, onRecordView, onLoginRequired,
 }: ProductCardProps) => {
 
   const stockAvailable = product.stock_quantity > 0;
   const hasViewed = viewedProductIds.includes(product.id);
-  const canSeePrice = user && (!isDealer || hasViewed);
-  const price = canSeePrice ? (isDealer ? getProductPrice(product) : product.base_price) : null;
+  const canSeePrice = user && (!isDealer || isRetailTier || hasViewed);
+  const price = canSeePrice ? (isDealer && !isRetailTier ? getProductPrice(product) : product.base_price) : null;
 
   if (viewMode === "list") {
     return (

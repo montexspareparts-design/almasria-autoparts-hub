@@ -31,7 +31,7 @@ interface ProductListingSectionProps {
   categoryCounts: Record<string, number>;
   user: any;
   isDealer: boolean;
-  viewedProductIds: string[];
+  isRetailTier?: boolean;
   dailyViewCount: number;
   limitReached: boolean;
   dailyLimit: number;
