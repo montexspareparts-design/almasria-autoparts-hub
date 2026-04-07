@@ -458,8 +458,7 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
           <AnimatePresence>
             {items.map((item, idx) => {
               const price = getPrice(item);
-              const violation = violationMap[item.product_id];
-              const hasItemViolation = violation !== undefined;
+              const direction = qtyDirection[item.product_id] || 'up';
               return (
                 <motion.div
                   key={item.id}
@@ -467,7 +466,7 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -80, height: 0, marginBottom: 0 }}
                   transition={{ delay: idx * 0.02 }}
-                  className={`rounded-xl border bg-card ${hasItemViolation ? 'border-destructive/50 bg-destructive/5' : 'border-border/50'}`}
+                  className="rounded-xl border border-border/50 bg-card"
                 >
                   <div className="flex items-center gap-3 p-3">
                     {/* Image */}
@@ -490,25 +489,30 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
                       </p>
                     </div>
 
-                    {/* Quantity */}
-                    <div className={`flex items-center shrink-0 rounded-full border ${hasItemViolation ? 'border-destructive/50 bg-destructive/5' : 'border-border bg-muted/30'} overflow-hidden`}>
+                    {/* Quantity - pill with animated number */}
+                    <div className="flex items-center shrink-0 rounded-full border border-border bg-muted/30 overflow-hidden">
                       <button
-                        onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
+                        onClick={() => handleQtyChange(item.product_id, item.quantity - 1)}
                         className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all active:scale-90"
                       >
                         <Minus className="w-3.5 h-3.5" />
                       </button>
-                      <input
-                        type="number"
-                        value={item.quantity}
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value);
-                          if (val > 0) updateQuantity(item.product_id, val);
-                        }}
-                        className={`w-9 h-8 text-center text-sm font-black bg-transparent border-x ${hasItemViolation ? 'border-destructive/30 text-destructive' : 'border-border/50 text-foreground'} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:outline-none`}
-                      />
+                      <div className="w-9 h-8 border-x border-border/50 overflow-hidden relative">
+                        <AnimatePresence mode="popLayout" initial={false}>
+                          <motion.span
+                            key={item.quantity}
+                            initial={{ y: direction === 'up' ? 12 : -12, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: direction === 'up' ? -12 : 12, opacity: 0 }}
+                            transition={{ type: "spring", stiffness: 500, damping: 30, mass: 0.5 }}
+                            className="absolute inset-0 flex items-center justify-center text-sm font-black text-foreground"
+                          >
+                            {item.quantity}
+                          </motion.span>
+                        </AnimatePresence>
+                      </div>
                       <button
-                        onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
+                        onClick={() => handleQtyChange(item.product_id, item.quantity + 1)}
                         className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all active:scale-90"
                       >
                         <Plus className="w-3.5 h-3.5" />
@@ -517,9 +521,14 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
 
                     {/* Total + Remove */}
                     <div className="text-left shrink-0 flex items-center gap-2">
-                      <p className="text-sm font-black text-primary whitespace-nowrap">
+                      <motion.p
+                        key={price * item.quantity}
+                        initial={{ scale: 1.15 }}
+                        animate={{ scale: 1 }}
+                        className="text-sm font-black text-primary whitespace-nowrap"
+                      >
                         {(price * item.quantity).toLocaleString("ar-EG")}
-                      </p>
+                      </motion.p>
                       <button
                         onClick={() => removeItem(item.product_id)}
                         className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
@@ -528,15 +537,6 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
                       </button>
                     </div>
                   </div>
-                  {/* Inline violation warning */}
-                  {hasItemViolation && (
-                    <div className="flex items-center gap-1.5 px-3 pb-2.5 -mt-1">
-                      <AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0" />
-                      <p className="text-[11px] text-destructive font-medium">
-                        من فضلك خفّض الكمية إلى <strong>{violation}</strong> قطعة كحد أقصى (الصنف #{item.product.sku})
-                      </p>
-                    </div>
-                  )}
                 </motion.div>
               );
             })}
