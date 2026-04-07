@@ -202,7 +202,8 @@ const fuzzyMatchWord = (word: string, ...texts: string[]): boolean => {
 };
 
 const ITEMS_PER_PAGE = 48;
-const DAILY_LIMIT = 20;
+  const DAILY_LIMIT = 20;
+  const isRetailTier = dealerAccount?.tier === 'retail';
 
 interface UseProductListingOptions {
   /** Filter by specific brand key (e.g., "toyota_genuine") */
