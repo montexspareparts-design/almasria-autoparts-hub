@@ -368,70 +368,49 @@ Deno.serve(async (req) => {
       } else {
         if (!baseUrl) throw new Error("ERP base URL is not configured");
 
+        // ─── NEW: Fetch both endpoints and merge by index ───
+        // /Ecommerce/GetItems returns {id, name}
+        // /Ecommerce/products returns {price, quantity, wholesalePrice, retailPrice}
+        const [itemsRes, productsRes] = await Promise.all([
+          erpFetch(baseUrl, "/Ecommerce/GetItems"),
+          erpFetch(baseUrl, "/Ecommerce/products"),
+        ]);
+
+        const itemsList = Array.isArray(itemsRes) ? itemsRes : (itemsRes.data || itemsRes.items || []);
+        const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
+
+        // Merge by index — both endpoints return same count in same order
+        const mergedItems = itemsList.map((item: any, idx: number) => {
+          const prod = productsList[idx] || {};
+          return {
+            id: (item.id || "").toString().trim(),
+            name: (item.name || "").toString().trim(),
+            quantity: Math.floor(Number(prod.quantity ?? 0)),
+            retailPrice: Number(prod.retailPrice ?? prod.price ?? 0),
+            wholesalePrice: Number(prod.wholesalePrice ?? 0),
+          };
+        });
+
+        console.log(`[ERP] Merged ${mergedItems.length} items (GetItems: ${itemsList.length}, products: ${productsList.length})`);
+
         if (action === "sync_stock") {
-          // Try multiple ERP endpoints for stock data
-          let stockItems: any[] = [];
-          let usedEndpoint = "/Ecommerce/products";
-          
-          // Try dedicated stock endpoints first
-          const stockEndpoints = [
-            "/Ecommerce/GetStock",
-            "/Ecommerce/GetInventory", 
-            "/Ecommerce/stock",
-            "/Ecommerce/inventory",
-          ];
-          
-          for (const endpoint of stockEndpoints) {
-            try {
-              const stockResponse = await erpFetch(baseUrl, endpoint);
-              const items = Array.isArray(stockResponse)
-                ? stockResponse
-                : (stockResponse.data || stockResponse.items || []);
-              if (items.length > 0) {
-                stockItems = items;
-                usedEndpoint = endpoint;
-                break;
-              }
-            } catch {
-              // Endpoint doesn't exist, try next
-            }
-          }
-          
-          // Fallback to /Ecommerce/products if no stock endpoint found
-          if (stockItems.length === 0) {
-            const erpResponse = await erpFetch(baseUrl, "/Ecommerce/products");
-            stockItems = Array.isArray(erpResponse)
-              ? erpResponse
-              : (erpResponse.data || erpResponse.items || []);
-          }
+          // Filter items with valid ID and quantity
+          const bulkItems = mergedItems
+            .filter((item: any) => item.id && item.quantity !== undefined)
+            .map((item: any) => ({ id: item.id, qty: item.quantity }));
 
-          // Build bulk payload for SQL function
-          const bulkItems = stockItems
-            .filter((item: any) => {
-              const id = (item.id || item.itemCode || item.sku || item.code || "").toString().trim();
-              const qty = item.qty ?? item.quantity ?? item.stock ?? item.availableQty ?? item.balance ?? item.onHand;
-              return id && qty !== undefined;
-            })
-            .map((item: any) => ({
-              id: (item.id || item.itemCode || item.sku || item.code).toString().trim(),
-              qty: Number(item.qty ?? item.quantity ?? item.stock ?? item.availableQty ?? item.balance ?? item.onHand),
-            }));
-
-          // ─── SAFETY CHECK: If ALL items have qty=0, ERP is likely not sending real stock ───
+          // ─── SAFETY CHECK: If ALL items have qty=0, ERP is likely broken ───
           const itemsWithPositiveQty = bulkItems.filter((i: any) => i.qty > 0);
           if (bulkItems.length > 50 && itemsWithPositiveQty.length === 0) {
             result = {
               success: false,
               warning: "ERP_ALL_ZERO_STOCK",
-              message: "⚠️ الـ API لا ترسل بيانات الأرصدة. جميع الكميات = 0. استخدم رفع ملف Excel لتحديث الأرصدة من تبويب 'استيراد جماعي'.",
-              total_erp_items: stockItems.length,
+              message: "⚠️ جميع الكميات = 0. لم يتم تحديث الأرصدة.",
+              total_erp_items: mergedItems.length,
               items_with_stock: 0,
               skipped: true,
-              tried_endpoints: [usedEndpoint, ...stockEndpoints],
-              erp_sample_fields: stockItems[0] ? Object.keys(stockItems[0]) : [],
             };
 
-            // Only log once per hour to avoid spamming
             const { data: recentBlock } = await supabase
               .from("erp_sync_logs")
               .select("id")
@@ -442,12 +421,10 @@ Deno.serve(async (req) => {
 
             if (!recentBlock || recentBlock.length === 0) {
               await supabase.from("erp_sync_logs").insert({
-                sync_type: syncType,
-                direction: "inbound",
-                payload: { action, safety_blocked: true, tried_endpoints: [usedEndpoint, ...stockEndpoints] },
-                response: result,
-                status: "blocked",
-                error_message: "ERP API does not provide stock data — use Excel import instead",
+                sync_type: syncType, direction: "inbound",
+                payload: { action, safety_blocked: true },
+                response: result, status: "blocked",
+                error_message: "All zero stock detected",
               });
             }
 
@@ -465,33 +442,21 @@ Deno.serve(async (req) => {
           result = {
             success: true,
             updated_count: bulkResult?.updated || 0,
-            total_erp_items: stockItems.length,
+            total_erp_items: mergedItems.length,
             matched_items: bulkResult?.updated || 0,
             items_with_positive_stock: itemsWithPositiveQty.length,
-            used_endpoint: usedEndpoint,
-            sample: stockItems.slice(0, 3).map((i: any) => ({
-              id: (i.id || "").toString().trim(),
-              name: i.name,
-              qty: i.qty ?? i.quantity,
+            sample: mergedItems.filter((i: any) => i.quantity > 0).slice(0, 3).map((i: any) => ({
+              id: i.id, name: i.name, qty: i.quantity,
             })),
           };
         } else {
-          // Price sync — fetch products from ERP
-          const erpResponse = await erpFetch(baseUrl, "/Ecommerce/products");
-          const priceItems = Array.isArray(erpResponse)
-            ? erpResponse
-            : (erpResponse.data || erpResponse.items || []);
-
-          const bulkItems = priceItems
-            .filter((item: any) => {
-              const id = (item.id || item.itemCode || item.sku || item.code || "").toString().trim();
-              const price = item.price ?? item.unitPrice ?? item.basePrice;
-              return id && price !== undefined;
-            })
+          // ─── Price sync: update retailPrice → base_price, wholesalePrice → wholesale_tier1 ───
+          const bulkItems = mergedItems
+            .filter((item: any) => item.id && item.retailPrice > 0)
             .map((item: any) => ({
-              id: (item.id || item.itemCode || item.sku || item.code).toString().trim(),
-              price: Number(item.price ?? item.unitPrice ?? item.basePrice),
-              quantity: Number(item.qty ?? item.quantity ?? item.stock ?? 0),
+              id: item.id,
+              price: item.retailPrice,
+              quantity: Math.floor(item.quantity),
             }));
 
           const { data: bulkResult, error: bulkErr } = await supabase.rpc("bulk_update_product_prices", {
@@ -500,15 +465,27 @@ Deno.serve(async (req) => {
 
           if (bulkErr) throw new Error(`Bulk price sync failed: ${bulkErr.message}`);
 
+          // ─── Also update wholesale_tier1 prices via bulk SQL function ───
+          const wholesaleItems = mergedItems
+            .filter((i: any) => i.id && i.wholesalePrice > 0)
+            .map((i: any) => ({ id: i.id, wholesalePrice: i.wholesalePrice }));
+
+          const { data: wholesaleResult, error: wholesaleErr } = await supabase.rpc(
+            "bulk_upsert_wholesale_prices",
+            { _items: wholesaleItems }
+          );
+
+          const wholesaleUpdated = wholesaleErr ? 0 : (wholesaleResult?.updated || 0);
+          if (wholesaleErr) console.error("Wholesale price sync error:", wholesaleErr.message);
+
           result = {
             success: true,
             updated_count: bulkResult?.updated || 0,
-            total_erp_items: priceItems.length,
+            wholesale_updated: wholesaleUpdated,
+            total_erp_items: mergedItems.length,
             matched_items: bulkResult?.updated || 0,
-            sample: priceItems.slice(0, 3).map((i: any) => ({
-              id: (i.id || "").toString().trim(),
-              name: i.name,
-              price: i.price,
+            sample: mergedItems.filter((i: any) => i.retailPrice > 0).slice(0, 3).map((i: any) => ({
+              id: i.id, name: i.name, retailPrice: i.retailPrice, wholesalePrice: i.wholesalePrice,
             })),
           };
         }
