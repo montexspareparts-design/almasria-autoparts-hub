@@ -931,6 +931,49 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ─── DEBUG: Inspect raw ERP API data ───
+    else if (action === "debug_erp_api") {
+      if (!baseUrl) throw new Error("ERP base URL is not configured");
+
+      const [itemsRes, productsRes] = await Promise.all([
+        erpFetch(baseUrl, "/Ecommerce/GetItems"),
+        erpFetch(baseUrl, "/Ecommerce/products"),
+      ]);
+
+      const items = Array.isArray(itemsRes) ? itemsRes : (itemsRes.data || itemsRes.items || []);
+      const products = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
+
+      // Search for our erp_item_codes in the ERP data
+      const ourCodes = data?.erp_codes || ["11603", "20587", "19489"];
+      const codeMatches: any[] = [];
+      for (const code of ourCodes) {
+        const trimCode = code.trim();
+        const idx = items.findIndex((i: any) => String(i.id).trim() === trimCode);
+        if (idx >= 0) {
+          codeMatches.push({
+            erp_item_code: trimCode,
+            found: true,
+            index: idx,
+            item: items[idx],
+            product: products[idx],
+          });
+        } else {
+          codeMatches.push({ erp_item_code: trimCode, found: false });
+        }
+      }
+
+      result = {
+        success: true,
+        getItems_count: items.length,
+        products_count: products.length,
+        getItems_keys: items.length > 0 ? Object.keys(items[0]) : [],
+        products_keys: products.length > 0 ? Object.keys(products[0]) : [],
+        getItems_sample: items.slice(0, 3),
+        products_sample: products.slice(0, 3),
+        codeMatches,
+      };
+    }
+
     else {
       throw new Error(`Unknown action: ${action}`);
     }
