@@ -41,6 +41,7 @@ const DealerQuickOrder = () => {
   // Auto-search state
   const [searching, setSearching] = useState(false);
   const [suggestions, setSuggestions] = useState<MatchedProduct[]>([]);
+  const [qtyDir, setQtyDir] = useState<QtyDir>({});
   const searchTimeout = useRef<ReturnType<typeof setTimeout>>();
 
   const searchProducts = useCallback(async (query: string) => {
