@@ -31,6 +31,8 @@ interface PricedProduct {
     image_url: string | null;
     stock_quantity: number;
     brand: string;
+    safety_stock: number;
+    max_order_cap: number | null;
   };
   tier_price?: number | null;
   quantity: number;
