@@ -233,6 +233,11 @@ const AdminInstaPayReceipts = () => {
                             <span className="flex items-center gap-1">
                               <Phone className="w-3 h-3" />
                               {order.profile.phone}
+                              <WhatsAppQuickChat
+                                phone={order.profile.phone}
+                                customerName={order.profile.full_name || undefined}
+                                context={`بخصوص طلبك رقم #${order.order_number} والدفع عبر إنستا باي.`}
+                              />
                             </span>
                           )}
                         </div>

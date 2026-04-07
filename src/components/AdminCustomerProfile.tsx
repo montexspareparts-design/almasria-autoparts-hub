@@ -174,9 +174,11 @@ const AdminCustomerProfile = () => {
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Phone className="w-4 h-4" />
                     <span dir="ltr">{app.phone}</span>
-                    <a href={`https://wa.me/${app.phone.replace(/^0/, "20").replace(/\D/g, "")}`} target="_blank" className="text-green-600 hover:underline">
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
+                    <WhatsAppQuickChat
+                      phone={app.phone}
+                      customerName={app.business_name}
+                      context={`بخصوص حسابك التجاري في المصرية جروب.`}
+                    />
                   </div>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Mail className="w-4 h-4" />
