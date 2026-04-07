@@ -931,6 +931,57 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ─── DEBUG: Inspect raw ERP API data ───
+    else if (action === "debug_erp_api") {
+      if (!baseUrl) throw new Error("ERP base URL is not configured");
+
+      const [itemsRes, productsRes] = await Promise.all([
+        erpFetch(baseUrl, "/Ecommerce/GetItems"),
+        erpFetch(baseUrl, "/Ecommerce/products"),
+      ]);
+
+      const items = Array.isArray(itemsRes) ? itemsRes : (itemsRes.data || itemsRes.items || []);
+      const products = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
+
+      // Find specific SKUs to compare
+      const testSkus = ["90313-13001", "K20TNR-DENSO", "53238-26010", "13450-0W070", "85222-71010"];
+      
+      const comparison: any[] = [];
+      for (const sku of testSkus) {
+        const itemIdx = items.findIndex((i: any) => String(i.id).trim() === sku);
+        const itemMatch = itemIdx >= 0 ? items[itemIdx] : null;
+        const prodAtIdx = itemIdx >= 0 ? products[itemIdx] : null;
+        
+        // Also search products by any ID-like field
+        const prodDirect = products.find((p: any) => 
+          String(p.id || "").trim() === sku || 
+          String(p.itemCode || "").trim() === sku ||
+          String(p.sku || "").trim() === sku ||
+          String(p.productId || "").trim() === sku
+        );
+
+        comparison.push({
+          sku,
+          itemFound: !!itemMatch,
+          itemIndex: itemIdx,
+          itemData: itemMatch,
+          productAtSameIndex: prodAtIdx,
+          productDirectMatch: prodDirect,
+        });
+      }
+
+      result = {
+        success: true,
+        getItems_count: items.length,
+        products_count: products.length,
+        getItems_keys: items.length > 0 ? Object.keys(items[0]) : [],
+        products_keys: products.length > 0 ? Object.keys(products[0]) : [],
+        getItems_sample: items.slice(0, 5),
+        products_sample: products.slice(0, 5),
+        comparison,
+      };
+    }
+
     else {
       throw new Error(`Unknown action: ${action}`);
     }
