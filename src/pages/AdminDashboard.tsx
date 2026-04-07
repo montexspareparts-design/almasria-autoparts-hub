@@ -39,6 +39,7 @@ const AdminBulkImport = lazy(() => import("@/components/AdminBulkImport"));
 const AdminERPCustomers = lazy(() => import("@/components/AdminERPCustomers"));
 const AdminStockSettings = lazy(() => import("@/components/AdminStockSettings"));
 const AdminLeads = lazy(() => import("@/components/AdminLeads"));
+const AdminStaffRoles = lazy(() => import("@/components/AdminStaffRoles"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];
@@ -106,6 +107,7 @@ const sidebarGroups: SidebarGroup[] = [
         { id: "erp-customers", label: "ربط عملاء الفيصل", icon: Users },
         { id: "paymob", label: "إعدادات Paymob", icon: Briefcase },
         { id: "stock-settings", label: "إعدادات المخزون", icon: ShieldCheck },
+        { id: "staff-roles", label: "إدارة الموظفين", icon: Users },
         { id: "audit-log", label: "سجل المراجعة", icon: Shield },
       ],
     },
@@ -572,6 +574,8 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminPaymobSettings /></Suspense>;
       case "stock-settings":
         return <Suspense fallback={<SectionLoader />}><AdminStockSettings /></Suspense>;
+      case "staff-roles":
+        return <Suspense fallback={<SectionLoader />}><AdminStaffRoles /></Suspense>;
       case "audit-log":
         return <Suspense fallback={<SectionLoader />}><AdminAuditLog /></Suspense>;
       case "bundles":
