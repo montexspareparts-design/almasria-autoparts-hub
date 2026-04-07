@@ -242,7 +242,7 @@ const ProductListingSection = memo(({
 
               {/* Loading state */}
               {isLoading ? (
-                <div className={viewMode === "grid" ? "grid grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}>
+                <div className={viewMode === "grid" ? "grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5" : "space-y-3"}>
                   {Array.from({ length: 12 }).map((_, i) => (
                     <div key={i} className="bg-card border border-border rounded-xl p-4 animate-pulse">
                       <div className="h-4 bg-muted rounded w-3/4 mb-3" />
