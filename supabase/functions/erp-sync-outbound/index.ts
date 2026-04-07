@@ -456,7 +456,7 @@ Deno.serve(async (req) => {
             .map((item: any) => ({
               id: item.id,
               price: item.retailPrice,
-              quantity: item.quantity,
+              quantity: Math.floor(item.quantity),
             }));
 
           const { data: bulkResult, error: bulkErr } = await supabase.rpc("bulk_update_product_prices", {
