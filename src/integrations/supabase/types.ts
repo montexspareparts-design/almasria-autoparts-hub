@@ -282,7 +282,6 @@ export type Database = {
           erp_customer_code: string | null
           erp_customer_name: string | null
           id: string
-          initial_password: string | null
           is_active: boolean
           min_order_amount: number | null
           notes: string | null
@@ -300,7 +299,6 @@ export type Database = {
           erp_customer_code?: string | null
           erp_customer_name?: string | null
           id?: string
-          initial_password?: string | null
           is_active?: boolean
           min_order_amount?: number | null
           notes?: string | null
@@ -318,7 +316,6 @@ export type Database = {
           erp_customer_code?: string | null
           erp_customer_name?: string | null
           id?: string
-          initial_password?: string | null
           is_active?: boolean
           min_order_amount?: number | null
           notes?: string | null
@@ -496,6 +493,35 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dealer_passwords: {
+        Row: {
+          created_at: string
+          dealer_account_id: string
+          id: string
+          initial_password: string
+        }
+        Insert: {
+          created_at?: string
+          dealer_account_id: string
+          id?: string
+          initial_password: string
+        }
+        Update: {
+          created_at?: string
+          dealer_account_id?: string
+          id?: string
+          initial_password?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dealer_passwords_dealer_account_id_fkey"
+            columns: ["dealer_account_id"]
+            isOneToOne: true
+            referencedRelation: "dealer_accounts"
             referencedColumns: ["id"]
           },
         ]
