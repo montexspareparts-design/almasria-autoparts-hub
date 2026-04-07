@@ -666,6 +666,13 @@ const AdminLeads = () => {
                             </Button>
                           </>
                         )}
+                        {lead.phone && (
+                          <WhatsAppQuickChat
+                            phone={lead.phone}
+                            customerName={lead.name}
+                            context={lead.shop_name ? `بخصوص محل "${lead.shop_name}"` : undefined}
+                          />
+                        )}
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(lead)}>
                           <Edit2 className="w-3.5 h-3.5" />
                         </Button>
