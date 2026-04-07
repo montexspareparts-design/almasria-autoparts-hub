@@ -40,6 +40,7 @@ const AdminERPCustomers = lazy(() => import("@/components/AdminERPCustomers"));
 const AdminStockSettings = lazy(() => import("@/components/AdminStockSettings"));
 const AdminLeads = lazy(() => import("@/components/AdminLeads"));
 const AdminStaffRoles = lazy(() => import("@/components/AdminStaffRoles"));
+const StaffDailyDashboard = lazy(() => import("@/components/admin/StaffDailyDashboard"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];
@@ -67,6 +68,7 @@ const sidebarGroups: SidebarGroup[] = [
   {
     label: "الرئيسية",
     items: [
+      { id: "daily-dashboard", label: "لوحة المهام اليومية", icon: BarChart3 },
       { id: "analytics", label: "التحليلات", icon: BarChart3 },
       { id: "product-insights", label: "تحليل الأصناف", icon: TrendingUp },
       { id: "customer-intel", label: "ذكاء العملاء", icon: Eye },
@@ -115,7 +117,7 @@ const sidebarGroups: SidebarGroup[] = [
 
 // Sections accessible by moderators (employees)
 const MODERATOR_SECTIONS = new Set([
-  "orders", "leads", "customers", "customer-intel",
+  "daily-dashboard", "orders", "leads", "customers", "customer-intel",
   "price-lists", "dealers", "analytics", "product-insights",
 ]);
 
@@ -525,6 +527,8 @@ const AdminDashboard = () => {
 
   const renderActiveSection = () => {
     switch (activeSection) {
+      case "daily-dashboard":
+        return <Suspense fallback={<SectionLoader />}><StaffDailyDashboard onNavigate={setActiveSection} /></Suspense>;
       case "analytics":
         return <Suspense fallback={<SectionLoader />}><AdminAnalytics /></Suspense>;
       case "product-insights":

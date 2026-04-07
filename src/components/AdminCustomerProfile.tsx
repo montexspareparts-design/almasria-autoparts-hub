@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Search, ArrowRight, Phone, Mail, MapPin, Building2, Calendar, ShoppingBag, CreditCard, FileText, TrendingUp, ChevronDown, ChevronUp, ExternalLink, Link2 } from "lucide-react";
 import WhatsAppQuickChat from "@/components/admin/WhatsAppQuickChat";
+import CustomerNotes from "@/components/admin/CustomerNotes";
 import type { Database } from "@/integrations/supabase/types";
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
@@ -275,6 +276,9 @@ const AdminCustomerProfile = () => {
             </CardContent>
           </Card>
         )}
+
+        {/* Internal Notes */}
+        <CustomerNotes customerUserId={app.user_id} />
 
         {/* ERP Customer Code */}
         {account && (
