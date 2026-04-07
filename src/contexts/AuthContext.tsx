@@ -146,7 +146,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               .select("role")
               .eq("user_id", session.user.id);
             const hasAdmin = roles?.some((r) => r.role === "admin") ?? false;
+            const hasModerator = roles?.some((r) => r.role === "moderator") ?? false;
             setIsAdmin(hasAdmin);
+            setIsModerator(hasModerator);
 
             // If both dealer and admin, check saved preference
             if (dealer && hasAdmin) {
