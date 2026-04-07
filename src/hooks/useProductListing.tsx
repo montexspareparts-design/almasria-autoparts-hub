@@ -202,7 +202,6 @@ const fuzzyMatchWord = (word: string, ...texts: string[]): boolean => {
 };
 
 const ITEMS_PER_PAGE = 48;
-const DAILY_LIMIT = 20;
 
 interface UseProductListingOptions {
   /** Filter by specific brand key (e.g., "toyota_genuine") */
@@ -219,6 +218,8 @@ export function useProductListing(options: UseProductListingOptions = {}) {
   const { isDealer, user, dealerAccount } = useAuth();
   const { addItem } = useCart();
   const queryClient = useQueryClient();
+  const DAILY_LIMIT = 20;
+  const isRetailTier = dealerAccount?.tier === 'retail';
 
   // Fetch max order percentage from site_settings
   const { data: maxOrderPct } = useQuery({
@@ -773,24 +774,30 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     if (!product) return null;
     if (!user) return null;
     if (!isDealer) return product.base_price;
+    // Retail tier sees base_price directly without reveal
+    if (isRetailTier) return product.base_price;
     if (viewedProductIds.includes(product.id)) return getProductPrice(product);
     return null;
-  }, [user, isDealer, viewedProductIds, getProductPrice]);
+  }, [user, isDealer, isRetailTier, viewedProductIds, getProductPrice]);
 
   const getDialogPriceLabel = useCallback((product: any) => {
     if (!product || !user) return undefined;
+    if (isDealer && isRetailTier) return "سعر قطاعي";
     if (isDealer && viewedProductIds.includes(product.id)) return "سعر الجملة الخاص بك";
     if (!isDealer) return "سعر قطاعي";
     return undefined;
-  }, [user, isDealer, viewedProductIds]);
+  }, [user, isDealer, isRetailTier, viewedProductIds]);
 
   const canAddToCartDialog = useCallback((product: any) => {
-    return !!user && (!isDealer || (product && viewedProductIds.includes(product.id)));
-  }, [user, isDealer, viewedProductIds]);
+    if (!user) return false;
+    if (!isDealer) return true;
+    if (isRetailTier) return true;
+    return product && viewedProductIds.includes(product.id);
+  }, [user, isDealer, isRetailTier, viewedProductIds]);
 
   return {
     // Auth
-    user, isDealer, dealerAccount,
+    user, isDealer, dealerAccount, isRetailTier,
     // Filters
     filters, setFilters,
     // View

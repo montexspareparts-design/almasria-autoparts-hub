@@ -31,6 +31,7 @@ interface ProductListingSectionProps {
   categoryCounts: Record<string, number>;
   user: any;
   isDealer: boolean;
+  isRetailTier?: boolean;
   viewedProductIds: string[];
   dailyViewCount: number;
   limitReached: boolean;
@@ -62,7 +63,7 @@ const ProductListingSection = memo(({
   hasMore, loadMore,
   products, isLoading, filteredProducts, paginatedProducts,
   visibleCategories, categoryCounts,
-  user, isDealer, viewedProductIds, dailyViewCount, limitReached, dailyLimit,
+  user, isDealer, isRetailTier = false, viewedProductIds, dailyViewCount, limitReached, dailyLimit,
   getProductPrice, handleAddToCart, handleLoginRequired, recordView,
   selectedProduct, setSelectedProduct,
   getDialogPrice, getDialogPriceLabel, canAddToCartDialog,
@@ -277,6 +278,7 @@ const ProductListingSection = memo(({
                             viewMode={viewMode}
                             user={user}
                             isDealer={isDealer}
+                            isRetailTier={isRetailTier}
                             viewedProductIds={viewedProductIds}
                             limitReached={limitReached}
                             dailyViewCount={dailyViewCount}

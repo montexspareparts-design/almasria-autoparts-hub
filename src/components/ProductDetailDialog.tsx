@@ -335,6 +335,17 @@ const ProductDetailDialog = ({
             </Button>
           )}
 
+          {/* Alternative Products from different brands in same category */}
+          {price !== null && product.category_id && (
+            <AlternativeProducts
+              product={product}
+              currentPrice={price}
+              brandLabels={brandLabels}
+              onClose={handleClose}
+              brandMap={brandMap}
+            />
+          )}
+
           {/* Car-based Recommendations */}
           {carProducts && carProducts.length > 0 && (
             <>
@@ -376,6 +387,87 @@ const ProductDetailDialog = ({
         </div>
       </DialogContent>
     </Dialog>
+  );
+};
+
+/* ── Alternative Products Sub-component ── */
+const AlternativeProducts = ({ product, currentPrice, brandLabels, onClose, brandMap }: {
+  product: any;
+  currentPrice: number;
+  brandLabels: Record<string, string>;
+  onClose: () => void;
+  brandMap: Record<string, string>;
+}) => {
+  const { data: alternatives } = useQuery({
+    queryKey: ["alternative_products", product.id, product.category_id, product.brand],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("products")
+        .select("id, name_ar, sku, brand, image_url, base_price, stock_quantity")
+        .eq("is_active", true)
+        .eq("category_id", product.category_id)
+        .neq("brand", product.brand)
+        .neq("id", product.id)
+        .gt("stock_quantity", 0)
+        .order("base_price", { ascending: true })
+        .limit(4);
+      return data || [];
+    },
+    enabled: !!product.category_id,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  if (!alternatives || alternatives.length === 0) return null;
+
+  return (
+    <>
+      <Separator />
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <Layers className="w-4 h-4 text-primary" />
+          <p className="text-sm font-bold text-foreground">بدائل متاحة من ماركات أخرى</p>
+        </div>
+        <div className="grid grid-cols-1 gap-2">
+          {alternatives.map((alt) => {
+            const priceDiff = alt.base_price - currentPrice;
+            const priceDiffPct = currentPrice > 0 ? Math.round((priceDiff / currentPrice) * 100) : 0;
+            return (
+              <Link
+                key={alt.id}
+                to={`/products/${brandMap[alt.brand] || "toyota-genuine"}?search=${encodeURIComponent(alt.sku)}`}
+                onClick={onClose}
+                className="group flex items-center gap-3 p-2.5 rounded-lg border border-border hover:border-primary/30 hover:bg-primary/5 transition-all"
+              >
+                <div className="w-12 h-12 rounded-md bg-white shrink-0 overflow-hidden">
+                  {alt.image_url ? (
+                    <img src={alt.image_url} alt={alt.name_ar} className="w-full h-full object-contain" loading="lazy" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center"><Package className="w-5 h-5 text-muted-foreground/30" /></div>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <Badge variant="secondary" className="text-[9px] px-1.5 py-0">
+                      {brandLabels[alt.brand] || alt.brand}
+                    </Badge>
+                    <span className="text-[10px] font-mono text-muted-foreground">{alt.sku}</span>
+                  </div>
+                  <p className="text-xs font-semibold text-card-foreground leading-tight line-clamp-1 group-hover:text-primary transition-colors">{alt.name_ar}</p>
+                </div>
+                <div className="text-left shrink-0">
+                  <p className="text-sm font-bold text-foreground">{alt.base_price.toLocaleString("ar-EG")} ج.م</p>
+                  {priceDiff !== 0 && (
+                    <p className={`text-[10px] font-semibold ${priceDiff < 0 ? 'text-green-600' : 'text-destructive'}`}>
+                      {priceDiff < 0 ? `أوفر ${Math.abs(priceDiffPct)}%` : `أغلى ${priceDiffPct}%`}
+                    </p>
+                  )}
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    </>
   );
 };
 
