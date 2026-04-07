@@ -100,6 +100,7 @@ const DealerQuickOrder = () => {
   const removeLine = (idx: number) => setLines(prev => prev.filter((_, i) => i !== idx));
 
   const updateLineQty = (idx: number, delta: number) => {
+    setQtyDir(prev => ({ ...prev, [idx]: delta > 0 ? 'up' : 'down' }));
     setLines(prev => prev.map((l, i) => i === idx ? { ...l, quantity: Math.max(1, l.quantity + delta) } : l));
   };
 
