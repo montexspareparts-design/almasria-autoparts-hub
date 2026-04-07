@@ -102,9 +102,19 @@ serve(async (req) => {
           status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      // Update stored password
+      // Update stored password in dealer_passwords table
       if (erpCode) {
-        await adminClient.from("dealer_accounts").update({ initial_password: new_password }).eq("erp_customer_code", erpCode);
+        const { data: dealerAcc2 } = await adminClient
+          .from("dealer_accounts")
+          .select("id")
+          .eq("erp_customer_code", erpCode)
+          .maybeSingle();
+        if (dealerAcc2) {
+          await adminClient.from("dealer_passwords").upsert(
+            { dealer_account_id: dealerAcc2.id, initial_password: new_password },
+            { onConflict: "dealer_account_id" }
+          );
+        }
       }
       return new Response(JSON.stringify({ success: true }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -189,15 +199,22 @@ serve(async (req) => {
     // Determine tier based on client_type
     const tier = client_type === "wholesale" ? "wholesale_tier2" : "retail";
 
-    // Create dealer account linked to ERP (store initial password for admin retrieval)
-    await adminClient.from("dealer_accounts").insert({
+    // Create dealer account linked to ERP
+    const { data: newDealer } = await adminClient.from("dealer_accounts").insert({
       user_id: userId,
       erp_customer_code: erp_customer_code,
       erp_customer_name: shop_name || name,
       tier,
       is_active: true,
-      initial_password: password,
-    });
+    }).select("id").single();
+
+    // Store initial password in separate secure table
+    if (newDealer) {
+      await adminClient.from("dealer_passwords").insert({
+        dealer_account_id: newDealer.id,
+        initial_password: password,
+      });
+    }
 
     // Update lead status if lead_id provided
     if (lead_id) {
