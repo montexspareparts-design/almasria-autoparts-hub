@@ -278,6 +278,7 @@ const ProductListingSection = memo(({
                             viewMode={viewMode}
                             user={user}
                             isDealer={isDealer}
+                            isRetailTier={isRetailTier}
                             viewedProductIds={viewedProductIds}
                             limitReached={limitReached}
                             dailyViewCount={dailyViewCount}
