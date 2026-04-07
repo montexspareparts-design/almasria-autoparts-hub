@@ -224,6 +224,22 @@ serve(async (req) => {
         .eq("id", lead_id);
     }
 
+    // Send WhatsApp welcome message with credentials
+    try {
+      await fetch(`${supabaseUrl}/functions/v1/notify-dealer-welcome`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: cleanPhone,
+          name: name,
+          username: phone,
+          password: password,
+        }),
+      });
+    } catch (e) {
+      console.error("Welcome WhatsApp failed (non-blocking):", e);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
