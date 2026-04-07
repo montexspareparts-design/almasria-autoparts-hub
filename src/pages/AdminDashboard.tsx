@@ -117,7 +117,7 @@ const sidebarGroups: SidebarGroup[] = [
 const MODERATOR_SECTIONS = new Set([
   "orders", "leads", "customers", "customer-intel", "products",
   "bulk-import", "price-lists", "dealers", "analytics", "product-insights",
-  "erp-customers", "stock-settings",
+  "stock-settings",
 ]);
 
 const sidebarSections = sidebarGroups.flatMap(g => g.items);
