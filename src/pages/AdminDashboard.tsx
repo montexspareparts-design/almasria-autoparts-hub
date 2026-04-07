@@ -676,7 +676,7 @@ const AdminDashboard = () => {
           )}
 
           <nav className="p-2.5 space-y-1">
-            {sidebarGroups.map((group, gi) => (
+            {filteredSidebarGroups.map((group, gi) => (
               <div key={group.label}>
                 {gi > 0 && <div className="h-px bg-border/40 mx-3 my-2" />}
                 <div className="px-3 py-1.5 text-[9px] font-extrabold uppercase tracking-[0.15em] text-muted-foreground/40">
