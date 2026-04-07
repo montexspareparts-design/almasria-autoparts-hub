@@ -797,7 +797,7 @@ export function useProductListing(options: UseProductListingOptions = {}) {
 
   return {
     // Auth
-    user, isDealer, dealerAccount,
+    user, isDealer, dealerAccount, isRetailTier,
     // Filters
     filters, setFilters,
     // View
