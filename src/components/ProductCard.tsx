@@ -45,7 +45,7 @@ const ProductCard = memo(({
   if (viewMode === "list") {
     return (
       <div
-        className="bg-card border border-border/50 rounded-2xl overflow-hidden hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 cursor-pointer flex group animate-fade-in"
+        className="bg-card border border-border/50 rounded-2xl overflow-hidden hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 cursor-pointer flex group"
         onClick={() => onProductClick(product)}
       >
         {/* Image */}
@@ -114,68 +114,68 @@ const ProductCard = memo(({
     );
   }
 
-  // Grid mode — Premium card design
+  // Grid mode — Premium luxurious card design
   return (
     <div
-      className="bg-card rounded-2xl overflow-hidden group cursor-pointer relative
-        border border-border/40
-        hover:border-primary/30 hover:shadow-[0_8px_30px_hsl(var(--primary)/0.08),0_4px_12px_hsl(0_0%_0%/0.06)]
-        hover:-translate-y-0.5
-        transition-all duration-300 ease-out animate-fade-in"
+      className="bg-card rounded-2xl overflow-hidden group cursor-pointer relative flex flex-col
+        border border-border/30
+        shadow-[0_1px_3px_rgba(0,0,0,0.04)]
+        hover:border-primary/25
+        hover:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.12),0_4px_16px_rgba(0,0,0,0.06)]
+        hover:-translate-y-1
+        transition-all duration-500 ease-out"
       onClick={() => onProductClick(product)}
     >
       {/* ── Image Section ── */}
-      <div className="aspect-[4/3] bg-gradient-to-br from-white via-white to-muted/10 relative overflow-hidden">
-        {/* Subtle shimmer */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out z-10 pointer-events-none" />
+      <div className="aspect-[4/3] bg-white relative overflow-hidden">
+        {/* Elegant inner shadow */}
+        <div className="absolute inset-0 shadow-[inset_0_-1px_0_0_rgba(0,0,0,0.04)] z-10 pointer-events-none" />
+        
+        {/* Luxury shimmer on hover */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out z-10 pointer-events-none" />
 
         {product.image_url ? (
           <img
             src={product.image_url}
             alt={product.name_ar}
-            className="w-full h-full object-contain p-4 sm:p-5 mix-blend-multiply
-              group-hover:scale-[1.06] transition-transform duration-500 ease-out"
+            className="w-full h-full object-contain p-4 sm:p-5
+              group-hover:scale-105 transition-transform duration-700 ease-out"
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted/5 to-muted/15">
             <Package className="w-12 h-12 text-muted-foreground/10" />
           </div>
         )}
 
-        {/* Sale badge — top left */}
+        {/* Sale badge — top left with premium styling */}
         {product.is_on_sale && (
-          <Badge className="absolute top-2.5 left-2.5 bg-destructive text-destructive-foreground text-[9px] font-bold px-2 py-0.5 shadow-lg shadow-destructive/25 z-20 rounded-md">
+          <Badge className="absolute top-3 left-3 bg-destructive text-destructive-foreground text-[9px] font-black px-2.5 py-1 shadow-lg shadow-destructive/30 z-20 rounded-lg tracking-wide">
             تخفيض
           </Badge>
         )}
 
-        {/* Stock dot — top right */}
-        <div className={`absolute top-2.5 right-2.5 z-20 flex items-center gap-1 ${
-          stockAvailable ? "text-green-600" : "text-red-500"
-        }`}>
-          <div className={`w-1.5 h-1.5 rounded-full ring-[1.5px] ring-white shadow-sm ${
-            stockAvailable ? "bg-green-500" : "bg-red-400"
+        {/* Stock indicator — top right, elegant dot */}
+        <div className="absolute top-3 right-3 z-20">
+          <div className={`w-2.5 h-2.5 rounded-full ring-2 ring-white/90 shadow-sm ${
+            stockAvailable ? "bg-emerald-500" : "bg-red-400"
           }`} />
         </div>
 
-        {/* Priced badge overlay */}
+        {/* Priced badge — bottom left */}
         {hasViewed && (
-          <div className="absolute bottom-2 left-2 z-20">
-            <span className="inline-flex items-center gap-0.5 bg-green-500/90 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-md shadow-sm">
+          <div className="absolute bottom-2.5 left-2.5 z-20">
+            <span className="inline-flex items-center gap-1 bg-emerald-500/90 backdrop-blur-sm text-white text-[8px] font-bold px-2 py-0.5 rounded-lg shadow-sm">
               <Check className="w-2.5 h-2.5" /> مسعّر
             </span>
           </div>
         )}
       </div>
 
-      {/* ── Divider ── */}
-      <div className="h-px bg-border/40" />
-
       {/* ── Content Section ── */}
-      <div className="p-3 sm:p-3.5 space-y-2" onClick={(e) => e.stopPropagation()}>
-        {/* Top row: Stock + Brand */}
-        <div className="flex items-center justify-between gap-1">
+      <div className="flex-1 flex flex-col p-3.5 sm:p-4 border-t border-border/20" onClick={(e) => e.stopPropagation()}>
+        {/* Top row: SKU + Brand + Stock */}
+        <div className="flex items-center justify-between gap-1 mb-2">
           <div className="flex items-center gap-1.5">
             <StockBadge available={stockAvailable} />
             {brandRouteMap[product.brand] && (
@@ -188,26 +188,29 @@ const ProductCard = memo(({
               </Link>
             )}
           </div>
-          <span className="text-[8px] sm:text-[9px] font-mono text-muted-foreground/50 tracking-wider leading-none">
+          <span className="text-[8px] sm:text-[9px] font-mono text-muted-foreground/40 tracking-wider leading-none select-all">
             {product.sku}
           </span>
         </div>
 
-        {/* Name */}
-        <h3 className="font-bold text-card-foreground text-[11px] sm:text-[13px] leading-snug line-clamp-2 min-h-[2.5em]
-          group-hover:text-primary transition-colors duration-200">
+        {/* Name — with stable height */}
+        <h3 className="font-bold text-card-foreground text-[11px] sm:text-[13px] leading-snug line-clamp-2 min-h-[2.6em] mb-1
+          group-hover:text-primary transition-colors duration-300">
           {product.name_ar}
         </h3>
 
         {/* Category */}
         {product.product_categories && (
-          <p className="text-[8px] sm:text-[10px] text-muted-foreground/50 leading-none truncate">
+          <p className="text-[8px] sm:text-[10px] text-muted-foreground/45 leading-none truncate mb-2">
             {(product.product_categories as any).name_ar}
           </p>
         )}
 
+        {/* Spacer to push price/button to bottom */}
+        <div className="flex-1" />
+
         {/* Price / Action */}
-        <div className="pt-0.5">
+        <div className="pt-1 border-t border-border/10">
           <PriceSection
             user={user}
             isDealer={isDealer}
@@ -226,7 +229,7 @@ const ProductCard = memo(({
         {stockAvailable && canSeePrice && (
           <Button
             size="sm"
-            className="w-full gap-1.5 text-[10px] sm:text-xs h-8 sm:h-9 rounded-xl font-bold
+            className="w-full gap-1.5 text-[10px] sm:text-xs h-9 rounded-xl font-bold mt-2
               shadow-sm hover:shadow-md hover:shadow-primary/15 active:scale-[0.98] transition-all duration-200"
             onClick={() => onAddToCart(product)}
           >
@@ -246,7 +249,7 @@ ProductCard.displayName = "ProductCard";
 const StockBadge = ({ available }: { available: boolean }) => (
   <span className={`inline-flex items-center gap-0.5 text-[8px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-md font-semibold leading-none ${
     available
-      ? "text-green-700 bg-green-50/80 dark:text-green-400 dark:bg-green-950/30"
+      ? "text-emerald-700 bg-emerald-50/80 dark:text-emerald-400 dark:bg-emerald-950/30"
       : "text-red-600 bg-red-50/80 dark:text-red-400 dark:bg-red-950/30"
   }`}>
     {available ? "متوفر" : "غير متوفر"}
@@ -286,12 +289,12 @@ const PriceSection = ({
 
   if (price !== null) {
     return (
-      <div className={compact ? "flex items-baseline gap-1.5" : "space-y-0.5"}>
+      <div className={compact ? "flex items-baseline gap-1.5" : "space-y-0.5 py-1"}>
         <div className="text-primary font-black text-base sm:text-lg tracking-tight leading-tight">
-          {price.toLocaleString("ar-EG")} <span className="text-[10px] sm:text-xs font-bold text-primary/70">ج.م</span>
+          {price.toLocaleString("ar-EG")} <span className="text-[10px] sm:text-xs font-bold text-primary/60">ج.م</span>
         </div>
         <p className={`text-[8px] sm:text-[10px] font-medium leading-none ${
-          isDealer && hasViewed ? "text-green-600 dark:text-green-400" : "text-muted-foreground/60"
+          isDealer && hasViewed ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground/50"
         }`}>
           {isDealer && hasViewed ? "✓ سعر الجملة الخاص بك" : "سعر قطاعي"}
         </p>
@@ -306,7 +309,7 @@ const PriceSection = ({
       </Button>
     ) : (
       <button
-        className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-[10px] sm:text-xs font-bold
+        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold
           bg-primary/8 text-primary border border-primary/15
           hover:bg-primary/15 hover:border-primary/25 active:scale-[0.98]
           transition-all duration-200"
@@ -321,7 +324,7 @@ const PriceSection = ({
 
   if (isDealer && limitReached) {
     return (
-      <div className="flex items-center justify-center gap-1.5 text-muted-foreground/60 text-[10px] sm:text-xs py-2 rounded-xl bg-muted/30">
+      <div className="flex items-center justify-center gap-1.5 text-muted-foreground/60 text-[10px] sm:text-xs py-2.5 rounded-xl bg-muted/30">
         <Lock className="w-3 h-3" />
         <span>استنفدت الحد اليومي</span>
       </div>
