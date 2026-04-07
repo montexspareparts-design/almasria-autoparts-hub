@@ -734,6 +734,32 @@ const AdminDashboard = () => {
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto bg-muted/20">
           <div className="p-4 lg:p-6 max-w-6xl">
+            {/* Quick Nav Strip for moderators */}
+            {isModerator && !isAdmin && (
+              <div className="flex items-center gap-1.5 mb-4 overflow-x-auto scrollbar-none pb-1">
+                {filteredSidebarSections.map((section) => {
+                  const Icon = section.icon;
+                  const isActive = activeSection === section.id;
+                  return (
+                    <button
+                      key={section.id}
+                      onClick={() => setActiveSection(section.id)}
+                      className={`
+                        flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold whitespace-nowrap transition-all shrink-0
+                        ${isActive
+                          ? "bg-primary text-primary-foreground shadow-sm"
+                          : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                        }
+                      `}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                      {section.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
             {/* Page Header */}
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2.5">
