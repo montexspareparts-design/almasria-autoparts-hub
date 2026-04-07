@@ -49,9 +49,14 @@ const DealerDashboard = () => {
   const dealerCart = useDealerCart();
   const cartItemCount = dealerCart.itemCount;
 
+  const { isModerator, isAdmin } = useAuth();
+
   useEffect(() => {
     if (!authLoading && !user) { navigate("/auth"); return; }
-    if (!authLoading && user && !isDealer) { navigate("/"); return; }
+    if (!authLoading && user && !isDealer) {
+      if (isAdmin || isModerator) { navigate("/admin"); return; }
+      navigate("/"); return;
+    }
     if (user && isDealer) fetchData();
   }, [user, authLoading, isDealer]);
 
