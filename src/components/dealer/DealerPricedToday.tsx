@@ -70,7 +70,7 @@ const DealerPricedToday = ({ onConvertToOrder, sharedCart }: DealerPricedTodayPr
     const productIds = views.map(v => v.product_id);
     const { data: products } = await supabase
       .from("products")
-      .select("id, name_ar, name_en, sku, base_price, sale_price, is_on_sale, image_url, stock_quantity, brand")
+      .select("id, name_ar, name_en, sku, base_price, sale_price, is_on_sale, image_url, stock_quantity, brand, safety_stock, max_order_cap")
       .in("id", productIds);
 
     let tierPricesMap: Record<string, number> = {};
