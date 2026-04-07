@@ -104,6 +104,11 @@ const DealerQuickOrder = () => {
     setLines(prev => prev.map((l, i) => i === idx ? { ...l, quantity: Math.max(1, l.quantity + delta) } : l));
   };
 
+  const setLineQty = (idx: number, newQty: number) => {
+    const clamped = Math.max(1, newQty);
+    setLines(prev => prev.map((l, i) => i === idx ? { ...l, quantity: clamped } : l));
+  };
+
   const totalAmount = lines.reduce((sum, l) => {
     if (l.product) return sum + l.product.base_price * l.quantity;
     return sum;
