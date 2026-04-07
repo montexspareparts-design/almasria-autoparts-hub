@@ -943,31 +943,23 @@ Deno.serve(async (req) => {
       const items = Array.isArray(itemsRes) ? itemsRes : (itemsRes.data || itemsRes.items || []);
       const products = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
 
-      // Find specific SKUs to compare
-      const testSkus = ["90313-13001", "K20TNR-DENSO", "53238-26010", "13450-0W070", "85222-71010"];
-      
-      const comparison: any[] = [];
-      for (const sku of testSkus) {
-        const itemIdx = items.findIndex((i: any) => String(i.id).trim() === sku);
-        const itemMatch = itemIdx >= 0 ? items[itemIdx] : null;
-        const prodAtIdx = itemIdx >= 0 ? products[itemIdx] : null;
-        
-        // Also search products by any ID-like field
-        const prodDirect = products.find((p: any) => 
-          String(p.id || "").trim() === sku || 
-          String(p.itemCode || "").trim() === sku ||
-          String(p.sku || "").trim() === sku ||
-          String(p.productId || "").trim() === sku
-        );
-
-        comparison.push({
-          sku,
-          itemFound: !!itemMatch,
-          itemIndex: itemIdx,
-          itemData: itemMatch,
-          productAtSameIndex: prodAtIdx,
-          productDirectMatch: prodDirect,
-        });
+      // Search for our erp_item_codes in the ERP data
+      const ourCodes = data?.erp_codes || ["11603", "20587", "19489"];
+      const codeMatches: any[] = [];
+      for (const code of ourCodes) {
+        const trimCode = code.trim();
+        const idx = items.findIndex((i: any) => String(i.id).trim() === trimCode);
+        if (idx >= 0) {
+          codeMatches.push({
+            erp_item_code: trimCode,
+            found: true,
+            index: idx,
+            item: items[idx],
+            product: products[idx],
+          });
+        } else {
+          codeMatches.push({ erp_item_code: trimCode, found: false });
+        }
       }
 
       result = {
@@ -976,9 +968,9 @@ Deno.serve(async (req) => {
         products_count: products.length,
         getItems_keys: items.length > 0 ? Object.keys(items[0]) : [],
         products_keys: products.length > 0 ? Object.keys(products[0]) : [],
-        getItems_sample: items.slice(0, 5),
-        products_sample: products.slice(0, 5),
-        comparison,
+        getItems_sample: items.slice(0, 3),
+        products_sample: products.slice(0, 3),
+        codeMatches,
       };
     }
 
