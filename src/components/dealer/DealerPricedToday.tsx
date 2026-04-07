@@ -111,13 +111,49 @@ const DealerPricedToday = ({ onConvertToOrder, sharedCart }: DealerPricedTodayPr
 
   const [qtyDir, setQtyDir] = useState<Record<string, 'up' | 'down'>>({});
 
+  // Fetch max order percentage
+  const { data: maxOrderPct } = useQuery({
+    queryKey: ["site_settings", "max_order_percentage"],
+    queryFn: async () => {
+      const { data } = await supabase.from("site_settings").select("value").eq("key", "max_order_percentage").maybeSingle();
+      return parseInt(data?.value || "25") || 25;
+    },
+  });
+
+  // Compute max allowed per item
+  const maxAllowedMap = useMemo(() => {
+    const pct = maxOrderPct || 25;
+    const map: Record<string, number> = {};
+    for (const item of items) {
+      const available = Math.max(0, (item.product.stock_quantity || 0) - (item.product.safety_stock || 0));
+      const pctCap = Math.max(1, Math.floor(available * pct / 100));
+      map[item.product_id] = item.product.max_order_cap ? Math.min(pctCap, item.product.max_order_cap) : pctCap;
+    }
+    return map;
+  }, [items, maxOrderPct]);
+
   const updateQuantity = (productId: string, delta: number) => {
     setQtyDir(prev => ({ ...prev, [productId]: delta > 0 ? 'up' : 'down' }));
-    setItems(prev => prev.map(item => item.product_id !== productId ? item : { ...item, quantity: Math.max(1, item.quantity + delta) }));
+    setItems(prev => prev.map(item => {
+      if (item.product_id !== productId) return item;
+      const max = maxAllowedMap[productId] || 999;
+      const newQty = Math.max(1, item.quantity + delta);
+      if (newQty > max) {
+        toast({ title: `الحد الأقصى ${max} قطعة`, description: item.product.name_ar });
+        return { ...item, quantity: max };
+      }
+      return { ...item, quantity: newQty };
+    }));
   };
 
   const setQuantity = (productId: string, newQty: number) => {
-    setItems(prev => prev.map(item => item.product_id !== productId ? item : { ...item, quantity: Math.max(1, newQty) }));
+    const max = maxAllowedMap[productId] || 999;
+    const clamped = Math.min(Math.max(1, newQty), max);
+    if (newQty > max) {
+      const item = items.find(i => i.product_id === productId);
+      if (item) toast({ title: `الحد الأقصى ${max} قطعة`, description: item.product.name_ar });
+    }
+    setItems(prev => prev.map(item => item.product_id !== productId ? item : { ...item, quantity: clamped }));
   };
 
   const removeItem = (productId: string) => {
