@@ -28,6 +28,8 @@ interface OrderLine {
   product?: MatchedProduct;
 }
 
+interface QtyDir { [idx: number]: 'up' | 'down' }
+
 const DealerQuickOrder = () => {
   const { user } = useAuth();
   const [sku, setSku] = useState("");
