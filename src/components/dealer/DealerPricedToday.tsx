@@ -106,8 +106,15 @@ const DealerPricedToday = ({ onConvertToOrder, sharedCart }: DealerPricedTodayPr
     setSelectedIds(selectedIds.size === items.length ? new Set() : new Set(items.map(i => i.product_id)));
   };
 
+  const [qtyDir, setQtyDir] = useState<Record<string, 'up' | 'down'>>({});
+
   const updateQuantity = (productId: string, delta: number) => {
+    setQtyDir(prev => ({ ...prev, [productId]: delta > 0 ? 'up' : 'down' }));
     setItems(prev => prev.map(item => item.product_id !== productId ? item : { ...item, quantity: Math.max(1, item.quantity + delta) }));
+  };
+
+  const setQuantity = (productId: string, newQty: number) => {
+    setItems(prev => prev.map(item => item.product_id !== productId ? item : { ...item, quantity: Math.max(1, newQty) }));
   };
 
   const removeItem = (productId: string) => {
