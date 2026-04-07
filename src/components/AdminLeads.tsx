@@ -105,19 +105,27 @@ const AdminLeads = () => {
     if (convertedLeads.length === 0) return;
     
     const erpCodes = convertedLeads.map(l => l.erp_customer_code!);
-    const { data } = await supabase
+    // Get dealer account IDs by ERP codes
+    const { data: accounts } = await supabase
       .from("dealer_accounts")
-      .select("erp_customer_code, initial_password")
+      .select("id, erp_customer_code")
       .in("erp_customer_code", erpCodes);
     
-    if (data) {
+    if (accounts && accounts.length > 0) {
+      const accountIds = accounts.map(a => a.id);
+      const { data: passwords } = await supabase
+        .from("dealer_passwords" as any)
+        .select("dealer_account_id, initial_password")
+        .in("dealer_account_id", accountIds);
+      
       const creds: Record<string, LeadCredentials> = {};
       for (const lead of convertedLeads) {
-        const account = data.find(d => d.erp_customer_code === lead.erp_customer_code);
+        const account = accounts.find(a => a.erp_customer_code === lead.erp_customer_code);
+        const pw = (passwords as any[])?.find((p: any) => p.dealer_account_id === account?.id);
         const cleanPhone = lead.phone.replace(/\D/g, "");
         creds[lead.id] = {
           username: cleanPhone,
-          password: account?.initial_password || "غير محفوظة",
+          password: pw?.initial_password || "غير محفوظة",
         };
       }
       setLeadCredentials(creds);
