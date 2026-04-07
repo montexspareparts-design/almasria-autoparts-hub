@@ -53,6 +53,7 @@ const DealerProductSearch = ({ onNavigateToOrders, onNavigateToCart, sharedCart 
         categoryCounts={listing.categoryCounts}
         user={listing.user}
         isDealer={listing.isDealer}
+        isRetailTier={listing.isRetailTier}
         viewedProductIds={listing.viewedProductIds}
         dailyViewCount={listing.dailyViewCount}
         limitReached={listing.limitReached}
