@@ -25,7 +25,7 @@ const OurClientsSection = lazy(() => import("@/components/OurClientsSection"));
 const MaintenanceTipsSection = lazy(() => import("@/components/MaintenanceTipsSection"));
 const ContactSimple = lazy(() => import("@/components/ContactSimple"));
 const Footer = lazy(() => import("@/components/Footer"));
-const WhatsAppFloat = lazy(() => import("@/components/WhatsAppFloat"));
+
 const BackToTop = lazy(() => import("@/components/BackToTop"));
 const CarProfilePopup = lazy(() => import("@/components/CarProfilePopup"));
 
