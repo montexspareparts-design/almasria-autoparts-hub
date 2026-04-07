@@ -127,7 +127,7 @@ const SectionLoader = () => (
 );
 
 const AdminDashboard = () => {
-  const { user, isAdmin, isDealer, loading: authLoading, signOut } = useAuth();
+  const { user, isAdmin, isModerator, isDealer, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -143,7 +143,23 @@ const AdminDashboard = () => {
   const [fetchingApproveErpName, setFetchingApproveErpName] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const activeSection = searchParams.get("section") || "analytics";
+  const canAccess = isAdmin || isModerator;
+
+  // Filter sidebar for moderators
+  const filteredSidebarGroups = canAccess
+    ? (isModerator && !isAdmin
+      ? sidebarGroups
+          .map(g => ({
+            ...g,
+            items: g.items.filter(item => MODERATOR_SECTIONS.has(item.id)),
+          }))
+          .filter(g => g.items.length > 0)
+      : sidebarGroups)
+    : [];
+
+  const filteredSidebarSections = filteredSidebarGroups.flatMap(g => g.items);
+
+  const activeSection = searchParams.get("section") || (filteredSidebarSections[0]?.id || "analytics");
 
   const setActiveSection = (section: string) => {
     setSearchParams({ section });
@@ -151,9 +167,9 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     if (!authLoading && !user) { navigate("/auth"); return; }
-    if (!authLoading && !isAdmin) { navigate("/dealer"); return; }
-    if (isAdmin) fetchApplications();
-  }, [user, authLoading, isAdmin]);
+    if (!authLoading && !canAccess) { navigate("/dealer"); return; }
+    if (canAccess) fetchApplications();
+  }, [user, authLoading, canAccess]);
 
   const fetchApplications = async () => {
     const { data } = await supabase
