@@ -140,33 +140,40 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
   const vat = subtotal * 0.14;
   const total = subtotal + vat;
 
-  // Per-item validation: check if any item exceeds 25% limit
-  const itemViolations = useMemo(() => {
+  // Compute max allowed per item
+  const maxAllowedMap = useMemo(() => {
     const pct = maxOrderPct || 25;
-    const violations: { product_id: string; sku: string; name: string; quantity: number; maxAllowed: number }[] = [];
+    const map: Record<string, number> = {};
     for (const item of items) {
       const available = Math.max(0, (item.product.stock_quantity || 0) - (item.product.safety_stock || 0));
       const pctCap = Math.max(1, Math.floor(available * pct / 100));
       const maxAllowed = item.product.max_order_cap ? Math.min(pctCap, item.product.max_order_cap) : pctCap;
-      if (item.quantity > maxAllowed) {
-        violations.push({
-          product_id: item.product_id,
-          sku: item.product.sku,
-          name: item.product.name_ar,
-          quantity: item.quantity,
-          maxAllowed,
-        });
-      }
+      map[item.product_id] = maxAllowed;
     }
-    return violations;
+    return map;
   }, [items, maxOrderPct]);
 
-  const hasViolations = itemViolations.length > 0;
-  const violationMap = useMemo(() => {
-    const map: Record<string, number> = {};
-    itemViolations.forEach(v => { map[v.product_id] = v.maxAllowed; });
-    return map;
-  }, [itemViolations]);
+  // Track quantity direction for animation
+  const [qtyDirection, setQtyDirection] = useState<Record<string, 'up' | 'down'>>({});
+
+  // Smart quantity update with auto-correction
+  const handleQtyChange = useCallback((productId: string, newQty: number) => {
+    const currentItem = items.find(i => i.product_id === productId);
+    if (!currentItem) return;
+    const max = maxAllowedMap[productId] || 999;
+    
+    setQtyDirection(prev => ({
+      ...prev,
+      [productId]: newQty > (currentItem.quantity) ? 'up' : 'down'
+    }));
+
+    if (newQty > max) {
+      updateQuantity(productId, max);
+      toast({ title: `الحد الأقصى ${max} قطعة`, description: currentItem.product.name_ar });
+      return;
+    }
+    updateQuantity(productId, newQty);
+  }, [items, maxAllowedMap, updateQuantity]);
 
   // Search products
   const handleSearch = useCallback((query: string) => {
