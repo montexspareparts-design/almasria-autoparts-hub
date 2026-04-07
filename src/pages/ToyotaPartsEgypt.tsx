@@ -6,7 +6,7 @@ import Navbar from "@/components/Navbar";
 import { lazy, Suspense } from "react";
 
 const Footer = lazy(() => import("@/components/Footer"));
-const WhatsAppFloat = lazy(() => import("@/components/WhatsAppFloat"));
+
 
 const features = [
   { icon: ShieldCheck, title: "موزع معتمد", desc: "وكيل رسمي لقطع غيار تويوتا الأصلية وزيوت تويوتا في مصر" },
