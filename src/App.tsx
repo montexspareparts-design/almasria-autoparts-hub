@@ -78,6 +78,7 @@ const App = () => (
             <CartProvider>
               <DeferredComponent delay={2000}><InstallBannerLazy /></DeferredComponent>
               <DeferredComponent delay={4000}><AIChatBot /></DeferredComponent>
+              <DeferredComponent delay={2500}><WhatsAppFloat /></DeferredComponent>
                <Suspense fallback={<PageLoader />}>
                   <Routes>
                     <Route path="/" element={<Index />} />
