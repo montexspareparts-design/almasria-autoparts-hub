@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Search, ArrowRight, Phone, Mail, MapPin, Building2, Calendar, ShoppingBag, CreditCard, FileText, TrendingUp, ChevronDown, ChevronUp, ExternalLink, Link2 } from "lucide-react";
 import WhatsAppQuickChat from "@/components/admin/WhatsAppQuickChat";
 import CustomerNotes from "@/components/admin/CustomerNotes";
+import CustomerCommunicationLog from "@/components/admin/CustomerCommunicationLog";
 import type { Database } from "@/integrations/supabase/types";
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
@@ -276,6 +277,9 @@ const AdminCustomerProfile = () => {
             </CardContent>
           </Card>
         )}
+
+        {/* Communication Log */}
+        <CustomerCommunicationLog customerUserId={app.user_id} />
 
         {/* Internal Notes */}
         <CustomerNotes customerUserId={app.user_id} />
