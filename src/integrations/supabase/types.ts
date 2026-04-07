@@ -221,6 +221,33 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_communications: {
+        Row: {
+          comm_type: string
+          created_at: string
+          customer_user_id: string
+          id: string
+          note: string | null
+          staff_user_id: string
+        }
+        Insert: {
+          comm_type?: string
+          created_at?: string
+          customer_user_id: string
+          id?: string
+          note?: string | null
+          staff_user_id: string
+        }
+        Update: {
+          comm_type?: string
+          created_at?: string
+          customer_user_id?: string
+          id?: string
+          note?: string | null
+          staff_user_id?: string
+        }
+        Relationships: []
+      }
       customer_notes: {
         Row: {
           created_at: string
