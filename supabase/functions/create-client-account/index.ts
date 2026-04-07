@@ -102,9 +102,19 @@ serve(async (req) => {
           status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      // Update stored password
+      // Update stored password in dealer_passwords table
       if (erpCode) {
-        await adminClient.from("dealer_accounts").update({ initial_password: new_password }).eq("erp_customer_code", erpCode);
+        const { data: dealerAcc2 } = await adminClient
+          .from("dealer_accounts")
+          .select("id")
+          .eq("erp_customer_code", erpCode)
+          .maybeSingle();
+        if (dealerAcc2) {
+          await adminClient.from("dealer_passwords").upsert(
+            { dealer_account_id: dealerAcc2.id, initial_password: new_password },
+            { onConflict: "dealer_account_id" }
+          );
+        }
       }
       return new Response(JSON.stringify({ success: true }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
