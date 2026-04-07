@@ -574,6 +574,8 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminPaymobSettings /></Suspense>;
       case "stock-settings":
         return <Suspense fallback={<SectionLoader />}><AdminStockSettings /></Suspense>;
+      case "staff-roles":
+        return <Suspense fallback={<SectionLoader />}><AdminStaffRoles /></Suspense>;
       case "audit-log":
         return <Suspense fallback={<SectionLoader />}><AdminAuditLog /></Suspense>;
       case "bundles":
