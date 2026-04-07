@@ -18,7 +18,7 @@ async function sendWhatsApp(phone: string, message: string) {
 
   try {
     const resp = await fetch(
-      `https://graph.facebook.com/v21.0/${phoneNumberId}/messages`,
+      `https://crm.whats-meta.com/api/meta/v19.0/${phoneNumberId}/messages`,
       {
         method: "POST",
         headers: {

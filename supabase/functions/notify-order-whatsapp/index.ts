@@ -21,7 +21,7 @@ async function sendWhatsApp(phone: string, message: string) {
   if (/^\d{10}$/.test(formatted)) formatted = "2" + formatted;
 
   const resp = await fetch(
-    `https://graph.facebook.com/v21.0/${phoneNumberId}/messages`,
+    `https://crm.whats-meta.com/api/meta/v19.0/${phoneNumberId}/messages`,
     {
       method: "POST",
       headers: {
