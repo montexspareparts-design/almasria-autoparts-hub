@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 const COMM_TYPES = [
   { value: "phone", label: "📞 مكالمة هاتفية", icon: Phone, color: "bg-blue-100 text-blue-800" },
   { value: "whatsapp", label: "💬 واتساب", icon: MessageCircle, color: "bg-green-100 text-green-800" },
+  { value: "whatsapp_reply", label: "📩 رد واتساب (وارد)", icon: MessageCircle, color: "bg-emerald-100 text-emerald-800 border border-emerald-300" },
   { value: "visit", label: "🏪 زيارة ميدانية", icon: MapPin, color: "bg-orange-100 text-orange-800" },
   { value: "email", label: "📧 بريد إلكتروني", icon: Mail, color: "bg-purple-100 text-purple-800" },
 ] as const;
