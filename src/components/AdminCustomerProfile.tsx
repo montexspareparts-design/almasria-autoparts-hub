@@ -276,6 +276,9 @@ const AdminCustomerProfile = () => {
           </Card>
         )}
 
+        {/* Internal Notes */}
+        <CustomerNotes customerUserId={app.user_id} />
+
         {/* ERP Customer Code */}
         {account && (
           <Card className="border-primary/20">
