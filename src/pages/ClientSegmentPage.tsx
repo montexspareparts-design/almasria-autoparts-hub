@@ -9,7 +9,7 @@ import Navbar from "@/components/Navbar";
 import { lazy, Suspense } from "react";
 
 const Footer = lazy(() => import("@/components/Footer"));
-const WhatsAppFloat = lazy(() => import("@/components/WhatsAppFloat"));
+
 const BackToTop = lazy(() => import("@/components/BackToTop"));
 
 /* ── Segment Data ── */
