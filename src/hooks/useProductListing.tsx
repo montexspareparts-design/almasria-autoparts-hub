@@ -774,20 +774,26 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     if (!product) return null;
     if (!user) return null;
     if (!isDealer) return product.base_price;
+    // Retail tier sees base_price directly without reveal
+    if (isRetailTier) return product.base_price;
     if (viewedProductIds.includes(product.id)) return getProductPrice(product);
     return null;
-  }, [user, isDealer, viewedProductIds, getProductPrice]);
+  }, [user, isDealer, isRetailTier, viewedProductIds, getProductPrice]);
 
   const getDialogPriceLabel = useCallback((product: any) => {
     if (!product || !user) return undefined;
+    if (isDealer && isRetailTier) return "سعر قطاعي";
     if (isDealer && viewedProductIds.includes(product.id)) return "سعر الجملة الخاص بك";
     if (!isDealer) return "سعر قطاعي";
     return undefined;
-  }, [user, isDealer, viewedProductIds]);
+  }, [user, isDealer, isRetailTier, viewedProductIds]);
 
   const canAddToCartDialog = useCallback((product: any) => {
-    return !!user && (!isDealer || (product && viewedProductIds.includes(product.id)));
-  }, [user, isDealer, viewedProductIds]);
+    if (!user) return false;
+    if (!isDealer) return true;
+    if (isRetailTier) return true;
+    return product && viewedProductIds.includes(product.id);
+  }, [user, isDealer, isRetailTier, viewedProductIds]);
 
   return {
     // Auth
