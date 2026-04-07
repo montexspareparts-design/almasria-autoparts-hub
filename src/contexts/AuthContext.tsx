@@ -150,8 +150,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setIsAdmin(hasAdmin);
             setIsModerator(hasModerator);
 
-            // If both dealer and admin, check saved preference
-            if (dealer && hasAdmin) {
+            // If both dealer and admin/moderator, check saved preference
+            if (dealer && (hasAdmin || hasModerator)) {
               const savedRole = localStorage.getItem("almasria_last_role");
               if (savedRole === "dealer" || savedRole === "admin") {
                 // Auto-redirect to saved role — no dialog
