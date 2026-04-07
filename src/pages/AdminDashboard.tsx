@@ -527,6 +527,8 @@ const AdminDashboard = () => {
 
   const renderActiveSection = () => {
     switch (activeSection) {
+      case "daily-dashboard":
+        return <Suspense fallback={<SectionLoader />}><StaffDailyDashboard onNavigate={setActiveSection} /></Suspense>;
       case "analytics":
         return <Suspense fallback={<SectionLoader />}><AdminAnalytics /></Suspense>;
       case "product-insights":
