@@ -104,6 +104,11 @@ const DealerQuickOrder = () => {
     setLines(prev => prev.map((l, i) => i === idx ? { ...l, quantity: Math.max(1, l.quantity + delta) } : l));
   };
 
+  const setLineQty = (idx: number, newQty: number) => {
+    const clamped = Math.max(1, newQty);
+    setLines(prev => prev.map((l, i) => i === idx ? { ...l, quantity: clamped } : l));
+  };
+
   const totalAmount = lines.reduce((sum, l) => {
     if (l.product) return sum + l.product.base_price * l.quantity;
     return sum;
@@ -272,18 +277,26 @@ const DealerQuickOrder = () => {
                 <Button variant="ghost" size="icon" className="w-7 h-7 rounded-none hover:bg-destructive/10 hover:text-destructive" onClick={() => updateLineQty(idx, -1)}>
                   <Minus className="w-3 h-3" />
                 </Button>
-                <div className="w-8 h-7 border-x border-border/50 overflow-hidden relative">
+                <div className="w-10 h-7 border-x border-border/50 overflow-hidden relative">
                   <AnimatePresence mode="popLayout" initial={false}>
-                    <motion.span
-                      key={line.quantity}
+                    <motion.div
+                      key={`anim-${idx}-${line.quantity}`}
                       initial={{ y: (qtyDir[idx] || 'up') === 'up' ? 10 : -10, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
                       exit={{ y: (qtyDir[idx] || 'up') === 'up' ? -10 : 10, opacity: 0 }}
                       transition={{ type: "spring", stiffness: 500, damping: 30, mass: 0.5 }}
-                      className="absolute inset-0 flex items-center justify-center text-sm font-bold text-foreground"
+                      className="absolute inset-0 flex items-center justify-center"
                     >
-                      {line.quantity}
-                    </motion.span>
+                      <input
+                        type="number"
+                        value={line.quantity}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value);
+                          if (!isNaN(val)) setLineQty(idx, val);
+                        }}
+                        className="w-full h-full text-center text-sm font-bold text-foreground bg-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:outline-none"
+                      />
+                    </motion.div>
                   </AnimatePresence>
                 </div>
                 <Button variant="ghost" size="icon" className="w-7 h-7 rounded-none hover:bg-primary/10 hover:text-primary" onClick={() => updateLineQty(idx, 1)}>
