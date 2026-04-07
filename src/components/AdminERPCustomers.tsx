@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Download, Search, Link2, CheckCircle, Users, Building2, AlertCircle } from "lucide-react";
+import WhatsAppQuickChat from "@/components/admin/WhatsAppQuickChat";
 
 interface ERPCustomer {
   id: string;
@@ -311,10 +312,16 @@ const AdminERPCustomers = () => {
               {matchResults.unmatched_dealers.map(d => (
                 <div key={d.id} className="flex items-center gap-3 text-sm border border-border rounded-lg p-3">
                   <Users className="w-4 h-4 text-muted-foreground shrink-0" />
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="font-medium text-foreground truncate">{d.app?.business_name || "—"}</p>
                     <p className="text-xs text-muted-foreground">{d.app?.phone || ""} · {d.tier}</p>
                   </div>
+                  {d.app?.phone && (
+                    <WhatsAppQuickChat
+                      phone={d.app.phone}
+                      customerName={d.app.business_name || undefined}
+                    />
+                  )}
                 </div>
               ))}
             </div>

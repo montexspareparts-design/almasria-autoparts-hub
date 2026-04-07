@@ -8,6 +8,7 @@ import {
   Loader2, CheckCircle, XCircle, Eye, Phone, Mail,
   Banknote, Clock, Image as ImageIcon, ExternalLink, RefreshCw
 } from "lucide-react";
+import WhatsAppQuickChat from "@/components/admin/WhatsAppQuickChat";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle
 } from "@/components/ui/dialog";
@@ -233,6 +234,11 @@ const AdminInstaPayReceipts = () => {
                             <span className="flex items-center gap-1">
                               <Phone className="w-3 h-3" />
                               {order.profile.phone}
+                              <WhatsAppQuickChat
+                                phone={order.profile.phone}
+                                customerName={order.profile.full_name || undefined}
+                                context={`بخصوص طلبك رقم #${order.order_number} والدفع عبر إنستا باي.`}
+                              />
                             </span>
                           )}
                         </div>
