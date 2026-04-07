@@ -215,6 +215,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         dealerAccount,
         isDealer: !!dealerAccount,
         isAdmin,
+        isModerator,
         signOut,
       }}
     >
