@@ -311,16 +311,26 @@ const AdminLeads = () => {
 
   // View stored credentials for a converted lead
   const viewCredentials = async (lead: Lead) => {
-    const { data } = await supabase
+    const { data: account } = await supabase
       .from("dealer_accounts")
-      .select("initial_password, erp_customer_code")
+      .select("id")
       .eq("erp_customer_code", lead.erp_customer_code)
       .maybeSingle();
     
-    if (data?.initial_password) {
-      setCredentials({ username: lead.phone, password: data.initial_password, phone: lead.phone });
+    if (account) {
+      const { data: pw } = await supabase
+        .from("dealer_passwords" as any)
+        .select("initial_password")
+        .eq("dealer_account_id", account.id)
+        .maybeSingle();
+      
+      if ((pw as any)?.initial_password) {
+        setCredentials({ username: lead.phone, password: (pw as any).initial_password, phone: lead.phone });
+      } else {
+        toast({ title: "تنبيه", description: "كلمة المرور غير محفوظة. استخدم إعادة التعيين.", variant: "destructive" });
+      }
     } else {
-      toast({ title: "تنبيه", description: "كلمة المرور غير محفوظة. استخدم إعادة التعيين.", variant: "destructive" });
+      toast({ title: "تنبيه", description: "حساب التاجر غير موجود", variant: "destructive" });
     }
   };
 
