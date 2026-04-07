@@ -21,6 +21,7 @@ interface AuthContextType {
   dealerAccount: DealerAccount | null;
   isDealer: boolean;
   isAdmin: boolean;
+  isModerator: boolean;
   signOut: () => Promise<void>;
 }
 
@@ -31,6 +32,7 @@ const AuthContext = createContext<AuthContextType>({
   dealerAccount: null,
   isDealer: false,
   isAdmin: false,
+  isModerator: false,
   signOut: async () => {},
 });
 
