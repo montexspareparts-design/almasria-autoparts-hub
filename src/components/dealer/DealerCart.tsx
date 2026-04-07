@@ -175,7 +175,22 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
     updateQuantity(productId, newQty);
   }, [items, maxAllowedMap, updateQuantity]);
 
-  // Search products
+  // Auto-correct items that exceed max allowed (e.g. added from priced-today with higher qty)
+  useEffect(() => {
+    if (!items.length || !maxOrderPct) return;
+    let corrected = false;
+    for (const item of items) {
+      const max = maxAllowedMap[item.product_id];
+      if (max && item.quantity > max) {
+        updateQuantity(item.product_id, max);
+        corrected = true;
+      }
+    }
+    if (corrected) {
+      toast({ title: "تم تعديل بعض الكميات تلقائياً", description: "حسب سياسة الطلبيات المتفق عليها" });
+    }
+  }, [items.length, maxOrderPct]); // only on load/items count change
+
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
