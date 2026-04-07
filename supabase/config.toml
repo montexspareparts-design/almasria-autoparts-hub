@@ -48,3 +48,6 @@ verify_jwt = false
 
 [functions.notify-order-status-push]
 verify_jwt = false
+
+[functions.whatsapp-webhook]
+verify_jwt = false
