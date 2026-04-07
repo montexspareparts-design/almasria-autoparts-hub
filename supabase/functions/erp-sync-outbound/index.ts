@@ -465,34 +465,18 @@ Deno.serve(async (req) => {
 
           if (bulkErr) throw new Error(`Bulk price sync failed: ${bulkErr.message}`);
 
-          // ─── Also update wholesale_tier1 prices in product_tier_prices ───
-          let wholesaleUpdated = 0;
-          const wholesaleItems = mergedItems.filter((i: any) => i.id && i.wholesalePrice > 0);
-          
-          // Batch update wholesale prices (50 at a time)
-          for (let i = 0; i < wholesaleItems.length; i += 50) {
-            const batch = wholesaleItems.slice(i, i + 50);
-            for (const item of batch) {
-              // Find product by erp_item_code or sku
-              const { data: prod } = await supabase
-                .from("products")
-                .select("id")
-                .or(`sku.eq.${item.id},erp_item_code.eq.${item.id}`)
-                .limit(1)
-                .maybeSingle();
+          // ─── Also update wholesale_tier1 prices via bulk SQL function ───
+          const wholesaleItems = mergedItems
+            .filter((i: any) => i.id && i.wholesalePrice > 0)
+            .map((i: any) => ({ id: i.id, wholesalePrice: i.wholesalePrice }));
 
-              if (prod) {
-                // Upsert wholesale_tier1 price
-                const { error: upsertErr } = await supabase
-                  .from("product_tier_prices")
-                  .upsert(
-                    { product_id: prod.id, tier: "wholesale_tier1", price: item.wholesalePrice },
-                    { onConflict: "product_id,tier" }
-                  );
-                if (!upsertErr) wholesaleUpdated++;
-              }
-            }
-          }
+          const { data: wholesaleResult, error: wholesaleErr } = await supabase.rpc(
+            "bulk_upsert_wholesale_prices",
+            { _items: wholesaleItems }
+          );
+
+          const wholesaleUpdated = wholesaleErr ? 0 : (wholesaleResult?.updated || 0);
+          if (wholesaleErr) console.error("Wholesale price sync error:", wholesaleErr.message);
 
           result = {
             success: true,
