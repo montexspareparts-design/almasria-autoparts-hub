@@ -547,19 +547,6 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
       {/* Summary + Notes + Actions (only show when cart has items) */}
       {items.length > 0 && (
         <>
-          {/* Violation summary banner — only shown when items exceed limits */}
-          {hasViolations && (
-            <div className="flex items-start gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/30">
-              <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
-              <div className="text-[11px] text-destructive font-medium leading-snug space-y-0.5">
-                <p className="font-bold">لا يمكن إرسال الطلبية حتى يتم تعديل الكميات التالية حسب سياسة الطلبيات المتفق عليها:</p>
-                {itemViolations.map(v => (
-                  <p key={v.product_id}>• الصنف <strong>#{v.sku}</strong> — خفّض الكمية من {v.quantity} إلى <strong>{v.maxAllowed}</strong> كحد أقصى</p>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Notes */}
           <div className="rounded-xl border border-border/50 bg-card p-3">
             <Textarea
@@ -593,7 +580,7 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
             <div className="grid grid-cols-2 gap-2">
               <Button
                 onClick={handleSubmitOrder}
-                disabled={isProcessing || hasViolations}
+                disabled={isProcessing}
                 className="h-12 gap-2 font-bold rounded-xl bg-primary hover:bg-primary/90"
               >
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
@@ -601,7 +588,7 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
               </Button>
               <Button
                 onClick={handlePayNow}
-                disabled={isProcessing || hasViolations}
+                disabled={isProcessing}
                 variant="outline"
                 className="h-12 gap-2 font-bold rounded-xl border-2 border-emerald-500 text-emerald-700 hover:bg-emerald-50"
               >
