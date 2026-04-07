@@ -106,8 +106,15 @@ const DealerPricedToday = ({ onConvertToOrder, sharedCart }: DealerPricedTodayPr
     setSelectedIds(selectedIds.size === items.length ? new Set() : new Set(items.map(i => i.product_id)));
   };
 
+  const [qtyDir, setQtyDir] = useState<Record<string, 'up' | 'down'>>({});
+
   const updateQuantity = (productId: string, delta: number) => {
+    setQtyDir(prev => ({ ...prev, [productId]: delta > 0 ? 'up' : 'down' }));
     setItems(prev => prev.map(item => item.product_id !== productId ? item : { ...item, quantity: Math.max(1, item.quantity + delta) }));
+  };
+
+  const setQuantity = (productId: string, newQty: number) => {
+    setItems(prev => prev.map(item => item.product_id !== productId ? item : { ...item, quantity: Math.max(1, newQty) }));
   };
 
   const removeItem = (productId: string) => {
@@ -355,19 +362,42 @@ const DealerPricedToday = ({ onConvertToOrder, sharedCart }: DealerPricedTodayPr
                             </button>
 
                             {/* Quantity */}
-                            <div className="flex items-center gap-0.5 bg-muted/50 rounded-lg p-0.5">
+                            <div className="flex items-center bg-muted/50 rounded-full overflow-hidden border border-border/50">
                               <button
                                 onClick={(e) => { e.stopPropagation(); updateQuantity(item.product_id, -1); }}
-                                className="w-7 h-7 rounded-md bg-background flex items-center justify-center text-foreground hover:bg-accent transition-colors shadow-sm"
+                                className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all active:scale-90"
                               >
-                                <Minus className="w-3 h-3" />
+                                <Minus className="w-3.5 h-3.5" />
                               </button>
-                              <span className="text-sm font-bold w-8 text-center text-foreground">{item.quantity}</span>
+                              <div className="w-10 h-8 border-x border-border/50 overflow-hidden relative">
+                                <AnimatePresence mode="popLayout" initial={false}>
+                                  <motion.div
+                                    key={`qty-${item.product_id}-${item.quantity}`}
+                                    initial={{ y: (qtyDir[item.product_id] || 'up') === 'up' ? 10 : -10, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    exit={{ y: (qtyDir[item.product_id] || 'up') === 'up' ? -10 : 10, opacity: 0 }}
+                                    transition={{ type: "spring", stiffness: 500, damping: 30, mass: 0.5 }}
+                                    className="absolute inset-0 flex items-center justify-center"
+                                  >
+                                    <input
+                                      type="number"
+                                      value={item.quantity}
+                                      onClick={(e) => e.stopPropagation()}
+                                      onChange={(e) => {
+                                        e.stopPropagation();
+                                        const val = parseInt(e.target.value);
+                                        if (!isNaN(val)) setQuantity(item.product_id, val);
+                                      }}
+                                      className="w-full h-full text-center text-sm font-bold text-foreground bg-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:outline-none"
+                                    />
+                                  </motion.div>
+                                </AnimatePresence>
+                              </div>
                               <button
                                 onClick={(e) => { e.stopPropagation(); updateQuantity(item.product_id, 1); }}
-                                className="w-7 h-7 rounded-md bg-background flex items-center justify-center text-foreground hover:bg-accent transition-colors shadow-sm"
+                                className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all active:scale-90"
                               >
-                                <Plus className="w-3 h-3" />
+                                <Plus className="w-3.5 h-3.5" />
                               </button>
                             </div>
                           </div>
