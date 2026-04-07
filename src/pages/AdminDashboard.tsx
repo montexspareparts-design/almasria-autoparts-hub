@@ -581,7 +581,7 @@ const AdminDashboard = () => {
     }
   };
 
-  const currentSection = sidebarSections.find(s => s.id === activeSection);
+  const currentSection = filteredSidebarSections.find(s => s.id === activeSection);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
