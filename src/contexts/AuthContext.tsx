@@ -21,6 +21,7 @@ interface AuthContextType {
   dealerAccount: DealerAccount | null;
   isDealer: boolean;
   isAdmin: boolean;
+  isModerator: boolean;
   signOut: () => Promise<void>;
 }
 
@@ -31,6 +32,7 @@ const AuthContext = createContext<AuthContextType>({
   dealerAccount: null,
   isDealer: false,
   isAdmin: false,
+  isModerator: false,
   signOut: async () => {},
 });
 
@@ -48,6 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [dealerAccount, setDealerAccount] = useState<DealerAccount | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isModerator, setIsModerator] = useState(false);
   const [showCompleteProfile, setShowCompleteProfile] = useState(false);
   const [showRoleSelection, setShowRoleSelection] = useState(false);
   const sessionCheckRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -143,10 +146,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               .select("role")
               .eq("user_id", session.user.id);
             const hasAdmin = roles?.some((r) => r.role === "admin") ?? false;
+            const hasModerator = roles?.some((r) => r.role === "moderator") ?? false;
             setIsAdmin(hasAdmin);
+            setIsModerator(hasModerator);
 
-            // If both dealer and admin, check saved preference
-            if (dealer && hasAdmin) {
+            // If both dealer and admin/moderator, check saved preference
+            if (dealer && (hasAdmin || hasModerator)) {
               const savedRole = localStorage.getItem("almasria_last_role");
               if (savedRole === "dealer" || savedRole === "admin") {
                 // Auto-redirect to saved role — no dialog
@@ -173,6 +178,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } else {
           setDealerAccount(null);
           setIsAdmin(false);
+          setIsModerator(false);
           clearSessionCheck();
           clearAllAuthStorage();
         }
@@ -197,6 +203,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await supabase.auth.signOut();
     setDealerAccount(null);
     setIsAdmin(false);
+    setIsModerator(false);
   };
 
   return (
@@ -208,6 +215,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         dealerAccount,
         isDealer: !!dealerAccount,
         isAdmin,
+        isModerator,
         signOut,
       }}
     >

@@ -111,6 +111,13 @@ const sidebarGroups: SidebarGroup[] = [
     },
 ];
 
+// Sections accessible by moderators (employees)
+const MODERATOR_SECTIONS = new Set([
+  "orders", "leads", "customers", "customer-intel", "products",
+  "bulk-import", "price-lists", "dealers", "analytics", "product-insights",
+  "erp-customers", "stock-settings",
+]);
+
 const sidebarSections = sidebarGroups.flatMap(g => g.items);
 
 const SectionLoader = () => (
@@ -120,7 +127,7 @@ const SectionLoader = () => (
 );
 
 const AdminDashboard = () => {
-  const { user, isAdmin, isDealer, loading: authLoading, signOut } = useAuth();
+  const { user, isAdmin, isModerator, isDealer, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -136,7 +143,23 @@ const AdminDashboard = () => {
   const [fetchingApproveErpName, setFetchingApproveErpName] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const activeSection = searchParams.get("section") || "analytics";
+  const canAccess = isAdmin || isModerator;
+
+  // Filter sidebar for moderators
+  const filteredSidebarGroups = canAccess
+    ? (isModerator && !isAdmin
+      ? sidebarGroups
+          .map(g => ({
+            ...g,
+            items: g.items.filter(item => MODERATOR_SECTIONS.has(item.id)),
+          }))
+          .filter(g => g.items.length > 0)
+      : sidebarGroups)
+    : [];
+
+  const filteredSidebarSections = filteredSidebarGroups.flatMap(g => g.items);
+
+  const activeSection = searchParams.get("section") || (filteredSidebarSections[0]?.id || "analytics");
 
   const setActiveSection = (section: string) => {
     setSearchParams({ section });
@@ -144,9 +167,9 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     if (!authLoading && !user) { navigate("/auth"); return; }
-    if (!authLoading && !isAdmin) { navigate("/dealer"); return; }
-    if (isAdmin) fetchApplications();
-  }, [user, authLoading, isAdmin]);
+    if (!authLoading && !canAccess) { navigate("/dealer"); return; }
+    if (canAccess) fetchApplications();
+  }, [user, authLoading, canAccess]);
 
   const fetchApplications = async () => {
     const { data } = await supabase
@@ -558,7 +581,7 @@ const AdminDashboard = () => {
     }
   };
 
-  const currentSection = sidebarSections.find(s => s.id === activeSection);
+  const currentSection = filteredSidebarSections.find(s => s.id === activeSection);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -582,7 +605,9 @@ const AdminDashboard = () => {
                 <span className="text-sm font-black text-secondary-foreground leading-none tracking-tight">
                   المصرية <span className="text-primary">جروب</span>
                 </span>
-                <p className="text-[9px] text-secondary-foreground/40 font-semibold mt-0.5 tracking-wide">ADMIN PANEL</p>
+                <p className="text-[9px] text-secondary-foreground/40 font-semibold mt-0.5 tracking-wide">
+                  {isAdmin ? "ADMIN PANEL" : "STAFF PANEL"}
+                </p>
               </div>
             </a>
           </div>
@@ -651,7 +676,7 @@ const AdminDashboard = () => {
           )}
 
           <nav className="p-2.5 space-y-1">
-            {sidebarGroups.map((group, gi) => (
+            {filteredSidebarGroups.map((group, gi) => (
               <div key={group.label}>
                 {gi > 0 && <div className="h-px bg-border/40 mx-3 my-2" />}
                 <div className="px-3 py-1.5 text-[9px] font-extrabold uppercase tracking-[0.15em] text-muted-foreground/40">

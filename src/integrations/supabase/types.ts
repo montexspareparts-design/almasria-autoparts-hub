@@ -1670,6 +1670,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_staff: { Args: { _user_id: string }; Returns: boolean }
       verify_otp_code: {
         Args: { _code: string; _phone: string }
         Returns: boolean

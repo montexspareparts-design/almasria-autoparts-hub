@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Briefcase, Shield } from "lucide-react";
+import { Briefcase, Shield, Users } from "lucide-react";
 import { motion } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface RoleSelectionDialogProps {
   open: boolean;
@@ -10,12 +11,17 @@ interface RoleSelectionDialogProps {
 
 const RoleSelectionDialog = ({ open, onOpenChange }: RoleSelectionDialogProps) => {
   const navigate = useNavigate();
+  const { isAdmin, isModerator } = useAuth();
 
   const handleSelect = (role: "dealer" | "admin") => {
     localStorage.setItem("almasria_last_role", role);
     onOpenChange(false);
     navigate(role === "dealer" ? "/dealer" : "/admin", { replace: true });
   };
+
+  const adminLabel = isAdmin ? "مدير" : "موظف";
+  const adminDesc = isAdmin ? "لوحة الإدارة" : "لوحة الموظفين";
+  const AdminIcon = isAdmin ? Shield : Users;
 
   return (
     <Dialog open={open} onOpenChange={() => {}}>
@@ -56,11 +62,11 @@ const RoleSelectionDialog = ({ open, onOpenChange }: RoleSelectionDialogProps) =
             className="flex flex-col items-center gap-3 p-5 rounded-xl border-2 border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all duration-200 group"
           >
             <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-              <Shield className="w-7 h-7 text-primary" />
+              <AdminIcon className="w-7 h-7 text-primary" />
             </div>
             <div className="text-center">
-              <p className="font-bold text-sm text-foreground">مدير</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">لوحة الإدارة</p>
+              <p className="font-bold text-sm text-foreground">{adminLabel}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">{adminDesc}</p>
             </div>
           </motion.button>
         </div>
