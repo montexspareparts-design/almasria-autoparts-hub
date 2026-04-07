@@ -206,7 +206,7 @@ const ToyotaPartsEgypt = () => {
       </section>
 
       <Suspense fallback={null}><Footer /></Suspense>
-      <Suspense fallback={null}><WhatsAppFloat /></Suspense>
+      
     </div>
   );
 };

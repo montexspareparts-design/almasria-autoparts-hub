@@ -148,7 +148,7 @@ const GenuinePartsPage = () => {
       </section>
 
       <Suspense fallback={null}><Footer /></Suspense>
-      <Suspense fallback={null}><WhatsAppFloat /></Suspense>
+      
       <Suspense fallback={null}><BackToTop /></Suspense>
     </div>
   );

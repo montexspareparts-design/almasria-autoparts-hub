@@ -98,7 +98,7 @@ const Index = () => {
       <LazySection><MaintenanceTipsSection /></LazySection>
       <LazySection><ContactSimple /></LazySection>
       <LazySection fallback={null}><Footer /></LazySection>
-      <Suspense fallback={null}><WhatsAppFloat /></Suspense>
+      
       <Suspense fallback={null}><BackToTop /></Suspense>
       <Suspense fallback={null}><CarProfilePopup /></Suspense>
     </div>
