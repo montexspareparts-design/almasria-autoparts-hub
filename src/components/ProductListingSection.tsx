@@ -263,7 +263,7 @@ const ProductListingSection = memo(({
               ) : (
                 <div className="relative">
                   {/* Product Grid */}
-                  <div className={viewMode === "grid" ? "grid grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"}>
+                  <div className={viewMode === "grid" ? "grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5" : "space-y-3"}>
                     <AnimatePresence mode="popLayout">
                       {visibleProducts.map((product, idx) => (
                         <motion.div
