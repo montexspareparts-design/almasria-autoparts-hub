@@ -218,6 +218,8 @@ export function useProductListing(options: UseProductListingOptions = {}) {
   const { isDealer, user, dealerAccount } = useAuth();
   const { addItem } = useCart();
   const queryClient = useQueryClient();
+  const DAILY_LIMIT = 20;
+  const isRetailTier = dealerAccount?.tier === 'retail';
 
   // Fetch max order percentage from site_settings
   const { data: maxOrderPct } = useQuery({
