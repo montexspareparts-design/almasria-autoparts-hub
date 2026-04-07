@@ -605,7 +605,9 @@ const AdminDashboard = () => {
                 <span className="text-sm font-black text-secondary-foreground leading-none tracking-tight">
                   المصرية <span className="text-primary">جروب</span>
                 </span>
-                <p className="text-[9px] text-secondary-foreground/40 font-semibold mt-0.5 tracking-wide">ADMIN PANEL</p>
+                <p className="text-[9px] text-secondary-foreground/40 font-semibold mt-0.5 tracking-wide">
+                  {isAdmin ? "ADMIN PANEL" : "STAFF PANEL"}
+                </p>
               </div>
             </a>
           </div>
