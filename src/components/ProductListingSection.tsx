@@ -63,7 +63,7 @@ const ProductListingSection = memo(({
   hasMore, loadMore,
   products, isLoading, filteredProducts, paginatedProducts,
   visibleCategories, categoryCounts,
-  user, isDealer, viewedProductIds, dailyViewCount, limitReached, dailyLimit,
+  user, isDealer, isRetailTier = false, viewedProductIds, dailyViewCount, limitReached, dailyLimit,
   getProductPrice, handleAddToCart, handleLoginRequired, recordView,
   selectedProduct, setSelectedProduct,
   getDialogPrice, getDialogPriceLabel, canAddToCartDialog,
