@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,8 @@ interface OrderLine {
   product?: MatchedProduct;
 }
 
+interface QtyDir { [idx: number]: 'up' | 'down' }
+
 const DealerQuickOrder = () => {
   const { user } = useAuth();
   const [sku, setSku] = useState("");
@@ -38,6 +41,7 @@ const DealerQuickOrder = () => {
   // Auto-search state
   const [searching, setSearching] = useState(false);
   const [suggestions, setSuggestions] = useState<MatchedProduct[]>([]);
+  const [qtyDir, setQtyDir] = useState<QtyDir>({});
   const searchTimeout = useRef<ReturnType<typeof setTimeout>>();
 
   const searchProducts = useCallback(async (query: string) => {
@@ -96,6 +100,7 @@ const DealerQuickOrder = () => {
   const removeLine = (idx: number) => setLines(prev => prev.filter((_, i) => i !== idx));
 
   const updateLineQty = (idx: number, delta: number) => {
+    setQtyDir(prev => ({ ...prev, [idx]: delta > 0 ? 'up' : 'down' }));
     setLines(prev => prev.map((l, i) => i === idx ? { ...l, quantity: Math.max(1, l.quantity + delta) } : l));
   };
 
@@ -263,13 +268,28 @@ const DealerQuickOrder = () => {
                 )}
               </div>
               <div className="flex items-center gap-1 shrink-0">
-                <Button variant="outline" size="icon" className="w-7 h-7" onClick={() => updateLineQty(idx, -1)}>
+              <div className="flex items-center shrink-0 rounded-full border border-border bg-muted/30 overflow-hidden">
+                <Button variant="ghost" size="icon" className="w-7 h-7 rounded-none hover:bg-destructive/10 hover:text-destructive" onClick={() => updateLineQty(idx, -1)}>
                   <Minus className="w-3 h-3" />
                 </Button>
-                <span className="w-8 text-center text-sm font-bold">{line.quantity}</span>
-                <Button variant="outline" size="icon" className="w-7 h-7" onClick={() => updateLineQty(idx, 1)}>
+                <div className="w-8 h-7 border-x border-border/50 overflow-hidden relative">
+                  <AnimatePresence mode="popLayout" initial={false}>
+                    <motion.span
+                      key={line.quantity}
+                      initial={{ y: (qtyDir[idx] || 'up') === 'up' ? 10 : -10, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      exit={{ y: (qtyDir[idx] || 'up') === 'up' ? -10 : 10, opacity: 0 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 30, mass: 0.5 }}
+                      className="absolute inset-0 flex items-center justify-center text-sm font-bold text-foreground"
+                    >
+                      {line.quantity}
+                    </motion.span>
+                  </AnimatePresence>
+                </div>
+                <Button variant="ghost" size="icon" className="w-7 h-7 rounded-none hover:bg-primary/10 hover:text-primary" onClick={() => updateLineQty(idx, 1)}>
                   <Plus className="w-3 h-3" />
                 </Button>
+              </div>
                 <Button variant="ghost" size="icon" className="w-7 h-7 text-destructive" onClick={() => removeLine(idx)}>
                   <Trash2 className="w-3 h-3" />
                 </Button>
