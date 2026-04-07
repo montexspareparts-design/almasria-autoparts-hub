@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Search, ArrowRight, Phone, Mail, MapPin, Building2, Calendar, ShoppingBag, CreditCard, FileText, TrendingUp, ChevronDown, ChevronUp, ExternalLink, Link2 } from "lucide-react";
+import WhatsAppQuickChat from "@/components/admin/WhatsAppQuickChat";
 import type { Database } from "@/integrations/supabase/types";
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];

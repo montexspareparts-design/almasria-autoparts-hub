@@ -8,6 +8,7 @@ import {
   Loader2, CheckCircle, XCircle, Eye, Phone, Mail,
   Banknote, Clock, Image as ImageIcon, ExternalLink, RefreshCw
 } from "lucide-react";
+import WhatsAppQuickChat from "@/components/admin/WhatsAppQuickChat";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle
 } from "@/components/ui/dialog";
