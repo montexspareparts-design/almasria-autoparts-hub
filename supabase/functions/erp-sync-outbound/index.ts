@@ -385,7 +385,7 @@ Deno.serve(async (req) => {
           return {
             id: (item.id || "").toString().trim(),
             name: (item.name || "").toString().trim(),
-            quantity: Number(prod.quantity ?? 0),
+            quantity: Math.floor(Number(prod.quantity ?? 0)),
             retailPrice: Number(prod.retailPrice ?? prod.price ?? 0),
             wholesalePrice: Number(prod.wholesalePrice ?? 0),
           };
