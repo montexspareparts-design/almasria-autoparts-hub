@@ -484,12 +484,12 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
                     </div>
 
                     {/* Quantity */}
-                    <div className="flex items-center gap-1 shrink-0">
+                    <div className={`flex items-center shrink-0 rounded-full border ${hasItemViolation ? 'border-destructive/50 bg-destructive/5' : 'border-border bg-muted/30'} overflow-hidden`}>
                       <button
                         onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
-                        className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center hover:bg-destructive/10 hover:text-destructive transition-colors"
+                        className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all active:scale-90"
                       >
-                        <Minus className="w-3 h-3" />
+                        <Minus className="w-3.5 h-3.5" />
                       </button>
                       <input
                         type="number"
@@ -498,13 +498,13 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
                           const val = parseInt(e.target.value);
                           if (val > 0) updateQuantity(item.product_id, val);
                         }}
-                        className={`w-10 h-7 text-center text-sm font-bold bg-muted/50 border rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${hasItemViolation ? 'border-destructive text-destructive' : 'border-border/50'}`}
+                        className={`w-9 h-8 text-center text-sm font-black bg-transparent border-x ${hasItemViolation ? 'border-destructive/30 text-destructive' : 'border-border/50 text-foreground'} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:outline-none`}
                       />
                       <button
                         onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
-                        className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center hover:bg-primary/10 hover:text-primary transition-colors"
+                        className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all active:scale-90"
                       >
-                        <Plus className="w-3 h-3" />
+                        <Plus className="w-3.5 h-3.5" />
                       </button>
                     </div>
 
