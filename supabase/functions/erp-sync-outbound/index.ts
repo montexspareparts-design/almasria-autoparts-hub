@@ -518,10 +518,23 @@ Deno.serve(async (req) => {
         ];
       } else {
         if (!baseUrl) throw new Error("ERP base URL is not configured");
-        const erpResponse = await erpFetch(baseUrl, "/Ecommerce/products");
-        items = Array.isArray(erpResponse)
-          ? erpResponse
-          : (erpResponse.data || erpResponse.items || []);
+        // Merge GetItems (id, name) + products (price, quantity) by index
+        const [itemsRes, productsRes] = await Promise.all([
+          erpFetch(baseUrl, "/Ecommerce/GetItems"),
+          erpFetch(baseUrl, "/Ecommerce/products"),
+        ]);
+        const itemsList = Array.isArray(itemsRes) ? itemsRes : (itemsRes.data || itemsRes.items || []);
+        const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
+
+        items = itemsList.map((item: any, i: number) => {
+          const prod = productsList[i] || {};
+          return {
+            id: String(item.id || "").trim(),
+            name: String(item.name || item.itemName || "").trim(),
+            price: Number(prod.retailPrice ?? prod.price ?? prod.unitPrice ?? 0),
+            qty: Math.floor(Number(prod.quantity ?? prod.qty ?? prod.stock ?? 0)),
+          };
+        }).filter((item: any) => item.id && item.name);
       }
 
       // Process in batches using the SQL function for performance
@@ -632,20 +645,28 @@ Deno.serve(async (req) => {
         };
       } else {
         if (!baseUrl) throw new Error("ERP base URL is not configured");
-        const erpResponse = await erpFetch(baseUrl, "/Ecommerce/products");
-        const items = Array.isArray(erpResponse)
-          ? erpResponse
-          : (erpResponse.data || erpResponse.items || []);
+        // Merge GetItems (id, name) + products (price, quantity) by index
+        const [itemsRes, productsRes] = await Promise.all([
+          erpFetch(baseUrl, "/Ecommerce/GetItems"),
+          erpFetch(baseUrl, "/Ecommerce/products"),
+        ]);
+        const itemsList = Array.isArray(itemsRes) ? itemsRes : (itemsRes.data || itemsRes.items || []);
+        const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
+
+        const merged = itemsList.map((item: any, i: number) => {
+          const prod = productsList[i] || {};
+          return {
+            id: String(item.id || "").trim(),
+            name: String(item.name || item.itemName || "").trim(),
+            price: Number(prod.retailPrice ?? prod.price ?? prod.unitPrice ?? 0),
+            quantity: Math.floor(Number(prod.quantity ?? prod.qty ?? prod.stock ?? 0)),
+          };
+        }).filter((p: any) => p.id);
 
         result = {
           success: true,
-          total: items.length,
-          products: items.map((i: any) => ({
-            id: (i.id || i.itemCode || "").toString().trim(),
-            name: i.name || i.itemName || "",
-            price: i.price ?? i.unitPrice ?? 0,
-            quantity: i.qty ?? i.quantity ?? i.stock ?? 0,
-          })),
+          total: merged.length,
+          products: merged,
         };
       }
     }
@@ -653,30 +674,44 @@ Deno.serve(async (req) => {
     // ─── DEEP STOCK CHECK: Find items with qty > 0 ───
     else if (action === "deep_stock_check") {
       if (!baseUrl) throw new Error("ERP base URL is not configured");
-      const erpResponse = await erpFetch(baseUrl, "/Ecommerce/products");
-      const items = Array.isArray(erpResponse) ? erpResponse : (erpResponse.data || erpResponse.items || []);
-      
-      const withStock = items.filter((i: any) => {
-        const q = i.qty ?? i.quantity ?? i.stock ?? i.availableQty ?? i.balance ?? i.onHand ?? i.inStock;
-        return q && Number(q) > 0;
-      });
-      
-      // Check ALL numeric fields across all items
-      const firstItem = items[0] || {};
-      const allFields = Object.entries(firstItem).map(([k, v]) => ({ key: k, type: typeof v, value: v }));
-      
-      // Find items 10503 and 11162 and show ALL their fields
-      const targets = items.filter((i: any) => {
-        const id = (i.id || "").toString().trim();
-        return id === "10503" || id === "11162";
-      });
+      // Merge both endpoints by index for accurate data
+      const [itemsRes, productsRes] = await Promise.all([
+        erpFetch(baseUrl, "/Ecommerce/GetItems"),
+        erpFetch(baseUrl, "/Ecommerce/products"),
+      ]);
+      const itemsList = Array.isArray(itemsRes) ? itemsRes : (itemsRes.data || itemsRes.items || []);
+      const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
+
+      // Show raw schema from both endpoints
+      const getItemsSchema = Object.entries(itemsList[0] || {}).map(([k, v]) => ({ key: k, type: typeof v, value: v }));
+      const productsSchema = Object.entries(productsList[0] || {}).map(([k, v]) => ({ key: k, type: typeof v, value: v }));
+
+      // Merge by index
+      const merged = itemsList.map((item: any, i: number) => {
+        const prod = productsList[i] || {};
+        return {
+          id: String(item.id || "").trim(),
+          name: String(item.name || "").trim(),
+          quantity: Math.floor(Number(prod.quantity ?? 0)),
+          retailPrice: Number(prod.retailPrice ?? 0),
+          wholesalePrice: Number(prod.wholesalePrice ?? 0),
+        };
+      }).filter((p: any) => p.id);
+
+      const withStock = merged.filter((i: any) => i.quantity > 0);
+
+      // Find specific target items
+      const targets = merged.filter((i: any) => ["10503", "11162", "12495", "12496", "12027", "14898"].includes(i.id));
 
       result = {
         success: true,
-        total: items.length,
+        total_getitems: itemsList.length,
+        total_products: productsList.length,
+        total_merged: merged.length,
         items_with_positive_qty: withStock.length,
         sample_with_stock: withStock.slice(0, 5),
-        all_fields_schema: allFields,
+        getitems_schema: getItemsSchema,
+        products_schema: productsSchema,
         targets_full: targets,
       };
     }
