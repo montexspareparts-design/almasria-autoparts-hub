@@ -96,11 +96,8 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
     if (onCategorySelect) {
       onCategorySelect(cat.id);
     } else {
-      // Navigate to products page with category filter (use current brand path if available)
-      const currentPath = window.location.pathname;
-      const brandMatch = currentPath.match(/\/products\/([^/]+)/);
-      const targetPath = brandMatch ? `/products/${brandMatch[1]}` : "/products/toyota-genuine";
-      navigate(`${targetPath}?category=${cat.slug}`);
+      // Navigate to products page with category filter — no brand restriction
+      navigate(`/products/toyota-genuine?category=${cat.slug}`);
     }
   };
 
