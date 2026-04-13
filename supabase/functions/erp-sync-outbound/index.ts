@@ -410,32 +410,43 @@ Deno.serve(async (req) => {
               sample: bulkItems.filter(i => i.qty > 0).slice(0, 5),
             };
           } else {
-            // ── Prices: Use GetPriceList (has itemid as key — reliable!) ──
-            const priceListRes = await erpFetch(baseUrl, "/Ecommerce/GetPriceList");
-            const priceItems = priceListRes?.data || (Array.isArray(priceListRes) ? priceListRes : []);
+            // ── Prices: Merge GetItems (id) + products (retailPrice, wholesalePrice) by index ──
+            // Then filter to only our products
+            const [itemsRes, productsRes] = await Promise.all([
+              erpFetch(baseUrl, "/Ecommerce/GetItems"),
+              erpFetch(baseUrl, "/Ecommerce/products"),
+            ]);
 
-            // Filter to only our products
+            const itemsList = Array.isArray(itemsRes) ? itemsRes : (itemsRes.data || itemsRes.items || []);
+            const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
+
+            // Build ID → prices map (merge by index)
             const retailItems: { id: string; price: number }[] = [];
             const wholesaleItems: { id: string; wholesalePrice: number }[] = [];
             let matchedCount = 0;
+            const sampleItems: any[] = [];
 
-            for (const item of priceItems) {
-              const erpId = String(item.itemid || "").trim();
+            for (let i = 0; i < itemsList.length; i++) {
+              const erpId = String(itemsList[i]?.id || "").trim();
               if (!erpId || !ourCodeSet.has(erpId)) continue;
 
               matchedCount++;
-              const consumerPrice = Number(item.consumerprice ?? 0);
-              const wholesalePrice = Number(item.wholesaleprice ?? 0);
+              const prod = productsList[i] || {};
+              const retailPrice = Number(prod.retailPrice ?? prod.price ?? 0);
+              const wholesalePrice = Number(prod.wholesalePrice ?? 0);
 
-              if (consumerPrice > 0) {
-                retailItems.push({ id: erpId, price: consumerPrice });
+              if (retailPrice > 0) {
+                retailItems.push({ id: erpId, price: retailPrice });
               }
               if (wholesalePrice > 0) {
                 wholesaleItems.push({ id: erpId, wholesalePrice });
               }
+              if (sampleItems.length < 5) {
+                sampleItems.push({ id: erpId, name: String(itemsList[i]?.name || "").trim(), retailPrice, wholesalePrice });
+              }
             }
 
-            console.log(`[ERP Price v2] PriceList total: ${priceItems.length}, Our products: ${ourProducts.length}, Matched: ${matchedCount}, Retail: ${retailItems.length}, Wholesale: ${wholesaleItems.length}`);
+            console.log(`[ERP Price v2] ERP total: ${itemsList.length}, Our products: ${ourProducts.length}, Matched: ${matchedCount}, Retail: ${retailItems.length}, Wholesale: ${wholesaleItems.length}`);
 
             // Update retail prices (base_price)
             let retailUpdated = 0;
@@ -461,18 +472,10 @@ Deno.serve(async (req) => {
               success: true,
               retail_updated: retailUpdated,
               wholesale_updated: wholesaleUpdated,
-              pricelist_total: priceItems.length,
+              erp_total: itemsList.length,
               our_products: ourProducts.length,
               matched: matchedCount,
-              sample: priceItems
-                .filter((i: any) => ourCodeSet.has(String(i.itemid || "").trim()))
-                .slice(0, 5)
-                .map((i: any) => ({
-                  itemid: i.itemid,
-                  consumer: i.consumerprice,
-                  wholesale: i.wholesaleprice,
-                  halfwholesale: i.halfwholesaleprice,
-                })),
+              sample: sampleItems,
             };
           }
         }
