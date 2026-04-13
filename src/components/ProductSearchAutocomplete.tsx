@@ -321,7 +321,7 @@ const ProductSearchAutocomplete = ({
                       <span className="text-[10px] text-muted-foreground">{group.products.length} نتيجة</span>
                     </div>
                     {group.products.map((product) => {
-                      const currentIdx = flatIdx++;
+                      const currentIdx = renderFlatIdx++;
                       return (
                         <SearchResultItem
                           key={product.id}
