@@ -415,7 +415,7 @@ const AdminOrders = () => {
             </div>
             <div
               className={`rounded-lg p-3 text-center cursor-pointer transition-all hover:ring-2 hover:ring-orange-400/50 ${filterStatus === "processing" ? "ring-2 ring-orange-500" : "bg-orange-500/10"}`}
-              onClick={() => { setFilterStatus("confirmed"); setPage(0); setAutoExpandFirst(true); }}
+              onClick={() => handleStatClick("processing")}
             >
               <p className="text-2xl font-bold text-orange-600">{stats.processing}</p>
               <p className="text-xs text-muted-foreground">جاري التجهيز</p>
