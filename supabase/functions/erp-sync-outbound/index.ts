@@ -1011,6 +1011,51 @@ Deno.serve(async (req) => {
       };
     }
 
+    // ─── FETCH RAW ERP PRICES (read-only, no updates) ───
+    else if (action === "fetch_erp_prices") {
+      if (!isServiceRole) {
+        const { data: isAdmin } = await supabase.rpc("has_role", {
+          _user_id: userId!,
+          _role: "admin",
+        });
+        if (!isAdmin) {
+          return new Response(
+            JSON.stringify({ error: "Forbidden — admin only" }),
+            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
+
+      if (isMock || !baseUrl) {
+        result = { success: false, message: "ERP not configured or in mock mode" };
+      } else {
+        const [itemsRes, productsRes] = await Promise.all([
+          erpFetch(baseUrl, "/Ecommerce/GetItems"),
+          erpFetch(baseUrl, "/Ecommerce/products"),
+        ]);
+
+        const itemsList = Array.isArray(itemsRes) ? itemsRes : (itemsRes.data || itemsRes.items || []);
+        const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
+
+        // Build merged array with id from GetItems + prices from products
+        const merged: any[] = [];
+        for (let i = 0; i < itemsList.length; i++) {
+          const erpId = String(itemsList[i]?.id || "").trim();
+          const name = String(itemsList[i]?.name || "").trim();
+          const prod = productsList[i] || {};
+          merged.push({
+            id: erpId,
+            name,
+            retailPrice: Number(prod.retailPrice ?? prod.price ?? 0),
+            wholesalePrice: Number(prod.wholesalePrice ?? 0),
+            quantity: Number(prod.quantity ?? 0),
+          });
+        }
+
+        result = { success: true, total: merged.length, items: merged };
+      }
+    }
+
     else {
       throw new Error(`Unknown action: ${action}`);
     }
