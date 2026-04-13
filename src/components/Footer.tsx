@@ -18,6 +18,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
     { label: t("footer.products"), href: "/products" },
     { label: t("footer.what_sets_us_apart"), href: "/what-sets-us-apart" },
     { label: t("footer.contact"), href: "/contact" },
+    { label: "الشروط والأحكام", href: "/policies?tab=terms" },
     { label: "سياسة الخصوصية", href: "/policies?tab=privacy" },
     { label: "الشحن والتوصيل", href: "/policies?tab=delivery" },
     { label: "الإرجاع والاسترداد", href: "/policies?tab=refund" },
