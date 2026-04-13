@@ -214,8 +214,18 @@ const ProductSearchAutocomplete = ({
     onChange(value.replace(didYouMean.original, didYouMean.suggested));
   };
 
-  // Flat index for keyboard navigation
-  let flatIdx = 0;
+  // Build flat index map for grouped suggestions keyboard navigation
+  const flatIndexMap = useMemo(() => {
+    const map: { idx: number; product: Product }[] = [];
+    for (const group of groupedSuggestions) {
+      for (const p of group.products) {
+        map.push({ idx: map.length, product: p });
+      }
+    }
+    return map;
+  }, [groupedSuggestions]);
+
+  let renderFlatIdx = 0;
 
   return (
     <div ref={wrapperRef} className="relative flex-1">
