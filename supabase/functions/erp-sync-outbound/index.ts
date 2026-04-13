@@ -998,6 +998,19 @@ Deno.serve(async (req) => {
       };
     }
 
+    // ─── TEST: GetPriceList endpoint ───
+    else if (action === "test_pricelist") {
+      if (!baseUrl) throw new Error("ERP base URL is not configured");
+      const priceList = await erpFetch(baseUrl, "/Ecommerce/GetPriceList");
+      const arr = Array.isArray(priceList) ? priceList : (priceList?.data || priceList?.items || [priceList]);
+      result = {
+        success: true,
+        total: arr.length,
+        keys: arr.length > 0 ? Object.keys(arr[0]) : [],
+        sample: arr.slice(0, 10),
+      };
+    }
+
     else {
       throw new Error(`Unknown action: ${action}`);
     }
