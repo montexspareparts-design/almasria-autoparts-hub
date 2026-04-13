@@ -90,16 +90,6 @@ async function erpFetch(baseUrl: string, path: string, options: RequestInit = {}
   return result;
 }
 
-// ─── Helper: Build a Map from /Ecommerce/products keyed by item ID ──
-function buildProductsMap(productsList: any[]): Map<string, any> {
-  const map = new Map<string, any>();
-  for (const prod of productsList) {
-    const id = String(prod.id ?? prod.itemCode ?? prod.code ?? "").trim();
-    if (id) map.set(id, prod);
-  }
-  return map;
-}
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -354,7 +344,8 @@ Deno.serve(async (req) => {
           });
 
           if (action === "sync_stock") {
-            // ── Stock: Fetch GetItems (id,name) + products (quantity) and merge by ID ──
+            // ── Stock: Fetch GetItems (id,name) + products (quantity) and merge by index ──
+            // Note: /products endpoint has NO id field, arrays are parallel by design
             const [itemsRes, productsRes] = await Promise.all([
               erpFetch(baseUrl, "/Ecommerce/GetItems"),
               erpFetch(baseUrl, "/Ecommerce/products"),
@@ -363,17 +354,12 @@ Deno.serve(async (req) => {
             const itemsList = Array.isArray(itemsRes) ? itemsRes : (itemsRes.data || itemsRes.items || []);
             const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
 
-            // Build products map keyed by ID for accurate matching
-            const productsMap = buildProductsMap(productsList);
-
-            // Build ID → quantity map by matching GetItems ID to products map
+            // Build ID → quantity map from parallel arrays
             const stockMap = new Map<string, number>();
-            for (const item of itemsList) {
-              const erpId = String(item?.id || "").trim();
-              if (!erpId) continue;
-              const prod = productsMap.get(erpId);
-              const qty = Math.floor(Number(prod?.quantity ?? 0));
-              stockMap.set(erpId, qty);
+            for (let i = 0; i < itemsList.length; i++) {
+              const erpId = String(itemsList[i]?.id || "").trim();
+              const qty = Math.floor(Number(productsList[i]?.quantity ?? 0));
+              if (erpId) stockMap.set(erpId, qty);
             }
 
             // Filter to only items that exist on our website
@@ -424,7 +410,8 @@ Deno.serve(async (req) => {
               sample: bulkItems.filter(i => i.qty > 0).slice(0, 5),
             };
           } else {
-            // ── Prices: Merge GetItems (id) + products (retailPrice, wholesalePrice) by ID ──
+            // ── Prices: Merge GetItems (id) + products (retailPrice, wholesalePrice) by index ──
+            // Note: /products endpoint has NO id field, arrays are parallel by design
             const [itemsRes, productsRes] = await Promise.all([
               erpFetch(baseUrl, "/Ecommerce/GetItems"),
               erpFetch(baseUrl, "/Ecommerce/products"),
@@ -433,20 +420,17 @@ Deno.serve(async (req) => {
             const itemsList = Array.isArray(itemsRes) ? itemsRes : (itemsRes.data || itemsRes.items || []);
             const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
 
-            // Build products map keyed by ID for accurate matching
-            const productsMap = buildProductsMap(productsList);
-
             const retailItems: { id: string; price: number }[] = [];
             const wholesaleItems: { id: string; wholesalePrice: number }[] = [];
             let matchedCount = 0;
             const sampleItems: any[] = [];
 
-            for (const item of itemsList) {
-              const erpId = String(item?.id || "").trim();
+            for (let i = 0; i < itemsList.length; i++) {
+              const erpId = String(itemsList[i]?.id || "").trim();
               if (!erpId || !ourCodeSet.has(erpId)) continue;
 
               matchedCount++;
-              const prod = productsMap.get(erpId) || {};
+              const prod = productsList[i] || {};
               const retailPrice = Number(prod.retailPrice ?? prod.price ?? 0);
               const wholesalePrice = Number(prod.wholesalePrice ?? 0);
 
@@ -457,7 +441,7 @@ Deno.serve(async (req) => {
                 wholesaleItems.push({ id: erpId, wholesalePrice });
               }
               if (sampleItems.length < 5) {
-                sampleItems.push({ id: erpId, name: String(item?.name || "").trim(), retailPrice, wholesalePrice });
+                sampleItems.push({ id: erpId, name: String(itemsList[i]?.name || "").trim(), retailPrice, wholesalePrice });
               }
             }
 
@@ -533,7 +517,7 @@ Deno.serve(async (req) => {
         ];
       } else {
         if (!baseUrl) throw new Error("ERP base URL is not configured");
-        // Merge GetItems (id, name) + products (price, quantity) by ID
+        // Merge GetItems (id, name) + products (price, quantity) by index (parallel arrays)
         const [itemsRes, productsRes] = await Promise.all([
           erpFetch(baseUrl, "/Ecommerce/GetItems"),
           erpFetch(baseUrl, "/Ecommerce/products"),
@@ -541,13 +525,10 @@ Deno.serve(async (req) => {
         const itemsList = Array.isArray(itemsRes) ? itemsRes : (itemsRes.data || itemsRes.items || []);
         const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
 
-        const productsMap = buildProductsMap(productsList);
-
-        items = itemsList.map((item: any) => {
-          const erpId = String(item.id || "").trim();
-          const prod = productsMap.get(erpId) || {};
+        items = itemsList.map((item: any, i: number) => {
+          const prod = productsList[i] || {};
           return {
-            id: erpId,
+            id: String(item.id || "").trim(),
             name: String(item.name || item.itemName || "").trim(),
             price: Number(prod.retailPrice ?? prod.price ?? prod.unitPrice ?? 0),
             qty: Math.floor(Number(prod.quantity ?? prod.qty ?? prod.stock ?? 0)),
@@ -663,7 +644,7 @@ Deno.serve(async (req) => {
         };
       } else {
         if (!baseUrl) throw new Error("ERP base URL is not configured");
-        // Merge GetItems (id, name) + products (price, quantity) by ID
+        // Merge GetItems (id, name) + products (price, quantity) by index (parallel arrays)
         const [itemsRes, productsRes] = await Promise.all([
           erpFetch(baseUrl, "/Ecommerce/GetItems"),
           erpFetch(baseUrl, "/Ecommerce/products"),
@@ -671,13 +652,10 @@ Deno.serve(async (req) => {
         const itemsList = Array.isArray(itemsRes) ? itemsRes : (itemsRes.data || itemsRes.items || []);
         const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
 
-        const productsMap = buildProductsMap(productsList);
-
-        const merged = itemsList.map((item: any) => {
-          const erpId = String(item.id || "").trim();
-          const prod = productsMap.get(erpId) || {};
+        const merged = itemsList.map((item: any, i: number) => {
+          const prod = productsList[i] || {};
           return {
-            id: erpId,
+            id: String(item.id || "").trim(),
             name: String(item.name || item.itemName || "").trim(),
             price: Number(prod.retailPrice ?? prod.price ?? prod.unitPrice ?? 0),
             quantity: Math.floor(Number(prod.quantity ?? prod.qty ?? prod.stock ?? 0)),
@@ -695,7 +673,7 @@ Deno.serve(async (req) => {
     // ─── DEEP STOCK CHECK: Find items with qty > 0 ───
     else if (action === "deep_stock_check") {
       if (!baseUrl) throw new Error("ERP base URL is not configured");
-      // Merge both endpoints by ID for accurate data
+      // Merge both endpoints by index (parallel arrays — /products has no ID field)
       const [itemsRes, productsRes] = await Promise.all([
         erpFetch(baseUrl, "/Ecommerce/GetItems"),
         erpFetch(baseUrl, "/Ecommerce/products"),
@@ -707,14 +685,11 @@ Deno.serve(async (req) => {
       const getItemsSchema = Object.entries(itemsList[0] || {}).map(([k, v]) => ({ key: k, type: typeof v, value: v }));
       const productsSchema = Object.entries(productsList[0] || {}).map(([k, v]) => ({ key: k, type: typeof v, value: v }));
 
-      // Merge by ID
-      const productsMap = buildProductsMap(productsList);
-
-      const merged = itemsList.map((item: any) => {
-        const erpId = String(item.id || "").trim();
-        const prod = productsMap.get(erpId) || {};
+      // Merge by index
+      const merged = itemsList.map((item: any, i: number) => {
+        const prod = productsList[i] || {};
         return {
-          id: erpId,
+          id: String(item.id || "").trim(),
           name: String(item.name || "").trim(),
           quantity: Math.floor(Number(prod.quantity ?? 0)),
           retailPrice: Number(prod.retailPrice ?? 0),
@@ -994,7 +969,6 @@ Deno.serve(async (req) => {
 
       // Search for our erp_item_codes in the ERP data
       const ourCodes = data?.erp_codes || ["11603", "20587", "19489"];
-      const productsMap = buildProductsMap(products);
       const codeMatches: any[] = [];
       for (const code of ourCodes) {
         const trimCode = code.trim();
@@ -1005,7 +979,7 @@ Deno.serve(async (req) => {
             found: true,
             index: idx,
             item: items[idx],
-            product: productsMap.get(trimCode) || null,
+            product: products[idx] || null,
           });
         } else {
           codeMatches.push({ erp_item_code: trimCode, found: false });
