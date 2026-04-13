@@ -518,10 +518,23 @@ Deno.serve(async (req) => {
         ];
       } else {
         if (!baseUrl) throw new Error("ERP base URL is not configured");
-        const erpResponse = await erpFetch(baseUrl, "/Ecommerce/products");
-        items = Array.isArray(erpResponse)
-          ? erpResponse
-          : (erpResponse.data || erpResponse.items || []);
+        // Merge GetItems (id, name) + products (price, quantity) by index
+        const [itemsRes, productsRes] = await Promise.all([
+          erpFetch(baseUrl, "/Ecommerce/GetItems"),
+          erpFetch(baseUrl, "/Ecommerce/products"),
+        ]);
+        const itemsList = Array.isArray(itemsRes) ? itemsRes : (itemsRes.data || itemsRes.items || []);
+        const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
+
+        items = itemsList.map((item: any, i: number) => {
+          const prod = productsList[i] || {};
+          return {
+            id: String(item.id || "").trim(),
+            name: String(item.name || item.itemName || "").trim(),
+            price: Number(prod.retailPrice ?? prod.price ?? prod.unitPrice ?? 0),
+            qty: Math.floor(Number(prod.quantity ?? prod.qty ?? prod.stock ?? 0)),
+          };
+        }).filter((item: any) => item.id && item.name);
       }
 
       // Process in batches using the SQL function for performance
@@ -632,20 +645,28 @@ Deno.serve(async (req) => {
         };
       } else {
         if (!baseUrl) throw new Error("ERP base URL is not configured");
-        const erpResponse = await erpFetch(baseUrl, "/Ecommerce/products");
-        const items = Array.isArray(erpResponse)
-          ? erpResponse
-          : (erpResponse.data || erpResponse.items || []);
+        // Merge GetItems (id, name) + products (price, quantity) by index
+        const [itemsRes, productsRes] = await Promise.all([
+          erpFetch(baseUrl, "/Ecommerce/GetItems"),
+          erpFetch(baseUrl, "/Ecommerce/products"),
+        ]);
+        const itemsList = Array.isArray(itemsRes) ? itemsRes : (itemsRes.data || itemsRes.items || []);
+        const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
+
+        const merged = itemsList.map((item: any, i: number) => {
+          const prod = productsList[i] || {};
+          return {
+            id: String(item.id || "").trim(),
+            name: String(item.name || item.itemName || "").trim(),
+            price: Number(prod.retailPrice ?? prod.price ?? prod.unitPrice ?? 0),
+            quantity: Math.floor(Number(prod.quantity ?? prod.qty ?? prod.stock ?? 0)),
+          };
+        }).filter((p: any) => p.id);
 
         result = {
           success: true,
-          total: items.length,
-          products: items.map((i: any) => ({
-            id: (i.id || i.itemCode || "").toString().trim(),
-            name: i.name || i.itemName || "",
-            price: i.price ?? i.unitPrice ?? 0,
-            quantity: i.qty ?? i.quantity ?? i.stock ?? 0,
-          })),
+          total: merged.length,
+          products: merged,
         };
       }
     }
