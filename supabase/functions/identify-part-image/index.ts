@@ -22,15 +22,35 @@ serve(async (req) => {
       );
     }
 
-    // Rate limit: 10 image identifications per IP per 5 minutes
+    // Rate limit: prefer auth user ID, fallback to IP
     const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabaseRL = createClient(supabaseUrl, serviceKey);
+
+    let rateLimitId = clientIp;
+    let isAuthenticated = false;
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      try {
+        const authClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+          global: { headers: { Authorization: authHeader } },
+        });
+        const token = authHeader.replace("Bearer ", "");
+        const { data: claimsData } = await authClient.auth.getClaims(token);
+        if (claimsData?.claims?.sub) {
+          rateLimitId = claimsData.claims.sub as string;
+          isAuthenticated = true;
+        }
+      } catch { /* guest */ }
+    }
+
+    // Authenticated users: 15 per 5 min, guests: 5 per 5 min
+    const maxRequests = isAuthenticated ? 15 : 5;
     const { data: allowed } = await supabaseRL.rpc("check_rate_limit", {
-      _identifier: clientIp,
+      _identifier: rateLimitId,
       _action: "identify_part_image",
-      _max_requests: 10,
+      _max_requests: maxRequests,
       _window_seconds: 300,
     });
 

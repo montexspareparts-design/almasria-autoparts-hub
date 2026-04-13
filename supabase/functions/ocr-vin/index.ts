@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,6 +13,42 @@ serve(async (req) => {
   }
 
   try {
+    // ── Rate limiting: 5 OCR attempts per IP per 5 minutes ──
+    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseRL = createClient(supabaseUrl, serviceKey);
+
+    // Try to get authenticated user for better rate-limit tracking
+    const authHeader = req.headers.get("Authorization");
+    let rateLimitId = clientIp;
+    if (authHeader?.startsWith("Bearer ")) {
+      try {
+        const authClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+          global: { headers: { Authorization: authHeader } },
+        });
+        const token = authHeader.replace("Bearer ", "");
+        const { data: claimsData } = await authClient.auth.getClaims(token);
+        if (claimsData?.claims?.sub) {
+          rateLimitId = claimsData.claims.sub as string;
+        }
+      } catch { /* use IP */ }
+    }
+
+    const { data: allowed } = await supabaseRL.rpc("check_rate_limit", {
+      _identifier: rateLimitId,
+      _action: "ocr_vin",
+      _max_requests: 5,
+      _window_seconds: 300,
+    });
+
+    if (!allowed) {
+      return new Response(
+        JSON.stringify({ error: "محاولات كثيرة. حاول بعد 5 دقائق." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { image_base64 } = await req.json();
 
     if (!image_base64 || typeof image_base64 !== "string") {
