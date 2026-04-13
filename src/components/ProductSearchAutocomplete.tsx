@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Search, X, Package, Hash, Command, Lightbulb, PlusCircle, ArrowLeft, CheckCircle, XCircle, Tag } from "lucide-react";
+import { Search, X, Package, Hash, Command, Lightbulb, PlusCircle, ArrowLeft, CheckCircle, XCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
 import { normalizeArabic, expandAliases, getSearchRelevanceScore } from "@/hooks/useProductListing";
