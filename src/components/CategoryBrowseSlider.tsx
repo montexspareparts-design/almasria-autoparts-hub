@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Search } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -52,66 +52,96 @@ const categoryAssets: Record<string, { image: string; accent: string }> = {
 const defaultAccent = "from-primary/80 to-primary/90";
 
 interface CategoryBrowseSliderProps {
-  /** If provided, clicking a category calls this instead of navigating */
   onCategorySelect?: (categoryId: string) => void;
 }
 
 const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) => {
   const navigate = useNavigate();
-  const [isHovered, setIsHovered] = useState(false);
+  const location = useLocation();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
 
-  // Fetch categories + product counts from DB
+  // Fetch categories + product counts (all active products, not just in-stock — temp policy)
   const { data: categoriesWithCounts } = useQuery({
-    queryKey: ["category_browse_slider"],
+    queryKey: ["category_browse_slider_v2"],
     queryFn: async () => {
-      // Get categories
       const { data: cats, error } = await supabase
         .from("product_categories")
         .select("id, name_ar, slug, sort_order")
         .order("sort_order");
       if (error) throw error;
 
-      // Get counts per category (only active products with stock > 0)
+      // Count ALL active products per category (temp: ignore stock per policy)
       const counts = await Promise.all(
         (cats || []).map(async (cat) => {
           const { count } = await supabase
             .from("products")
             .select("id", { count: "exact", head: true })
             .eq("is_active", true)
-            .gt("stock_quantity", 0)
             .eq("category_id", cat.id);
           return { ...cat, count: count ?? 0 };
         })
       );
 
-      // Only show categories with products, sorted by count desc
       return counts.filter((c) => c.count > 0).sort((a, b) => b.count - a.count);
     },
     staleTime: 5 * 60 * 1000,
   });
 
-
-
   const handleCategoryClick = (cat: { id: string; slug: string }) => {
     if (onCategorySelect) {
       onCategorySelect(cat.id);
     } else {
-      // Navigate to products page with category filter — no brand restriction
-      navigate(`/products/toyota-genuine?category=${cat.slug}`);
+      // Navigate to products page WITHOUT brand restriction — show all brands
+      navigate(`/products/toyota-genuine?category=${cat.slug}&search=`);
     }
   };
 
   const items = categoriesWithCounts || [];
+
+  // Scroll state management
+  const updateScrollState = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 10);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    updateScrollState();
+    el.addEventListener("scroll", updateScrollState, { passive: true });
+    return () => el.removeEventListener("scroll", updateScrollState);
+  }, [items, updateScrollState]);
+
+  // Auto-scroll to start (RTL)
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el && items.length > 0) {
+      el.scrollLeft = el.scrollWidth;
+      setTimeout(updateScrollState, 100);
+    }
+  }, [items, updateScrollState]);
+
+  const scroll = (direction: "left" | "right") => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const amount = direction === "left" ? -300 : 300;
+    el.scrollBy({ left: amount, behavior: "smooth" });
+  };
+
   if (items.length === 0) return null;
 
   return (
-    <section className="py-14 bg-gradient-to-b from-background to-muted/40">
+    <section className="py-8 bg-gradient-to-b from-background to-muted/30">
       <div className="container mx-auto px-4">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-10"
+          className="text-center mb-6"
         >
           <button
             onClick={() => {
@@ -121,48 +151,63 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
                 setTimeout(() => searchInput.focus(), 500);
               }
             }}
-            className="inline-flex items-center gap-3 px-8 py-3 rounded-full bg-primary/15 border-2 border-primary/30 text-primary text-lg md:text-2xl font-black mb-4 hover:bg-primary/25 hover:scale-105 transition-all duration-300 cursor-pointer animate-[glowPulse_3s_ease-in-out_infinite]"
-            style={{ animationName: "glowPulse" }}
+            className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-full bg-primary/10 border border-primary/25 text-primary text-base md:text-lg font-bold mb-3 hover:bg-primary/20 hover:scale-[1.03] transition-all duration-300 cursor-pointer"
           >
-            <Search className="w-6 h-6 md:w-7 md:h-7" />
+            <Search className="w-5 h-5" />
             بتدوّر على إيه؟
           </button>
-          <p className="text-muted-foreground text-sm max-w-md mx-auto">
-            اختار الفئة اللي محتاجها وهنوصّلك للمنتج اللي بتدور عليه
+          <p className="text-muted-foreground text-xs max-w-sm mx-auto">
+            اختار الفئة وهنوصّلك للمنتج اللي بتدور عليه
           </p>
         </motion.div>
 
-        {/* Marquee ticker */}
-        <div
-          className="relative overflow-hidden"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-        >
+        {/* Scrollable category strip */}
+        <div className="relative group">
+          {/* Scroll arrows */}
+          {canScrollLeft && (
+            <button
+              onClick={() => scroll("left")}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-background/90 border border-border shadow-lg flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors duration-200 opacity-0 group-hover:opacity-100"
+              aria-label="Scroll left"
+            >
+              ‹
+            </button>
+          )}
+          {canScrollRight && (
+            <button
+              onClick={() => scroll("right")}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-background/90 border border-border shadow-lg flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors duration-200 opacity-0 group-hover:opacity-100"
+              aria-label="Scroll right"
+            >
+              ›
+            </button>
+          )}
+
           {/* Fade edges */}
-          <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-background to-transparent z-[5] pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-background to-transparent z-[5] pointer-events-none" />
+          <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-[5] pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-[5] pointer-events-none" />
 
           <div
-            className="flex w-max gap-4 py-2"
-            style={{
-              animation: `marquee-rtl ${items.length * 2.5}s linear infinite`,
-            }}
+            ref={scrollRef}
+            className="flex gap-3 overflow-x-auto scrollbar-hide py-2 px-1 scroll-smooth"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            dir="rtl"
           >
-            {[...items, ...items].map((cat, i) => {
+            {items.map((cat) => {
               const assets = categoryAssets[cat.slug] || { image: catFilters, accent: defaultAccent };
               return (
                 <motion.div
-                  key={`${cat.id}-${i}`}
-                  whileHover={{ scale: 1.08, y: -6 }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  key={cat.id}
+                  whileHover={{ scale: 1.05, y: -4 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 22 }}
                   className="shrink-0"
                 >
                   <button
                     onClick={() => handleCategoryClick(cat)}
-                    className="group/card block relative w-[120px] sm:w-[140px] rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 text-right"
+                    className="group/card block relative w-[130px] sm:w-[150px] rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 text-center border border-border/40 hover:border-primary/30"
                   >
-                    <div className="aspect-[4/3] bg-white p-2 relative overflow-hidden">
+                    <div className="aspect-[4/3] bg-white p-3 relative overflow-hidden">
                       <motion.img
                         src={assets.image}
                         alt={cat.name_ar}
@@ -170,15 +215,14 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
                         width={280}
                         height={210}
                         className="w-full h-full object-contain"
-                        whileHover={{ scale: 1.15, rotate: 2 }}
+                        whileHover={{ scale: 1.1 }}
                         transition={{ type: "spring", stiffness: 200, damping: 15 }}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300" />
                     </div>
-                    <div className={`relative bg-gradient-to-br ${assets.accent} px-2.5 py-2 text-center overflow-hidden`}>
+                    <div className={`relative bg-gradient-to-br ${assets.accent} px-2.5 py-2.5 overflow-hidden`}>
                       <div className="absolute inset-0 bg-white/0 group-hover/card:bg-white/10 transition-colors duration-300" />
                       <span className="relative text-white font-bold text-xs block leading-snug">{cat.name_ar}</span>
-                      <span className="relative text-white/70 text-[10px] block">{cat.count} صنف</span>
+                      <span className="relative text-white/80 text-[10px] block mt-0.5">{cat.count} صنف</span>
                     </div>
                   </button>
                 </motion.div>
