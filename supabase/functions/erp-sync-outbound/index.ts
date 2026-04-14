@@ -977,28 +977,16 @@ Deno.serve(async (req) => {
       if (isMock || !baseUrl) {
         result = { success: false, message: "ERP not configured or in mock mode" };
       } else {
-        const [itemsRes, productsRes] = await Promise.all([
-          erpFetch(baseUrl, "/Ecommerce/GetItems"),
-          erpFetch(baseUrl, "/Ecommerce/products"),
-        ]);
-
-        const itemsList = Array.isArray(itemsRes) ? itemsRes : (itemsRes.data || itemsRes.items || []);
+        const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
         const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
 
-        // Build merged array with id from GetItems + prices from products
-        const merged: any[] = [];
-        for (let i = 0; i < itemsList.length; i++) {
-          const erpId = String(itemsList[i]?.id || "").trim();
-          const name = String(itemsList[i]?.name || "").trim();
-          const prod = productsList[i] || {};
-          merged.push({
-            id: erpId,
-            name,
-            retailPrice: Number(prod.retailPrice ?? prod.price ?? 0),
-            wholesalePrice: Number(prod.wholesalePrice ?? 0),
-            quantity: Number(prod.quantity ?? 0),
-          });
-        }
+        const merged = productsList.map((prod: any) => ({
+          id: String(prod.id || "").trim(),
+          name: String(prod.name || "").trim(),
+          retailPrice: Number(prod.retailPrice ?? prod.price ?? 0),
+          wholesalePrice: Number(prod.wholesaleprice ?? prod.wholesalePrice ?? 0),
+          quantity: Number(prod.qty ?? prod.quantity ?? 0),
+        }));
 
         result = { success: true, total: merged.length, items: merged };
       }
