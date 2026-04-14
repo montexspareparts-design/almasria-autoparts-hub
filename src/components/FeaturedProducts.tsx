@@ -44,6 +44,26 @@ const FeaturedProducts = () => {
 
   const limitReached = dailyViewCount >= DAILY_LIMIT;
 
+  // Fetch tier prices for dealers (wholesale price from ERP sync)
+  const { data: tierPrices } = useQuery({
+    queryKey: ["tier_prices_featured", dealerAccount?.tier],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("product_tier_prices")
+        .select("product_id, price")
+        .eq("tier", dealerAccount!.tier as any);
+      const map: Record<string, number> = {};
+      (data || []).forEach((tp) => { map[tp.product_id] = tp.price; });
+      return map;
+    },
+    enabled: !!dealerAccount?.tier,
+  });
+
+  const getDealerPrice = useCallback((product: any) => {
+    if (tierPrices && tierPrices[product.id]) return tierPrices[product.id];
+    return product.base_price;
+  }, [tierPrices]);
+
   const recordView = useCallback(async (productId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!user || !isDealer || viewedProductIds.includes(productId) || limitReached) return;
