@@ -365,17 +365,16 @@ const ProductSearchAutocomplete = ({
                 </>
               )}
 
-              {/* Search results grouped by brand */}
+              {/* Search results grouped by part type — original first then alternatives */}
               {groupedSuggestions.map((group) => {
-                const brandInfo = brandLabels[group.brand] || { label: group.brand, color: "bg-muted text-muted-foreground border-border" };
                 return (
-                  <div key={group.brand}>
+                  <div key={group.partType}>
                     <div className="sticky top-0 z-10 bg-muted/60 backdrop-blur-sm px-4 py-1.5 flex items-center gap-2 border-b border-border/20">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${brandInfo.color}`}>
-                        {brandInfo.label}
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-accent text-accent-foreground border-border">
+                        {group.partType}
                       </span>
                       <span className="text-[10px] text-muted-foreground">
-                        {brandTotalCounts[group.brand] || group.products.length} صنف
+                        {group.products.length} صنف
                       </span>
                     </div>
                     {group.products.map((product) => {
@@ -389,6 +388,7 @@ const ProductSearchAutocomplete = ({
                           onHover={() => setSelectedIndex(currentIdx)}
                           onAddToQuote={onAddToQuote}
                           isDealer={isDealer}
+                          showBrand
                           getProductPrice={getProductPrice}
                         />
                       );
