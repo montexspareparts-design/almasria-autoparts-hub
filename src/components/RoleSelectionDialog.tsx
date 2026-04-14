@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Briefcase, Shield, Users } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -34,9 +34,9 @@ const RoleSelectionDialog = ({ open, onOpenChange }: RoleSelectionDialogProps) =
           <DialogTitle className="text-lg font-black text-foreground">
             اختر وضع الدخول
           </DialogTitle>
-          <p className="text-xs text-muted-foreground mt-1">
+          <DialogDescription className="text-xs text-muted-foreground mt-1">
             حسابك يملك صلاحيتين — اختر اللوحة المناسبة
-          </p>
+          </DialogDescription>
         </DialogHeader>
 
         <div className="p-6 pt-4 grid grid-cols-2 gap-3" dir="rtl">
