@@ -373,7 +373,7 @@ const ProductSearchAutocomplete = ({
 
 /* ── Single result item (Google-style) ── */
 const SearchResultItem = ({
-  product, isSelected, onSelect, onHover, onAddToQuote, isDealer, showBrand = false,
+  product, isSelected, onSelect, onHover, onAddToQuote, isDealer, showBrand = false, getProductPrice,
 }: {
   product: Product;
   isSelected: boolean;
