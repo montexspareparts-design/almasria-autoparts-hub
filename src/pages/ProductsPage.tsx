@@ -112,8 +112,9 @@ const ProductsPage = () => {
   }, [listing.filters.search, trackSearch]);
   useEffect(() => { if (listing.filters.categoryId) trackCategory(listing.filters.categoryId); }, [listing.filters.categoryId, trackCategory]);
 
-  // Brand showcase page (no specific brand selected)
-  if (!config) {
+  // Brand showcase page (no specific brand selected AND no category filter)
+  const hasCategoryFilter = searchParams.has("category");
+  if (!config && !hasCategoryFilter) {
     return (
       <div className="min-h-screen bg-dark-section">
         <Helmet>
@@ -194,24 +195,31 @@ const ProductsPage = () => {
     );
   }
 
+  const pageTitle = config?.title || "تصفح حسب الفئة";
+  const pageDescription = config?.description || "تصفح جميع المنتجات حسب الفئة المختارة من جميع الماركات المتاحة.";
+
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>{config.title} | المصرية جروب</title>
-        <meta name="description" content={config.description} />
-        <link rel="canonical" href={`https://www.almasriaautoparts.com/products/${brand}`} />
+        <title>{pageTitle} | المصرية جروب</title>
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={`https://www.almasriaautoparts.com/products${brand ? `/${brand}` : ''}`} />
       </Helmet>
-      <BreadcrumbSchema items={[
-        { name: "الرئيسية", url: "https://www.almasriaautoparts.com/" },
-        { name: "المنتجات", url: "https://www.almasriaautoparts.com/products" },
-        { name: config.title, url: `https://www.almasriaautoparts.com/products/${brand}` },
-      ]} />
+      {config && (
+        <BreadcrumbSchema items={[
+          { name: "الرئيسية", url: "https://www.almasriaautoparts.com/" },
+          { name: "المنتجات", url: "https://www.almasriaautoparts.com/products" },
+          { name: config.title, url: `https://www.almasriaautoparts.com/products/${brand}` },
+        ]} />
+      )}
       <Navbar />
-      <BrandHeroBanner
-        logo={config.logo} title={config.title} subtitle={config.subtitle}
-        description={config.description} badge={config.badge}
-        backgroundImage={config.backgroundImage} logoScale={config.logoScale}
-      />
+      {config && (
+        <BrandHeroBanner
+          logo={config.logo} title={config.title} subtitle={config.subtitle}
+          description={config.description} badge={config.badge}
+          backgroundImage={config.backgroundImage} logoScale={config.logoScale}
+        />
+      )}
 
       <CategoryBrowseSlider
         onCategorySelect={(categoryId) => {
