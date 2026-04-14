@@ -326,7 +326,9 @@ const ProductSearchAutocomplete = ({
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${brandInfo.color}`}>
                         {brandInfo.label}
                       </span>
-                      <span className="text-[10px] text-muted-foreground">{group.products.length} نتيجة</span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {brandTotalCounts[group.brand] || group.products.length} صنف
+                      </span>
                     </div>
                     {group.products.map((product) => {
                       const currentIdx = renderFlatIdx++;
