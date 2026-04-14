@@ -379,6 +379,7 @@ const SearchResultItem = ({
   onAddToQuote?: (product: Product) => void;
   isDealer: boolean;
   showBrand?: boolean;
+  getProductPrice?: (product: Product) => { price: number | null; label: string } | null;
 }) => {
   const brandInfo = brandLabels[product.brand];
   const isAvailable = ((product as any).stock_quantity ?? 0) > ((product as any).safety_stock ?? 0);
