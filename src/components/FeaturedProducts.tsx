@@ -212,7 +212,7 @@ const FeaturedProducts = () => {
                     ) : isDealer ? (
                       viewedProductIds.includes(product.id) ? (
                         <span className="text-primary font-black text-lg">
-                          {product.base_price.toLocaleString("ar-EG")} ج.م
+                          {getDealerPrice(product).toLocaleString("ar-EG")} ج.م
                         </span>
                       ) : limitReached ? (
                         <span className="text-muted-foreground text-xs flex items-center gap-1"><Lock className="w-3 h-3" />استنفدت الحد اليومي</span>
