@@ -222,8 +222,8 @@ const ProductsPage = () => {
       )}
 
       <CategoryBrowseSlider
-        onCategorySelect={(categoryId) => {
-          listing.setFilters((prev: any) => ({ ...prev, categoryId }));
+        onCategorySelect={(categoryName) => {
+          listing.setFilters((prev: any) => ({ ...prev, search: categoryName, categoryId: null, brandKey: null }));
           productsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
         }}
       />
