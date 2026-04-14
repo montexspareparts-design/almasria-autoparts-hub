@@ -142,7 +142,7 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
         } else {
           el.scrollBy({ left: -160, behavior: "smooth" });
         }
-      }, 3000);
+      }, 4000);
     };
 
     startAutoScroll();
