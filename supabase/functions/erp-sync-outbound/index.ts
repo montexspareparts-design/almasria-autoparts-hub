@@ -404,14 +404,8 @@ Deno.serve(async (req) => {
               sample: bulkItems.filter(i => i.qty > 0).slice(0, 5),
             };
           } else {
-            // ── Prices: Merge GetItems (id) + products (retailPrice, wholesalePrice) by index ──
-            // Note: /products endpoint has NO id field, arrays are parallel by design
-            const [itemsRes, productsRes] = await Promise.all([
-              erpFetch(baseUrl, "/Ecommerce/GetItems"),
-              erpFetch(baseUrl, "/Ecommerce/products"),
-            ]);
-
-            const itemsList = Array.isArray(itemsRes) ? itemsRes : (itemsRes.data || itemsRes.items || []);
+            // ── Prices: /products now returns id + retailPrice + wholesaleprice directly ──
+            const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
             const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
 
             const retailItems: { id: string; price: number }[] = [];
@@ -419,14 +413,13 @@ Deno.serve(async (req) => {
             let matchedCount = 0;
             const sampleItems: any[] = [];
 
-            for (let i = 0; i < itemsList.length; i++) {
-              const erpId = String(itemsList[i]?.id || "").trim();
+            for (const prod of productsList) {
+              const erpId = String(prod.id || "").trim();
               if (!erpId || !ourCodeSet.has(erpId)) continue;
 
               matchedCount++;
-              const prod = productsList[i] || {};
               const retailPrice = Number(prod.retailPrice ?? prod.price ?? 0);
-              const wholesalePrice = Number(prod.wholesalePrice ?? 0);
+              const wholesalePrice = Number(prod.wholesaleprice ?? prod.wholesalePrice ?? 0);
 
               if (retailPrice > 0) {
                 retailItems.push({ id: erpId, price: retailPrice });
@@ -435,11 +428,11 @@ Deno.serve(async (req) => {
                 wholesaleItems.push({ id: erpId, wholesalePrice });
               }
               if (sampleItems.length < 5) {
-                sampleItems.push({ id: erpId, name: String(itemsList[i]?.name || "").trim(), retailPrice, wholesalePrice });
+                sampleItems.push({ id: erpId, name: String(prod.name || "").trim(), retailPrice, wholesalePrice });
               }
             }
 
-            console.log(`[ERP Price v2] ERP total: ${itemsList.length}, Our products: ${ourProducts.length}, Matched: ${matchedCount}, Retail: ${retailItems.length}, Wholesale: ${wholesaleItems.length}`);
+            console.log(`[ERP Price v3] ERP total: ${productsList.length}, Our products: ${ourProducts.length}, Matched: ${matchedCount}, Retail: ${retailItems.length}, Wholesale: ${wholesaleItems.length}`);
 
             // Update retail prices (base_price)
             let retailUpdated = 0;
@@ -465,7 +458,7 @@ Deno.serve(async (req) => {
               success: true,
               retail_updated: retailUpdated,
               wholesale_updated: wholesaleUpdated,
-              erp_total: itemsList.length,
+              erp_total: productsList.length,
               our_products: ourProducts.length,
               matched: matchedCount,
               sample: sampleItems,
@@ -477,7 +470,7 @@ Deno.serve(async (req) => {
       await supabase.from("erp_sync_logs").insert({
         sync_type: syncType,
         direction: "inbound",
-        payload: { action, version: "v2" },
+        payload: { action, version: "v3" },
         response: result,
         status: isMock ? "mock" : "success",
       });
