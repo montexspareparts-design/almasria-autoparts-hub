@@ -992,6 +992,320 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ─── ANALYZE ERP CATEGORIES: Cross-reference with our DB ───
+    else if (action === "analyze_erp_categories") {
+      if (!baseUrl) throw new Error("ERP base URL is not configured");
+
+      // Fetch ERP products with category fields
+      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
+      const erpProducts = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
+
+      // Build ERP lookup by id
+      const erpMap = new Map<string, any>();
+      for (const p of erpProducts) {
+        const id = String(p.id || "").trim();
+        if (id) erpMap.set(id, p);
+      }
+
+      // Get our categorized products with erp_item_code
+      const { data: categorizedProducts } = await supabase
+        .from("products")
+        .select("erp_item_code, name_ar, category_id, product_categories(name_ar, slug)")
+        .not("category_id", "is", null)
+        .not("erp_item_code", "is", null);
+
+      // Build mapping: for each category, collect the ERP category field values
+      const catFieldAnalysis: Record<string, Record<string, Record<string, number>>> = {};
+      const catFields = ["itemcatid", "itemcat2id", "itemcat3id", "itemcat4id", "itemcat5id", "itemcat6id", "itemcat7id", "itemcat8id", "itemcat9id", "itemcat10id"];
+      let matchedCount = 0;
+
+      for (const prod of (categorizedProducts || [])) {
+        const erpData = erpMap.get(prod.erp_item_code?.trim() || "");
+        if (!erpData) continue;
+        matchedCount++;
+
+        const catInfo = (prod as any).product_categories;
+        const catSlug = catInfo?.slug || "unknown";
+        const catName = catInfo?.name_ar || "unknown";
+        const catKey = `${catSlug}|${catName}`;
+
+        if (!catFieldAnalysis[catKey]) {
+          catFieldAnalysis[catKey] = {};
+          for (const f of catFields) catFieldAnalysis[catKey][f] = {};
+        }
+
+        for (const f of catFields) {
+          const val = String(erpData[f] ?? 0);
+          catFieldAnalysis[catKey][f][val] = (catFieldAnalysis[catKey][f][val] || 0) + 1;
+        }
+      }
+
+      // Find the most discriminating field (highest consistency per category)
+      const fieldScores: Record<string, number> = {};
+      for (const f of catFields) {
+        let score = 0;
+        for (const catKey of Object.keys(catFieldAnalysis)) {
+          const valueCounts = catFieldAnalysis[catKey][f];
+          const entries = Object.entries(valueCounts);
+          if (entries.length === 0) continue;
+          const total = entries.reduce((s, [, c]) => s + c, 0);
+          const maxCount = Math.max(...entries.map(([, c]) => c));
+          // Consistency: how dominant is the top value
+          score += maxCount / total;
+        }
+        fieldScores[f] = score;
+      }
+
+      // Sort fields by discrimination score
+      const rankedFields = Object.entries(fieldScores)
+        .sort((a, b) => b[1] - a[1])
+        .map(([field, score]) => ({ field, score: Math.round(score * 100) / 100 }));
+
+      // For the best field, build recommended mapping
+      const bestField = rankedFields[0]?.field || "itemcatid";
+      const recommendedMapping: Record<string, { erp_value: string; confidence: number; sample_count: number }> = {};
+
+      for (const catKey of Object.keys(catFieldAnalysis)) {
+        const valueCounts = catFieldAnalysis[catKey][bestField];
+        const entries = Object.entries(valueCounts).sort((a, b) => b[1] - a[1]);
+        if (entries.length > 0) {
+          const total = entries.reduce((s, [, c]) => s + c, 0);
+          recommendedMapping[catKey] = {
+            erp_value: entries[0][0],
+            confidence: Math.round((entries[0][1] / total) * 100),
+            sample_count: total,
+          };
+        }
+      }
+
+      // Count uncategorized products
+      const { count: uncategorizedCount } = await supabase
+        .from("products")
+        .select("id", { count: "exact", head: true })
+        .is("category_id", null)
+        .eq("is_active", true);
+
+      result = {
+        success: true,
+        total_erp_products: erpProducts.length,
+        categorized_matched: matchedCount,
+        total_categories: Object.keys(catFieldAnalysis).length,
+        uncategorized_products: uncategorizedCount || 0,
+        best_discriminating_field: bestField,
+        field_ranking: rankedFields,
+        recommended_mapping: recommendedMapping,
+        raw_analysis: catFieldAnalysis,
+      };
+    }
+
+    // ─── SYNC CATEGORIES: Auto-assign categories based on ERP fields ───
+    else if (action === "sync_categories") {
+      if (!isServiceRole) {
+        const { data: isAdmin } = await supabase.rpc("has_role", {
+          _user_id: userId!,
+          _role: "admin",
+        });
+        if (!isAdmin) {
+          return new Response(
+            JSON.stringify({ error: "Forbidden — admin only" }),
+            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
+
+      if (!baseUrl) throw new Error("ERP base URL is not configured");
+      const dryRun = data?.dry_run !== false; // Default to dry run for safety
+
+      // Fetch ERP products
+      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
+      const erpProducts = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
+      const erpMap = new Map<string, any>();
+      for (const p of erpProducts) {
+        const id = String(p.id || "").trim();
+        if (id) erpMap.set(id, p);
+      }
+
+      // Get all categories
+      const { data: categories } = await supabase.from("product_categories").select("id, slug, name_ar");
+      const catBySlug = new Map<string, string>();
+      for (const c of (categories || [])) catBySlug.set(c.slug, c.id);
+
+      // ── Hierarchical classification using multiple ERP fields ──
+      // Based on analysis: itemcatid → itemcat5id → itemcat6id → itemcat2id → name-based fallback
+      function classifyProduct(erp: any): string | null {
+        const cat1 = Number(erp.itemcatid ?? 0);
+        const cat2 = Number(erp.itemcat2id ?? 0);
+        const cat4 = Number(erp.itemcat4id ?? 0);
+        const cat5 = Number(erp.itemcat5id ?? 0);
+        const cat6 = Number(erp.itemcat6id ?? 0);
+        const cat8 = Number(erp.itemcat8id ?? 0);
+        const name = String(erp.name || "").toLowerCase();
+
+        // ── Level 0: Name-based PRIORITY classification (overrides ERP category fields) ──
+        // These are high-confidence name matches that should always win
+        if (name.includes("تيل") || name.includes("فرامل") || name.includes("brake")) return "brakes";
+        if (name.includes("فلتر") || name.includes("filter")) return "filters";
+        if (name.includes("بوجيه") || name.includes("بوجية") || name.includes("بواجي") || name.includes("كويل")) return "spark-plugs-coils";
+        if (name.includes("دبرياج") || name.includes("كلاتش")) return "clutch";
+        if (name.includes("اويل سيل") || name.includes("سيل ")) return "oil-seals";
+        if (name.includes("جوان")) return "gaskets";
+        if (name.includes("مساعد")) return "shocks";
+        if (name.includes("كشاف") || name.includes("لمبه") || name.includes("لمبة") || name.includes("فانوس")) return "lights";
+        if (name.includes("اكصدام") || name.includes("اكسدام") || name.includes("بامبر")) return "bumpers";
+        if (name.includes("مرايا") || name.includes("مراية")) return "mirrors";
+        if (name.includes("كاوتش")) return "rubber";
+        if (name.includes("دينامو") || name.includes("مارش") || name.includes("طلمبة بنزين")) return "electrical";
+        if (name.includes("سير ") || name.includes("بلي") || name.includes("بيرنج")) return "belts-bearings";
+        if (name.includes("عفشه") || name.includes("عفشة") || name.includes("مقص") || name.includes("جلبه") || name.includes("جلبة")) return "suspension";
+        if (name.includes("عمه") || name.includes("عمة") || name.includes("مقود")) return "steering";
+        if (name.includes("رديتر") || name.includes("ريدياتير") || name.includes("ثرموستات") || name.includes("مروحة")) return "water-cooling";
+        if (name.includes("فيبر") || name.includes("كبوت") || name.includes("شنطه") || name.includes("باب")) return "fiber-parts";
+
+        // ── Level 1: Oils (itemcatid=2) — only if name didn't match above ──
+        if (cat1 === 2) {
+          if (cat2 === 75) return "oils-diesel";
+          if (cat2 === 77) return "oils-gasoline";
+          if ([88, 89, 100].includes(cat2)) return "oils-transmission";
+          if (name.includes("ديزل") || name.includes("diesel")) return "oils-diesel";
+          if (name.includes("بنزين") || name.includes("gasoline")) return "oils-gasoline";
+          if (name.includes("فتيس") || name.includes("كرونه") || name.includes("كرونة") || name.includes("نقل") || name.includes("باور")) return "oils-transmission";
+          if (name.includes("زيت")) return "oils-gasoline";
+          return null; // Don't default unknown cat1=2 items
+        }
+        }
+
+        // ── Level 2: Parts (itemcatid=1) ──
+        // Brakes (cat5=19 تيل, cat5=26 ديسك فرامل, cat8=7)
+        if (cat5 === 19 || cat5 === 26 || cat8 === 7) return "brakes";
+        
+        // Clutch (cat5=63)
+        if (cat5 === 63) return "clutch";
+
+        // For cat5=8 (general parts), use cat6 to differentiate
+        if (cat5 === 8) {
+          // Filters (cat6: 234, 320, 428, 536)
+          if ([234, 320, 428, 536].includes(cat6)) return "filters";
+          // Spark plugs (cat6=194)
+          if (cat6 === 194) return "spark-plugs-coils";
+          // Water cooling (cat6: 679, 1235)
+          if ([679, 1235].includes(cat6)) return "water-cooling";
+          // Electrical (cat6: 671, 1372)
+          if ([671, 1372].includes(cat6)) return "electrical";
+        }
+
+        // ── Level 3: cat5-based broader matches ──
+        if (cat5 === 138) {
+          // Oils sub-category detected via cat5 even though cat1 might be wrong
+          if (name.includes("زيت")) return "oils-gasoline";
+        }
+        if (cat5 === 10) {
+          // Oil seals
+          if (name.includes("اويل سيل") || name.includes("سيل")) return "oil-seals";
+        }
+
+        // Name-based rules already handled at Level 0 above
+
+        return null; // Cannot classify
+      }
+
+      // Get uncategorized products
+      const { data: uncategorizedProducts } = await supabase
+        .from("products")
+        .select("id, erp_item_code, name_ar")
+        .is("category_id", null)
+        .eq("is_active", true)
+        .not("erp_item_code", "is", null);
+
+      // Also allow re-classifying already-categorized if requested
+      const includeExisting = data?.include_existing === true;
+      let targetProducts = uncategorizedProducts || [];
+
+      if (includeExisting) {
+        const { data: allProducts } = await supabase
+          .from("products")
+          .select("id, erp_item_code, name_ar")
+          .eq("is_active", true)
+          .not("erp_item_code", "is", null);
+        targetProducts = allProducts || [];
+      }
+
+      // Apply classification
+      let updated = 0;
+      let skipped = 0;
+      const updates: { id: string; name: string; category: string; method: string }[] = [];
+      const unclassified: { id: string; name: string; erp_cats: Record<string, number> }[] = [];
+
+      for (const prod of targetProducts) {
+        const erpData = erpMap.get(prod.erp_item_code?.trim() || "");
+        if (!erpData) { skipped++; continue; }
+
+        const catSlug = classifyProduct(erpData);
+        if (!catSlug || !catBySlug.has(catSlug)) {
+          skipped++;
+          if (unclassified.length < 10) {
+            unclassified.push({
+              id: prod.id,
+              name: prod.name_ar,
+              erp_cats: {
+                itemcatid: erpData.itemcatid,
+                itemcat2id: erpData.itemcat2id,
+                itemcat5id: erpData.itemcat5id,
+                itemcat6id: erpData.itemcat6id,
+                itemcat8id: erpData.itemcat8id,
+              },
+            });
+          }
+          continue;
+        }
+
+        const categoryId = catBySlug.get(catSlug)!;
+        
+        if (!dryRun) {
+          const { error } = await supabase
+            .from("products")
+            .update({ category_id: categoryId })
+            .eq("id", prod.id);
+          if (!error) updated++;
+          else skipped++;
+        } else {
+          updated++;
+        }
+
+        if (updates.length < 30) {
+          updates.push({
+            id: prod.id,
+            name: prod.name_ar,
+            category: catSlug,
+            method: "hierarchical",
+          });
+        }
+      }
+
+      result = {
+        success: true,
+        dry_run: dryRun,
+        method: "hierarchical_multi_field",
+        total_target: targetProducts.length,
+        would_categorize: updated,
+        skipped,
+        sample_updates: updates,
+        unclassified_samples: unclassified,
+        message: dryRun
+          ? `[تجربة] يمكن تصنيف ${updated} صنف من ${targetProducts.length}. أعد الطلب مع dry_run: false للتنفيذ.`
+          : `تم تصنيف ${updated} صنف تلقائياً`,
+      };
+
+      if (!dryRun) {
+        await supabase.from("erp_sync_logs").insert({
+          sync_type: "category_sync",
+          direction: "inbound",
+          payload: { action, method: "hierarchical", include_existing: includeExisting },
+          response: { updated, skipped, total: targetProducts.length },
+          status: "success",
+        });
+      }
+    }
+
     else {
       throw new Error(`Unknown action: ${action}`);
     }
