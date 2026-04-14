@@ -1171,7 +1171,6 @@ Deno.serve(async (req) => {
           if (name.includes("زيت")) return "oils-gasoline";
           return null; // Don't default unknown cat1=2 items
         }
-        }
 
         // ── Level 2: Parts (itemcatid=1) ──
         // Brakes (cat5=19 تيل, cat5=26 ديسك فرامل, cat8=7)
@@ -1303,9 +1302,7 @@ Deno.serve(async (req) => {
           status: "success",
         });
       }
-    }
-
-    else {
+    } else {
       throw new Error(`Unknown action: ${action}`);
     }
 
