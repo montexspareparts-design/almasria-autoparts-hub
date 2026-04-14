@@ -380,11 +380,11 @@ const ProductSearchAutocomplete = ({
               {groupedSuggestions.map((group) => {
                 return (
                   <div key={group.partType}>
-                    <div className="sticky top-0 z-10 bg-muted/60 backdrop-blur-sm px-4 py-1.5 flex items-center gap-2 border-b border-border/20">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-accent text-accent-foreground border-border">
+                    <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm px-5 py-2 flex items-center gap-2 border-b border-border/20">
+                      <span className="text-[11px] font-bold text-foreground">
                         {group.partType}
                       </span>
-                      <span className="text-[10px] text-muted-foreground">
+                      <span className="text-[10px] text-muted-foreground/60">
                         {group.products.length} صنف
                       </span>
                     </div>
