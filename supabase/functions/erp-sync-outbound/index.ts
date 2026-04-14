@@ -504,23 +504,16 @@ Deno.serve(async (req) => {
         ];
       } else {
         if (!baseUrl) throw new Error("ERP base URL is not configured");
-        // Merge GetItems (id, name) + products (price, quantity) by index (parallel arrays)
-        const [itemsRes, productsRes] = await Promise.all([
-          erpFetch(baseUrl, "/Ecommerce/GetItems"),
-          erpFetch(baseUrl, "/Ecommerce/products"),
-        ]);
-        const itemsList = Array.isArray(itemsRes) ? itemsRes : (itemsRes.data || itemsRes.items || []);
+        // /products endpoint now returns id, name, price, qty, wholesaleprice, retailPrice directly
+        const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
         const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
 
-        items = itemsList.map((item: any, i: number) => {
-          const prod = productsList[i] || {};
-          return {
-            id: String(item.id || "").trim(),
-            name: String(item.name || item.itemName || "").trim(),
-            price: Number(prod.retailPrice ?? prod.price ?? prod.unitPrice ?? 0),
-            qty: Math.floor(Number(prod.quantity ?? prod.qty ?? prod.stock ?? 0)),
-          };
-        }).filter((item: any) => item.id && item.name);
+        items = productsList.map((prod: any) => ({
+          id: String(prod.id || "").trim(),
+          name: String(prod.name || "").trim(),
+          price: Number(prod.retailPrice ?? prod.price ?? 0),
+          qty: Math.floor(Number(prod.qty ?? prod.quantity ?? 0)),
+        })).filter((item: any) => item.id && item.name);
       }
 
       // Process in batches using the SQL function for performance
