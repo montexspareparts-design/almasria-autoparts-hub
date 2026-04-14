@@ -39,7 +39,7 @@ const ProductCard = memo(({
 
   const stockAvailable = product.stock_quantity > 0;
   const hasViewed = viewedProductIds.includes(product.id);
-  const canSeePrice = !isDealer || isRetailTier || hasViewed;
+  const canSeePrice = user && (!isDealer || isRetailTier || hasViewed);
   const price = canSeePrice ? (isDealer && !isRetailTier ? getProductPrice(product) : product.base_price) : null;
 
   if (viewMode === "list") {
@@ -283,18 +283,15 @@ const PriceSection = ({
   dailyViewCount, dailyLimit, productId,
   onRecordView, onLoginRequired, compact,
 }: PriceSectionProps) => {
-  // Guests and retail users always see base_price (handled by price != null below)
-  // Only dealers without reveal see the reveal button
-  if (!user && price !== null) {
-    // Guest seeing retail price — show it
-    return (
-      <div className={compact ? "flex items-baseline gap-1.5" : "space-y-1 py-1"}>
-        <div className="text-primary font-black text-lg sm:text-xl tracking-tight leading-tight">
-          {price.toLocaleString("ar-EG")}
-          <span className="text-[10px] sm:text-xs font-bold text-primary/50 mr-1">ج.م</span>
-        </div>
-        <p className="text-[8px] sm:text-[10px] font-semibold leading-none text-muted-foreground/40">سعر قطاعي</p>
-      </div>
+  if (!user) {
+    return compact ? (
+      <Button variant="outline" size="sm" className="gap-1.5 text-[10px] sm:text-xs h-7 sm:h-8 rounded-xl border-border/50 font-bold" onClick={onLoginRequired}>
+        <Lock className="w-3 h-3" />سجل لعرض السعر
+      </Button>
+    ) : (
+      <Button variant="outline" size="sm" className="w-full gap-2 text-[10px] sm:text-xs h-9 rounded-xl border-border/40 font-bold hover:bg-primary/5 hover:border-primary/25 transition-all duration-300" onClick={onLoginRequired}>
+        <Lock className="w-3.5 h-3.5 text-muted-foreground/60" />سجل دخولك لعرض السعر
+      </Button>
     );
   }
 
