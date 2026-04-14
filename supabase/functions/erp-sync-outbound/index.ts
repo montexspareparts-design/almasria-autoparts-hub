@@ -344,21 +344,15 @@ Deno.serve(async (req) => {
           });
 
           if (action === "sync_stock") {
-            // ── Stock: Fetch GetItems (id,name) + products (quantity) and merge by index ──
-            // Note: /products endpoint has NO id field, arrays are parallel by design
-            const [itemsRes, productsRes] = await Promise.all([
-              erpFetch(baseUrl, "/Ecommerce/GetItems"),
-              erpFetch(baseUrl, "/Ecommerce/products"),
-            ]);
-
-            const itemsList = Array.isArray(itemsRes) ? itemsRes : (itemsRes.data || itemsRes.items || []);
+            // ── Stock: /products now returns id + qty directly (per updated API docs) ──
+            const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
             const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
 
-            // Build ID → quantity map from parallel arrays
+            // Build ID → quantity map directly from products endpoint
             const stockMap = new Map<string, number>();
-            for (let i = 0; i < itemsList.length; i++) {
-              const erpId = String(itemsList[i]?.id || "").trim();
-              const qty = Math.floor(Number(productsList[i]?.quantity ?? 0));
+            for (const p of productsList) {
+              const erpId = String(p.id || "").trim();
+              const qty = Math.floor(Number(p.qty ?? p.quantity ?? 0));
               if (erpId) stockMap.set(erpId, qty);
             }
 
@@ -370,7 +364,7 @@ Deno.serve(async (req) => {
               }
             }
 
-            console.log(`[ERP Stock v2] ERP total: ${stockMap.size}, Our products: ${ourProducts.length}, Matched: ${bulkItems.length}`);
+            console.log(`[ERP Stock v3] ERP total: ${stockMap.size}, Our products: ${ourProducts.length}, Matched: ${bulkItems.length}`);
 
             // Safety check
             const itemsWithPositiveQty = bulkItems.filter(i => i.qty > 0);
