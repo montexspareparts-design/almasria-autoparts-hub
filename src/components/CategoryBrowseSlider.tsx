@@ -126,6 +126,44 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
     }
   }, [items, updateScrollState]);
 
+  // Auto-scroll every 3 seconds (RTL: scrolls left = visually right-to-left)
+  const autoScrollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pauseAutoScroll = useRef(false);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || items.length === 0) return;
+
+    const startAutoScroll = () => {
+      autoScrollRef.current = setInterval(() => {
+        if (pauseAutoScroll.current) return;
+        const atStart = el.scrollLeft <= 10;
+        if (atStart) {
+          el.scrollTo({ left: el.scrollWidth, behavior: "smooth" });
+        } else {
+          el.scrollBy({ left: -160, behavior: "smooth" });
+        }
+      }, 3000);
+    };
+
+    startAutoScroll();
+
+    const pause = () => { pauseAutoScroll.current = true; };
+    const resume = () => { pauseAutoScroll.current = false; };
+    el.addEventListener("mouseenter", pause);
+    el.addEventListener("mouseleave", resume);
+    el.addEventListener("touchstart", pause, { passive: true });
+    el.addEventListener("touchend", resume);
+
+    return () => {
+      if (autoScrollRef.current) clearInterval(autoScrollRef.current);
+      el.removeEventListener("mouseenter", pause);
+      el.removeEventListener("mouseleave", resume);
+      el.removeEventListener("touchstart", pause);
+      el.removeEventListener("touchend", resume);
+    };
+  }, [items]);
+
   const scroll = (direction: "left" | "right") => {
     const el = scrollRef.current;
     if (!el) return;
