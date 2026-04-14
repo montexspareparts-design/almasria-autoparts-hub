@@ -380,11 +380,11 @@ const ProductSearchAutocomplete = ({
               {groupedSuggestions.map((group) => {
                 return (
                   <div key={group.partType}>
-                    <div className="sticky top-0 z-10 bg-muted/60 backdrop-blur-sm px-4 py-1.5 flex items-center gap-2 border-b border-border/20">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-accent text-accent-foreground border-border">
+                    <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm px-5 py-2 flex items-center gap-2 border-b border-border/20">
+                      <span className="text-[11px] font-bold text-foreground">
                         {group.partType}
                       </span>
-                      <span className="text-[10px] text-muted-foreground">
+                      <span className="text-[10px] text-muted-foreground/60">
                         {group.products.length} صنف
                       </span>
                     </div>
@@ -428,7 +428,7 @@ const ProductSearchAutocomplete = ({
   );
 };
 
-/* ── Single result item (Google-style) ── */
+/* ── Single result item (Google Search style) ── */
 const SearchResultItem = ({
   product, isSelected, onSelect, onHover, onAddToQuote, isDealer, showBrand = false, getProductPrice,
 }: {
@@ -448,67 +448,70 @@ const SearchResultItem = ({
     <button
       onClick={onSelect}
       onMouseEnter={onHover}
-      className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-right ${
-        isSelected ? "bg-primary/5" : "hover:bg-muted/50"
+      className={`w-full text-right px-5 py-3 transition-colors group ${
+        isSelected ? "bg-muted/60" : "hover:bg-muted/30"
       }`}
     >
-      {/* Thumbnail */}
-      <div className="w-10 h-10 rounded-lg bg-muted/50 shrink-0 flex items-center justify-center overflow-hidden">
+      {/* Line 1: SKU (like Google URL breadcrumb) */}
+      <div className="flex items-center gap-1.5 mb-0.5">
         {product.image_url ? (
-          <img src={product.image_url} alt="" className="w-full h-full object-contain p-0.5" loading="lazy" />
+          <div className="w-5 h-5 rounded-full bg-muted/50 shrink-0 flex items-center justify-center overflow-hidden border border-border/30">
+            <img src={product.image_url} alt="" className="w-full h-full object-contain" loading="lazy" />
+          </div>
         ) : (
-          <Package className="w-4 h-4 text-muted-foreground/30" />
+          <div className="w-5 h-5 rounded-full bg-muted/50 shrink-0 flex items-center justify-center border border-border/30">
+            <Hash className="w-2.5 h-2.5 text-muted-foreground/40" />
+          </div>
+        )}
+        <span dir="ltr" className="text-[11px] font-mono text-muted-foreground truncate">{product.sku}</span>
+        {showBrand && brandInfo && (
+          <span className={`text-[9px] font-bold px-1.5 py-0 rounded-full border ${brandInfo.color}`}>
+            {brandInfo.label}
+          </span>
         )}
       </div>
 
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <p className="text-xs font-semibold line-clamp-1 leading-snug text-foreground">{product.name_ar}</p>
-        <div className="mt-0.5 flex items-center gap-2 flex-wrap">
-          <span dir="ltr" className="text-[10px] font-mono text-muted-foreground">{product.sku}</span>
-          {showBrand && brandInfo && (
-            <span className={`text-[9px] font-bold px-1.5 py-0 rounded-full border ${brandInfo.color}`}>
-              {brandInfo.label}
-            </span>
-          )}
-          {isDealer && (
-            isAvailable ? (
-              <span className="flex items-center gap-0.5 text-emerald-600 dark:text-emerald-400">
-                <CheckCircle className="w-2.5 h-2.5" />
-                <span className="text-[10px]">متوفر</span>
-              </span>
-            ) : (
-              <span className="flex items-center gap-0.5 text-destructive">
-                <XCircle className="w-2.5 h-2.5" />
-                <span className="text-[10px]">نفد</span>
-              </span>
-            )
-          )}
-        </div>
-      </div>
+      {/* Line 2: Product name (like Google title) */}
+      <p className="text-[13px] font-semibold text-primary group-hover:underline decoration-primary/40 leading-snug line-clamp-2 mr-6">
+        {product.name_ar}
+      </p>
 
-      {/* Price */}
-      {getProductPrice && (() => {
-        const priceInfo = getProductPrice(product);
-        if (!priceInfo || priceInfo.price === null) return null;
-        return (
-          <div className="shrink-0 text-left">
-            <p className="text-xs font-bold text-primary">{priceInfo.price.toLocaleString('ar-EG')} ج.م</p>
-            <p className="text-[9px] text-muted-foreground">{priceInfo.label}</p>
-          </div>
-        );
-      })()}
-      {isDealer && onAddToQuote && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onAddToQuote(product); }}
-          className="shrink-0 w-7 h-7 rounded-full bg-primary/10 hover:bg-primary/20 text-primary flex items-center justify-center transition-colors"
-          title="أضف لعرض السعر"
-        >
-          <PlusCircle className="w-3.5 h-3.5" />
-        </button>
-      )}
+      {/* Line 3: Meta info (like Google description) */}
+      <div className="mt-1 flex items-center gap-2 flex-wrap mr-6">
+        {isDealer && (
+          isAvailable ? (
+            <span className="flex items-center gap-0.5 text-emerald-600 dark:text-emerald-400">
+              <CheckCircle className="w-3 h-3" />
+              <span className="text-[11px]">متوفر</span>
+            </span>
+          ) : (
+            <span className="flex items-center gap-0.5 text-destructive">
+              <XCircle className="w-3 h-3" />
+              <span className="text-[11px]">نفد</span>
+            </span>
+          )
+        )}
+        {getProductPrice && (() => {
+          const priceInfo = getProductPrice(product);
+          if (!priceInfo || priceInfo.price === null) return null;
+          return (
+            <span className="text-[11px] text-muted-foreground">
+              {priceInfo.label}: <span className="font-bold text-foreground">{priceInfo.price.toLocaleString('ar-EG')} ج.م</span>
+            </span>
+          );
+        })()}
+        {isDealer && onAddToQuote && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onAddToQuote(product); }}
+            className="mr-auto shrink-0 flex items-center gap-1 text-[10px] text-primary hover:text-primary/80 font-bold transition-colors"
+            title="أضف للسلة"
+          >
+            <PlusCircle className="w-3.5 h-3.5" />
+            <span>أضف</span>
+          </button>
+        )}
+      </div>
     </button>
   );
 };
-
 export default ProductSearchAutocomplete;
