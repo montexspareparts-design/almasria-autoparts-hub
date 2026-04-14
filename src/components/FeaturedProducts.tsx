@@ -14,7 +14,7 @@ const DAILY_LIMIT = 20;
 
 const FeaturedProducts = () => {
   const { addItem } = useCart();
-  const { user, isDealer } = useAuth();
+  const { user, isDealer, dealerAccount } = useAuth();
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const queryClient = useQueryClient();
 
