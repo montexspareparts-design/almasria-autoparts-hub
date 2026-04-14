@@ -192,7 +192,7 @@ Deno.serve(async (req) => {
         customerName: data.erp_customer_code ? "" : (data.customer_name || ""),
         phone: data.customer_phone || "0000000000",
         items: data.items?.map((item: any) => ({
-          productId: String(item.erp_item_code || item.sku || ""),
+          productId: String(item.erp_item_code || ""),
           quantity: Number(item.quantity) || 1,
           price: Number(item.unit_price) || 0,
         })),
@@ -255,7 +255,7 @@ Deno.serve(async (req) => {
         customerName: data.erp_customer_code ? "" : (data.customer_name || ""),
         phone: data.customer_phone || "0000000000",
         items: data.items?.map((item: any) => ({
-          productId: String(item.erp_item_code || item.sku || ""),
+          productId: String(item.erp_item_code || ""),
           quantity: Number(item.quantity) || 1,
           price: Number(item.unit_price) || 0,
         })),
@@ -336,10 +336,9 @@ Deno.serve(async (req) => {
         if (!ourProducts || ourProducts.length === 0) {
           result = { success: true, message: "No active products on website", updated: 0, total: 0 };
         } else {
-          // Build lookup: erp_code → product_id (SKU takes priority, then erp_item_code)
+          // Build lookup: match ERP items by erp_item_code ONLY (the Faisal code)
           const ourCodeSet = new Set<string>();
           ourProducts.forEach((p: any) => {
-            if (p.sku) ourCodeSet.add(p.sku.trim());
             if (p.erp_item_code) ourCodeSet.add(p.erp_item_code.trim());
           });
 
