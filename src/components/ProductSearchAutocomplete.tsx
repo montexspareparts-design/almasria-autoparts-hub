@@ -28,6 +28,7 @@ interface Props {
   onCommandPaletteOpen?: () => void;
   placeholder?: string;
   isDealer?: boolean;
+  getProductPrice?: (product: Product) => { price: number | null; label: string } | null;
 }
 
 const brandLabels: Record<string, { label: string; color: string }> = {
