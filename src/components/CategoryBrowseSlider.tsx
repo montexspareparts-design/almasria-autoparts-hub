@@ -62,9 +62,9 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
-  // Fetch categories + product counts by name search (matches products across all brands)
+  // Fetch categories + product counts by category_id
   const { data: categoriesWithCounts } = useQuery({
-    queryKey: ["category_browse_slider_v3"],
+    queryKey: ["category_browse_slider_v4"],
     queryFn: async () => {
       const { data: cats, error } = await supabase
         .from("product_categories")
@@ -72,14 +72,13 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
         .order("sort_order");
       if (error) throw error;
 
-      // Count ALL active products whose name contains the category name
       const counts = await Promise.all(
         (cats || []).map(async (cat) => {
           const { count } = await supabase
             .from("products")
             .select("id", { count: "exact", head: true })
             .eq("is_active", true)
-            .ilike("name_ar", `%${cat.name_ar}%`);
+            .eq("category_id", cat.id);
           return { ...cat, count: count ?? 0 };
         })
       );
@@ -90,10 +89,14 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
   });
 
   const handleCategoryClick = (cat: { id: string; slug: string; name_ar: string }) => {
+    // Build search query from mapped keywords for accurate cross-brand results
+    const assets = categoryAssets[cat.slug];
+    const searchQuery = assets?.searchTerms ? assets.searchTerms.join(" ") : cat.name_ar;
+    
     if (onCategorySelect) {
-      onCategorySelect(cat.name_ar);
+      onCategorySelect(searchQuery);
     } else {
-      navigate(`/products?search=${encodeURIComponent(cat.name_ar)}`);
+      navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
     }
   };
 
