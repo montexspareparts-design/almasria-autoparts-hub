@@ -74,8 +74,8 @@ const DealerProductSearch = ({ onNavigateToOrders, onNavigateToCart, sharedCart 
         showBrands
         beforeGrid={
           <CategoryBrowseSlider
-            onCategorySelect={(categoryName) => {
-              listing.setFilters((prev: any) => ({ ...prev, search: categoryName, categoryId: null, brandKey: null }));
+            onCategorySelect={(categoryId, categoryName) => {
+              listing.setFilters((prev: any) => ({ ...prev, categoryId, search: "", brandKey: null }));
             }}
           />
         }

@@ -53,7 +53,7 @@ const categoryAssets: Record<string, { image: string; accent: string; searchTerm
 const defaultAccent = "from-primary/80 to-primary/90";
 
 interface CategoryBrowseSliderProps {
-  onCategorySelect?: (searchTerm: string) => void;
+  onCategorySelect?: (categoryId: string, categoryName: string) => void;
 }
 
 const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) => {
