@@ -300,7 +300,7 @@ const FeaturedProducts = () => {
           product={selectedProduct}
           open={!!selectedProduct}
           onOpenChange={(open) => !open && setSelectedProduct(null)}
-          price={!user ? null : isDealer ? (viewedProductIds.includes(selectedProduct.id) ? selectedProduct.base_price : null) : (selectedProduct.sale_price || selectedProduct.base_price)}
+          price={!user ? null : isDealer ? (viewedProductIds.includes(selectedProduct.id) ? getDealerPrice(selectedProduct) : null) : (selectedProduct.sale_price || selectedProduct.base_price)}
           priceLabel={!user ? "سجّل لرؤية السعر" : isDealer && viewedProductIds.includes(selectedProduct.id) ? "سعر الجملة الخاص بك" : undefined}
           isLoggedIn={!!user}
           isDealer={isDealer}
@@ -322,7 +322,7 @@ const FeaturedProducts = () => {
               name_ar: product.name_ar,
               sku: product.sku,
               image_url: product.image_url,
-              unit_price: product.sale_price || product.base_price,
+              unit_price: isDealer ? getDealerPrice(product) : (product.sale_price || product.base_price),
               quantity: product.min_order_qty || 1,
               stock_quantity: product.stock_quantity,
               min_order_qty: product.min_order_qty,
