@@ -646,29 +646,20 @@ Deno.serve(async (req) => {
     // ─── DEEP STOCK CHECK: Find items with qty > 0 ───
     else if (action === "deep_stock_check") {
       if (!baseUrl) throw new Error("ERP base URL is not configured");
-      // Merge both endpoints by index (parallel arrays — /products has no ID field)
-      const [itemsRes, productsRes] = await Promise.all([
-        erpFetch(baseUrl, "/Ecommerce/GetItems"),
-        erpFetch(baseUrl, "/Ecommerce/products"),
-      ]);
-      const itemsList = Array.isArray(itemsRes) ? itemsRes : (itemsRes.data || itemsRes.items || []);
+      // /products now returns all fields directly
+      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
       const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
 
-      // Show raw schema from both endpoints
-      const getItemsSchema = Object.entries(itemsList[0] || {}).map(([k, v]) => ({ key: k, type: typeof v, value: v }));
+      // Show raw schema
       const productsSchema = Object.entries(productsList[0] || {}).map(([k, v]) => ({ key: k, type: typeof v, value: v }));
 
-      // Merge by index
-      const merged = itemsList.map((item: any, i: number) => {
-        const prod = productsList[i] || {};
-        return {
-          id: String(item.id || "").trim(),
-          name: String(item.name || "").trim(),
-          quantity: Math.floor(Number(prod.quantity ?? 0)),
-          retailPrice: Number(prod.retailPrice ?? 0),
-          wholesalePrice: Number(prod.wholesalePrice ?? 0),
-        };
-      }).filter((p: any) => p.id);
+      const merged = productsList.map((prod: any) => ({
+        id: String(prod.id || "").trim(),
+        name: String(prod.name || "").trim(),
+        quantity: Math.floor(Number(prod.qty ?? prod.quantity ?? 0)),
+        retailPrice: Number(prod.retailPrice ?? prod.price ?? 0),
+        wholesalePrice: Number(prod.wholesaleprice ?? prod.wholesalePrice ?? 0),
+      })).filter((p: any) => p.id);
 
       const withStock = merged.filter((i: any) => i.quantity > 0);
 
@@ -677,12 +668,10 @@ Deno.serve(async (req) => {
 
       result = {
         success: true,
-        total_getitems: itemsList.length,
         total_products: productsList.length,
         total_merged: merged.length,
         items_with_positive_qty: withStock.length,
         sample_with_stock: withStock.slice(0, 5),
-        getitems_schema: getItemsSchema,
         products_schema: productsSchema,
         targets_full: targets,
       };
