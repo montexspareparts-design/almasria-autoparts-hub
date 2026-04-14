@@ -94,7 +94,7 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
       onCategorySelect(cat.id);
     } else {
       // Navigate to products page WITHOUT brand restriction — show all brands
-      navigate(`/products/toyota-genuine?category=${cat.slug}&search=`);
+      navigate(`/products?category=${cat.slug}`);
     }
   };
 
