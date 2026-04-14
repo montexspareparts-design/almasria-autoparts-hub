@@ -20,7 +20,7 @@ const brands = [
 
 const ProductsShowcase = () => {
   return (
-    <section className="relative py-24 md:py-32 overflow-hidden overflow-x-hidden bg-secondary" style={{ overflowX: 'clip' }}>
+    <section className="relative py-16 md:py-32 overflow-hidden overflow-x-hidden bg-secondary" style={{ overflowX: 'clip' }}>
       {/* Gradient overlays for depth */}
       <div className="absolute inset-0 bg-gradient-to-b from-secondary via-secondary/95 to-secondary" />
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
@@ -59,12 +59,12 @@ const ProductsShowcase = () => {
 
         {/* Brands Grid - 3+2 layout */}
         <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-5 mb-3 sm:mb-5">
             {brands.slice(0, 3).map((brand, i) => (
               <BrandCard key={brand.id} brand={brand} index={i} />
             ))}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-[66%] mx-auto">
+          <div className="grid grid-cols-2 gap-3 sm:gap-5 max-w-full sm:max-w-[66%] mx-auto">
             {brands.slice(3).map((brand, i) => (
               <BrandCard key={brand.id} brand={brand} index={i + 3} />
             ))}
