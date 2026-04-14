@@ -1114,11 +1114,6 @@ Deno.serve(async (req) => {
       }
 
       if (!baseUrl) throw new Error("ERP base URL is not configured");
-
-      // data.mapping should be: { "erp_field": "itemcatid", "rules": { "1": "category_slug", "2": "category_slug", ... } }
-      // Or we auto-detect from existing categorized products
-      const erpField = data?.erp_field || null;
-      const manualRules: Record<string, string> | null = data?.rules || null;
       const dryRun = data?.dry_run !== false; // Default to dry run for safety
 
       // Fetch ERP products
@@ -1135,64 +1130,86 @@ Deno.serve(async (req) => {
       const catBySlug = new Map<string, string>();
       for (const c of (categories || [])) catBySlug.set(c.slug, c.id);
 
-      let rules: Record<string, string> = {};
-      let fieldToUse = erpField;
+      // ── Hierarchical classification using multiple ERP fields ──
+      // Based on analysis: itemcatid → itemcat5id → itemcat6id → itemcat2id → name-based fallback
+      function classifyProduct(erp: any): string | null {
+        const cat1 = Number(erp.itemcatid ?? 0);
+        const cat2 = Number(erp.itemcat2id ?? 0);
+        const cat4 = Number(erp.itemcat4id ?? 0);
+        const cat5 = Number(erp.itemcat5id ?? 0);
+        const cat6 = Number(erp.itemcat6id ?? 0);
+        const cat8 = Number(erp.itemcat8id ?? 0);
+        const name = String(erp.name || "").toLowerCase();
 
-      if (manualRules && fieldToUse) {
-        // Use provided mapping
-        rules = manualRules;
-      } else {
-        // Auto-detect: learn from categorized products
-        const { data: categorizedProducts } = await supabase
-          .from("products")
-          .select("erp_item_code, category_id, product_categories(slug)")
-          .not("category_id", "is", null)
-          .not("erp_item_code", "is", null);
-
-        const catFields = ["itemcatid", "itemcat2id", "itemcat3id", "itemcat4id", "itemcat5id"];
-        
-        // Score each field
-        let bestField = "itemcatid";
-        let bestScore = 0;
-
-        for (const field of catFields) {
-          const valueToCategory: Record<string, Record<string, number>> = {};
-          for (const prod of (categorizedProducts || [])) {
-            const erpData = erpMap.get(prod.erp_item_code?.trim() || "");
-            if (!erpData) continue;
-            const val = String(erpData[field] ?? 0);
-            const catSlug = (prod as any).product_categories?.slug || "";
-            if (!catSlug || val === "0") continue;
-            if (!valueToCategory[val]) valueToCategory[val] = {};
-            valueToCategory[val][catSlug] = (valueToCategory[val][catSlug] || 0) + 1;
-          }
-          
-          let fieldScore = 0;
-          for (const val of Object.keys(valueToCategory)) {
-            const catCounts = Object.entries(valueToCategory[val]);
-            const total = catCounts.reduce((s, [, c]) => s + c, 0);
-            const max = Math.max(...catCounts.map(([, c]) => c));
-            fieldScore += max / total;
-          }
-
-          if (fieldScore > bestScore) {
-            bestScore = fieldScore;
-            bestField = field;
-            // Build rules from this field
-            rules = {};
-            for (const val of Object.keys(valueToCategory)) {
-              const catCounts = Object.entries(valueToCategory[val]).sort((a, b) => b[1] - a[1]);
-              if (catCounts.length > 0) {
-                const total = catCounts.reduce((s, [, c]) => s + c, 0);
-                const confidence = catCounts[0][1] / total;
-                if (confidence >= 0.6) { // Only use rules with 60%+ confidence
-                  rules[val] = catCounts[0][0];
-                }
-              }
-            }
-          }
+        // ── Level 1: Oils (itemcatid=2) ──
+        if (cat1 === 2) {
+          if (cat2 === 75) return "oils-diesel";
+          if (cat2 === 77) return "oils-gasoline";
+          if ([88, 89, 100].includes(cat2)) return "oils-transmission";
+          // Fallback by name
+          if (name.includes("ديزل") || name.includes("diesel")) return "oils-diesel";
+          if (name.includes("بنزين") || name.includes("gasoline")) return "oils-gasoline";
+          if (name.includes("فتيس") || name.includes("كرونه") || name.includes("كرونة") || name.includes("نقل") || name.includes("باور")) return "oils-transmission";
+          // Generic oil - check for diesel keywords
+          if (cat4 === 16 || cat4 === 1) return "oils-gasoline"; // Default oils to gasoline
+          return "oils-gasoline";
         }
-        fieldToUse = bestField;
+
+        // ── Level 2: Parts (itemcatid=1) ──
+        // Brakes (cat5=19 تيل, cat5=26 ديسك فرامل, cat8=7)
+        if (cat5 === 19 || cat5 === 26 || cat8 === 7) return "brakes";
+        
+        // Clutch (cat5=63)
+        if (cat5 === 63) return "clutch";
+
+        // For cat5=8 (general parts), use cat6 to differentiate
+        if (cat5 === 8) {
+          // Filters (cat6: 234, 320, 428, 536)
+          if ([234, 320, 428, 536].includes(cat6)) return "filters";
+          // Spark plugs (cat6=194)
+          if (cat6 === 194) return "spark-plugs-coils";
+          // Water cooling (cat6: 679, 1235)
+          if ([679, 1235].includes(cat6)) return "water-cooling";
+          // Electrical (cat6: 671, 1372)
+          if ([671, 1372].includes(cat6)) return "electrical";
+        }
+
+        // ── Level 3: cat5-based broader matches ──
+        if (cat5 === 138) {
+          // Oils sub-category detected via cat5 even though cat1 might be wrong
+          if (name.includes("زيت")) return "oils-gasoline";
+        }
+        if (cat5 === 10) {
+          // Oil seals
+          if (name.includes("اويل سيل") || name.includes("سيل")) return "oil-seals";
+        }
+
+        // ── Level 4: cat8-based fallback ──
+        if (cat8 === 4) return "filters"; // DENSO filters mostly
+        if (cat8 === 11) return "oils-gasoline"; // Oils
+        if (cat8 === 27) return "electrical";
+        if (cat8 === 2) return "water-cooling";
+
+        // ── Level 5: Name-based fallback ──
+        if (name.includes("فلتر") || name.includes("filter")) return "filters";
+        if (name.includes("تيل") || name.includes("فرامل") || name.includes("brake")) return "brakes";
+        if (name.includes("بوجيه") || name.includes("بوجية") || name.includes("بواجي") || name.includes("مبين") || name.includes("كويل")) return "spark-plugs-coils";
+        if (name.includes("سير ") || name.includes("بلي") || name.includes("بيرنج")) return "belts-bearings";
+        if (name.includes("مساعد")) return "shocks";
+        if (name.includes("كشاف") || name.includes("لمبه") || name.includes("لمبة") || name.includes("فانوس")) return "lights";
+        if (name.includes("اكصدام") || name.includes("اكسدام") || name.includes("بامبر")) return "bumpers";
+        if (name.includes("مرايا") || name.includes("مراية") || name.includes("مرآة")) return "mirrors";
+        if (name.includes("جوان")) return "gaskets";
+        if (name.includes("اويل سيل") || name.includes("سيل ")) return "oil-seals";
+        if (name.includes("كاوتش")) return "rubber";
+        if (name.includes("دينامو") || name.includes("مارش") || name.includes("طلمبة بنزين")) return "electrical";
+        if (name.includes("دبرياج") || name.includes("كلاتش") || name.includes("ديسك دبرياج")) return "clutch";
+        if (name.includes("عفشه") || name.includes("عفشة") || name.includes("مقص") || name.includes("جلبه") || name.includes("جلبة")) return "suspension";
+        if (name.includes("عمه") || name.includes("عمة") || name.includes("مقود")) return "steering";
+        if (name.includes("رديتر") || name.includes("ريدياتير") || name.includes("ثرموستات") || name.includes("مروحة")) return "water-cooling";
+        if (name.includes("فيبر") || name.includes("كبوت") || name.includes("شنطه") || name.includes("باب")) return "fiber-parts";
+
+        return null; // Cannot classify
       }
 
       // Get uncategorized products
@@ -1203,18 +1220,47 @@ Deno.serve(async (req) => {
         .eq("is_active", true)
         .not("erp_item_code", "is", null);
 
-      // Apply rules
+      // Also allow re-classifying already-categorized if requested
+      const includeExisting = data?.include_existing === true;
+      let targetProducts = uncategorizedProducts || [];
+
+      if (includeExisting) {
+        const { data: allProducts } = await supabase
+          .from("products")
+          .select("id, erp_item_code, name_ar")
+          .eq("is_active", true)
+          .not("erp_item_code", "is", null);
+        targetProducts = allProducts || [];
+      }
+
+      // Apply classification
       let updated = 0;
       let skipped = 0;
-      const updates: { id: string; name: string; category: string; erp_value: string }[] = [];
+      const updates: { id: string; name: string; category: string; method: string }[] = [];
+      const unclassified: { id: string; name: string; erp_cats: Record<string, number> }[] = [];
 
-      for (const prod of (uncategorizedProducts || [])) {
+      for (const prod of targetProducts) {
         const erpData = erpMap.get(prod.erp_item_code?.trim() || "");
         if (!erpData) { skipped++; continue; }
 
-        const erpValue = String(erpData[fieldToUse!] ?? 0);
-        const catSlug = rules[erpValue];
-        if (!catSlug || !catBySlug.has(catSlug)) { skipped++; continue; }
+        const catSlug = classifyProduct(erpData);
+        if (!catSlug || !catBySlug.has(catSlug)) {
+          skipped++;
+          if (unclassified.length < 10) {
+            unclassified.push({
+              id: prod.id,
+              name: prod.name_ar,
+              erp_cats: {
+                itemcatid: erpData.itemcatid,
+                itemcat2id: erpData.itemcat2id,
+                itemcat5id: erpData.itemcat5id,
+                itemcat6id: erpData.itemcat6id,
+                itemcat8id: erpData.itemcat8id,
+              },
+            });
+          }
+          continue;
+        }
 
         const categoryId = catBySlug.get(catSlug)!;
         
@@ -1229,12 +1275,12 @@ Deno.serve(async (req) => {
           updated++;
         }
 
-        if (updates.length < 20) {
+        if (updates.length < 30) {
           updates.push({
             id: prod.id,
             name: prod.name_ar,
             category: catSlug,
-            erp_value: erpValue,
+            method: "hierarchical",
           });
         }
       }
@@ -1242,24 +1288,23 @@ Deno.serve(async (req) => {
       result = {
         success: true,
         dry_run: dryRun,
-        erp_field_used: fieldToUse,
-        rules_count: Object.keys(rules).length,
-        rules,
-        total_uncategorized: uncategorizedProducts?.length || 0,
+        method: "hierarchical_multi_field",
+        total_target: targetProducts.length,
         would_categorize: updated,
         skipped,
         sample_updates: updates,
+        unclassified_samples: unclassified,
         message: dryRun
-          ? `[تجربة] يمكن تصنيف ${updated} صنف من ${uncategorizedProducts?.length || 0} غير مصنف. أعد الطلب مع dry_run: false للتنفيذ.`
-          : `تم تصنيف ${updated} صنف تلقائياً باستخدام حقل ${fieldToUse}`,
+          ? `[تجربة] يمكن تصنيف ${updated} صنف من ${targetProducts.length}. أعد الطلب مع dry_run: false للتنفيذ.`
+          : `تم تصنيف ${updated} صنف تلقائياً`,
       };
 
       if (!dryRun) {
         await supabase.from("erp_sync_logs").insert({
           sync_type: "category_sync",
           direction: "inbound",
-          payload: { action, field: fieldToUse, rules },
-          response: { updated, skipped, total: uncategorizedProducts?.length },
+          payload: { action, method: "hierarchical", include_existing: includeExisting },
+          response: { updated, skipped, total: targetProducts.length },
           status: "success",
         });
       }
