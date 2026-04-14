@@ -25,9 +25,7 @@ import catMirrors from "@/assets/categories/cat-mirrors.jpg";
 import catGaskets from "@/assets/categories/cat-gaskets.jpg";
 import catDynamo from "@/assets/categories/cat-dynamo.jpg";
 
-// Each category maps to: image, gradient, and a SINGLE primary search keyword
-// Using ONE keyword ensures the AND-logic search in useProductListing works correctly
-const categoryAssets: Record<string, { image: string; accent: string; searchTerm: string }> = {
+// Map category slugs to visuals for the premium slider cards
   "spark-plugs-coils": { image: catSparkPlugs, accent: "from-amber-500/80 to-orange-600/90", searchTerm: "بوجيه" },
   "water-cooling": { image: catCooling, accent: "from-blue-500/80 to-cyan-600/90", searchTerm: "تبريد" },
   "belts-bearings": { image: catBelts, accent: "from-gray-600/80 to-gray-800/90", searchTerm: "سير" },
@@ -96,7 +94,7 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
     if (onCategorySelect) {
       onCategorySelect(cat.id, cat.name_ar);
     } else {
-      navigate(`/products?category=${encodeURIComponent(cat.id)}`);
+      navigate(`/products?category=${encodeURIComponent(cat.slug)}`);
     }
   };
 

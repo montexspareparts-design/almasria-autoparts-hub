@@ -223,6 +223,29 @@ const fuzzyMatchWord = (word: string, ...texts: string[]): boolean => {
 
 const ITEMS_PER_PAGE = 48;
 
+const categoryKeywordFallbacks: Record<string, string[]> = {
+  "filters": ["فلتر"],
+  "spark-plugs-coils": ["بوجيه", "بوجية", "مباين", "موبينة"],
+  "brakes": ["تيل", "فرامل"],
+  "water-cooling": ["ريداتير", "تبريد", "ثرموستات"],
+  "electrical": ["دينامو", "كهرباء", "سلف", "مارش"],
+  "oils-gasoline": ["زيت بنزين", "محرك بنزين"],
+  "oils-diesel": ["زيت ديزل", "محرك ديزل"],
+  "oils-transmission": ["زيت فتيس", "زيت نقل", "atf"],
+  "clutch": ["دبرياج", "اسطوانة", "ديسك"],
+  "suspension": ["عفشة", "مقص"],
+  "shocks": ["مساعد"],
+  "gaskets": ["جوان"],
+  "oil-seals": ["اويل سيل", "سيل"],
+  "lights": ["فانوس", "كشاف", "لمبة"],
+  "steering": ["دركسيون", "مقود", "عمة"],
+  "belts-bearings": ["سير", "بلية", "بلي"],
+  "bumpers": ["صدام", "اكصدام"],
+  "mirrors": ["مراية", "مرايا"],
+  "rubber": ["كاوتش", "جلدة"],
+  "fiber-parts": ["فيبر", "رفرف", "كابوت"],
+};
+
 interface UseProductListingOptions {
   /** Filter by specific brand key (e.g., "toyota_genuine") */
   brandFilter?: string;
@@ -422,6 +445,13 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     });
   }, [searchParams]);
 
+  const selectedCategoryFallbackKeywords = useMemo(() => {
+    if (!filters.categoryId || !dbCategories) return [] as string[];
+    const selectedCategory = dbCategories.find((cat: any) => cat.id === filters.categoryId);
+    if (!selectedCategory) return [] as string[];
+    return categoryKeywordFallbacks[selectedCategory.slug] || [selectedCategory.name_ar];
+  }, [filters.categoryId, dbCategories]);
+
   /* ── Products (select only needed columns for performance) ── */
   const { data: products, isLoading } = useQuery({
     queryKey: ["products", "all", queryKeySuffix].filter(Boolean),
@@ -505,45 +535,44 @@ export function useProductListing(options: UseProductListingOptions = {}) {
 
     // Step 1: Base filtering (text match + other filters, NO year filtering yet)
     const baseFilter = (p: any) => {
+      const normalizedName = normalizeArabic(p.name_ar || "");
+      const skuLower = (p.sku || "").toLowerCase();
+      const nameEnLower = (p.name_en || "").toLowerCase();
+      const descArNorm = normalizeArabic(p.description_ar || "");
+      const modelsText = normalizeArabic((p.compatible_models || []).join(" "));
+      const allText = `${normalizedName} ${skuLower} ${nameEnLower} ${descArNorm} ${modelsText}`;
+
       // When searching, show results from ALL brands (cross-brand search)
       const hasActiveSearch = !!rawSearch;
       const matchesBrand = hasActiveSearch || !filters.brandKey || p.brand === filters.brandKey;
 
       let matchesSearch = true;
       if (rawSearch) {
-        // Expand aliases before searching (e.g., هاياس → هاي اس)
         const textToSearch = expandAliases(searchYear ? searchWithoutYear : rawSearch);
         if (textToSearch) {
-          const normalizedName = normalizeArabic(p.name_ar);
-          const skuLower = p.sku.toLowerCase();
-          const nameEnLower = (p.name_en || "").toLowerCase();
-          const descArNorm = normalizeArabic(p.description_ar || "");
-          const modelsText = normalizeArabic((p.compatible_models || []).join(" "));
-          const allText = `${normalizedName} ${skuLower} ${nameEnLower} ${descArNorm} ${modelsText}`;
-          
-          // Split search into individual words and check ALL words exist (AND logic)
           const searchWords = textToSearch.trim().split(/\s+/).filter((w: string) => w.length > 0);
           matchesSearch = searchWords.every((word: string) => fuzzyMatchWord(word, allText));
         }
-        // If textToSearch is empty (year-only search like "2022"), match all products
       }
 
-      const matchesCategory = !filters.categoryId || p.category_id === filters.categoryId;
+      const matchesCategoryById = !!filters.categoryId && p.category_id === filters.categoryId;
+      const matchesCategoryByFallback = !!filters.categoryId && selectedCategoryFallbackKeywords.length > 0 &&
+        selectedCategoryFallbackKeywords.some((keyword) =>
+          fuzzyMatchWord(keyword, normalizedName, descArNorm, modelsText)
+        );
+      const matchesCategory = !filters.categoryId || matchesCategoryById || matchesCategoryByFallback;
 
       let matchesModel = true;
       if (filters.model) {
-        const normalizedName = normalizeArabic(p.name_ar);
-        const modelsText = normalizeArabic((p.compatible_models || []).join(" "));
         matchesModel = fuzzyMatchWord(filters.model, normalizedName, modelsText);
       }
 
       const matchesYear = !filters.year || p.name_ar.includes(filters.year);
-      const matchesPartNumber = !filters.partNumber || p.sku.toLowerCase().includes(filters.partNumber.toLowerCase());
+      const matchesPartNumber = !filters.partNumber || skuLower.includes(filters.partNumber.toLowerCase());
       const price = p.base_price;
       const matchesPriceMin = !filters.priceMin || price >= Number(filters.priceMin);
       const matchesPriceMax = !filters.priceMax || price <= Number(filters.priceMax);
 
-      // Maintenance-only filter
       if (filters.maintenanceOnly) {
         const maintenanceCatIds = new Set<string>();
         dbCategories?.forEach((cat: any) => {
@@ -552,15 +581,8 @@ export function useProductListing(options: UseProductListingOptions = {}) {
         if (!p.category_id || !maintenanceCatIds.has(p.category_id)) return false;
       }
 
-      // On-sale filter
-      if (filters.onSaleOnly) {
-        if (!p.is_on_sale) return false;
-      }
-
-      // Best-selling filter
-      if (filters.bestSellingOnly) {
-        if (!bestSellingIds?.includes(p.id)) return false;
-      }
+      if (filters.onSaleOnly && !p.is_on_sale) return false;
+      if (filters.bestSellingOnly && !bestSellingIds?.includes(p.id)) return false;
 
       return matchesBrand && matchesSearch && matchesCategory && matchesModel && matchesYear && matchesPartNumber && matchesPriceMin && matchesPriceMax;
     };
@@ -737,7 +759,7 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     }
 
     return result;
-  }, [products, filters, bestSellingIds, dbCategories, maintenanceCategorySlugs, mostSearchedTerms]);
+  }, [products, filters, bestSellingIds, dbCategories, maintenanceCategorySlugs, mostSearchedTerms, selectedCategoryFallbackKeywords]);
 
   /* ── Search logging (debounced) ── */
   const lastLoggedSearch = useRef("");
