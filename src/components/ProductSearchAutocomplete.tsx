@@ -130,25 +130,12 @@ const ProductSearchAutocomplete = ({
   const popularProducts = useMemo(() => {
     if (value && value.length >= 2) return [];
     let filtered = [...products];
-    if (isDealer) {
-      filtered = filtered.filter(p => {
-        const available = (p.available_quantity ?? ((p.stock_quantity ?? 0) - (p.safety_stock ?? 0)));
-        return available > 0;
-      });
-    }
     return filtered.sort((a, b) => (b as any).stock_quantity - (a as any).stock_quantity).slice(0, 8);
-  }, [products, value, isDealer]);
+  }, [products, value]);
 
   const allMatches = useMemo(() => {
     if (!value || value.length < 2) return [];
     return [...products]
-      .filter((p) => {
-        if (isDealer) {
-          const available = (p.available_quantity ?? ((p.stock_quantity ?? 0) - (p.safety_stock ?? 0)));
-          if (available <= 0) return false;
-        }
-        return true;
-      })
       .map((product) => ({ product, score: getSearchRelevanceScore(value, product) }))
       .filter(({ score }) => score > 0)
       .sort((a, b) => {
