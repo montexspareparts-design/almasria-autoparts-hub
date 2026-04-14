@@ -36,11 +36,11 @@ async function getErpToken(baseUrl: string): Promise<string> {
   // Try parsing as JSON first
   try {
     const data = JSON.parse(text);
-    // Al Faisal may return { jwtToken, token, expiresIn } or just a string
+    // Al Faisal returns { JwtToken: "..." } per updated API docs
     if (typeof data === "string") {
       jwt = data;
     } else {
-      jwt = data.jwtToken || data.token || data.access_token || null;
+      jwt = data.JwtToken || data.jwtToken || data.token || data.access_token || null;
       expiresIn = data.expiresIn || data.expires_in || null;
     }
   } catch {
