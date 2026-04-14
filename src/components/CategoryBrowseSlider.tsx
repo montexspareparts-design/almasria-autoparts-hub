@@ -1,6 +1,6 @@
-import { motion } from "framer-motion";
+import { motion, useAnimation, useMotionValue } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Search } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,46 +25,48 @@ import catMirrors from "@/assets/categories/cat-mirrors.jpg";
 import catGaskets from "@/assets/categories/cat-gaskets.jpg";
 import catDynamo from "@/assets/categories/cat-dynamo.jpg";
 
-// Map category slugs to images, gradient accents, and search keywords
-const categoryAssets: Record<string, { image: string; accent: string; searchTerms?: string[] }> = {
-  "spark-plugs-coils": { image: catSparkPlugs, accent: "from-amber-500/80 to-orange-600/90", searchTerms: ["بوجية", "موبينة"] },
-  "water-cooling": { image: catCooling, accent: "from-blue-500/80 to-cyan-600/90", searchTerms: ["ريداتير", "تبريد", "ثرموستات"] },
-  "belts-bearings": { image: catBelts, accent: "from-gray-600/80 to-gray-800/90", searchTerms: ["سير", "بلي"] },
-  "suspension": { image: catSuspension, accent: "from-green-600/80 to-emerald-700/90", searchTerms: ["عفشة", "مقص", "مشعل"] },
-  "clutch": { image: catClutch, accent: "from-red-500/80 to-rose-700/90", searchTerms: ["دبرياج", "ديسك", "اسطوانة"] },
-  "filters": { image: catFilters, accent: "from-purple-500/80 to-violet-700/90", searchTerms: ["فلتر"] },
-  "fiber-parts": { image: catBody, accent: "from-yellow-500/80 to-amber-600/90", searchTerms: ["فيبر", "كابوت", "شنطة"] },
-  "bumpers": { image: catBumpers, accent: "from-stone-600/80 to-stone-800/90", searchTerms: ["اكصدام", "صدام"] },
-  "oil-seals": { image: catOilSeals, accent: "from-orange-600/80 to-amber-800/90", searchTerms: ["اويل سيل", "سيل"] },
-  "lights": { image: catHeadlights, accent: "from-sky-500/80 to-blue-700/90", searchTerms: ["كشاف", "لمبة", "فانوس"] },
-  "rubber": { image: catRubber, accent: "from-zinc-600/80 to-zinc-800/90", searchTerms: ["كاوتش", "جلدة"] },
-  "mirrors": { image: catMirrors, accent: "from-cyan-500/80 to-cyan-700/90", searchTerms: ["مراية", "مرايا"] },
-  "gaskets": { image: catGaskets, accent: "from-rose-500/80 to-red-700/90", searchTerms: ["جوان"] },
-  "shocks": { image: catShocks, accent: "from-emerald-500/80 to-green-700/90", searchTerms: ["مساعد"] },
-  "electrical": { image: catDynamo, accent: "from-violet-500/80 to-purple-700/90", searchTerms: ["دينامو", "كلاكس", "مساحة", "طلمبة بنزين"] },
-  "oils-gasoline": { image: catOilGasoline, accent: "from-teal-500/80 to-teal-700/90", searchTerms: ["زيت محرك بنزين"] },
-  "oils-diesel": { image: catOilDiesel, accent: "from-slate-600/80 to-slate-800/90", searchTerms: ["زيت محرك ديزل"] },
-  "oils-transmission": { image: catOilTransmission, accent: "from-indigo-500/80 to-indigo-700/90", searchTerms: ["زيت فتيس", "زيت كرونة", "زيت كلاتش"] },
-  "brakes": { image: catBrakePads, accent: "from-pink-500/80 to-rose-700/90", searchTerms: ["تيل", "فرامل"] },
-  "steering": { image: catSuspension, accent: "from-teal-600/80 to-emerald-800/90", searchTerms: ["عمة", "مقود"] },
+// Each category maps to: image, gradient, and a SINGLE primary search keyword
+// Using ONE keyword ensures the AND-logic search in useProductListing works correctly
+const categoryAssets: Record<string, { image: string; accent: string; searchTerm: string }> = {
+  "spark-plugs-coils": { image: catSparkPlugs, accent: "from-amber-500/80 to-orange-600/90", searchTerm: "بوجيه" },
+  "water-cooling": { image: catCooling, accent: "from-blue-500/80 to-cyan-600/90", searchTerm: "تبريد" },
+  "belts-bearings": { image: catBelts, accent: "from-gray-600/80 to-gray-800/90", searchTerm: "سير" },
+  "suspension": { image: catSuspension, accent: "from-green-600/80 to-emerald-700/90", searchTerm: "عفشة" },
+  "clutch": { image: catClutch, accent: "from-red-500/80 to-rose-700/90", searchTerm: "دبرياج" },
+  "filters": { image: catFilters, accent: "from-purple-500/80 to-violet-700/90", searchTerm: "فلتر" },
+  "fiber-parts": { image: catBody, accent: "from-yellow-500/80 to-amber-600/90", searchTerm: "فيبر" },
+  "bumpers": { image: catBumpers, accent: "from-stone-600/80 to-stone-800/90", searchTerm: "صدام" },
+  "oil-seals": { image: catOilSeals, accent: "from-orange-600/80 to-amber-800/90", searchTerm: "سيل" },
+  "lights": { image: catHeadlights, accent: "from-sky-500/80 to-blue-700/90", searchTerm: "كشاف" },
+  "rubber": { image: catRubber, accent: "from-zinc-600/80 to-zinc-800/90", searchTerm: "كاوتش" },
+  "mirrors": { image: catMirrors, accent: "from-cyan-500/80 to-cyan-700/90", searchTerm: "مراية" },
+  "gaskets": { image: catGaskets, accent: "from-rose-500/80 to-red-700/90", searchTerm: "جوان" },
+  "shocks": { image: catShocks, accent: "from-emerald-500/80 to-green-700/90", searchTerm: "مساعد" },
+  "electrical": { image: catDynamo, accent: "from-violet-500/80 to-purple-700/90", searchTerm: "دينامو" },
+  "oils-gasoline": { image: catOilGasoline, accent: "from-teal-500/80 to-teal-700/90", searchTerm: "زيت بنزين" },
+  "oils-diesel": { image: catOilDiesel, accent: "from-slate-600/80 to-slate-800/90", searchTerm: "زيت ديزل" },
+  "oils-transmission": { image: catOilTransmission, accent: "from-indigo-500/80 to-indigo-700/90", searchTerm: "زيت فتيس" },
+  "brakes": { image: catBrakePads, accent: "from-pink-500/80 to-rose-700/90", searchTerm: "فرامل" },
+  "steering": { image: catSuspension, accent: "from-teal-600/80 to-emerald-800/90", searchTerm: "مقود" },
 };
 
 const defaultAccent = "from-primary/80 to-primary/90";
 
 interface CategoryBrowseSliderProps {
-  onCategorySelect?: (categoryName: string) => void;
+  onCategorySelect?: (searchTerm: string) => void;
 }
 
 const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) => {
   const navigate = useNavigate();
-  const location = useLocation();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartX = useRef(0);
+  const scrollStartX = useRef(0);
 
-  // Fetch categories + product counts by category_id
   const { data: categoriesWithCounts } = useQuery({
-    queryKey: ["category_browse_slider_v4"],
+    queryKey: ["category_browse_slider_v5"],
     queryFn: async () => {
       const { data: cats, error } = await supabase
         .from("product_categories")
@@ -89,10 +91,10 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
   });
 
   const handleCategoryClick = (cat: { id: string; slug: string; name_ar: string }) => {
-    // Build search query from mapped keywords for accurate cross-brand results
+    if (isDragging) return;
     const assets = categoryAssets[cat.slug];
-    const searchQuery = assets?.searchTerms ? assets.searchTerms.join(" ") : cat.name_ar;
-    
+    const searchQuery = assets?.searchTerm || cat.name_ar;
+
     if (onCategorySelect) {
       onCategorySelect(searchQuery);
     } else {
@@ -102,7 +104,6 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
 
   const items = categoriesWithCounts || [];
 
-  // Scroll state management
   const updateScrollState = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -118,7 +119,7 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
     return () => el.removeEventListener("scroll", updateScrollState);
   }, [items, updateScrollState]);
 
-  // Auto-scroll to start (RTL)
+  // RTL: scroll to end on load
   useEffect(() => {
     const el = scrollRef.current;
     if (el && items.length > 0) {
@@ -130,8 +131,30 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
   const scroll = (direction: "left" | "right") => {
     const el = scrollRef.current;
     if (!el) return;
-    const amount = direction === "left" ? -300 : 300;
+    const amount = direction === "left" ? -280 : 280;
     el.scrollBy({ left: amount, behavior: "smooth" });
+  };
+
+  // Mouse drag scrolling
+  const handleMouseDown = (e: React.MouseEvent) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setIsDragging(false);
+    dragStartX.current = e.clientX;
+    scrollStartX.current = el.scrollLeft;
+
+    const handleMouseMove = (ev: MouseEvent) => {
+      const diff = ev.clientX - dragStartX.current;
+      if (Math.abs(diff) > 5) setIsDragging(true);
+      el.scrollLeft = scrollStartX.current - diff;
+    };
+    const handleMouseUp = () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+      setTimeout(() => setIsDragging(false), 50);
+    };
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
   };
 
   if (items.length === 0) return null;
@@ -167,47 +190,57 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
         <div className="relative group">
           {/* Scroll arrows */}
           {canScrollLeft && (
-            <button
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
               onClick={() => scroll("left")}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-background/90 border border-border shadow-lg flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors duration-200 opacity-0 group-hover:opacity-100"
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-background/95 border border-border shadow-xl flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all duration-200"
               aria-label="Scroll left"
             >
-              ‹
-            </button>
+              <ChevronLeft className="w-5 h-5" />
+            </motion.button>
           )}
           {canScrollRight && (
-            <button
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
               onClick={() => scroll("right")}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-background/90 border border-border shadow-lg flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors duration-200 opacity-0 group-hover:opacity-100"
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-background/95 border border-border shadow-xl flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all duration-200"
               aria-label="Scroll right"
             >
-              ›
-            </button>
+              <ChevronRight className="w-5 h-5" />
+            </motion.button>
           )}
 
           {/* Fade edges */}
-          <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-[5] pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-[5] pointer-events-none" />
+          <div className="absolute left-0 top-0 bottom-0 w-10 bg-gradient-to-r from-background to-transparent z-[5] pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-background to-transparent z-[5] pointer-events-none" />
 
           <div
             ref={scrollRef}
-            className="flex gap-3 overflow-x-auto scrollbar-hide py-2 px-1 scroll-smooth"
+            onMouseDown={handleMouseDown}
+            className="flex gap-3 overflow-x-auto scrollbar-hide py-3 px-2 scroll-smooth cursor-grab active:cursor-grabbing select-none"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             dir="rtl"
           >
-            {items.map((cat) => {
-              const assets = categoryAssets[cat.slug] || { image: catFilters, accent: defaultAccent };
+            {items.map((cat, index) => {
+              const assets = categoryAssets[cat.slug] || { image: catFilters, accent: defaultAccent, searchTerm: cat.name_ar };
               return (
                 <motion.div
                   key={cat.id}
-                  whileHover={{ scale: 1.05, y: -4 }}
-                  whileTap={{ scale: 0.97 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 22 }}
+                  initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  viewport={{ once: true, margin: "-20px" }}
+                  transition={{ delay: index * 0.04, type: "spring", stiffness: 260, damping: 20 }}
+                  whileHover={{ scale: 1.07, y: -6 }}
+                  whileTap={{ scale: 0.95 }}
                   className="shrink-0"
                 >
                   <button
                     onClick={() => handleCategoryClick(cat)}
-                    className="group/card block relative w-[130px] sm:w-[150px] rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 text-center border border-border/40 hover:border-primary/30"
+                    className="group/card block relative w-[125px] sm:w-[145px] rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 text-center border border-border/40 hover:border-primary/40"
                   >
                     <div className="aspect-[4/3] bg-white p-3 relative overflow-hidden">
                       <motion.img
@@ -216,14 +249,16 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
                         loading="lazy"
                         width={280}
                         height={210}
-                        className="w-full h-full object-contain"
-                        whileHover={{ scale: 1.1 }}
+                        className="w-full h-full object-contain drop-shadow-sm"
+                        whileHover={{ scale: 1.12, rotate: 2 }}
                         transition={{ type: "spring", stiffness: 200, damping: 15 }}
                       />
+                      {/* Shine overlay on hover */}
+                      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 pointer-events-none" />
                     </div>
                     <div className={`relative bg-gradient-to-br ${assets.accent} px-2.5 py-2.5 overflow-hidden`}>
                       <div className="absolute inset-0 bg-white/0 group-hover/card:bg-white/10 transition-colors duration-300" />
-                      <span className="relative text-white font-bold text-xs block leading-snug">{cat.name_ar}</span>
+                      <span className="relative text-white font-bold text-xs block leading-snug drop-shadow-sm">{cat.name_ar}</span>
                       <span className="relative text-white/80 text-[10px] block mt-0.5">{cat.count} صنف</span>
                     </div>
                   </button>
