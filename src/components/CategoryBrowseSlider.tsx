@@ -275,9 +275,9 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
                 >
                   <button
                     onClick={() => handleCategoryClick(cat)}
-                    className="group/card block relative w-[125px] sm:w-[145px] rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 text-center border border-border/40 hover:border-primary/40"
+                    className="group/card block relative w-[105px] sm:w-[145px] rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 text-center border border-border/40 hover:border-primary/40"
                   >
-                    <div className="aspect-[4/3] bg-white p-3 relative overflow-hidden">
+                    <div className="aspect-square sm:aspect-[4/3] bg-white p-2 sm:p-3 relative overflow-hidden">
                       <motion.img
                         src={assets.image}
                         alt={cat.name_ar}

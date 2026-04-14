@@ -130,7 +130,7 @@ const ProductCard = memo(({
       <div className="absolute -inset-[1px] rounded-[20px] bg-gradient-to-b from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none z-0" />
 
       {/* ── Image Section ── */}
-      <div className="relative aspect-[4/3] bg-white overflow-hidden z-[1]">
+      <div className="relative aspect-square sm:aspect-[4/3] bg-white overflow-hidden z-[1]">
         {/* Subtle vignette */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_60%,rgba(0,0,0,0.02)_100%)] z-10 pointer-events-none" />
         
@@ -144,7 +144,7 @@ const ProductCard = memo(({
           <img
             src={product.image_url}
             alt={product.name_ar}
-            className="w-full h-full object-contain p-5 sm:p-6
+            className="w-full h-full object-contain p-3 sm:p-6
               group-hover:scale-[1.06] transition-transform duration-[800ms] ease-[cubic-bezier(0.23,1,0.32,1)]"
             loading="lazy"
           />
@@ -184,7 +184,7 @@ const ProductCard = memo(({
       </div>
 
       {/* ── Content Section ── */}
-      <div className="relative flex-1 flex flex-col p-4 sm:p-[18px] z-[1]" onClick={(e) => e.stopPropagation()}>
+      <div className="relative flex-1 flex flex-col p-2.5 sm:p-[18px] z-[1]" onClick={(e) => e.stopPropagation()}>
         {/* Top row: Stock + Brand + SKU */}
         <div className="flex items-center justify-between gap-1 mb-2.5">
           <div className="flex items-center gap-1.5">
@@ -233,7 +233,7 @@ const ProductCard = memo(({
         {stockAvailable && canSeePrice && (
           <Button
             size="sm"
-            className="w-full gap-2 text-[10px] sm:text-xs h-10 rounded-xl font-extrabold mt-3
+            className="w-full gap-2 text-[10px] sm:text-xs h-8 sm:h-10 rounded-xl font-extrabold mt-2 sm:mt-3
               bg-primary hover:bg-primary/90
               shadow-[0_4px_14px_-3px_hsl(var(--primary)/0.4)]
               hover:shadow-[0_6px_20px_-3px_hsl(var(--primary)/0.5)]
