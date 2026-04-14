@@ -1303,9 +1303,7 @@ Deno.serve(async (req) => {
           status: "success",
         });
       }
-    }
-
-    else {
+    } else {
       throw new Error(`Unknown action: ${action}`);
     }
 
