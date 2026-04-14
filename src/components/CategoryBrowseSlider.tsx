@@ -26,6 +26,7 @@ import catGaskets from "@/assets/categories/cat-gaskets.jpg";
 import catDynamo from "@/assets/categories/cat-dynamo.jpg";
 
 // Map category slugs to visuals for the premium slider cards
+const categoryAssets: Record<string, { image: string; accent: string; searchTerm: string }> = {
   "spark-plugs-coils": { image: catSparkPlugs, accent: "from-amber-500/80 to-orange-600/90", searchTerm: "بوجيه" },
   "water-cooling": { image: catCooling, accent: "from-blue-500/80 to-cyan-600/90", searchTerm: "تبريد" },
   "belts-bearings": { image: catBelts, accent: "from-gray-600/80 to-gray-800/90", searchTerm: "سير" },
