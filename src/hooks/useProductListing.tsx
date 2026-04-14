@@ -187,10 +187,11 @@ export const getSearchRelevanceScore = (query: string, product: {
   // CRITICAL: If not all search words matched, heavily penalize or reject
   if (searchWords.length >= 2) {
     if (matchedWords < searchWords.length) {
-      // Penalize proportionally - missing words = much lower rank
       const matchRatio = matchedWords / searchWords.length;
-      if (matchRatio < 0.5) return 0; // Less than half words match = reject
-      score = Math.floor(score * matchRatio * 0.3); // Heavy penalty
+      // For 3+ word queries, require ALL words to match
+      if (searchWords.length >= 3) return 0;
+      // For 2-word queries, both must match
+      if (matchRatio < 1) return 0;
     } else {
       // ALL words matched - big bonus
       score += 500 * searchWords.length;
