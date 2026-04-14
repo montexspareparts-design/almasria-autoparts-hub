@@ -135,7 +135,7 @@ const FeaturedProducts = () => {
 
   return (
     <>
-      <section className="relative py-20 md:py-28 bg-muted/30 overflow-hidden section-glow">
+      <section className="relative py-14 md:py-28 bg-muted/30 overflow-hidden section-glow">
         <div className="container mx-auto px-4">
           {/* Header */}
           <motion.div
@@ -154,7 +154,7 @@ const FeaturedProducts = () => {
           </motion.div>
 
           {/* Products Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5 max-w-6xl mx-auto mb-10">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5 max-w-6xl mx-auto mb-10">
             {products.map((product: any, i: number) => (
               <motion.div
                 key={product.id}
@@ -179,7 +179,7 @@ const FeaturedProducts = () => {
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
                 {/* Image */}
-                <div className="aspect-square bg-white relative overflow-hidden p-4">
+                <div className="aspect-[4/3] bg-white relative overflow-hidden p-2 sm:p-4">
                   {product.image_url ? (
                     <img
                       src={product.image_url}
@@ -195,11 +195,11 @@ const FeaturedProducts = () => {
                 </div>
 
                 {/* Content */}
-                <div className="p-4 relative z-10">
-                  <p className="text-[10px] font-mono text-muted-foreground mb-1.5">
+                <div className="p-2.5 sm:p-4 relative z-10">
+                  <p className="text-[8px] sm:text-[10px] font-mono text-muted-foreground mb-1">
                     {product.sku}
                   </p>
-                  <h4 className="text-sm font-black text-foreground leading-relaxed mb-3 line-clamp-2 min-h-[2.5rem]">
+                  <h4 className="text-[11px] sm:text-sm font-black text-foreground leading-relaxed mb-2 line-clamp-2 min-h-[2.2rem]">
                     {product.name_ar}
                   </h4>
 
