@@ -296,8 +296,8 @@ const FeaturedProducts = () => {
           product={selectedProduct}
           open={!!selectedProduct}
           onOpenChange={(open) => !open && setSelectedProduct(null)}
-          price={!user ? null : isDealer ? (viewedProductIds.includes(selectedProduct.id) ? getDealerPrice(selectedProduct) : null) : (selectedProduct.sale_price || selectedProduct.base_price)}
-          priceLabel={!user ? "سجّل لرؤية السعر" : isDealer && viewedProductIds.includes(selectedProduct.id) ? "سعر الجملة الخاص بك" : undefined}
+          price={isDealer ? (viewedProductIds.includes(selectedProduct.id) ? getDealerPrice(selectedProduct) : null) : (selectedProduct.sale_price || selectedProduct.base_price)}
+          priceLabel={isDealer && viewedProductIds.includes(selectedProduct.id) ? "سعر الجملة الخاص بك" : !isDealer ? "سعر قطاعي" : undefined}
           isLoggedIn={!!user}
           isDealer={isDealer}
           onRevealPrice={(productId) => {
