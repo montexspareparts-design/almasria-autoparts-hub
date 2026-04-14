@@ -112,8 +112,9 @@ const ProductsPage = () => {
   }, [listing.filters.search, trackSearch]);
   useEffect(() => { if (listing.filters.categoryId) trackCategory(listing.filters.categoryId); }, [listing.filters.categoryId, trackCategory]);
 
-  // Brand showcase page (no specific brand selected)
-  if (!config) {
+  // Brand showcase page (no specific brand selected AND no category filter)
+  const hasCategoryFilter = searchParams.has("category");
+  if (!config && !hasCategoryFilter) {
     return (
       <div className="min-h-screen bg-dark-section">
         <Helmet>
