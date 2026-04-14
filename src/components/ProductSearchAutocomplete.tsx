@@ -142,13 +142,6 @@ const ProductSearchAutocomplete = ({
   const allMatches = useMemo(() => {
     if (!value || value.length < 2) return [];
     return [...products]
-      .filter((p) => {
-        if (isDealer) {
-          const available = (p.available_quantity ?? ((p.stock_quantity ?? 0) - (p.safety_stock ?? 0)));
-          if (available <= 0) return false;
-        }
-        return true;
-      })
       .map((product) => ({ product, score: getSearchRelevanceScore(value, product) }))
       .filter(({ score }) => score > 0)
       .sort((a, b) => {
