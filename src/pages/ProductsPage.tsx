@@ -195,7 +195,7 @@ const ProductsPage = () => {
     );
   }
 
-  const categoryTitle = searchParams.get("category") || "";
+  const pageTitle = config?.title || "تصفح حسب الفئة";
   const pageTitle = config?.title || "تصفح حسب الفئة";
   const pageDescription = config?.description || "تصفح جميع المنتجات حسب الفئة المختارة من جميع الماركات المتاحة.";
 
