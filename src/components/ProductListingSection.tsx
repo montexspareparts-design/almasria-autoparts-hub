@@ -130,6 +130,11 @@ const ProductListingSection = memo(({
               }}
               onCommandPaletteOpen={() => setCommandPaletteOpen(true)}
               isDealer={isDealer}
+              getProductPrice={user ? (p: any) => {
+                const price = getDialogPrice(p);
+                const label = getDialogPriceLabel(p) || "";
+                return { price, label };
+              } : undefined}
             />
 
             <Suspense fallback={null}>
