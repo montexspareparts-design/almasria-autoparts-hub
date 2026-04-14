@@ -247,6 +247,11 @@ const ProductCard = memo(({
             أضف للسلة
           </Button>
         )}
+
+        {/* Alert button for out-of-stock — dealers only */}
+        {!stockAvailable && user && isDealer && (
+          <StockAlertButton productId={product.id} userId={user.id} productName={product.name_ar} />
+        )}
       </div>
     </div>
   );
