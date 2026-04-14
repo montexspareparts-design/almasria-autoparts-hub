@@ -92,13 +92,11 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
 
   const handleCategoryClick = (cat: { id: string; slug: string; name_ar: string }) => {
     if (isDragging) return;
-    const assets = categoryAssets[cat.slug];
-    const searchQuery = assets?.searchTerm || cat.name_ar;
 
     if (onCategorySelect) {
-      onCategorySelect(searchQuery);
+      onCategorySelect(cat.id, cat.name_ar);
     } else {
-      navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
+      navigate(`/products?category=${encodeURIComponent(cat.id)}`);
     }
   };
 
