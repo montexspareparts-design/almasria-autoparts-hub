@@ -1203,24 +1203,7 @@ Deno.serve(async (req) => {
           if (name.includes("اويل سيل") || name.includes("سيل")) return "oil-seals";
         }
 
-        // ── Level 4: Name-based classification (MORE RELIABLE than broad cat8) ──
-        if (name.includes("فلتر") || name.includes("filter")) return "filters";
-        if (name.includes("تيل") || name.includes("فرامل") || name.includes("brake")) return "brakes";
-        if (name.includes("بوجيه") || name.includes("بوجية") || name.includes("بواجي") || name.includes("مبين") || name.includes("كويل")) return "spark-plugs-coils";
-        if (name.includes("سير ") || name.includes("بلي") || name.includes("بيرنج")) return "belts-bearings";
-        if (name.includes("مساعد")) return "shocks";
-        if (name.includes("كشاف") || name.includes("لمبه") || name.includes("لمبة") || name.includes("فانوس")) return "lights";
-        if (name.includes("اكصدام") || name.includes("اكسدام") || name.includes("بامبر")) return "bumpers";
-        if (name.includes("مرايا") || name.includes("مراية") || name.includes("مرآة")) return "mirrors";
-        if (name.includes("جوان")) return "gaskets";
-        if (name.includes("اويل سيل") || name.includes("سيل ")) return "oil-seals";
-        if (name.includes("كاوتش")) return "rubber";
-        if (name.includes("دينامو") || name.includes("مارش") || name.includes("طلمبة بنزين")) return "electrical";
-        if (name.includes("دبرياج") || name.includes("كلاتش") || name.includes("ديسك دبرياج")) return "clutch";
-        if (name.includes("عفشه") || name.includes("عفشة") || name.includes("مقص") || name.includes("جلبه") || name.includes("جلبة")) return "suspension";
-        if (name.includes("عمه") || name.includes("عمة") || name.includes("مقود")) return "steering";
-        if (name.includes("رديتر") || name.includes("ريدياتير") || name.includes("ثرموستات") || name.includes("مروحة")) return "water-cooling";
-        if (name.includes("فيبر") || name.includes("كبوت") || name.includes("شنطه") || name.includes("باب")) return "fiber-parts";
+        // Name-based rules already handled at Level 0 above
 
         return null; // Cannot classify
       }
