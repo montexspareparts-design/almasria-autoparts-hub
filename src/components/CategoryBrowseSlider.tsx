@@ -25,28 +25,28 @@ import catMirrors from "@/assets/categories/cat-mirrors.jpg";
 import catGaskets from "@/assets/categories/cat-gaskets.jpg";
 import catDynamo from "@/assets/categories/cat-dynamo.jpg";
 
-// Map category slugs to images and gradient accents
-const categoryAssets: Record<string, { image: string; accent: string }> = {
-  "spark-plugs-coils": { image: catSparkPlugs, accent: "from-amber-500/80 to-orange-600/90" },
-  "water-cooling": { image: catCooling, accent: "from-blue-500/80 to-cyan-600/90" },
-  "belts-bearings": { image: catBelts, accent: "from-gray-600/80 to-gray-800/90" },
-  "suspension": { image: catSuspension, accent: "from-green-600/80 to-emerald-700/90" },
-  "clutch": { image: catClutch, accent: "from-red-500/80 to-rose-700/90" },
-  "filters": { image: catFilters, accent: "from-purple-500/80 to-violet-700/90" },
-  "fiber-parts": { image: catBody, accent: "from-yellow-500/80 to-amber-600/90" },
-  "bumpers": { image: catBumpers, accent: "from-stone-600/80 to-stone-800/90" },
-  "oil-seals": { image: catOilSeals, accent: "from-orange-600/80 to-amber-800/90" },
-  "lights": { image: catHeadlights, accent: "from-sky-500/80 to-blue-700/90" },
-  "rubber": { image: catRubber, accent: "from-zinc-600/80 to-zinc-800/90" },
-  "mirrors": { image: catMirrors, accent: "from-cyan-500/80 to-cyan-700/90" },
-  "gaskets": { image: catGaskets, accent: "from-rose-500/80 to-red-700/90" },
-  "shocks": { image: catShocks, accent: "from-emerald-500/80 to-green-700/90" },
-  "electrical": { image: catDynamo, accent: "from-violet-500/80 to-purple-700/90" },
-  "oils-gasoline": { image: catOilGasoline, accent: "from-teal-500/80 to-teal-700/90" },
-  "oils-diesel": { image: catOilDiesel, accent: "from-slate-600/80 to-slate-800/90" },
-  "oils-transmission": { image: catOilTransmission, accent: "from-indigo-500/80 to-indigo-700/90" },
-  "brakes": { image: catBrakePads, accent: "from-pink-500/80 to-rose-700/90" },
-  "steering": { image: catSuspension, accent: "from-teal-600/80 to-emerald-800/90" },
+// Map category slugs to images, gradient accents, and search keywords
+const categoryAssets: Record<string, { image: string; accent: string; searchTerms?: string[] }> = {
+  "spark-plugs-coils": { image: catSparkPlugs, accent: "from-amber-500/80 to-orange-600/90", searchTerms: ["بوجية", "موبينة"] },
+  "water-cooling": { image: catCooling, accent: "from-blue-500/80 to-cyan-600/90", searchTerms: ["ريداتير", "تبريد", "ثرموستات"] },
+  "belts-bearings": { image: catBelts, accent: "from-gray-600/80 to-gray-800/90", searchTerms: ["سير", "بلي"] },
+  "suspension": { image: catSuspension, accent: "from-green-600/80 to-emerald-700/90", searchTerms: ["عفشة", "مقص", "مشعل"] },
+  "clutch": { image: catClutch, accent: "from-red-500/80 to-rose-700/90", searchTerms: ["دبرياج", "ديسك", "اسطوانة"] },
+  "filters": { image: catFilters, accent: "from-purple-500/80 to-violet-700/90", searchTerms: ["فلتر"] },
+  "fiber-parts": { image: catBody, accent: "from-yellow-500/80 to-amber-600/90", searchTerms: ["فيبر", "كابوت", "شنطة"] },
+  "bumpers": { image: catBumpers, accent: "from-stone-600/80 to-stone-800/90", searchTerms: ["اكصدام", "صدام"] },
+  "oil-seals": { image: catOilSeals, accent: "from-orange-600/80 to-amber-800/90", searchTerms: ["اويل سيل", "سيل"] },
+  "lights": { image: catHeadlights, accent: "from-sky-500/80 to-blue-700/90", searchTerms: ["كشاف", "لمبة", "فانوس"] },
+  "rubber": { image: catRubber, accent: "from-zinc-600/80 to-zinc-800/90", searchTerms: ["كاوتش", "جلدة"] },
+  "mirrors": { image: catMirrors, accent: "from-cyan-500/80 to-cyan-700/90", searchTerms: ["مراية", "مرايا"] },
+  "gaskets": { image: catGaskets, accent: "from-rose-500/80 to-red-700/90", searchTerms: ["جوان"] },
+  "shocks": { image: catShocks, accent: "from-emerald-500/80 to-green-700/90", searchTerms: ["مساعد"] },
+  "electrical": { image: catDynamo, accent: "from-violet-500/80 to-purple-700/90", searchTerms: ["دينامو", "كلاكس", "مساحة", "طلمبة بنزين"] },
+  "oils-gasoline": { image: catOilGasoline, accent: "from-teal-500/80 to-teal-700/90", searchTerms: ["زيت محرك بنزين"] },
+  "oils-diesel": { image: catOilDiesel, accent: "from-slate-600/80 to-slate-800/90", searchTerms: ["زيت محرك ديزل"] },
+  "oils-transmission": { image: catOilTransmission, accent: "from-indigo-500/80 to-indigo-700/90", searchTerms: ["زيت فتيس", "زيت كرونة", "زيت كلاتش"] },
+  "brakes": { image: catBrakePads, accent: "from-pink-500/80 to-rose-700/90", searchTerms: ["تيل", "فرامل"] },
+  "steering": { image: catSuspension, accent: "from-teal-600/80 to-emerald-800/90", searchTerms: ["عمة", "مقود"] },
 };
 
 const defaultAccent = "from-primary/80 to-primary/90";
