@@ -430,7 +430,17 @@ const SearchResultItem = ({
         </div>
       </div>
 
-      {/* Add to quote */}
+      {/* Price */}
+      {getProductPrice && (() => {
+        const priceInfo = getProductPrice(product);
+        if (!priceInfo || priceInfo.price === null) return null;
+        return (
+          <div className="shrink-0 text-left">
+            <p className="text-xs font-bold text-primary">{priceInfo.price.toLocaleString('ar-EG')} ج.م</p>
+            <p className="text-[9px] text-muted-foreground">{priceInfo.label}</p>
+          </div>
+        );
+      })()}
       {isDealer && onAddToQuote && (
         <button
           onClick={(e) => { e.stopPropagation(); onAddToQuote(product); }}
