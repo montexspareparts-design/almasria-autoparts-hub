@@ -244,7 +244,9 @@ const ProductSearchAutocomplete = ({
     return null;
   }, [value]);
 
-  const showDropdown = isFocused && (suggestions.length > 0 || didYouMean || popularProducts.length > 0);
+  const hasSearchQuery = value && value.length >= 2;
+  const noResults = hasSearchQuery && suggestions.length === 0;
+  const showDropdown = isFocused && (suggestions.length > 0 || didYouMean || popularProducts.length > 0 || noResults);
   const displayProducts = suggestions.length > 0 ? suggestions : popularProducts;
 
   useEffect(() => { setSelectedIndex(-1); }, [value]);
