@@ -162,11 +162,19 @@ const ProductSearchAutocomplete = ({
   const suggestions = useMemo(() => allMatches.slice(0, 16), [allMatches]);
   const filteredTotal = allMatches.length;
 
+  // Count ALL matches per brand (not just displayed slice)
+  const brandTotalCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const p of allMatches) {
+      counts[p.brand] = (counts[p.brand] || 0) + 1;
+    }
+    return counts;
+  }, [allMatches]);
+
   // Group suggestions by brand for display
   const groupedSuggestions = useMemo(() => {
     if (suggestions.length === 0) return [];
     const groups: Record<string, Product[]> = {};
-    // Maintain order of first appearance
     const brandOrder: string[] = [];
     for (const p of suggestions) {
       if (!groups[p.brand]) {
