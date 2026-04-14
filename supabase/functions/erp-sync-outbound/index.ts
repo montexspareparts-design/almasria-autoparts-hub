@@ -474,6 +474,23 @@ Deno.serve(async (req) => {
         status: isMock ? "mock" : "success",
       });
     }
+    // ─── DEBUG: Show raw ERP response structure ───
+    else if (action === "debug_sample") {
+      if (!baseUrl) throw new Error("ERP base URL is not configured");
+      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
+      const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
+      // Find specific items by ID for comparison
+      const targetIds = ["13621", "12967", "22236", "22774"];
+      const targetItems = productsList.filter((p: any) => targetIds.includes(String(p.id || "").trim()));
+      // Also grab first 3 items raw
+      const firstThree = productsList.slice(0, 3);
+      return new Response(JSON.stringify({
+        total_items: productsList.length,
+        all_keys: productsList.length > 0 ? Object.keys(productsList[0]) : [],
+        first_three_raw: firstThree,
+        target_items: targetItems,
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     // ─── IMPORT ALL ERP PRODUCTS INTO DB ───
     else if (action === "import_products") {
