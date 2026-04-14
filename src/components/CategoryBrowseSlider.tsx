@@ -52,7 +52,7 @@ const categoryAssets: Record<string, { image: string; accent: string }> = {
 const defaultAccent = "from-primary/80 to-primary/90";
 
 interface CategoryBrowseSliderProps {
-  onCategorySelect?: (categoryId: string) => void;
+  onCategorySelect?: (categoryName: string) => void;
 }
 
 const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) => {
@@ -62,9 +62,9 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
-  // Fetch categories + product counts (all active products, not just in-stock — temp policy)
+  // Fetch categories + product counts by name search (matches products across all brands)
   const { data: categoriesWithCounts } = useQuery({
-    queryKey: ["category_browse_slider_v2"],
+    queryKey: ["category_browse_slider_v3"],
     queryFn: async () => {
       const { data: cats, error } = await supabase
         .from("product_categories")
@@ -72,14 +72,14 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
         .order("sort_order");
       if (error) throw error;
 
-      // Count ALL active products per category (temp: ignore stock per policy)
+      // Count ALL active products whose name contains the category name
       const counts = await Promise.all(
         (cats || []).map(async (cat) => {
           const { count } = await supabase
             .from("products")
             .select("id", { count: "exact", head: true })
             .eq("is_active", true)
-            .eq("category_id", cat.id);
+            .ilike("name_ar", `%${cat.name_ar}%`);
           return { ...cat, count: count ?? 0 };
         })
       );
@@ -89,12 +89,11 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
     staleTime: 5 * 60 * 1000,
   });
 
-  const handleCategoryClick = (cat: { id: string; slug: string }) => {
+  const handleCategoryClick = (cat: { id: string; slug: string; name_ar: string }) => {
     if (onCategorySelect) {
-      onCategorySelect(cat.id);
+      onCategorySelect(cat.name_ar);
     } else {
-      // Navigate to products page WITHOUT brand restriction — show all brands
-      navigate(`/products?category=${cat.slug}`);
+      navigate(`/products?search=${encodeURIComponent(cat.name_ar)}`);
     }
   };
 
