@@ -87,7 +87,7 @@ const findDidYouMean = (input: string): string | null => {
 
 const ProductSearchAutocomplete = ({
   value, onChange, products = [], onProductClick, onAddToQuote, onCommandPaletteOpen,
-  placeholder = "ابحث بالاسم أو رقم القطعة...", isDealer = false
+  placeholder = "ابحث بالاسم أو رقم القطعة...", isDealer = false, getProductPrice
 }: Props) => {
   const [isFocused, setIsFocused] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
