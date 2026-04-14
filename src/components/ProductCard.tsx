@@ -1,8 +1,10 @@
-import { memo } from "react";
-import { Package, Lock, Eye, ShoppingCart, Check, Sparkles } from "lucide-react";
+import { memo, useState, useCallback } from "react";
+import { Package, Lock, Eye, ShoppingCart, Check, Sparkles, Bell, BellOff } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 const brandRouteMap: Record<string, { label: string; color: string; path: string }> = {
   toyota_genuine: { label: "تويوتا أصلي", color: "bg-red-600 text-white", path: "/products/toyota-genuine" },
@@ -245,12 +247,87 @@ const ProductCard = memo(({
             أضف للسلة
           </Button>
         )}
+
+        {/* Alert button for out-of-stock — dealers only */}
+        {!stockAvailable && user && isDealer && (
+          <StockAlertButton productId={product.id} userId={user.id} productName={product.name_ar} />
+        )}
       </div>
     </div>
   );
 });
 
 ProductCard.displayName = "ProductCard";
+
+/* ── Stock Alert Button ── */
+const StockAlertButton = ({ productId, userId, productName }: { productId: string; userId: string; productName: string }) => {
+  const [subscribed, setSubscribed] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [checked, setChecked] = useState(false);
+
+  const checkAndToggle = useCallback(async () => {
+    if (loading) return;
+    setLoading(true);
+
+    if (!checked) {
+      // First click: check if already subscribed
+      const { data } = await supabase
+        .from("stock_alerts")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("product_id", productId)
+        .eq("is_active", true)
+        .maybeSingle();
+      setChecked(true);
+      if (data) {
+        setSubscribed(true);
+        // Unsubscribe
+        await supabase.from("stock_alerts").delete().eq("id", data.id);
+        setSubscribed(false);
+        toast({ title: "تم إلغاء التنبيه", description: productName });
+      } else {
+        // Subscribe
+        await supabase.from("stock_alerts").insert([
+          { user_id: userId, product_id: productId, alert_type: "back_in_stock" },
+          { user_id: userId, product_id: productId, alert_type: "price_drop" },
+        ]);
+        setSubscribed(true);
+        toast({ title: "🔔 سيتم تنبيهك", description: `عند توفر "${productName}" أو نزول عرض عليه` });
+      }
+    } else {
+      if (subscribed) {
+        await supabase.from("stock_alerts").delete().eq("user_id", userId).eq("product_id", productId);
+        setSubscribed(false);
+        toast({ title: "تم إلغاء التنبيه" });
+      } else {
+        await supabase.from("stock_alerts").insert([
+          { user_id: userId, product_id: productId, alert_type: "back_in_stock" },
+          { user_id: userId, product_id: productId, alert_type: "price_drop" },
+        ]);
+        setSubscribed(true);
+        toast({ title: "🔔 سيتم تنبيهك", description: `عند توفر "${productName}"` });
+      }
+    }
+    setLoading(false);
+  }, [checked, subscribed, loading, productId, userId, productName]);
+
+  return (
+    <Button
+      size="sm"
+      variant="outline"
+      className={`w-full gap-1.5 text-[9px] sm:text-xs h-7 sm:h-9 rounded-xl font-bold mt-1.5 sm:mt-2.5 transition-all duration-300
+        ${subscribed 
+          ? "border-amber-400/40 bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-700/30" 
+          : "border-border/40 hover:border-primary/30 hover:bg-primary/5"
+        }`}
+      onClick={checkAndToggle}
+      disabled={loading}
+    >
+      {subscribed ? <BellOff className="w-3.5 h-3.5" /> : <Bell className="w-3.5 h-3.5" />}
+      {subscribed ? "إلغاء التنبيه" : "نبّهني عند التوفر"}
+    </Button>
+  );
+};
 
 /* ── Sub-components ── */
 
