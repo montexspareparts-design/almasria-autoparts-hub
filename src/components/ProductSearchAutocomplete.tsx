@@ -163,28 +163,74 @@ const ProductSearchAutocomplete = ({
   const suggestions = useMemo(() => allMatches.slice(0, 16), [allMatches]);
   const filteredTotal = allMatches.length;
 
-  // Count ALL matches per brand (not just displayed slice)
-  const brandTotalCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const p of allMatches) {
-      counts[p.brand] = (counts[p.brand] || 0) + 1;
+  // ── Extract core part type from product name ──
+  const extractPartType = (name: string): string => {
+    // Remove brand suffixes, model names, years, and qualifiers to get the core part
+    let core = name
+      .replace(/\b(اصلي|أصلي|ياباني|كوري|صيني|تايواني|DENSO|FBK|AISIN|MTX)\b/gi, "")
+      .replace(/\b(تويوتا|toyota)\b/gi, "")
+      .replace(/\b\d{4}\b/g, "") // years
+      .replace(/\b[A-Z0-9]{2,}-?[A-Z0-9]*\b/g, "") // part numbers like 1GD, 2KD
+      .replace(/&/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    
+    // Extract key part words (first 2-3 meaningful words)
+    const partKeywords = [
+      "تيل", "فلتر", "سير", "بواجي", "بوجيه", "بوجية", "زيت", "كشاف", "مرايا", "مساعد",
+      "اويل سيل", "دبرياج", "ديسك", "اسطوانة", "كلاتش", "طلمبة", "حساس", "جوان",
+      "ريداتير", "رديتر", "بطارية", "اكصدام", "شكمان", "دينامو", "مارش",
+      "فانوس", "غطاء", "صباب", "ماستر", "رشاش", "كاتينة", "شبكة",
+      "عفشة", "سوستة", "مقص", "جلبة", "بلية", "كوعة", "طنبورة", "شداد",
+      "كرنك", "كرتيرة", "فتيس", "جيربوكس", "ميزان", "قاعدة", "حامل",
+      "فبرة", "كبوت", "باب", "طارة", "كلاكس", "صرة", "عمة",
+    ];
+    
+    // Find the main part keyword in the name
+    const normalizedCore = normalizeArabic(core);
+    for (const kw of partKeywords) {
+      if (normalizedCore.includes(normalizeArabic(kw))) {
+        return kw;
+      }
     }
-    return counts;
-  }, [allMatches]);
+    
+    // Fallback: use first 2 words
+    const words = core.split(/\s+/).filter(w => w.length > 1);
+    return words.slice(0, 2).join(" ") || core;
+  };
 
-  // Group suggestions by brand for display
+  // Brand priority: original first, then alternatives
+  const brandPriority: Record<string, number> = {
+    toyota_genuine: 0,
+    toyota_oils: 1,
+    denso: 2,
+    aisin: 3,
+    fbk: 4,
+    mtx_aftermarket: 5,
+  };
+
+  // Group suggestions by part type, show original first then alternatives
   const groupedSuggestions = useMemo(() => {
     if (suggestions.length === 0) return [];
+    
     const groups: Record<string, Product[]> = {};
-    const brandOrder: string[] = [];
+    const groupOrder: string[] = [];
+    
     for (const p of suggestions) {
-      if (!groups[p.brand]) {
-        groups[p.brand] = [];
-        brandOrder.push(p.brand);
+      const partType = extractPartType(p.name_ar);
+      if (!groups[partType]) {
+        groups[partType] = [];
+        groupOrder.push(partType);
       }
-      groups[p.brand].push(p);
+      groups[partType].push(p);
     }
-    return brandOrder.map(brand => ({ brand, products: groups[brand] }));
+    
+    // Sort products within each group: original first, then alternatives
+    for (const key of groupOrder) {
+      groups[key].sort((a, b) => (brandPriority[a.brand] ?? 99) - (brandPriority[b.brand] ?? 99));
+    }
+    
+    return groupOrder.map(partType => ({ partType, products: groups[partType] }));
   }, [suggestions]);
 
   const didYouMean = useMemo(() => {
