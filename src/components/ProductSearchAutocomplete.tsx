@@ -342,8 +342,17 @@ const ProductSearchAutocomplete = ({
                 </button>
               )}
 
+              {/* No results message */}
+              {noResults && !didYouMean && (
+                <div className="px-4 py-8 text-center">
+                  <Package className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+                  <p className="text-sm font-bold text-muted-foreground mb-1">لا توجد نتائج لـ "{value}"</p>
+                  <p className="text-xs text-muted-foreground/60">جرّب البحث بكلمات مختلفة أو رقم القطعة</p>
+                </div>
+              )}
+
               {/* No search: popular items */}
-              {suggestions.length === 0 && popularProducts.length > 0 && (
+              {!noResults && suggestions.length === 0 && popularProducts.length > 0 && (
                 <>
                   <div className="px-4 py-2 text-[11px] text-muted-foreground font-medium border-b border-border/20">
                     🔥 الأكثر توفراً
