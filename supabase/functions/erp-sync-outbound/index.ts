@@ -1184,13 +1184,7 @@ Deno.serve(async (req) => {
           if (name.includes("اويل سيل") || name.includes("سيل")) return "oil-seals";
         }
 
-        // ── Level 4: cat8-based fallback ──
-        if (cat8 === 4) return "filters"; // DENSO filters mostly
-        if (cat8 === 11) return "oils-gasoline"; // Oils
-        if (cat8 === 27) return "electrical";
-        if (cat8 === 2) return "water-cooling";
-
-        // ── Level 5: Name-based fallback ──
+        // ── Level 4: Name-based classification (MORE RELIABLE than broad cat8) ──
         if (name.includes("فلتر") || name.includes("filter")) return "filters";
         if (name.includes("تيل") || name.includes("فرامل") || name.includes("brake")) return "brakes";
         if (name.includes("بوجيه") || name.includes("بوجية") || name.includes("بواجي") || name.includes("مبين") || name.includes("كويل")) return "spark-plugs-coils";
