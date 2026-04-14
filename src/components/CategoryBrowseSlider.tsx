@@ -73,16 +73,24 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
         .order("sort_order");
       if (error) throw error;
 
-      const counts = await Promise.all(
-        (cats || []).map(async (cat) => {
-          const { count } = await supabase
-            .from("products")
-            .select("id", { count: "exact", head: true })
-            .eq("is_active", true)
-            .eq("category_id", cat.id);
-          return { ...cat, count: count ?? 0 };
-        })
-      );
+      // Single query to get counts instead of N+1
+      const { data: countData } = await supabase
+        .from("products")
+        .select("category_id")
+        .eq("is_active", true)
+        .not("category_id", "is", null);
+
+      const countMap = new Map<string, number>();
+      (countData || []).forEach((p) => {
+        if (p.category_id) {
+          countMap.set(p.category_id, (countMap.get(p.category_id) || 0) + 1);
+        }
+      });
+
+      const counts = (cats || []).map((cat) => ({
+        ...cat,
+        count: countMap.get(cat.id) || 0,
+      }));
 
       return counts.filter((c) => c.count > 0).sort((a, b) => b.count - a.count);
     },
