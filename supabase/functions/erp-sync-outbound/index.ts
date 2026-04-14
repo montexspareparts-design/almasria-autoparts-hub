@@ -992,6 +992,279 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ─── ANALYZE ERP CATEGORIES: Cross-reference with our DB ───
+    else if (action === "analyze_erp_categories") {
+      if (!baseUrl) throw new Error("ERP base URL is not configured");
+
+      // Fetch ERP products with category fields
+      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
+      const erpProducts = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
+
+      // Build ERP lookup by id
+      const erpMap = new Map<string, any>();
+      for (const p of erpProducts) {
+        const id = String(p.id || "").trim();
+        if (id) erpMap.set(id, p);
+      }
+
+      // Get our categorized products with erp_item_code
+      const { data: categorizedProducts } = await supabase
+        .from("products")
+        .select("erp_item_code, name_ar, category_id, product_categories(name_ar, slug)")
+        .not("category_id", "is", null)
+        .not("erp_item_code", "is", null);
+
+      // Build mapping: for each category, collect the ERP category field values
+      const catFieldAnalysis: Record<string, Record<string, Record<string, number>>> = {};
+      const catFields = ["itemcatid", "itemcat2id", "itemcat3id", "itemcat4id", "itemcat5id", "itemcat6id", "itemcat7id", "itemcat8id", "itemcat9id", "itemcat10id"];
+      let matchedCount = 0;
+
+      for (const prod of (categorizedProducts || [])) {
+        const erpData = erpMap.get(prod.erp_item_code?.trim() || "");
+        if (!erpData) continue;
+        matchedCount++;
+
+        const catInfo = (prod as any).product_categories;
+        const catSlug = catInfo?.slug || "unknown";
+        const catName = catInfo?.name_ar || "unknown";
+        const catKey = `${catSlug}|${catName}`;
+
+        if (!catFieldAnalysis[catKey]) {
+          catFieldAnalysis[catKey] = {};
+          for (const f of catFields) catFieldAnalysis[catKey][f] = {};
+        }
+
+        for (const f of catFields) {
+          const val = String(erpData[f] ?? 0);
+          catFieldAnalysis[catKey][f][val] = (catFieldAnalysis[catKey][f][val] || 0) + 1;
+        }
+      }
+
+      // Find the most discriminating field (highest consistency per category)
+      const fieldScores: Record<string, number> = {};
+      for (const f of catFields) {
+        let score = 0;
+        for (const catKey of Object.keys(catFieldAnalysis)) {
+          const valueCounts = catFieldAnalysis[catKey][f];
+          const entries = Object.entries(valueCounts);
+          if (entries.length === 0) continue;
+          const total = entries.reduce((s, [, c]) => s + c, 0);
+          const maxCount = Math.max(...entries.map(([, c]) => c));
+          // Consistency: how dominant is the top value
+          score += maxCount / total;
+        }
+        fieldScores[f] = score;
+      }
+
+      // Sort fields by discrimination score
+      const rankedFields = Object.entries(fieldScores)
+        .sort((a, b) => b[1] - a[1])
+        .map(([field, score]) => ({ field, score: Math.round(score * 100) / 100 }));
+
+      // For the best field, build recommended mapping
+      const bestField = rankedFields[0]?.field || "itemcatid";
+      const recommendedMapping: Record<string, { erp_value: string; confidence: number; sample_count: number }> = {};
+
+      for (const catKey of Object.keys(catFieldAnalysis)) {
+        const valueCounts = catFieldAnalysis[catKey][bestField];
+        const entries = Object.entries(valueCounts).sort((a, b) => b[1] - a[1]);
+        if (entries.length > 0) {
+          const total = entries.reduce((s, [, c]) => s + c, 0);
+          recommendedMapping[catKey] = {
+            erp_value: entries[0][0],
+            confidence: Math.round((entries[0][1] / total) * 100),
+            sample_count: total,
+          };
+        }
+      }
+
+      // Count uncategorized products
+      const { count: uncategorizedCount } = await supabase
+        .from("products")
+        .select("id", { count: "exact", head: true })
+        .is("category_id", null)
+        .eq("is_active", true);
+
+      result = {
+        success: true,
+        total_erp_products: erpProducts.length,
+        categorized_matched: matchedCount,
+        total_categories: Object.keys(catFieldAnalysis).length,
+        uncategorized_products: uncategorizedCount || 0,
+        best_discriminating_field: bestField,
+        field_ranking: rankedFields,
+        recommended_mapping: recommendedMapping,
+        raw_analysis: catFieldAnalysis,
+      };
+    }
+
+    // ─── SYNC CATEGORIES: Auto-assign categories based on ERP fields ───
+    else if (action === "sync_categories") {
+      if (!isServiceRole) {
+        const { data: isAdmin } = await supabase.rpc("has_role", {
+          _user_id: userId!,
+          _role: "admin",
+        });
+        if (!isAdmin) {
+          return new Response(
+            JSON.stringify({ error: "Forbidden — admin only" }),
+            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
+
+      if (!baseUrl) throw new Error("ERP base URL is not configured");
+
+      // data.mapping should be: { "erp_field": "itemcatid", "rules": { "1": "category_slug", "2": "category_slug", ... } }
+      // Or we auto-detect from existing categorized products
+      const erpField = data?.erp_field || null;
+      const manualRules: Record<string, string> | null = data?.rules || null;
+      const dryRun = data?.dry_run !== false; // Default to dry run for safety
+
+      // Fetch ERP products
+      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
+      const erpProducts = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
+      const erpMap = new Map<string, any>();
+      for (const p of erpProducts) {
+        const id = String(p.id || "").trim();
+        if (id) erpMap.set(id, p);
+      }
+
+      // Get all categories
+      const { data: categories } = await supabase.from("product_categories").select("id, slug, name_ar");
+      const catBySlug = new Map<string, string>();
+      for (const c of (categories || [])) catBySlug.set(c.slug, c.id);
+
+      let rules: Record<string, string> = {};
+      let fieldToUse = erpField;
+
+      if (manualRules && fieldToUse) {
+        // Use provided mapping
+        rules = manualRules;
+      } else {
+        // Auto-detect: learn from categorized products
+        const { data: categorizedProducts } = await supabase
+          .from("products")
+          .select("erp_item_code, category_id, product_categories(slug)")
+          .not("category_id", "is", null)
+          .not("erp_item_code", "is", null);
+
+        const catFields = ["itemcatid", "itemcat2id", "itemcat3id", "itemcat4id", "itemcat5id"];
+        
+        // Score each field
+        let bestField = "itemcatid";
+        let bestScore = 0;
+
+        for (const field of catFields) {
+          const valueToCategory: Record<string, Record<string, number>> = {};
+          for (const prod of (categorizedProducts || [])) {
+            const erpData = erpMap.get(prod.erp_item_code?.trim() || "");
+            if (!erpData) continue;
+            const val = String(erpData[field] ?? 0);
+            const catSlug = (prod as any).product_categories?.slug || "";
+            if (!catSlug || val === "0") continue;
+            if (!valueToCategory[val]) valueToCategory[val] = {};
+            valueToCategory[val][catSlug] = (valueToCategory[val][catSlug] || 0) + 1;
+          }
+          
+          let fieldScore = 0;
+          for (const val of Object.keys(valueToCategory)) {
+            const catCounts = Object.entries(valueToCategory[val]);
+            const total = catCounts.reduce((s, [, c]) => s + c, 0);
+            const max = Math.max(...catCounts.map(([, c]) => c));
+            fieldScore += max / total;
+          }
+
+          if (fieldScore > bestScore) {
+            bestScore = fieldScore;
+            bestField = field;
+            // Build rules from this field
+            rules = {};
+            for (const val of Object.keys(valueToCategory)) {
+              const catCounts = Object.entries(valueToCategory[val]).sort((a, b) => b[1] - a[1]);
+              if (catCounts.length > 0) {
+                const total = catCounts.reduce((s, [, c]) => s + c, 0);
+                const confidence = catCounts[0][1] / total;
+                if (confidence >= 0.6) { // Only use rules with 60%+ confidence
+                  rules[val] = catCounts[0][0];
+                }
+              }
+            }
+          }
+        }
+        fieldToUse = bestField;
+      }
+
+      // Get uncategorized products
+      const { data: uncategorizedProducts } = await supabase
+        .from("products")
+        .select("id, erp_item_code, name_ar")
+        .is("category_id", null)
+        .eq("is_active", true)
+        .not("erp_item_code", "is", null);
+
+      // Apply rules
+      let updated = 0;
+      let skipped = 0;
+      const updates: { id: string; name: string; category: string; erp_value: string }[] = [];
+
+      for (const prod of (uncategorizedProducts || [])) {
+        const erpData = erpMap.get(prod.erp_item_code?.trim() || "");
+        if (!erpData) { skipped++; continue; }
+
+        const erpValue = String(erpData[fieldToUse!] ?? 0);
+        const catSlug = rules[erpValue];
+        if (!catSlug || !catBySlug.has(catSlug)) { skipped++; continue; }
+
+        const categoryId = catBySlug.get(catSlug)!;
+        
+        if (!dryRun) {
+          const { error } = await supabase
+            .from("products")
+            .update({ category_id: categoryId })
+            .eq("id", prod.id);
+          if (!error) updated++;
+          else skipped++;
+        } else {
+          updated++;
+        }
+
+        if (updates.length < 20) {
+          updates.push({
+            id: prod.id,
+            name: prod.name_ar,
+            category: catSlug,
+            erp_value: erpValue,
+          });
+        }
+      }
+
+      result = {
+        success: true,
+        dry_run: dryRun,
+        erp_field_used: fieldToUse,
+        rules_count: Object.keys(rules).length,
+        rules,
+        total_uncategorized: uncategorizedProducts?.length || 0,
+        would_categorize: updated,
+        skipped,
+        sample_updates: updates,
+        message: dryRun
+          ? `[تجربة] يمكن تصنيف ${updated} صنف من ${uncategorizedProducts?.length || 0} غير مصنف. أعد الطلب مع dry_run: false للتنفيذ.`
+          : `تم تصنيف ${updated} صنف تلقائياً باستخدام حقل ${fieldToUse}`,
+      };
+
+      if (!dryRun) {
+        await supabase.from("erp_sync_logs").insert({
+          sync_type: "category_sync",
+          direction: "inbound",
+          payload: { action, field: fieldToUse, rules },
+          response: { updated, skipped, total: uncategorizedProducts?.length },
+          status: "success",
+        });
+      }
+    }
+
     else {
       throw new Error(`Unknown action: ${action}`);
     }
