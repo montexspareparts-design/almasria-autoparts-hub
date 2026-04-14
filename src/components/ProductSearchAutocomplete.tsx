@@ -28,6 +28,7 @@ interface Props {
   onCommandPaletteOpen?: () => void;
   placeholder?: string;
   isDealer?: boolean;
+  getProductPrice?: (product: Product) => { price: number | null; label: string } | null;
 }
 
 const brandLabels: Record<string, { label: string; color: string }> = {
@@ -86,7 +87,7 @@ const findDidYouMean = (input: string): string | null => {
 
 const ProductSearchAutocomplete = ({
   value, onChange, products = [], onProductClick, onAddToQuote, onCommandPaletteOpen,
-  placeholder = "ابحث بالاسم أو رقم القطعة...", isDealer = false
+  placeholder = "ابحث بالاسم أو رقم القطعة...", isDealer = false, getProductPrice
 }: Props) => {
   const [isFocused, setIsFocused] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -162,11 +163,19 @@ const ProductSearchAutocomplete = ({
   const suggestions = useMemo(() => allMatches.slice(0, 16), [allMatches]);
   const filteredTotal = allMatches.length;
 
+  // Count ALL matches per brand (not just displayed slice)
+  const brandTotalCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const p of allMatches) {
+      counts[p.brand] = (counts[p.brand] || 0) + 1;
+    }
+    return counts;
+  }, [allMatches]);
+
   // Group suggestions by brand for display
   const groupedSuggestions = useMemo(() => {
     if (suggestions.length === 0) return [];
     const groups: Record<string, Product[]> = {};
-    // Maintain order of first appearance
     const brandOrder: string[] = [];
     for (const p of suggestions) {
       if (!groups[p.brand]) {
@@ -303,6 +312,7 @@ const ProductSearchAutocomplete = ({
                         onAddToQuote={onAddToQuote}
                         isDealer={isDealer}
                         showBrand
+                        getProductPrice={getProductPrice}
                       />
                     );
                   })}
@@ -318,12 +328,14 @@ const ProductSearchAutocomplete = ({
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${brandInfo.color}`}>
                         {brandInfo.label}
                       </span>
-                      <span className="text-[10px] text-muted-foreground">{group.products.length} نتيجة</span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {brandTotalCounts[group.brand] || group.products.length} صنف
+                      </span>
                     </div>
                     {group.products.map((product) => {
                       const currentIdx = renderFlatIdx++;
                       return (
-                        <SearchResultItem
+                         <SearchResultItem
                           key={product.id}
                           product={product}
                           isSelected={selectedIndex === currentIdx}
@@ -331,6 +343,7 @@ const ProductSearchAutocomplete = ({
                           onHover={() => setSelectedIndex(currentIdx)}
                           onAddToQuote={onAddToQuote}
                           isDealer={isDealer}
+                          getProductPrice={getProductPrice}
                         />
                       );
                     })}
@@ -360,7 +373,7 @@ const ProductSearchAutocomplete = ({
 
 /* ── Single result item (Google-style) ── */
 const SearchResultItem = ({
-  product, isSelected, onSelect, onHover, onAddToQuote, isDealer, showBrand = false,
+  product, isSelected, onSelect, onHover, onAddToQuote, isDealer, showBrand = false, getProductPrice,
 }: {
   product: Product;
   isSelected: boolean;
@@ -369,6 +382,7 @@ const SearchResultItem = ({
   onAddToQuote?: (product: Product) => void;
   isDealer: boolean;
   showBrand?: boolean;
+  getProductPrice?: (product: Product) => { price: number | null; label: string } | null;
 }) => {
   const brandInfo = brandLabels[product.brand];
   const isAvailable = ((product as any).stock_quantity ?? 0) > ((product as any).safety_stock ?? 0);
@@ -416,7 +430,17 @@ const SearchResultItem = ({
         </div>
       </div>
 
-      {/* Add to quote */}
+      {/* Price */}
+      {getProductPrice && (() => {
+        const priceInfo = getProductPrice(product);
+        if (!priceInfo || priceInfo.price === null) return null;
+        return (
+          <div className="shrink-0 text-left">
+            <p className="text-xs font-bold text-primary">{priceInfo.price.toLocaleString('ar-EG')} ج.م</p>
+            <p className="text-[9px] text-muted-foreground">{priceInfo.label}</p>
+          </div>
+        );
+      })()}
       {isDealer && onAddToQuote && (
         <button
           onClick={(e) => { e.stopPropagation(); onAddToQuote(product); }}
