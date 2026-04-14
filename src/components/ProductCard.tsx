@@ -1,8 +1,10 @@
-import { memo } from "react";
-import { Package, Lock, Eye, ShoppingCart, Check, Sparkles } from "lucide-react";
+import { memo, useState, useCallback } from "react";
+import { Package, Lock, Eye, ShoppingCart, Check, Sparkles, Bell, BellOff } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 const brandRouteMap: Record<string, { label: string; color: string; path: string }> = {
   toyota_genuine: { label: "تويوتا أصلي", color: "bg-red-600 text-white", path: "/products/toyota-genuine" },
