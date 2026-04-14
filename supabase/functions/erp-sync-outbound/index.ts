@@ -192,7 +192,7 @@ Deno.serve(async (req) => {
         customerName: data.erp_customer_code ? "" : (data.customer_name || ""),
         phone: data.customer_phone || "0000000000",
         items: data.items?.map((item: any) => ({
-          productId: String(item.erp_item_code || item.sku || ""),
+          productId: String(item.erp_item_code || ""),
           quantity: Number(item.quantity) || 1,
           price: Number(item.unit_price) || 0,
         })),
@@ -255,7 +255,7 @@ Deno.serve(async (req) => {
         customerName: data.erp_customer_code ? "" : (data.customer_name || ""),
         phone: data.customer_phone || "0000000000",
         items: data.items?.map((item: any) => ({
-          productId: String(item.erp_item_code || item.sku || ""),
+          productId: String(item.erp_item_code || ""),
           quantity: Number(item.quantity) || 1,
           price: Number(item.unit_price) || 0,
         })),
