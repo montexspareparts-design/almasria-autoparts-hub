@@ -312,6 +312,7 @@ const ProductSearchAutocomplete = ({
                         onAddToQuote={onAddToQuote}
                         isDealer={isDealer}
                         showBrand
+                        getProductPrice={getProductPrice}
                       />
                     );
                   })}
