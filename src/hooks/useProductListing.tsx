@@ -404,12 +404,12 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     },
   });
 
-  // Deep link: set category from URL query
+  // Deep link: set category from URL query — clear brand to show all brands
   useEffect(() => {
     const categorySlug = searchParams.get("category");
     if (categorySlug && dbCategories) {
       const matched = dbCategories.find((c) => c.slug === categorySlug);
-      if (matched) setFilters((prev) => ({ ...prev, categoryId: matched.id }));
+      if (matched) setFilters((prev) => ({ ...prev, categoryId: matched.id, brandKey: null }));
     }
   }, [dbCategories, searchParams]);
 
