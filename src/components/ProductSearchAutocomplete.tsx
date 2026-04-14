@@ -335,7 +335,7 @@ const ProductSearchAutocomplete = ({
                     {group.products.map((product) => {
                       const currentIdx = renderFlatIdx++;
                       return (
-                        <SearchResultItem
+                         <SearchResultItem
                           key={product.id}
                           product={product}
                           isSelected={selectedIndex === currentIdx}
@@ -343,6 +343,7 @@ const ProductSearchAutocomplete = ({
                           onHover={() => setSelectedIndex(currentIdx)}
                           onAddToQuote={onAddToQuote}
                           isDealer={isDealer}
+                          getProductPrice={getProductPrice}
                         />
                       );
                     })}
