@@ -99,7 +99,7 @@ const FeaturedProducts = () => {
       name_ar: product.name_ar,
       sku: product.sku,
       image_url: product.image_url,
-      unit_price: product.sale_price || product.base_price,
+      unit_price: isDealer ? getDealerPrice(product) : (product.sale_price || product.base_price),
       quantity: product.min_order_qty || 1,
       stock_quantity: product.stock_quantity,
       min_order_qty: product.min_order_qty,
