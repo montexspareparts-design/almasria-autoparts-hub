@@ -170,12 +170,31 @@ export const getSearchRelevanceScore = (query: string, product: {
   const modelsText = normalizeArabic((product.compatible_models || []).join(" "));
 
   let score = 0;
+  let matchedWords = 0;
+  const allFields = [normalizedName, skuLower, nameEnLower, descArNorm, modelsText].join(" ");
+
   for (const word of searchWords) {
-    score += getWordMatchScore(word, normalizedName) * 10;
-    score += getWordMatchScore(word, skuLower) * 12;
-    score += getWordMatchScore(word, nameEnLower) * 5;
-    score += getWordMatchScore(word, descArNorm) * 3;
-    score += getWordMatchScore(word, modelsText) * 4;
+    const nameScore = getWordMatchScore(word, normalizedName) * 10;
+    const skuScore = getWordMatchScore(word, skuLower) * 12;
+    const enScore = getWordMatchScore(word, nameEnLower) * 5;
+    const descScore = getWordMatchScore(word, descArNorm) * 3;
+    const modelScore = getWordMatchScore(word, modelsText) * 4;
+    const wordTotal = nameScore + skuScore + enScore + descScore + modelScore;
+    score += wordTotal;
+    if (wordTotal > 0) matchedWords++;
+  }
+
+  // CRITICAL: If not all search words matched, heavily penalize or reject
+  if (searchWords.length >= 2) {
+    if (matchedWords < searchWords.length) {
+      // Penalize proportionally - missing words = much lower rank
+      const matchRatio = matchedWords / searchWords.length;
+      if (matchRatio < 0.5) return 0; // Less than half words match = reject
+      score = Math.floor(score * matchRatio * 0.3); // Heavy penalty
+    } else {
+      // ALL words matched - big bonus
+      score += 500 * searchWords.length;
+    }
   }
 
   if (normalizedName === normalizedQuery) score += 2000;
