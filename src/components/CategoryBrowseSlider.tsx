@@ -5,25 +5,25 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-import catSparkPlugs from "@/assets/categories/cat-spark-plugs.jpg";
-import catCooling from "@/assets/categories/cat-cooling.jpg";
-import catBelts from "@/assets/categories/cat-belts.jpg";
-import catSuspension from "@/assets/categories/cat-suspension.jpg";
-import catClutch from "@/assets/categories/cat-clutch.jpg";
-import catFilters from "@/assets/categories/cat-filters.jpg";
-import catBody from "@/assets/categories/cat-body.jpg";
-import catOilGasoline from "@/assets/categories/cat-oil-gasoline.jpg";
-import catOilDiesel from "@/assets/categories/cat-oil-diesel.jpg";
-import catOilTransmission from "@/assets/categories/cat-oil-transmission.jpg";
-import catBrakePads from "@/assets/categories/cat-brake-pads.jpg";
-import catHeadlights from "@/assets/categories/cat-headlights.jpg";
-import catOilSeals from "@/assets/categories/cat-oil-seals.jpg";
-import catBumpers from "@/assets/categories/cat-bumpers.jpg";
-import catRubber from "@/assets/categories/cat-rubber.jpg";
-import catShocks from "@/assets/categories/cat-shocks.jpg";
-import catMirrors from "@/assets/categories/cat-mirrors.jpg";
-import catGaskets from "@/assets/categories/cat-gaskets.jpg";
-import catDynamo from "@/assets/categories/cat-dynamo.jpg";
+import catSparkPlugs from "@/assets/categories/cat-spark-plugs.webp";
+import catCooling from "@/assets/categories/cat-cooling.webp";
+import catBelts from "@/assets/categories/cat-belts.webp";
+import catSuspension from "@/assets/categories/cat-suspension.webp";
+import catClutch from "@/assets/categories/cat-clutch.webp";
+import catFilters from "@/assets/categories/cat-filters.webp";
+import catBody from "@/assets/categories/cat-body.webp";
+import catOilGasoline from "@/assets/categories/cat-oil-gasoline.webp";
+import catOilDiesel from "@/assets/categories/cat-oil-diesel.webp";
+import catOilTransmission from "@/assets/categories/cat-oil-transmission.webp";
+import catBrakePads from "@/assets/categories/cat-brake-pads.webp";
+import catHeadlights from "@/assets/categories/cat-headlights.webp";
+import catOilSeals from "@/assets/categories/cat-oil-seals.webp";
+import catBumpers from "@/assets/categories/cat-bumpers.webp";
+import catRubber from "@/assets/categories/cat-rubber.webp";
+import catShocks from "@/assets/categories/cat-shocks.webp";
+import catMirrors from "@/assets/categories/cat-mirrors.webp";
+import catGaskets from "@/assets/categories/cat-gaskets.webp";
+import catDynamo from "@/assets/categories/cat-dynamo.webp";
 
 // Map category slugs to visuals for the premium slider cards
 const categoryAssets: Record<string, { image: string; accent: string; searchTerm: string }> = {

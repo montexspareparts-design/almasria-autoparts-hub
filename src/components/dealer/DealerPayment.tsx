@@ -6,10 +6,10 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import visaLogo from "@/assets/visa-logo.png";
-import mastercardLogo from "@/assets/mastercard-logo.png";
-import meezaLogo from "@/assets/meeza-logo.png";
-import instapayLogo from "@/assets/instapay-logo.png";
+import visaLogo from "@/assets/visa-logo.webp";
+import mastercardLogo from "@/assets/mastercard-logo.webp";
+import meezaLogo from "@/assets/meeza-logo.webp";
+import instapayLogo from "@/assets/instapay-logo.webp";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";

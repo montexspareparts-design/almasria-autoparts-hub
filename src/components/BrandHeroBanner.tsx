@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { ArrowRight, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
-import partsBg from "@/assets/parts-bg.jpg";
+import partsBg from "@/assets/parts-bg.webp";
 
 interface BrandHeroBannerProps {
   logo: string;

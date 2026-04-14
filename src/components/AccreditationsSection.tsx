@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Award, Star } from "lucide-react";
-import awardTrophy from "@/assets/award-trophy.jpg";
-import autotechExhibition from "@/assets/autotech-exhibition.jpg";
+import awardTrophy from "@/assets/award-trophy.webp";
+import autotechExhibition from "@/assets/autotech-exhibition.webp";
 
 const accreditations = [
   {

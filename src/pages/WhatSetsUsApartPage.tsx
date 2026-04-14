@@ -10,14 +10,14 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 // Images
-import heroWarehouse from "@/assets/hero-warehouse.jpg";
-import warehouseLogistics from "@/assets/warehouse-logistics.jpg";
-import partnershipToyota from "@/assets/partnership-toyota.jpg";
-import distributionMap from "@/assets/distribution-map.jpg";
-import erpSystem from "@/assets/erp-system.jpg";
+import heroWarehouse from "@/assets/hero-warehouse.webp";
+import warehouseLogistics from "@/assets/warehouse-logistics.webp";
+import partnershipToyota from "@/assets/partnership-toyota.webp";
+import distributionMap from "@/assets/distribution-map.webp";
+import erpSystem from "@/assets/erp-system.webp";
 import brandMtx from "@/assets/brand-mtx.webp";
-import dubaiOffice from "@/assets/dubai-office.jpg";
-import autotechExhibition from "@/assets/autotech-exhibition.jpg";
+import dubaiOffice from "@/assets/dubai-office.webp";
+import autotechExhibition from "@/assets/autotech-exhibition.webp";
 
 const CountUpInline = ({ target, suffix = "" }: { target: number; suffix?: string }) => {
   const [count, setCount] = useState(0);

@@ -72,7 +72,7 @@ const HeroSection = () => {
     enabled: true,
   });
 
-  const videoSrc = heroVideoUrl || "/videos/hero-cinematic-v2.mp4";
+  const videoSrc = heroVideoUrl || "/videos/hero-cinematic-v3.mp4";
 
   const stats = [
     { value: 25, suffix: "+", label: t("hero.stat_years") },

@@ -16,12 +16,12 @@ import { useProductListing } from "@/hooks/useProductListing";
 import brandMtx from "@/assets/brand-mtx.webp";
 import brandDenso from "@/assets/brand-denso.webp";
 import brandAisin from "@/assets/brand-aisin.webp";
-import mtxHeroBg from "@/assets/mtx-hero-bg.jpg";
-import catFilters from "@/assets/cat-mtx-filters.jpg";
-import catBrakes from "@/assets/cat-mtx-brakes.jpg";
-import catSuspension from "@/assets/cat-mtx-suspension.jpg";
-import catElectrical from "@/assets/cat-mtx-electrical.jpg";
-import catBelts from "@/assets/cat-mtx-belts.jpg";
+import mtxHeroBg from "@/assets/mtx-hero-bg.webp";
+import catFilters from "@/assets/cat-mtx-filters.webp";
+import catBrakes from "@/assets/cat-mtx-brakes.webp";
+import catSuspension from "@/assets/cat-mtx-suspension.webp";
+import catElectrical from "@/assets/cat-mtx-electrical.webp";
+import catBelts from "@/assets/cat-mtx-belts.webp";
 
 const distributedBrands = [
   { logo: brandMtx, name: "MTX Aftermarket", desc: "علامتنا الخاصة — قطع غيار مستوردة بجودة تضاهي الأصلية وبسعر تنافسي.", to: "/products/mtx-aftermarket", scale: "scale-150" },
