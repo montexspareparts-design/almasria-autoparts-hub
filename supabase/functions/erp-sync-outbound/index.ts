@@ -1141,18 +1141,37 @@ Deno.serve(async (req) => {
         const cat8 = Number(erp.itemcat8id ?? 0);
         const name = String(erp.name || "").toLowerCase();
 
-        // ── Level 1: Oils (itemcatid=2) ──
+        // ── Level 0: Name-based PRIORITY classification (overrides ERP category fields) ──
+        // These are high-confidence name matches that should always win
+        if (name.includes("تيل") || name.includes("فرامل") || name.includes("brake")) return "brakes";
+        if (name.includes("فلتر") || name.includes("filter")) return "filters";
+        if (name.includes("بوجيه") || name.includes("بوجية") || name.includes("بواجي") || name.includes("كويل")) return "spark-plugs-coils";
+        if (name.includes("دبرياج") || name.includes("كلاتش")) return "clutch";
+        if (name.includes("اويل سيل") || name.includes("سيل ")) return "oil-seals";
+        if (name.includes("جوان")) return "gaskets";
+        if (name.includes("مساعد")) return "shocks";
+        if (name.includes("كشاف") || name.includes("لمبه") || name.includes("لمبة") || name.includes("فانوس")) return "lights";
+        if (name.includes("اكصدام") || name.includes("اكسدام") || name.includes("بامبر")) return "bumpers";
+        if (name.includes("مرايا") || name.includes("مراية")) return "mirrors";
+        if (name.includes("كاوتش")) return "rubber";
+        if (name.includes("دينامو") || name.includes("مارش") || name.includes("طلمبة بنزين")) return "electrical";
+        if (name.includes("سير ") || name.includes("بلي") || name.includes("بيرنج")) return "belts-bearings";
+        if (name.includes("عفشه") || name.includes("عفشة") || name.includes("مقص") || name.includes("جلبه") || name.includes("جلبة")) return "suspension";
+        if (name.includes("عمه") || name.includes("عمة") || name.includes("مقود")) return "steering";
+        if (name.includes("رديتر") || name.includes("ريدياتير") || name.includes("ثرموستات") || name.includes("مروحة")) return "water-cooling";
+        if (name.includes("فيبر") || name.includes("كبوت") || name.includes("شنطه") || name.includes("باب")) return "fiber-parts";
+
+        // ── Level 1: Oils (itemcatid=2) — only if name didn't match above ──
         if (cat1 === 2) {
           if (cat2 === 75) return "oils-diesel";
           if (cat2 === 77) return "oils-gasoline";
           if ([88, 89, 100].includes(cat2)) return "oils-transmission";
-          // Fallback by name
           if (name.includes("ديزل") || name.includes("diesel")) return "oils-diesel";
           if (name.includes("بنزين") || name.includes("gasoline")) return "oils-gasoline";
           if (name.includes("فتيس") || name.includes("كرونه") || name.includes("كرونة") || name.includes("نقل") || name.includes("باور")) return "oils-transmission";
-          // Generic oil - check for diesel keywords
-          if (cat4 === 16 || cat4 === 1) return "oils-gasoline"; // Default oils to gasoline
-          return "oils-gasoline";
+          if (name.includes("زيت")) return "oils-gasoline";
+          return null; // Don't default unknown cat1=2 items
+        }
         }
 
         // ── Level 2: Parts (itemcatid=1) ──
