@@ -24,11 +24,9 @@ const RoleSelectionDialog = ({ open, onOpenChange }: RoleSelectionDialogProps) =
   const AdminIcon = isAdmin ? Shield : Users;
 
   return (
-    <Dialog open={open} onOpenChange={() => {}}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v) { localStorage.setItem("almasria_role_dismissed", "1"); onOpenChange(false); } }}>
       <DialogContent
         className="max-w-sm p-0 gap-0 overflow-hidden border-border/60"
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <DialogHeader className="p-6 pb-2 text-center">
           <DialogTitle className="text-lg font-black text-foreground">
