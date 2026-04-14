@@ -8,7 +8,7 @@ import Navbar from "@/components/Navbar";
 import ProductListingSection from "@/components/ProductListingSection";
 
 import { useProductListing } from "@/hooks/useProductListing";
-import heroBg from "@/assets/parts-bg.jpg";
+import heroBg from "@/assets/parts-bg.webp";
 
 const Footer = lazy(() => import("@/components/Footer"));
 

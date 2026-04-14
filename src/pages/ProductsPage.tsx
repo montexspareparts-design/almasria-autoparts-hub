@@ -27,8 +27,8 @@ import brandToyotaOil from "@/assets/brand-toyota-oil.webp";
 import brandMtx from "@/assets/brand-mtx.webp";
 import brandDenso from "@/assets/brand-denso.webp";
 import brandAisin from "@/assets/brand-aisin.webp";
-import brandFbkBrakes from "@/assets/brand-fbk-logo.png";
-import oilBg from "@/assets/oil-hero-bg.jpg";
+import brandFbkBrakes from "@/assets/brand-fbk-logo.webp";
+import oilBg from "@/assets/oil-hero-bg.webp";
 
 const brandConfig: Record<string, { title: string; subtitle: string; description: string; badge: string; brandKey: string; logo: string; backgroundImage?: string; logoScale?: number }> = {
   "toyota-genuine": {
