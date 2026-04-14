@@ -791,16 +791,17 @@ export function useProductListing(options: UseProductListingOptions = {}) {
   /* ── Product detail dialog price helpers ── */
   const getDialogPrice = useCallback((product: any) => {
     if (!product) return null;
-    if (!user) return null;
+    // Guests and retail users always see base_price
     if (!isDealer) return product.base_price;
     // Retail tier sees base_price directly without reveal
     if (isRetailTier) return product.base_price;
     if (viewedProductIds.includes(product.id)) return getProductPrice(product);
     return null;
-  }, [user, isDealer, isRetailTier, viewedProductIds, getProductPrice]);
+  }, [isDealer, isRetailTier, viewedProductIds, getProductPrice]);
 
   const getDialogPriceLabel = useCallback((product: any) => {
-    if (!product || !user) return undefined;
+    if (!product) return undefined;
+    if (!user) return "سعر قطاعي";
     if (isDealer && isRetailTier) return "سعر قطاعي";
     if (isDealer && viewedProductIds.includes(product.id)) return "سعر الجملة الخاص بك";
     if (!isDealer) return "سعر قطاعي";
