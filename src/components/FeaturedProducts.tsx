@@ -14,7 +14,7 @@ const DAILY_LIMIT = 20;
 
 const FeaturedProducts = () => {
   const { addItem } = useCart();
-  const { user, isDealer } = useAuth();
+  const { user, isDealer, dealerAccount } = useAuth();
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const queryClient = useQueryClient();
 
@@ -43,6 +43,26 @@ const FeaturedProducts = () => {
   });
 
   const limitReached = dailyViewCount >= DAILY_LIMIT;
+
+  // Fetch tier prices for dealers (wholesale price from ERP sync)
+  const { data: tierPrices } = useQuery({
+    queryKey: ["tier_prices_featured", dealerAccount?.tier],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("product_tier_prices")
+        .select("product_id, price")
+        .eq("tier", dealerAccount!.tier as any);
+      const map: Record<string, number> = {};
+      (data || []).forEach((tp) => { map[tp.product_id] = tp.price; });
+      return map;
+    },
+    enabled: !!dealerAccount?.tier,
+  });
+
+  const getDealerPrice = useCallback((product: any) => {
+    if (tierPrices && tierPrices[product.id]) return tierPrices[product.id];
+    return product.base_price;
+  }, [tierPrices]);
 
   const recordView = useCallback(async (productId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -79,7 +99,7 @@ const FeaturedProducts = () => {
       name_ar: product.name_ar,
       sku: product.sku,
       image_url: product.image_url,
-      unit_price: product.sale_price || product.base_price,
+      unit_price: isDealer ? getDealerPrice(product) : (product.sale_price || product.base_price),
       quantity: product.min_order_qty || 1,
       stock_quantity: product.stock_quantity,
       min_order_qty: product.min_order_qty,
@@ -192,7 +212,7 @@ const FeaturedProducts = () => {
                     ) : isDealer ? (
                       viewedProductIds.includes(product.id) ? (
                         <span className="text-primary font-black text-lg">
-                          {product.base_price.toLocaleString("ar-EG")} ج.م
+                          {getDealerPrice(product).toLocaleString("ar-EG")} ج.م
                         </span>
                       ) : limitReached ? (
                         <span className="text-muted-foreground text-xs flex items-center gap-1"><Lock className="w-3 h-3" />استنفدت الحد اليومي</span>
@@ -280,7 +300,7 @@ const FeaturedProducts = () => {
           product={selectedProduct}
           open={!!selectedProduct}
           onOpenChange={(open) => !open && setSelectedProduct(null)}
-          price={!user ? null : isDealer ? (viewedProductIds.includes(selectedProduct.id) ? selectedProduct.base_price : null) : (selectedProduct.sale_price || selectedProduct.base_price)}
+          price={!user ? null : isDealer ? (viewedProductIds.includes(selectedProduct.id) ? getDealerPrice(selectedProduct) : null) : (selectedProduct.sale_price || selectedProduct.base_price)}
           priceLabel={!user ? "سجّل لرؤية السعر" : isDealer && viewedProductIds.includes(selectedProduct.id) ? "سعر الجملة الخاص بك" : undefined}
           isLoggedIn={!!user}
           isDealer={isDealer}
@@ -302,7 +322,7 @@ const FeaturedProducts = () => {
               name_ar: product.name_ar,
               sku: product.sku,
               image_url: product.image_url,
-              unit_price: product.sale_price || product.base_price,
+              unit_price: isDealer ? getDealerPrice(product) : (product.sale_price || product.base_price),
               quantity: product.min_order_qty || 1,
               stock_quantity: product.stock_quantity,
               min_order_qty: product.min_order_qty,
