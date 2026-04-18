@@ -1168,6 +1168,47 @@ export type Database = {
           },
         ]
       }
+      price_change_history: {
+        Row: {
+          change_percentage: number
+          created_at: string
+          id: string
+          new_price: number
+          notified_dealers_count: number | null
+          old_price: number
+          product_id: string
+          source: string
+        }
+        Insert: {
+          change_percentage: number
+          created_at?: string
+          id?: string
+          new_price: number
+          notified_dealers_count?: number | null
+          old_price: number
+          product_id: string
+          source?: string
+        }
+        Update: {
+          change_percentage?: number
+          created_at?: string
+          id?: string
+          new_price?: number
+          notified_dealers_count?: number | null
+          old_price?: number
+          product_id?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_change_history_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       price_list_products: {
         Row: {
           id: string
