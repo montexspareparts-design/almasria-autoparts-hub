@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { LazyImage } from "@/components/ui/lazy-image";
 import { motion, AnimatePresence } from "framer-motion";
 import { ListPlus, Plus, Minus, Trash2, Package, ShoppingCart, Edit2, Check, X, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
