@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { LazyImage } from "@/components/ui/lazy-image";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -69,15 +70,14 @@ const DealerOffers = () => {
             return (
               <Card key={product.id} className="border-border/50 overflow-hidden group">
                 <div className="relative">
-                  {product.image_url ? (
-                    <img src={product.image_url} alt={product.name_ar} className="w-full h-36 object-cover" />
-                  ) : (
-                    <div className="w-full h-36 bg-muted flex items-center justify-center">
-                      <Tag className="w-8 h-8 text-muted-foreground/30" />
-                    </div>
-                  )}
+                  <LazyImage
+                    src={product.image_url}
+                    alt={product.name_ar}
+                    wrapperClassName="w-full h-36"
+                    className="w-full h-full object-cover"
+                  />
                   {discount > 0 && (
-                    <Badge className="absolute top-2 right-2 bg-destructive text-destructive-foreground text-[10px]">
+                    <Badge className="absolute top-2 right-2 bg-destructive text-destructive-foreground text-[10px] z-10">
                       <Percent className="w-3 h-3 ml-0.5" />
                       خصم {discount}%
                     </Badge>
