@@ -361,6 +361,33 @@ export type Database = {
           },
         ]
       }
+      dealer_ai_recommendations: {
+        Row: {
+          created_at: string
+          expires_at: string
+          generated_at: string
+          id: string
+          recommendations: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          generated_at?: string
+          id?: string
+          recommendations?: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          generated_at?: string
+          id?: string
+          recommendations?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       dealer_applications: {
         Row: {
           additional_docs: string[] | null
