@@ -728,7 +728,12 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
                         {items.map((item) => (
                           <div key={item.id} className="flex items-center gap-3 bg-card rounded-xl p-3 border border-border/20">
                             {item.products?.image_url ? (
-                              <img src={item.products.image_url} alt="" className="w-12 h-12 rounded-lg object-contain bg-muted/30 shrink-0 p-1" />
+                              <LazyImage
+                                src={item.products.image_url}
+                                alt={item.products?.name_ar || ""}
+                                wrapperClassName="w-12 h-12 rounded-lg bg-muted/30 shrink-0"
+                                className="w-full h-full object-contain p-1"
+                              />
                             ) : (
                               <div className="w-12 h-12 rounded-lg bg-muted/30 flex items-center justify-center shrink-0">
                                 <Package className="w-5 h-5 text-muted-foreground/20" />

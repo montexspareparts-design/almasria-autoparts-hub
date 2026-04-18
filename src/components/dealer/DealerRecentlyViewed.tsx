@@ -103,11 +103,13 @@ const DealerRecentlyViewed = ({ userId, isRTL, onPriceItem, onAddToOrder }: Prop
               transition-all duration-500"
             >
               <div className="aspect-square bg-gradient-to-br from-muted/10 to-muted/30 relative overflow-hidden flex items-center justify-center">
-                {p.image_url
-                  ? <img src={p.image_url} alt={p.name_ar} className="w-full h-full object-contain p-3 group-hover:scale-110 transition-transform duration-700" loading="lazy" />
-                  : <Package className="w-8 h-8 text-muted-foreground/10" />
-                }
-                <span className={`absolute top-2.5 right-2.5 w-2 h-2 rounded-full ring-[2.5px] ring-card ${p.stock_quantity > 0 ? "bg-emerald-500" : "bg-muted-foreground/25"}`} />
+                <LazyImage
+                  src={p.image_url}
+                  alt={p.name_ar}
+                  wrapperClassName="absolute inset-0 bg-transparent"
+                  className="w-full h-full object-contain p-3 group-hover:scale-110 transition-transform duration-700"
+                />
+                <span className={`absolute top-2.5 right-2.5 w-2 h-2 rounded-full ring-[2.5px] ring-card z-10 ${p.stock_quantity > 0 ? "bg-emerald-500" : "bg-muted-foreground/25"}`} />
               </div>
               <div className="p-2.5 border-t border-border/20">
                 <p className="text-[11px] font-bold text-foreground line-clamp-1 mb-0.5">{isRTL ? p.name_ar : (p.name_en || p.name_ar)}</p>

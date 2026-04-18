@@ -485,15 +485,12 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
                 >
                   <div className="flex items-center gap-3 p-3">
                     {/* Image */}
-                    <div className="w-12 h-12 rounded-lg bg-muted/50 overflow-hidden shrink-0">
-                      {item.product.image_url ? (
-                        <img src={item.product.image_url} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Package className="w-5 h-5 text-muted-foreground/30" />
-                        </div>
-                      )}
-                    </div>
+                    <LazyImage
+                      src={item.product.image_url}
+                      alt={item.product.name_ar}
+                      wrapperClassName="w-12 h-12 rounded-lg bg-muted/50 shrink-0"
+                      className="w-full h-full object-cover"
+                    />
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">

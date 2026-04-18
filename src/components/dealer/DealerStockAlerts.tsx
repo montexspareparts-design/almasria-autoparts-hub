@@ -97,13 +97,12 @@ const DealerStockAlerts = () => {
                   const typeInfo = alertTypeLabels[alert.alert_type] || alertTypeLabels.back_in_stock;
                   return (
                     <div key={alert.id} className="flex items-center gap-3 p-3.5">
-                      {alert.product?.image_url ? (
-                        <img src={alert.product.image_url} alt="" className="w-11 h-11 rounded-lg bg-white object-contain p-0.5 border border-border shrink-0" />
-                      ) : (
-                        <div className="w-11 h-11 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                          <Package className="w-5 h-5 text-muted-foreground/40" />
-                        </div>
-                      )}
+                      <LazyImage
+                        src={alert.product?.image_url}
+                        alt={alert.product?.name_ar || "منتج"}
+                        wrapperClassName="w-11 h-11 rounded-lg bg-white border border-border shrink-0"
+                        className="w-full h-full object-contain p-0.5"
+                      />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">{alert.product?.name_ar || "منتج"}</p>
                         <div className="flex items-center gap-2 mt-0.5">

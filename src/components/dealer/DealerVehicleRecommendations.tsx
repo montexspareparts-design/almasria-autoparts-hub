@@ -176,18 +176,12 @@ const DealerVehicleRecommendations = ({ compact }: DealerVehicleRecommendationsP
                   {/* Shimmer */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out z-10 pointer-events-none" />
 
-                  {product.image_url ? (
-                    <img
-                      src={product.image_url}
-                      alt={product.name_ar}
-                      className="w-full h-full object-contain p-4 mix-blend-multiply group-hover:scale-[1.06] transition-transform duration-500"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Package className="w-12 h-12 text-muted-foreground/10" />
-                    </div>
-                  )}
+                  <LazyImage
+                    src={product.image_url}
+                    alt={product.name_ar}
+                    wrapperClassName="absolute inset-0 bg-transparent"
+                    className="w-full h-full object-contain p-4 mix-blend-multiply group-hover:scale-[1.06] transition-transform duration-500"
+                  />
 
                   {/* Stock dot */}
                   <div className={`absolute top-2.5 right-2.5 w-1.5 h-1.5 rounded-full ring-[1.5px] ring-white shadow-sm z-20 ${
