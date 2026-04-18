@@ -160,6 +160,7 @@ const DealerDashboard = () => {
           </div>
           <DealerProductSearch onNavigateToCart={() => setActiveTab("cart")} sharedCart={dealerCart} />
           <DealerVehicleRecommendations compact />
+          <Suspense fallback={null}><DealerAIRecommendations /></Suspense>
           <Suspense fallback={null}><DealerBottomCarousel onNavigateToPriceLists={() => setActiveTab("price_lists")} /></Suspense>
         </div>
       );
