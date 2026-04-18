@@ -1,0 +1,115 @@
+import { useEffect, useRef, useState, ImgHTMLAttributes } from "react";
+import { Package } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface LazyImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, "src" | "loading"> {
+  src: string | null | undefined;
+  alt: string;
+  /** Wrapper className (controls box dimensions) */
+  wrapperClassName?: string;
+  /** Image className (object-fit etc) */
+  className?: string;
+  /** Show fallback icon when no src or load error */
+  fallbackIcon?: boolean;
+  /** Eager load (above-the-fold). Default lazy. */
+  eager?: boolean;
+}
+
+/**
+ * High-performance image component:
+ * - IntersectionObserver: only fetches when ~200px from viewport
+ * - Skeleton shimmer until loaded
+ * - decoding="async" + fetchpriority="low"
+ * - Graceful fallback on error
+ * - Static cache of loaded URLs to skip skeleton on revisit
+ */
+const loadedCache = new Set<string>();
+
+export const LazyImage = ({
+  src,
+  alt,
+  wrapperClassName,
+  className,
+  fallbackIcon = true,
+  eager = false,
+  ...rest
+}: LazyImageProps) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(eager);
+  const [loaded, setLoaded] = useState(() => (src ? loadedCache.has(src) : false));
+  const [errored, setErrored] = useState(false);
+
+  useEffect(() => {
+    if (eager || visible || !ref.current) return;
+    const el = ref.current;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            setVisible(true);
+            io.disconnect();
+            break;
+          }
+        }
+      },
+      { rootMargin: "200px 0px", threshold: 0.01 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [eager, visible]);
+
+  // Reset state when src changes
+  useEffect(() => {
+    if (!src) return;
+    if (loadedCache.has(src)) {
+      setLoaded(true);
+      setErrored(false);
+    } else {
+      setLoaded(false);
+      setErrored(false);
+    }
+  }, [src]);
+
+  const showImage = !!src && !errored && visible;
+  const showFallback = (!src || errored) && fallbackIcon;
+
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        "relative overflow-hidden bg-muted/30",
+        !loaded && showImage && "animate-pulse",
+        wrapperClassName
+      )}
+    >
+      {showImage && (
+        <img
+          src={src!}
+          alt={alt}
+          loading={eager ? "eager" : "lazy"}
+          decoding="async"
+          // @ts-expect-error fetchpriority is valid HTML, not yet in React types
+          fetchpriority={eager ? "high" : "low"}
+          onLoad={() => {
+            loadedCache.add(src!);
+            setLoaded(true);
+          }}
+          onError={() => setErrored(true)}
+          className={cn(
+            "transition-opacity duration-300",
+            loaded ? "opacity-100" : "opacity-0",
+            className
+          )}
+          {...rest}
+        />
+      )}
+      {showFallback && (
+        <div className="w-full h-full flex items-center justify-center">
+          <Package className="w-1/3 h-1/3 text-muted-foreground/20" />
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default LazyImage;
