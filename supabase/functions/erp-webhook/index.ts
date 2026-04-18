@@ -192,39 +192,95 @@ Deno.serve(async (req) => {
     else if (event === "price.updated") {
       const updates = data.items || [];
       let updated = 0;
+      const DROP_THRESHOLD_PCT = 2.5; // Notify only if drop >= 2.5%
 
       for (const item of updates) {
-        const updateData: any = { base_price: item.price };
-        if (item.sale_price !== undefined) updateData.sale_price = item.sale_price;
+        const newPrice = Number(item.price);
+        if (!newPrice || newPrice <= 0) continue;
 
         const erpCode = (item.itemCode || item.id || "").toString().trim();
         const sku = item.sku || "";
 
-        // Try SKU (part number) first, then erp_item_code
-        let result;
+        // Find product first to capture old price
+        let product: any = null;
         if (sku) {
-          result = await supabase.from("products").update(updateData).eq("sku", sku);
+          const { data: p } = await supabase
+            .from("products")
+            .select("id, name_ar, sku, base_price")
+            .eq("sku", sku)
+            .maybeSingle();
+          product = p;
         }
-        if ((!sku || result?.error) && erpCode) {
-          result = await supabase.from("products").update(updateData).eq("erp_item_code", erpCode);
+        if (!product && erpCode) {
+          const { data: p } = await supabase
+            .from("products")
+            .select("id, name_ar, sku, base_price")
+            .eq("erp_item_code", erpCode)
+            .maybeSingle();
+          product = p;
         }
-        if (!result?.error) updated++;
-      }
+        if (!product) continue;
 
-      // Notify dealers about price changes
-      const { data: dealers } = await supabase
-        .from("dealer_accounts")
-        .select("user_id")
-        .eq("is_active", true);
+        const oldPrice = Number(product.base_price);
+        const updateData: any = { base_price: newPrice };
+        if (item.sale_price !== undefined) updateData.sale_price = item.sale_price;
 
-      if (dealers && dealers.length > 0) {
-        const notifications = dealers.map((d: any) => ({
-          user_id: d.user_id,
-          title: "💰 تحديث أسعار جديد",
-          message: `تم تحديث أسعار ${updated} صنف. تصفح كشوفات الأسعار للاطلاع على الأسعار الجديدة.`,
-          type: "info",
-        }));
-        await supabase.from("notifications").insert(notifications);
+        const { error: updErr } = await supabase
+          .from("products")
+          .update(updateData)
+          .eq("id", product.id);
+
+        if (updErr) continue;
+        updated++;
+
+        // Skip if no real change
+        if (oldPrice === newPrice) continue;
+
+        const changePct = ((newPrice - oldPrice) / oldPrice) * 100;
+        let notifiedCount = 0;
+
+        // Only notify on price DROPS >= 2.5%
+        if (changePct <= -DROP_THRESHOLD_PCT) {
+          // Find dealers who viewed this product's price in last 48h
+          const since = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+          const { data: views } = await supabase
+            .from("dealer_price_views")
+            .select("user_id")
+            .eq("product_id", product.id)
+            .gte("viewed_at", since);
+
+          const dealerUserIds = Array.from(
+            new Set((views || []).map((v: any) => v.user_id))
+          );
+
+          if (dealerUserIds.length > 0) {
+            try {
+              await supabase.functions.invoke("notify-price-drop-whatsapp", {
+                body: {
+                  productId: product.id,
+                  productName: product.name_ar,
+                  sku: product.sku,
+                  oldPrice,
+                  newPrice,
+                  dealerUserIds,
+                },
+              });
+              notifiedCount = dealerUserIds.length;
+            } catch (e) {
+              console.error("Failed to send price drop notifications:", e);
+            }
+          }
+        }
+
+        // Log price change in history
+        await supabase.from("price_change_history").insert({
+          product_id: product.id,
+          old_price: oldPrice,
+          new_price: newPrice,
+          change_percentage: Number(changePct.toFixed(2)),
+          source: "erp_webhook",
+          notified_dealers_count: notifiedCount,
+        });
       }
 
       await supabase.from("erp_sync_logs").insert({
