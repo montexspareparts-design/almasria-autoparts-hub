@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { LazyImage } from "@/components/ui/lazy-image";
 import { motion } from "framer-motion";
 import { RefreshCw, Package, Plus, ChevronLeft, ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -127,10 +128,12 @@ const DealerPreviouslyPurchased = ({ userId, isRTL, onAddToOrder }: Props) => {
               transition-all duration-500"
             >
               <div className="aspect-square bg-gradient-to-br from-muted/10 to-muted/30 relative overflow-hidden flex items-center justify-center">
-                {p.image_url
-                  ? <img src={p.image_url} alt={p.name_ar} className="w-full h-full object-contain p-3 group-hover:scale-110 transition-transform duration-700" loading="lazy" />
-                  : <Package className="w-8 h-8 text-muted-foreground/10" />
-                }
+                <LazyImage
+                  src={p.image_url}
+                  alt={p.name_ar}
+                  wrapperClassName="absolute inset-0 bg-transparent"
+                  className="w-full h-full object-contain p-3 group-hover:scale-110 transition-transform duration-700"
+                />
                 {/* Reorder badge */}
                 <span className="absolute top-2 right-2 text-[9px] font-bold bg-emerald-500/10 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200/30">
                   {p.total_qty_ordered}x {isRTL ? "طلب" : "ordered"}

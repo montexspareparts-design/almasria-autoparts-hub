@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { LazyImage } from "@/components/ui/lazy-image";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
@@ -107,13 +108,12 @@ const DealerFavorites = () => {
               <Card key={fav.id} className="border-border/50">
                 <CardContent className="p-3">
                   <div className="flex items-start gap-3">
-                    {product.image_url ? (
-                      <img src={product.image_url} alt="" className="w-14 h-14 rounded-lg object-cover shrink-0" />
-                    ) : (
-                      <div className="w-14 h-14 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                        <Package className="w-6 h-6 text-muted-foreground" />
-                      </div>
-                    )}
+                    <LazyImage
+                      src={product.image_url}
+                      alt={product.name_ar}
+                      wrapperClassName="w-14 h-14 rounded-lg bg-muted shrink-0"
+                      className="w-full h-full object-cover"
+                    />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">{product.name_ar}</p>
                       <p className="text-[11px] text-muted-foreground">{product.sku}</p>

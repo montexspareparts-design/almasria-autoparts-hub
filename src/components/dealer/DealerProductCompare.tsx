@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { LazyImage } from "@/components/ui/lazy-image";
 import { motion } from "framer-motion";
 import { Scale, Plus, X, Package, CheckCircle2, XCircle, Hash, Box, Car, Tag, Layers } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -104,10 +105,12 @@ const DealerProductCompare = () => {
               {product ? (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ ease }}>
                   <div className="aspect-[4/3] bg-gradient-to-br from-muted/10 to-muted/30 relative flex items-center justify-center">
-                    {product.image_url
-                      ? <img src={product.image_url} alt={product.name_ar} className="w-full h-full object-contain p-4" />
-                      : <Package className="w-12 h-12 text-muted-foreground/10" />
-                    }
+                    <LazyImage
+                      src={product.image_url}
+                      alt={product.name_ar}
+                      wrapperClassName="absolute inset-0 bg-transparent"
+                      className="w-full h-full object-contain p-4"
+                    />
                     <button onClick={() => clearSlot(idx)} className="absolute top-2 right-2 w-7 h-7 rounded-lg bg-card/80 backdrop-blur-sm border border-border/40 flex items-center justify-center hover:bg-destructive/10 transition-colors">
                       <X className="w-3.5 h-3.5 text-muted-foreground" />
                     </button>
@@ -159,9 +162,12 @@ const DealerProductCompare = () => {
             <div className="max-h-[250px] overflow-y-auto space-y-1.5">
               {searchResults.map(p => (
                 <button key={p.id} onClick={() => selectProduct(p)} className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-muted/50 transition-colors text-right">
-                  <div className="w-10 h-10 rounded-lg bg-muted/30 shrink-0 overflow-hidden flex items-center justify-center">
-                    {p.image_url ? <img src={p.image_url} alt="" className="w-full h-full object-contain p-1" /> : <Package className="w-4 h-4 text-muted-foreground/20" />}
-                  </div>
+                  <LazyImage
+                    src={p.image_url}
+                    alt={p.name_ar}
+                    wrapperClassName="w-10 h-10 rounded-lg bg-muted/30 shrink-0"
+                    className="w-full h-full object-contain p-1"
+                  />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold text-foreground truncate">{isRTL ? p.name_ar : (p.name_en || p.name_ar)}</p>
                     <p className="text-[10px] text-muted-foreground font-mono">{p.sku}</p>

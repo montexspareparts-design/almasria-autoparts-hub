@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { LazyImage } from "@/components/ui/lazy-image";
 import { motion, AnimatePresence } from "framer-motion";
 import { ListPlus, Plus, Minus, Trash2, Package, ShoppingCart, Edit2, Check, X, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -216,13 +217,12 @@ const DealerShoppingLists = () => {
                           <>
                             {list.items.map(item => (
                               <div key={item.id} className="flex items-center gap-3 bg-card rounded-xl p-3 border border-border/20">
-                                {item.product?.image_url ? (
-                                  <img src={item.product.image_url} alt="" className="w-10 h-10 rounded-lg object-contain bg-muted/30 p-1 shrink-0" />
-                                ) : (
-                                  <div className="w-10 h-10 rounded-lg bg-muted/30 flex items-center justify-center shrink-0">
-                                    <Package className="w-4 h-4 text-muted-foreground/20" />
-                                  </div>
-                                )}
+                                <LazyImage
+                                  src={item.product?.image_url}
+                                  alt={item.product?.name_ar || ""}
+                                  wrapperClassName="w-10 h-10 rounded-lg bg-muted/30 shrink-0"
+                                  className="w-full h-full object-contain p-1"
+                                />
                                 <div className="flex-1 min-w-0">
                                   <p className="text-xs font-bold text-foreground truncate">{item.product?.name_ar}</p>
                                   <p className="text-[10px] text-muted-foreground font-mono">{item.product?.sku}</p>

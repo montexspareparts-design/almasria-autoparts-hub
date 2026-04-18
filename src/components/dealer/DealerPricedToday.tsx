@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { LazyImage } from "@/components/ui/lazy-image";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -341,15 +342,12 @@ const DealerPricedToday = ({ onConvertToOrder, sharedCart }: DealerPricedTodayPr
                       </button>
 
                       {/* Image */}
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-muted/40 overflow-hidden shrink-0 border border-border/30">
-                        {item.product.image_url ? (
-                          <img src={item.product.image_url} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Package className="w-7 h-7 text-muted-foreground/25" />
-                          </div>
-                        )}
-                      </div>
+                      <LazyImage
+                        src={item.product.image_url}
+                        alt={item.product.name_ar}
+                        wrapperClassName="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-muted/40 shrink-0 border border-border/30"
+                        className="w-full h-full object-cover"
+                      />
 
                       {/* Info */}
                       <div className="flex-1 min-w-0 space-y-2">
