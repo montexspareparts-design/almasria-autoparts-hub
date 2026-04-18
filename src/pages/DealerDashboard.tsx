@@ -31,6 +31,7 @@ const DealerPricedToday = lazy(() => import("@/components/dealer/DealerPricedTod
 const DealerCart = lazy(() => import("@/components/dealer/DealerCart"));
 const VehicleTypeDialog = lazy(() => import("@/components/dealer/VehicleTypeDialog"));
 const DealerVehicleRecommendations = lazy(() => import("@/components/dealer/DealerVehicleRecommendations"));
+const DealerAIRecommendations = lazy(() => import("@/components/dealer/DealerAIRecommendations"));
 const DealerBottomCarousel = lazy(() => import("@/components/dealer/DealerBottomCarousel"));
 
 const DealerDashboard = () => {
@@ -159,6 +160,7 @@ const DealerDashboard = () => {
           </div>
           <DealerProductSearch onNavigateToCart={() => setActiveTab("cart")} sharedCart={dealerCart} />
           <DealerVehicleRecommendations compact />
+          <Suspense fallback={null}><DealerAIRecommendations /></Suspense>
           <Suspense fallback={null}><DealerBottomCarousel onNavigateToPriceLists={() => setActiveTab("price_lists")} /></Suspense>
         </div>
       );

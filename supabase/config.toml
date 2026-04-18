@@ -54,3 +54,6 @@ verify_jwt = false
 
 [functions.notify-price-drop-whatsapp]
 verify_jwt = false
+
+[functions.dealer-ai-recommendations]
+verify_jwt = true
