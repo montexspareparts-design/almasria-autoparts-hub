@@ -63,3 +63,6 @@ verify_jwt = false
 
 [functions.chatbot-create-account]
 verify_jwt = false
+
+[functions.notify-admin-support-request]
+verify_jwt = false
