@@ -60,6 +60,7 @@ const QUICK_QUESTIONS_DEALER = [
 ];
 
 const QUICK_QUESTIONS_GUEST = [
+  "✨ اعملي حساب جديد",
   "إيه الماركات المتوفرة عندكم؟",
   "📍 أقرب فرع ليا",
   "بتشحنوا لكل المحافظات؟",
@@ -168,6 +169,13 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
   const [isListening, setIsListening] = useState(false);
   const [speakingMsgIndex, setSpeakingMsgIndex] = useState<number | null>(null);
   const [isLocating, setIsLocating] = useState(false);
+  // Signup flow state — collected step by step inside chat
+  const signupStateRef = useRef<{
+    step: "idle" | "name" | "email" | "phone" | "confirm" | "submitting";
+    name?: string;
+    email?: string;
+    phone?: string;
+  }>({ step: "idle" });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -432,11 +440,56 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
     return keywords.some(k => t.includes(k));
   };
 
+  // Helper: detect intent to create a new account
+  const wantsSignup = (t: string): boolean => {
+    const s = t.toLowerCase();
+    const keywords = [
+      "اعملي حساب", "اعمللي حساب", "اعمل لي حساب", "عايز احساب", "عايز حساب",
+      "انشاء حساب", "إنشاء حساب", "افتحلي حساب", "افتح لي حساب", "سجلني",
+      "عايز اسجل", "عاوز حساب", "اعملي اكونت", "حساب جديد",
+    ];
+    return keywords.some(k => s.includes(k));
+  };
+
+  // Validators
+  const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
+  const normalizeEgPhone = (raw: string): string | null => {
+    let d = raw
+      .replace(/[٠-٩]/g, (x) => String("٠١٢٣٤٥٦٧٨٩".indexOf(x)))
+      .replace(/[۰-۹]/g, (x) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(x)))
+      .replace(/\D/g, "");
+    if (d.startsWith("0020")) d = d.slice(4);
+    else if (d.startsWith("20")) d = d.slice(2);
+    if (d.length === 10 && d.startsWith("1")) d = "0" + d;
+    return /^01[0125]\d{8}$/.test(d) ? d : null;
+  };
+
   // Helper: extract phone from text (Egyptian format)
   const extractPhone = (t: string): string | null => {
     const m = t.match(/(?:\+?20)?0?1[0125]\d{8}/);
     return m ? m[0] : null;
   };
+
+  // Submit signup → calls public edge function
+  const submitSignup = async (name: string, email: string, phone: string) => {
+    try {
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chatbot-create-account`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ name, email, phone }),
+      });
+      const data = await resp.json();
+      return { ok: resp.ok, status: resp.status, data };
+    } catch (e) {
+      console.error("submitSignup error:", e);
+      return { ok: false, status: 0, data: { error: "خطأ في الاتصال" } };
+    }
+  };
+
 
   // Create support request → notifies all staff via DB trigger
   const createSupportRequest = async (lastMessage: string, phoneOverride?: string) => {
@@ -482,6 +535,123 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
 
   const sendMessage = async (text: string) => {
     if ((!text.trim() && !pendingImage) || isLoading) return;
+
+    // ============= SIGNUP FLOW =============
+    if (signupStateRef.current.step === "idle" && !user && wantsSignup(text)) {
+      signupStateRef.current = { step: "name" };
+      setMessages(prev => [
+        ...prev,
+        { role: "user", content: text },
+        {
+          role: "assistant",
+          content:
+            "تمام! هعمللك حساب جديد في ثواني ✨\n\nمحتاج منك 3 بيانات بس:\n\n**1️⃣ اكتبلي اسمك بالكامل** (الاسم الذي ستظهر به فواتيرك):",
+        },
+      ]);
+      return;
+    }
+
+    if (signupStateRef.current.step !== "idle" && signupStateRef.current.step !== "submitting") {
+      const trimmed = text.trim();
+
+      if (/^(الغاء|إلغاء|cancel|stop|توقف)$/i.test(trimmed)) {
+        signupStateRef.current = { step: "idle" };
+        setMessages(prev => [
+          ...prev,
+          { role: "user", content: text },
+          { role: "assistant", content: "تمام، تم إلغاء إنشاء الحساب 👌. لو احتجت تاني، قولي **اعملي حساب**." },
+        ]);
+        return;
+      }
+
+      const step = signupStateRef.current.step;
+      setMessages(prev => [...prev, { role: "user", content: text }]);
+
+      if (step === "name") {
+        if (trimmed.length < 2 || trimmed.length > 80) {
+          setMessages(prev => [...prev, { role: "assistant", content: "الاسم لازم يكون من 2 إلى 80 حرف. اكتبلي اسمك بالكامل من فضلك:" }]);
+          return;
+        }
+        signupStateRef.current.name = trimmed;
+        signupStateRef.current.step = "email";
+        setMessages(prev => [
+          ...prev,
+          { role: "assistant", content: `تشرفنا يا ${trimmed} 🌟\n\n**2️⃣ ابعتلي الإيميل بتاعك** (مهم عشان نبعتلك تأكيد الطلبات):` },
+        ]);
+        return;
+      }
+
+      if (step === "email") {
+        const email = trimmed.toLowerCase();
+        if (!isValidEmail(email)) {
+          setMessages(prev => [...prev, { role: "assistant", content: "الإيميل ده شكله مش مظبوط 🤔. اكتب الإيميل بالشكل الصحيح، مثال: ahmed@gmail.com" }]);
+          return;
+        }
+        signupStateRef.current.email = email;
+        signupStateRef.current.step = "phone";
+        setMessages(prev => [
+          ...prev,
+          { role: "assistant", content: "ممتاز ✅\n\n**3️⃣ ابعتلي رقم موبايلك** (لازم يكون رقم مصري 11 رقم يبدأ بـ 01):" },
+        ]);
+        return;
+      }
+
+      if (step === "phone") {
+        const phone = normalizeEgPhone(trimmed);
+        if (!phone) {
+          setMessages(prev => [...prev, { role: "assistant", content: "الرقم ده مش رقم موبايل مصري صحيح. لازم يكون 11 رقم ويبدأ بـ 010 أو 011 أو 012 أو 015. جرب تاني:" }]);
+          return;
+        }
+        signupStateRef.current.phone = phone;
+        signupStateRef.current.step = "submitting";
+
+        const { name, email } = signupStateRef.current;
+        setMessages(prev => [
+          ...prev,
+          { role: "assistant", content: `جاري إنشاء الحساب... ⏳\n\n**الاسم:** ${name}\n**الإيميل:** ${email}\n**الموبايل:** ${phone}` },
+        ]);
+
+        const result = await submitSignup(name!, email!, phone);
+        if (result.ok && result.data?.success) {
+          signupStateRef.current = { step: "idle" };
+          setMessages(prev => [
+            ...prev,
+            {
+              role: "assistant",
+              content:
+                `🎉 **تم إنشاء حسابك بنجاح!**\n\n` +
+                `احفظ بياناتك في مكان آمن:\n\n` +
+                `📧 **الإيميل:** \`${result.data.email}\`\n` +
+                `🔐 **كلمة السر:** \`${result.data.password}\`\n\n` +
+                `دلوقتي تقدر تسجّل دخولك وتشوف الأسعار وتطلب أي قطعة 🚗\n\n` +
+                `[👉 سجّل دخولك دلوقتي](/auth)`,
+            },
+          ]);
+          toast.success("تم إنشاء حسابك بنجاح 🎉");
+        } else {
+          const errMsg = result.data?.error || "حصلت مشكلة، جرب تاني";
+          const field = result.data?.field as "name" | "email" | "phone" | undefined;
+          if (field === "email") {
+            signupStateRef.current.step = "email";
+            signupStateRef.current.email = undefined;
+            setMessages(prev => [...prev, { role: "assistant", content: `❌ ${errMsg}\n\nاكتبلي إيميل تاني:` }]);
+          } else if (field === "phone") {
+            signupStateRef.current.step = "phone";
+            signupStateRef.current.phone = undefined;
+            setMessages(prev => [...prev, { role: "assistant", content: `❌ ${errMsg}\n\nاكتبلي رقم موبايل تاني:` }]);
+          } else if (field === "name") {
+            signupStateRef.current.step = "name";
+            signupStateRef.current.name = undefined;
+            setMessages(prev => [...prev, { role: "assistant", content: `❌ ${errMsg}\n\nاكتبلي الاسم تاني:` }]);
+          } else {
+            signupStateRef.current = { step: "idle" };
+            setMessages(prev => [...prev, { role: "assistant", content: `❌ ${errMsg}\n\nلو حابب تجرب تاني قولي **اعملي حساب**، أو تواصل معانا على [واتساب](https://wa.me/201032104861).` }]);
+          }
+        }
+        return;
+      }
+    }
+    // ============= END SIGNUP FLOW =============
 
     // Check if asking for support team / human contact
     if (wantsHumanSupport(text)) {
