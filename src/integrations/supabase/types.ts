@@ -1019,6 +1019,7 @@ export type Database = {
           notes: string | null
           order_number: string
           payment_method: string | null
+          pickup_branch: string | null
           shipped_at: string | null
           shipping_address: string | null
           shipping_company: string | null
@@ -1040,6 +1041,7 @@ export type Database = {
           notes?: string | null
           order_number: string
           payment_method?: string | null
+          pickup_branch?: string | null
           shipped_at?: string | null
           shipping_address?: string | null
           shipping_company?: string | null
@@ -1061,6 +1063,7 @@ export type Database = {
           notes?: string | null
           order_number?: string
           payment_method?: string | null
+          pickup_branch?: string | null
           shipped_at?: string | null
           shipping_address?: string | null
           shipping_company?: string | null
