@@ -732,6 +732,55 @@ const AdminStaffRoles = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Full Delete Dialog */}
+      <Dialog open={!!deleteTarget} onOpenChange={(o) => { if (!o) { setDeleteTarget(null); setDeleteConfirmText(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <UserX className="w-5 h-5" />
+              حذف نهائي للموظف
+            </DialogTitle>
+            <DialogDescription>
+              سيتم حذف <strong>{deleteTarget?.full_name || deleteTarget?.email}</strong> نهائياً من نظام المصادقة، الصلاحيات، والملف الشخصي. <span className="text-destructive font-bold">لا يمكن التراجع.</span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 text-sm space-y-1">
+              <p className="font-bold text-destructive">⚠️ سيتم حذف:</p>
+              <ul className="list-disc list-inside text-xs text-muted-foreground space-y-0.5">
+                <li>حساب المصادقة (auth.users)</li>
+                <li>الصلاحيات (user_roles)</li>
+                <li>الملف الشخصي (profiles)</li>
+                <li>حساب التاجر إن وجد + الإشعارات</li>
+              </ul>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground mb-1.5 block">
+                للتأكيد، اكتب: <code className="bg-muted px-1.5 py-0.5 rounded text-foreground">حذف نهائي</code>
+              </label>
+              <Input
+                placeholder="حذف نهائي"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                autoFocus
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)} disabled={deletingFully}>إلغاء</Button>
+            <Button
+              variant="destructive"
+              onClick={handleFullDelete}
+              disabled={deletingFully || deleteConfirmText.trim() !== "حذف نهائي"}
+              className="gap-2"
+            >
+              {deletingFully ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserX className="w-4 h-4" />}
+              حذف نهائي
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Tabs>
   );
 };
