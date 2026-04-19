@@ -313,7 +313,7 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
 
   useEffect(() => { fetchAll(); }, [isAdmin]);
 
-  // Realtime subscription for new chatbot support requests
+  // Realtime subscription for support requests (INSERT new + UPDATE for claim sync)
   useEffect(() => {
     if (!user) return;
     const channel = supabase
@@ -337,8 +337,44 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
               created_at: r.created_at,
               status: r.status,
               minutes_ago: minutesBetween(r.created_at),
+              claimed_by: null,
+              claimed_by_name: null,
+              claimed_at: null,
             }, ...prev];
           });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "support_requests" },
+        async (payload) => {
+          const r = payload.new as any;
+          // Remove from list if resolved
+          if (r.status === "resolved" || r.status === "closed") {
+            setSupportRequests((prev) => prev.filter((x) => x.id !== r.id));
+            return;
+          }
+          // Resolve claimed_by name if needed
+          let claimedName: string | null = null;
+          if (r.claimed_by) {
+            if (r.claimed_by === user.id) {
+              claimedName = "أنت";
+            } else {
+              const { data: prof } = await supabase
+                .from("profiles")
+                .select("full_name, email")
+                .eq("user_id", r.claimed_by)
+                .maybeSingle();
+              claimedName = (prof as any)?.full_name || (prof as any)?.email || "موظف";
+            }
+          }
+          setSupportRequests((prev) =>
+            prev.map((x) =>
+              x.id === r.id
+                ? { ...x, status: r.status, claimed_by: r.claimed_by, claimed_by_name: claimedName, claimed_at: r.claimed_at }
+                : x
+            )
+          );
         }
       )
       .subscribe();
