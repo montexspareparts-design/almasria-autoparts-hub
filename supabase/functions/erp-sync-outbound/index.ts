@@ -187,7 +187,9 @@ Deno.serve(async (req) => {
       referenceNumber = data.order_number;
 
       // Map to Al Faisal CreateOrder format (per API docs)
-      const payload = {
+      // Include pickup branch in notes/remarks so it appears in Faisal ERP order
+      const orderNotes = String(data.notes || "").trim();
+      const payload: any = {
         customerId: data.erp_customer_code ? String(data.erp_customer_code) : "",
         customerName: data.erp_customer_code ? "" : (data.customer_name || ""),
         phone: data.customer_phone || "0000000000",
@@ -196,6 +198,13 @@ Deno.serve(async (req) => {
           quantity: Number(item.quantity) || 1,
           price: Number(item.unit_price) || 0,
         })),
+        // Pass notes under all common keys Al Faisal might accept
+        notes: orderNotes,
+        remarks: orderNotes,
+        remark: orderNotes,
+        comment: orderNotes,
+        comments: orderNotes,
+        description: orderNotes,
       };
 
       if (isMock) {
