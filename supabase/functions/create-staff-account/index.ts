@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { fullName, email, phone } = await req.json();
+    const { fullName, email, phone, password: customPassword } = await req.json();
     if (!fullName || !email) {
       return new Response(JSON.stringify({ error: "الاسم والبريد الإلكتروني مطلوبان" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -129,11 +129,15 @@ Deno.serve(async (req) => {
       userId = existingUser.id;
       tempPassword = "(كلمة المرور الحالية للمستخدم — لم تتغير)";
     } else {
-      // Generate random 10-char password
-      tempPassword = Array.from(crypto.getRandomValues(new Uint8Array(8)))
-        .map(b => b.toString(36).padStart(2, "0"))
-        .join("")
-        .slice(0, 10);
+      // Use custom password from admin or generate random one
+      if (customPassword && String(customPassword).length >= 6) {
+        tempPassword = String(customPassword);
+      } else {
+        tempPassword = Array.from(crypto.getRandomValues(new Uint8Array(8)))
+          .map(b => b.toString(36).padStart(2, "0"))
+          .join("")
+          .slice(0, 10);
+      }
 
       const { data: newUser, error: createErr } = await adminClient.auth.admin.createUser({
         email: cleanEmail,
