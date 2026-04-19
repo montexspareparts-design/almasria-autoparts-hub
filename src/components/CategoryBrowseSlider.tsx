@@ -283,13 +283,13 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
                 >
                   <button
                     onClick={() => handleCategoryClick(cat)}
-                    className="group/card block relative w-[90px] sm:w-[145px] rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 text-center border border-border/40 hover:border-primary/40"
+                    className="group/card block relative w-[68px] sm:w-[145px] rounded-lg sm:rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 text-center border border-border/40 hover:border-primary/40"
                   >
                     {/* Bold dynamic count badge — top-left corner */}
-                    <div className="absolute top-1.5 left-1.5 z-10 min-w-[22px] sm:min-w-[28px] h-[22px] sm:h-[28px] px-1.5 rounded-full bg-primary text-primary-foreground text-[10px] sm:text-xs font-extrabold flex items-center justify-center shadow-lg ring-2 ring-white/90">
+                    <div className="absolute top-1 left-1 sm:top-1.5 sm:left-1.5 z-10 min-w-[18px] sm:min-w-[28px] h-[18px] sm:h-[28px] px-1 sm:px-1.5 rounded-full bg-primary text-primary-foreground text-[9px] sm:text-xs font-extrabold flex items-center justify-center shadow-lg ring-1 sm:ring-2 ring-white/90">
                       {cat.count}
                     </div>
-                    <div className="aspect-square sm:aspect-[4/3] bg-white p-1.5 sm:p-3 relative overflow-hidden">
+                    <div className="aspect-square sm:aspect-[4/3] bg-white p-1 sm:p-3 relative overflow-hidden">
                       <motion.img
                         src={assets.image}
                         alt={cat.name_ar}
@@ -303,10 +303,10 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
                       {/* Shine overlay on hover */}
                       <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 pointer-events-none" />
                     </div>
-                    <div className={`relative bg-gradient-to-br ${assets.accent} px-2 py-2 sm:px-2.5 sm:py-2.5 overflow-hidden`}>
+                    <div className={`relative bg-gradient-to-br ${assets.accent} px-1 py-1 sm:px-2.5 sm:py-2.5 overflow-hidden`}>
                       <div className="absolute inset-0 bg-white/0 group-hover/card:bg-white/10 transition-colors duration-300" />
-                      <span className="relative text-white font-bold text-[10px] sm:text-xs block leading-snug drop-shadow-sm">{cat.name_ar}</span>
-                      <span className="relative text-white/80 text-[8px] sm:text-[10px] block mt-0.5 font-semibold">{cat.count} صنف متاح</span>
+                      <span className="relative text-white font-bold text-[9px] sm:text-xs block leading-tight sm:leading-snug drop-shadow-sm truncate">{cat.name_ar}</span>
+                      <span className="relative text-white/80 text-[7px] sm:text-[10px] block mt-0.5 font-semibold">{cat.count} صنف</span>
                     </div>
                   </button>
                 </motion.div>
