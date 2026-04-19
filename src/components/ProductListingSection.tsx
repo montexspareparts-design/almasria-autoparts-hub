@@ -224,6 +224,44 @@ const ProductListingSection = memo(({
             />
 
             <div className="flex-1 min-w-0">
+              {/* Active filter banner — bold "Clear filter" CTA */}
+              {!isLoading && (filters.categoryId || filters.brandKey) && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-3 flex items-center justify-between gap-3 p-3 rounded-xl bg-gradient-to-l from-primary/10 via-primary/5 to-transparent border-2 border-primary/30 shadow-sm"
+                >
+                  <div className="flex items-center gap-2 min-w-0 flex-wrap">
+                    <span className="text-xs font-semibold text-muted-foreground shrink-0">الفلتر النشط:</span>
+                    {filters.categoryId && (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-bold shadow-sm">
+                        {visibleCategories.find((c: any) => c.id === filters.categoryId)?.name_ar || "تصنيف"}
+                      </span>
+                    )}
+                    {filters.brandKey && (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-bold shadow-sm">
+                        {filters.brandKey === "toyota_genuine" ? "أصلي" :
+                         filters.brandKey === "toyota_oils" ? "زيوت" :
+                         filters.brandKey === "mtx_aftermarket" ? "MTX" :
+                         (filters.brandKey as string).toUpperCase()}
+                      </span>
+                    )}
+                    <span className="text-xs text-muted-foreground shrink-0">
+                      (<span className="font-bold text-foreground">{filteredProducts.length}</span> منتج)
+                    </span>
+                  </div>
+                  <Button
+                    onClick={clearFilters}
+                    size="sm"
+                    variant="default"
+                    className="shrink-0 gap-1.5 h-8 px-3 text-xs font-bold rounded-lg bg-destructive hover:bg-destructive/90 text-destructive-foreground shadow-md"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    مسح الفلتر
+                  </Button>
+                </motion.div>
+              )}
+
               {/* Results count + view toggle */}
               <div className="flex items-center justify-between mb-2.5">
                 <div className="flex items-center gap-2">
