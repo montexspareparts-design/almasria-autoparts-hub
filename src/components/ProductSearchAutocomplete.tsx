@@ -275,17 +275,17 @@ const ProductSearchAutocomplete = ({
     <div ref={wrapperRef} className="relative flex-1">
       {/* Google-style search bar */}
       <div className="relative group">
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center">
-          <Search className="w-5 h-5 text-muted-foreground/50 group-focus-within:text-primary transition-colors duration-300" />
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center">
+          <Search className="w-5 h-5 sm:w-5 sm:h-5 text-primary/70 group-focus-within:text-primary transition-colors duration-300" />
         </div>
         <Input
           ref={inputRef}
-          placeholder={value ? placeholder : (typingPlaceholder || placeholder)}
+          placeholder={value ? placeholder : (typingPlaceholder || "🔍  ابحث عن قطعة، رقم، أو موديل...")}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onKeyDown={handleKeyDown}
-          className="pr-11 pl-16 bg-background border-border h-11 sm:h-12 text-sm placeholder:text-muted-foreground/40 rounded-full shadow-sm transition-all duration-200 focus-visible:ring-1 focus-visible:ring-primary/20 focus-visible:ring-offset-0 focus-visible:border-primary/30 focus-visible:shadow-lg focus-visible:shadow-primary/5"
+          className="pr-12 pl-16 bg-background border-2 border-border/70 h-14 sm:h-12 text-base sm:text-sm font-medium placeholder:text-muted-foreground/60 placeholder:font-normal rounded-2xl sm:rounded-full shadow-md transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-offset-0 focus-visible:border-primary/50 focus-visible:shadow-xl focus-visible:shadow-primary/10"
         />
         <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
           {value && (
