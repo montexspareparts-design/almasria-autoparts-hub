@@ -439,7 +439,7 @@ const AdminStaffRoles = () => {
                     <TableHead className="text-right">الاسم</TableHead>
                     <TableHead className="text-right">البريد الإلكتروني</TableHead>
                     <TableHead className="text-right">تاريخ الإضافة</TableHead>
-                    <TableHead className="text-right w-24">إجراءات</TableHead>
+                    <TableHead className="text-right w-32">إجراءات</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -449,27 +449,38 @@ const AdminStaffRoles = () => {
                       <TableCell dir="ltr" className="text-left text-muted-foreground">{member.email || "—"}</TableCell>
                       <TableCell className="text-muted-foreground text-sm">{new Date(member.created_at).toLocaleDateString("ar-EG")}</TableCell>
                       <TableCell>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 h-8 w-8">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>حذف صلاحية الموظف؟</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                سيتم إزالة صلاحيات الموظف من {member.full_name || member.email}.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleRemoveModerator(member)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                حذف
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-amber-600 hover:bg-amber-500/10 h-8 w-8"
+                            onClick={() => { setResetTarget(member); setResetPassword(""); }}
+                            title="إعادة تعيين كلمة المرور"
+                          >
+                            <KeyRound className="w-4 h-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 h-8 w-8" title="حذف الصلاحية">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>حذف صلاحية الموظف؟</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  سيتم إزالة صلاحيات الموظف من {member.full_name || member.email}.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleRemoveModerator(member)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                  حذف
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
