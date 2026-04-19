@@ -30,38 +30,17 @@ const CouponInput = ({ subtotal, onApply, onRemove, appliedCode, appliedDiscount
     try {
       const trimmed = code.trim().toUpperCase();
 
-      // Fetch coupon
-      const { data: coupon, error } = await supabase
-        .from("coupons")
-        .select("*")
-        .eq("code", trimmed)
-        .eq("is_active", true)
-        .single();
+      // Validate via secure RPC (only returns coupon if code is valid & active)
+      const { data: coupons, error } = await supabase.rpc("validate_coupon", { _code: trimmed });
+      const coupon = Array.isArray(coupons) ? coupons[0] : null;
 
       if (error || !coupon) {
-        toast.error("كود الخصم غير صالح");
-        return;
-      }
-
-      // Check validity period
-      const now = new Date();
-      if (coupon.valid_from && new Date(coupon.valid_from) > now) {
-        toast.error("كود الخصم لم يبدأ بعد");
-        return;
-      }
-      if (coupon.valid_to && new Date(coupon.valid_to) < now) {
-        toast.error("كود الخصم منتهي الصلاحية");
-        return;
-      }
-
-      // Check max uses
-      if (coupon.max_uses && coupon.used_count >= coupon.max_uses) {
-        toast.error("تم استخدام كود الخصم بالكامل");
+        toast.error("كود الخصم غير صالح أو منتهي");
         return;
       }
 
       // Check min order
-      if (coupon.min_order_amount && subtotal < coupon.min_order_amount) {
+      if (coupon.min_order_amount && subtotal < Number(coupon.min_order_amount)) {
         toast.error(`الحد الأدنى للطلب ${Number(coupon.min_order_amount).toLocaleString("ar-EG")} ج.م`);
         return;
       }
