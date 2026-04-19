@@ -656,6 +656,16 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
           </TabsContent>
         )}
       </Tabs>
+
+      {/* Activity Summary Drawer */}
+      <CustomerActivitySummary
+        open={!!summaryUser}
+        onOpenChange={(o) => { if (!o) setSummaryUser(null); }}
+        userId={summaryUser?.id || null}
+        customerName={summaryUser?.name}
+        customerPhone={summaryUser?.phone}
+        isDealer={summaryUser?.isDealer}
+      />
     </div>
   );
 }
