@@ -581,6 +581,34 @@ const AdminPriceLists = () => {
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Bulk actions */}
+          <div className="flex flex-wrap gap-2 p-3 rounded-lg border border-primary/20 bg-primary/5">
+            <Button
+              size="sm"
+              onClick={linkAllActiveProducts}
+              disabled={bulkLinking}
+              className="gap-1.5 text-xs"
+            >
+              {bulkLinking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+              ربط جميع الأصناف النشطة بالكشف
+            </Button>
+            {linkedProducts.length > 0 && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={unlinkAllProducts}
+                disabled={bulkLinking}
+                className="gap-1.5 text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                فك ربط الكل
+              </Button>
+            )}
+            <p className="text-[10px] text-muted-foreground self-center mr-auto">
+              💡 استخدم الزر لعرض كل الأصناف للتاجر تحت معاينة الـ PDF
+            </p>
+          </div>
+
           {/* Search to add */}
           <div className="relative">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
