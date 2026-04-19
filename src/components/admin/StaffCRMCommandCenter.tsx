@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import {
   Flame, Search, UserCheck, Users, Trophy, Phone, Eye,
-  CheckCircle2, Clock, Building2, ShoppingBag, Loader2, RefreshCw, Briefcase, Activity
+  CheckCircle2, Clock, Building2, ShoppingBag, Loader2, RefreshCw, Briefcase, Activity, Bot, MessageSquare
 } from "lucide-react";
 import WhatsAppQuickChat from "./WhatsAppQuickChat";
 import CustomerActivitySummary from "./CustomerActivitySummary";
@@ -52,6 +52,18 @@ interface StaffStat {
   contacts_today: number;
   orders_handled: number;
 }
+interface SupportReq {
+  id: string;
+  user_id: string | null;
+  customer_name: string | null;
+  customer_phone: string | null;
+  message: string | null;
+  request_type: string;
+  is_dealer: boolean;
+  created_at: string;
+  minutes_ago: number;
+  status: string;
+}
 
 // =================== Helpers ===================
 const minutesBetween = (iso: string) => Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
@@ -68,7 +80,7 @@ interface Props {
 export default function StaffCRMCommandCenter({ onNavigate }: Props) {
   const { user, isAdmin } = useAuth();
   const { toast } = useToast();
-  const [tab, setTab] = useState<"urgent" | "search" | "yesterday" | "leaderboard">("urgent");
+  const [tab, setTab] = useState<"urgent" | "chatbot" | "search" | "yesterday" | "leaderboard">("urgent");
   const [segmentFilter, setSegmentFilter] = useState<"all" | "b2b" | "b2c">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -80,6 +92,7 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
   const [yesterdayCustomers, setYesterdayCustomers] = useState<YesterdayCustomer[]>([]);
   const [staffLeaderboard, setStaffLeaderboard] = useState<StaffStat[]>([]);
   const [contactedToday, setContactedToday] = useState<Set<string>>(new Set());
+  const [supportRequests, setSupportRequests] = useState<SupportReq[]>([]);
   const [summaryUser, setSummaryUser] = useState<{ id: string; name: string; phone: string | null; isDealer: boolean } | null>(null);
 
   // =================== Fetch ===================
