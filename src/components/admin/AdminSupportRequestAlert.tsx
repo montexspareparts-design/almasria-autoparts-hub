@@ -19,6 +19,7 @@ interface SupportRequest {
   request_type: string;
   is_dealer: boolean | null;
   context: any;
+  status?: string;
   created_at: string;
 }
 
