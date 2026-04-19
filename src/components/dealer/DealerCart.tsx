@@ -280,7 +280,7 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
     );
 
     const erpCodePromise = pushOrderToERP((order as any).id);
-    notifyNewOrderWhatsApp(orderNumber, total);
+    notifyNewOrderWhatsApp(orderNumber, total, undefined, undefined, undefined, pickupBranch || undefined);
     return { id: (order as any).id, order_number: orderNumber, erpCodePromise };
   };
 

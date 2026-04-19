@@ -52,8 +52,16 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { orderNumber, totalAmount, customerPhone, paymentLink, customerName } =
+    const { orderNumber, totalAmount, customerPhone, paymentLink, customerName, pickupBranch } =
       await req.json();
+
+    const branchLabels: Record<string, string> = {
+      ossim: "أوسيم",
+      luxor: "الأقصر",
+      tawfiqia: "التوفيقية",
+    };
+    const branchAr = pickupBranch ? (branchLabels[pickupBranch] || pickupBranch) : "";
+    const branchLine = branchAr ? `\n🏢 فرع الاستلام: ${branchAr}` : "";
 
     if (!orderNumber || !customerPhone) {
       return new Response(
@@ -69,7 +77,7 @@ Deno.serve(async (req) => {
     const clientName = customerName || "عميل";
 
     // Customer message
-    let msg = `أهلاً ${clientName} 👋\nتم استلام طلبك بنجاح ✅\nرقم الطلب: ${orderNumber}\nالإجمالي: ${amountFormatted} جنيه`;
+    let msg = `أهلاً ${clientName} 👋\nتم استلام طلبك بنجاح ✅\nرقم الطلب: ${orderNumber}\nالإجمالي: ${amountFormatted} جنيه${branchLine}`;
 
     if (paymentLink) {
       msg += `\n\nادفع الآن لتأكيد الطلب فورًا:\n${paymentLink}`;
@@ -96,7 +104,7 @@ Deno.serve(async (req) => {
         .select("phone")
         .in("user_id", admins.map((a: { user_id: string }) => a.user_id));
 
-      const adminMsg = `🆕 طلب جديد #${orderNumber}\nالعميل: ${clientName}\nالتليفون: ${customerPhone}\nالإجمالي: ${amountFormatted} جنيه`;
+      const adminMsg = `🆕 طلب جديد #${orderNumber}\nالعميل: ${clientName}\nالتليفون: ${customerPhone}\nالإجمالي: ${amountFormatted} جنيه${branchLine}`;
       for (const p of adminProfiles || []) {
         if (p.phone) await sendWhatsApp(p.phone, adminMsg);
       }

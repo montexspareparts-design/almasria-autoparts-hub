@@ -9,7 +9,8 @@ export async function notifyNewOrderWhatsApp(
   totalAmount: number,
   customerPhone?: string,
   paymentLink?: string,
-  customerName?: string
+  customerName?: string,
+  pickupBranch?: string
 ) {
   try {
     let phone = customerPhone;
@@ -33,7 +34,7 @@ export async function notifyNewOrderWhatsApp(
     }
 
     await supabase.functions.invoke("notify-order-whatsapp", {
-      body: { orderNumber, totalAmount, customerPhone: phone, paymentLink, customerName: name },
+      body: { orderNumber, totalAmount, customerPhone: phone, paymentLink, customerName: name, pickupBranch },
     });
   } catch (err) {
     console.error("WhatsApp notification failed (non-blocking):", err);

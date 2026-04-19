@@ -30,6 +30,7 @@ export const pushOrderToERP = async (orderId: string): Promise<string | null> =>
           customer_tier: dealerRes.data?.tier || "retail",
           shipping_address: order.shipping_address || "",
           shipping_governorate: order.shipping_governorate || "",
+          pickup_branch: (order as any).pickup_branch || "",
           payment_method: order.payment_method || "",
           items: (order.order_items || []).map((item: any) => ({
             sku: item.products?.sku || "",
