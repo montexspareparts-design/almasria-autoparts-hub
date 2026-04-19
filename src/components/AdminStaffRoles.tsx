@@ -482,9 +482,21 @@ const AdminStaffRoles = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.map(member => (
+                  {filtered.map(member => {
+                    const isProtected = (member.email || "").toLowerCase() === PROTECTED_ADMIN_EMAIL;
+                    return (
                     <TableRow key={member.id}>
-                      <TableCell className="font-medium">{member.full_name || "—"}</TableCell>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          {member.full_name || "—"}
+                          {isProtected && (
+                            <Badge variant="outline" className="gap-1 text-[10px] border-amber-500/40 text-amber-600">
+                              <Crown className="w-3 h-3" />
+                              أدمن رئيسي
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell dir="ltr" className="text-left text-muted-foreground">{member.email || "—"}</TableCell>
                       <TableCell className="text-muted-foreground text-sm">{new Date(member.created_at).toLocaleDateString("ar-EG")}</TableCell>
                       <TableCell>
@@ -495,12 +507,19 @@ const AdminStaffRoles = () => {
                             className="text-amber-600 hover:bg-amber-500/10 h-8 w-8"
                             onClick={() => { setResetTarget(member); setResetPassword(""); }}
                             title="إعادة تعيين كلمة المرور"
+                            disabled={isProtected}
                           >
                             <KeyRound className="w-4 h-4" />
                           </Button>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 h-8 w-8" title="حذف الصلاحية">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-destructive hover:bg-destructive/10 h-8 w-8"
+                                title="حذف الصلاحية فقط"
+                                disabled={isProtected}
+                              >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
                             </AlertDialogTrigger>
@@ -508,21 +527,32 @@ const AdminStaffRoles = () => {
                               <AlertDialogHeader>
                                 <AlertDialogTitle>حذف صلاحية الموظف؟</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  سيتم إزالة صلاحيات الموظف من {member.full_name || member.email}.
+                                  سيتم إزالة صلاحيات الموظف من {member.full_name || member.email} (الحساب يبقى موجوداً).
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel>إلغاء</AlertDialogCancel>
                                 <AlertDialogAction onClick={() => handleRemoveModerator(member)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                  حذف
+                                  حذف الصلاحية
                                 </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive hover:bg-destructive/20 h-8 w-8 border border-destructive/30"
+                            title="حذف نهائي من النظام"
+                            disabled={isProtected}
+                            onClick={() => { setDeleteTarget(member); setDeleteConfirmText(""); }}
+                          >
+                            <UserX className="w-4 h-4" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                    );
+                  })}
                 </TableBody>
               </Table>
             )}
