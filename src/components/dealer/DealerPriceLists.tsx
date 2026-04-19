@@ -597,12 +597,16 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
 
     const convertToOrder = async () => {
       if (!user) return;
+      if (!pickupBranch) {
+        toast({ title: "اختر فرع الاستلام أولاً", variant: "destructive" });
+        return;
+      }
       setSavingQuote(true);
       const orderNumber = await generateOrderNumber();
 
       const { data: order, error } = await supabase
         .from("orders")
-        .insert({ user_id: user.id, order_number: orderNumber, total_amount: createdQuote.totalAmount, status: "pending" })
+        .insert({ user_id: user.id, order_number: orderNumber, total_amount: createdQuote.totalAmount, status: "pending", pickup_branch: pickupBranch } as any)
         .select()
         .single();
 
@@ -624,7 +628,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
 
       toast({ title: "تم إرسال الطلبية ✓", description: `رقم الطلب: ${orderNumber}` });
       pushOrderToERP((order as any).id);
-      notifyNewOrderWhatsApp(orderNumber, createdQuote.totalAmount);
+      notifyNewOrderWhatsApp(orderNumber, createdQuote.totalAmount, undefined, undefined, undefined, pickupBranch);
       setCreatedQuote(null);
       setSavingQuote(false);
     };
