@@ -62,6 +62,7 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
       { count: todayLeadsContacted },
       { count: totalOrdersHandled },
       { count: totalLeadsConverted },
+      { data: staffRoles },
     ] = await Promise.all([
       supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "pending"),
       supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "awaiting_payment"),
@@ -71,7 +72,10 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
       supabase.from("leads").select("*", { count: "exact", head: true }).eq("status", "contacted").gte("updated_at", todayStart),
       supabase.from("orders").select("*", { count: "exact", head: true }).in("status", ["processing", "ready", "shipped", "delivered"]),
       supabase.from("leads").select("*", { count: "exact", head: true }).eq("status", "converted"),
+      supabase.from("user_roles").select("user_id, role").in("role", ["admin", "moderator"]),
     ]);
+
+    const activeStaff = new Set((staffRoles || []).map((r: any) => r.user_id)).size;
 
     setStats({
       pendingOrders: pendingOrders || 0,
@@ -82,6 +86,7 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
       todayLeadsContacted: todayLeadsContacted || 0,
       totalOrdersHandled: totalOrdersHandled || 0,
       totalLeadsConverted: totalLeadsConverted || 0,
+      activeStaff,
     });
     setLoading(false);
   };
