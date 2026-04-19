@@ -68,6 +68,7 @@ const shippingCompanies = ["أرامكس", "بوسطة", "mylerz", "J&T", "DHL",
 
 const AdminOrders = () => {
   const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [orders, setOrders] = useState<OrderWithItems[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -85,6 +86,41 @@ const AdminOrders = () => {
   const [shippingInfo, setShippingInfo] = useState<Record<string, { tracking_number: string; shipping_company: string }>>({});
   const [editingShipping, setEditingShipping] = useState<string | null>(null);
   const [savingShipping, setSavingShipping] = useState(false);
+  // Force re-render every minute to update SLA timers
+  const [, setNowTick] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setNowTick((n) => n + 1), 60000);
+    return () => clearInterval(t);
+  }, []);
+
+  // Highlight order from URL (?highlight=xxx) — auto-expand and scroll
+  useEffect(() => {
+    const highlightId = searchParams.get("highlight");
+    if (highlightId && orders.some((o) => o.id === highlightId)) {
+      setExpandedOrder(highlightId);
+      setTimeout(() => {
+        document.getElementById(`order-${highlightId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+        // Clean URL
+        searchParams.delete("highlight");
+        setSearchParams(searchParams, { replace: true });
+      }, 200);
+    }
+  }, [orders, searchParams, setSearchParams]);
+
+  // Quick WhatsApp action — marks first contact + opens WA
+  const quickWhatsApp = async (order: OrderWithItems) => {
+    const phone = order.profile?.phone;
+    if (!phone) {
+      toast({ title: "لا يوجد رقم موبايل لهذا العميل", variant: "destructive" });
+      return;
+    }
+    if (!(order as any).first_contacted_at) {
+      await supabase.from("orders").update({ first_contacted_at: new Date().toISOString() } as any).eq("id", order.id);
+      fetchOrders();
+    }
+    const msg = buildNewOrderMessage(order.profile?.full_name || "", order.order_number, Number(order.total_amount));
+    window.open(`https://wa.me/${formatPhoneForWA(phone)}?text=${encodeURIComponent(msg)}`, "_blank");
+  };
 
   // Stats fetched once
   const [stats, setStats] = useState({ total: 0, pending: 0, processing: 0, shipped: 0, delivered: 0, totalRevenue: 0 });
