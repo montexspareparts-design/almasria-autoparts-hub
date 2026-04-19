@@ -18,6 +18,7 @@ import {
   Eye, Loader2, Download, X, ArrowRight, Edit3, ChevronLeft,
   MessageCircle, Mail, Bell
 } from "lucide-react";
+import PickupBranchSelector, { getStoredPickupBranch } from "./PickupBranchSelector";
 
 interface Product {
   id: string;
@@ -90,6 +91,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
   const [todayItems, setTodayItems] = useState<QuoteItem[]>([]);
   const [loadingToday, setLoadingToday] = useState(false);
   const [todayPricedIds, setTodayPricedIds] = useState<Set<string>>(new Set());
+  const [pickupBranch, setPickupBranch] = useState<string>(() => getStoredPickupBranch());
 
   useEffect(() => {
     if (user) {
@@ -330,12 +332,16 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
 
   const convertToOrder = async () => {
     if (quoteItems.length === 0) return;
+    if (!pickupBranch) {
+      toast({ title: "اختر فرع الاستلام أولاً", variant: "destructive" });
+      return;
+    }
     setSaving(true);
     const orderNumber = await generateOrderNumber();
 
     const { data: order, error } = await supabase
       .from("orders")
-      .insert({ user_id: user!.id, order_number: orderNumber, total_amount: totalAmount, notes: notes || null, status: "pending" })
+      .insert({ user_id: user!.id, order_number: orderNumber, total_amount: totalAmount, notes: notes || null, status: "pending", pickup_branch: pickupBranch } as any)
       .select()
       .single();
 
@@ -362,7 +368,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
 
     toast({ title: "تم إرسال الطلب ✓", description: `رقم الطلب: ${orderNumber}` });
     pushOrderToERP((order as any).id);
-    notifyNewOrderWhatsApp(orderNumber, totalAmount);
+    notifyNewOrderWhatsApp(orderNumber, totalAmount, undefined, undefined, undefined, pickupBranch);
     setQuoteItems([]);
     setNotes("");
     setEditingQuoteId(null);
@@ -474,6 +480,10 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
 
   const convertSavedQuoteToOrder = async (quote: SavedQuote) => {
     if (!user) return;
+    if (!pickupBranch) {
+      toast({ title: "اختر فرع الاستلام أولاً", variant: "destructive" });
+      return;
+    }
     setSaving(true);
 
     // Fetch quote items
@@ -491,7 +501,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
     const orderNumber = await generateOrderNumber();
     const { data: order, error } = await supabase
       .from("orders")
-      .insert({ user_id: user.id, order_number: orderNumber, total_amount: Number(quote.total_amount), notes: quote.notes || null, status: "pending" })
+      .insert({ user_id: user.id, order_number: orderNumber, total_amount: Number(quote.total_amount), notes: quote.notes || null, status: "pending", pickup_branch: pickupBranch } as any)
       .select()
       .single();
 
@@ -515,7 +525,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
 
     toast({ title: "تم إرسال الطلبية ✓", description: `رقم الطلب: ${orderNumber}` });
     pushOrderToERP((order as any).id);
-    notifyNewOrderWhatsApp(orderNumber, Number(quote.total_amount));
+    notifyNewOrderWhatsApp(orderNumber, Number(quote.total_amount), undefined, undefined, undefined, pickupBranch);
     fetchSavedQuotes();
     setSaving(false);
   };
@@ -724,6 +734,9 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
               <span className="text-sm font-medium text-muted-foreground">الإجمالي</span>
               <span className="text-lg font-bold text-foreground">{totalAmount.toLocaleString("ar-EG")} ج.م</span>
             </div>
+            <div className="mb-3">
+              <PickupBranchSelector value={pickupBranch} onChange={setPickupBranch} compact />
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
               <Button variant="outline" onClick={downloadPDF} disabled={saving} className="h-10">
                 <Download className="w-4 h-4 ml-1.5" />
@@ -749,7 +762,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
                 {saving ? <Loader2 className="w-4 h-4 ml-1.5 animate-spin" /> : <Save className="w-4 h-4 ml-1.5" />}
                 {editingQuoteId ? "تحديث" : "حفظ"}
               </Button>
-              <Button onClick={convertToOrder} disabled={saving} className="h-10 bg-primary hover:bg-primary/90">
+              <Button onClick={convertToOrder} disabled={saving || !pickupBranch} className="h-10 bg-primary hover:bg-primary/90">
                 {saving ? <Loader2 className="w-4 h-4 ml-1.5 animate-spin" /> : <ShoppingCart className="w-4 h-4 ml-1.5" />}
                 تحويل لطلب
               </Button>
@@ -872,6 +885,9 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
                     <span className="text-sm font-medium text-muted-foreground">الإجمالي</span>
                     <span className="text-lg font-bold text-foreground">{todayItems.reduce((s, i) => s + i.unit_price * i.quantity, 0).toLocaleString("ar-EG")} ج.م</span>
                   </div>
+                  <div className="mb-3">
+                    <PickupBranchSelector value={pickupBranch} onChange={setPickupBranch} compact />
+                  </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <Button
                       variant="outline"
@@ -921,12 +937,16 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
                     <Button
                       className="h-10"
                       onClick={async () => {
+                        if (!pickupBranch) {
+                          toast({ title: "اختر فرع الاستلام أولاً", variant: "destructive" });
+                          return;
+                        }
                         setSaving(true);
                         const orderNumber = await generateOrderNumber();
                         const total = todayItems.reduce((s, i) => s + i.unit_price * i.quantity, 0);
                         const { data: order, error } = await supabase
                           .from("orders")
-                          .insert({ user_id: user!.id, order_number: orderNumber, total_amount: total, status: "pending" })
+                          .insert({ user_id: user!.id, order_number: orderNumber, total_amount: total, status: "pending", pickup_branch: pickupBranch } as any)
                           .select().single();
                         if (!error && order) {
                           await supabase.from("order_items").insert(
@@ -940,13 +960,13 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
                           );
                           toast({ title: "تم إرسال الطلب ✓", description: `رقم الطلب: ${orderNumber}` });
                           pushOrderToERP((order as any).id);
-                          notifyNewOrderWhatsApp(orderNumber, total);
+                          notifyNewOrderWhatsApp(orderNumber, total, undefined, undefined, undefined, pickupBranch);
                         } else {
                           toast({ title: "خطأ", variant: "destructive" });
                         }
                         setSaving(false);
                       }}
-                      disabled={saving || todayItems.every(i => i.product.stock_quantity === 0)}
+                      disabled={saving || todayItems.every(i => i.product.stock_quantity === 0) || !pickupBranch}
                     >
                       {saving ? <Loader2 className="w-4 h-4 ml-1.5 animate-spin" /> : <ShoppingCart className="w-4 h-4 ml-1.5" />}
                       تحويل لطلب

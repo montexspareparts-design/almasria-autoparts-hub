@@ -17,6 +17,7 @@ import {
   Plus, Minus, X, ShoppingCart, ArrowLeft, Loader2, AlertTriangle, ChevronRight,
   CheckCircle2, Printer, MessageCircle, Mail, Package
 } from "lucide-react";
+import PickupBranchSelector, { getStoredPickupBranch } from "./PickupBranchSelector";
 
 interface PriceList {
   id: string;
@@ -91,6 +92,8 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
     priceListTitle: string;
     createdAt: Date;
   } | null>(null);
+
+  const [pickupBranch, setPickupBranch] = useState<string>(() => getStoredPickupBranch());
 
   useEffect(() => {
     fetchLists();
@@ -367,6 +370,10 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
 
   const convertDirectToOrder = async () => {
     if (selectedProducts.length === 0 || !user) return;
+    if (!pickupBranch) {
+      toast({ title: "اختر فرع الاستلام أولاً", variant: "destructive" });
+      return;
+    }
     setSavingQuote(true);
 
     const items = await Promise.all(
@@ -380,7 +387,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
 
     const { data: order, error } = await supabase
       .from("orders")
-      .insert({ user_id: user.id, order_number: orderNumber, total_amount: totalAmount, status: "pending" })
+      .insert({ user_id: user.id, order_number: orderNumber, total_amount: totalAmount, status: "pending", pickup_branch: pickupBranch } as any)
       .select()
       .single();
 
@@ -413,7 +420,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
 
     toast({ title: "تم إرسال الطلبية ✓", description: `رقم الطلب: ${orderNumber}` });
     pushOrderToERP((order as any).id);
-    notifyNewOrderWhatsApp(orderNumber, totalAmount);
+    notifyNewOrderWhatsApp(orderNumber, totalAmount, undefined, undefined, undefined, pickupBranch);
     setSelectedProducts([]);
     setSavingQuote(false);
     fetchDailyViews();
@@ -590,12 +597,16 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
 
     const convertToOrder = async () => {
       if (!user) return;
+      if (!pickupBranch) {
+        toast({ title: "اختر فرع الاستلام أولاً", variant: "destructive" });
+        return;
+      }
       setSavingQuote(true);
       const orderNumber = await generateOrderNumber();
 
       const { data: order, error } = await supabase
         .from("orders")
-        .insert({ user_id: user.id, order_number: orderNumber, total_amount: createdQuote.totalAmount, status: "pending" })
+        .insert({ user_id: user.id, order_number: orderNumber, total_amount: createdQuote.totalAmount, status: "pending", pickup_branch: pickupBranch } as any)
         .select()
         .single();
 
@@ -617,7 +628,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
 
       toast({ title: "تم إرسال الطلبية ✓", description: `رقم الطلب: ${orderNumber}` });
       pushOrderToERP((order as any).id);
-      notifyNewOrderWhatsApp(orderNumber, createdQuote.totalAmount);
+      notifyNewOrderWhatsApp(orderNumber, createdQuote.totalAmount, undefined, undefined, undefined, pickupBranch);
       setCreatedQuote(null);
       setSavingQuote(false);
     };
@@ -667,6 +678,9 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
         {/* Action Options */}
         <div className="space-y-4">
           <h4 className="text-base font-bold text-foreground text-center">ماذا تريد أن تفعل؟</h4>
+          <div className="max-w-md mx-auto">
+            <PickupBranchSelector value={pickupBranch} onChange={setPickupBranch} compact />
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Button 
               size="lg" 
@@ -681,7 +695,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
               size="lg" 
               className="h-20 text-base gap-3 bg-destructive hover:bg-destructive/90 flex-col"
               onClick={convertToOrder} 
-              disabled={savingQuote}
+              disabled={savingQuote || !pickupBranch}
             >
               {savingQuote ? <Loader2 className="w-7 h-7 animate-spin" /> : <ShoppingCart className="w-7 h-7" />}
               <span className="font-bold">تحويل لطلبية</span>
@@ -1136,12 +1150,15 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
                     )}
                     {editingQuoteId ? `تحديث العرض (${selectedProducts.length} صنف)` : `إرسال كعرض سعر (${selectedProducts.length} صنف)`}
                   </Button>
+                  <div className="pt-1">
+                    <PickupBranchSelector value={pickupBranch} onChange={setPickupBranch} compact />
+                  </div>
                   <Button
                     size="sm"
                     variant="secondary"
                     className="w-full h-9 text-xs gap-1 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20"
                     onClick={convertDirectToOrder}
-                    disabled={savingQuote}
+                    disabled={savingQuote || !pickupBranch}
                   >
                     {savingQuote ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
