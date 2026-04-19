@@ -17,6 +17,7 @@ import {
   Plus, Minus, X, ShoppingCart, ArrowLeft, Loader2, AlertTriangle, ChevronRight,
   CheckCircle2, Printer, MessageCircle, Mail, Package
 } from "lucide-react";
+import PickupBranchSelector, { getStoredPickupBranch } from "./PickupBranchSelector";
 
 interface PriceList {
   id: string;
@@ -91,6 +92,8 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
     priceListTitle: string;
     createdAt: Date;
   } | null>(null);
+
+  const [pickupBranch, setPickupBranch] = useState<string>(() => getStoredPickupBranch());
 
   useEffect(() => {
     fetchLists();
@@ -367,6 +370,10 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
 
   const convertDirectToOrder = async () => {
     if (selectedProducts.length === 0 || !user) return;
+    if (!pickupBranch) {
+      toast({ title: "اختر فرع الاستلام أولاً", variant: "destructive" });
+      return;
+    }
     setSavingQuote(true);
 
     const items = await Promise.all(
@@ -380,7 +387,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
 
     const { data: order, error } = await supabase
       .from("orders")
-      .insert({ user_id: user.id, order_number: orderNumber, total_amount: totalAmount, status: "pending" })
+      .insert({ user_id: user.id, order_number: orderNumber, total_amount: totalAmount, status: "pending", pickup_branch: pickupBranch } as any)
       .select()
       .single();
 
@@ -413,7 +420,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
 
     toast({ title: "تم إرسال الطلبية ✓", description: `رقم الطلب: ${orderNumber}` });
     pushOrderToERP((order as any).id);
-    notifyNewOrderWhatsApp(orderNumber, totalAmount);
+    notifyNewOrderWhatsApp(orderNumber, totalAmount, undefined, undefined, undefined, pickupBranch);
     setSelectedProducts([]);
     setSavingQuote(false);
     fetchDailyViews();
