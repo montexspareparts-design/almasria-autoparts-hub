@@ -734,6 +734,9 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
               <span className="text-sm font-medium text-muted-foreground">الإجمالي</span>
               <span className="text-lg font-bold text-foreground">{totalAmount.toLocaleString("ar-EG")} ج.م</span>
             </div>
+            <div className="mb-3">
+              <PickupBranchSelector value={pickupBranch} onChange={setPickupBranch} compact />
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
               <Button variant="outline" onClick={downloadPDF} disabled={saving} className="h-10">
                 <Download className="w-4 h-4 ml-1.5" />
@@ -759,7 +762,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
                 {saving ? <Loader2 className="w-4 h-4 ml-1.5 animate-spin" /> : <Save className="w-4 h-4 ml-1.5" />}
                 {editingQuoteId ? "تحديث" : "حفظ"}
               </Button>
-              <Button onClick={convertToOrder} disabled={saving} className="h-10 bg-primary hover:bg-primary/90">
+              <Button onClick={convertToOrder} disabled={saving || !pickupBranch} className="h-10 bg-primary hover:bg-primary/90">
                 {saving ? <Loader2 className="w-4 h-4 ml-1.5 animate-spin" /> : <ShoppingCart className="w-4 h-4 ml-1.5" />}
                 تحويل لطلب
               </Button>
