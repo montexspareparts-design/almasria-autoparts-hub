@@ -314,6 +314,40 @@ const AdminStaffRoles = () => {
     setResetting(false);
   };
 
+  const handleFullDelete = async () => {
+    if (!deleteTarget) return;
+    if ((deleteTarget.email || "").toLowerCase() === PROTECTED_ADMIN_EMAIL) {
+      toast({ title: "❌ لا يمكن حذف الأدمن الرئيسي", variant: "destructive" });
+      return;
+    }
+    if (deleteConfirmText.trim() !== "حذف نهائي") {
+      toast({ title: "اكتب 'حذف نهائي' للتأكيد", variant: "destructive" });
+      return;
+    }
+    setDeletingFully(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-delete-user", {
+        body: { user_ids: [deleteTarget.user_id] },
+      });
+      if (error || data?.error) {
+        toast({ title: "فشل الحذف النهائي", description: data?.error || error?.message, variant: "destructive" });
+      } else {
+        const result = data?.results?.[0];
+        if (result?.success) {
+          toast({ title: "✅ تم حذف الموظف نهائياً", description: `تم حذف ${deleteTarget.full_name || deleteTarget.email} من النظام بالكامل` });
+          setDeleteTarget(null);
+          setDeleteConfirmText("");
+          fetchStaff();
+        } else {
+          toast({ title: "فشل الحذف", description: result?.error || "خطأ غير معروف", variant: "destructive" });
+        }
+      }
+    } catch (err: any) {
+      toast({ title: "خطأ", description: err.message, variant: "destructive" });
+    }
+    setDeletingFully(false);
+  };
+
   const filtered = staff.filter(s =>
     (s.email || "").toLowerCase().includes(search.toLowerCase()) ||
     (s.full_name || "").toLowerCase().includes(search.toLowerCase())
