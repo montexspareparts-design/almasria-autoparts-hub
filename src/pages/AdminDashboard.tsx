@@ -120,7 +120,7 @@ const sidebarGroups: SidebarGroup[] = [
 // Sections accessible by moderators (employees)
 const MODERATOR_SECTIONS = new Set([
   "daily-dashboard", "orders", "leads", "customers", "customer-intel",
-  "price-lists", "dealers", "analytics", "product-insights",
+  "price-lists", "dealers", "analytics", "product-insights", "whatsapp-inbox",
 ]);
 
 const sidebarSections = sidebarGroups.flatMap(g => g.items);
