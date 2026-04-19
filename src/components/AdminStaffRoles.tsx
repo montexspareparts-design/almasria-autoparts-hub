@@ -113,7 +113,10 @@ const AdminStaffRoles = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [newEmail, setNewEmail] = useState("");
+  const [newName, setNewName] = useState("");
+  const [newPhone, setNewPhone] = useState("");
   const [adding, setAdding] = useState(false);
+  const [createdCredentials, setCreatedCredentials] = useState<{ email: string; password: string; whatsappSent: boolean; emailSent: boolean } | null>(null);
 
   // Activity state
   const [activityLoading, setActivityLoading] = useState(false);
@@ -211,51 +214,53 @@ const AdminStaffRoles = () => {
   useEffect(() => { fetchActivity(); }, [fetchActivity]);
 
   const handleAddModerator = async () => {
-    if (!newEmail.trim()) return;
+    if (!newEmail.trim() || !newName.trim()) {
+      toast({ title: "الاسم والبريد الإلكتروني مطلوبان", variant: "destructive" });
+      return;
+    }
     setAdding(true);
+    setCreatedCredentials(null);
 
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("user_id, full_name, email")
-      .eq("email", newEmail.trim().toLowerCase())
-      .maybeSingle();
+    try {
+      const { data, error } = await supabase.functions.invoke("create-staff-account", {
+        body: {
+          fullName: newName.trim(),
+          email: newEmail.trim().toLowerCase(),
+          phone: newPhone.trim() || null,
+        },
+      });
 
-    if (profileError || !profile) {
-      toast({ title: "لم يتم العثور على مستخدم بهذا البريد", description: "تأكد من أن المستخدم مسجل في النظام", variant: "destructive" });
-      setAdding(false);
-      return;
-    }
-
-    const existing = staff.find(s => s.user_id === profile.user_id);
-    if (existing) {
-      toast({ title: "هذا المستخدم موظف بالفعل", variant: "destructive" });
-      setAdding(false);
-      return;
-    }
-
-    const { data: adminCheck } = await supabase
-      .from("user_roles")
-      .select("id")
-      .eq("user_id", profile.user_id)
-      .eq("role", "admin")
-      .maybeSingle();
-
-    if (adminCheck) {
-      toast({ title: "هذا المستخدم أدمن بالفعل — لا يحتاج صلاحية موظف", variant: "destructive" });
-      setAdding(false);
-      return;
-    }
-
-    const { error } = await supabase
-      .from("user_roles")
-      .insert({ user_id: profile.user_id, role: "moderator" });
-
-    if (error) {
-      toast({ title: "خطأ في إضافة الصلاحية", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "✅ تم إضافة الموظف بنجاح", description: `تم منح صلاحية موظف لـ ${profile.full_name || profile.email}` });
-      setNewEmail("");
-      fetchStaff();
+      if (error || data?.error) {
+        toast({
+          title: "فشل إضافة الموظف",
+          description: data?.error || error?.message || "حدث خطأ غير متوقع",
+          variant: "destructive",
+        });
+      } else {
+        if (data.isNewUser && data.tempPassword) {
+          setCreatedCredentials({
+            email: data.email,
+            password: data.tempPassword,
+            whatsappSent: data.whatsappSent,
+            emailSent: data.emailSent,
+          });
+          toast({
+            title: "✅ تم إنشاء حساب الموظف",
+            description: `${data.whatsappSent ? "📱 تم إرسال البيانات على واتساب. " : ""}${data.emailSent ? "📧 تم إرسال البيانات على الإيميل." : ""}`,
+          });
+        } else {
+          toast({
+            title: "✅ تم منح صلاحية الموظف",
+            description: "تم تحويل المستخدم القائم لموظف",
+          });
+        }
+        setNewEmail("");
+        setNewName("");
+        setNewPhone("");
+        fetchStaff();
+      }
+    } catch (err: any) {
+      toast({ title: "خطأ", description: err.message, variant: "destructive" });
     }
     setAdding(false);
   };
@@ -301,27 +306,66 @@ const AdminStaffRoles = () => {
               إضافة موظف جديد
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="flex gap-3 items-end">
-              <div className="flex-1">
-                <label className="text-sm font-medium text-muted-foreground mb-1.5 block">البريد الإلكتروني للمستخدم</label>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium text-muted-foreground mb-1.5 block">الاسم الكامل *</label>
                 <Input
-                  placeholder="example@email.com"
+                  placeholder="محمد أحمد"
+                  value={newName}
+                  onChange={e => setNewName(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-muted-foreground mb-1.5 block">البريد الإلكتروني *</label>
+                <Input
+                  placeholder="staff@email.com"
                   value={newEmail}
                   onChange={e => setNewEmail(e.target.value)}
                   dir="ltr"
                   className="text-left"
-                  onKeyDown={e => e.key === "Enter" && handleAddModerator()}
                 />
               </div>
-              <Button onClick={handleAddModerator} disabled={adding || !newEmail.trim()} className="gap-2">
-                {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
-                إضافة
-              </Button>
+              <div className="sm:col-span-2">
+                <label className="text-sm font-medium text-muted-foreground mb-1.5 block">رقم الواتساب (اختياري)</label>
+                <Input
+                  placeholder="01xxxxxxxxx"
+                  value={newPhone}
+                  onChange={e => setNewPhone(e.target.value)}
+                  dir="ltr"
+                  className="text-left"
+                />
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              يجب أن يكون المستخدم مسجلاً في النظام أولاً. سيحصل على صلاحيات الموظف.
+            <Button onClick={handleAddModerator} disabled={adding || !newEmail.trim() || !newName.trim()} className="gap-2 w-full sm:w-auto">
+              {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
+              إنشاء حساب وإرسال البيانات
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              سيتم إنشاء حساب جديد بكلمة مرور مؤقتة وإرسال بيانات الدخول على واتساب والإيميل تلقائياً. لو المستخدم مسجل بالفعل، سيتم منحه صلاحية موظف فقط.
             </p>
+
+            {createdCredentials && (
+              <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4 space-y-2">
+                <p className="font-bold text-emerald-700 dark:text-emerald-400">✅ تم إنشاء الحساب بنجاح</p>
+                <div className="text-sm space-y-1 font-mono bg-background/50 p-3 rounded">
+                  <p><span className="text-muted-foreground">البريد: </span><span dir="ltr">{createdCredentials.email}</span></p>
+                  <p><span className="text-muted-foreground">كلمة السر المؤقتة: </span><code className="bg-muted px-2 py-0.5 rounded">{createdCredentials.password}</code></p>
+                  <p className="text-xs text-muted-foreground pt-2">
+                    رابط الدخول: <span dir="ltr">{window.location.origin}/dealer-login</span>
+                  </p>
+                </div>
+                <div className="flex gap-2 text-xs">
+                  <Badge variant={createdCredentials.whatsappSent ? "default" : "secondary"}>
+                    {createdCredentials.whatsappSent ? "📱 تم إرسال واتساب" : "⚠️ لم يتم إرسال واتساب"}
+                  </Badge>
+                  <Badge variant={createdCredentials.emailSent ? "default" : "secondary"}>
+                    {createdCredentials.emailSent ? "📧 تم إرسال إيميل" : "⚠️ لم يتم إرسال إيميل"}
+                  </Badge>
+                </div>
+                <Button size="sm" variant="ghost" onClick={() => setCreatedCredentials(null)} className="text-xs">إخفاء</Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
