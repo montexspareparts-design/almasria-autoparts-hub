@@ -133,27 +133,31 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
     }
   }, [items, updateScrollState]);
 
-  // Auto-scroll every 3 seconds (RTL: scrolls left = visually right-to-left)
-  const autoScrollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Continuous smooth auto-scroll (drift) — pauses on hover/touch/focus
+  const rafRef = useRef<number | null>(null);
   const pauseAutoScroll = useRef(false);
 
   useEffect(() => {
     const el = scrollRef.current;
     if (!el || items.length === 0) return;
 
-    const startAutoScroll = () => {
-      autoScrollRef.current = setInterval(() => {
-        if (pauseAutoScroll.current) return;
-        const atStart = el.scrollLeft <= 10;
-        if (atStart) {
-          el.scrollTo({ left: el.scrollWidth, behavior: "smooth" });
-        } else {
-          el.scrollBy({ left: -160, behavior: "smooth" });
-        }
-      }, 4000);
-    };
+    const SPEED_PX_PER_FRAME = 0.45; // ~27px/sec — smooth professional drift
+    let lastTs = performance.now();
 
-    startAutoScroll();
+    const tick = (ts: number) => {
+      const dt = ts - lastTs;
+      lastTs = ts;
+      if (!pauseAutoScroll.current) {
+        const step = SPEED_PX_PER_FRAME * (dt / 16.67);
+        if (el.scrollLeft <= 1) {
+          el.scrollLeft = el.scrollWidth - el.clientWidth;
+        } else {
+          el.scrollLeft -= step;
+        }
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
 
     const pause = () => { pauseAutoScroll.current = true; };
     const resume = () => { pauseAutoScroll.current = false; };
@@ -161,13 +165,17 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
     el.addEventListener("mouseleave", resume);
     el.addEventListener("touchstart", pause, { passive: true });
     el.addEventListener("touchend", resume);
+    el.addEventListener("focusin", pause);
+    el.addEventListener("focusout", resume);
 
     return () => {
-      if (autoScrollRef.current) clearInterval(autoScrollRef.current);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
       el.removeEventListener("mouseenter", pause);
       el.removeEventListener("mouseleave", resume);
       el.removeEventListener("touchstart", pause);
       el.removeEventListener("touchend", resume);
+      el.removeEventListener("focusin", pause);
+      el.removeEventListener("focusout", resume);
     };
   }, [items]);
 
