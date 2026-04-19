@@ -444,16 +444,24 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                             </div>
                             <div className="flex items-center gap-1.5 flex-wrap">
                               {o.customer_phone && (
-                                <WhatsAppQuickChat
-                                  phone={o.customer_phone}
-                                  customerName={o.customer_name}
-                                  context={`بخصوص طلبك رقم ${o.order_number} بقيمة ${Number(o.total_amount).toLocaleString("ar-EG")} ج.م. هل تحب نأكد الطلب الآن؟`}
-                                  size="sm"
-                                />
+                                <>
+                                  <Button asChild size="sm" variant="outline" className="h-7 gap-1 text-xs border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-400">
+                                    <a href={`tel:${o.customer_phone}`}>
+                                      <Phone className="w-3 h-3" />
+                                      اتصال
+                                    </a>
+                                  </Button>
+                                  <WhatsAppQuickChat
+                                    phone={o.customer_phone}
+                                    customerName={o.customer_name}
+                                    context={`بخصوص طلبك رقم ${o.order_number} بقيمة ${Number(o.total_amount).toLocaleString("ar-EG")} ج.م. هل تحب نأكد الطلب الآن؟`}
+                                    size="sm"
+                                  />
+                                </>
                               )}
-                              <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => onNavigate?.(`orders`)}>
-                                <Eye className="w-3 h-3" />
-                                عرض
+                              <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => setSummaryUser({ id: o.user_id, name: o.customer_name, phone: o.customer_phone, isDealer: o.is_dealer })}>
+                                <Activity className="w-3 h-3" />
+                                ملخص
                               </Button>
                               <Button size="sm" className="h-7 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => markOrderContacted(o.id, o.user_id)}>
                                 <CheckCircle2 className="w-3 h-3" />
