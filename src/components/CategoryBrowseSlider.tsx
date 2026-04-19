@@ -141,18 +141,25 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
     const el = scrollRef.current;
     if (!el || items.length === 0) return;
 
-    const SPEED_PX_PER_FRAME = 0.45; // ~27px/sec — smooth professional drift
+    const SPEED_PX_PER_SEC = 35; // smooth professional drift
     let lastTs = performance.now();
+    let acc = 0; // accumulator for sub-pixel movement
 
     const tick = (ts: number) => {
       const dt = ts - lastTs;
       lastTs = ts;
-      if (!pauseAutoScroll.current) {
-        const step = SPEED_PX_PER_FRAME * (dt / 16.67);
-        if (el.scrollLeft <= 1) {
-          el.scrollLeft = el.scrollWidth - el.clientWidth;
-        } else {
-          el.scrollLeft -= step;
+      if (!pauseAutoScroll.current && el.scrollWidth > el.clientWidth) {
+        acc += (SPEED_PX_PER_SEC * dt) / 1000;
+        if (acc >= 1) {
+          const step = Math.floor(acc);
+          acc -= step;
+          const maxScroll = el.scrollWidth - el.clientWidth;
+          // RTL: drift from right (max) to left (0), then loop
+          if (el.scrollLeft <= 1) {
+            el.scrollLeft = maxScroll;
+          } else {
+            el.scrollLeft = Math.max(0, el.scrollLeft - step);
+          }
         }
       }
       rafRef.current = requestAnimationFrame(tick);
@@ -272,7 +279,7 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
           <div
             ref={scrollRef}
             onMouseDown={handleMouseDown}
-            className="flex gap-3 overflow-x-auto scrollbar-hide py-3 px-2 scroll-smooth cursor-grab active:cursor-grabbing select-none"
+            className="flex gap-3 overflow-x-auto scrollbar-hide py-3 px-2 cursor-grab active:cursor-grabbing select-none"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             dir="rtl"
           >
