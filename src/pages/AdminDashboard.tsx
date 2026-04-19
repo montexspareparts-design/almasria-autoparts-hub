@@ -44,6 +44,7 @@ const AdminWhatsAppInbox = lazy(() => import("@/components/AdminWhatsAppInbox"))
 const StaffDailyDashboard = lazy(() => import("@/components/admin/StaffDailyDashboard"));
 const StaffWelcomeDashboard = lazy(() => import("@/components/admin/StaffWelcomeDashboard"));
 const StaffAccountSettings = lazy(() => import("@/components/admin/StaffAccountSettings"));
+const AdminNewOrderAlert = lazy(() => import("@/components/admin/AdminNewOrderAlert"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];
@@ -612,6 +613,10 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {/* Real-time new order alert popup */}
+      <Suspense fallback={null}>
+        <AdminNewOrderAlert />
+      </Suspense>
       {/* Header */}
       <header className="bg-gradient-to-l from-secondary via-secondary to-[hsl(var(--secondary)/0.95)] backdrop-blur-xl border-b border-border/20 sticky top-0 z-50 shadow-sm">
         <div className="flex items-center justify-between h-14 px-4 lg:px-5">
