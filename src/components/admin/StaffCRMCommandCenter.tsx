@@ -63,6 +63,9 @@ interface SupportReq {
   created_at: string;
   minutes_ago: number;
   status: string;
+  claimed_by: string | null;
+  claimed_by_name: string | null;
+  claimed_at: string | null;
 }
 
 // =================== Helpers ===================
