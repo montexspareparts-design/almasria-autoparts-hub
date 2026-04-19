@@ -15,8 +15,14 @@ import { toast } from "@/hooks/use-toast";
 import {
   ShoppingCart, Trash2, Minus, Plus, Package, Loader2,
   ArrowRight, CreditCard, Shield, Copy, Check,
-  Search, X, CheckCircle2, Save, Send, PlusCircle, AlertTriangle
+  Search, X, CheckCircle2, Save, Send, PlusCircle, AlertTriangle, MapPin
 } from "lucide-react";
+
+const PICKUP_BRANCHES = [
+  { value: "ossim", label: "أوسيم" },
+  { value: "luxor", label: "الأقصر" },
+  { value: "tawfiqia", label: "التوفيقية" },
+] as const;
 import {
   Dialog,
   DialogContent,
