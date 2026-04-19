@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, XCircle, Clock, Eye, LogOut, Trash2, Users, ShoppingBag, Video, FileText, Image, Brain, Zap, Bell, ListVideo, Menu, X, ChevronRight, Package, BarChart3, Tag, Layers, TrendingUp, ArrowLeftRight, Briefcase, Banknote, Shield, Building2, ShieldCheck } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Clock, Eye, LogOut, Trash2, Users, ShoppingBag, Video, FileText, Image, Brain, Zap, Bell, ListVideo, Menu, X, ChevronRight, Package, BarChart3, Tag, Layers, TrendingUp, ArrowLeftRight, Briefcase, Banknote, Shield, Building2, ShieldCheck, MessageCircle } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -40,6 +40,7 @@ const AdminERPCustomers = lazy(() => import("@/components/AdminERPCustomers"));
 const AdminStockSettings = lazy(() => import("@/components/AdminStockSettings"));
 const AdminLeads = lazy(() => import("@/components/AdminLeads"));
 const AdminStaffRoles = lazy(() => import("@/components/AdminStaffRoles"));
+const AdminWhatsAppInbox = lazy(() => import("@/components/AdminWhatsAppInbox"));
 const StaffDailyDashboard = lazy(() => import("@/components/admin/StaffDailyDashboard"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
@@ -102,6 +103,7 @@ const sidebarGroups: SidebarGroup[] = [
     {
       label: "التنبيهات والربط",
       items: [
+        { id: "whatsapp-inbox", label: "صندوق الواتساب", icon: MessageCircle },
         { id: "instapay-receipts", label: "إيصالات InstaPay", icon: Banknote },
         { id: "payment-reminders", label: "متابعة التذكيرات", icon: Clock },
         { id: "push-notifications", label: "إشعارات Push", icon: Bell },
@@ -118,7 +120,7 @@ const sidebarGroups: SidebarGroup[] = [
 // Sections accessible by moderators (employees)
 const MODERATOR_SECTIONS = new Set([
   "daily-dashboard", "orders", "leads", "customers", "customer-intel",
-  "price-lists", "dealers", "analytics", "product-insights",
+  "price-lists", "dealers", "analytics", "product-insights", "whatsapp-inbox",
 ]);
 
 const sidebarSections = sidebarGroups.flatMap(g => g.items);
@@ -581,6 +583,8 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminStaffRoles /></Suspense>;
       case "audit-log":
         return <Suspense fallback={<SectionLoader />}><AdminAuditLog /></Suspense>;
+      case "whatsapp-inbox":
+        return <Suspense fallback={<SectionLoader />}><AdminWhatsAppInbox /></Suspense>;
       case "bundles":
         return <Suspense fallback={<SectionLoader />}><AdminMaintenanceBundles /></Suspense>;
       default:

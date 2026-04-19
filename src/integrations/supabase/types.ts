@@ -1753,6 +1753,113 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_conversations: {
+        Row: {
+          assigned_to: string | null
+          contact_name: string | null
+          created_at: string
+          customer_user_id: string | null
+          id: string
+          is_archived: boolean
+          last_message_at: string
+          last_message_preview: string | null
+          phone: string
+          unread_count: number
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          contact_name?: string | null
+          created_at?: string
+          customer_user_id?: string | null
+          id?: string
+          is_archived?: boolean
+          last_message_at?: string
+          last_message_preview?: string | null
+          phone: string
+          unread_count?: number
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          contact_name?: string | null
+          created_at?: string
+          customer_user_id?: string | null
+          id?: string
+          is_archived?: boolean
+          last_message_at?: string
+          last_message_preview?: string | null
+          phone?: string
+          unread_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      whatsapp_messages: {
+        Row: {
+          body: string | null
+          conversation_id: string
+          created_at: string
+          direction: string
+          error_message: string | null
+          id: string
+          media_caption: string | null
+          media_mime: string | null
+          media_url: string | null
+          message_type: string
+          meta_message_id: string | null
+          phone: string
+          raw_payload: Json | null
+          sent_by: string | null
+          source: string
+          status: string
+        }
+        Insert: {
+          body?: string | null
+          conversation_id: string
+          created_at?: string
+          direction: string
+          error_message?: string | null
+          id?: string
+          media_caption?: string | null
+          media_mime?: string | null
+          media_url?: string | null
+          message_type?: string
+          meta_message_id?: string | null
+          phone: string
+          raw_payload?: Json | null
+          sent_by?: string | null
+          source?: string
+          status?: string
+        }
+        Update: {
+          body?: string | null
+          conversation_id?: string
+          created_at?: string
+          direction?: string
+          error_message?: string | null
+          id?: string
+          media_caption?: string | null
+          media_mime?: string | null
+          media_url?: string | null
+          message_type?: string
+          meta_message_id?: string | null
+          phone?: string
+          raw_payload?: Json | null
+          sent_by?: string | null
+          source?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       product_reviews_public: {
