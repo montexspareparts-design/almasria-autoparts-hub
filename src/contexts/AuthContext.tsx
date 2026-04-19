@@ -125,6 +125,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user ?? null);
 
         if (session?.user) {
+          // Only re-register dealer session on a fresh sign-in, NOT on token refresh
+          // (TOKEN_REFRESHED fires during payment flows and would race with the session monitor → false logout)
+          const isFreshSignIn = event === "SIGNED_IN" || event === "INITIAL_SESSION";
+
           setTimeout(async () => {
             const { data: dealer } = await supabase
               .from("dealer_accounts")
@@ -134,9 +138,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               .maybeSingle();
             setDealerAccount(dealer as any);
 
-            // If dealer, register session and start monitoring
+            // If dealer, register session (only on fresh sign-in) and start monitoring
             if (dealer) {
-              await registerDealerSession(dealer.id);
+              if (isFreshSignIn) {
+                // Reuse existing session ID from localStorage if present (page reload), otherwise create new
+                const existingSessionId = localStorage.getItem(SESSION_KEY);
+                if (!existingSessionId) {
+                  await registerDealerSession(dealer.id);
+                }
+              }
               startSessionMonitor(dealer.id);
             }
 
