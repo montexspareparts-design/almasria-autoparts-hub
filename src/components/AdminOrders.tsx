@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,9 +12,33 @@ import {
   Loader2, Package, Clock, Truck, CheckCircle, XCircle,
   ShoppingBag, MapPin, Phone, Mail, ChevronDown, ChevronUp,
   FileText, Edit3, Trash2, Save, Plus, Minus, X,
-  ChevronRight, ChevronLeft, Search, CreditCard
+  ChevronRight, ChevronLeft, Search, CreditCard, MessageCircle, AlertTriangle
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+
+// SLA threshold for first contact (minutes)
+const SLA_MINUTES = 15;
+
+function getMinutesAgo(date: string): number {
+  return Math.floor((Date.now() - new Date(date).getTime()) / 60000);
+}
+
+function formatPhoneForWA(phone: string): string {
+  let c = phone.replace(/[\s\-()+]/g, "");
+  c = c.replace(/^002/, "").replace(/^0020/, "");
+  if (c.startsWith("0")) c = "2" + c;
+  if (/^1\d{9}$/.test(c)) c = "20" + c;
+  return c;
+}
+
+function buildNewOrderMessage(name: string, orderNumber: string, total: number): string {
+  return (
+    `أهلاً ${name || "عميلنا الكريم"}، معاك المصرية جروب لقطع غيار تويوتا 🚗\n\n` +
+    `استلمنا طلبك رقم *${orderNumber}* بقيمة *${Number(total).toLocaleString("ar-EG")} ج.م*.\n` +
+    `بنتواصل معاك لتأكيد التفاصيل وأقرب وقت للاستلام/التوصيل.\n\n` +
+    `هل تحب نأكد الطلب الآن؟`
+  );
+}
 
 type Order = Database["public"]["Tables"]["orders"]["Row"];
 type OrderItem = Database["public"]["Tables"]["order_items"]["Row"];
