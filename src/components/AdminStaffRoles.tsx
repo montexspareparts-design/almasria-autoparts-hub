@@ -286,6 +286,29 @@ const AdminStaffRoles = () => {
     }
   };
 
+  const handleResetPassword = async () => {
+    if (!resetTarget?.email || resetPassword.trim().length < 6) {
+      toast({ title: "كلمة المرور لازم تكون 6 حروف على الأقل", variant: "destructive" });
+      return;
+    }
+    setResetting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-reset-staff-password", {
+        body: { email: resetTarget.email, newPassword: resetPassword.trim() },
+      });
+      if (error || data?.error) {
+        toast({ title: "فشل إعادة التعيين", description: data?.error || error?.message, variant: "destructive" });
+      } else {
+        toast({ title: "✅ تم تغيير كلمة المرور", description: `الكلمة الجديدة: ${resetPassword.trim()}` });
+        setResetTarget(null);
+        setResetPassword("");
+      }
+    } catch (err: any) {
+      toast({ title: "خطأ", description: err.message, variant: "destructive" });
+    }
+    setResetting(false);
+  };
+
   const filtered = staff.filter(s =>
     (s.email || "").toLowerCase().includes(search.toLowerCase()) ||
     (s.full_name || "").toLowerCase().includes(search.toLowerCase())
@@ -341,6 +364,17 @@ const AdminStaffRoles = () => {
                   onChange={e => setNewPhone(e.target.value)}
                   dir="ltr"
                   className="text-left"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="text-sm font-medium text-muted-foreground mb-1.5 block">كلمة المرور (اختياري — هتتولّد عشوائياً لو فاضية)</label>
+                <Input
+                  placeholder="مثال: Karam@2050"
+                  value={newCustomPassword}
+                  onChange={e => setNewCustomPassword(e.target.value)}
+                  dir="ltr"
+                  className="text-left"
+                  type="text"
                 />
               </div>
             </div>
