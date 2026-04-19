@@ -330,18 +330,37 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
               </CardHeader>
               <CardContent className="space-y-2">
                 {inactiveAlerts.slice(0, 5).map((alert, i) => (
-                  <div key={i} className="flex items-center justify-between gap-3 p-3 bg-red-50/50 rounded-lg border border-red-100">
-                    <div className="flex-1 min-w-0">
+                  <div key={i} className="flex items-center justify-between gap-3 p-3 bg-red-50/50 rounded-lg border border-red-100 flex-wrap">
+                    <div className="flex-1 min-w-[180px]">
                       <p className="font-semibold text-sm text-foreground truncate">{alert.name}</p>
                       <p className="text-xs text-muted-foreground">{alert.detail}</p>
+                      {alert.phone ? (
+                        <a href={`tel:${alert.phone}`} className="text-xs text-primary hover:underline flex items-center gap-1 mt-0.5 font-mono" dir="ltr">
+                          📞 {alert.phone}
+                        </a>
+                      ) : (
+                        <p className="text-[11px] text-muted-foreground italic">لا يوجد رقم موبايل</p>
+                      )}
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                       {alert.phone && (
-                        <WhatsAppQuickChat
-                          phone={alert.phone}
-                          customerName={alert.name}
-                          context="متابعة عميل خامل"
-                        />
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 gap-1 text-xs border-blue-300 text-blue-700 hover:bg-blue-50"
+                            onClick={() => window.location.href = `tel:${alert.phone}`}
+                          >
+                            <MessageCircle className="w-3 h-3" />
+                            اتصال
+                          </Button>
+                          <WhatsAppQuickChat
+                            phone={alert.phone}
+                            customerName={alert.name}
+                            context="افتقدناك! نقدم لك عروض مميزة على قطع الغيار. تحب نوريك أحدث الكشوفات؟"
+                            size="sm"
+                          />
+                        </>
                       )}
                       <Badge variant="outline" className="text-red-600 border-red-300 text-[10px]">
                         خامل
