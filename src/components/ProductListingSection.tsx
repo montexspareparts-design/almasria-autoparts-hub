@@ -180,6 +180,30 @@ const ProductListingSection = memo(({
             </div>
           </div>
 
+          {/* Quick search suggestions — only when search is empty */}
+          {!filters.search && (
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 mb-2 scrollbar-hide -mt-1" style={{ scrollbarWidth: "none" }}>
+              <span className="text-[11px] text-muted-foreground/70 font-medium shrink-0 ml-1">بحث سريع:</span>
+              {[
+                { label: "فلاتر", icon: "🛢️" },
+                { label: "زيت", icon: "🛢️" },
+                { label: "فرامل", icon: "🛑" },
+                { label: "بوجيه", icon: "⚡" },
+                { label: "تيل", icon: "🔧" },
+                { label: "بطارية", icon: "🔋" },
+              ].map(s => (
+                <button
+                  key={s.label}
+                  onClick={() => setFilters(prev => ({ ...prev, search: s.label }))}
+                  className="px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap shrink-0 bg-card border border-border/50 text-foreground/80 hover:bg-primary hover:text-primary-foreground hover:border-primary hover:shadow-sm transition-all duration-200 flex items-center gap-1"
+                >
+                  <span className="text-[13px] leading-none">{s.icon}</span>
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Brand quick-filter chips for dealer */}
           {isDealer && (
             <div className="flex gap-1.5 overflow-x-auto pb-1 mb-2 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
