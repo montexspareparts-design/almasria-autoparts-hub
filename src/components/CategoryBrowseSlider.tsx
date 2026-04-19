@@ -279,7 +279,7 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
           <div
             ref={scrollRef}
             onMouseDown={handleMouseDown}
-            className="flex gap-3 overflow-x-auto scrollbar-hide py-3 px-2 scroll-smooth cursor-grab active:cursor-grabbing select-none"
+            className="flex gap-3 overflow-x-auto scrollbar-hide py-3 px-2 cursor-grab active:cursor-grabbing select-none"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             dir="rtl"
           >
