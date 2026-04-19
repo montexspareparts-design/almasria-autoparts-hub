@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, XCircle, Clock, Eye, LogOut, Trash2, Users, ShoppingBag, Video, FileText, Image, Brain, Zap, Bell, ListVideo, Menu, X, ChevronRight, Package, BarChart3, Tag, Layers, TrendingUp, ArrowLeftRight, Briefcase, Banknote, Shield, Building2, ShieldCheck, MessageCircle } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Clock, Eye, LogOut, Trash2, Users, ShoppingBag, Video, FileText, Image, Brain, Zap, Bell, ListVideo, Menu, X, ChevronRight, Package, BarChart3, Tag, Layers, TrendingUp, ArrowLeftRight, Briefcase, Banknote, Shield, Building2, ShieldCheck, MessageCircle, User as UserIcon } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -43,6 +43,7 @@ const AdminStaffRoles = lazy(() => import("@/components/AdminStaffRoles"));
 const AdminWhatsAppInbox = lazy(() => import("@/components/AdminWhatsAppInbox"));
 const StaffDailyDashboard = lazy(() => import("@/components/admin/StaffDailyDashboard"));
 const StaffWelcomeDashboard = lazy(() => import("@/components/admin/StaffWelcomeDashboard"));
+const StaffAccountSettings = lazy(() => import("@/components/admin/StaffAccountSettings"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];
@@ -116,12 +117,19 @@ const sidebarGroups: SidebarGroup[] = [
         { id: "audit-log", label: "سجل المراجعة", icon: Shield },
       ],
     },
+    {
+      label: "حسابي",
+      items: [
+        { id: "account-settings", label: "إعدادات حسابي", icon: UserIcon },
+      ],
+    },
 ];
 
 // Sections accessible by moderators (employees)
 const MODERATOR_SECTIONS = new Set([
   "daily-dashboard", "orders", "leads", "customers", "customer-intel",
   "price-lists", "dealers", "analytics", "product-insights", "whatsapp-inbox",
+  "account-settings",
 ]);
 
 const sidebarSections = sidebarGroups.flatMap(g => g.items);
@@ -593,6 +601,8 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminWhatsAppInbox /></Suspense>;
       case "bundles":
         return <Suspense fallback={<SectionLoader />}><AdminMaintenanceBundles /></Suspense>;
+      case "account-settings":
+        return <Suspense fallback={<SectionLoader />}><StaffAccountSettings /></Suspense>;
       default:
         return <Suspense fallback={<SectionLoader />}><AdminAnalytics /></Suspense>;
     }
