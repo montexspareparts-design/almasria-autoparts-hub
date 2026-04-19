@@ -885,6 +885,9 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
                     <span className="text-sm font-medium text-muted-foreground">الإجمالي</span>
                     <span className="text-lg font-bold text-foreground">{todayItems.reduce((s, i) => s + i.unit_price * i.quantity, 0).toLocaleString("ar-EG")} ج.م</span>
                   </div>
+                  <div className="mb-3">
+                    <PickupBranchSelector value={pickupBranch} onChange={setPickupBranch} compact />
+                  </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <Button
                       variant="outline"
