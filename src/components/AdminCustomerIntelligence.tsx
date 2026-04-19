@@ -1133,34 +1133,6 @@ const AdminCustomerIntelligence = () => {
                 ))}
               </div>
 
-              {/* Bar Chart */}
-              {chartData.length > 0 && (
-                <div className="bg-muted/20 rounded-2xl p-5 border border-border/30">
-                  <h4 className="text-sm font-black text-foreground mb-4 flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <BarChart3 className="w-3.5 h-3.5 text-primary" />
-                    </div>
-                    أعلى 10 عملاء بحثاً — مقارنة بالطلبات
-                  </h4>
-                  <div className="h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
-                        <XAxis type="number" tick={{ fontSize: 11 }} />
-                        <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 11, textAnchor: "end" }} />
-                        <Tooltip
-                          contentStyle={{ direction: "rtl", borderRadius: 12, fontSize: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
-                          formatter={(value: number, name: string) => [value, name]}
-                        />
-                        <Legend wrapperStyle={{ fontSize: 12 }} />
-                        <Bar dataKey="بحث" fill="hsl(217, 91%, 60%)" radius={[0, 6, 6, 0]} barSize={16} />
-                        <Bar dataKey="طلبات" fill="hsl(142, 71%, 45%)" radius={[0, 6, 6, 0]} barSize={16} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              )}
-
               {/* Detailed Table */}
               <div>
                 <div className="flex items-center justify-between mb-3">
