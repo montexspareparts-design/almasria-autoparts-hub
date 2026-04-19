@@ -536,6 +536,123 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
   const sendMessage = async (text: string) => {
     if ((!text.trim() && !pendingImage) || isLoading) return;
 
+    // ============= SIGNUP FLOW =============
+    if (signupStateRef.current.step === "idle" && !user && wantsSignup(text)) {
+      signupStateRef.current = { step: "name" };
+      setMessages(prev => [
+        ...prev,
+        { role: "user", content: text },
+        {
+          role: "assistant",
+          content:
+            "تمام! هعمللك حساب جديد في ثواني ✨\n\nمحتاج منك 3 بيانات بس:\n\n**1️⃣ اكتبلي اسمك بالكامل** (الاسم الذي ستظهر به فواتيرك):",
+        },
+      ]);
+      return;
+    }
+
+    if (signupStateRef.current.step !== "idle" && signupStateRef.current.step !== "submitting") {
+      const trimmed = text.trim();
+
+      if (/^(الغاء|إلغاء|cancel|stop|توقف)$/i.test(trimmed)) {
+        signupStateRef.current = { step: "idle" };
+        setMessages(prev => [
+          ...prev,
+          { role: "user", content: text },
+          { role: "assistant", content: "تمام، تم إلغاء إنشاء الحساب 👌. لو احتجت تاني، قولي **اعملي حساب**." },
+        ]);
+        return;
+      }
+
+      const step = signupStateRef.current.step;
+      setMessages(prev => [...prev, { role: "user", content: text }]);
+
+      if (step === "name") {
+        if (trimmed.length < 2 || trimmed.length > 80) {
+          setMessages(prev => [...prev, { role: "assistant", content: "الاسم لازم يكون من 2 إلى 80 حرف. اكتبلي اسمك بالكامل من فضلك:" }]);
+          return;
+        }
+        signupStateRef.current.name = trimmed;
+        signupStateRef.current.step = "email";
+        setMessages(prev => [
+          ...prev,
+          { role: "assistant", content: `تشرفنا يا ${trimmed} 🌟\n\n**2️⃣ ابعتلي الإيميل بتاعك** (مهم عشان نبعتلك تأكيد الطلبات):` },
+        ]);
+        return;
+      }
+
+      if (step === "email") {
+        const email = trimmed.toLowerCase();
+        if (!isValidEmail(email)) {
+          setMessages(prev => [...prev, { role: "assistant", content: "الإيميل ده شكله مش مظبوط 🤔. اكتب الإيميل بالشكل الصحيح، مثال: ahmed@gmail.com" }]);
+          return;
+        }
+        signupStateRef.current.email = email;
+        signupStateRef.current.step = "phone";
+        setMessages(prev => [
+          ...prev,
+          { role: "assistant", content: "ممتاز ✅\n\n**3️⃣ ابعتلي رقم موبايلك** (لازم يكون رقم مصري 11 رقم يبدأ بـ 01):" },
+        ]);
+        return;
+      }
+
+      if (step === "phone") {
+        const phone = normalizeEgPhone(trimmed);
+        if (!phone) {
+          setMessages(prev => [...prev, { role: "assistant", content: "الرقم ده مش رقم موبايل مصري صحيح. لازم يكون 11 رقم ويبدأ بـ 010 أو 011 أو 012 أو 015. جرب تاني:" }]);
+          return;
+        }
+        signupStateRef.current.phone = phone;
+        signupStateRef.current.step = "submitting";
+
+        const { name, email } = signupStateRef.current;
+        setMessages(prev => [
+          ...prev,
+          { role: "assistant", content: `جاري إنشاء الحساب... ⏳\n\n**الاسم:** ${name}\n**الإيميل:** ${email}\n**الموبايل:** ${phone}` },
+        ]);
+
+        const result = await submitSignup(name!, email!, phone);
+        if (result.ok && result.data?.success) {
+          signupStateRef.current = { step: "idle" };
+          setMessages(prev => [
+            ...prev,
+            {
+              role: "assistant",
+              content:
+                `🎉 **تم إنشاء حسابك بنجاح!**\n\n` +
+                `احفظ بياناتك في مكان آمن:\n\n` +
+                `📧 **الإيميل:** \`${result.data.email}\`\n` +
+                `🔐 **كلمة السر:** \`${result.data.password}\`\n\n` +
+                `دلوقتي تقدر تسجّل دخولك وتشوف الأسعار وتطلب أي قطعة 🚗\n\n` +
+                `[👉 سجّل دخولك دلوقتي](/auth)`,
+            },
+          ]);
+          toast.success("تم إنشاء حسابك بنجاح 🎉");
+        } else {
+          const errMsg = result.data?.error || "حصلت مشكلة، جرب تاني";
+          const field = result.data?.field as "name" | "email" | "phone" | undefined;
+          if (field === "email") {
+            signupStateRef.current.step = "email";
+            signupStateRef.current.email = undefined;
+            setMessages(prev => [...prev, { role: "assistant", content: `❌ ${errMsg}\n\nاكتبلي إيميل تاني:` }]);
+          } else if (field === "phone") {
+            signupStateRef.current.step = "phone";
+            signupStateRef.current.phone = undefined;
+            setMessages(prev => [...prev, { role: "assistant", content: `❌ ${errMsg}\n\nاكتبلي رقم موبايل تاني:` }]);
+          } else if (field === "name") {
+            signupStateRef.current.step = "name";
+            signupStateRef.current.name = undefined;
+            setMessages(prev => [...prev, { role: "assistant", content: `❌ ${errMsg}\n\nاكتبلي الاسم تاني:` }]);
+          } else {
+            signupStateRef.current = { step: "idle" };
+            setMessages(prev => [...prev, { role: "assistant", content: `❌ ${errMsg}\n\nلو حابب تجرب تاني قولي **اعملي حساب**، أو تواصل معانا على [واتساب](https://wa.me/201032104861).` }]);
+          }
+        }
+        return;
+      }
+    }
+    // ============= END SIGNUP FLOW =============
+
     // Check if asking for support team / human contact
     if (wantsHumanSupport(text)) {
       // Already logged in → create request immediately
