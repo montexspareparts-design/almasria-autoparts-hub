@@ -82,11 +82,12 @@ const DealerProductSearch = ({ onNavigateToOrders, onNavigateToCart, sharedCart 
         setCommandPaletteOpen={listing.setCommandPaletteOpen}
         showBrands
         beforeGrid={
-          <CategoryBrowseSlider
-            onCategorySelect={(categoryId, categoryName) => {
-              listing.setFilters((prev: any) => ({ ...prev, categoryId, search: "", brandKey: null }));
-            }}
-          />
+          <>
+            <CategoryBrowseSlider
+              onCategorySelect={handleCategorySelect}
+            />
+            <div ref={productsAnchorRef} aria-hidden className="scroll-mt-24" />
+          </>
         }
       />
 
