@@ -577,15 +577,27 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                               </a>
                             )}
                           </div>
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1.5 flex-wrap">
                             {y.phone && (
-                              <WhatsAppQuickChat
-                                phone={y.phone}
-                                customerName={y.name}
-                                context="لاحظنا زيارتك للموقع أمس. هل تحتاج مساعدة في طلب معين؟"
-                                size="sm"
-                              />
+                              <>
+                                <Button asChild size="sm" variant="outline" className="h-7 gap-1 text-xs border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-400">
+                                  <a href={`tel:${y.phone}`}>
+                                    <Phone className="w-3 h-3" />
+                                    اتصال
+                                  </a>
+                                </Button>
+                                <WhatsAppQuickChat
+                                  phone={y.phone}
+                                  customerName={y.name}
+                                  context="لاحظنا زيارتك للموقع أمس. هل تحتاج مساعدة في طلب معين؟"
+                                  size="sm"
+                                />
+                              </>
                             )}
+                            <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => setSummaryUser({ id: y.user_id, name: y.name, phone: y.phone, isDealer: y.is_dealer })}>
+                              <Activity className="w-3 h-3" />
+                              ملخص
+                            </Button>
                             <Button size="sm" className="h-7 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => markContacted(y.user_id, "yesterday")}>
                               <CheckCircle2 className="w-3 h-3" />
                               تم
