@@ -9,7 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Loader2, UserPlus, Trash2, Shield, Search, Users, Activity, ShoppingBag, UserCheck, FileText, Package, Clock, KeyRound } from "lucide-react";
+import { Loader2, UserPlus, Trash2, Shield, Search, Users, Activity, ShoppingBag, UserCheck, FileText, Package, Clock, KeyRound, UserX, Crown } from "lucide-react";
+
+const PROTECTED_ADMIN_EMAIL = "monmohanad9@gmail.com";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface StaffMember {
@@ -122,6 +124,9 @@ const AdminStaffRoles = () => {
   const [resetTarget, setResetTarget] = useState<StaffMember | null>(null);
   const [resetPassword, setResetPassword] = useState("");
   const [resetting, setResetting] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<StaffMember | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deletingFully, setDeletingFully] = useState(false);
 
   // Activity state
   const [activityLoading, setActivityLoading] = useState(false);
@@ -309,6 +314,40 @@ const AdminStaffRoles = () => {
     setResetting(false);
   };
 
+  const handleFullDelete = async () => {
+    if (!deleteTarget) return;
+    if ((deleteTarget.email || "").toLowerCase() === PROTECTED_ADMIN_EMAIL) {
+      toast({ title: "❌ لا يمكن حذف الأدمن الرئيسي", variant: "destructive" });
+      return;
+    }
+    if (deleteConfirmText.trim() !== "حذف نهائي") {
+      toast({ title: "اكتب 'حذف نهائي' للتأكيد", variant: "destructive" });
+      return;
+    }
+    setDeletingFully(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-delete-user", {
+        body: { user_ids: [deleteTarget.user_id] },
+      });
+      if (error || data?.error) {
+        toast({ title: "فشل الحذف النهائي", description: data?.error || error?.message, variant: "destructive" });
+      } else {
+        const result = data?.results?.[0];
+        if (result?.success) {
+          toast({ title: "✅ تم حذف الموظف نهائياً", description: `تم حذف ${deleteTarget.full_name || deleteTarget.email} من النظام بالكامل` });
+          setDeleteTarget(null);
+          setDeleteConfirmText("");
+          fetchStaff();
+        } else {
+          toast({ title: "فشل الحذف", description: result?.error || "خطأ غير معروف", variant: "destructive" });
+        }
+      }
+    } catch (err: any) {
+      toast({ title: "خطأ", description: err.message, variant: "destructive" });
+    }
+    setDeletingFully(false);
+  };
+
   const filtered = staff.filter(s =>
     (s.email || "").toLowerCase().includes(search.toLowerCase()) ||
     (s.full_name || "").toLowerCase().includes(search.toLowerCase())
@@ -443,9 +482,21 @@ const AdminStaffRoles = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.map(member => (
+                  {filtered.map(member => {
+                    const isProtected = (member.email || "").toLowerCase() === PROTECTED_ADMIN_EMAIL;
+                    return (
                     <TableRow key={member.id}>
-                      <TableCell className="font-medium">{member.full_name || "—"}</TableCell>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          {member.full_name || "—"}
+                          {isProtected && (
+                            <Badge variant="outline" className="gap-1 text-[10px] border-amber-500/40 text-amber-600">
+                              <Crown className="w-3 h-3" />
+                              أدمن رئيسي
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell dir="ltr" className="text-left text-muted-foreground">{member.email || "—"}</TableCell>
                       <TableCell className="text-muted-foreground text-sm">{new Date(member.created_at).toLocaleDateString("ar-EG")}</TableCell>
                       <TableCell>
@@ -456,12 +507,19 @@ const AdminStaffRoles = () => {
                             className="text-amber-600 hover:bg-amber-500/10 h-8 w-8"
                             onClick={() => { setResetTarget(member); setResetPassword(""); }}
                             title="إعادة تعيين كلمة المرور"
+                            disabled={isProtected}
                           >
                             <KeyRound className="w-4 h-4" />
                           </Button>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 h-8 w-8" title="حذف الصلاحية">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-destructive hover:bg-destructive/10 h-8 w-8"
+                                title="حذف الصلاحية فقط"
+                                disabled={isProtected}
+                              >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
                             </AlertDialogTrigger>
@@ -469,21 +527,32 @@ const AdminStaffRoles = () => {
                               <AlertDialogHeader>
                                 <AlertDialogTitle>حذف صلاحية الموظف؟</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  سيتم إزالة صلاحيات الموظف من {member.full_name || member.email}.
+                                  سيتم إزالة صلاحيات الموظف من {member.full_name || member.email} (الحساب يبقى موجوداً).
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel>إلغاء</AlertDialogCancel>
                                 <AlertDialogAction onClick={() => handleRemoveModerator(member)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                  حذف
+                                  حذف الصلاحية
                                 </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive hover:bg-destructive/20 h-8 w-8 border border-destructive/30"
+                            title="حذف نهائي من النظام"
+                            disabled={isProtected}
+                            onClick={() => { setDeleteTarget(member); setDeleteConfirmText(""); }}
+                          >
+                            <UserX className="w-4 h-4" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                    );
+                  })}
                 </TableBody>
               </Table>
             )}
@@ -659,6 +728,55 @@ const AdminStaffRoles = () => {
             <Button onClick={handleResetPassword} disabled={resetting || resetPassword.trim().length < 6} className="gap-2">
               {resetting ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
               تعيين كلمة المرور
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Full Delete Dialog */}
+      <Dialog open={!!deleteTarget} onOpenChange={(o) => { if (!o) { setDeleteTarget(null); setDeleteConfirmText(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <UserX className="w-5 h-5" />
+              حذف نهائي للموظف
+            </DialogTitle>
+            <DialogDescription>
+              سيتم حذف <strong>{deleteTarget?.full_name || deleteTarget?.email}</strong> نهائياً من نظام المصادقة، الصلاحيات، والملف الشخصي. <span className="text-destructive font-bold">لا يمكن التراجع.</span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 text-sm space-y-1">
+              <p className="font-bold text-destructive">⚠️ سيتم حذف:</p>
+              <ul className="list-disc list-inside text-xs text-muted-foreground space-y-0.5">
+                <li>حساب المصادقة (auth.users)</li>
+                <li>الصلاحيات (user_roles)</li>
+                <li>الملف الشخصي (profiles)</li>
+                <li>حساب التاجر إن وجد + الإشعارات</li>
+              </ul>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground mb-1.5 block">
+                للتأكيد، اكتب: <code className="bg-muted px-1.5 py-0.5 rounded text-foreground">حذف نهائي</code>
+              </label>
+              <Input
+                placeholder="حذف نهائي"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                autoFocus
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)} disabled={deletingFully}>إلغاء</Button>
+            <Button
+              variant="destructive"
+              onClick={handleFullDelete}
+              disabled={deletingFully || deleteConfirmText.trim() !== "حذف نهائي"}
+              className="gap-2"
+            >
+              {deletingFully ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserX className="w-4 h-4" />}
+              حذف نهائي
             </Button>
           </DialogFooter>
         </DialogContent>
