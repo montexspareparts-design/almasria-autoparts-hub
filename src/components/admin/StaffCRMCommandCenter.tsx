@@ -669,8 +669,22 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                   <div className="divide-y">
                     {filteredSupport.map((r) => {
                       const isLate = r.minutes_ago >= 5;
+                      const isClaimed = !!r.claimed_by;
+                      const isMine = isClaimed && r.claimed_by === user?.id;
+                      const claimedByOther = isClaimed && !isMine;
                       return (
-                        <div key={r.id} className={`p-3 hover:bg-muted/30 transition-colors ${isLate ? "bg-purple-50/30 dark:bg-purple-950/10" : ""}`}>
+                        <div
+                          key={r.id}
+                          className={`p-3 transition-colors ${
+                            claimedByOther
+                              ? "bg-muted/40 opacity-60"
+                              : isMine
+                                ? "bg-emerald-50/40 dark:bg-emerald-950/10 border-r-4 border-emerald-500"
+                                : isLate
+                                  ? "bg-purple-50/30 dark:bg-purple-950/10 hover:bg-muted/30"
+                                  : "hover:bg-muted/30"
+                          }`}
+                        >
                           <div className="flex items-start justify-between gap-3 flex-wrap">
                             <div className="flex-1 min-w-[200px]">
                               <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -680,10 +694,22 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                                   {r.is_dealer ? "تاجر" : "قطاعي"}
                                 </Badge>
                                 {!r.user_id && <Badge variant="outline" className="text-[10px] h-5">ضيف</Badge>}
-                                <Badge variant={isLate ? "destructive" : "outline"} className={`text-[10px] h-5 gap-1 ${isLate ? "animate-pulse" : ""}`}>
+                                <Badge variant={isLate && !isClaimed ? "destructive" : "outline"} className={`text-[10px] h-5 gap-1 ${isLate && !isClaimed ? "animate-pulse" : ""}`}>
                                   <Clock className="w-3 h-3" />
                                   {fmtMinutes(r.minutes_ago)}
                                 </Badge>
+                                {isMine && (
+                                  <Badge className="text-[10px] h-5 gap-1 bg-emerald-600 hover:bg-emerald-600">
+                                    <UserCheck className="w-3 h-3" />
+                                    أنت بترد
+                                  </Badge>
+                                )}
+                                {claimedByOther && (
+                                  <Badge variant="secondary" className="text-[10px] h-5 gap-1">
+                                    <UserCheck className="w-3 h-3" />
+                                    {r.claimed_by_name} بيرد
+                                  </Badge>
+                                )}
                               </div>
                               {r.customer_phone && (
                                 <a href={`tel:${r.customer_phone}`} className="text-xs text-primary hover:underline flex items-center gap-1">
@@ -699,7 +725,16 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                               )}
                             </div>
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              {r.customer_phone && (
+                              {!isClaimed && (
+                                <Button
+                                  size="sm"
+                                  className="h-7 gap-1 text-xs bg-primary hover:bg-primary/90 shadow-md"
+                                  onClick={() => claimSupportRequest(r.id)}
+                                >
+                                  🎯 أنا هرد
+                                </Button>
+                              )}
+                              {isMine && r.customer_phone && (
                                 <>
                                   <Button asChild size="sm" variant="outline" className="h-7 gap-1 text-xs border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-400">
                                     <a href={`tel:${r.customer_phone}`}>
@@ -715,16 +750,18 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                                   />
                                 </>
                               )}
-                              {r.user_id && (
+                              {isMine && r.user_id && (
                                 <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => setSummaryUser({ id: r.user_id!, name: r.customer_name || "عميل", phone: r.customer_phone, isDealer: r.is_dealer })}>
                                   <Activity className="w-3 h-3" />
                                   ملخص
                                 </Button>
                               )}
-                              <Button size="sm" className="h-7 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => resolveSupportRequest(r.id)}>
-                                <CheckCircle2 className="w-3 h-3" />
-                                تم
-                              </Button>
+                              {isMine && (
+                                <Button size="sm" className="h-7 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => resolveSupportRequest(r.id)}>
+                                  <CheckCircle2 className="w-3 h-3" />
+                                  تم الرد
+                                </Button>
+                              )}
                             </div>
                           </div>
                         </div>
