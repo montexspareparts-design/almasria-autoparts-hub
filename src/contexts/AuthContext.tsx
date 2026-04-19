@@ -160,6 +160,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setIsAdmin(hasAdmin);
             setIsModerator(hasModerator);
 
+            // Track customer session for CRM (non-staff users only)
+            if (!hasAdmin && !hasModerator) {
+              import("@/lib/sessionTracker").then(m => m.trackCustomerSession()).catch(() => {});
+            }
+
             // Moderator-only: always go to admin, no role selection
             if (hasModerator && !hasAdmin && dealer) {
               // Moderators don't get dealer access even if they have an account
