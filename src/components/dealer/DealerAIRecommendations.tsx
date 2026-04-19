@@ -33,10 +33,19 @@ const DealerAIRecommendations = ({ isRTL = true }: { isRTL?: boolean }) => {
     else setLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke("dealer-ai-recommendations", {
-        body: { user_id: user.id, force_refresh: forceRefresh },
+      const { data: { session } } = await supabase.auth.getSession();
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/dealer-ai-recommendations`;
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({ user_id: user.id, force_refresh: forceRefresh }),
       });
-      if (error) throw error;
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
       setRecommendations(data?.recommendations || []);
     } catch (err: any) {
       console.error("AI recs error:", err);
