@@ -60,6 +60,7 @@ const QUICK_QUESTIONS_DEALER = [
 ];
 
 const QUICK_QUESTIONS_GUEST = [
+  "✨ اعملي حساب جديد",
   "إيه الماركات المتوفرة عندكم؟",
   "📍 أقرب فرع ليا",
   "بتشحنوا لكل المحافظات؟",
