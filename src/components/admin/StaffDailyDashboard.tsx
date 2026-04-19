@@ -36,7 +36,7 @@ interface StaffDailyDashboardProps {
 }
 
 export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardProps) {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [alerts, setAlerts] = useState<BehavioralAlert[]>([]);
   const [loading, setLoading] = useState(true);
