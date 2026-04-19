@@ -108,72 +108,76 @@ const ProductListingSection = memo(({
 
       <section id={sectionId} className={sectionClassName || "py-3 md:py-5 bg-background"}>
         <div className="container mx-auto px-4">
-          {/* Premium toolbar */}
-          <div
-            className="flex items-center gap-2.5 mb-4 p-2.5 rounded-2xl bg-card/80 border border-border/60 shadow-sm relative z-[55] cursor-text"
-            onClick={(e) => {
-              const target = e.target as HTMLElement;
-              if (target.tagName === 'DIV' || target.tagName === 'SECTION') {
-                const searchInput = e.currentTarget.querySelector<HTMLInputElement>('input[type="text"], input[placeholder]');
-                if (searchInput) searchInput.focus();
-              }
-            }}
-          >
-            <ProductSearchAutocomplete
-              value={filters.search}
-              onChange={(v) => setFilters(prev => ({ ...prev, search: v }))}
-              products={products as any}
-              onProductClick={(p) => setSelectedProduct(p)}
-              onAddToQuote={(p) => {
-                recordView(p.id);
-                toast({ title: "✅ تم التسعير بنجاح", description: p.name_ar || "تم إضافة المنتج لقائمة التسعير", className: "bg-green-50 border-green-200 dark:bg-green-950/50 dark:border-green-800 text-green-900 dark:text-green-100" });
+          {/* Premium toolbar — search on its own row on mobile, inline on desktop */}
+          <div className="mb-4 p-2.5 rounded-2xl bg-card/80 border border-border/60 shadow-sm relative z-[55] flex flex-col md:flex-row md:items-center gap-2.5">
+            {/* Search row (full width on mobile) */}
+            <div
+              className="w-full md:flex-1 cursor-text"
+              onClick={(e) => {
+                const target = e.target as HTMLElement;
+                if (target.tagName === 'DIV') {
+                  const searchInput = e.currentTarget.querySelector<HTMLInputElement>('input[type="text"], input[placeholder]');
+                  if (searchInput) searchInput.focus();
+                }
               }}
-              onCommandPaletteOpen={() => setCommandPaletteOpen(true)}
-              isDealer={isDealer}
-              getProductPrice={user ? (p: any) => {
-                const price = getDialogPrice(p);
-                const label = getDialogPriceLabel(p) || "";
-                return { price, label };
-              } : undefined}
-            />
+            >
+              <ProductSearchAutocomplete
+                value={filters.search}
+                onChange={(v) => setFilters(prev => ({ ...prev, search: v }))}
+                products={products as any}
+                onProductClick={(p) => setSelectedProduct(p)}
+                onAddToQuote={(p) => {
+                  recordView(p.id);
+                  toast({ title: "✅ تم التسعير بنجاح", description: p.name_ar || "تم إضافة المنتج لقائمة التسعير", className: "bg-green-50 border-green-200 dark:bg-green-950/50 dark:border-green-800 text-green-900 dark:text-green-100" });
+                }}
+                onCommandPaletteOpen={() => setCommandPaletteOpen(true)}
+                isDealer={isDealer}
+                getProductPrice={user ? (p: any) => {
+                  const price = getDialogPrice(p);
+                  const label = getDialogPriceLabel(p) || "";
+                  return { price, label };
+                } : undefined}
+              />
+            </div>
 
-            <Suspense fallback={null}>
-              <ImageSearchDialog onProductFound={(term) => setFilters(prev => ({ ...prev, search: term }))} />
-              <VINScannerDialog onProductFound={(term) => setFilters(prev => ({ ...prev, search: term }))} />
-            </Suspense>
+            {/* Tools row (image/VIN/limit/filter/sort) */}
+            <div className="flex items-center gap-2 flex-wrap md:flex-nowrap shrink-0">
+              <Suspense fallback={null}>
+                <ImageSearchDialog onProductFound={(term) => setFilters(prev => ({ ...prev, search: term }))} />
+                <VINScannerDialog onProductFound={(term) => setFilters(prev => ({ ...prev, search: term }))} />
+              </Suspense>
 
-            {isDealer && (
-              <div
-                className={`shrink-0 flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold border-2 transition-all duration-300 shadow-sm ${
-                  limitReached
-                    ? "bg-gradient-to-r from-amber-500/15 via-yellow-300/25 to-amber-500/15 bg-[length:200%_100%] animate-shimmer-gold border-amber-400/40 text-amber-800 dark:text-amber-300 shadow-amber-500/10"
-                    : "bg-gradient-to-br from-amber-50 to-amber-100/80 dark:from-amber-900/20 dark:to-amber-800/10 border-amber-300/40 dark:border-amber-600/30 text-amber-800 dark:text-amber-300"
-                }`}
-                title={limitReached ? "استنفدت الحد اليومي" : `شاهدت ${dailyViewCount} من ${dailyLimit} صنف`}
-              >
-                <Eye className="w-4 h-4" />
-                <span className="tabular-nums tracking-wide">{dailyViewCount}<span className="text-amber-500/60 mx-0.5">/</span>{dailyLimit}</span>
-              </div>
-            )}
+              {isDealer && (
+                <div
+                  className={`shrink-0 flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold border-2 transition-all duration-300 shadow-sm ${
+                    limitReached
+                      ? "bg-gradient-to-r from-amber-500/15 via-yellow-300/25 to-amber-500/15 bg-[length:200%_100%] animate-shimmer-gold border-amber-400/40 text-amber-800 dark:text-amber-300 shadow-amber-500/10"
+                      : "bg-gradient-to-br from-amber-50 to-amber-100/80 dark:from-amber-900/20 dark:to-amber-800/10 border-amber-300/40 dark:border-amber-600/30 text-amber-800 dark:text-amber-300"
+                  }`}
+                  title={limitReached ? "استنفدت الحد اليومي" : `شاهدت ${dailyViewCount} من ${dailyLimit} صنف`}
+                >
+                  <Eye className="w-4 h-4" />
+                  <span className="tabular-nums tracking-wide">{dailyViewCount}<span className="text-amber-500/60 mx-0.5">/</span>{dailyLimit}</span>
+                </div>
+              )}
 
-            {/* Quick filter buttons removed per user request */}
-
-            <Button variant="outline" className="lg:hidden gap-1.5 shrink-0 h-10 text-xs rounded-xl border-border/60" onClick={() => setSidebarOpen(true)}>
-              <SlidersHorizontal className="w-4 h-4" />
-              <span className="hidden sm:inline">فلاتر</span>
-            </Button>
-            <Select value={filters.sortBy || "newest"} onValueChange={(v) => setFilters(prev => ({ ...prev, sortBy: v }))}>
-              <SelectTrigger className="w-[120px] h-10 text-xs bg-background/80 shrink-0 rounded-xl border-border/60 font-medium">
-                <SelectValue placeholder="ترتيب" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">الأحدث</SelectItem>
-                <SelectItem value="best_selling">الأكثر مبيعاً</SelectItem>
-                <SelectItem value="price_asc">السعر: الأقل</SelectItem>
-                <SelectItem value="price_desc">السعر: الأعلى</SelectItem>
-                <SelectItem value="name_asc">الاسم: أ - ي</SelectItem>
-              </SelectContent>
-            </Select>
+              <Button variant="outline" className="lg:hidden gap-1.5 shrink-0 h-10 text-xs rounded-xl border-border/60" onClick={() => setSidebarOpen(true)}>
+                <SlidersHorizontal className="w-4 h-4" />
+                <span className="hidden sm:inline">فلاتر</span>
+              </Button>
+              <Select value={filters.sortBy || "newest"} onValueChange={(v) => setFilters(prev => ({ ...prev, sortBy: v }))}>
+                <SelectTrigger className="w-[120px] h-10 text-xs bg-background/80 shrink-0 rounded-xl border-border/60 font-medium">
+                  <SelectValue placeholder="ترتيب" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">الأحدث</SelectItem>
+                  <SelectItem value="best_selling">الأكثر مبيعاً</SelectItem>
+                  <SelectItem value="price_asc">السعر: الأقل</SelectItem>
+                  <SelectItem value="price_desc">السعر: الأعلى</SelectItem>
+                  <SelectItem value="name_asc">الاسم: أ - ي</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Brand quick-filter chips for dealer */}
