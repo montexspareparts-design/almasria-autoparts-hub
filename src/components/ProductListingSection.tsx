@@ -1,5 +1,6 @@
 import { memo, useEffect, useMemo, useState } from "react";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { Eye, Package, Grid3X3, List, SlidersHorizontal, ChevronDown, Sparkles, Wrench, Flame, TrendingUp, X } from "lucide-react";
 import { lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -58,6 +59,22 @@ interface ProductListingSectionProps {
 
 const INITIAL_ROWS = 4;
 
+// Map an Arabic search term to a relevant emoji icon
+const pickIcon = (term: string): string => {
+  const t = term.toLowerCase();
+  if (t.includes("زيت") || t.includes("اويل")) return "🛢️";
+  if (t.includes("فلتر") || t.includes("فيبر")) return "🧪";
+  if (t.includes("فرامل") || t.includes("تيل")) return "🛑";
+  if (t.includes("بوجي") || t.includes("بوجيه") || t.includes("دينامو") || t.includes("كهرب")) return "⚡";
+  if (t.includes("بطار")) return "🔋";
+  if (t.includes("اكصدام") || t.includes("صدام") || t.includes("مصد")) return "🚗";
+  if (t.includes("مساعد") || t.includes("مقص") || t.includes("بلي")) return "🔩";
+  if (t.includes("جوان") || t.includes("سيل") || t.includes("مياه")) return "💧";
+  if (t.includes("دبرياج") || t.includes("كلتش")) return "⚙️";
+  if (t.includes("كورولا") || t.includes("هاي اس") || t.includes("هايلوكس") || t.includes("كامري")) return "🚙";
+  return "🔧";
+};
+
 const ProductListingSection = memo(({
   filters, setFilters, viewMode, setViewMode,
   hasMore, loadMore,
@@ -71,6 +88,50 @@ const ProductListingSection = memo(({
   showBrands = false, beforeGrid, sectionTitle, sectionId, sectionClassName,
 }: ProductListingSectionProps) => {
   const [expanded, setExpanded] = useState(false);
+
+  // Dynamic quick search suggestions based on top dealer searches
+  const FALLBACK_SUGGESTIONS = useMemo(() => [
+    { label: "فلتر", icon: "🛢️" },
+    { label: "زيت", icon: "🛢️" },
+    { label: "فرامل", icon: "🛑" },
+    { label: "بوجيه", icon: "⚡" },
+    { label: "تيل", icon: "🔧" },
+    { label: "بطارية", icon: "🔋" },
+  ], []);
+  const [quickSuggestions, setQuickSuggestions] = useState(FALLBACK_SUGGESTIONS);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        // Pull last 30 days of search logs (cap rows for perf), aggregate client-side
+        const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+        const { data, error } = await supabase
+          .from("customer_search_logs")
+          .select("search_query")
+          .gte("created_at", since)
+          .limit(2000);
+        if (error || !data || cancelled) return;
+
+        const counts = new Map<string, number>();
+        for (const row of data) {
+          const raw = (row.search_query || "").trim();
+          if (raw.length < 2 || raw.length > 25) continue;
+          const key = raw.toLowerCase();
+          counts.set(key, (counts.get(key) || 0) + 1);
+        }
+        const top = Array.from(counts.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 6)
+          .map(([label]) => ({ label, icon: pickIcon(label) }));
+
+        if (top.length >= 3 && !cancelled) setQuickSuggestions(top);
+      } catch {
+        // keep fallback
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const clearFilters = () => {
     setFilters({
@@ -180,18 +241,11 @@ const ProductListingSection = memo(({
             </div>
           </div>
 
-          {/* Quick search suggestions — only when search is empty */}
-          {!filters.search && (
+          {/* Quick search suggestions — dynamic from top dealer searches */}
+          {!filters.search && quickSuggestions.length > 0 && (
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 mb-2 scrollbar-hide -mt-1" style={{ scrollbarWidth: "none" }}>
-              <span className="text-[11px] text-muted-foreground/70 font-medium shrink-0 ml-1">بحث سريع:</span>
-              {[
-                { label: "فلاتر", icon: "🛢️" },
-                { label: "زيت", icon: "🛢️" },
-                { label: "فرامل", icon: "🛑" },
-                { label: "بوجيه", icon: "⚡" },
-                { label: "تيل", icon: "🔧" },
-                { label: "بطارية", icon: "🔋" },
-              ].map(s => (
+              <span className="text-[11px] text-muted-foreground/70 font-medium shrink-0 ml-1">الأكثر بحثاً:</span>
+              {quickSuggestions.map(s => (
                 <button
                   key={s.label}
                   onClick={() => setFilters(prev => ({ ...prev, search: s.label }))}
