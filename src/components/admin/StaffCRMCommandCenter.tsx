@@ -295,6 +295,38 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
 
   useEffect(() => { fetchAll(); }, [isAdmin]);
 
+  // Realtime subscription for new chatbot support requests
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel("crm-support-requests")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "support_requests" },
+        (payload) => {
+          const r = payload.new as any;
+          if (r.status !== "pending") return;
+          setSupportRequests((prev) => {
+            if (prev.find((x) => x.id === r.id)) return prev;
+            return [{
+              id: r.id,
+              user_id: r.user_id,
+              customer_name: r.customer_name,
+              customer_phone: r.customer_phone,
+              message: r.message,
+              request_type: r.request_type,
+              is_dealer: !!r.is_dealer,
+              created_at: r.created_at,
+              status: r.status,
+              minutes_ago: minutesBetween(r.created_at),
+            }, ...prev];
+          });
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
+
   // =================== Actions ===================
   const markContacted = async (customerUserId: string, context: string) => {
     if (!user) return;
