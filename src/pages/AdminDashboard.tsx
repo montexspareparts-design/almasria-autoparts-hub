@@ -42,6 +42,7 @@ const AdminLeads = lazy(() => import("@/components/AdminLeads"));
 const AdminStaffRoles = lazy(() => import("@/components/AdminStaffRoles"));
 const AdminWhatsAppInbox = lazy(() => import("@/components/AdminWhatsAppInbox"));
 const StaffDailyDashboard = lazy(() => import("@/components/admin/StaffDailyDashboard"));
+const StaffWelcomeDashboard = lazy(() => import("@/components/admin/StaffWelcomeDashboard"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];
@@ -530,7 +531,12 @@ const AdminDashboard = () => {
   const renderActiveSection = () => {
     switch (activeSection) {
       case "daily-dashboard":
-        return <Suspense fallback={<SectionLoader />}><StaffDailyDashboard onNavigate={setActiveSection} /></Suspense>;
+        return (
+          <Suspense fallback={<SectionLoader />}>
+            {isModerator && !isAdmin && <StaffWelcomeDashboard onNavigate={setActiveSection} />}
+            <StaffDailyDashboard onNavigate={setActiveSection} />
+          </Suspense>
+        );
       case "analytics":
         return <Suspense fallback={<SectionLoader />}><AdminAnalytics /></Suspense>;
       case "product-insights":
