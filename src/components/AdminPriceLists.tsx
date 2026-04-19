@@ -46,6 +46,7 @@ const AdminPriceLists = () => {
   const [linkedProducts, setLinkedProducts] = useState<Product[]>([]);
   const [searchingProducts, setSearchingProducts] = useState(false);
   const [loadingLinked, setLoadingLinked] = useState(false);
+  const [bulkLinking, setBulkLinking] = useState(false);
 
   // Views report
   const [viewingReport, setViewingReport] = useState<PriceListRow | null>(null);
@@ -460,6 +461,64 @@ const AdminPriceLists = () => {
     fetchLinkedProducts(managingList.id);
   };
 
+  const linkAllActiveProducts = async () => {
+    if (!managingList) return;
+    if (!confirm("سيتم ربط جميع الأصناف النشطة بهذا الكشف. هل أنت متأكد؟")) return;
+    setBulkLinking(true);
+    try {
+      const allIds: string[] = [];
+      let from = 0;
+      const pageSize = 1000;
+      while (true) {
+        const { data, error } = await supabase
+          .from("products")
+          .select("id")
+          .eq("is_active", true)
+          .range(from, from + pageSize - 1);
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        allIds.push(...data.map((p: any) => p.id));
+        if (data.length < pageSize) break;
+        from += pageSize;
+      }
+      if (allIds.length === 0) {
+        toast({ title: "لا توجد أصناف نشطة", variant: "destructive" });
+        return;
+      }
+      const batchSize = 500;
+      for (let i = 0; i < allIds.length; i += batchSize) {
+        const batch = allIds.slice(i, i + batchSize).map(pid => ({
+          price_list_id: managingList.id,
+          product_id: pid,
+        }));
+        await supabase
+          .from("price_list_products")
+          .upsert(batch as any, { onConflict: "price_list_id,product_id", ignoreDuplicates: true });
+      }
+      toast({ title: "✅ تم الربط", description: `تم ربط ${allIds.length} صنف بالكشف` });
+      fetchLinkedProducts(managingList.id);
+    } catch (e: any) {
+      toast({ title: "خطأ", description: e.message, variant: "destructive" });
+    } finally {
+      setBulkLinking(false);
+    }
+  };
+
+  const unlinkAllProducts = async () => {
+    if (!managingList) return;
+    if (!confirm("سيتم فك ربط جميع الأصناف من هذا الكشف. هل أنت متأكد؟")) return;
+    setBulkLinking(true);
+    const { error } = await supabase
+      .from("price_list_products")
+      .delete()
+      .eq("price_list_id", managingList.id);
+    if (!error) {
+      toast({ title: "تم فك الربط" });
+      fetchLinkedProducts(managingList.id);
+    }
+    setBulkLinking(false);
+  };
+
   if (loading) return <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
 
   // Views report for a specific list
@@ -522,6 +581,34 @@ const AdminPriceLists = () => {
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Bulk actions */}
+          <div className="flex flex-wrap gap-2 p-3 rounded-lg border border-primary/20 bg-primary/5">
+            <Button
+              size="sm"
+              onClick={linkAllActiveProducts}
+              disabled={bulkLinking}
+              className="gap-1.5 text-xs"
+            >
+              {bulkLinking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+              ربط جميع الأصناف النشطة بالكشف
+            </Button>
+            {linkedProducts.length > 0 && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={unlinkAllProducts}
+                disabled={bulkLinking}
+                className="gap-1.5 text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                فك ربط الكل
+              </Button>
+            )}
+            <p className="text-[10px] text-muted-foreground self-center mr-auto">
+              💡 استخدم الزر لعرض كل الأصناف للتاجر تحت معاينة الـ PDF
+            </p>
+          </div>
+
           {/* Search to add */}
           <div className="relative">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
