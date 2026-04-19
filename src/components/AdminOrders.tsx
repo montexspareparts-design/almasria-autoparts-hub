@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,9 +12,33 @@ import {
   Loader2, Package, Clock, Truck, CheckCircle, XCircle,
   ShoppingBag, MapPin, Phone, Mail, ChevronDown, ChevronUp,
   FileText, Edit3, Trash2, Save, Plus, Minus, X,
-  ChevronRight, ChevronLeft, Search, CreditCard
+  ChevronRight, ChevronLeft, Search, CreditCard, MessageCircle, AlertTriangle
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+
+// SLA threshold for first contact (minutes)
+const SLA_MINUTES = 15;
+
+function getMinutesAgo(date: string): number {
+  return Math.floor((Date.now() - new Date(date).getTime()) / 60000);
+}
+
+function formatPhoneForWA(phone: string): string {
+  let c = phone.replace(/[\s\-()+]/g, "");
+  c = c.replace(/^002/, "").replace(/^0020/, "");
+  if (c.startsWith("0")) c = "2" + c;
+  if (/^1\d{9}$/.test(c)) c = "20" + c;
+  return c;
+}
+
+function buildNewOrderMessage(name: string, orderNumber: string, total: number): string {
+  return (
+    `أهلاً ${name || "عميلنا الكريم"}، معاك المصرية جروب لقطع غيار تويوتا 🚗\n\n` +
+    `استلمنا طلبك رقم *${orderNumber}* بقيمة *${Number(total).toLocaleString("ar-EG")} ج.م*.\n` +
+    `بنتواصل معاك لتأكيد التفاصيل وأقرب وقت للاستلام/التوصيل.\n\n` +
+    `هل تحب نأكد الطلب الآن؟`
+  );
+}
 
 type Order = Database["public"]["Tables"]["orders"]["Row"];
 type OrderItem = Database["public"]["Tables"]["order_items"]["Row"];
@@ -43,6 +68,7 @@ const shippingCompanies = ["أرامكس", "بوسطة", "mylerz", "J&T", "DHL",
 
 const AdminOrders = () => {
   const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [orders, setOrders] = useState<OrderWithItems[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -60,6 +86,41 @@ const AdminOrders = () => {
   const [shippingInfo, setShippingInfo] = useState<Record<string, { tracking_number: string; shipping_company: string }>>({});
   const [editingShipping, setEditingShipping] = useState<string | null>(null);
   const [savingShipping, setSavingShipping] = useState(false);
+  // Force re-render every minute to update SLA timers
+  const [, setNowTick] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setNowTick((n) => n + 1), 60000);
+    return () => clearInterval(t);
+  }, []);
+
+  // Highlight order from URL (?highlight=xxx) — auto-expand and scroll
+  useEffect(() => {
+    const highlightId = searchParams.get("highlight");
+    if (highlightId && orders.some((o) => o.id === highlightId)) {
+      setExpandedOrder(highlightId);
+      setTimeout(() => {
+        document.getElementById(`order-${highlightId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+        // Clean URL
+        searchParams.delete("highlight");
+        setSearchParams(searchParams, { replace: true });
+      }, 200);
+    }
+  }, [orders, searchParams, setSearchParams]);
+
+  // Quick WhatsApp action — marks first contact + opens WA
+  const quickWhatsApp = async (order: OrderWithItems) => {
+    const phone = order.profile?.phone;
+    if (!phone) {
+      toast({ title: "لا يوجد رقم موبايل لهذا العميل", variant: "destructive" });
+      return;
+    }
+    if (!(order as any).first_contacted_at) {
+      await supabase.from("orders").update({ first_contacted_at: new Date().toISOString() } as any).eq("id", order.id);
+      fetchOrders();
+    }
+    const msg = buildNewOrderMessage(order.profile?.full_name || "", order.order_number, Number(order.total_amount));
+    window.open(`https://wa.me/${formatPhoneForWA(phone)}?text=${encodeURIComponent(msg)}`, "_blank");
+  };
 
   // Stats fetched once
   const [stats, setStats] = useState({ total: 0, pending: 0, processing: 0, shipped: 0, delivered: 0, totalRevenue: 0 });
@@ -507,7 +568,13 @@ const AdminOrders = () => {
                 const canEdit = ["pending", "confirmed", "processing"].includes(order.status);
 
                 return (
-                  <div key={order.id} className={`border rounded-xl overflow-hidden transition-all ${order.isDealer ? "border-blue-200 dark:border-blue-800/50" : "border-border"}`}>
+                  <div
+                    key={order.id}
+                    id={`order-${order.id}`}
+                    className={`border rounded-xl overflow-hidden transition-all ${
+                      order.isDealer ? "border-blue-200 dark:border-blue-800/50" : "border-border"
+                    } ${searchParams.get("highlight") === order.id ? "ring-2 ring-primary shadow-lg" : ""}`}
+                  >
                     {/* Order Header */}
                     <div
                       className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/30 transition-colors"
@@ -526,6 +593,30 @@ const AdminOrders = () => {
                             <Badge variant="outline" className={`text-[10px] font-bold border-0 ${order.isDealer ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"}`}>
                               {order.isDealer ? "🏢 جملة" : "🛒 قطاعي"}
                             </Badge>
+                            {/* SLA Badge — only for new pending orders */}
+                            {order.status === "pending" && !(order as any).first_contacted_at && (() => {
+                              const mins = getMinutesAgo(order.created_at);
+                              const isLate = mins >= SLA_MINUTES;
+                              return (
+                                <Badge
+                                  variant="outline"
+                                  className={`text-[10px] font-bold border-0 gap-1 ${
+                                    isLate
+                                      ? "bg-destructive/15 text-destructive animate-pulse"
+                                      : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+                                  }`}
+                                >
+                                  {isLate ? <AlertTriangle className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
+                                  {isLate ? `متأخر ${mins}د` : `${mins}د`}
+                                </Badge>
+                              );
+                            })()}
+                            {(order as any).first_contacted_at && order.status === "pending" && (
+                              <Badge variant="outline" className="text-[10px] font-bold border-0 bg-green-500/10 text-green-600 dark:text-green-400 gap-1">
+                                <CheckCircle className="w-3 h-3" />
+                                تم التواصل
+                              </Badge>
+                            )}
                           </div>
                           <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1 flex-wrap">
                             <span>{order.profile?.full_name || "عميل"}</span>
@@ -537,6 +628,19 @@ const AdminOrders = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
+                        {/* Quick WhatsApp button — visible for all orders that have phone */}
+                        {order.profile?.phone && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs gap-1 border-green-500/40 text-green-600 hover:bg-green-50 dark:hover:bg-green-950/20"
+                            onClick={(e) => { e.stopPropagation(); quickWhatsApp(order); }}
+                            title="تواصل واتساب فوري"
+                          >
+                            <MessageCircle className="w-3 h-3" />
+                            <span className="hidden md:inline">واتساب</span>
+                          </Button>
+                        )}
                         {order.status === "pending" && (
                           <Button
                             size="sm"

@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, XCircle, Clock, Eye, LogOut, Trash2, Users, ShoppingBag, Video, FileText, Image, Brain, Zap, Bell, ListVideo, Menu, X, ChevronRight, Package, BarChart3, Tag, Layers, TrendingUp, ArrowLeftRight, Briefcase, Banknote, Shield, Building2, ShieldCheck, MessageCircle, User as UserIcon } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Clock, Eye, LogOut, Trash2, Users, ShoppingBag, Video, FileText, Image, Brain, Zap, Bell, ListVideo, Menu, X, ChevronRight, Package, BarChart3, Tag, Layers, TrendingUp, ArrowLeftRight, Briefcase, Banknote, Shield, Building2, ShieldCheck, MessageCircle, User as UserIcon, Phone } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -44,6 +44,8 @@ const AdminWhatsAppInbox = lazy(() => import("@/components/AdminWhatsAppInbox"))
 const StaffDailyDashboard = lazy(() => import("@/components/admin/StaffDailyDashboard"));
 const StaffWelcomeDashboard = lazy(() => import("@/components/admin/StaffWelcomeDashboard"));
 const StaffAccountSettings = lazy(() => import("@/components/admin/StaffAccountSettings"));
+const AdminNewOrderAlert = lazy(() => import("@/components/admin/AdminNewOrderAlert"));
+const AdminNotificationPhones = lazy(() => import("@/components/AdminNotificationPhones"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];
@@ -109,6 +111,7 @@ const sidebarGroups: SidebarGroup[] = [
         { id: "instapay-receipts", label: "إيصالات InstaPay", icon: Banknote },
         { id: "payment-reminders", label: "متابعة التذكيرات", icon: Clock },
         { id: "push-notifications", label: "إشعارات Push", icon: Bell },
+        { id: "notification-phones", label: "أرقام تنبيه الطلبات", icon: Phone },
         { id: "erp", label: "ربط ERP", icon: Zap },
         { id: "erp-customers", label: "ربط عملاء الفيصل", icon: Users },
         { id: "paymob", label: "إعدادات Paymob", icon: Briefcase },
@@ -585,6 +588,8 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminPaymentReminders /></Suspense>;
       case "push-notifications":
         return <Suspense fallback={<SectionLoader />}><AdminPushNotifications /></Suspense>;
+      case "notification-phones":
+        return <Suspense fallback={<SectionLoader />}><AdminNotificationPhones /></Suspense>;
       case "erp":
         return <Suspense fallback={<SectionLoader />}><AdminERPSync /></Suspense>;
       case "erp-customers":
@@ -612,6 +617,10 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {/* Real-time new order alert popup */}
+      <Suspense fallback={null}>
+        <AdminNewOrderAlert />
+      </Suspense>
       {/* Header */}
       <header className="bg-gradient-to-l from-secondary via-secondary to-[hsl(var(--secondary)/0.95)] backdrop-blur-xl border-b border-border/20 sticky top-0 z-50 shadow-sm">
         <div className="flex items-center justify-between h-14 px-4 lg:px-5">

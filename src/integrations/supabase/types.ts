@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_notification_phones: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          label: string | null
+          notify_new_orders: boolean
+          phone: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          notify_new_orders?: boolean
+          phone: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          notify_new_orders?: boolean
+          phone?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -1014,6 +1044,7 @@ export type Database = {
           created_at: string
           delivered_at: string | null
           erp_order_code: string | null
+          first_contacted_at: string | null
           id: string
           invoice_url: string | null
           notes: string | null
@@ -1036,6 +1067,7 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           erp_order_code?: string | null
+          first_contacted_at?: string | null
           id?: string
           invoice_url?: string | null
           notes?: string | null
@@ -1058,6 +1090,7 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           erp_order_code?: string | null
+          first_contacted_at?: string | null
           id?: string
           invoice_url?: string | null
           notes?: string | null
