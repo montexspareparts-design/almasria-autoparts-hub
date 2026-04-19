@@ -11,9 +11,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import {
   Flame, Search, UserCheck, Users, Trophy, Phone, Eye,
-  CheckCircle2, Clock, Building2, ShoppingBag, Loader2, RefreshCw, Briefcase
+  CheckCircle2, Clock, Building2, ShoppingBag, Loader2, RefreshCw, Briefcase, Activity
 } from "lucide-react";
 import WhatsAppQuickChat from "./WhatsAppQuickChat";
+import CustomerActivitySummary from "./CustomerActivitySummary";
 
 // =================== Types ===================
 interface UrgentOrder {
@@ -79,6 +80,7 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
   const [yesterdayCustomers, setYesterdayCustomers] = useState<YesterdayCustomer[]>([]);
   const [staffLeaderboard, setStaffLeaderboard] = useState<StaffStat[]>([]);
   const [contactedToday, setContactedToday] = useState<Set<string>>(new Set());
+  const [summaryUser, setSummaryUser] = useState<{ id: string; name: string; phone: string | null; isDealer: boolean } | null>(null);
 
   // =================== Fetch ===================
   const fetchAll = async () => {
@@ -442,16 +444,24 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                             </div>
                             <div className="flex items-center gap-1.5 flex-wrap">
                               {o.customer_phone && (
-                                <WhatsAppQuickChat
-                                  phone={o.customer_phone}
-                                  customerName={o.customer_name}
-                                  context={`بخصوص طلبك رقم ${o.order_number} بقيمة ${Number(o.total_amount).toLocaleString("ar-EG")} ج.م. هل تحب نأكد الطلب الآن؟`}
-                                  size="sm"
-                                />
+                                <>
+                                  <Button asChild size="sm" variant="outline" className="h-7 gap-1 text-xs border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-400">
+                                    <a href={`tel:${o.customer_phone}`}>
+                                      <Phone className="w-3 h-3" />
+                                      اتصال
+                                    </a>
+                                  </Button>
+                                  <WhatsAppQuickChat
+                                    phone={o.customer_phone}
+                                    customerName={o.customer_name}
+                                    context={`بخصوص طلبك رقم ${o.order_number} بقيمة ${Number(o.total_amount).toLocaleString("ar-EG")} ج.م. هل تحب نأكد الطلب الآن؟`}
+                                    size="sm"
+                                  />
+                                </>
                               )}
-                              <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => onNavigate?.(`orders`)}>
-                                <Eye className="w-3 h-3" />
-                                عرض
+                              <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => setSummaryUser({ id: o.user_id, name: o.customer_name, phone: o.customer_phone, isDealer: o.is_dealer })}>
+                                <Activity className="w-3 h-3" />
+                                ملخص
                               </Button>
                               <Button size="sm" className="h-7 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => markOrderContacted(o.id, o.user_id)}>
                                 <CheckCircle2 className="w-3 h-3" />
@@ -502,15 +512,27 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                               آخر بحث: <span className="font-medium text-foreground">"{s.last_query}"</span>
                             </p>
                           </div>
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1.5 flex-wrap">
                             {s.phone && (
-                              <WhatsAppQuickChat
-                                phone={s.phone}
-                                customerName={s.name}
-                                context={`لاحظنا اهتمامك بـ "${s.last_query}". هل نقدر نساعدك في إيجاد القطعة المناسبة؟`}
-                                size="sm"
-                              />
+                              <>
+                                <Button asChild size="sm" variant="outline" className="h-7 gap-1 text-xs border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-400">
+                                  <a href={`tel:${s.phone}`}>
+                                    <Phone className="w-3 h-3" />
+                                    اتصال
+                                  </a>
+                                </Button>
+                                <WhatsAppQuickChat
+                                  phone={s.phone}
+                                  customerName={s.name}
+                                  context={`لاحظنا اهتمامك بـ "${s.last_query}". هل نقدر نساعدك في إيجاد القطعة المناسبة؟`}
+                                  size="sm"
+                                />
+                              </>
                             )}
+                            <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => setSummaryUser({ id: s.user_id, name: s.name, phone: s.phone, isDealer: s.is_dealer })}>
+                              <Activity className="w-3 h-3" />
+                              ملخص
+                            </Button>
                             <Button size="sm" className="h-7 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => markContacted(s.user_id, "search_lead")}>
                               <CheckCircle2 className="w-3 h-3" />
                               تم
@@ -555,15 +577,27 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                               </a>
                             )}
                           </div>
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1.5 flex-wrap">
                             {y.phone && (
-                              <WhatsAppQuickChat
-                                phone={y.phone}
-                                customerName={y.name}
-                                context="لاحظنا زيارتك للموقع أمس. هل تحتاج مساعدة في طلب معين؟"
-                                size="sm"
-                              />
+                              <>
+                                <Button asChild size="sm" variant="outline" className="h-7 gap-1 text-xs border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-400">
+                                  <a href={`tel:${y.phone}`}>
+                                    <Phone className="w-3 h-3" />
+                                    اتصال
+                                  </a>
+                                </Button>
+                                <WhatsAppQuickChat
+                                  phone={y.phone}
+                                  customerName={y.name}
+                                  context="لاحظنا زيارتك للموقع أمس. هل تحتاج مساعدة في طلب معين؟"
+                                  size="sm"
+                                />
+                              </>
                             )}
+                            <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => setSummaryUser({ id: y.user_id, name: y.name, phone: y.phone, isDealer: y.is_dealer })}>
+                              <Activity className="w-3 h-3" />
+                              ملخص
+                            </Button>
                             <Button size="sm" className="h-7 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => markContacted(y.user_id, "yesterday")}>
                               <CheckCircle2 className="w-3 h-3" />
                               تم
@@ -622,6 +656,16 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
           </TabsContent>
         )}
       </Tabs>
+
+      {/* Activity Summary Drawer */}
+      <CustomerActivitySummary
+        open={!!summaryUser}
+        onOpenChange={(o) => { if (!o) setSummaryUser(null); }}
+        userId={summaryUser?.id || null}
+        customerName={summaryUser?.name}
+        customerPhone={summaryUser?.phone}
+        isDealer={summaryUser?.isDealer}
+      />
     </div>
   );
 }
