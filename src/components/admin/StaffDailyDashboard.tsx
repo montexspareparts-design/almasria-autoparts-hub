@@ -399,6 +399,14 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
               إضافة موظف جديد
             </Button>
           )}
+          <Button
+            size="sm"
+            className="gap-1.5 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-md hover:shadow-lg"
+            onClick={() => onNavigate?.("leads")}
+          >
+            <UserPlus className="w-4 h-4" />
+            إضافة عميل جديد
+          </Button>
           {[
             { label: "الطلبات", section: "orders", icon: "🛒" },
             { label: "إدخال العملاء", section: "leads", icon: "👥" },
