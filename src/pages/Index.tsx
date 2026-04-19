@@ -58,8 +58,13 @@ const faqItems = [
 ];
 
 const Index = () => {
-  const { dealerAccount, loading } = useAuth();
-  const isDealer = !!dealerAccount;
+  const { dealerAccount, isAdmin, isModerator, loading } = useAuth();
+  const isDealer = !!dealerAccount && !isModerator;
+
+  // Moderator-only employees should never see the B2C homepage
+  if (!loading && isModerator && !isAdmin && !isDealer) {
+    return <Navigate to="/admin" replace />;
+  }
 
   if (!loading && isDealer) {
     return <Navigate to="/dealer" replace />;

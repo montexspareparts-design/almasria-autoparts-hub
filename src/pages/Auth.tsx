@@ -73,6 +73,7 @@ const Auth = () => {
         supabase.from("user_roles").select("role").eq("user_id", userId),
       ]);
       const hasAdmin = roles?.some((r) => r.role === "admin") ?? false;
+      const hasModerator = roles?.some((r) => r.role === "moderator") ?? false;
       const hasDealer = !!dealer;
 
       if (!mounted) return;
@@ -89,6 +90,9 @@ const Auth = () => {
           navigate("/", { replace: true });
         }
       } else if (hasAdmin) {
+        navigate("/admin", { replace: true });
+      } else if (hasModerator) {
+        // Moderators (employees) go straight to admin panel — no B2C/B2B UI
         navigate("/admin", { replace: true });
       } else if (hasDealer) {
         navigate("/dealer", { replace: true });
