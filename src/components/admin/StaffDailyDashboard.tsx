@@ -20,6 +20,7 @@ interface DashboardStats {
   todayLeadsContacted: number;
   totalOrdersHandled: number;
   totalLeadsConverted: number;
+  activeStaff: number;
 }
 
 interface BehavioralAlert {
