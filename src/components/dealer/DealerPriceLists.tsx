@@ -862,7 +862,15 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
                       </p>
                     </div>
                   ) : (
-                    <div className="divide-y divide-border max-h-[40vh] overflow-y-auto">
+                    <div
+                      className="divide-y divide-border max-h-[60vh] overflow-y-auto overscroll-contain scroll-smooth"
+                      style={{ scrollbarWidth: "thin", scrollbarGutter: "stable" }}
+                    >
+                      {/* Sticky info bar */}
+                      <div className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm px-3 py-1.5 text-[10px] text-muted-foreground border-b border-border flex items-center justify-between">
+                        <span>إجمالي: {filteredLinkedProducts.length} صنف</span>
+                        <span className="text-primary font-semibold">↕ مرر للتصفح</span>
+                      </div>
                       <AnimatePresence>
                       {filteredLinkedProducts.map(product => {
                         const selected = isProductSelected(product.id);
