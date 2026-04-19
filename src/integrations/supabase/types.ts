@@ -1852,6 +1852,60 @@ export type Database = {
           },
         ]
       }
+      support_requests: {
+        Row: {
+          assigned_to: string | null
+          context: Json | null
+          created_at: string
+          customer_name: string | null
+          customer_phone: string | null
+          id: string
+          is_dealer: boolean | null
+          message: string | null
+          request_type: string
+          resolution_note: string | null
+          resolved_at: string | null
+          source: string
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          context?: Json | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          is_dealer?: boolean | null
+          message?: string | null
+          request_type?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          context?: Json | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          is_dealer?: boolean | null
+          message?: string | null
+          request_type?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

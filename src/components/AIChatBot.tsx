@@ -422,22 +422,112 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
     }
   };
 
+  // Helper: detect intent to talk to a human
+  const wantsHumanSupport = (t: string): boolean => {
+    const keywords = [
+      "تواصل مع فريق الدعم", "تواصل مع موظف", "تواصل مع شخص", "اتكلم مع موظف",
+      "اتكلم مع حد", "موظف يكلمني", "موظف خدمة العملاء", "محتاج موظف",
+      "عايز اتكلم مع موظف", "عايز اتكلم مع حد", "عايز موظف", "اكلم موظف",
+    ];
+    return keywords.some(k => t.includes(k));
+  };
+
+  // Helper: extract phone from text (Egyptian format)
+  const extractPhone = (t: string): string | null => {
+    const m = t.match(/(?:\+?20)?0?1[0125]\d{8}/);
+    return m ? m[0] : null;
+  };
+
+  // Create support request → notifies all staff via DB trigger
+  const createSupportRequest = async (lastMessage: string, phoneOverride?: string) => {
+    try {
+      let customer_name: string | null = null;
+      let customer_phone: string | null = phoneOverride || null;
+      let is_dealer = !!isDealer;
+
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name, phone")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        customer_name = profile?.full_name || user.email?.split("@")[0] || null;
+        if (!customer_phone) customer_phone = profile?.phone || null;
+      }
+
+      // Build context: last 6 chat messages
+      const recentChat = messages.slice(-6).map(m => ({
+        role: m.role,
+        text: getTextContent(m.content).slice(0, 300),
+      }));
+
+      const { error } = await supabase.from("support_requests").insert({
+        user_id: user?.id || null,
+        customer_name,
+        customer_phone,
+        request_type: "chatbot_contact",
+        message: lastMessage.slice(0, 500),
+        context: { chat_history: recentChat, page: window.location.pathname } as any,
+        source: "chatbot",
+        is_dealer,
+      });
+
+      if (error) throw error;
+      return true;
+    } catch (e) {
+      console.error("createSupportRequest error:", e);
+      return false;
+    }
+  };
+
   const sendMessage = async (text: string) => {
     if ((!text.trim() && !pendingImage) || isLoading) return;
 
-    // Check if asking for support team
-    if (text.includes("تواصل مع فريق الدعم")) {
-      const supportMsg = "📞 **فريق الدعم الفني جاهز لخدمتك!**\n\n" +
-        "🔹 **واتساب (أسرع طريقة):**\n[اضغط هنا للتواصل عبر واتساب](https://wa.me/201032104861)\n\n" +
-        "🔹 **تليفون:**\n📞 فرع القاهرة: 01032104861\n📞 فرع الجيزة: 01153961008\n📞 فرع الأقصر: 01016177204\n\n" +
-        "⏰ **مواعيد العمل:** 9 صباحاً - 7 مساءً\n\n" +
-        "أو اكتب مشكلتك هنا وأنا هحاول أساعدك فوراً! 💪";
+    // Check if asking for support team / human contact
+    if (wantsHumanSupport(text)) {
+      // Already logged in → create request immediately
+      if (user) {
+        setMessages(prev => [...prev, { role: "user", content: text }]);
+        const ok = await createSupportRequest(text);
+        const reply = ok
+          ? "✅ **تم إرسال طلب التواصل لفريقنا!**\n\nموظف من فريق الدعم هيتواصل معاك خلال دقائق.\n\nلو الموضوع عاجل جداً، تقدر تتواصل دلوقتي:\n📞 [اتصال](tel:01032104861)\n📱 [واتساب](https://wa.me/201032104861)"
+          : "حصلت مشكلة في إرسال الطلب 😔. تواصل معانا مباشرة:\n📞 01032104861\n📱 [واتساب](https://wa.me/201032104861)";
+        setMessages(prev => [...prev, { role: "assistant", content: reply }]);
+        return;
+      }
+      // Guest → check if they included a phone in message, else ask for it
+      const phone = extractPhone(text);
+      if (phone) {
+        setMessages(prev => [...prev, { role: "user", content: text }]);
+        const ok = await createSupportRequest(text, phone);
+        const reply = ok
+          ? `✅ **تم إرسال طلب التواصل!**\n\nسجلنا رقمك (${phone}) وموظف هيتصل بك في أقرب وقت.\n\nلو الموضوع عاجل:\n📞 [اتصال مباشر](tel:01032104861)\n📱 [واتساب](https://wa.me/201032104861)`
+          : "حصلت مشكلة. تواصل معانا مباشرة:\n📱 [واتساب](https://wa.me/201032104861)";
+        setMessages(prev => [...prev, { role: "assistant", content: reply }]);
+        return;
+      }
+      const askPhoneMsg = "تمام! 🤝 عشان موظف يتواصل معاك، ابعتلي **رقم موبايلك** كده في رسالة (مثال: 01012345678) وهنتصل بك في أسرع وقت.\n\nأو لو حابب تتواصل دلوقتي:\n📞 [اتصال](tel:01032104861)\n📱 [واتساب](https://wa.me/201032104861)";
       setMessages(prev => [
         ...prev,
         { role: "user", content: text },
-        { role: "assistant", content: supportMsg }
+        { role: "assistant", content: askPhoneMsg }
       ]);
       return;
+    }
+
+    // Auto-detect: guest sends ONLY a phone after we asked → treat as support contact
+    if (!user) {
+      const phoneOnly = extractPhone(text);
+      const lastAssistantMsg = messages[messages.length - 1];
+      if (phoneOnly && lastAssistantMsg?.role === "assistant" && getTextContent(lastAssistantMsg.content).includes("ابعتلي **رقم موبايلك**")) {
+        setMessages(prev => [...prev, { role: "user", content: text }]);
+        const ok = await createSupportRequest(`طلب تواصل من الشات بوت — رقم العميل: ${phoneOnly}`, phoneOnly);
+        const reply = ok
+          ? `✅ **تم تسجيل رقمك!**\n\nموظف من فريقنا هيتواصل معاك على ${phoneOnly} في أقرب وقت 👌`
+          : "حصلت مشكلة في حفظ الرقم. جرب تاني أو تواصل معانا على 📱 [واتساب](https://wa.me/201032104861)";
+        setMessages(prev => [...prev, { role: "assistant", content: reply }]);
+        return;
+      }
     }
 
     // Check if asking for nearest branch - use geolocation

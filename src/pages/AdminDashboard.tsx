@@ -46,6 +46,7 @@ const StaffDailyDashboard = lazy(() => import("@/components/admin/StaffCRMComman
 const StaffWelcomeDashboard = lazy(() => import("@/components/admin/StaffWelcomeDashboard"));
 const StaffAccountSettings = lazy(() => import("@/components/admin/StaffAccountSettings"));
 const AdminNewOrderAlert = lazy(() => import("@/components/admin/AdminNewOrderAlert"));
+const AdminSupportRequestAlert = lazy(() => import("@/components/admin/AdminSupportRequestAlert"));
 const AdminNotificationPhones = lazy(() => import("@/components/AdminNotificationPhones"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
@@ -624,6 +625,10 @@ const AdminDashboard = () => {
       {/* Real-time new order alert popup */}
       <Suspense fallback={null}>
         <AdminNewOrderAlert />
+      </Suspense>
+      {/* Real-time chatbot support request alert popup */}
+      <Suspense fallback={null}>
+        <AdminSupportRequestAlert />
       </Suspense>
       {/* Header */}
       <header className="bg-gradient-to-l from-secondary via-secondary to-[hsl(var(--secondary)/0.95)] backdrop-blur-xl border-b border-border/20 sticky top-0 z-50 shadow-sm">

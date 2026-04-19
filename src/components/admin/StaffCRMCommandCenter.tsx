@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import {
   Flame, Search, UserCheck, Users, Trophy, Phone, Eye,
-  CheckCircle2, Clock, Building2, ShoppingBag, Loader2, RefreshCw, Briefcase, Activity
+  CheckCircle2, Clock, Building2, ShoppingBag, Loader2, RefreshCw, Briefcase, Activity, Bot, MessageSquare
 } from "lucide-react";
 import WhatsAppQuickChat from "./WhatsAppQuickChat";
 import CustomerActivitySummary from "./CustomerActivitySummary";
@@ -52,6 +52,18 @@ interface StaffStat {
   contacts_today: number;
   orders_handled: number;
 }
+interface SupportReq {
+  id: string;
+  user_id: string | null;
+  customer_name: string | null;
+  customer_phone: string | null;
+  message: string | null;
+  request_type: string;
+  is_dealer: boolean;
+  created_at: string;
+  minutes_ago: number;
+  status: string;
+}
 
 // =================== Helpers ===================
 const minutesBetween = (iso: string) => Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
@@ -68,7 +80,7 @@ interface Props {
 export default function StaffCRMCommandCenter({ onNavigate }: Props) {
   const { user, isAdmin } = useAuth();
   const { toast } = useToast();
-  const [tab, setTab] = useState<"urgent" | "search" | "yesterday" | "leaderboard">("urgent");
+  const [tab, setTab] = useState<"urgent" | "chatbot" | "search" | "yesterday" | "leaderboard">("urgent");
   const [segmentFilter, setSegmentFilter] = useState<"all" | "b2b" | "b2c">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -80,6 +92,7 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
   const [yesterdayCustomers, setYesterdayCustomers] = useState<YesterdayCustomer[]>([]);
   const [staffLeaderboard, setStaffLeaderboard] = useState<StaffStat[]>([]);
   const [contactedToday, setContactedToday] = useState<Set<string>>(new Set());
+  const [supportRequests, setSupportRequests] = useState<SupportReq[]>([]);
   const [summaryUser, setSummaryUser] = useState<{ id: string; name: string; phone: string | null; isDealer: boolean } | null>(null);
 
   // =================== Fetch ===================
@@ -220,6 +233,28 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
         .eq("marked_date", today);
       setContactedToday(new Set((marks || []).map((m: any) => m.customer_user_id)));
 
+      // 4b) Pending support requests from chatbot
+      const { data: supportRows } = await (supabase as any)
+        .from("support_requests")
+        .select("id, user_id, customer_name, customer_phone, message, request_type, is_dealer, created_at, status")
+        .eq("status", "pending")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      setSupportRequests(
+        ((supportRows || []) as any[]).map((r) => ({
+          id: r.id,
+          user_id: r.user_id,
+          customer_name: r.customer_name,
+          customer_phone: r.customer_phone,
+          message: r.message,
+          request_type: r.request_type,
+          is_dealer: !!r.is_dealer,
+          created_at: r.created_at,
+          status: r.status,
+          minutes_ago: minutesBetween(r.created_at),
+        }))
+      );
+
       // 5) Leaderboard (admin only)
       if (isAdmin) {
         const { data: staffRoles } = await supabase
@@ -260,6 +295,38 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
 
   useEffect(() => { fetchAll(); }, [isAdmin]);
 
+  // Realtime subscription for new chatbot support requests
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel("crm-support-requests")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "support_requests" },
+        (payload) => {
+          const r = payload.new as any;
+          if (r.status !== "pending") return;
+          setSupportRequests((prev) => {
+            if (prev.find((x) => x.id === r.id)) return prev;
+            return [{
+              id: r.id,
+              user_id: r.user_id,
+              customer_name: r.customer_name,
+              customer_phone: r.customer_phone,
+              message: r.message,
+              request_type: r.request_type,
+              is_dealer: !!r.is_dealer,
+              created_at: r.created_at,
+              status: r.status,
+              minutes_ago: minutesBetween(r.created_at),
+            }, ...prev];
+          });
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
+
   // =================== Actions ===================
   const markContacted = async (customerUserId: string, context: string) => {
     if (!user) return;
@@ -282,6 +349,20 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
       .then(() => {});
     setUrgentOrders((prev) => prev.filter((o) => o.id !== orderId));
     toast({ title: "✅ تم التواصل", description: "تم تسجيل الطلب كمُتواصَل عليه" });
+  };
+
+  const resolveSupportRequest = async (reqId: string) => {
+    if (!user) return;
+    const { error } = await (supabase as any)
+      .from("support_requests")
+      .update({ status: "in_progress", assigned_to: user.id })
+      .eq("id", reqId);
+    if (error) {
+      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+      return;
+    }
+    setSupportRequests((prev) => prev.filter((r) => r.id !== reqId));
+    toast({ title: "✅ تم التسجيل", description: "تم تعيين الطلب لك" });
   };
 
   // =================== Filtering ===================
@@ -310,9 +391,24 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
   const filteredYesterday = useMemo(() =>
     applySearch(applySegmentFilter(yesterdayCustomers.filter((y) => !contactedToday.has(y.user_id)))),
     [yesterdayCustomers, segmentFilter, searchQuery, contactedToday]);
+  const filteredSupport = useMemo(() => {
+    let arr = supportRequests;
+    if (segmentFilter === "b2b") arr = arr.filter((r) => r.is_dealer);
+    else if (segmentFilter === "b2c") arr = arr.filter((r) => !r.is_dealer);
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      arr = arr.filter((r) =>
+        (r.customer_name || "").toLowerCase().includes(q) ||
+        (r.customer_phone || "").toLowerCase().includes(q) ||
+        (r.message || "").toLowerCase().includes(q)
+      );
+    }
+    return arr;
+  }, [supportRequests, segmentFilter, searchQuery]);
 
   const counts = {
     urgent: filteredUrgent.length,
+    chatbot: filteredSupport.length,
     search: filteredSearch.length,
     yesterday: filteredYesterday.length,
   };
@@ -373,13 +469,20 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
 
       {/* Tabs */}
       <Tabs value={tab} onValueChange={(v) => setTab(v as any)} dir="rtl">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 h-auto">
           <TabsTrigger value="urgent" className="flex flex-col gap-0.5 py-2.5 data-[state=active]:bg-red-50 data-[state=active]:text-red-700">
             <div className="flex items-center gap-1.5">
               <Flame className="w-4 h-4" />
               <span className="font-semibold">طلبات عاجلة</span>
             </div>
             <Badge variant={counts.urgent > 0 ? "destructive" : "secondary"} className="text-[10px] h-4">{counts.urgent}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="chatbot" className="flex flex-col gap-0.5 py-2.5 data-[state=active]:bg-purple-50 data-[state=active]:text-purple-700">
+            <div className="flex items-center gap-1.5">
+              <Bot className="w-4 h-4" />
+              <span className="font-semibold">طلبات الشات بوت</span>
+            </div>
+            <Badge variant={counts.chatbot > 0 ? "default" : "secondary"} className={`text-[10px] h-4 ${counts.chatbot > 0 ? "bg-purple-600 animate-pulse" : ""}`}>{counts.chatbot}</Badge>
           </TabsTrigger>
           <TabsTrigger value="search" className="flex flex-col gap-0.5 py-2.5 data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700">
             <div className="flex items-center gap-1.5">
@@ -464,6 +567,85 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                                 ملخص
                               </Button>
                               <Button size="sm" className="h-7 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => markOrderContacted(o.id, o.user_id)}>
+                                <CheckCircle2 className="w-3 h-3" />
+                                تم
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* === Chatbot Support Requests === */}
+        <TabsContent value="chatbot" className="mt-4">
+          <Card>
+            <CardContent className="p-0">
+              <ScrollArea className="h-[60vh]">
+                {filteredSupport.length === 0 ? (
+                  <EmptyState icon={Bot} title="لا توجد طلبات تواصل من الشات بوت" subtitle="هتظهر هنا لما عميل يطلب التواصل من الشات بوت" />
+                ) : (
+                  <div className="divide-y">
+                    {filteredSupport.map((r) => {
+                      const isLate = r.minutes_ago >= 5;
+                      return (
+                        <div key={r.id} className={`p-3 hover:bg-muted/30 transition-colors ${isLate ? "bg-purple-50/30 dark:bg-purple-950/10" : ""}`}>
+                          <div className="flex items-start justify-between gap-3 flex-wrap">
+                            <div className="flex-1 min-w-[200px]">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <Bot className="w-3.5 h-3.5 text-purple-600" />
+                                <span className="font-bold text-sm">{r.customer_name || "عميل"}</span>
+                                <Badge variant={r.is_dealer ? "default" : "secondary"} className="text-[10px] h-5">
+                                  {r.is_dealer ? "تاجر" : "قطاعي"}
+                                </Badge>
+                                {!r.user_id && <Badge variant="outline" className="text-[10px] h-5">ضيف</Badge>}
+                                <Badge variant={isLate ? "destructive" : "outline"} className={`text-[10px] h-5 gap-1 ${isLate ? "animate-pulse" : ""}`}>
+                                  <Clock className="w-3 h-3" />
+                                  {fmtMinutes(r.minutes_ago)}
+                                </Badge>
+                              </div>
+                              {r.customer_phone && (
+                                <a href={`tel:${r.customer_phone}`} className="text-xs text-primary hover:underline flex items-center gap-1">
+                                  <Phone className="w-3 h-3" />
+                                  {r.customer_phone}
+                                </a>
+                              )}
+                              {r.message && (
+                                <p className="text-xs text-muted-foreground bg-muted/50 rounded-md p-2 mt-1.5 line-clamp-2 flex items-start gap-1">
+                                  <MessageSquare className="w-3 h-3 shrink-0 mt-0.5" />
+                                  <span>{r.message}</span>
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {r.customer_phone && (
+                                <>
+                                  <Button asChild size="sm" variant="outline" className="h-7 gap-1 text-xs border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-400">
+                                    <a href={`tel:${r.customer_phone}`}>
+                                      <Phone className="w-3 h-3" />
+                                      اتصال
+                                    </a>
+                                  </Button>
+                                  <WhatsAppQuickChat
+                                    phone={r.customer_phone}
+                                    customerName={r.customer_name || undefined}
+                                    context="استلمنا طلبك للتواصل من خلال المساعد الذكي. كيف نقدر نساعدك؟"
+                                    size="sm"
+                                  />
+                                </>
+                              )}
+                              {r.user_id && (
+                                <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => setSummaryUser({ id: r.user_id!, name: r.customer_name || "عميل", phone: r.customer_phone, isDealer: r.is_dealer })}>
+                                  <Activity className="w-3 h-3" />
+                                  ملخص
+                                </Button>
+                              )}
+                              <Button size="sm" className="h-7 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => resolveSupportRequest(r.id)}>
                                 <CheckCircle2 className="w-3 h-3" />
                                 تم
                               </Button>
