@@ -25,6 +25,7 @@ const AdminERPSync = lazy(() => import("@/components/AdminERPSync"));
 const AdminPushNotifications = lazy(() => import("@/components/AdminPushNotifications"));
 const AdminProducts = lazy(() => import("@/components/AdminProducts"));
 const AdminAnalytics = lazy(() => import("@/components/AdminAnalytics"));
+const AdminStaffPerformance = lazy(() => import("@/components/AdminStaffPerformance"));
 const AdminCustomerProfile = lazy(() => import("@/components/AdminCustomerProfile"));
 const AdminCoupons = lazy(() => import("@/components/AdminCoupons"));
 const AdminQuantityDiscounts = lazy(() => import("@/components/AdminQuantityDiscounts"));
@@ -74,6 +75,7 @@ const sidebarGroups: SidebarGroup[] = [
     label: "الرئيسية",
     items: [
       { id: "daily-dashboard", label: "لوحة المهام اليومية", icon: BarChart3 },
+      { id: "staff-performance", label: "أداء الموظفين", icon: TrendingUp },
       { id: "analytics", label: "التحليلات", icon: BarChart3 },
       { id: "product-insights", label: "تحليل الأصناف", icon: TrendingUp },
       { id: "customer-intel", label: "ذكاء العملاء", icon: Eye },
@@ -550,6 +552,8 @@ const AdminDashboard = () => {
         );
       case "analytics":
         return <Suspense fallback={<SectionLoader />}><AdminAnalytics /></Suspense>;
+      case "staff-performance":
+        return <Suspense fallback={<SectionLoader />}><AdminStaffPerformance /></Suspense>;
       case "product-insights":
         return <Suspense fallback={<SectionLoader />}><AdminProductInsights /></Suspense>;
       case "customer-intel":
