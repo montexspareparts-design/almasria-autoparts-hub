@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Loader2, UserPlus, Trash2, Shield, Search, Users, Activity, ShoppingBag, UserCheck, FileText, Package, Clock } from "lucide-react";
+import { Loader2, UserPlus, Trash2, Shield, Search, Users, Activity, ShoppingBag, UserCheck, FileText, Package, Clock, KeyRound } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface StaffMember {
   id: string;
@@ -115,8 +116,12 @@ const AdminStaffRoles = () => {
   const [newEmail, setNewEmail] = useState("");
   const [newName, setNewName] = useState("");
   const [newPhone, setNewPhone] = useState("");
+  const [newCustomPassword, setNewCustomPassword] = useState("");
   const [adding, setAdding] = useState(false);
   const [createdCredentials, setCreatedCredentials] = useState<{ email: string; password: string; whatsappSent: boolean; emailSent: boolean } | null>(null);
+  const [resetTarget, setResetTarget] = useState<StaffMember | null>(null);
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetting, setResetting] = useState(false);
 
   // Activity state
   const [activityLoading, setActivityLoading] = useState(false);
@@ -227,6 +232,7 @@ const AdminStaffRoles = () => {
           fullName: newName.trim(),
           email: newEmail.trim().toLowerCase(),
           phone: newPhone.trim() || null,
+          password: newCustomPassword.trim() || undefined,
         },
       });
 
@@ -257,6 +263,7 @@ const AdminStaffRoles = () => {
         setNewEmail("");
         setNewName("");
         setNewPhone("");
+        setNewCustomPassword("");
         fetchStaff();
       }
     } catch (err: any) {
