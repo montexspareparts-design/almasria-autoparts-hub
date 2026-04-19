@@ -405,18 +405,40 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
     toast({ title: "✅ تم التواصل", description: "تم تسجيل الطلب كمُتواصَل عليه" });
   };
 
+  // Atomic claim — only succeeds if no one else has claimed it yet
+  const claimSupportRequest = async (reqId: string) => {
+    if (!user) return false;
+    const { data, error } = await (supabase as any)
+      .from("support_requests")
+      .update({ claimed_by: user.id, claimed_at: new Date().toISOString(), assigned_to: user.id, status: "in_progress" })
+      .eq("id", reqId)
+      .is("claimed_by", null)
+      .select("id")
+      .maybeSingle();
+    if (error) {
+      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+      return false;
+    }
+    if (!data) {
+      toast({ title: "⏱️ سبقك زميل!", description: "هذا الطلب تم الرد عليه بالفعل", variant: "destructive" });
+      return false;
+    }
+    toast({ title: "🎯 الطلب لك!", description: "تم تخصيص الطلب لك. تواصل مع العميل الآن" });
+    return true;
+  };
+
   const resolveSupportRequest = async (reqId: string) => {
     if (!user) return;
     const { error } = await (supabase as any)
       .from("support_requests")
-      .update({ status: "in_progress", assigned_to: user.id })
+      .update({ status: "resolved", resolved_at: new Date().toISOString() })
       .eq("id", reqId);
     if (error) {
       toast({ title: "خطأ", description: error.message, variant: "destructive" });
       return;
     }
     setSupportRequests((prev) => prev.filter((r) => r.id !== reqId));
-    toast({ title: "✅ تم التسجيل", description: "تم تعيين الطلب لك" });
+    toast({ title: "✅ تم الإغلاق", description: "تم إغلاق الطلب" });
   };
 
   // =================== Filtering ===================
