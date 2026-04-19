@@ -78,6 +78,12 @@ const DealerLogin = () => {
   const checkDealerStatus = async (userId: string) => {
     setCheckingStatus(true);
     try {
+      // Staff (admin/moderator) should go directly to the admin panel
+      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+      const hasAdmin = roles?.some((r) => r.role === "admin") ?? false;
+      const hasModerator = roles?.some((r) => r.role === "moderator") ?? false;
+      if (hasAdmin || hasModerator) { navigate("/admin"); return; }
+
       const { data: da } = await supabase.from("dealer_accounts").select("id, is_active, tier").eq("user_id", userId).eq("is_active", true).maybeSingle();
       if (da) { navigate("/dealer"); return; }
       const { data: app } = await supabase.from("dealer_applications").select("id, status, business_name, created_at, review_notes").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle();

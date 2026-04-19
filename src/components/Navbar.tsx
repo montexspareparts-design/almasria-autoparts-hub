@@ -37,7 +37,7 @@ const Navbar = () => {
     setAuthDialogOpen(true);
     setIsOpen(false);
   };
-  const { user, dealerAccount, loading: authLoading, isAdmin, signOut } = useAuth();
+  const { user, dealerAccount, loading: authLoading, isAdmin, isModerator, signOut } = useAuth();
   const { t, lang, setLang } = useLanguage();
   const { itemCount } = useCart();
   const isWholesaleDealer = !authLoading && !!dealerAccount?.is_active &&
@@ -76,7 +76,9 @@ const Navbar = () => {
 
   const toggleLang = () => setLang(lang === "ar" ? "en" : "ar");
 
-  const isDealer = !!dealerAccount;
+  const isDealer = !!dealerAccount && !isModerator;
+  // Moderator-only employee (no dealer / no admin) → minimal staff navbar
+  const isStaffOnly = isModerator && !isAdmin && !isDealer;
 
   // B2B links for dealers — simplified portal navigation
   const dealerLinks = [
@@ -85,6 +87,16 @@ const Navbar = () => {
     { label: lang === "ar" ? "المنتجات" : "Products", href: "/products", isRoute: true },
     { label: lang === "ar" ? "طلباتي" : "My Orders", href: "/dealer?tab=orders", isRoute: true },
     { label: lang === "ar" ? "عروض الأسعار" : "Price Lists", href: "/dealer?tab=price_lists", isRoute: true },
+  ];
+
+  // Staff links for moderators (employees) — focused on customer service
+  const moderatorLinks = [
+    { label: lang === "ar" ? "لوحة المهام" : "Tasks", href: "/admin?section=daily-dashboard", isRoute: true },
+    { label: lang === "ar" ? "ملف العملاء" : "Customers", href: "/admin?section=customers", isRoute: true },
+    { label: lang === "ar" ? "ذكاء العملاء" : "Intel", href: "/admin?section=customer-intel", isRoute: true },
+    { label: lang === "ar" ? "تحليل الأصناف" : "Products", href: "/admin?section=product-insights", isRoute: true },
+    { label: lang === "ar" ? "إدخال العملاء" : "Leads", href: "/admin?section=leads", isRoute: true },
+    { label: lang === "ar" ? "الواتساب" : "WhatsApp", href: "/admin?section=whatsapp-inbox", isRoute: true },
   ];
 
   // B2C links for regular visitors
@@ -97,7 +109,7 @@ const Navbar = () => {
     { label: t("nav.contact"), href: "/contact", isRoute: true },
   ];
 
-  const links = isDealer ? dealerLinks : visitorLinks;
+  const links = isStaffOnly ? moderatorLinks : (isDealer ? dealerLinks : visitorLinks);
 
   const renderDesktopLink = (link: typeof links[0]) => {
     const active = isLinkActive(link.href, link.isRoute);
@@ -193,7 +205,7 @@ const Navbar = () => {
             <button onClick={toggleLang} className="text-secondary-foreground/70 hover:text-primary transition-colors p-2 touch-manipulation text-[11px] font-bold">
               {lang === "ar" ? "EN" : "عربي"}
             </button>
-            {!isDealer && (
+            {!isDealer && !isStaffOnly && (
               <button onClick={() => navigate("/cart")} className="text-secondary-foreground/70 hover:text-primary transition-colors p-2 touch-manipulation relative">
                 <ShoppingCart className="w-[18px] h-[18px]" />
                 {itemCount > 0 && (
@@ -205,7 +217,11 @@ const Navbar = () => {
             )}
             <NotificationBell />
             <button
-              onClick={() => user ? navigate(dealerAccount ? "/dealer" : "/dealer-apply") : navigate("/auth")}
+              onClick={() => {
+                if (!user) return navigate("/auth");
+                if (isStaffOnly || isAdmin) return navigate("/admin");
+                return navigate(dealerAccount ? "/dealer" : "/dealer-apply");
+              }}
               className="text-secondary-foreground/70 hover:text-primary transition-colors p-2 touch-manipulation"
             >
               <User className="w-[18px] h-[18px]" />
@@ -226,7 +242,7 @@ const Navbar = () => {
             <div className="w-px h-5 bg-secondary-foreground/10 mx-1" />
 
             {/* Cart — B2C only */}
-            {!isDealer && (
+            {!isDealer && !isStaffOnly && (
               <button
                 onClick={() => navigate("/cart")}
                 className="relative text-secondary-foreground/60 hover:text-secondary-foreground transition-colors p-2 rounded-lg hover:bg-secondary-foreground/5"
@@ -247,19 +263,19 @@ const Navbar = () => {
               <>
                 <div className="w-px h-5 bg-secondary-foreground/10 mx-1" />
 
-                {isAdmin && (
+                {(isAdmin || isStaffOnly) && (
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => navigate("/admin")}
                     className="text-secondary-foreground/60 hover:text-secondary-foreground text-[13px] font-semibold h-8 px-2.5"
                   >
-                    {t("nav.admin")}
+                    {isStaffOnly ? (lang === "ar" ? "لوحة المهام" : "Staff Panel") : t("nav.admin")}
                   </Button>
                 )}
 
-                {/* B2C: show orders + dealer apply */}
-                {!isDealer && (
+                {/* B2C: show orders + dealer apply (hide for dealer & moderator) */}
+                {!isDealer && !isStaffOnly && (
                   <>
                     <Link
                       to="/my-profile"
@@ -384,17 +400,17 @@ const Navbar = () => {
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="border-t border-secondary-foreground/10 pt-3 mt-2 space-y-1.5">
                 {user ? (
                   <>
-                    {isAdmin && (
+                    {(isAdmin || isStaffOnly) && (
                       <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-secondary-foreground/70 font-semibold" onClick={() => { navigate("/admin"); setIsOpen(false); }}>
-                        {t("nav.admin")}
+                        {isStaffOnly ? (lang === "ar" ? "لوحة المهام" : "Staff Panel") : t("nav.admin")}
                       </Button>
                     )}
-                    {!isDealer && isWholesaleDealer && (
+                    {!isDealer && !isStaffOnly && isWholesaleDealer && (
                       <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-primary font-semibold" onClick={() => { navigate("/catalogs"); setIsOpen(false); }}>
                         <BookOpen className="w-4 h-4" /> {t("nav.catalogs")}
                       </Button>
                     )}
-                    {!isDealer && (
+                    {!isDealer && !isStaffOnly && (
                       <>
                         <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-secondary-foreground/70 font-semibold" onClick={() => { navigate("/my-profile"); setIsOpen(false); }}>
                           <User className="w-4 h-4" /> {lang === "ar" ? "حسابي" : "My Profile"}
