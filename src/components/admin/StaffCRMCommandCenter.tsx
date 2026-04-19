@@ -582,6 +582,85 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
           </Card>
         </TabsContent>
 
+        {/* === Chatbot Support Requests === */}
+        <TabsContent value="chatbot" className="mt-4">
+          <Card>
+            <CardContent className="p-0">
+              <ScrollArea className="h-[60vh]">
+                {filteredSupport.length === 0 ? (
+                  <EmptyState icon={Bot} title="لا توجد طلبات تواصل من الشات بوت" subtitle="هتظهر هنا لما عميل يطلب التواصل من الشات بوت" />
+                ) : (
+                  <div className="divide-y">
+                    {filteredSupport.map((r) => {
+                      const isLate = r.minutes_ago >= 5;
+                      return (
+                        <div key={r.id} className={`p-3 hover:bg-muted/30 transition-colors ${isLate ? "bg-purple-50/30 dark:bg-purple-950/10" : ""}`}>
+                          <div className="flex items-start justify-between gap-3 flex-wrap">
+                            <div className="flex-1 min-w-[200px]">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <Bot className="w-3.5 h-3.5 text-purple-600" />
+                                <span className="font-bold text-sm">{r.customer_name || "عميل"}</span>
+                                <Badge variant={r.is_dealer ? "default" : "secondary"} className="text-[10px] h-5">
+                                  {r.is_dealer ? "تاجر" : "قطاعي"}
+                                </Badge>
+                                {!r.user_id && <Badge variant="outline" className="text-[10px] h-5">ضيف</Badge>}
+                                <Badge variant={isLate ? "destructive" : "outline"} className={`text-[10px] h-5 gap-1 ${isLate ? "animate-pulse" : ""}`}>
+                                  <Clock className="w-3 h-3" />
+                                  {fmtMinutes(r.minutes_ago)}
+                                </Badge>
+                              </div>
+                              {r.customer_phone && (
+                                <a href={`tel:${r.customer_phone}`} className="text-xs text-primary hover:underline flex items-center gap-1">
+                                  <Phone className="w-3 h-3" />
+                                  {r.customer_phone}
+                                </a>
+                              )}
+                              {r.message && (
+                                <p className="text-xs text-muted-foreground bg-muted/50 rounded-md p-2 mt-1.5 line-clamp-2 flex items-start gap-1">
+                                  <MessageSquare className="w-3 h-3 shrink-0 mt-0.5" />
+                                  <span>{r.message}</span>
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {r.customer_phone && (
+                                <>
+                                  <Button asChild size="sm" variant="outline" className="h-7 gap-1 text-xs border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-400">
+                                    <a href={`tel:${r.customer_phone}`}>
+                                      <Phone className="w-3 h-3" />
+                                      اتصال
+                                    </a>
+                                  </Button>
+                                  <WhatsAppQuickChat
+                                    phone={r.customer_phone}
+                                    customerName={r.customer_name || undefined}
+                                    context="استلمنا طلبك للتواصل من خلال المساعد الذكي. كيف نقدر نساعدك؟"
+                                    size="sm"
+                                  />
+                                </>
+                              )}
+                              {r.user_id && (
+                                <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => setSummaryUser({ id: r.user_id!, name: r.customer_name || "عميل", phone: r.customer_phone, isDealer: r.is_dealer })}>
+                                  <Activity className="w-3 h-3" />
+                                  ملخص
+                                </Button>
+                              )}
+                              <Button size="sm" className="h-7 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => resolveSupportRequest(r.id)}>
+                                <CheckCircle2 className="w-3 h-3" />
+                                تم
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* === Search leads === */}
         <TabsContent value="search" className="mt-4">
           <Card>
