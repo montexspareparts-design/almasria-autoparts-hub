@@ -351,6 +351,20 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
     toast({ title: "✅ تم التواصل", description: "تم تسجيل الطلب كمُتواصَل عليه" });
   };
 
+  const resolveSupportRequest = async (reqId: string) => {
+    if (!user) return;
+    const { error } = await (supabase as any)
+      .from("support_requests")
+      .update({ status: "in_progress", assigned_to: user.id })
+      .eq("id", reqId);
+    if (error) {
+      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+      return;
+    }
+    setSupportRequests((prev) => prev.filter((r) => r.id !== reqId));
+    toast({ title: "✅ تم التسجيل", description: "تم تعيين الطلب لك" });
+  };
+
   // =================== Filtering ===================
   const applySegmentFilter = <T extends { is_dealer: boolean }>(arr: T[]) => {
     if (segmentFilter === "all") return arr;
@@ -377,9 +391,24 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
   const filteredYesterday = useMemo(() =>
     applySearch(applySegmentFilter(yesterdayCustomers.filter((y) => !contactedToday.has(y.user_id)))),
     [yesterdayCustomers, segmentFilter, searchQuery, contactedToday]);
+  const filteredSupport = useMemo(() => {
+    let arr = supportRequests;
+    if (segmentFilter === "b2b") arr = arr.filter((r) => r.is_dealer);
+    else if (segmentFilter === "b2c") arr = arr.filter((r) => !r.is_dealer);
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      arr = arr.filter((r) =>
+        (r.customer_name || "").toLowerCase().includes(q) ||
+        (r.customer_phone || "").toLowerCase().includes(q) ||
+        (r.message || "").toLowerCase().includes(q)
+      );
+    }
+    return arr;
+  }, [supportRequests, segmentFilter, searchQuery]);
 
   const counts = {
     urgent: filteredUrgent.length,
+    chatbot: filteredSupport.length,
     search: filteredSearch.length,
     yesterday: filteredYesterday.length,
   };
