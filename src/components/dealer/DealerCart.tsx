@@ -311,7 +311,15 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
       await clearCart();
       refetchLocks();
       setNotes("");
-      const erpCode = await order.erpCodePromise;
+      let erpCode = await order.erpCodePromise;
+      // If ERP didn't return code immediately, poll DB up to 6s (webhook may set it later)
+      if (!erpCode) {
+        for (let i = 0; i < 6; i++) {
+          await new Promise(r => setTimeout(r, 1000));
+          const { data: o } = await supabase.from("orders").select("erp_order_code").eq("id", order.id).maybeSingle();
+          if ((o as any)?.erp_order_code) { erpCode = (o as any).erp_order_code; break; }
+        }
+      }
       const displayCode = erpCode || order.order_number;
       setErpDialog({ open: true, erpCode: displayCode, orderNumber: order.order_number });
     } catch {
