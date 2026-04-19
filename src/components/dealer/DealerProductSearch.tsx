@@ -18,6 +18,15 @@ const DealerProductSearch = ({ onNavigateToOrders, onNavigateToCart, sharedCart 
   const listing = useProductListing();
   const fallbackCart = useDealerCart();
   const cart = sharedCart || fallbackCart;
+  const productsAnchorRef = useRef<HTMLDivElement>(null);
+
+  const handleCategorySelect = useCallback((categoryId: string, _categoryName: string) => {
+    listing.setFilters((prev: any) => ({ ...prev, categoryId, search: "", brandKey: null }));
+    // Smooth scroll to products grid after a short delay to let the filter apply
+    setTimeout(() => {
+      productsAnchorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+  }, [listing.setFilters]);
 
   const handleAddToCart = useCallback(async (product: any) => {
     try {
