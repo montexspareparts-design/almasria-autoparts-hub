@@ -1,6 +1,6 @@
 import { memo, useEffect, useMemo, useState } from "react";
 import { toast } from "@/hooks/use-toast";
-import { Eye, Package, Grid3X3, List, SlidersHorizontal, ChevronDown, Sparkles, Wrench, Flame, TrendingUp } from "lucide-react";
+import { Eye, Package, Grid3X3, List, SlidersHorizontal, ChevronDown, Sparkles, Wrench, Flame, TrendingUp, X } from "lucide-react";
 import { lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
