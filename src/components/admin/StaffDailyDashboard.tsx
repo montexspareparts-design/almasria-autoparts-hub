@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   ClipboardList, ShoppingCart, Users, AlertTriangle,
   Clock, TrendingUp, CheckCircle, Loader2, ArrowLeft,
-  Search, UserX, MessageCircle, UserPlus
+  Search, UserX, MessageCircle, UserPlus, Shield
 } from "lucide-react";
 import WhatsAppQuickChat from "./WhatsAppQuickChat";
 
