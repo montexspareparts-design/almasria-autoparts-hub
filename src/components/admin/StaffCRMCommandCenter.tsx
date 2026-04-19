@@ -11,9 +11,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import {
   Flame, Search, UserCheck, Users, Trophy, Phone, Eye,
-  CheckCircle2, Clock, Building2, ShoppingBag, Loader2, RefreshCw, Briefcase
+  CheckCircle2, Clock, Building2, ShoppingBag, Loader2, RefreshCw, Briefcase, Activity
 } from "lucide-react";
 import WhatsAppQuickChat from "./WhatsAppQuickChat";
+import CustomerActivitySummary from "./CustomerActivitySummary";
 
 // =================== Types ===================
 interface UrgentOrder {
