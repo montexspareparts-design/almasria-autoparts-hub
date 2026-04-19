@@ -233,6 +233,28 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
         .eq("marked_date", today);
       setContactedToday(new Set((marks || []).map((m: any) => m.customer_user_id)));
 
+      // 4b) Pending support requests from chatbot
+      const { data: supportRows } = await (supabase as any)
+        .from("support_requests")
+        .select("id, user_id, customer_name, customer_phone, message, request_type, is_dealer, created_at, status")
+        .eq("status", "pending")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      setSupportRequests(
+        ((supportRows || []) as any[]).map((r) => ({
+          id: r.id,
+          user_id: r.user_id,
+          customer_name: r.customer_name,
+          customer_phone: r.customer_phone,
+          message: r.message,
+          request_type: r.request_type,
+          is_dealer: !!r.is_dealer,
+          created_at: r.created_at,
+          status: r.status,
+          minutes_ago: minutesBetween(r.created_at),
+        }))
+      );
+
       // 5) Leaderboard (admin only)
       if (isAdmin) {
         const { data: staffRoles } = await supabase
