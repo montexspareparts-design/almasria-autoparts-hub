@@ -168,6 +168,13 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
   const [isListening, setIsListening] = useState(false);
   const [speakingMsgIndex, setSpeakingMsgIndex] = useState<number | null>(null);
   const [isLocating, setIsLocating] = useState(false);
+  // Signup flow state — collected step by step inside chat
+  const signupStateRef = useRef<{
+    step: "idle" | "name" | "email" | "phone" | "confirm" | "submitting";
+    name?: string;
+    email?: string;
+    phone?: string;
+  }>({ step: "idle" });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
