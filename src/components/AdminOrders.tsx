@@ -568,7 +568,13 @@ const AdminOrders = () => {
                 const canEdit = ["pending", "confirmed", "processing"].includes(order.status);
 
                 return (
-                  <div key={order.id} className={`border rounded-xl overflow-hidden transition-all ${order.isDealer ? "border-blue-200 dark:border-blue-800/50" : "border-border"}`}>
+                  <div
+                    key={order.id}
+                    id={`order-${order.id}`}
+                    className={`border rounded-xl overflow-hidden transition-all ${
+                      order.isDealer ? "border-blue-200 dark:border-blue-800/50" : "border-border"
+                    } ${searchParams.get("highlight") === order.id ? "ring-2 ring-primary shadow-lg" : ""}`}
+                  >
                     {/* Order Header */}
                     <div
                       className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/30 transition-colors"
@@ -587,6 +593,30 @@ const AdminOrders = () => {
                             <Badge variant="outline" className={`text-[10px] font-bold border-0 ${order.isDealer ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"}`}>
                               {order.isDealer ? "🏢 جملة" : "🛒 قطاعي"}
                             </Badge>
+                            {/* SLA Badge — only for new pending orders */}
+                            {order.status === "pending" && !(order as any).first_contacted_at && (() => {
+                              const mins = getMinutesAgo(order.created_at);
+                              const isLate = mins >= SLA_MINUTES;
+                              return (
+                                <Badge
+                                  variant="outline"
+                                  className={`text-[10px] font-bold border-0 gap-1 ${
+                                    isLate
+                                      ? "bg-destructive/15 text-destructive animate-pulse"
+                                      : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+                                  }`}
+                                >
+                                  {isLate ? <AlertTriangle className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
+                                  {isLate ? `متأخر ${mins}د` : `${mins}د`}
+                                </Badge>
+                              );
+                            })()}
+                            {(order as any).first_contacted_at && order.status === "pending" && (
+                              <Badge variant="outline" className="text-[10px] font-bold border-0 bg-green-500/10 text-green-600 dark:text-green-400 gap-1">
+                                <CheckCircle className="w-3 h-3" />
+                                تم التواصل
+                              </Badge>
+                            )}
                           </div>
                           <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1 flex-wrap">
                             <span>{order.profile?.full_name || "عميل"}</span>
@@ -598,6 +628,19 @@ const AdminOrders = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
+                        {/* Quick WhatsApp button — visible for all orders that have phone */}
+                        {order.profile?.phone && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs gap-1 border-green-500/40 text-green-600 hover:bg-green-50 dark:hover:bg-green-950/20"
+                            onClick={(e) => { e.stopPropagation(); quickWhatsApp(order); }}
+                            title="تواصل واتساب فوري"
+                          >
+                            <MessageCircle className="w-3 h-3" />
+                            <span className="hidden md:inline">واتساب</span>
+                          </Button>
+                        )}
                         {order.status === "pending" && (
                           <Button
                             size="sm"
