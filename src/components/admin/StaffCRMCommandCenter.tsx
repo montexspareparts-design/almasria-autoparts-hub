@@ -469,13 +469,20 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
 
       {/* Tabs */}
       <Tabs value={tab} onValueChange={(v) => setTab(v as any)} dir="rtl">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 h-auto">
           <TabsTrigger value="urgent" className="flex flex-col gap-0.5 py-2.5 data-[state=active]:bg-red-50 data-[state=active]:text-red-700">
             <div className="flex items-center gap-1.5">
               <Flame className="w-4 h-4" />
               <span className="font-semibold">طلبات عاجلة</span>
             </div>
             <Badge variant={counts.urgent > 0 ? "destructive" : "secondary"} className="text-[10px] h-4">{counts.urgent}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="chatbot" className="flex flex-col gap-0.5 py-2.5 data-[state=active]:bg-purple-50 data-[state=active]:text-purple-700">
+            <div className="flex items-center gap-1.5">
+              <Bot className="w-4 h-4" />
+              <span className="font-semibold">طلبات الشات بوت</span>
+            </div>
+            <Badge variant={counts.chatbot > 0 ? "default" : "secondary"} className={`text-[10px] h-4 ${counts.chatbot > 0 ? "bg-purple-600 animate-pulse" : ""}`}>{counts.chatbot}</Badge>
           </TabsTrigger>
           <TabsTrigger value="search" className="flex flex-col gap-0.5 py-2.5 data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700">
             <div className="flex items-center gap-1.5">
