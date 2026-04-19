@@ -46,6 +46,7 @@ const AdminPriceLists = () => {
   const [linkedProducts, setLinkedProducts] = useState<Product[]>([]);
   const [searchingProducts, setSearchingProducts] = useState(false);
   const [loadingLinked, setLoadingLinked] = useState(false);
+  const [bulkLinking, setBulkLinking] = useState(false);
 
   // Views report
   const [viewingReport, setViewingReport] = useState<PriceListRow | null>(null);
