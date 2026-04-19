@@ -578,6 +578,38 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
       {/* Summary + Notes + Actions (only show when cart has items) */}
       {items.length > 0 && (
         <>
+          {/* Pickup Branch Selection */}
+          <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-primary" />
+              <h3 className="text-sm font-black text-foreground">فرع الاستلام</h3>
+              <span className="text-[10px] text-destructive font-bold">*مطلوب</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {PICKUP_BRANCHES.map((branch) => {
+                const selected = pickupBranch === branch.value;
+                return (
+                  <button
+                    key={branch.value}
+                    type="button"
+                    onClick={() => {
+                      setPickupBranch(branch.value);
+                      localStorage.setItem("dealer_pickup_branch", branch.value);
+                    }}
+                    className={`relative h-12 rounded-xl border-2 text-sm font-bold transition-all flex items-center justify-center gap-1.5 ${
+                      selected
+                        ? "border-primary bg-primary text-primary-foreground shadow-md scale-[1.02]"
+                        : "border-border bg-card text-foreground hover:border-primary/50 hover:bg-primary/5"
+                    }`}
+                  >
+                    {selected && <Check className="w-3.5 h-3.5" />}
+                    {branch.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Notes */}
           <div className="rounded-xl border border-border/50 bg-card p-3">
             <Textarea
