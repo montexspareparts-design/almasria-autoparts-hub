@@ -263,7 +263,8 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
         total_amount: total,
         notes: notes || null,
         status: "pending",
-      })
+        pickup_branch: pickupBranch || null,
+      } as any)
       .select()
       .single();
     if (error || !order) return null;
