@@ -13,6 +13,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import PickupBranchSelector, { getStoredPickupBranch } from "./PickupBranchSelector";
 
 interface MatchedProduct {
   id: string;
@@ -37,6 +38,7 @@ const DealerQuickOrder = () => {
   const [lines, setLines] = useState<OrderLine[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [pickupBranch, setPickupBranch] = useState<string>(() => getStoredPickupBranch());
 
   // Auto-search state
   const [searching, setSearching] = useState(false);
@@ -119,6 +121,10 @@ const DealerQuickOrder = () => {
       toast({ title: "أضف صنف واحد على الأقل", variant: "destructive" });
       return;
     }
+    if (!pickupBranch) {
+      toast({ title: "اختر فرع الاستلام أولاً", variant: "destructive" });
+      return;
+    }
     setSubmitting(true);
 
     // For lines without matched product, look them up
@@ -159,7 +165,7 @@ const DealerQuickOrder = () => {
 
     const { data: order, error } = await supabase
       .from("orders")
-      .insert({ user_id: user!.id, order_number: orderNumber, total_amount: total, status: "pending" })
+      .insert({ user_id: user!.id, order_number: orderNumber, total_amount: total, status: "pending", pickup_branch: pickupBranch } as any)
       .select()
       .single();
 
@@ -184,7 +190,7 @@ const DealerQuickOrder = () => {
 
     // Push to Al Faisal ERP
     pushOrderToERP((order as any).id);
-    notifyNewOrderWhatsApp(orderNumber, total);
+    notifyNewOrderWhatsApp(orderNumber, total, undefined, undefined, undefined, pickupBranch);
 
     toast({ title: "تم إرسال الطلب ✓", description: `رقم الطلب: ${orderNumber}` });
     setLines([]);
