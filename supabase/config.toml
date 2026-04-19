@@ -52,6 +52,9 @@ verify_jwt = false
 [functions.whatsapp-webhook]
 verify_jwt = false
 
+[functions.whatsapp-send-message]
+verify_jwt = true
+
 [functions.notify-price-drop-whatsapp]
 verify_jwt = false
 
