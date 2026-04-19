@@ -324,6 +324,11 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
   // Pay now
   const handlePayNow = async () => {
     if (!user || items.length === 0) return;
+    if (!pickupBranch) {
+      toast({ title: "اختر فرع الاستلام أولاً", description: "حدد الفرع الذي ستستلم منه الطلبية", variant: "destructive" });
+      return;
+    }
+    localStorage.setItem("dealer_pickup_branch", pickupBranch);
     setSubmittingPayment(true);
     try {
       const order = await createOrder();
