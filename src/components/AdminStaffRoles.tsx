@@ -626,6 +626,43 @@ const AdminStaffRoles = () => {
           </CardContent>
         </Card>
       </TabsContent>
+
+      {/* Reset Password Dialog */}
+      <Dialog open={!!resetTarget} onOpenChange={(o) => { if (!o) { setResetTarget(null); setResetPassword(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="w-5 h-5 text-amber-600" />
+              إعادة تعيين كلمة المرور
+            </DialogTitle>
+            <DialogDescription>
+              تعيين كلمة مرور جديدة لـ <strong>{resetTarget?.full_name || resetTarget?.email}</strong>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div>
+              <label className="text-sm font-medium text-muted-foreground mb-1.5 block">كلمة المرور الجديدة (6 حروف على الأقل)</label>
+              <Input
+                placeholder="مثال: Karam@2050"
+                value={resetPassword}
+                onChange={(e) => setResetPassword(e.target.value)}
+                dir="ltr"
+                className="text-left"
+                type="text"
+                autoFocus
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">⚠️ بعد التعيين، شارك كلمة المرور الجديدة مع الموظف يدوياً.</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResetTarget(null)} disabled={resetting}>إلغاء</Button>
+            <Button onClick={handleResetPassword} disabled={resetting || resetPassword.trim().length < 6} className="gap-2">
+              {resetting ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
+              تعيين كلمة المرور
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Tabs>
   );
 };
