@@ -205,7 +205,7 @@ const Navbar = () => {
             <button onClick={toggleLang} className="text-secondary-foreground/70 hover:text-primary transition-colors p-2 touch-manipulation text-[11px] font-bold">
               {lang === "ar" ? "EN" : "عربي"}
             </button>
-            {!isDealer && (
+            {!isDealer && !isStaffOnly && (
               <button onClick={() => navigate("/cart")} className="text-secondary-foreground/70 hover:text-primary transition-colors p-2 touch-manipulation relative">
                 <ShoppingCart className="w-[18px] h-[18px]" />
                 {itemCount > 0 && (
@@ -217,7 +217,11 @@ const Navbar = () => {
             )}
             <NotificationBell />
             <button
-              onClick={() => user ? navigate(dealerAccount ? "/dealer" : "/dealer-apply") : navigate("/auth")}
+              onClick={() => {
+                if (!user) return navigate("/auth");
+                if (isStaffOnly || isAdmin) return navigate("/admin");
+                return navigate(dealerAccount ? "/dealer" : "/dealer-apply");
+              }}
               className="text-secondary-foreground/70 hover:text-primary transition-colors p-2 touch-manipulation"
             >
               <User className="w-[18px] h-[18px]" />
@@ -238,7 +242,7 @@ const Navbar = () => {
             <div className="w-px h-5 bg-secondary-foreground/10 mx-1" />
 
             {/* Cart — B2C only */}
-            {!isDealer && (
+            {!isDealer && !isStaffOnly && (
               <button
                 onClick={() => navigate("/cart")}
                 className="relative text-secondary-foreground/60 hover:text-secondary-foreground transition-colors p-2 rounded-lg hover:bg-secondary-foreground/5"
@@ -259,19 +263,19 @@ const Navbar = () => {
               <>
                 <div className="w-px h-5 bg-secondary-foreground/10 mx-1" />
 
-                {isAdmin && (
+                {(isAdmin || isStaffOnly) && (
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => navigate("/admin")}
                     className="text-secondary-foreground/60 hover:text-secondary-foreground text-[13px] font-semibold h-8 px-2.5"
                   >
-                    {t("nav.admin")}
+                    {isStaffOnly ? (lang === "ar" ? "لوحة المهام" : "Staff Panel") : t("nav.admin")}
                   </Button>
                 )}
 
-                {/* B2C: show orders + dealer apply */}
-                {!isDealer && (
+                {/* B2C: show orders + dealer apply (hide for dealer & moderator) */}
+                {!isDealer && !isStaffOnly && (
                   <>
                     <Link
                       to="/my-profile"
