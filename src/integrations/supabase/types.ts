@@ -251,6 +251,39 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_assignments: {
+        Row: {
+          assigned_by: string | null
+          assigned_staff_id: string
+          created_at: string
+          customer_user_id: string
+          id: string
+          last_contacted_at: string | null
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          assigned_staff_id: string
+          created_at?: string
+          customer_user_id: string
+          id?: string
+          last_contacted_at?: string | null
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_by?: string | null
+          assigned_staff_id?: string
+          created_at?: string
+          customer_user_id?: string
+          id?: string
+          last_contacted_at?: string | null
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       customer_communications: {
         Row: {
           comm_type: string
@@ -326,6 +359,30 @@ export type Database = {
           results_count?: number | null
           search_query?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      customer_sessions: {
+        Row: {
+          id: string
+          last_seen_at: string
+          page_views: number
+          session_date: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          last_seen_at?: string
+          page_views?: number
+          session_date?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          last_seen_at?: string
+          page_views?: number
+          session_date?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1727,6 +1784,33 @@ export type Database = {
           key?: string
           updated_at?: string
           value?: string
+        }
+        Relationships: []
+      }
+      staff_contact_marks: {
+        Row: {
+          context: string
+          created_at: string
+          customer_user_id: string
+          id: string
+          marked_date: string
+          staff_user_id: string
+        }
+        Insert: {
+          context?: string
+          created_at?: string
+          customer_user_id: string
+          id?: string
+          marked_date?: string
+          staff_user_id: string
+        }
+        Update: {
+          context?: string
+          created_at?: string
+          customer_user_id?: string
+          id?: string
+          marked_date?: string
+          staff_user_id?: string
         }
         Relationships: []
       }
