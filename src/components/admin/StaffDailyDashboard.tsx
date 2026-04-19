@@ -373,6 +373,16 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
       <div>
         <h3 className="text-base font-bold mb-3">وصول سريع</h3>
         <div className="flex flex-wrap gap-2">
+          {isAdmin && (
+            <Button
+              size="sm"
+              className="gap-1.5 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-md hover:shadow-lg"
+              onClick={() => onNavigate?.("staff-roles")}
+            >
+              <UserPlus className="w-4 h-4" />
+              إضافة موظف جديد
+            </Button>
+          )}
           {[
             { label: "الطلبات", section: "orders", icon: "🛒" },
             { label: "إدخال العملاء", section: "leads", icon: "👥" },
