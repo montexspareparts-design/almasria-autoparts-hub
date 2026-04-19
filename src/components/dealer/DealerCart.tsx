@@ -52,6 +52,7 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
   // ERP dialog
   const [erpDialog, setErpDialog] = useState<{ open: boolean; erpCode: string; orderNumber: string }>({ open: false, erpCode: "", orderNumber: "" });
   const [copied, setCopied] = useState(false);
+  const [pickupBranch, setPickupBranch] = useState<string>(() => localStorage.getItem("dealer_pickup_branch") || "");
 
   // Search
   const [searchQuery, setSearchQuery] = useState("");
