@@ -59,6 +59,22 @@ interface ProductListingSectionProps {
 
 const INITIAL_ROWS = 4;
 
+// Map an Arabic search term to a relevant emoji icon
+const pickIcon = (term: string): string => {
+  const t = term.toLowerCase();
+  if (t.includes("زيت") || t.includes("اويل")) return "🛢️";
+  if (t.includes("فلتر") || t.includes("فيبر")) return "🧪";
+  if (t.includes("فرامل") || t.includes("تيل")) return "🛑";
+  if (t.includes("بوجي") || t.includes("بوجيه") || t.includes("دينامو") || t.includes("كهرب")) return "⚡";
+  if (t.includes("بطار")) return "🔋";
+  if (t.includes("اكصدام") || t.includes("صدام") || t.includes("مصد")) return "🚗";
+  if (t.includes("مساعد") || t.includes("مقص") || t.includes("بلي")) return "🔩";
+  if (t.includes("جوان") || t.includes("سيل") || t.includes("مياه")) return "💧";
+  if (t.includes("دبرياج") || t.includes("كلتش")) return "⚙️";
+  if (t.includes("كورولا") || t.includes("هاي اس") || t.includes("هايلوكس") || t.includes("كامري")) return "🚙";
+  return "🔧";
+};
+
 const ProductListingSection = memo(({
   filters, setFilters, viewMode, setViewMode,
   hasMore, loadMore,
