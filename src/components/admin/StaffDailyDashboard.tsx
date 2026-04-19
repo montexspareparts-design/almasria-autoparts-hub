@@ -347,7 +347,7 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
           <TrendingUp className="w-4 h-4 text-primary" />
           ملخص الأداء
         </h3>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
           <Card>
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold text-foreground">{stats.todayOrders}</p>
@@ -370,6 +370,16 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold text-primary">{stats.totalLeadsConverted}</p>
               <p className="text-xs text-muted-foreground">عملاء تم تحويلهم لتجار</p>
+            </CardContent>
+          </Card>
+          <Card
+            className={isAdmin ? "cursor-pointer hover:shadow-md transition-shadow border-primary/30 bg-primary/5" : "border-primary/30 bg-primary/5"}
+            onClick={() => isAdmin && onNavigate?.("staff-roles")}
+          >
+            <CardContent className="p-4 text-center">
+              <Shield className="w-5 h-5 text-primary mx-auto mb-1" />
+              <p className="text-2xl font-bold text-primary">{stats.activeStaff}</p>
+              <p className="text-xs text-muted-foreground">الموظفين النشطين</p>
             </CardContent>
           </Card>
         </div>
