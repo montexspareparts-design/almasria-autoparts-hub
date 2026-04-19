@@ -241,18 +241,11 @@ const ProductListingSection = memo(({
             </div>
           </div>
 
-          {/* Quick search suggestions — only when search is empty */}
-          {!filters.search && (
+          {/* Quick search suggestions — dynamic from top dealer searches */}
+          {!filters.search && quickSuggestions.length > 0 && (
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 mb-2 scrollbar-hide -mt-1" style={{ scrollbarWidth: "none" }}>
-              <span className="text-[11px] text-muted-foreground/70 font-medium shrink-0 ml-1">بحث سريع:</span>
-              {[
-                { label: "فلاتر", icon: "🛢️" },
-                { label: "زيت", icon: "🛢️" },
-                { label: "فرامل", icon: "🛑" },
-                { label: "بوجيه", icon: "⚡" },
-                { label: "تيل", icon: "🔧" },
-                { label: "بطارية", icon: "🔋" },
-              ].map(s => (
+              <span className="text-[11px] text-muted-foreground/70 font-medium shrink-0 ml-1">الأكثر بحثاً:</span>
+              {quickSuggestions.map(s => (
                 <button
                   key={s.label}
                   onClick={() => setFilters(prev => ({ ...prev, search: s.label }))}
