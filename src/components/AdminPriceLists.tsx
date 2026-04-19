@@ -460,6 +460,64 @@ const AdminPriceLists = () => {
     fetchLinkedProducts(managingList.id);
   };
 
+  const linkAllActiveProducts = async () => {
+    if (!managingList) return;
+    if (!confirm("سيتم ربط جميع الأصناف النشطة بهذا الكشف. هل أنت متأكد؟")) return;
+    setBulkLinking(true);
+    try {
+      const allIds: string[] = [];
+      let from = 0;
+      const pageSize = 1000;
+      while (true) {
+        const { data, error } = await supabase
+          .from("products")
+          .select("id")
+          .eq("is_active", true)
+          .range(from, from + pageSize - 1);
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        allIds.push(...data.map((p: any) => p.id));
+        if (data.length < pageSize) break;
+        from += pageSize;
+      }
+      if (allIds.length === 0) {
+        toast({ title: "لا توجد أصناف نشطة", variant: "destructive" });
+        return;
+      }
+      const batchSize = 500;
+      for (let i = 0; i < allIds.length; i += batchSize) {
+        const batch = allIds.slice(i, i + batchSize).map(pid => ({
+          price_list_id: managingList.id,
+          product_id: pid,
+        }));
+        await supabase
+          .from("price_list_products")
+          .upsert(batch as any, { onConflict: "price_list_id,product_id", ignoreDuplicates: true });
+      }
+      toast({ title: "✅ تم الربط", description: `تم ربط ${allIds.length} صنف بالكشف` });
+      fetchLinkedProducts(managingList.id);
+    } catch (e: any) {
+      toast({ title: "خطأ", description: e.message, variant: "destructive" });
+    } finally {
+      setBulkLinking(false);
+    }
+  };
+
+  const unlinkAllProducts = async () => {
+    if (!managingList) return;
+    if (!confirm("سيتم فك ربط جميع الأصناف من هذا الكشف. هل أنت متأكد؟")) return;
+    setBulkLinking(true);
+    const { error } = await supabase
+      .from("price_list_products")
+      .delete()
+      .eq("price_list_id", managingList.id);
+    if (!error) {
+      toast({ title: "تم فك الربط" });
+      fetchLinkedProducts(managingList.id);
+    }
+    setBulkLinking(false);
+  };
+
   if (loading) return <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
 
   // Views report for a specific list
