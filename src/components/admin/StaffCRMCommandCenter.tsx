@@ -80,6 +80,7 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
   const [yesterdayCustomers, setYesterdayCustomers] = useState<YesterdayCustomer[]>([]);
   const [staffLeaderboard, setStaffLeaderboard] = useState<StaffStat[]>([]);
   const [contactedToday, setContactedToday] = useState<Set<string>>(new Set());
+  const [summaryUser, setSummaryUser] = useState<{ id: string; name: string; phone: string | null; isDealer: boolean } | null>(null);
 
   // =================== Fetch ===================
   const fetchAll = async () => {
