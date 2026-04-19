@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, Phone, X, Bot, CheckCircle2, User, Volume2, VolumeX } from "lucide-react";
+import { MessageCircle, Phone, X, Bot, CheckCircle2, User, Volume2, VolumeX, Target } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { playNewOrderSound } from "@/lib/orderAlertSound";
 import { isSoundEnabled, setSoundEnabled } from "@/lib/pricingSound";
@@ -20,6 +20,7 @@ interface SupportRequest {
   is_dealer: boolean | null;
   context: any;
   status?: string;
+  claimed_by?: string | null;
   created_at: string;
 }
 
@@ -52,7 +53,7 @@ export default function AdminSupportRequestAlert() {
         .in("role", ["admin", "moderator"]);
       if (!active || !roles || roles.length === 0) return;
 
-      // Subscribe to new support requests
+      // Subscribe to support requests (INSERT for new alerts, UPDATE to remove claimed ones)
       const channel = supabase
         .channel("admin-new-support-requests")
         .on(
@@ -62,11 +63,27 @@ export default function AdminSupportRequestAlert() {
             const req = payload.new as SupportRequest;
             if (seenIds.current.has(req.id)) return;
             if (req.status && (req.status as any) !== "pending") return;
+            if (req.claimed_by) return;
             seenIds.current.add(req.id);
             setPending((prev) => [req, ...prev]);
             setOpen(true);
             playNewOrderSound();
             toast.success("🤖 طلب تواصل جديد من العميل!", { duration: 6000 });
+          }
+        )
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "support_requests" },
+          (payload) => {
+            const req = payload.new as SupportRequest;
+            // If someone (anyone) claimed it, remove from popup for everyone
+            if (req.claimed_by || req.status === "resolved" || req.status === "closed") {
+              setPending((prev) => {
+                const next = prev.filter((r) => r.id !== req.id);
+                if (next.length === 0) setOpen(false);
+                return next;
+              });
+            }
           }
         )
         .subscribe();
@@ -86,26 +103,59 @@ export default function AdminSupportRequestAlert() {
     if (pending.length <= 1) setOpen(false);
   };
 
-  const markResolved = async (req: SupportRequest) => {
-    if (!user) return;
-    await supabase
+  // Atomic claim — only succeeds if no one else has claimed yet
+  const claimReq = async (req: SupportRequest): Promise<boolean> => {
+    if (!user) return false;
+    const { data, error } = await supabase
       .from("support_requests")
-      .update({ status: "in_progress", assigned_to: user.id } as any)
-      .eq("id", req.id);
-    dismissReq(req.id);
+      .update({
+        claimed_by: user.id,
+        claimed_at: new Date().toISOString(),
+        assigned_to: user.id,
+        status: "in_progress",
+      } as any)
+      .eq("id", req.id)
+      .is("claimed_by", null)
+      .select("id")
+      .maybeSingle();
+    if (error) {
+      toast.error(error.message);
+      return false;
+    }
+    if (!data) {
+      toast.error("⏱️ سبقك زميل! الطلب اتخد بالفعل");
+      dismissReq(req.id);
+      return false;
+    }
+    return true;
+  };
+
+  const handleClaim = async (req: SupportRequest) => {
+    const ok = await claimReq(req);
+    if (ok) {
+      toast.success("🎯 الطلب لك! تواصل مع العميل الآن");
+      // Keep visible only for this user (others get UPDATE event and lose it)
+      navigate("/admin?section=daily-dashboard");
+      dismissReq(req.id);
+    }
   };
 
   const handleWhatsApp = async (req: SupportRequest) => {
     if (!req.customer_phone) return;
+    const ok = await claimReq(req);
+    if (!ok) return;
     const name = req.customer_name || "عميلنا الكريم";
     const msg = `أهلاً ${name}، معاك المصرية جروب لقطع غيار تويوتا 🚗\nاستلمنا طلبك للتواصل. كيف نقدر نساعدك؟`;
     const url = `https://wa.me/${formatPhoneForWA(req.customer_phone)}?text=${encodeURIComponent(msg)}`;
     window.open(url, "_blank");
-    await markResolved(req);
+    dismissReq(req.id);
   };
 
-  const handleViewInCRM = (req: SupportRequest) => {
-    navigate("/admin?section=daily-dashboard");
+  const handleCall = async (req: SupportRequest) => {
+    if (!req.customer_phone) return;
+    const ok = await claimReq(req);
+    if (!ok) return;
+    window.location.href = `tel:${req.customer_phone}`;
     dismissReq(req.id);
   };
 
@@ -136,7 +186,7 @@ export default function AdminSupportRequestAlert() {
             </Button>
           </div>
           <DialogDescription>
-            عميل يحتاج موظف يتواصل معه — استجب بسرعة!
+            ⚡ أول واحد يضغط <strong>"أنا هرد"</strong> يحجز الطلب — اللي يسبق يكسب!
           </DialogDescription>
         </DialogHeader>
 
@@ -165,29 +215,34 @@ export default function AdminSupportRequestAlert() {
                 </div>
               </div>
 
+              <Button
+                size="sm"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground gap-2 font-bold shadow-md"
+                onClick={() => handleClaim(r)}
+              >
+                <Target className="w-4 h-4" />
+                🎯 أنا هرد على هذا العميل
+              </Button>
+
               <div className="flex gap-2">
                 <Button
                   size="sm"
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white gap-1.5"
+                  variant="outline"
+                  className="flex-1 gap-1.5 border-green-300 text-green-700 hover:bg-green-50 dark:border-green-700 dark:text-green-400"
                   onClick={() => handleWhatsApp(r)}
                   disabled={!r.customer_phone}
+                  title="يأخذ الطلب ويفتح واتساب"
                 >
                   <MessageCircle className="w-4 h-4" />
-                  واتساب فوري
+                  حجز + واتساب
                 </Button>
                 {r.customer_phone && (
-                  <Button asChild size="sm" variant="outline" className="gap-1.5">
-                    <a href={`tel:${r.customer_phone}`} onClick={() => markResolved(r)}>
-                      <Phone className="w-4 h-4" />
-                      اتصال
-                    </a>
+                  <Button size="sm" variant="outline" className="gap-1.5" onClick={() => handleCall(r)} title="يأخذ الطلب ويفتح اتصال">
+                    <Phone className="w-4 h-4" />
+                    حجز + اتصال
                   </Button>
                 )}
-                <Button size="sm" variant="outline" className="gap-1.5" onClick={() => handleViewInCRM(r)}>
-                  <CheckCircle2 className="w-4 h-4" />
-                  عرض
-                </Button>
-                <Button size="sm" variant="ghost" className="px-2" onClick={() => dismissReq(r.id)} title="إخفاء">
+                <Button size="sm" variant="ghost" className="px-2" onClick={() => dismissReq(r.id)} title="إخفاء (الطلب يفضل متاح للزملاء)">
                   <X className="w-4 h-4" />
                 </Button>
               </div>
@@ -196,7 +251,7 @@ export default function AdminSupportRequestAlert() {
         </div>
 
         <DialogFooter className="text-xs text-muted-foreground border-t pt-3">
-          💡 الطلبات بتظهر كمان في تبويب "طلبات الشات بوت" بمركز قيادة المتابعة
+          💡 لما تضغط "إخفاء" الطلب يفضل ظاهر لباقي الزملاء — مش هيتحجز عليك
         </DialogFooter>
       </DialogContent>
     </Dialog>

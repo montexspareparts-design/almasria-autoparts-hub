@@ -1855,6 +1855,8 @@ export type Database = {
       support_requests: {
         Row: {
           assigned_to: string | null
+          claimed_at: string | null
+          claimed_by: string | null
           context: Json | null
           created_at: string
           customer_name: string | null
@@ -1872,6 +1874,8 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          claimed_at?: string | null
+          claimed_by?: string | null
           context?: Json | null
           created_at?: string
           customer_name?: string | null
@@ -1889,6 +1893,8 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          claimed_at?: string | null
+          claimed_by?: string | null
           context?: Json | null
           created_at?: string
           customer_name?: string | null

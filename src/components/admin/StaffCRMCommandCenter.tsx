@@ -63,6 +63,9 @@ interface SupportReq {
   created_at: string;
   minutes_ago: number;
   status: string;
+  claimed_by: string | null;
+  claimed_by_name: string | null;
+  claimed_at: string | null;
 }
 
 // =================== Helpers ===================
@@ -233,13 +236,25 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
         .eq("marked_date", today);
       setContactedToday(new Set((marks || []).map((m: any) => m.customer_user_id)));
 
-      // 4b) Pending support requests from chatbot
+      // 4b) Active support requests from chatbot (pending OR claimed but not yet resolved)
       const { data: supportRows } = await (supabase as any)
         .from("support_requests")
-        .select("id, user_id, customer_name, customer_phone, message, request_type, is_dealer, created_at, status")
-        .eq("status", "pending")
+        .select("id, user_id, customer_name, customer_phone, message, request_type, is_dealer, created_at, status, claimed_by, claimed_at")
+        .in("status", ["pending", "in_progress"])
         .order("created_at", { ascending: false })
         .limit(50);
+
+      // Resolve names for claimed_by
+      const claimedIds = [...new Set(((supportRows || []) as any[]).map((r) => r.claimed_by).filter(Boolean))];
+      let staffNameMap = new Map<string, string>();
+      if (claimedIds.length > 0) {
+        const { data: staffProfs } = await supabase
+          .from("profiles")
+          .select("user_id, full_name, email")
+          .in("user_id", claimedIds);
+        staffNameMap = new Map((staffProfs || []).map((p: any) => [p.user_id, p.full_name || p.email || "موظف"]));
+      }
+
       setSupportRequests(
         ((supportRows || []) as any[]).map((r) => ({
           id: r.id,
@@ -252,6 +267,9 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
           created_at: r.created_at,
           status: r.status,
           minutes_ago: minutesBetween(r.created_at),
+          claimed_by: r.claimed_by || null,
+          claimed_by_name: r.claimed_by ? staffNameMap.get(r.claimed_by) || "موظف" : null,
+          claimed_at: r.claimed_at || null,
         }))
       );
 
@@ -295,7 +313,7 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
 
   useEffect(() => { fetchAll(); }, [isAdmin]);
 
-  // Realtime subscription for new chatbot support requests
+  // Realtime subscription for support requests (INSERT new + UPDATE for claim sync)
   useEffect(() => {
     if (!user) return;
     const channel = supabase
@@ -319,8 +337,44 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
               created_at: r.created_at,
               status: r.status,
               minutes_ago: minutesBetween(r.created_at),
+              claimed_by: null,
+              claimed_by_name: null,
+              claimed_at: null,
             }, ...prev];
           });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "support_requests" },
+        async (payload) => {
+          const r = payload.new as any;
+          // Remove from list if resolved
+          if (r.status === "resolved" || r.status === "closed") {
+            setSupportRequests((prev) => prev.filter((x) => x.id !== r.id));
+            return;
+          }
+          // Resolve claimed_by name if needed
+          let claimedName: string | null = null;
+          if (r.claimed_by) {
+            if (r.claimed_by === user.id) {
+              claimedName = "أنت";
+            } else {
+              const { data: prof } = await supabase
+                .from("profiles")
+                .select("full_name, email")
+                .eq("user_id", r.claimed_by)
+                .maybeSingle();
+              claimedName = (prof as any)?.full_name || (prof as any)?.email || "موظف";
+            }
+          }
+          setSupportRequests((prev) =>
+            prev.map((x) =>
+              x.id === r.id
+                ? { ...x, status: r.status, claimed_by: r.claimed_by, claimed_by_name: claimedName, claimed_at: r.claimed_at }
+                : x
+            )
+          );
         }
       )
       .subscribe();
@@ -351,18 +405,40 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
     toast({ title: "✅ تم التواصل", description: "تم تسجيل الطلب كمُتواصَل عليه" });
   };
 
+  // Atomic claim — only succeeds if no one else has claimed it yet
+  const claimSupportRequest = async (reqId: string) => {
+    if (!user) return false;
+    const { data, error } = await (supabase as any)
+      .from("support_requests")
+      .update({ claimed_by: user.id, claimed_at: new Date().toISOString(), assigned_to: user.id, status: "in_progress" })
+      .eq("id", reqId)
+      .is("claimed_by", null)
+      .select("id")
+      .maybeSingle();
+    if (error) {
+      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+      return false;
+    }
+    if (!data) {
+      toast({ title: "⏱️ سبقك زميل!", description: "هذا الطلب تم الرد عليه بالفعل", variant: "destructive" });
+      return false;
+    }
+    toast({ title: "🎯 الطلب لك!", description: "تم تخصيص الطلب لك. تواصل مع العميل الآن" });
+    return true;
+  };
+
   const resolveSupportRequest = async (reqId: string) => {
     if (!user) return;
     const { error } = await (supabase as any)
       .from("support_requests")
-      .update({ status: "in_progress", assigned_to: user.id })
+      .update({ status: "resolved", resolved_at: new Date().toISOString() })
       .eq("id", reqId);
     if (error) {
       toast({ title: "خطأ", description: error.message, variant: "destructive" });
       return;
     }
     setSupportRequests((prev) => prev.filter((r) => r.id !== reqId));
-    toast({ title: "✅ تم التسجيل", description: "تم تعيين الطلب لك" });
+    toast({ title: "✅ تم الإغلاق", description: "تم إغلاق الطلب" });
   };
 
   // =================== Filtering ===================
@@ -593,8 +669,22 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                   <div className="divide-y">
                     {filteredSupport.map((r) => {
                       const isLate = r.minutes_ago >= 5;
+                      const isClaimed = !!r.claimed_by;
+                      const isMine = isClaimed && r.claimed_by === user?.id;
+                      const claimedByOther = isClaimed && !isMine;
                       return (
-                        <div key={r.id} className={`p-3 hover:bg-muted/30 transition-colors ${isLate ? "bg-purple-50/30 dark:bg-purple-950/10" : ""}`}>
+                        <div
+                          key={r.id}
+                          className={`p-3 transition-colors ${
+                            claimedByOther
+                              ? "bg-muted/40 opacity-60"
+                              : isMine
+                                ? "bg-emerald-50/40 dark:bg-emerald-950/10 border-r-4 border-emerald-500"
+                                : isLate
+                                  ? "bg-purple-50/30 dark:bg-purple-950/10 hover:bg-muted/30"
+                                  : "hover:bg-muted/30"
+                          }`}
+                        >
                           <div className="flex items-start justify-between gap-3 flex-wrap">
                             <div className="flex-1 min-w-[200px]">
                               <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -604,10 +694,22 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                                   {r.is_dealer ? "تاجر" : "قطاعي"}
                                 </Badge>
                                 {!r.user_id && <Badge variant="outline" className="text-[10px] h-5">ضيف</Badge>}
-                                <Badge variant={isLate ? "destructive" : "outline"} className={`text-[10px] h-5 gap-1 ${isLate ? "animate-pulse" : ""}`}>
+                                <Badge variant={isLate && !isClaimed ? "destructive" : "outline"} className={`text-[10px] h-5 gap-1 ${isLate && !isClaimed ? "animate-pulse" : ""}`}>
                                   <Clock className="w-3 h-3" />
                                   {fmtMinutes(r.minutes_ago)}
                                 </Badge>
+                                {isMine && (
+                                  <Badge className="text-[10px] h-5 gap-1 bg-emerald-600 hover:bg-emerald-600">
+                                    <UserCheck className="w-3 h-3" />
+                                    أنت بترد
+                                  </Badge>
+                                )}
+                                {claimedByOther && (
+                                  <Badge variant="secondary" className="text-[10px] h-5 gap-1">
+                                    <UserCheck className="w-3 h-3" />
+                                    {r.claimed_by_name} بيرد
+                                  </Badge>
+                                )}
                               </div>
                               {r.customer_phone && (
                                 <a href={`tel:${r.customer_phone}`} className="text-xs text-primary hover:underline flex items-center gap-1">
@@ -623,7 +725,16 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                               )}
                             </div>
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              {r.customer_phone && (
+                              {!isClaimed && (
+                                <Button
+                                  size="sm"
+                                  className="h-7 gap-1 text-xs bg-primary hover:bg-primary/90 shadow-md"
+                                  onClick={() => claimSupportRequest(r.id)}
+                                >
+                                  🎯 أنا هرد
+                                </Button>
+                              )}
+                              {isMine && r.customer_phone && (
                                 <>
                                   <Button asChild size="sm" variant="outline" className="h-7 gap-1 text-xs border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-400">
                                     <a href={`tel:${r.customer_phone}`}>
@@ -639,16 +750,18 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                                   />
                                 </>
                               )}
-                              {r.user_id && (
+                              {isMine && r.user_id && (
                                 <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => setSummaryUser({ id: r.user_id!, name: r.customer_name || "عميل", phone: r.customer_phone, isDealer: r.is_dealer })}>
                                   <Activity className="w-3 h-3" />
                                   ملخص
                                 </Button>
                               )}
-                              <Button size="sm" className="h-7 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => resolveSupportRequest(r.id)}>
-                                <CheckCircle2 className="w-3 h-3" />
-                                تم
-                              </Button>
+                              {isMine && (
+                                <Button size="sm" className="h-7 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => resolveSupportRequest(r.id)}>
+                                  <CheckCircle2 className="w-3 h-3" />
+                                  تم الرد
+                                </Button>
+                              )}
                             </div>
                           </div>
                         </div>
