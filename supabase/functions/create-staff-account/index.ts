@@ -246,18 +246,6 @@ Deno.serve(async (req) => {
     }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-
-    return new Response(JSON.stringify({
-      success: true,
-      isNewUser,
-      userId,
-      email: cleanEmail,
-      tempPassword: isNewUser ? tempPassword : null,
-      whatsappSent,
-      emailSent,
-    }), {
-      status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
   } catch (err: any) {
     console.error("Error:", err);
     return new Response(JSON.stringify({ error: err.message || "Internal error" }), {
