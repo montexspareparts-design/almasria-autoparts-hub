@@ -323,7 +323,11 @@ const DealerQuickOrder = () => {
             </div>
           )}
 
-          <Button className="w-full h-12 text-base mt-2" onClick={() => setShowConfirm(true)} disabled={submitting}>
+          <div className="pt-2">
+            <PickupBranchSelector value={pickupBranch} onChange={setPickupBranch} compact />
+          </div>
+
+          <Button className="w-full h-12 text-base mt-2" onClick={() => setShowConfirm(true)} disabled={submitting || !pickupBranch}>
             <ShoppingCart className="w-5 h-5 ml-2" />
             اطلب الآن ({lines.length} صنف)
           </Button>
