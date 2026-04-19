@@ -37,7 +37,7 @@ const Navbar = () => {
     setAuthDialogOpen(true);
     setIsOpen(false);
   };
-  const { user, dealerAccount, loading: authLoading, isAdmin, signOut } = useAuth();
+  const { user, dealerAccount, loading: authLoading, isAdmin, isModerator, signOut } = useAuth();
   const { t, lang, setLang } = useLanguage();
   const { itemCount } = useCart();
   const isWholesaleDealer = !authLoading && !!dealerAccount?.is_active &&
@@ -76,7 +76,9 @@ const Navbar = () => {
 
   const toggleLang = () => setLang(lang === "ar" ? "en" : "ar");
 
-  const isDealer = !!dealerAccount;
+  const isDealer = !!dealerAccount && !isModerator;
+  // Moderator-only employee (no dealer / no admin) → minimal staff navbar
+  const isStaffOnly = isModerator && !isAdmin && !isDealer;
 
   // B2B links for dealers — simplified portal navigation
   const dealerLinks = [
@@ -85,6 +87,16 @@ const Navbar = () => {
     { label: lang === "ar" ? "المنتجات" : "Products", href: "/products", isRoute: true },
     { label: lang === "ar" ? "طلباتي" : "My Orders", href: "/dealer?tab=orders", isRoute: true },
     { label: lang === "ar" ? "عروض الأسعار" : "Price Lists", href: "/dealer?tab=price_lists", isRoute: true },
+  ];
+
+  // Staff links for moderators (employees) — focused on customer service
+  const moderatorLinks = [
+    { label: lang === "ar" ? "لوحة المهام" : "Tasks", href: "/admin?section=daily-dashboard", isRoute: true },
+    { label: lang === "ar" ? "ملف العملاء" : "Customers", href: "/admin?section=customers", isRoute: true },
+    { label: lang === "ar" ? "ذكاء العملاء" : "Intel", href: "/admin?section=customer-intel", isRoute: true },
+    { label: lang === "ar" ? "تحليل الأصناف" : "Products", href: "/admin?section=product-insights", isRoute: true },
+    { label: lang === "ar" ? "إدخال العملاء" : "Leads", href: "/admin?section=leads", isRoute: true },
+    { label: lang === "ar" ? "الواتساب" : "WhatsApp", href: "/admin?section=whatsapp-inbox", isRoute: true },
   ];
 
   // B2C links for regular visitors
@@ -97,7 +109,7 @@ const Navbar = () => {
     { label: t("nav.contact"), href: "/contact", isRoute: true },
   ];
 
-  const links = isDealer ? dealerLinks : visitorLinks;
+  const links = isStaffOnly ? moderatorLinks : (isDealer ? dealerLinks : visitorLinks);
 
   const renderDesktopLink = (link: typeof links[0]) => {
     const active = isLinkActive(link.href, link.isRoute);
