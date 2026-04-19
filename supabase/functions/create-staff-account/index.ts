@@ -229,7 +229,23 @@ Deno.serve(async (req) => {
       `;
       const emailResult = await sendEmail(cleanEmail, "مرحباً بك كموظف في المصرية جروب", emailHtml);
       emailSent = emailResult.ok;
+      emailReason = emailResult.ok ? "sent" : (emailResult.reason || "send_failed");
+      console.log(`[create-staff] Email result: ${emailReason}`);
     }
+
+    return new Response(JSON.stringify({
+      success: true,
+      isNewUser,
+      userId,
+      email: cleanEmail,
+      tempPassword: isNewUser ? tempPassword : null,
+      whatsappSent,
+      whatsappReason,
+      emailSent,
+      emailReason,
+    }), {
+      status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
 
     return new Response(JSON.stringify({
       success: true,
