@@ -557,18 +557,24 @@ export type Database = {
           dealer_account_id: string
           id: string
           initial_password: string
+          viewed_at: string | null
+          viewed_by: string | null
         }
         Insert: {
           created_at?: string
           dealer_account_id: string
           id?: string
           initial_password: string
+          viewed_at?: string | null
+          viewed_by?: string | null
         }
         Update: {
           created_at?: string
           dealer_account_id?: string
           id?: string
           initial_password?: string
+          viewed_at?: string | null
+          viewed_by?: string | null
         }
         Relationships: [
           {
@@ -1817,6 +1823,19 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      validate_coupon: {
+        Args: { _code: string }
+        Returns: {
+          applies_to_brands: string[]
+          code: string
+          description: string
+          discount_type: string
+          discount_value: number
+          id: string
+          max_discount_amount: number
+          min_order_amount: number
+        }[]
+      }
       verify_otp_code: {
         Args: { _code: string; _phone: string }
         Returns: boolean
