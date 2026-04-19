@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Loader2, UserPlus, Trash2, Shield, Search, Users, Activity, ShoppingBag, UserCheck, FileText, Package, Clock } from "lucide-react";
+import { Loader2, UserPlus, Trash2, Shield, Search, Users, Activity, ShoppingBag, UserCheck, FileText, Package, Clock, KeyRound } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface StaffMember {
   id: string;
@@ -115,8 +116,12 @@ const AdminStaffRoles = () => {
   const [newEmail, setNewEmail] = useState("");
   const [newName, setNewName] = useState("");
   const [newPhone, setNewPhone] = useState("");
+  const [newCustomPassword, setNewCustomPassword] = useState("");
   const [adding, setAdding] = useState(false);
   const [createdCredentials, setCreatedCredentials] = useState<{ email: string; password: string; whatsappSent: boolean; emailSent: boolean } | null>(null);
+  const [resetTarget, setResetTarget] = useState<StaffMember | null>(null);
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetting, setResetting] = useState(false);
 
   // Activity state
   const [activityLoading, setActivityLoading] = useState(false);
@@ -227,6 +232,7 @@ const AdminStaffRoles = () => {
           fullName: newName.trim(),
           email: newEmail.trim().toLowerCase(),
           phone: newPhone.trim() || null,
+          password: newCustomPassword.trim() || undefined,
         },
       });
 
@@ -257,6 +263,7 @@ const AdminStaffRoles = () => {
         setNewEmail("");
         setNewName("");
         setNewPhone("");
+        setNewCustomPassword("");
         fetchStaff();
       }
     } catch (err: any) {
@@ -277,6 +284,29 @@ const AdminStaffRoles = () => {
       toast({ title: "تم حذف صلاحية الموظف", description: `تم إزالة ${member.full_name || member.email} من الموظفين` });
       fetchStaff();
     }
+  };
+
+  const handleResetPassword = async () => {
+    if (!resetTarget?.email || resetPassword.trim().length < 6) {
+      toast({ title: "كلمة المرور لازم تكون 6 حروف على الأقل", variant: "destructive" });
+      return;
+    }
+    setResetting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-reset-staff-password", {
+        body: { email: resetTarget.email, newPassword: resetPassword.trim() },
+      });
+      if (error || data?.error) {
+        toast({ title: "فشل إعادة التعيين", description: data?.error || error?.message, variant: "destructive" });
+      } else {
+        toast({ title: "✅ تم تغيير كلمة المرور", description: `الكلمة الجديدة: ${resetPassword.trim()}` });
+        setResetTarget(null);
+        setResetPassword("");
+      }
+    } catch (err: any) {
+      toast({ title: "خطأ", description: err.message, variant: "destructive" });
+    }
+    setResetting(false);
   };
 
   const filtered = staff.filter(s =>
@@ -334,6 +364,17 @@ const AdminStaffRoles = () => {
                   onChange={e => setNewPhone(e.target.value)}
                   dir="ltr"
                   className="text-left"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="text-sm font-medium text-muted-foreground mb-1.5 block">كلمة المرور (اختياري — هتتولّد عشوائياً لو فاضية)</label>
+                <Input
+                  placeholder="مثال: Karam@2050"
+                  value={newCustomPassword}
+                  onChange={e => setNewCustomPassword(e.target.value)}
+                  dir="ltr"
+                  className="text-left"
+                  type="text"
                 />
               </div>
             </div>
@@ -398,7 +439,7 @@ const AdminStaffRoles = () => {
                     <TableHead className="text-right">الاسم</TableHead>
                     <TableHead className="text-right">البريد الإلكتروني</TableHead>
                     <TableHead className="text-right">تاريخ الإضافة</TableHead>
-                    <TableHead className="text-right w-24">إجراءات</TableHead>
+                    <TableHead className="text-right w-32">إجراءات</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -408,27 +449,38 @@ const AdminStaffRoles = () => {
                       <TableCell dir="ltr" className="text-left text-muted-foreground">{member.email || "—"}</TableCell>
                       <TableCell className="text-muted-foreground text-sm">{new Date(member.created_at).toLocaleDateString("ar-EG")}</TableCell>
                       <TableCell>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 h-8 w-8">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>حذف صلاحية الموظف؟</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                سيتم إزالة صلاحيات الموظف من {member.full_name || member.email}.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleRemoveModerator(member)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                حذف
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-amber-600 hover:bg-amber-500/10 h-8 w-8"
+                            onClick={() => { setResetTarget(member); setResetPassword(""); }}
+                            title="إعادة تعيين كلمة المرور"
+                          >
+                            <KeyRound className="w-4 h-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 h-8 w-8" title="حذف الصلاحية">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>حذف صلاحية الموظف؟</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  سيتم إزالة صلاحيات الموظف من {member.full_name || member.email}.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleRemoveModerator(member)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                  حذف
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -574,6 +626,43 @@ const AdminStaffRoles = () => {
           </CardContent>
         </Card>
       </TabsContent>
+
+      {/* Reset Password Dialog */}
+      <Dialog open={!!resetTarget} onOpenChange={(o) => { if (!o) { setResetTarget(null); setResetPassword(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="w-5 h-5 text-amber-600" />
+              إعادة تعيين كلمة المرور
+            </DialogTitle>
+            <DialogDescription>
+              تعيين كلمة مرور جديدة لـ <strong>{resetTarget?.full_name || resetTarget?.email}</strong>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div>
+              <label className="text-sm font-medium text-muted-foreground mb-1.5 block">كلمة المرور الجديدة (6 حروف على الأقل)</label>
+              <Input
+                placeholder="مثال: Karam@2050"
+                value={resetPassword}
+                onChange={(e) => setResetPassword(e.target.value)}
+                dir="ltr"
+                className="text-left"
+                type="text"
+                autoFocus
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">⚠️ بعد التعيين، شارك كلمة المرور الجديدة مع الموظف يدوياً.</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResetTarget(null)} disabled={resetting}>إلغاء</Button>
+            <Button onClick={handleResetPassword} disabled={resetting || resetPassword.trim().length < 6} className="gap-2">
+              {resetting ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
+              تعيين كلمة المرور
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Tabs>
   );
 };
