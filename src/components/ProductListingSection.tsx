@@ -225,7 +225,7 @@ const ProductListingSection = memo(({
 
             <div className="flex-1 min-w-0">
               {/* Active filter banner — bold "Clear filter" CTA */}
-              {!isLoading && (filters.categoryId || filters.brandKey) && (
+              {!isLoading && (filters.categoryId || filters.brandKey || filters.search) && (
                 <motion.div
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -233,6 +233,12 @@ const ProductListingSection = memo(({
                 >
                   <div className="flex items-center gap-2 min-w-0 flex-wrap">
                     <span className="text-xs font-semibold text-muted-foreground shrink-0">الفلتر النشط:</span>
+                    {filters.search && (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-bold shadow-sm max-w-[180px]">
+                        <span className="opacity-80">بحث:</span>
+                        <span className="truncate">"{filters.search}"</span>
+                      </span>
+                    )}
                     {filters.categoryId && (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-bold shadow-sm">
                         {visibleCategories.find((c: any) => c.id === filters.categoryId)?.name_ar || "تصنيف"}
