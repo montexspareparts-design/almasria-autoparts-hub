@@ -236,13 +236,25 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
         .eq("marked_date", today);
       setContactedToday(new Set((marks || []).map((m: any) => m.customer_user_id)));
 
-      // 4b) Pending support requests from chatbot
+      // 4b) Active support requests from chatbot (pending OR claimed but not yet resolved)
       const { data: supportRows } = await (supabase as any)
         .from("support_requests")
-        .select("id, user_id, customer_name, customer_phone, message, request_type, is_dealer, created_at, status")
-        .eq("status", "pending")
+        .select("id, user_id, customer_name, customer_phone, message, request_type, is_dealer, created_at, status, claimed_by, claimed_at")
+        .in("status", ["pending", "in_progress"])
         .order("created_at", { ascending: false })
         .limit(50);
+
+      // Resolve names for claimed_by
+      const claimedIds = [...new Set(((supportRows || []) as any[]).map((r) => r.claimed_by).filter(Boolean))];
+      let staffNameMap = new Map<string, string>();
+      if (claimedIds.length > 0) {
+        const { data: staffProfs } = await supabase
+          .from("profiles")
+          .select("user_id, full_name, email")
+          .in("user_id", claimedIds);
+        staffNameMap = new Map((staffProfs || []).map((p: any) => [p.user_id, p.full_name || p.email || "موظف"]));
+      }
+
       setSupportRequests(
         ((supportRows || []) as any[]).map((r) => ({
           id: r.id,
@@ -255,6 +267,9 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
           created_at: r.created_at,
           status: r.status,
           minutes_ago: minutesBetween(r.created_at),
+          claimed_by: r.claimed_by || null,
+          claimed_by_name: r.claimed_by ? staffNameMap.get(r.claimed_by) || "موظف" : null,
+          claimed_at: r.claimed_at || null,
         }))
       );
 
