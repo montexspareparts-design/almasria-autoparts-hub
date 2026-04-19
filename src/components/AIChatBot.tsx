@@ -440,11 +440,56 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
     return keywords.some(k => t.includes(k));
   };
 
+  // Helper: detect intent to create a new account
+  const wantsSignup = (t: string): boolean => {
+    const s = t.toLowerCase();
+    const keywords = [
+      "اعملي حساب", "اعمللي حساب", "اعمل لي حساب", "عايز احساب", "عايز حساب",
+      "انشاء حساب", "إنشاء حساب", "افتحلي حساب", "افتح لي حساب", "سجلني",
+      "عايز اسجل", "عاوز حساب", "اعملي اكونت", "حساب جديد",
+    ];
+    return keywords.some(k => s.includes(k));
+  };
+
+  // Validators
+  const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
+  const normalizeEgPhone = (raw: string): string | null => {
+    let d = raw
+      .replace(/[٠-٩]/g, (x) => String("٠١٢٣٤٥٦٧٨٩".indexOf(x)))
+      .replace(/[۰-۹]/g, (x) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(x)))
+      .replace(/\D/g, "");
+    if (d.startsWith("0020")) d = d.slice(4);
+    else if (d.startsWith("20")) d = d.slice(2);
+    if (d.length === 10 && d.startsWith("1")) d = "0" + d;
+    return /^01[0125]\d{8}$/.test(d) ? d : null;
+  };
+
   // Helper: extract phone from text (Egyptian format)
   const extractPhone = (t: string): string | null => {
     const m = t.match(/(?:\+?20)?0?1[0125]\d{8}/);
     return m ? m[0] : null;
   };
+
+  // Submit signup → calls public edge function
+  const submitSignup = async (name: string, email: string, phone: string) => {
+    try {
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chatbot-create-account`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ name, email, phone }),
+      });
+      const data = await resp.json();
+      return { ok: resp.ok, status: resp.status, data };
+    } catch (e) {
+      console.error("submitSignup error:", e);
+      return { ok: false, status: 0, data: { error: "خطأ في الاتصال" } };
+    }
+  };
+
 
   // Create support request → notifies all staff via DB trigger
   const createSupportRequest = async (lastMessage: string, phoneOverride?: string) => {
