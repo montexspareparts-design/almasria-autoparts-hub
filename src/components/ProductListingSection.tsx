@@ -73,6 +73,50 @@ const ProductListingSection = memo(({
 }: ProductListingSectionProps) => {
   const [expanded, setExpanded] = useState(false);
 
+  // Dynamic quick search suggestions based on top dealer searches
+  const FALLBACK_SUGGESTIONS = useMemo(() => [
+    { label: "فلتر", icon: "🛢️" },
+    { label: "زيت", icon: "🛢️" },
+    { label: "فرامل", icon: "🛑" },
+    { label: "بوجيه", icon: "⚡" },
+    { label: "تيل", icon: "🔧" },
+    { label: "بطارية", icon: "🔋" },
+  ], []);
+  const [quickSuggestions, setQuickSuggestions] = useState(FALLBACK_SUGGESTIONS);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        // Pull last 30 days of search logs (cap rows for perf), aggregate client-side
+        const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+        const { data, error } = await supabase
+          .from("customer_search_logs")
+          .select("search_query")
+          .gte("created_at", since)
+          .limit(2000);
+        if (error || !data || cancelled) return;
+
+        const counts = new Map<string, number>();
+        for (const row of data) {
+          const raw = (row.search_query || "").trim();
+          if (raw.length < 2 || raw.length > 25) continue;
+          const key = raw.toLowerCase();
+          counts.set(key, (counts.get(key) || 0) + 1);
+        }
+        const top = Array.from(counts.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 6)
+          .map(([label]) => ({ label, icon: pickIcon(label) }));
+
+        if (top.length >= 3 && !cancelled) setQuickSuggestions(top);
+      } catch {
+        // keep fallback
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   const clearFilters = () => {
     setFilters({
       search: "", model: null, year: null, chassisNumber: "", partNumber: "",
