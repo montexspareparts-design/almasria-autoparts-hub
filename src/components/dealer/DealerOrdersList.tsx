@@ -36,7 +36,14 @@ interface Order {
   shipping_company?: string | null;
   shipped_at?: string | null;
   delivered_at?: string | null;
+  pickup_branch?: string | null;
 }
+
+const BRANCH_LABELS: Record<string, string> = {
+  ossim: "أوسيم",
+  luxor: "الأقصر",
+  tawfiqia: "التوفيقية",
+};
 
 interface OrderItem {
   id: string;
@@ -708,8 +715,13 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
                     )}
 
                     {/* ─── Shipping & Payment Info ─── */}
-                    {(order.shipping_governorate || order.payment_method) && (
+                    {(order.shipping_governorate || order.payment_method || order.pickup_branch) && (
                       <div className="flex flex-wrap gap-2">
+                        {order.pickup_branch && (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-lg">
+                            🏢 فرع الاستلام: {BRANCH_LABELS[order.pickup_branch] || order.pickup_branch}
+                          </span>
+                        )}
                         {order.shipping_governorate && (
                           <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-lg">
                             📍 {order.shipping_governorate} — {order.shipping_address}

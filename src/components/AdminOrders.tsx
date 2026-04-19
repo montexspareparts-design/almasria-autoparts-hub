@@ -606,6 +606,16 @@ const AdminOrders = () => {
                           </div>
                         )}
 
+                        {(order as any).pickup_branch && (
+                          <div className="text-sm bg-primary/5 border border-primary/20 rounded-lg p-3 flex items-center gap-2">
+                            <MapPin className="w-4 h-4 text-primary" />
+                            <span className="text-muted-foreground">فرع الاستلام:</span>
+                            <span className="font-bold text-primary">
+                              {({ ossim: "أوسيم", luxor: "الأقصر", tawfiqia: "التوفيقية" } as Record<string, string>)[(order as any).pickup_branch] || (order as any).pickup_branch}
+                            </span>
+                          </div>
+                        )}
+
                         {/* Order Items */}
                         <div>
                           <div className="flex items-center justify-between mb-2">
