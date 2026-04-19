@@ -18,6 +18,16 @@ export const pushOrderToERP = async (orderId: string): Promise<string | null> =>
       supabase.from("dealer_accounts").select("erp_customer_code, tier").eq("user_id", order.user_id).maybeSingle(),
     ]);
 
+    const branchLabels: Record<string, string> = {
+      ossim: "أوسيم",
+      luxor: "الأقصر",
+      tawfiqia: "التوفيقية",
+    };
+    const pickupBranch = (order as any).pickup_branch || "";
+    const branchAr = pickupBranch ? (branchLabels[pickupBranch] || pickupBranch) : "";
+    const branchNote = branchAr ? `فرع الاستلام: ${branchAr}` : "";
+    const combinedNotes = [branchNote, order.notes || ""].filter(Boolean).join(" | ");
+
     const { data: erpResult } = await supabase.functions.invoke("erp-sync-outbound", {
       body: {
         action: "push_order",
@@ -30,7 +40,8 @@ export const pushOrderToERP = async (orderId: string): Promise<string | null> =>
           customer_tier: dealerRes.data?.tier || "retail",
           shipping_address: order.shipping_address || "",
           shipping_governorate: order.shipping_governorate || "",
-          pickup_branch: (order as any).pickup_branch || "",
+          pickup_branch: pickupBranch,
+          pickup_branch_ar: branchAr,
           payment_method: order.payment_method || "",
           items: (order.order_items || []).map((item: any) => ({
             sku: item.products?.sku || "",
@@ -41,7 +52,7 @@ export const pushOrderToERP = async (orderId: string): Promise<string | null> =>
             total_price: item.total_price,
           })),
           total_amount: order.total_amount,
-          notes: order.notes || "",
+          notes: combinedNotes,
         },
       },
     });
