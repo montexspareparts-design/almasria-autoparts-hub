@@ -400,17 +400,17 @@ const Navbar = () => {
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="border-t border-secondary-foreground/10 pt-3 mt-2 space-y-1.5">
                 {user ? (
                   <>
-                    {isAdmin && (
+                    {(isAdmin || isStaffOnly) && (
                       <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-secondary-foreground/70 font-semibold" onClick={() => { navigate("/admin"); setIsOpen(false); }}>
-                        {t("nav.admin")}
+                        {isStaffOnly ? (lang === "ar" ? "لوحة المهام" : "Staff Panel") : t("nav.admin")}
                       </Button>
                     )}
-                    {!isDealer && isWholesaleDealer && (
+                    {!isDealer && !isStaffOnly && isWholesaleDealer && (
                       <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-primary font-semibold" onClick={() => { navigate("/catalogs"); setIsOpen(false); }}>
                         <BookOpen className="w-4 h-4" /> {t("nav.catalogs")}
                       </Button>
                     )}
-                    {!isDealer && (
+                    {!isDealer && !isStaffOnly && (
                       <>
                         <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-secondary-foreground/70 font-semibold" onClick={() => { navigate("/my-profile"); setIsOpen(false); }}>
                           <User className="w-4 h-4" /> {lang === "ar" ? "حسابي" : "My Profile"}
