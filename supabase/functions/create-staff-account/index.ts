@@ -192,12 +192,22 @@ Deno.serve(async (req) => {
     let whatsappSent = false;
     let emailSent = false;
 
+    let whatsappReason = "";
+    let emailReason = "";
+
     if (isNewUser) {
       const waMsg = `🎉 أهلاً ${fullName}!\n\nتم إنشاء حساب موظف لك في المصرية جروب ✅\n\n🔐 بيانات الدخول:\nالبريد: ${cleanEmail}\nكلمة السر المؤقتة: ${tempPassword}\n\n🔗 رابط الدخول:\n${loginUrl}\n\n⚠️ يرجى تغيير كلمة السر بعد أول تسجيل دخول من "إعدادات حسابي".\n\nالمصرية جروب 🚗`;
 
-      if (phone) {
+      console.log(`[create-staff] Sending notifications for new user: ${cleanEmail}, phone: ${phone || "(none)"}`);
+
+      if (phone && String(phone).trim().length > 0) {
         const waResult = await sendWhatsApp(phone, waMsg);
         whatsappSent = waResult.ok;
+        whatsappReason = waResult.ok ? "sent" : (waResult.reason || "send_failed");
+        console.log(`[create-staff] WhatsApp result: ${whatsappReason}`);
+      } else {
+        whatsappReason = "no_phone_provided";
+        console.log("[create-staff] WhatsApp skipped: no phone provided");
       }
 
       const emailHtml = `
