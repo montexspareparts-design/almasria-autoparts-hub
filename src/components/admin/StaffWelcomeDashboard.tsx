@@ -4,7 +4,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, Users, ShoppingCart, Clock, Loader2, ArrowLeft, UserCheck } from "lucide-react";
+import {
+  MessageCircle, ShoppingCart, Clock, Loader2, ArrowLeft, UserCheck,
+  PhoneCall, UserPlus, Search, Trophy, Star, Zap, Target,
+} from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
 
@@ -12,6 +15,11 @@ interface WelcomeStats {
   assignedConversations: number;
   pendingOrdersCount: number;
   unreadMessagesCount: number;
+  myCallsToday: number;
+  myLeadsToday: number;
+  myAvgRating: number | null;
+  myRank: number | null;
+  totalStaff: number;
 }
 
 interface RecentConversation {
@@ -51,23 +59,54 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
     if (!user) return;
     setLoading(true);
 
-    const [profileRes, assignedRes, unreadRes, pendingCountRes, recentConvRes, pendingOrdersRes] = await Promise.all([
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayIso = todayStart.toISOString();
+
+    const [
+      profileRes, assignedRes, unreadRes, pendingCountRes, recentConvRes, pendingOrdersRes,
+      myCallsRes, myLeadsRes, myRatingsRes, allStaffRes, allCommsTodayRes,
+    ] = await Promise.all([
       supabase.from("profiles").select("full_name, email").eq("user_id", user.id).maybeSingle(),
       supabase.from("whatsapp_conversations").select("*", { count: "exact", head: true }).eq("assigned_to", user.id).eq("is_archived", false),
       supabase.from("whatsapp_conversations").select("unread_count").eq("assigned_to", user.id).eq("is_archived", false),
       supabase.from("orders").select("*", { count: "exact", head: true }).in("status", ["pending", "awaiting_payment"]),
       supabase.from("whatsapp_conversations").select("id, contact_name, phone, last_message_preview, last_message_at, unread_count").eq("is_archived", false).order("last_message_at", { ascending: false }).limit(5),
       supabase.from("orders").select("id, order_number, total_amount, created_at, status").in("status", ["pending", "awaiting_payment"]).order("created_at", { ascending: false }).limit(5),
+      supabase.from("customer_communications").select("*", { count: "exact", head: true }).eq("staff_user_id", user.id).gte("created_at", todayIso),
+      supabase.from("leads").select("*", { count: "exact", head: true }).eq("created_by", user.id).gte("created_at", todayIso),
+      supabase.from("support_request_ratings").select("rating").eq("staff_user_id", user.id),
+      supabase.from("user_roles").select("user_id").in("role", ["admin", "moderator"]),
+      supabase.from("customer_communications").select("staff_user_id").gte("created_at", todayIso),
     ]);
 
     setStaffName(profileRes.data?.full_name || profileRes.data?.email?.split("@")[0] || "");
 
     const unreadTotal = (unreadRes.data || []).reduce((sum, c) => sum + (c.unread_count || 0), 0);
 
+    const myRatings = (myRatingsRes.data || []).map((r: any) => r.rating);
+    const myAvgRating = myRatings.length > 0
+      ? myRatings.reduce((a: number, b: number) => a + b, 0) / myRatings.length
+      : null;
+
+    const totalStaff = new Set((allStaffRes.data || []).map((r: any) => r.user_id)).size;
+    const commsCount: Record<string, number> = {};
+    (allCommsTodayRes.data || []).forEach((c: any) => {
+      commsCount[c.staff_user_id] = (commsCount[c.staff_user_id] || 0) + 1;
+    });
+    const ranked = Object.entries(commsCount).sort((a, b) => b[1] - a[1]);
+    const myRankIdx = ranked.findIndex(([sid]) => sid === user.id);
+    const myRank = myRankIdx >= 0 ? myRankIdx + 1 : null;
+
     setStats({
       assignedConversations: assignedRes.count || 0,
       pendingOrdersCount: pendingCountRes.count || 0,
       unreadMessagesCount: unreadTotal,
+      myCallsToday: myCallsRes.count || 0,
+      myLeadsToday: myLeadsRes.count || 0,
+      myAvgRating,
+      myRank,
+      totalStaff,
     });
 
     setConversations(recentConvRes.data || []);
@@ -90,38 +129,132 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
     );
   }
 
+  const rankBadge = (rank: number | null) => {
+    if (!rank) return null;
+    if (rank === 1) return { emoji: "🥇", label: "الأول", color: "text-amber-600 bg-amber-50 border-amber-200" };
+    if (rank === 2) return { emoji: "🥈", label: "الثاني", color: "text-slate-600 bg-slate-50 border-slate-200" };
+    if (rank === 3) return { emoji: "🥉", label: "الثالث", color: "text-orange-600 bg-orange-50 border-orange-200" };
+    return { emoji: "⭐", label: `#${rank}`, color: "text-primary bg-primary/10 border-primary/20" };
+  };
+  const rb = rankBadge(stats?.myRank ?? null);
+
   return (
-    <div className="space-y-6 mb-6">
-      {/* Welcome Header */}
+    <div className="space-y-4 mb-6">
+      {/* Compact Welcome Header — single row with greeting + rank */}
       <Card className="bg-gradient-to-l from-primary/10 via-primary/5 to-transparent border-primary/20">
-        <CardContent className="p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-              <UserCheck className="w-6 h-6 text-primary" />
+        <CardContent className="p-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+              <UserCheck className="w-5 h-5 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <h2 className="text-lg font-bold text-foreground">
+              <h2 className="text-base font-bold text-foreground leading-tight">
                 {greeting()}{staffName ? `، ${staffName}` : ""} 👋
               </h2>
-              <p className="text-sm text-muted-foreground">إليك ملخص يومك والمهام المسندة لك</p>
+              <p className="text-xs text-muted-foreground">
+                {new Date().toLocaleDateString("ar-EG", { weekday: "long", day: "numeric", month: "long" })}
+              </p>
             </div>
+            {rb && (
+              <button
+                onClick={() => onNavigate?.("staff-performance")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold transition hover:scale-105 ${rb.color}`}
+                title="عرض أداء الموظفين"
+              >
+                <Trophy className="w-3.5 h-3.5" />
+                <span>{rb.emoji} ترتيبك {rb.label}</span>
+                {stats?.totalStaff ? <span className="text-[10px] opacity-70">من {stats.totalStaff}</span> : null}
+              </button>
+            )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Personal KPIs */}
+      {/* Quick Actions Bar */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <Button
+          variant="outline"
+          className="h-auto py-3 flex-col gap-1.5 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700"
+          onClick={() => onNavigate?.("leads")}
+        >
+          <UserPlus className="w-5 h-5" />
+          <span className="text-xs font-semibold">عميل جديد</span>
+        </Button>
+        <Button
+          variant="outline"
+          className="h-auto py-3 flex-col gap-1.5 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700"
+          onClick={() => onNavigate?.("customer-profile")}
+        >
+          <PhoneCall className="w-5 h-5" />
+          <span className="text-xs font-semibold">تسجيل مكالمة</span>
+        </Button>
+        <Button
+          variant="outline"
+          className="h-auto py-3 flex-col gap-1.5 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700"
+          onClick={() => onNavigate?.("customer-profile")}
+        >
+          <Search className="w-5 h-5" />
+          <span className="text-xs font-semibold">بحث عميل</span>
+        </Button>
+        <Button
+          variant="outline"
+          className="h-auto py-3 flex-col gap-1.5 hover:bg-amber-50 hover:border-amber-300 hover:text-amber-700"
+          onClick={() => onNavigate?.("whatsapp-inbox")}
+        >
+          <MessageCircle className="w-5 h-5" />
+          <span className="text-xs font-semibold">صندوق الواتساب</span>
+        </Button>
+      </div>
+
+      {/* My Achievements Today */}
+      <Card className="border-primary/20 bg-gradient-to-l from-primary/[0.04] to-transparent">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-bold flex items-center gap-2">
+            <Zap className="w-4 h-4 text-primary" />
+            إنجازي اليوم
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-3 gap-3">
+          <div className="text-center p-2 rounded-lg bg-blue-50/60 border border-blue-100">
+            <div className="flex items-center justify-center gap-1.5 mb-1">
+              <PhoneCall className="w-3.5 h-3.5 text-blue-600" />
+              <p className="text-[11px] text-blue-700 font-semibold">مكالماتي</p>
+            </div>
+            <p className="text-2xl font-bold text-blue-700">{stats?.myCallsToday || 0}</p>
+          </div>
+          <div className="text-center p-2 rounded-lg bg-emerald-50/60 border border-emerald-100">
+            <div className="flex items-center justify-center gap-1.5 mb-1">
+              <Target className="w-3.5 h-3.5 text-emerald-600" />
+              <p className="text-[11px] text-emerald-700 font-semibold">عملاء جدد</p>
+            </div>
+            <p className="text-2xl font-bold text-emerald-700">{stats?.myLeadsToday || 0}</p>
+          </div>
+          <div className="text-center p-2 rounded-lg bg-amber-50/60 border border-amber-100">
+            <div className="flex items-center justify-center gap-1.5 mb-1">
+              <Star className="w-3.5 h-3.5 text-amber-600 fill-amber-600" />
+              <p className="text-[11px] text-amber-700 font-semibold">تقييمي</p>
+            </div>
+            <p className="text-2xl font-bold text-amber-700">
+              {stats?.myAvgRating ? stats.myAvgRating.toFixed(1) : "—"}
+              <span className="text-[10px] font-normal text-amber-600">/5</span>
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Inbox KPIs (compact strip) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Card
           className="cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-emerald-500"
           onClick={() => onNavigate?.("whatsapp-inbox")}
         >
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
-              <MessageCircle className="w-5 h-5 text-emerald-600" />
+          <CardContent className="p-3 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
+              <MessageCircle className="w-4 h-4 text-emerald-600" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-2xl font-bold text-foreground">{stats?.assignedConversations || 0}</p>
-              <p className="text-xs text-muted-foreground">محادثات مسندة لي</p>
+              <p className="text-xl font-bold text-foreground">{stats?.assignedConversations || 0}</p>
+              <p className="text-[11px] text-muted-foreground">محادثات مسندة لي</p>
             </div>
             <ArrowLeft className="w-4 h-4 text-muted-foreground" />
           </CardContent>
@@ -131,13 +264,13 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
           className="cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-amber-500"
           onClick={() => onNavigate?.("whatsapp-inbox")}
         >
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
-              <MessageCircle className="w-5 h-5 text-amber-600" />
+          <CardContent className="p-3 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+              <MessageCircle className="w-4 h-4 text-amber-600" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-2xl font-bold text-foreground">{stats?.unreadMessagesCount || 0}</p>
-              <p className="text-xs text-muted-foreground">رسائل غير مقروءة</p>
+              <p className="text-xl font-bold text-foreground">{stats?.unreadMessagesCount || 0}</p>
+              <p className="text-[11px] text-muted-foreground">رسائل غير مقروءة</p>
             </div>
             <ArrowLeft className="w-4 h-4 text-muted-foreground" />
           </CardContent>
@@ -147,13 +280,13 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
           className="cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-blue-500"
           onClick={() => onNavigate?.("orders")}
         >
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
-              <ShoppingCart className="w-5 h-5 text-blue-600" />
+          <CardContent className="p-3 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+              <ShoppingCart className="w-4 h-4 text-blue-600" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-2xl font-bold text-foreground">{stats?.pendingOrdersCount || 0}</p>
-              <p className="text-xs text-muted-foreground">طلبات بانتظار الرد</p>
+              <p className="text-xl font-bold text-foreground">{stats?.pendingOrdersCount || 0}</p>
+              <p className="text-[11px] text-muted-foreground">طلبات بانتظار الرد</p>
             </div>
             <ArrowLeft className="w-4 h-4 text-muted-foreground" />
           </CardContent>
