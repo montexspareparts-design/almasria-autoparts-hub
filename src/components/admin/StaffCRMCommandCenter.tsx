@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import WhatsAppQuickChat from "./WhatsAppQuickChat";
 import CustomerActivitySummary from "./CustomerActivitySummary";
+import SupportRequestAISummary from "./SupportRequestAISummary";
 
 // =================== Types ===================
 interface UrgentOrder {
@@ -97,6 +98,7 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
   const [contactedToday, setContactedToday] = useState<Set<string>>(new Set());
   const [supportRequests, setSupportRequests] = useState<SupportReq[]>([]);
   const [summaryUser, setSummaryUser] = useState<{ id: string; name: string; phone: string | null; isDealer: boolean } | null>(null);
+  const [aiSummaryReq, setAiSummaryReq] = useState<{ id: string; name: string | null } | null>(null);
 
   // =================== Fetch ===================
   const fetchAll = async () => {
@@ -750,10 +752,21 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                                   />
                                 </>
                               )}
+                              {isMine && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 gap-1 text-xs border-purple-300 text-purple-700 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-400"
+                                  onClick={() => setAiSummaryReq({ id: r.id, name: r.customer_name })}
+                                >
+                                  <Bot className="w-3 h-3" />
+                                  ملخص AI
+                                </Button>
+                              )}
                               {isMine && r.user_id && (
                                 <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => setSummaryUser({ id: r.user_id!, name: r.customer_name || "عميل", phone: r.customer_phone, isDealer: r.is_dealer })}>
                                   <Activity className="w-3 h-3" />
-                                  ملخص
+                                  نشاط العميل
                                 </Button>
                               )}
                               {isMine && (
@@ -960,6 +973,14 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
         customerName={summaryUser?.name}
         customerPhone={summaryUser?.phone}
         isDealer={summaryUser?.isDealer}
+      />
+
+      {/* AI Summary for chatbot conversations */}
+      <SupportRequestAISummary
+        open={!!aiSummaryReq}
+        onOpenChange={(o) => { if (!o) setAiSummaryReq(null); }}
+        requestId={aiSummaryReq?.id || null}
+        customerName={aiSummaryReq?.name}
       />
     </div>
   );
