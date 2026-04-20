@@ -258,9 +258,10 @@ const ProductListingSection = memo(({
             </div>
           )}
 
-          {/* Brand quick-filter chips for dealer */}
+          {/* Brand quick-filter chips for dealer — refined with label + sticky "All" */}
           {isDealer && (
-            <div className="flex gap-1.5 overflow-x-auto pb-1 mb-2 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 mb-2 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
+              <span className="text-[10px] text-muted-foreground/70 font-semibold shrink-0 ml-1 uppercase tracking-wider">الماركة:</span>
               {[
                 { key: null, label: "الكل" },
                 { key: "toyota_genuine", label: "أصلي" },
@@ -269,18 +270,20 @@ const ProductListingSection = memo(({
                 { key: "denso", label: "DENSO" },
                 { key: "aisin", label: "AISIN" },
                 { key: "fbk", label: "FBK" },
-              ].map(b => (
-                <button
-                  key={b.key ?? "all"}
-                  onClick={() => setFilters(prev => ({ ...prev, brandKey: b.key }))}
-                  className={`px-3 py-1 rounded-xl text-[11px] font-medium whitespace-nowrap shrink-0 transition-all border ${
-                    filters.brandKey === b.key
-                      ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                      : "bg-card text-muted-foreground border-border/40 hover:border-border hover:text-foreground"
-                  }`}
-                >
-                  {b.label}
-                </button>
+              ].map((b, idx) => (
+                <div key={b.key ?? "all"} className="flex items-center gap-1.5 shrink-0">
+                  {idx === 1 && <div className="h-4 w-px bg-border/60 shrink-0" />}
+                  <button
+                    onClick={() => setFilters(prev => ({ ...prev, brandKey: b.key }))}
+                    className={`px-3 py-1.5 rounded-xl text-[11px] font-bold whitespace-nowrap shrink-0 transition-all border-2 ${
+                      filters.brandKey === b.key
+                        ? "bg-primary text-primary-foreground border-primary shadow-md scale-[1.03]"
+                        : "bg-card text-muted-foreground border-border/40 hover:border-primary/40 hover:text-foreground hover:bg-primary/5"
+                    }`}
+                  >
+                    {b.label}
+                  </button>
+                </div>
               ))}
             </div>
           )}

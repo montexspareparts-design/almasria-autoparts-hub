@@ -91,32 +91,42 @@ const DealerProductSearch = ({ onNavigateToOrders, onNavigateToCart, sharedCart 
         }
       />
 
-      {/* Floating Cart Bar */}
+      {/* Floating Cart Bar — with running total */}
       <AnimatePresence>
         {cart.itemCount > 0 && onNavigateToCart && (
           <motion.div
             initial={{ y: 80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 80, opacity: 0 }}
-            className="fixed bottom-20 lg:bottom-6 left-1/2 -translate-x-1/2 z-50 w-[95vw] max-w-[500px]"
+            className="fixed bottom-20 lg:bottom-6 left-1/2 -translate-x-1/2 z-50 w-[95vw] max-w-[520px]"
           >
             <button
               onClick={onNavigateToCart}
-              className="w-full bg-primary text-primary-foreground rounded-2xl shadow-2xl shadow-primary/20 p-3.5 flex items-center justify-between gap-3 hover:bg-primary/90 transition-colors"
+              className="w-full bg-primary text-primary-foreground rounded-2xl shadow-2xl shadow-primary/30 p-3.5 flex items-center justify-between gap-3 hover:bg-primary/90 transition-all hover:scale-[1.01] active:scale-[0.99]"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary-foreground/15 flex items-center justify-center shrink-0 relative">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-11 h-11 rounded-xl bg-primary-foreground/15 flex items-center justify-center shrink-0 relative">
                   <ShoppingCart className="w-5 h-5" />
-                  <Badge className="absolute -top-1.5 -right-1.5 bg-primary-foreground text-primary text-[10px] px-1.5 py-0 h-4 min-w-4 flex items-center justify-center">
+                  <Badge className="absolute -top-1.5 -right-1.5 bg-primary-foreground text-primary text-[10px] px-1.5 py-0 h-4 min-w-4 flex items-center justify-center font-black">
                     {cart.itemCount}
                   </Badge>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-bold">أكمل الطلبية</p>
-                  <p className="text-xs opacity-80">{cart.itemCount} صنف في السلة</p>
+                <div className="text-right min-w-0">
+                  <p className="text-sm font-black leading-tight">أكمل الطلبية</p>
+                  <p className="text-[11px] opacity-85 mt-0.5">
+                    {cart.items.length} صنف · {cart.itemCount} قطعة
+                  </p>
                 </div>
               </div>
-              <ArrowLeft className="w-5 h-5 opacity-70" />
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="text-left">
+                  <p className="text-[10px] opacity-75 leading-none mb-0.5">إجمالي</p>
+                  <p className="text-sm font-black tabular-nums">
+                    {cart.items.reduce((s: number, i: any) => s + i.product.base_price * i.quantity, 0).toLocaleString("ar-EG")} ج.م
+                  </p>
+                </div>
+                <ArrowLeft className="w-5 h-5 opacity-70" />
+              </div>
             </button>
           </motion.div>
         )}
