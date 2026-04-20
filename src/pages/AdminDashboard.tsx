@@ -83,7 +83,6 @@ const sidebarGroups: SidebarGroup[] = [
       { id: "staff-performance", label: "أداء الموظفين", icon: TrendingUp },
       { id: "analytics", label: "التحليلات", icon: BarChart3 },
       { id: "customers", label: "ملف العملاء", icon: Users },
-      { id: "leads", label: "إدخال عملاء", icon: Building2 },
       { id: "dealers", label: "طلبات التجار", icon: Users },
     ],
   },
@@ -597,9 +596,25 @@ const AdminDashboard = () => {
       case "customer-intel":
         return <Suspense fallback={<SectionLoader />}><AdminCustomerIntelligence /></Suspense>;
       case "customers":
-        return <Suspense fallback={<SectionLoader />}><AdminCustomerProfile /></Suspense>;
       case "leads":
-        return <Suspense fallback={<SectionLoader />}><AdminLeads /></Suspense>;
+        return (
+          <Suspense fallback={<SectionLoader />}>
+            <Tabs defaultValue={activeSection === "leads" ? "leads" : "profile"} className="w-full">
+              <TabsList className="mb-4">
+                <TabsTrigger value="profile">
+                  <Users className="w-4 h-4 ml-2" />
+                  ملف العملاء
+                </TabsTrigger>
+                <TabsTrigger value="leads">
+                  <Building2 className="w-4 h-4 ml-2" />
+                  إدخال عملاء جدد
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="profile"><AdminCustomerProfile /></TabsContent>
+              <TabsContent value="leads"><AdminLeads /></TabsContent>
+            </Tabs>
+          </Suspense>
+        );
       case "dealers":
         return renderDealersSection();
       case "products":
