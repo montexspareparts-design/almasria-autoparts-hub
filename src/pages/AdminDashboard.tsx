@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle, XCircle, Clock, Eye, LogOut, Trash2, Users, ShoppingBag, Video, FileText, Image, Brain, Zap, Bell, ListVideo, Menu, X, ChevronRight, Package, BarChart3, Tag, Layers, TrendingUp, ArrowLeftRight, Briefcase, Banknote, Shield, Building2, ShieldCheck, MessageCircle, User as UserIcon, Phone } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Database } from "@/integrations/supabase/types";
 
 // Lazy load admin sections
@@ -80,7 +81,6 @@ const sidebarGroups: SidebarGroup[] = [
       { id: "customer-intel", label: "ذكاء العملاء", icon: Eye },
       { id: "staff-performance", label: "أداء الموظفين", icon: TrendingUp },
       { id: "analytics", label: "التحليلات", icon: BarChart3 },
-      { id: "product-insights", label: "تحليل الأصناف", icon: TrendingUp },
       { id: "customers", label: "ملف العملاء", icon: Users },
       { id: "leads", label: "إدخال عملاء", icon: Building2 },
       { id: "dealers", label: "طلبات التجار", icon: Users },
@@ -557,11 +557,27 @@ const AdminDashboard = () => {
           </Suspense>
         );
       case "analytics":
-        return <Suspense fallback={<SectionLoader />}><AdminAnalytics /></Suspense>;
+      case "product-insights":
+        return (
+          <Suspense fallback={<SectionLoader />}>
+            <Tabs defaultValue={activeSection === "product-insights" ? "products" : "general"} className="w-full">
+              <TabsList className="mb-4">
+                <TabsTrigger value="general">
+                  <BarChart3 className="w-4 h-4 ml-2" />
+                  التحليلات العامة
+                </TabsTrigger>
+                <TabsTrigger value="products">
+                  <TrendingUp className="w-4 h-4 ml-2" />
+                  تحليل الأصناف
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="general"><AdminAnalytics /></TabsContent>
+              <TabsContent value="products"><AdminProductInsights /></TabsContent>
+            </Tabs>
+          </Suspense>
+        );
       case "staff-performance":
         return <Suspense fallback={<SectionLoader />}><AdminStaffPerformance /></Suspense>;
-      case "product-insights":
-        return <Suspense fallback={<SectionLoader />}><AdminProductInsights /></Suspense>;
       case "customer-intel":
         return <Suspense fallback={<SectionLoader />}><AdminCustomerIntelligence /></Suspense>;
       case "customers":
