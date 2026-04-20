@@ -78,6 +78,8 @@ const AdminOrders = () => {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [orderTypeFilter, setOrderTypeFilter] = useState<"all" | "wholesale" | "retail">("all");
+  const [dateFrom, setDateFrom] = useState<string>(""); // YYYY-MM-DD
+  const [dateTo, setDateTo] = useState<string>("");     // YYYY-MM-DD
   const [adminNotes, setAdminNotes] = useState<Record<string, string>>({});
   const [editingOrder, setEditingOrder] = useState<string | null>(null);
   const [editedItems, setEditedItems] = useState<Record<string, { id: string; quantity: number; unit_price: number; total_price: number; product_id: string; product?: any }[]>>({});
@@ -153,6 +155,12 @@ const AdminOrders = () => {
     if (searchQuery.trim()) {
       query = query.or(`order_number.ilike.%${searchQuery.trim()}%`);
     }
+    if (dateFrom) {
+      query = query.gte("created_at", `${dateFrom}T00:00:00`);
+    }
+    if (dateTo) {
+      query = query.lte("created_at", `${dateTo}T23:59:59.999`);
+    }
 
     const { data, count, error } = await query.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
@@ -214,14 +222,14 @@ const AdminOrders = () => {
         ordersListRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 100);
     }
-  }, [page, filterStatus, searchQuery, autoExpandFirst, orderTypeFilter]);
+  }, [page, filterStatus, searchQuery, autoExpandFirst, orderTypeFilter, dateFrom, dateTo]);
 
 
 
 
   useEffect(() => { fetchStats(); }, [fetchStats]);
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
-  useEffect(() => { setPage(0); }, [filterStatus, searchQuery, orderTypeFilter]);
+  useEffect(() => { setPage(0); }, [filterStatus, searchQuery, orderTypeFilter, dateFrom, dateTo]);
 
   const handleStatClick = (status: string) => {
     setFilterStatus(status);
@@ -523,31 +531,108 @@ const AdminOrders = () => {
           </div>
 
           {/* Filters */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-4">
-            <div className="relative flex-1 w-full sm:w-auto">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="بحث برقم الطلب..."
-                className="pr-9"
-                dir="rtl"
-              />
+          <div className="flex flex-col gap-3 mb-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <div className="relative flex-1 w-full sm:w-auto">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="بحث برقم الطلب..."
+                  className="pr-9"
+                  dir="rtl"
+                />
+              </div>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع الطلبات</SelectItem>
+                  {Object.entries(statusConfig).map(([key, val]) => (
+                    <SelectItem key={key} value={key}>{val.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <span className="text-sm text-muted-foreground whitespace-nowrap">
+                {totalCount} طلب
+              </span>
             </div>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">جميع الطلبات</SelectItem>
-                {Object.entries(statusConfig).map(([key, val]) => (
-                  <SelectItem key={key} value={key}>{val.label}</SelectItem>
+
+            {/* Date range filter */}
+            <div className="flex flex-wrap items-center gap-2 p-3 rounded-lg bg-muted/40 border border-border/60">
+              <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">📅 التاريخ:</span>
+              <div className="flex items-center gap-1.5">
+                <label className="text-xs text-muted-foreground">من</label>
+                <Input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  max={dateTo || undefined}
+                  className="h-8 w-auto text-xs"
+                />
+              </div>
+              <div className="flex items-center gap-1.5">
+                <label className="text-xs text-muted-foreground">إلى</label>
+                <Input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  min={dateFrom || undefined}
+                  className="h-8 w-auto text-xs"
+                />
+              </div>
+
+              {/* Quick presets */}
+              <div className="flex flex-wrap items-center gap-1 mr-1">
+                {[
+                  { label: "اليوم", days: 0 },
+                  { label: "أمس", days: 1, single: true },
+                  { label: "آخر 7 أيام", days: 6 },
+                  { label: "آخر 30 يوم", days: 29 },
+                  { label: "هذا الشهر", monthStart: true },
+                ].map((p) => (
+                  <Button
+                    key={p.label}
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2.5 text-xs"
+                    onClick={() => {
+                      const today = new Date();
+                      const fmt = (d: Date) => d.toISOString().slice(0, 10);
+                      if (p.monthStart) {
+                        const first = new Date(today.getFullYear(), today.getMonth(), 1);
+                        setDateFrom(fmt(first));
+                        setDateTo(fmt(today));
+                      } else if (p.single) {
+                        const d = new Date(today);
+                        d.setDate(d.getDate() - (p.days as number));
+                        setDateFrom(fmt(d));
+                        setDateTo(fmt(d));
+                      } else {
+                        const d = new Date(today);
+                        d.setDate(d.getDate() - (p.days as number));
+                        setDateFrom(fmt(d));
+                        setDateTo(fmt(today));
+                      }
+                    }}
+                  >
+                    {p.label}
+                  </Button>
                 ))}
-              </SelectContent>
-            </Select>
-            <span className="text-sm text-muted-foreground">
-              {totalCount} طلب
-            </span>
+                {(dateFrom || dateTo) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs text-destructive hover:text-destructive"
+                    onClick={() => { setDateFrom(""); setDateTo(""); }}
+                  >
+                    <X className="w-3 h-3 ml-1" />
+                    مسح
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Orders List */}
