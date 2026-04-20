@@ -144,19 +144,32 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
           return (
             <div key={group.label}>
               <button
-                onClick={() => toggleGroup(group.label)}
+                onClick={() => {
+                  // Activate the first item in this group AND ensure it's open
+                  const firstItem = group.items[0];
+                  if (firstItem) onTabChange(firstItem.id);
+                  if (!isOpen) toggleGroup(group.label);
+                }}
                 className={cn(
                   "w-full flex items-center justify-between px-3 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-colors",
                   hasActiveItem
-                    ? "text-foreground/70"
-                    : "text-muted-foreground/50 hover:text-muted-foreground/70"
+                    ? "text-primary"
+                    : "text-muted-foreground/60 hover:text-foreground"
                 )}
               >
                 <span>{group.label}</span>
-                {isOpen
-                  ? <ChevronUp className="w-3 h-3 opacity-40" />
-                  : <ChevronDown className="w-3 h-3 opacity-40" />
-                }
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => { e.stopPropagation(); toggleGroup(group.label); }}
+                  className="p-0.5 rounded hover:bg-muted/50"
+                  aria-label={isOpen ? "طي القسم" : "فتح القسم"}
+                >
+                  {isOpen
+                    ? <ChevronUp className="w-3 h-3 opacity-60" />
+                    : <ChevronDown className="w-3 h-3 opacity-60" />
+                  }
+                </span>
               </button>
 
               {isOpen && (
