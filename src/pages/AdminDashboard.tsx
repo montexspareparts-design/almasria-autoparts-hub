@@ -77,10 +77,10 @@ const sidebarGroups: SidebarGroup[] = [
     label: "الرئيسية",
     items: [
       { id: "daily-dashboard", label: "لوحة المهام اليومية", icon: BarChart3 },
+      { id: "customer-intel", label: "ذكاء العملاء", icon: Eye },
       { id: "staff-performance", label: "أداء الموظفين", icon: TrendingUp },
       { id: "analytics", label: "التحليلات", icon: BarChart3 },
       { id: "product-insights", label: "تحليل الأصناف", icon: TrendingUp },
-      { id: "customer-intel", label: "ذكاء العملاء", icon: Eye },
       { id: "customers", label: "ملف العملاء", icon: Users },
       { id: "leads", label: "إدخال عملاء", icon: Building2 },
       { id: "dealers", label: "طلبات التجار", icon: Users },
