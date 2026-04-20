@@ -271,10 +271,9 @@ const ProductListingSection = memo(({
                 { key: "aisin", label: "AISIN" },
                 { key: "fbk", label: "FBK" },
               ].map((b, idx) => (
-                <>
-                  {idx === 1 && <div key="sep" className="h-4 w-px bg-border/60 shrink-0 mx-0.5" />}
+                <div key={b.key ?? "all"} className="flex items-center gap-1.5 shrink-0">
+                  {idx === 1 && <div className="h-4 w-px bg-border/60 shrink-0" />}
                   <button
-                    key={b.key ?? "all"}
                     onClick={() => setFilters(prev => ({ ...prev, brandKey: b.key }))}
                     className={`px-3 py-1.5 rounded-xl text-[11px] font-bold whitespace-nowrap shrink-0 transition-all border-2 ${
                       filters.brandKey === b.key
@@ -284,7 +283,7 @@ const ProductListingSection = memo(({
                   >
                     {b.label}
                   </button>
-                </>
+                </div>
               ))}
             </div>
           )}
