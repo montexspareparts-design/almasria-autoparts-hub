@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import WhatsAppQuickChat from "./WhatsAppQuickChat";
 import CustomerActivitySummary from "./CustomerActivitySummary";
+import SupportRequestAISummary from "./SupportRequestAISummary";
 
 // =================== Types ===================
 interface UrgentOrder {
