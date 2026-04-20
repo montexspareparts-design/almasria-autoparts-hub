@@ -13,7 +13,7 @@ import { useDealerCart } from "@/hooks/useDealerCart";
 import {
   Eye, Loader2, Download, ShoppingCart, MessageCircle,
   Package, CheckCircle2, XCircle, Clock, Info,
-  Minus, Plus, Trash2
+  Minus, Plus, Trash2, Flame, AlertTriangle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
