@@ -125,23 +125,16 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
 
   return (
     <aside className="w-[250px] bg-card/50 backdrop-blur-sm border-l border-border/20 flex flex-col h-full shrink-0 hidden lg:flex">
-      {/* Profile Card */}
-      <div className="p-4">
-        <div className="bg-gradient-to-br from-secondary to-secondary/80 rounded-2xl p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center ring-2 ring-white/10">
-              <User className="w-4.5 h-4.5 text-secondary-foreground/80" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="font-bold text-secondary-foreground text-sm truncate leading-tight">{dealerName}</p>
-              <span className={cn(
-                "inline-flex items-center text-[9px] font-bold mt-1 px-2 py-0.5 rounded-md",
-                tierColors[tier] || "bg-muted text-muted-foreground"
-              )}>
-                {tierLabels[tier] || tier}
-              </span>
-            </div>
-          </div>
+      {/* Compact Tier Badge (name shown in top header) */}
+      <div className="px-4 pt-4 pb-2">
+        <div className="flex items-center justify-between">
+          <span className={cn(
+            "inline-flex items-center text-[10px] font-bold px-2.5 py-1 rounded-md",
+            tierColors[tier] || "bg-muted text-muted-foreground"
+          )}>
+            {tierLabels[tier] || tier}
+          </span>
+          <span className="text-[10px] text-muted-foreground/60 font-medium">بوابة B2B</span>
         </div>
       </div>
 

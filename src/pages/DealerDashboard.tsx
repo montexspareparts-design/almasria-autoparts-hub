@@ -145,29 +145,25 @@ const DealerDashboard = () => {
               />
             </Suspense>
           )}
-          {/* Prominent New Order CTA */}
-          <div className="flex flex-col sm:flex-row gap-3 p-4 rounded-2xl bg-gradient-to-l from-primary/10 via-primary/5 to-transparent border border-primary/20">
-            <div className="flex-1">
-              <h2 className="text-lg font-black text-foreground">ابدأ طلبية جديدة</h2>
-              <p className="text-sm text-muted-foreground mt-0.5">ابحث عن القطع وأضفها للسلة، ثم أرسل الطلب أو ادفع مباشرة</p>
-            </div>
-            <div className="flex gap-2 shrink-0">
-              <Button
-                onClick={() => setActiveTab("cart")}
-                variant="outline"
-                className="gap-2 h-11 text-sm"
-              >
-                <ShoppingCart className="w-4 h-4" />
-                طلباتي {cartItemCount > 0 && <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{cartItemCount}</Badge>}
-              </Button>
-              <Button
-                onClick={() => setActiveTab("quick_order")}
-                className="gap-2 h-11 text-sm bg-primary hover:bg-primary/90"
-              >
-                <Zap className="w-4 h-4" />
-                طلب سريع
-              </Button>
-            </div>
+          {/* Compact Quick Actions Bar */}
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              onClick={() => setActiveTab("cart")}
+              variant="outline"
+              size="sm"
+              className="gap-1.5 h-9 text-xs rounded-lg"
+            >
+              <ShoppingCart className="w-3.5 h-3.5" />
+              طلباتي {cartItemCount > 0 && <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4">{cartItemCount}</Badge>}
+            </Button>
+            <Button
+              onClick={() => setActiveTab("quick_order")}
+              size="sm"
+              className="gap-1.5 h-9 text-xs rounded-lg bg-primary hover:bg-primary/90"
+            >
+              <Zap className="w-3.5 h-3.5" />
+              طلب سريع
+            </Button>
           </div>
           <DealerProductSearch onNavigateToCart={() => setActiveTab("cart")} sharedCart={dealerCart} />
           <DealerVehicleRecommendations compact />
