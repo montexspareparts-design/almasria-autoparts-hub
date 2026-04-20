@@ -974,6 +974,14 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
         customerPhone={summaryUser?.phone}
         isDealer={summaryUser?.isDealer}
       />
+
+      {/* AI Summary for chatbot conversations */}
+      <SupportRequestAISummary
+        open={!!aiSummaryReq}
+        onOpenChange={(o) => { if (!o) setAiSummaryReq(null); }}
+        requestId={aiSummaryReq?.id || null}
+        customerName={aiSummaryReq?.name}
+      />
     </div>
   );
 }
