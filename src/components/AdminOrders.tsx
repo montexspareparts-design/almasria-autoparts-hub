@@ -222,14 +222,14 @@ const AdminOrders = () => {
         ordersListRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 100);
     }
-  }, [page, filterStatus, searchQuery, autoExpandFirst, orderTypeFilter]);
+  }, [page, filterStatus, searchQuery, autoExpandFirst, orderTypeFilter, dateFrom, dateTo]);
 
 
 
 
   useEffect(() => { fetchStats(); }, [fetchStats]);
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
-  useEffect(() => { setPage(0); }, [filterStatus, searchQuery, orderTypeFilter]);
+  useEffect(() => { setPage(0); }, [filterStatus, searchQuery, orderTypeFilter, dateFrom, dateTo]);
 
   const handleStatClick = (status: string) => {
     setFilterStatus(status);
