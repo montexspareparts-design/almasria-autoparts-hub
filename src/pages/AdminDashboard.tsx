@@ -2,6 +2,7 @@ import { useEffect, useState, lazy, Suspense } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { requestPushPermission } from "@/lib/pushNotifications";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -188,7 +189,11 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (!authLoading && !user) { navigate("/auth"); return; }
     if (!authLoading && !canAccess) { navigate("/dealer"); return; }
-    if (canAccess) fetchApplications();
+    if (canAccess) {
+      fetchApplications();
+      // Request push permission silently for staff (browser notifications for new support requests)
+      requestPushPermission().catch(() => {});
+    }
   }, [user, authLoading, canAccess]);
 
   const fetchApplications = async () => {
