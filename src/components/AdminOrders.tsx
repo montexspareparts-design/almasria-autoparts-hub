@@ -155,6 +155,12 @@ const AdminOrders = () => {
     if (searchQuery.trim()) {
       query = query.or(`order_number.ilike.%${searchQuery.trim()}%`);
     }
+    if (dateFrom) {
+      query = query.gte("created_at", `${dateFrom}T00:00:00`);
+    }
+    if (dateTo) {
+      query = query.lte("created_at", `${dateTo}T23:59:59.999`);
+    }
 
     const { data, count, error } = await query.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
