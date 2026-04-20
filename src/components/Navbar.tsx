@@ -94,7 +94,7 @@ const Navbar = () => {
     { label: lang === "ar" ? "لوحة المهام" : "Tasks", href: "/admin?section=daily-dashboard", isRoute: true },
     { label: lang === "ar" ? "ملف العملاء" : "Customers", href: "/admin?section=customers", isRoute: true },
     { label: lang === "ar" ? "ذكاء العملاء" : "Intel", href: "/admin?section=customer-intel", isRoute: true },
-    { label: lang === "ar" ? "تحليل الأصناف" : "Products", href: "/admin?section=product-insights", isRoute: true },
+    { label: lang === "ar" ? "تحليل الأصناف" : "Products", href: "/admin?section=analytics", isRoute: true },
     { label: lang === "ar" ? "إدخال العملاء" : "Leads", href: "/admin?section=leads", isRoute: true },
     { label: lang === "ar" ? "الواتساب" : "WhatsApp", href: "/admin?section=whatsapp-inbox", isRoute: true },
   ];
