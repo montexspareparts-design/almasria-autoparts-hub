@@ -177,6 +177,8 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
     email?: string;
     phone?: string;
   }>({ step: "idle" });
+  // Track phones we've already auto-notified staff about (per session) to avoid duplicates
+  const notifiedPhonesRef = useRef<Set<string>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
