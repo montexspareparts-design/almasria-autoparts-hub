@@ -102,9 +102,9 @@ const DealerVehicleRecommendations = ({ compact }: DealerVehicleRecommendationsP
     if (!error) {
       const product = allProducts.find((p) => p.id === productId);
       if (product) {
-        const price = product.is_on_sale && product.sale_price ? product.sale_price : product.base_price;
-        setRevealedPrices((prev) => ({ ...prev, [productId]: price }));
-        setDailyViewCount((prev) => prev + 1);
+        // Invalidate shared cache → all sections (this card, ProductListingSection, etc.) update together
+        queryClient.invalidateQueries({ queryKey: ["dealer_views_today", user.id] });
+        queryClient.invalidateQueries({ queryKey: ["dealer_revealed_prices", user.id] });
         try {
           const audio = new Audio("/sounds/cha-ching.mp3");
           audio.volume = 0.3;
