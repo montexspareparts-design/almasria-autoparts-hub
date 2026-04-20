@@ -559,9 +559,19 @@ const AdminDashboard = () => {
         );
       case "analytics":
       case "product-insights":
+      case "leads-report":
         return (
           <Suspense fallback={<SectionLoader />}>
-            <Tabs defaultValue={activeSection === "product-insights" ? "products" : "general"} className="w-full">
+            <Tabs
+              defaultValue={
+                activeSection === "product-insights"
+                  ? "products"
+                  : activeSection === "leads-report"
+                  ? "leads"
+                  : "general"
+              }
+              className="w-full"
+            >
               <TabsList className="mb-4">
                 <TabsTrigger value="general">
                   <BarChart3 className="w-4 h-4 ml-2" />
@@ -571,9 +581,14 @@ const AdminDashboard = () => {
                   <TrendingUp className="w-4 h-4 ml-2" />
                   تحليل الأصناف
                 </TabsTrigger>
+                <TabsTrigger value="leads">
+                  <Users className="w-4 h-4 ml-2" />
+                  تقرير العملاء
+                </TabsTrigger>
               </TabsList>
               <TabsContent value="general"><AdminAnalytics /></TabsContent>
               <TabsContent value="products"><AdminProductInsights /></TabsContent>
+              <TabsContent value="leads"><AdminLeadsReport /></TabsContent>
             </Tabs>
           </Suspense>
         );
