@@ -125,16 +125,13 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
 
   return (
     <aside className="w-[250px] bg-card/50 backdrop-blur-sm border-l border-border/20 flex flex-col h-full shrink-0 hidden lg:flex">
-      {/* Compact Tier Badge (name shown in top header) */}
+      {/* Dealer Name Badge */}
       <div className="px-4 pt-4 pb-2">
-        <div className="flex items-center justify-between">
-          <span className={cn(
-            "inline-flex items-center text-[10px] font-bold px-2.5 py-1 rounded-md",
-            tierColors[tier] || "bg-muted text-muted-foreground"
-          )}>
-            {tierLabels[tier] || tier}
+        <div className="flex items-center justify-between gap-2">
+          <span className="inline-flex items-center text-[12px] font-bold px-2.5 py-1 rounded-md bg-primary/10 text-primary truncate max-w-[170px]">
+            {dealerName}
           </span>
-          <span className="text-[10px] text-muted-foreground/60 font-medium">بوابة B2B</span>
+          <span className="text-[10px] text-muted-foreground/60 font-medium shrink-0">بوابة B2B</span>
         </div>
       </div>
 
