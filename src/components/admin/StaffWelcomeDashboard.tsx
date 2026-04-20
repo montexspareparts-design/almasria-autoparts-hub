@@ -4,7 +4,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, Users, ShoppingCart, Clock, Loader2, ArrowLeft, UserCheck } from "lucide-react";
+import {
+  MessageCircle, ShoppingCart, Clock, Loader2, ArrowLeft, UserCheck,
+  PhoneCall, UserPlus, Search, Trophy, Star, Zap, Target,
+} from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
 
@@ -12,6 +15,11 @@ interface WelcomeStats {
   assignedConversations: number;
   pendingOrdersCount: number;
   unreadMessagesCount: number;
+  myCallsToday: number;
+  myLeadsToday: number;
+  myAvgRating: number | null;
+  myRank: number | null;
+  totalStaff: number;
 }
 
 interface RecentConversation {
