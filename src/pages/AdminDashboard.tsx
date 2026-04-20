@@ -83,7 +83,6 @@ const sidebarGroups: SidebarGroup[] = [
       { id: "staff-performance", label: "أداء الموظفين", icon: TrendingUp },
       { id: "analytics", label: "التحليلات", icon: BarChart3 },
       { id: "customers", label: "ملف العملاء", icon: Users },
-      { id: "dealers", label: "طلبات التجار", icon: Users },
     ],
   },
   {
@@ -616,13 +615,34 @@ const AdminDashboard = () => {
           </Suspense>
         );
       case "dealers":
-        return renderDealersSection();
+      case "orders":
+        return (
+          <Suspense fallback={<SectionLoader />}>
+            <Tabs defaultValue={activeSection === "dealers" ? "dealers" : "orders"} className="w-full">
+              <TabsList className="mb-4">
+                <TabsTrigger value="orders">
+                  <ShoppingBag className="w-4 h-4 ml-2" />
+                  إدارة الطلبات
+                </TabsTrigger>
+                <TabsTrigger value="dealers">
+                  <Users className="w-4 h-4 ml-2" />
+                  طلبات التجار
+                  {pendingCount > 0 && (
+                    <span className="mr-2 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-md min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                      {pendingCount}
+                    </span>
+                  )}
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="orders"><AdminOrders /></TabsContent>
+              <TabsContent value="dealers">{renderDealersSection()}</TabsContent>
+            </Tabs>
+          </Suspense>
+        );
       case "products":
         return <Suspense fallback={<SectionLoader />}><AdminProducts /></Suspense>;
       case "bulk-import":
         return <Suspense fallback={<SectionLoader />}><AdminBulkImport /></Suspense>;
-      case "orders":
-        return <Suspense fallback={<SectionLoader />}><AdminOrders /></Suspense>;
       case "coupons":
         return <Suspense fallback={<SectionLoader />}><AdminCoupons /></Suspense>;
       case "qty-discounts":
