@@ -42,6 +42,7 @@ const AdminBulkImport = lazy(() => import("@/components/AdminBulkImport"));
 const AdminERPCustomers = lazy(() => import("@/components/AdminERPCustomers"));
 const AdminStockSettings = lazy(() => import("@/components/AdminStockSettings"));
 const AdminLeads = lazy(() => import("@/components/AdminLeads"));
+const AdminLeadsReport = lazy(() => import("@/components/admin/AdminLeadsReport"));
 const AdminStaffRoles = lazy(() => import("@/components/AdminStaffRoles"));
 const AdminWhatsAppInbox = lazy(() => import("@/components/AdminWhatsAppInbox"));
 const StaffDailyDashboard = lazy(() => import("@/components/admin/StaffCRMCommandCenter"));
