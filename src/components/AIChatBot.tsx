@@ -8,6 +8,7 @@ import ReactMarkdown from "react-markdown";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePersonalization } from "@/hooks/usePersonalization";
 import { supabase } from "@/integrations/supabase/client";
+import CustomerRatingPrompt from "./CustomerRatingPrompt";
 
 type MessageContent =
   | string
@@ -876,6 +877,8 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
                   </div>
                 </div>
               )}
+
+              {isOpen && user && <CustomerRatingPrompt />}
 
               {messages.map((msg, i) => (
                 <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>

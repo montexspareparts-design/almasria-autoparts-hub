@@ -1852,6 +1852,47 @@ export type Database = {
           },
         ]
       }
+      support_request_ratings: {
+        Row: {
+          comment: string | null
+          created_at: string
+          customer_phone: string | null
+          customer_user_id: string | null
+          id: string
+          rating: number
+          staff_user_id: string
+          support_request_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          customer_phone?: string | null
+          customer_user_id?: string | null
+          id?: string
+          rating: number
+          staff_user_id: string
+          support_request_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          customer_phone?: string | null
+          customer_user_id?: string | null
+          id?: string
+          rating?: number
+          staff_user_id?: string
+          support_request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_request_ratings_support_request_id_fkey"
+            columns: ["support_request_id"]
+            isOneToOne: true
+            referencedRelation: "support_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_request_transfers: {
         Row: {
           created_at: string
