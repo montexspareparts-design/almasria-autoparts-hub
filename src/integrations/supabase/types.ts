@@ -1852,6 +1852,41 @@ export type Database = {
           },
         ]
       }
+      support_request_transfers: {
+        Row: {
+          created_at: string
+          from_staff_id: string
+          id: string
+          note: string | null
+          support_request_id: string
+          to_staff_id: string
+        }
+        Insert: {
+          created_at?: string
+          from_staff_id: string
+          id?: string
+          note?: string | null
+          support_request_id: string
+          to_staff_id: string
+        }
+        Update: {
+          created_at?: string
+          from_staff_id?: string
+          id?: string
+          note?: string | null
+          support_request_id?: string
+          to_staff_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_request_transfers_support_request_id_fkey"
+            columns: ["support_request_id"]
+            isOneToOne: false
+            referencedRelation: "support_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_requests: {
         Row: {
           assigned_to: string | null
