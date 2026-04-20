@@ -197,7 +197,10 @@ serve(async (req) => {
       .eq("user_id", userId);
 
     // Determine tier based on client_type
-    const tier = client_type === "wholesale" ? "wholesale_tier2" : "retail";
+    // retail + corporate → retail pricing
+    // wholesale + workshop → wholesale_tier1 pricing
+    const wholesaleTypes = new Set(["wholesale", "workshop"]);
+    const tier = wholesaleTypes.has(client_type) ? "wholesale_tier1" : "retail";
 
     // Create dealer account linked to ERP
     const { data: newDealer } = await adminClient.from("dealer_accounts").insert({

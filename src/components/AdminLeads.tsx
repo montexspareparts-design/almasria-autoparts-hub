@@ -52,8 +52,18 @@ const statusColors: Record<string, string> = {
 };
 
 const clientTypeLabels: Record<string, string> = {
-  wholesale: "جملة",
   retail: "قطاعي",
+  corporate: "شركات وهيئات",
+  wholesale: "جملة",
+  workshop: "مركز صيانة / ورشة",
+};
+
+// Pricing tier mapping for display + conversion
+const clientTypeTier: Record<string, "retail" | "wholesale_tier1"> = {
+  retail: "retail",
+  corporate: "retail",
+  wholesale: "wholesale_tier1",
+  workshop: "wholesale_tier1",
 };
 
 const AdminLeads = () => {
@@ -438,10 +448,15 @@ const AdminLeads = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="wholesale">جملة</SelectItem>
                     <SelectItem value="retail">قطاعي</SelectItem>
+                    <SelectItem value="corporate">شركات وهيئات</SelectItem>
+                    <SelectItem value="wholesale">جملة</SelectItem>
+                    <SelectItem value="workshop">مركز صيانة / ورشة</SelectItem>
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground">
+                  💰 التسعير: <span className="font-semibold">{clientTypeTier[form.client_type] === "wholesale_tier1" ? "جملة" : "قطاعي"}</span>
+                </p>
               </div>
 
               {/* ERP Customer Code - MANDATORY */}
