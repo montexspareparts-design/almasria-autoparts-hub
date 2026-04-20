@@ -202,14 +202,19 @@ serve(async (req) => {
     const wholesaleTypes = new Set(["wholesale", "workshop"]);
     const tier = wholesaleTypes.has(client_type) ? "wholesale_tier1" : "retail";
 
+    // Normalize business_type — only allow the 4 known categories
+    const allowedBusinessTypes = new Set(["retail", "corporate", "wholesale", "workshop"]);
+    const business_type = allowedBusinessTypes.has(client_type) ? client_type : "retail";
+
     // Create dealer account linked to ERP
     const { data: newDealer } = await adminClient.from("dealer_accounts").insert({
       user_id: userId,
       erp_customer_code: erp_customer_code,
       erp_customer_name: shop_name || name,
       tier,
+      business_type,
       is_active: true,
-    }).select("id").single();
+    } as any).select("id").single();
 
     // Store initial password in separate secure table
     if (newDealer) {

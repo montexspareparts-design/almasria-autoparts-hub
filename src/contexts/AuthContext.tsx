@@ -12,6 +12,7 @@ interface DealerAccount {
   custom_discount: number | null;
   min_order_amount: number | null;
   vehicle_types: string[];
+  business_type?: string | null;
 }
 
 interface AuthContextType {
@@ -132,7 +133,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setTimeout(async () => {
             const { data: dealer } = await supabase
               .from("dealer_accounts")
-              .select("id, tier, is_active, custom_discount, min_order_amount, vehicle_types")
+              .select("id, tier, is_active, custom_discount, min_order_amount, vehicle_types, business_type")
               .eq("user_id", session.user.id)
               .eq("is_active", true)
               .maybeSingle();
