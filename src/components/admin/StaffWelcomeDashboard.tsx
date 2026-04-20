@@ -59,23 +59,54 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
     if (!user) return;
     setLoading(true);
 
-    const [profileRes, assignedRes, unreadRes, pendingCountRes, recentConvRes, pendingOrdersRes] = await Promise.all([
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayIso = todayStart.toISOString();
+
+    const [
+      profileRes, assignedRes, unreadRes, pendingCountRes, recentConvRes, pendingOrdersRes,
+      myCallsRes, myLeadsRes, myRatingsRes, allStaffRes, allCommsTodayRes,
+    ] = await Promise.all([
       supabase.from("profiles").select("full_name, email").eq("user_id", user.id).maybeSingle(),
       supabase.from("whatsapp_conversations").select("*", { count: "exact", head: true }).eq("assigned_to", user.id).eq("is_archived", false),
       supabase.from("whatsapp_conversations").select("unread_count").eq("assigned_to", user.id).eq("is_archived", false),
       supabase.from("orders").select("*", { count: "exact", head: true }).in("status", ["pending", "awaiting_payment"]),
       supabase.from("whatsapp_conversations").select("id, contact_name, phone, last_message_preview, last_message_at, unread_count").eq("is_archived", false).order("last_message_at", { ascending: false }).limit(5),
       supabase.from("orders").select("id, order_number, total_amount, created_at, status").in("status", ["pending", "awaiting_payment"]).order("created_at", { ascending: false }).limit(5),
+      supabase.from("customer_communications").select("*", { count: "exact", head: true }).eq("staff_user_id", user.id).gte("created_at", todayIso),
+      supabase.from("leads").select("*", { count: "exact", head: true }).eq("created_by", user.id).gte("created_at", todayIso),
+      supabase.from("support_request_ratings").select("rating").eq("staff_user_id", user.id),
+      supabase.from("user_roles").select("user_id").in("role", ["admin", "moderator"]),
+      supabase.from("customer_communications").select("staff_user_id").gte("created_at", todayIso),
     ]);
 
     setStaffName(profileRes.data?.full_name || profileRes.data?.email?.split("@")[0] || "");
 
     const unreadTotal = (unreadRes.data || []).reduce((sum, c) => sum + (c.unread_count || 0), 0);
 
+    const myRatings = (myRatingsRes.data || []).map((r: any) => r.rating);
+    const myAvgRating = myRatings.length > 0
+      ? myRatings.reduce((a: number, b: number) => a + b, 0) / myRatings.length
+      : null;
+
+    const totalStaff = new Set((allStaffRes.data || []).map((r: any) => r.user_id)).size;
+    const commsCount: Record<string, number> = {};
+    (allCommsTodayRes.data || []).forEach((c: any) => {
+      commsCount[c.staff_user_id] = (commsCount[c.staff_user_id] || 0) + 1;
+    });
+    const ranked = Object.entries(commsCount).sort((a, b) => b[1] - a[1]);
+    const myRankIdx = ranked.findIndex(([sid]) => sid === user.id);
+    const myRank = myRankIdx >= 0 ? myRankIdx + 1 : null;
+
     setStats({
       assignedConversations: assignedRes.count || 0,
       pendingOrdersCount: pendingCountRes.count || 0,
       unreadMessagesCount: unreadTotal,
+      myCallsToday: myCallsRes.count || 0,
+      myLeadsToday: myLeadsRes.count || 0,
+      myAvgRating,
+      myRank,
+      totalStaff,
     });
 
     setConversations(recentConvRes.data || []);
