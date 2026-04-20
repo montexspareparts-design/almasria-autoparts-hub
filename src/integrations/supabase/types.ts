@@ -390,6 +390,7 @@ export type Database = {
         Row: {
           active_session_id: string | null
           application_id: string | null
+          business_type: string | null
           created_at: string
           credit_limit: number | null
           custom_discount: number | null
@@ -407,6 +408,7 @@ export type Database = {
         Insert: {
           active_session_id?: string | null
           application_id?: string | null
+          business_type?: string | null
           created_at?: string
           credit_limit?: number | null
           custom_discount?: number | null
@@ -424,6 +426,7 @@ export type Database = {
         Update: {
           active_session_id?: string | null
           application_id?: string | null
+          business_type?: string | null
           created_at?: string
           credit_limit?: number | null
           custom_discount?: number | null
