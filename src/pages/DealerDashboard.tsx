@@ -34,6 +34,8 @@ const DealerVehicleRecommendations = lazy(() => import("@/components/dealer/Deal
 const DealerAIRecommendations = lazy(() => import("@/components/dealer/DealerAIRecommendations"));
 const DealerBottomCarousel = lazy(() => import("@/components/dealer/DealerBottomCarousel"));
 const DealerBusinessBanner = lazy(() => import("@/components/dealer/DealerBusinessBanner"));
+const DealerPersonalStats = lazy(() => import("@/components/dealer/DealerPersonalStats"));
+const DealerKeyboardShortcuts = lazy(() => import("@/components/dealer/DealerKeyboardShortcuts"));
 
 const DealerDashboard = () => {
   const { user, dealerAccount, isDealer, loading: authLoading, signOut } = useAuth();
@@ -135,6 +137,9 @@ const DealerDashboard = () => {
     switch (activeTab) {
       case "quotes": return (
         <div className="space-y-6">
+          {/* Personal Stats Dashboard (#10) */}
+          <Suspense fallback={null}><DealerPersonalStats /></Suspense>
+
           {/* Business-type tailored welcome (workshop / corporate) */}
           {(dealerAccount?.business_type === "workshop" || dealerAccount?.business_type === "corporate") && (
             <Suspense fallback={null}>
@@ -254,6 +259,11 @@ const DealerDashboard = () => {
       </div>
 
       <DealerMobileNav activeTab={activeTab} onTabChange={setActiveTab} unreadCount={unreadCount} cartItemCount={cartItemCount} />
+
+      {/* Keyboard shortcuts (#5) - Press ? to view, G + letter to navigate */}
+      <Suspense fallback={null}>
+        <DealerKeyboardShortcuts onTabChange={setActiveTab} />
+      </Suspense>
 
       {dealerAccount && (
         <Suspense fallback={null}>
