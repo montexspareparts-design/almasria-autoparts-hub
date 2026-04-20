@@ -10,7 +10,7 @@ const WhatsAppFloat = forwardRef<HTMLDivElement>((_, ref) => {
   };
 
   return (
-    <div className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50">
+    <div className="fixed bottom-24 right-4 md:bottom-24 md:right-6 z-50">
       <motion.a
         href={`https://wa.me/201027815696?text=${encodeURIComponent(defaultMsg)}`}
         target="_blank"
