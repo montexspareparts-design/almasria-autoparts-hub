@@ -22,49 +22,51 @@ interface DealerVehicleRecommendationsProps {
 const DealerVehicleRecommendations = ({ compact }: DealerVehicleRecommendationsProps) => {
   const { user, isDealer, dealerAccount } = useAuth();
   const { addItem } = useDealerCart();
+  const queryClient = useQueryClient();
   const [allProducts, setAllProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
-  const [revealedPrices, setRevealedPrices] = useState<Record<string, number>>({});
-  const [dailyViewCount, setDailyViewCount] = useState(0);
   const [revealingId, setRevealingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchRecommendations();
   }, []);
 
-  useEffect(() => {
-    if (user) fetchDailyViews();
-  }, [user]);
+  // Shared source of truth — same key used by useProductListing hook
+  const { data: viewedProductIds = [] } = useQuery({
+    queryKey: ["dealer_views_today", user?.id],
+    queryFn: async () => {
+      const today = new Date().toISOString().split("T")[0];
+      const { data } = await supabase
+        .from("dealer_price_views")
+        .select("product_id")
+        .eq("user_id", user!.id)
+        .eq("view_date", today);
+      return (data || []).map((v) => v.product_id);
+    },
+    enabled: !!isDealer && !!user,
+  });
 
-  const fetchDailyViews = async () => {
-    if (!user) return;
-    const { data } = await supabase.rpc("get_daily_view_count", { _user_id: user.id });
-    setDailyViewCount(data || 0);
-
-    const { data: views } = await supabase
-      .from("dealer_price_views")
-      .select("product_id")
-      .eq("user_id", user.id)
-      .eq("view_date", new Date().toISOString().split("T")[0]);
-
-    if (views && views.length > 0) {
-      const revealedIds = views.map((v) => v.product_id);
+  // Map of revealed prices for products currently shown
+  const { data: revealedPrices = {} } = useQuery({
+    queryKey: ["dealer_revealed_prices", user?.id, viewedProductIds.join(",")],
+    queryFn: async () => {
+      if (!viewedProductIds.length) return {} as Record<string, number>;
       const { data: prods } = await supabase
         .from("products")
         .select("id, base_price, sale_price, is_on_sale")
-        .in("id", revealedIds);
+        .in("id", viewedProductIds);
+      const map: Record<string, number> = {};
+      (prods || []).forEach((p) => {
+        map[p.id] = p.is_on_sale && p.sale_price ? p.sale_price : p.base_price;
+      });
+      return map;
+    },
+    enabled: !!user && viewedProductIds.length > 0,
+  });
 
-      if (prods) {
-        const map: Record<string, number> = {};
-        prods.forEach((p) => {
-          map[p.id] = p.is_on_sale && p.sale_price ? p.sale_price : p.base_price;
-        });
-        setRevealedPrices(map);
-      }
-    }
-  };
+  const dailyViewCount = viewedProductIds.length;
 
   const fetchRecommendations = async () => {
     setLoading(true);
