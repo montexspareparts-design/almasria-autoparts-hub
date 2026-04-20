@@ -656,6 +656,20 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
     }
     // ============= END SIGNUP FLOW =============
 
+    // 🔔 Auto-notify staff: ANY message containing a valid Egyptian phone number
+    // (whether sent by guest or logged-in user) → create silent support_request
+    // so admins/moderators get pinged via DB trigger + WhatsApp + push.
+    {
+      const detectedPhone = extractPhone(text);
+      if (detectedPhone && !notifiedPhonesRef.current.has(detectedPhone)) {
+        notifiedPhonesRef.current.add(detectedPhone);
+        // Fire-and-forget — never block the user's chat experience
+        createSupportRequest(text, detectedPhone)
+          .then(ok => console.log("[AIChatBot] auto support_request created:", ok, "phone:", detectedPhone))
+          .catch(err => console.error("[AIChatBot] auto support_request failed:", err));
+      }
+    }
+
     // Check if asking for support team / human contact
     if (wantsHumanSupport(text)) {
       // Already logged in → create request immediately
