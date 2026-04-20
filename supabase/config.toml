@@ -66,3 +66,9 @@ verify_jwt = false
 
 [functions.notify-admin-support-request]
 verify_jwt = false
+
+[functions.notify-staff-push]
+verify_jwt = false
+
+[functions.summarize-support-conversation]
+verify_jwt = false

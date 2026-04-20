@@ -98,6 +98,18 @@ https://almasriaautoparts.com/admin?section=daily-dashboard`;
     );
     const sent = results.filter((r) => r.success).length;
 
+    // Also send Browser Push notification to all staff (parallel, non-blocking)
+    supabase.functions
+      .invoke("notify-staff-push", {
+        body: {
+          title: `${typeLabel}${dealerTag}`,
+          message: `${customer_name} — ${(message || "بدون تفاصيل").slice(0, 120)}`,
+          url: "/admin?section=daily-dashboard",
+          tag: `support-${Date.now()}`,
+        },
+      })
+      .catch((e) => console.error("Staff push failed:", e));
+
     return new Response(JSON.stringify({ success: true, sent, total: phones.length }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
