@@ -16,6 +16,8 @@ import {
 import WhatsAppQuickChat from "./WhatsAppQuickChat";
 import CustomerActivitySummary from "./CustomerActivitySummary";
 import SupportRequestAISummary from "./SupportRequestAISummary";
+import TransferToColleagueDialog from "./TransferToColleagueDialog";
+import { ArrowRightLeft } from "lucide-react";
 
 // =================== Types ===================
 interface UrgentOrder {
@@ -99,6 +101,7 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
   const [supportRequests, setSupportRequests] = useState<SupportReq[]>([]);
   const [summaryUser, setSummaryUser] = useState<{ id: string; name: string; phone: string | null; isDealer: boolean } | null>(null);
   const [aiSummaryReq, setAiSummaryReq] = useState<{ id: string; name: string | null } | null>(null);
+  const [transferReq, setTransferReq] = useState<{ id: string; name: string | null } | null>(null);
 
   // =================== Fetch ===================
   const fetchAll = async () => {
@@ -763,6 +766,17 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                                   ملخص AI
                                 </Button>
                               )}
+                              {isMine && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 gap-1 text-xs border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-700 dark:text-amber-400"
+                                  onClick={() => setTransferReq({ id: r.id, name: r.customer_name })}
+                                >
+                                  <ArrowRightLeft className="w-3 h-3" />
+                                  تحويل لزميل
+                                </Button>
+                              )}
                               {isMine && r.user_id && (
                                 <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => setSummaryUser({ id: r.user_id!, name: r.customer_name || "عميل", phone: r.customer_phone, isDealer: r.is_dealer })}>
                                   <Activity className="w-3 h-3" />
@@ -981,6 +995,15 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
         onOpenChange={(o) => { if (!o) setAiSummaryReq(null); }}
         requestId={aiSummaryReq?.id || null}
         customerName={aiSummaryReq?.name}
+      />
+
+      {/* Transfer to colleague dialog */}
+      <TransferToColleagueDialog
+        open={!!transferReq}
+        onOpenChange={(o) => { if (!o) setTransferReq(null); }}
+        requestId={transferReq?.id || null}
+        customerName={transferReq?.name}
+        onTransferred={() => fetchAll()}
       />
     </div>
   );
