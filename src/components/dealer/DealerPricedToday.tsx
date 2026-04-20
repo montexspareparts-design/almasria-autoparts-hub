@@ -365,7 +365,7 @@ const DealerPricedToday = ({ onConvertToOrder, sharedCart }: DealerPricedTodayPr
                           </button>
                         </div>
 
-                        {/* SKU + Stock */}
+                        {/* SKU + Stock + Velocity */}
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-[11px] font-mono text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded">{item.product.sku}</span>
                           <span className={cn(
@@ -375,6 +375,19 @@ const DealerPricedToday = ({ onConvertToOrder, sharedCart }: DealerPricedTodayPr
                             {inStock ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
                             {inStock ? "متوفر" : "نفد"}
                           </span>
+                          {/* Stock Velocity Badge — urgency indicator */}
+                          {inStock && item.product.stock_quantity > 0 && item.product.stock_quantity <= 5 && (
+                            <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-destructive/10 text-destructive border border-destructive/30 animate-pulse">
+                              <AlertTriangle className="w-2.5 h-2.5" />
+                              آخر {item.product.stock_quantity} قطع
+                            </span>
+                          )}
+                          {inStock && item.product.stock_quantity > 5 && item.product.stock_quantity <= 15 && (
+                            <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+                              <Flame className="w-2.5 h-2.5" />
+                              سريع البيع
+                            </span>
+                          )}
                         </div>
 
                         {/* Bottom Row: Price + Quantity + Actions */}
