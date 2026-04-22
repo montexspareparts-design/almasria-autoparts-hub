@@ -124,6 +124,7 @@ const sidebarGroups: SidebarGroup[] = [
         { id: "stock-settings", label: "إعدادات المخزون", icon: ShieldCheck },
         { id: "staff-roles", label: "إدارة الموظفين", icon: Users },
         { id: "audit-log", label: "سجل المراجعة", icon: Shield },
+        { id: "account-attempts", label: "محاولات إنشاء/إعادة تعيين الحسابات", icon: KeyRound },
       ],
     },
     {
