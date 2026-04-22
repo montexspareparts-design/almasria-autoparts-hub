@@ -764,6 +764,74 @@ const AdminPriceLists = () => {
     }
   };
 
+  // Dry-run preview: extract SKUs and compute matches WITHOUT writing to DB.
+  // Opens a "سجل المطابقة" dialog with top candidates + reason per code.
+  const previewMatchingLog = async () => {
+    if (!managingList) return;
+    setMatchLogOpen(true);
+    setMatchLogLoading(true);
+    setMatchLogData(null);
+    setMatchLogFilter("all");
+    try {
+      const { data, error } = await supabase.functions.invoke("extract-pricelist-skus", {
+        body: {
+          price_list_id: managingList.id,
+          min_confidence: minConfidence,
+          dry_run: true,
+          include_diagnostics: true,
+        },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const res = data as {
+        extracted_count: number;
+        matched_count: number;
+        unmatched: string[];
+        avg_score: number;
+        diagnostics: MatchDiagnostic[];
+      };
+      setMatchLogData({
+        extracted_count: res.extracted_count,
+        matched_count: res.matched_count,
+        unmatched: res.unmatched || [],
+        avg_score: res.avg_score || 0,
+        diagnostics: res.diagnostics || [],
+      });
+    } catch (e: any) {
+      toast({ title: "فشل التحليل", description: e.message, variant: "destructive" });
+      setMatchLogOpen(false);
+    } finally {
+      setMatchLogLoading(false);
+    }
+  };
+
+  // Apply (commit) the previewed matching by re-running without dry_run.
+  const applyMatchingFromLog = async () => {
+    if (!managingList) return;
+    if (!confirm("سيتم اعتماد المطابقة وكتابتها في الكشف (سيتم استبدال الأصناف الحالية). متابعة؟")) return;
+    setMatchLogApplying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("extract-pricelist-skus", {
+        body: { price_list_id: managingList.id, min_confidence: minConfidence },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const res = data as { extracted_count: number; matched_count: number; linked_count: number; unmatched: string[] };
+      setAiResult(res);
+      toast({
+        title: "✅ تم اعتماد المطابقة",
+        description: `تم ربط ${res.linked_count} صنف`,
+      });
+      fetchLinkedProducts(managingList.id);
+      setMatchLogOpen(false);
+    } catch (e: any) {
+      toast({ title: "فشل الاعتماد", description: e.message, variant: "destructive" });
+    } finally {
+      setMatchLogApplying(false);
+    }
+  };
+
+
   const linkAllPriceListsFromPdfWithAI = async () => {
     const candidates = lists.filter((l) => l.file_url);
     if (candidates.length === 0) {
