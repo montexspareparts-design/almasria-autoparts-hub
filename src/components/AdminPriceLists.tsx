@@ -60,6 +60,11 @@ const AdminPriceLists = () => {
   const [aiLinking, setAiLinking] = useState(false);
   const [aiResult, setAiResult] = useState<{ extracted_count: number; matched_count: number; linked_count: number; unmatched: string[]; sample_extracted?: string[] } | null>(null);
 
+  // Bulk AI re-link across all price lists
+  const [bulkAiRunning, setBulkAiRunning] = useState(false);
+  const [bulkAiProgress, setBulkAiProgress] = useState<{ current: number; total: number; currentTitle: string }>({ current: 0, total: 0, currentTitle: "" });
+  const [bulkAiResults, setBulkAiResults] = useState<Array<{ title: string; linked: number; extracted: number; error?: string }>>([]);
+
   // Upload report
   const [uploadReport, setUploadReport] = useState<UploadReportRow[] | null>(null);
   const [reportListTitle, setReportListTitle] = useState("");
