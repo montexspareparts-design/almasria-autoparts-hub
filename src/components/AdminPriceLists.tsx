@@ -750,7 +750,7 @@ const AdminPriceLists = () => {
     setAiResult(null);
     try {
       const { data, error } = await supabase.functions.invoke("extract-pricelist-skus", {
-        body: { price_list_id: managingList.id, min_confidence: minConfidence },
+        body: { price_list_id: managingList.id, min_confidence: minConfidence, min_confidence_sku: minConfidenceSku, min_confidence_erp: minConfidenceErp },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
@@ -781,6 +781,8 @@ const AdminPriceLists = () => {
         body: {
           price_list_id: managingList.id,
           min_confidence: minConfidence,
+          min_confidence_sku: minConfidenceSku,
+          min_confidence_erp: minConfidenceErp,
           dry_run: true,
           include_diagnostics: true,
         },
@@ -816,7 +818,7 @@ const AdminPriceLists = () => {
     setMatchLogApplying(true);
     try {
       const { data, error } = await supabase.functions.invoke("extract-pricelist-skus", {
-        body: { price_list_id: managingList.id, min_confidence: minConfidence },
+        body: { price_list_id: managingList.id, min_confidence: minConfidence, min_confidence_sku: minConfidenceSku, min_confidence_erp: minConfidenceErp },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
@@ -855,7 +857,7 @@ const AdminPriceLists = () => {
       setBulkAiProgress({ current: i + 1, total: candidates.length, currentTitle: list.title });
       try {
         const { data, error } = await supabase.functions.invoke("extract-pricelist-skus", {
-          body: { price_list_id: list.id, min_confidence: minConfidence },
+          body: { price_list_id: list.id, min_confidence: minConfidence, min_confidence_sku: minConfidenceSku, min_confidence_erp: minConfidenceErp },
         });
         if (error) throw error;
         if ((data as any)?.error) throw new Error((data as any).error);
