@@ -719,7 +719,7 @@ const AdminPriceLists = () => {
     setAiResult(null);
     try {
       const { data, error } = await supabase.functions.invoke("extract-pricelist-skus", {
-        body: { price_list_id: managingList.id },
+        body: { price_list_id: managingList.id, min_confidence: minConfidence },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
