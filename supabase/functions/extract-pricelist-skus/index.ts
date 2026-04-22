@@ -15,11 +15,17 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json();
     const { price_list_id } = body;
-    // Confidence threshold: 0-100. Default 80 = strict (exact or near-exact).
-    // 100 = exact match only. Lower values allow fuzzy matches.
+    // Confidence threshold: 0-100. 100 = exact match only.
     const min_confidence = Math.max(
       0,
       Math.min(100, Number(body.min_confidence ?? 100))
+    );
+    // dry_run: do NOT delete/insert price_list_products — only return diagnostics.
+    const dry_run: boolean = Boolean(body.dry_run ?? false);
+    // include_diagnostics: return top candidates per extracted code so the admin
+    // can review match decisions before committing.
+    const include_diagnostics: boolean = Boolean(
+      body.include_diagnostics ?? dry_run
     );
 
     if (!price_list_id) {
