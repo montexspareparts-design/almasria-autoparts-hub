@@ -65,6 +65,16 @@ const AdminPriceLists = () => {
   const [bulkAiProgress, setBulkAiProgress] = useState<{ current: number; total: number; currentTitle: string }>({ current: 0, total: 0, currentTitle: "" });
   const [bulkAiResults, setBulkAiResults] = useState<Array<{ title: string; linked: number; extracted: number; error?: string }>>([]);
 
+  // Verification dialog (post bulk AI)
+  const [verifyOpen, setVerifyOpen] = useState(false);
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [verifyData, setVerifyData] = useState<Array<{
+    listId: string;
+    listTitle: string;
+    totalLinked: number;
+    samples: Array<{ id: string; sku: string; name_ar: string }>;
+  }>>([]);
+
   // Upload report
   const [uploadReport, setUploadReport] = useState<UploadReportRow[] | null>(null);
   const [reportListTitle, setReportListTitle] = useState("");
