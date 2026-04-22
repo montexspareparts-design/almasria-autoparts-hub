@@ -531,6 +531,64 @@ const AdminERPSync = () => {
 
         {/* ─── SYNC ACTIONS ─── */}
         <TabsContent value="actions" className="space-y-4 mt-4">
+          {/* Full Sync Card - Prices + Stock together */}
+          <Card className="border-2 border-emerald-500/40 hover:border-emerald-500/70 transition-colors bg-emerald-500/5">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                  <Zap className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-foreground">⚡ مزامنة شاملة (الأسعار + الأرصدة)</h3>
+                  <p className="text-xs text-muted-foreground">
+                    تشغيل مزامنة الأسعار ثم الأرصدة معاً من نظام الفيصل في خطوة واحدة
+                  </p>
+                </div>
+              </div>
+
+              {fullSyncReport && (
+                <div className="mb-3 p-4 rounded-lg bg-muted/50 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground">📊 نتيجة آخر مزامنة شاملة</span>
+                    <Button variant="ghost" size="sm" onClick={() => setFullSyncReport(null)} className="h-6 px-2 text-xs">✕</Button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className={`bg-background rounded p-3 text-center border ${fullSyncReport.pricesError ? "border-destructive/50" : "border-emerald-500/30"}`}>
+                      <p className="font-bold text-lg text-foreground">{fullSyncReport.pricesUpdated}</p>
+                      <p className="text-muted-foreground">أسعار محدّثة</p>
+                      {fullSyncReport.pricesError && (
+                        <p className="text-destructive mt-1 text-[10px]">❌ {fullSyncReport.pricesError}</p>
+                      )}
+                    </div>
+                    <div className={`bg-background rounded p-3 text-center border ${fullSyncReport.stockError ? "border-destructive/50" : "border-emerald-500/30"}`}>
+                      <p className="font-bold text-lg text-foreground">{fullSyncReport.stockUpdated}</p>
+                      <p className="text-muted-foreground">أرصدة محدّثة</p>
+                      {fullSyncReport.stockError && (
+                        <p className="text-destructive mt-1 text-[10px]">❌ {fullSyncReport.stockError}</p>
+                      )}
+                      {fullSyncReport.stockWarning && (
+                        <p className="text-amber-600 mt-1 text-[10px]">⚠️ {fullSyncReport.stockWarning}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <Button
+                className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+                onClick={runFullSync}
+                disabled={syncing !== null}
+              >
+                {syncing === "full_sync" ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Zap className="w-4 h-4" />
+                )}
+                {syncing === "full_sync" ? "جاري المزامنة..." : "تشغيل المزامنة الشاملة الآن"}
+              </Button>
+            </CardContent>
+          </Card>
+
           {/* Import Products Card - Full Width */}
           <Card className="border-2 border-primary/30 hover:border-primary/60 transition-colors bg-primary/5">
             <CardContent className="p-5">
