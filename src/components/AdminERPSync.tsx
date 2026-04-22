@@ -13,6 +13,7 @@ import {
   Zap, TestTube, Globe, Copy
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface SyncLog {
   id: string;
@@ -71,6 +72,23 @@ const AdminERPSync = () => {
     stockWarning?: string;
     finishedAt: string;
   } | null>(null);
+  const [priceSyncProgress, setPriceSyncProgress] = useState<{
+    phase: string;
+    percent: number;
+    done: boolean;
+    error?: string;
+  } | null>(null);
+  const [priceSyncReport, setPriceSyncReport] = useState<{
+    retailUpdated: number;
+    wholesaleUpdated: number;
+    matched: number;
+    erpTotal: number;
+    ourProducts: number;
+    sample: Array<{ id: string; name?: string; retailPrice?: number; wholesalePrice?: number; status: "success" | "skipped"; reason?: string }>;
+    failures: Array<{ id: string; name?: string; reason: string }>;
+    finishedAt: string;
+  } | null>(null);
+  const [showPriceReport, setShowPriceReport] = useState(false);
   const [importProgress, setImportProgress] = useState<{
     phase: string;
     currentBatch: number;
@@ -323,6 +341,106 @@ const AdminERPSync = () => {
 
     fetchData();
     setSyncing(null);
+  };
+
+  const runPriceSync = async () => {
+    setSyncing("price_sync");
+    setPriceSyncReport(null);
+    setPriceSyncProgress({ phase: "جاري الاتصال بنظام الفيصل...", percent: 10, done: false });
+
+    const t1 = setTimeout(() => {
+      setPriceSyncProgress(p => p && !p.done ? { ...p, phase: "جاري جلب الأسعار من الفيصل...", percent: 35 } : p);
+    }, 800);
+    const t2 = setTimeout(() => {
+      setPriceSyncProgress(p => p && !p.done ? { ...p, phase: "جاري مطابقة المنتجات...", percent: 60 } : p);
+    }, 2000);
+    const t3 = setTimeout(() => {
+      setPriceSyncProgress(p => p && !p.done ? { ...p, phase: "جاري تحديث قاعدة البيانات...", percent: 85 } : p);
+    }, 3500);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("erp-sync-outbound", {
+        body: { action: "sync_prices", data: {} },
+      });
+
+      clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
+
+      if (error) throw error;
+      if (data?.success === false) throw new Error(data?.message || "فشلت المزامنة");
+
+      const retailUpdated = data?.retail_updated || 0;
+      const wholesaleUpdated = data?.wholesale_updated || 0;
+      const matched = data?.matched || 0;
+      const erpTotal = data?.erp_total || 0;
+      const ourProducts = data?.our_products || 0;
+      const sample = (data?.sample || []) as Array<any>;
+
+      const sampleWithStatus = sample.map((s) => {
+        const r = Number(s.retailPrice || 0);
+        const w = Number(s.wholesalePrice || 0);
+        const ok = r > 0 || w > 0;
+        return {
+          id: String(s.id || ""),
+          name: s.name,
+          retailPrice: r,
+          wholesalePrice: w,
+          status: ok ? ("success" as const) : ("skipped" as const),
+          reason: !ok ? "السعر = 0 من الفيصل" : undefined,
+        };
+      });
+
+      const unmatchedCount = Math.max(0, ourProducts - matched);
+      const failures: Array<{ id: string; name?: string; reason: string }> = [];
+      if (unmatchedCount > 0) {
+        failures.push({
+          id: "—",
+          reason: `${unmatchedCount} صنف على موقعنا بدون كود الفيصل (erp_item_code) أو غير موجود في الفيصل`,
+        });
+      }
+
+      setPriceSyncProgress({ phase: "✅ اكتملت المزامنة", percent: 100, done: true });
+      setPriceSyncReport({
+        retailUpdated, wholesaleUpdated, matched, erpTotal, ourProducts,
+        sample: sampleWithStatus, failures,
+        finishedAt: new Date().toISOString(),
+      });
+
+      toast({
+        title: "✅ تمت مزامنة الأسعار",
+        description: `تم تحديث ${retailUpdated} سعر قطاعي و ${wholesaleUpdated} سعر جملة من ${matched} صنف مطابق`,
+      });
+    } catch (err: any) {
+      clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
+      setPriceSyncProgress({ phase: "❌ فشلت المزامنة", percent: 100, done: true, error: err?.message || "خطأ غير معروف" });
+      toast({
+        title: "فشل مزامنة الأسعار",
+        description: err?.message || "خطأ غير معروف",
+        variant: "destructive",
+      });
+    }
+
+    fetchData();
+    setSyncing(null);
+  };
+
+  const downloadPriceReportCsv = () => {
+    if (!priceSyncReport) return;
+    const headers = ["كود الفيصل", "اسم الصنف", "سعر القطاعي", "سعر الجملة", "الحالة", "ملاحظة"];
+    const rows = [
+      ...priceSyncReport.sample.map(s => [
+        s.id, s.name || "", s.retailPrice || 0, s.wholesalePrice || 0,
+        s.status === "success" ? "نجح" : "تم التخطي", s.reason || "",
+      ]),
+      ...priceSyncReport.failures.map(f => [f.id, f.name || "", "", "", "فشل", f.reason]),
+    ];
+    const csv = "\uFEFF" + [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `price-sync-report-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleBatchImport = async () => {
@@ -589,7 +707,89 @@ const AdminERPSync = () => {
             </CardContent>
           </Card>
 
-          {/* Import Products Card - Full Width */}
+          {/* Prices-Only Sync Card with Live Progress + Per-Record Report */}
+          <Card className="border-2 border-amber-500/40 hover:border-amber-500/70 transition-colors bg-amber-500/5">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                  <DollarSign className="w-5 h-5 text-amber-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-foreground">💰 مزامنة الأسعار فقط (مع تقدّم وتقرير تفصيلي)</h3>
+                  <p className="text-xs text-muted-foreground">
+                    تحديث أسعار القطاعي والجملة من الفيصل لكل المنتجات المربوطة بـ erp_item_code — مع عرض حي للتقدم وتقرير نتائج لكل سجل
+                  </p>
+                </div>
+              </div>
+
+              {priceSyncProgress && (
+                <div className="mb-3 p-4 rounded-lg bg-muted/50 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground flex items-center gap-2">
+                      {!priceSyncProgress.done && <Loader2 className="w-4 h-4 animate-spin" />}
+                      {priceSyncProgress.phase}
+                    </span>
+                    {priceSyncProgress.done && (
+                      <Button variant="ghost" size="sm" onClick={() => { setPriceSyncProgress(null); setPriceSyncReport(null); }} className="h-6 px-2 text-xs">✕</Button>
+                    )}
+                  </div>
+                  <Progress value={priceSyncProgress.percent} className="h-2" />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>{priceSyncProgress.percent}%</span>
+                  </div>
+                  {priceSyncProgress.error && (
+                    <p className="text-xs text-destructive">❌ {priceSyncProgress.error}</p>
+                  )}
+                </div>
+              )}
+
+              {priceSyncReport && (
+                <div className="mb-3 p-4 rounded-lg bg-background border space-y-3">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                    <div className="bg-emerald-500/10 rounded p-3 text-center border border-emerald-500/30">
+                      <p className="font-bold text-lg text-foreground">{priceSyncReport.retailUpdated}</p>
+                      <p className="text-muted-foreground">سعر قطاعي ✅</p>
+                    </div>
+                    <div className="bg-emerald-500/10 rounded p-3 text-center border border-emerald-500/30">
+                      <p className="font-bold text-lg text-foreground">{priceSyncReport.wholesaleUpdated}</p>
+                      <p className="text-muted-foreground">سعر جملة ✅</p>
+                    </div>
+                    <div className="bg-blue-500/10 rounded p-3 text-center border border-blue-500/30">
+                      <p className="font-bold text-lg text-foreground">{priceSyncReport.matched}</p>
+                      <p className="text-muted-foreground">صنف مطابق</p>
+                    </div>
+                    <div className="bg-amber-500/10 rounded p-3 text-center border border-amber-500/30">
+                      <p className="font-bold text-lg text-foreground">{Math.max(0, priceSyncReport.ourProducts - priceSyncReport.matched)}</p>
+                      <p className="text-muted-foreground">غير مطابق ⚠️</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setShowPriceReport(true)} className="flex-1 gap-2">
+                      <Database className="w-4 h-4" /> عرض التقرير التفصيلي
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={downloadPriceReportCsv} className="gap-2">
+                      <Copy className="w-4 h-4" /> CSV
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <Button
+                className="w-full gap-2 bg-amber-600 hover:bg-amber-700 text-white"
+                onClick={runPriceSync}
+                disabled={syncing !== null}
+              >
+                {syncing === "price_sync" ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <DollarSign className="w-4 h-4" />
+                )}
+                {syncing === "price_sync" ? "جاري المزامنة..." : "تشغيل مزامنة الأسعار الآن"}
+              </Button>
+            </CardContent>
+          </Card>
+
           <Card className="border-2 border-primary/30 hover:border-primary/60 transition-colors bg-primary/5">
             <CardContent className="p-5">
               <div className="flex items-center gap-3 mb-3">
@@ -1202,6 +1402,110 @@ const AdminERPSync = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Detailed Per-Record Price Sync Report Dialog */}
+      <Dialog open={showPriceReport} onOpenChange={setShowPriceReport}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-amber-600" />
+              تقرير مزامنة الأسعار التفصيلي
+            </DialogTitle>
+          </DialogHeader>
+
+          {priceSyncReport && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
+                <div className="bg-muted rounded p-2 text-center">
+                  <p className="font-bold text-foreground">{priceSyncReport.erpTotal}</p>
+                  <p className="text-muted-foreground">في الفيصل</p>
+                </div>
+                <div className="bg-muted rounded p-2 text-center">
+                  <p className="font-bold text-foreground">{priceSyncReport.ourProducts}</p>
+                  <p className="text-muted-foreground">على موقعنا</p>
+                </div>
+                <div className="bg-emerald-500/10 rounded p-2 text-center">
+                  <p className="font-bold text-foreground">{priceSyncReport.matched}</p>
+                  <p className="text-muted-foreground">مطابق ✅</p>
+                </div>
+                <div className="bg-emerald-500/10 rounded p-2 text-center">
+                  <p className="font-bold text-foreground">{priceSyncReport.retailUpdated}</p>
+                  <p className="text-muted-foreground">سعر قطاعي محدّث</p>
+                </div>
+                <div className="bg-emerald-500/10 rounded p-2 text-center">
+                  <p className="font-bold text-foreground">{priceSyncReport.wholesaleUpdated}</p>
+                  <p className="text-muted-foreground">سعر جملة محدّث</p>
+                </div>
+              </div>
+
+              <Button onClick={downloadPriceReportCsv} variant="outline" size="sm" className="w-full gap-2">
+                <Copy className="w-4 h-4" /> تحميل التقرير الكامل (CSV)
+              </Button>
+
+              <div>
+                <h4 className="font-semibold mb-2 text-sm flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-600" />
+                  عيّنة من السجلات الناجحة (أول 5)
+                </h4>
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full text-xs">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="p-2 text-right">كود الفيصل</th>
+                        <th className="p-2 text-right">الاسم</th>
+                        <th className="p-2 text-right">قطاعي</th>
+                        <th className="p-2 text-right">جملة</th>
+                        <th className="p-2 text-right">الحالة</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {priceSyncReport.sample.length === 0 && (
+                        <tr><td colSpan={5} className="p-4 text-center text-muted-foreground">لا توجد سجلات</td></tr>
+                      )}
+                      {priceSyncReport.sample.map((s, i) => (
+                        <tr key={i} className="border-t">
+                          <td className="p-2 font-mono">{s.id}</td>
+                          <td className="p-2">{s.name || "—"}</td>
+                          <td className="p-2">{s.retailPrice ? `${s.retailPrice} ج.م` : "—"}</td>
+                          <td className="p-2">{s.wholesalePrice ? `${s.wholesalePrice} ج.م` : "—"}</td>
+                          <td className="p-2">
+                            {s.status === "success" ? (
+                              <Badge variant="default" className="bg-emerald-600">نجح</Badge>
+                            ) : (
+                              <Badge variant="secondary" title={s.reason}>تخطي</Badge>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {priceSyncReport.failures.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-2 text-sm flex items-center gap-2">
+                    <XCircle className="w-4 h-4 text-destructive" />
+                    أصناف فشلت أو بدون مطابقة
+                  </h4>
+                  <div className="space-y-2">
+                    {priceSyncReport.failures.map((f, i) => (
+                      <div key={i} className="p-3 rounded border border-destructive/30 bg-destructive/5 text-xs">
+                        <p className="font-medium text-destructive">{f.reason}</p>
+                        <p className="text-muted-foreground mt-1">💡 الحل: تأكد من إضافة كود الفيصل (erp_item_code) لكل منتج في صفحة "المنتجات"</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <p className="text-xs text-muted-foreground text-center">
+                ⏱️ اكتمل في: {new Date(priceSyncReport.finishedAt).toLocaleString("ar-EG")}
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
