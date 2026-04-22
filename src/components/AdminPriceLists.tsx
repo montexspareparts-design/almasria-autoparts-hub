@@ -65,6 +65,16 @@ const AdminPriceLists = () => {
   const [bulkAiProgress, setBulkAiProgress] = useState<{ current: number; total: number; currentTitle: string }>({ current: 0, total: 0, currentTitle: "" });
   const [bulkAiResults, setBulkAiResults] = useState<Array<{ title: string; linked: number; extracted: number; error?: string }>>([]);
 
+  // Verification dialog (post bulk AI)
+  const [verifyOpen, setVerifyOpen] = useState(false);
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [verifyData, setVerifyData] = useState<Array<{
+    listId: string;
+    listTitle: string;
+    totalLinked: number;
+    samples: Array<{ id: string; sku: string; name_ar: string }>;
+  }>>([]);
+
   // Upload report
   const [uploadReport, setUploadReport] = useState<UploadReportRow[] | null>(null);
   const [reportListTitle, setReportListTitle] = useState("");
@@ -761,6 +771,69 @@ const AdminPriceLists = () => {
       description: `تم ربط ${totalLinked} صنف عبر ${candidates.length} كشف${failedCount ? ` (${failedCount} فشل)` : ""}`,
     });
     setBulkAiRunning(false);
+
+    // Open verification dialog with sample SKUs from each linked list
+    const successful = candidates.filter((c, i) => !results[i]?.error && results[i]?.linked > 0);
+    if (successful.length > 0) {
+      await openVerificationFor(successful.map((c) => ({ id: c.id, title: c.title })));
+    }
+  };
+
+  const openVerificationFor = async (
+    items: Array<{ id: string; title: string }>
+  ) => {
+    setVerifyLoading(true);
+    setVerifyOpen(true);
+    setVerifyData([]);
+    const out: Array<{
+      listId: string;
+      listTitle: string;
+      totalLinked: number;
+      samples: Array<{ id: string; sku: string; name_ar: string }>;
+    }> = [];
+    for (const it of items) {
+      const { data, count } = await supabase
+        .from("price_list_products")
+        .select("product_id, products:product_id(id, sku, name_ar)", { count: "exact" })
+        .eq("price_list_id", it.id)
+        .limit(8) as any;
+      const samples = (data || [])
+        .map((r: any) => r.products)
+        .filter(Boolean) as Array<{ id: string; sku: string; name_ar: string }>;
+      out.push({
+        listId: it.id,
+        listTitle: it.title,
+        totalLinked: count ?? samples.length,
+        samples,
+      });
+      setVerifyData([...out]);
+    }
+    setVerifyLoading(false);
+  };
+
+  const removeSampleFromList = async (listId: string, productId: string) => {
+    await supabase
+      .from("price_list_products")
+      .delete()
+      .eq("price_list_id", listId)
+      .eq("product_id", productId);
+    setVerifyData((prev) =>
+      prev.map((d) =>
+        d.listId === listId
+          ? { ...d, samples: d.samples.filter((s) => s.id !== productId), totalLinked: Math.max(0, d.totalLinked - 1) }
+          : d
+      )
+    );
+    toast({ title: "تم حذف الصنف من الكشف" });
+  };
+
+  const clearListLinks = async (listId: string) => {
+    if (!confirm("سيتم إلغاء كل الأصناف المربوطة بهذا الكشف. متابعة؟")) return;
+    await supabase.from("price_list_products").delete().eq("price_list_id", listId);
+    setVerifyData((prev) =>
+      prev.map((d) => (d.listId === listId ? { ...d, samples: [], totalLinked: 0 } : d))
+    );
+    toast({ title: "تم إلغاء الربط لهذا الكشف" });
   };
 
   // Views report for a specific list
@@ -1082,6 +1155,26 @@ const AdminPriceLists = () => {
                 ))}
               </div>
             )}
+            {!bulkAiRunning && bulkAiResults.length > 0 && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-primary/40 text-primary hover:bg-primary/10"
+                onClick={() => {
+                  const successful = bulkAiResults
+                    .filter((r) => !r.error && r.linked > 0)
+                    .map((r) => {
+                      const list = lists.find((l) => l.title === r.title);
+                      return list ? { id: list.id, title: list.title } : null;
+                    })
+                    .filter(Boolean) as Array<{ id: string; title: string }>;
+                  if (successful.length > 0) openVerificationFor(successful);
+                }}
+              >
+                <Eye className="w-4 h-4 ml-1" />
+                مراجعة عينات SKU من النتائج
+              </Button>
+            )}
           </div>
         )}
 
@@ -1303,6 +1396,119 @@ const AdminPriceLists = () => {
               ))}
             </tbody>
           </table>
+        </div>
+      </DialogContent>
+    </Dialog>
+
+    {/* Verification Dialog: sample SKUs per linked price list */}
+    <Dialog open={verifyOpen} onOpenChange={setVerifyOpen}>
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <CheckCircle2 className="w-5 h-5 text-primary" />
+            مراجعة عينات الـ SKU المربوطة لكل كشف
+          </DialogTitle>
+        </DialogHeader>
+        <p className="text-xs text-muted-foreground -mt-2">
+          راجع عينة من الأصناف المربوطة في كل كشف. لو لقيت صنف غلط، اضغط ✕ لإزالته من الكشف. اضغط "اعتماد" لما تخلص.
+        </p>
+        {verifyLoading && verifyData.length === 0 ? (
+          <div className="flex justify-center py-10">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {verifyData.map((d) => (
+              <div key={d.listId} className="border border-border rounded-lg p-3 bg-muted/20">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <FileText className="w-4 h-4 text-primary shrink-0" />
+                    <span className="font-bold text-sm truncate">{d.listTitle}</span>
+                    <Badge variant="secondary" className="text-[10px]">
+                      {d.totalLinked} صنف
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-xs h-7"
+                      onClick={() => {
+                        const list = lists.find((l) => l.id === d.listId);
+                        if (list) {
+                          setVerifyOpen(false);
+                          setManagingList(list);
+                          fetchLinkedProducts(list.id);
+                        }
+                      }}
+                    >
+                      <Package className="w-3 h-3 ml-1" />
+                      إدارة كاملة
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-xs h-7 text-destructive hover:bg-destructive/10"
+                      onClick={() => clearListLinks(d.listId)}
+                    >
+                      <Trash2 className="w-3 h-3 ml-1" />
+                      إلغاء الكل
+                    </Button>
+                  </div>
+                </div>
+                {d.samples.length === 0 ? (
+                  <p className="text-xs text-muted-foreground py-2 text-center">لا توجد أصناف للعرض</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
+                    {d.samples.map((s) => (
+                      <div
+                        key={s.id}
+                        className="flex items-center justify-between gap-2 p-2 rounded bg-background border border-border text-xs"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-medium">{s.name_ar}</p>
+                          <p className="font-mono text-[10px] text-muted-foreground">{s.sku}</p>
+                        </div>
+                        <button
+                          onClick={() => removeSampleFromList(d.listId, s.id)}
+                          className="p-1 hover:bg-destructive/10 rounded shrink-0"
+                          title="حذف من الكشف"
+                        >
+                          <X className="w-3.5 h-3.5 text-destructive" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {d.totalLinked > d.samples.length && (
+                  <p className="text-[10px] text-muted-foreground mt-1.5">
+                    عرض {d.samples.length} من {d.totalLinked} — افتح "إدارة كاملة" لرؤية الباقي
+                  </p>
+                )}
+              </div>
+            ))}
+            {verifyLoading && verifyData.length > 0 && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Loader2 className="w-3 h-3 animate-spin" /> جاري تحميل المزيد...
+              </div>
+            )}
+          </div>
+        )}
+        <div className="flex justify-end gap-2 pt-2 border-t border-border">
+          <Button variant="outline" size="sm" onClick={() => setVerifyOpen(false)}>
+            إغلاق
+          </Button>
+          <Button
+            size="sm"
+            className="bg-primary text-primary-foreground"
+            onClick={() => {
+              setVerifyOpen(false);
+              toast({ title: "✅ تم اعتماد النتائج" });
+            }}
+          >
+            <CheckCircle2 className="w-4 h-4 ml-1" />
+            اعتماد النتائج
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
