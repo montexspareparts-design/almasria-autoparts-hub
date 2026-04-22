@@ -1021,6 +1021,15 @@ const AdminERPSync = () => {
                 )}
                 {syncing === "full_sync" ? "جاري المزامنة..." : "تشغيل المزامنة الشاملة الآن"}
               </Button>
+
+              <Button
+                variant="outline"
+                className="w-full gap-2 mt-2"
+                onClick={downloadLastRunReport}
+                disabled={!priceSyncReport && !stockSyncReport && !fullSyncReport}
+              >
+                📥 تنزيل تقرير آخر مزامنة (CSV) — يتضمن الأصناف غير المطابقة والأخطاء
+              </Button>
             </CardContent>
           </Card>
 
