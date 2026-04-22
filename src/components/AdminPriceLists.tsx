@@ -310,54 +310,110 @@ const AdminPriceLists = () => {
     toast({ title: "تم رفع الكشف ✓" });
     await notifyDealers(form.title);
 
-    // Link products from Excel
+    // Link products from Excel — and AUTO-CREATE missing ones
     if (newList && selectedExcel) {
       try {
         const excelRows = await extractSkusFromExcel(selectedExcel);
         const skuStrings = excelRows.map(r => r.sku);
-        // Build a price map from Excel: sku -> price
+        // Build maps from Excel: sku -> price/name (with normalized key)
         const priceMap = new Map<string, number | null>();
+        const nameMap = new Map<string, string | null>();
         for (const row of excelRows) {
+          const norm = row.sku.replace(/[-\s]/g, "").toUpperCase();
           priceMap.set(row.sku, row.price);
-          priceMap.set(row.sku.replace(/[-\s]/g, "").toUpperCase(), row.price);
+          priceMap.set(norm, row.price);
+          nameMap.set(row.sku, row.name);
+          nameMap.set(norm, row.name);
         }
 
         if (skuStrings.length > 0) {
-          // Get matching product IDs
           const batchSize = 50;
-          const matchedProducts: { id: string; sku: string }[] = [];
+          // Step 1: Find existing products (by sku OR erp_item_code, exact + normalized)
+          const matchedProducts: { id: string; sku: string; matchedKey: string }[] = [];
+          const matchedKeys = new Set<string>(); // excel keys (original) that found a match
 
           for (let i = 0; i < skuStrings.length; i += batchSize) {
             const batch = skuStrings.slice(i, i + batchSize);
-            const { data: products } = await supabase
-              .from("products")
-              .select("id, sku")
-              .eq("is_active", true)
-              .in("sku", batch);
-
-            if (products) {
-              matchedProducts.push(...products);
+            const { data: bySku } = await supabase
+              .from("products").select("id, sku").in("sku", batch);
+            if (bySku) {
+              for (const p of bySku) {
+                matchedProducts.push({ id: p.id, sku: p.sku, matchedKey: p.sku });
+                matchedKeys.add(p.sku);
+              }
+            }
+            const { data: byErp } = await supabase
+              .from("products").select("id, sku, erp_item_code").in("erp_item_code", batch);
+            if (byErp) {
+              for (const p of byErp) {
+                if (!matchedProducts.some(m => m.id === p.id)) {
+                  matchedProducts.push({ id: p.id, sku: p.sku, matchedKey: (p as any).erp_item_code });
+                  matchedKeys.add((p as any).erp_item_code);
+                }
+              }
             }
           }
 
           // Normalized matching
           const { data: allProducts } = await supabase
-            .from("products")
-            .select("id, sku")
-            .eq("is_active", true);
-
+            .from("products").select("id, sku, erp_item_code");
           if (allProducts) {
-            const normalizedExcelSkus = skuStrings.map(s => s.replace(/[-\s]/g, "").toUpperCase());
-            const matchedIds = new Set(matchedProducts.map(p => p.id));
+            const normExcel = new Map<string, string>();
+            skuStrings.forEach(s => normExcel.set(s.replace(/[-\s]/g, "").toUpperCase(), s));
             for (const product of allProducts) {
-              const normalizedDbSku = product.sku.replace(/[-\s]/g, "").toUpperCase();
-              if (normalizedExcelSkus.includes(normalizedDbSku) && !matchedIds.has(product.id)) {
-                matchedProducts.push(product);
+              if (matchedProducts.some(m => m.id === product.id)) continue;
+              for (const c of [product.sku, product.erp_item_code].filter(Boolean)) {
+                const norm = String(c).replace(/[-\s]/g, "").toUpperCase();
+                const original = normExcel.get(norm);
+                if (original) {
+                  matchedProducts.push({ id: product.id, sku: product.sku, matchedKey: original });
+                  matchedKeys.add(original);
+                  break;
+                }
               }
             }
           }
 
-          // Insert links with prices
+          // Step 2: AUTO-CREATE missing items via bulk_import_products RPC
+          const missing = excelRows.filter(r => !matchedKeys.has(r.sku));
+          let createdCount = 0;
+          if (missing.length > 0) {
+            const importItems = missing.map(r => ({
+              id: r.sku,
+              name: r.name || `صنف ${r.sku}`,
+              price: r.price ?? 0,
+              qty: 0,
+            }));
+            const { data: importRes, error: importErr } = await supabase
+              .rpc("bulk_import_products", { _items: importItems as any });
+            if (importErr) {
+              console.error("bulk_import error:", importErr);
+            } else if (importRes) {
+              const r = importRes as any;
+              createdCount = (r.imported || 0) + (r.updated || 0);
+            }
+
+            // Now fetch the newly-created products and add to matched list
+            const missingSkus = missing.map(m => m.sku);
+            for (let i = 0; i < missingSkus.length; i += batchSize) {
+              const batch = missingSkus.slice(i, i + batchSize);
+              const { data: newlyFound } = await supabase
+                .from("products").select("id, sku, erp_item_code")
+                .or(`sku.in.(${batch.map(s => `"${s}"`).join(",")}),erp_item_code.in.(${batch.map(s => `"${s}"`).join(",")})`);
+              if (newlyFound) {
+                for (const p of newlyFound) {
+                  if (!matchedProducts.some(m => m.id === p.id)) {
+                    const matchedKey = batch.find(b =>
+                      b === p.sku || b === (p as any).erp_item_code
+                    ) || p.sku;
+                    matchedProducts.push({ id: p.id, sku: p.sku, matchedKey });
+                  }
+                }
+              }
+            }
+          }
+
+          // Step 3: Link all matched products with prices
           const seenIds = new Set<string>();
           const uniqueProducts = matchedProducts.filter(p => {
             if (seenIds.has(p.id)) return false;
@@ -368,8 +424,8 @@ const AdminPriceLists = () => {
           if (uniqueProducts.length > 0) {
             for (let i = 0; i < uniqueProducts.length; i += batchSize) {
               const batch = uniqueProducts.slice(i, i + batchSize).map(product => {
-                const normalizedSku = product.sku.replace(/[-\s]/g, "").toUpperCase();
-                const price = priceMap.get(product.sku) ?? priceMap.get(normalizedSku) ?? null;
+                const norm = product.matchedKey.replace(/[-\s]/g, "").toUpperCase();
+                const price = priceMap.get(product.matchedKey) ?? priceMap.get(norm) ?? null;
                 return {
                   price_list_id: (newList as any).id,
                   product_id: product.id,
@@ -382,12 +438,15 @@ const AdminPriceLists = () => {
               });
             }
             const withPrices = uniqueProducts.filter(p => {
-              const ns = p.sku.replace(/[-\s]/g, "").toUpperCase();
-              return (priceMap.get(p.sku) ?? priceMap.get(ns)) != null;
+              const norm = p.matchedKey.replace(/[-\s]/g, "").toUpperCase();
+              return (priceMap.get(p.matchedKey) ?? priceMap.get(norm)) != null;
             }).length;
-            toast({ title: `✅ تم ربط ${uniqueProducts.length} صنف بالكشف (${withPrices} بسعر من الكشف)` });
+            toast({
+              title: `✅ تم ربط ${uniqueProducts.length} صنف بالكشف`,
+              description: `${createdCount} صنف جديد تمت إضافته للنظام • ${withPrices} بسعر من الكشف`,
+            });
           } else {
-            toast({ title: "⚠️ لم يتم مطابقة أي صنف", description: "تأكد من أن أرقام القطع في الملف مطابقة للمنتجات", variant: "destructive" });
+            toast({ title: "⚠️ لم يتم ربط أي صنف", variant: "destructive" });
           }
         }
       } catch (e) {
