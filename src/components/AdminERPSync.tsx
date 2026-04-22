@@ -107,6 +107,30 @@ const AdminERPSync = () => {
   } | null>(null);
   const [showStockReport, setShowStockReport] = useState(false);
 
+  // ─── Auto Sync state ───
+  const [autoSyncReport, setAutoSyncReport] = useState<{
+    started_at: string;
+    finished_at: string;
+    erp_total: number;
+    our_active_products: number;
+    sync: {
+      stock_updated: number;
+      retail_updated: number;
+      wholesale_updated: number;
+      stock_disabled: boolean;
+      price_disabled: boolean;
+    };
+    new_items: {
+      detected: number;
+      added: number;
+      failed: number;
+      threshold: number;
+      samples: Array<{ erp_id: string; name: string; qty: number; retailPrice: number; wholesalePrice: number; action?: string }>;
+      failed_samples: Array<{ erp_id: string; name: string; error: string }>;
+    };
+  } | null>(null);
+  const [autoSyncThreshold, setAutoSyncThreshold] = useState(10);
+
   // ─── Preview (Dry-Run) state ───
   const [previewLoading, setPreviewLoading] = useState<"prices" | "stock" | null>(null);
   const [pricePreview, setPricePreview] = useState<{
@@ -335,6 +359,27 @@ const AdminERPSync = () => {
       fetchData();
     } catch (err: any) {
       toast({ title: "خطأ في المزامنة", description: err.message, variant: "destructive" });
+    }
+    setSyncing(null);
+  };
+
+  const runAutoSync = async () => {
+    setSyncing("auto_sync");
+    setAutoSyncReport(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("erp-sync-outbound", {
+        body: { action: "auto_sync_full", data: { stock_threshold: autoSyncThreshold } },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "فشل التنفيذ");
+      setAutoSyncReport(data);
+      toast({
+        title: "اكتملت المزامنة التلقائية ✓",
+        description: `تم تحديث ${data.sync.stock_updated} رصيد و ${data.sync.retail_updated} سعر قطاعي • ${data.new_items.added} صنف جديد مضاف`,
+      });
+      fetchData();
+    } catch (err: any) {
+      toast({ title: "فشل المزامنة التلقائية", description: err.message, variant: "destructive" });
     }
     setSyncing(null);
   };
@@ -966,6 +1011,100 @@ const AdminERPSync = () => {
 
         {/* ─── SYNC ACTIONS ─── */}
         <TabsContent value="actions" className="space-y-4 mt-4">
+
+          {/* Auto Sync Card — Scheduled hourly + manual trigger */}
+          <Card className="border-2 border-primary/40 hover:border-primary/70 transition-colors bg-primary/5">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                  <RefreshCw className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-foreground">🤖 المزامنة التلقائية (سعر + رصيد + اكتشاف أصناف جديدة)</h3>
+                  <p className="text-xs text-muted-foreground">
+                    تعمل تلقائياً كل ساعة. تُحدّث الأسعار والأرصدة للأصناف المعروضة فقط، وتُضيف أي صنف أصلي برصيد أكبر من الحد المحدد.
+                  </p>
+                </div>
+                <Badge variant="outline" className="text-xs">⏰ كل ساعة</Badge>
+              </div>
+
+              <div className="flex items-end gap-2 mb-3">
+                <div className="flex-1">
+                  <label className="text-xs text-muted-foreground mb-1 block">الحد الأدنى للرصيد لاكتشاف صنف جديد</label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={autoSyncThreshold}
+                    onChange={(e) => setAutoSyncThreshold(Math.max(1, Number(e.target.value) || 10))}
+                    className="h-9"
+                  />
+                </div>
+                <Button
+                  className="gap-2"
+                  onClick={runAutoSync}
+                  disabled={syncing !== null}
+                >
+                  {syncing === "auto_sync" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+                  {syncing === "auto_sync" ? "جاري التنفيذ..." : "تشغيل الآن"}
+                </Button>
+              </div>
+
+              {autoSyncReport && (
+                <div className="mt-3 p-4 rounded-lg bg-muted/50 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground">📊 نتيجة آخر تنفيذ</span>
+                    <Button variant="ghost" size="sm" onClick={() => setAutoSyncReport(null)} className="h-6 px-2 text-xs">✕</Button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    <div className="bg-background rounded p-3 text-center border border-emerald-500/30">
+                      <p className="font-bold text-lg text-foreground">{autoSyncReport.sync.stock_updated}</p>
+                      <p className="text-muted-foreground">رصيد محدّث</p>
+                    </div>
+                    <div className="bg-background rounded p-3 text-center border border-amber-500/30">
+                      <p className="font-bold text-lg text-foreground">{autoSyncReport.sync.retail_updated}</p>
+                      <p className="text-muted-foreground">سعر قطاعي</p>
+                    </div>
+                    <div className="bg-background rounded p-3 text-center border border-blue-500/30">
+                      <p className="font-bold text-lg text-foreground">{autoSyncReport.sync.wholesale_updated}</p>
+                      <p className="text-muted-foreground">سعر جملة</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-background rounded-lg p-3 border border-primary/30">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-bold text-foreground">🆕 أصناف أصلية جديدة</span>
+                      <Badge variant="default" className="text-xs">
+                        {autoSyncReport.new_items.added} مُضاف من {autoSyncReport.new_items.detected} مكتشف
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      الحد المعتمد: رصيد &gt; {autoSyncReport.new_items.threshold}
+                    </p>
+                    {autoSyncReport.new_items.samples.length > 0 ? (
+                      <div className="max-h-48 overflow-y-auto space-y-1">
+                        {autoSyncReport.new_items.samples.map((s, i) => (
+                          <div key={i} className="flex items-center justify-between gap-2 text-xs p-2 rounded bg-muted/40">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-foreground truncate">{s.name}</p>
+                              <p className="text-muted-foreground">كود: {s.erp_id} • سعر: {s.retailPrice} ج.م</p>
+                            </div>
+                            <Badge variant="secondary" className="text-[10px] shrink-0">رصيد: {s.qty}</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground text-center py-2">لا توجد أصناف جديدة هذه المرة</p>
+                    )}
+                  </div>
+
+                  <p className="text-[10px] text-muted-foreground text-center">
+                    آخر تنفيذ: {new Date(autoSyncReport.finished_at).toLocaleString("ar-EG")}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Full Sync Card - Prices + Stock together */}
           <Card className="border-2 border-emerald-500/40 hover:border-emerald-500/70 transition-colors bg-emerald-500/5">
             <CardContent className="p-5">
