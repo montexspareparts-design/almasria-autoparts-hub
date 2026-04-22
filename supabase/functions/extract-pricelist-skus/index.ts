@@ -16,10 +16,19 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { price_list_id } = body;
     // Confidence threshold: 0-100. 100 = exact match only.
-    const min_confidence = Math.max(
-      0,
-      Math.min(100, Number(body.min_confidence ?? 100))
+    // Back-compat: `min_confidence` applies to both SKU & ERP unless overridden.
+    const clamp = (v: number) => Math.max(0, Math.min(100, v));
+    const min_confidence = clamp(Number(body.min_confidence ?? 100));
+    // Per-field thresholds — fall back to the global one when not provided.
+    const min_confidence_sku = clamp(
+      Number(body.min_confidence_sku ?? body.min_confidence ?? 100)
     );
+    const min_confidence_erp = clamp(
+      Number(body.min_confidence_erp ?? body.min_confidence ?? 100)
+    );
+    // The "gate" for the exact-vs-fuzzy branch is the *lowest* of the two
+    // (if either side allows fuzzy matching we must run the fuzzy path).
+    const effective_min_confidence = Math.min(min_confidence_sku, min_confidence_erp);
     // dry_run: do NOT delete/insert price_list_products — only return diagnostics.
     const dry_run: boolean = Boolean(body.dry_run ?? false);
     // include_diagnostics: return top candidates per extracted code so the admin
@@ -153,6 +162,8 @@ Deno.serve(async (req) => {
         linked_count: 0,
         unmatched: [],
         min_confidence,
+        min_confidence_sku,
+        min_confidence_erp,
         message: "لم يتم استخراج أي أكواد من الـ PDF",
       });
     }
@@ -180,7 +191,7 @@ Deno.serve(async (req) => {
       candidates: Candidate[];
     }> = [];
 
-    if (min_confidence >= 100) {
+    if (effective_min_confidence >= 100) {
       // Exact match path (fast, batched OR queries)
       const chunkSize = 200;
       const exactByCode = new Map<string, Candidate[]>();
@@ -257,9 +268,24 @@ Deno.serve(async (req) => {
         for (const c of candidates) {
           const s1 = c.nSku ? similarity(code, c.nSku) : 0;
           const s2 = c.nErp ? similarity(code, c.nErp) : 0;
-          const candScore = Math.max(s1, s2);
-          if (candScore <= 0) continue;
-          const candField: "sku" | "erp" = s1 >= s2 ? "sku" : "erp";
+          // Each field is gated by its OWN threshold. A candidate is only
+          // considered for that field if its score meets that field's bar.
+          const sku_ok = c.nSku && s1 >= min_confidence_sku;
+          const erp_ok = c.nErp && s2 >= min_confidence_erp;
+          if (!sku_ok && !erp_ok) continue;
+          // Pick the field with the higher *eligible* score; tie → prefer SKU.
+          let candScore: number;
+          let candField: "sku" | "erp";
+          if (sku_ok && erp_ok) {
+            candField = s1 >= s2 ? "sku" : "erp";
+            candScore = Math.max(s1, s2);
+          } else if (sku_ok) {
+            candField = "sku";
+            candScore = s1;
+          } else {
+            candField = "erp";
+            candScore = s2;
+          }
           scored.push({
             product_id: c.id,
             sku: c.sku,
@@ -276,7 +302,8 @@ Deno.serve(async (req) => {
         });
         const top = scored.slice(0, 5);
         const best = scored[0] || null;
-        const passes = !!(best && best.score >= min_confidence);
+        // Already gated above — any candidate in `scored` passes its field's threshold.
+        const passes = !!best;
         if (passes && best) {
           matchedProducts.set(code, {
             id: best.product_id,
@@ -287,13 +314,15 @@ Deno.serve(async (req) => {
         }
         if (include_diagnostics) {
           let reason: string;
-          if (!best) reason = "لا يوجد مرشحين";
-          else if (!passes) reason = `أعلى score (${best.score}) أقل من الحد الأدنى (${min_confidence})`;
-          else {
+          if (!best) {
+            reason = `لا يوجد مرشح يتجاوز الحد الأدنى (SKU ≥ ${min_confidence_sku}% أو ERP ≥ ${min_confidence_erp}%)`;
+          } else {
             const tied = scored.filter((s) => s.score === best.score);
+            const fieldLabel = best.matchedField === "sku" ? "SKU" : "ERP code";
+            const fieldThreshold = best.matchedField === "sku" ? min_confidence_sku : min_confidence_erp;
             reason = tied.length > 1
-              ? `${tied.length} مرشحين بنفس الـ score (${best.score}) — تم تفضيل التطابق على ${best.matchedField === "sku" ? "SKU" : "ERP code"}`
-              : `أفضل مرشح بـ score ${best.score} على ${best.matchedField === "sku" ? "SKU" : "ERP code"}`;
+              ? `${tied.length} مرشحين بنفس الـ score (${best.score}) — تم تفضيل التطابق على ${fieldLabel} (الحد ${fieldThreshold}%)`
+              : `أفضل مرشح بـ score ${best.score} على ${fieldLabel} (الحد ${fieldThreshold}%)`;
           }
           diagnostics.push({
             code,
@@ -344,6 +373,8 @@ Deno.serve(async (req) => {
       linked_count: linked,
       unmatched,
       min_confidence,
+      min_confidence_sku,
+      min_confidence_erp,
       avg_score,
       sample_extracted: cleaned.slice(0, 20),
       ...(include_diagnostics ? { diagnostics } : {}),

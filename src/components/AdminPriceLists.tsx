@@ -68,7 +68,11 @@ const AdminPriceLists = () => {
 
   // Calibration: minimum confidence (0-100) for linking SKUs to products.
   // 100 = exact match only. Lower = allow fuzzy matches.
+  // Per-field thresholds: SKU and ERP code can be tuned independently
+  // because price lists often use one type of code more reliably than the other.
   const [minConfidence, setMinConfidence] = useState<number>(100);
+  const [minConfidenceSku, setMinConfidenceSku] = useState<number>(100);
+  const [minConfidenceErp, setMinConfidenceErp] = useState<number>(100);
 
   // Matching log (dry-run preview) — top candidates per extracted SKU + reason.
   type MatchCandidate = {
@@ -746,7 +750,7 @@ const AdminPriceLists = () => {
     setAiResult(null);
     try {
       const { data, error } = await supabase.functions.invoke("extract-pricelist-skus", {
-        body: { price_list_id: managingList.id, min_confidence: minConfidence },
+        body: { price_list_id: managingList.id, min_confidence: minConfidence, min_confidence_sku: minConfidenceSku, min_confidence_erp: minConfidenceErp },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
@@ -777,6 +781,8 @@ const AdminPriceLists = () => {
         body: {
           price_list_id: managingList.id,
           min_confidence: minConfidence,
+          min_confidence_sku: minConfidenceSku,
+          min_confidence_erp: minConfidenceErp,
           dry_run: true,
           include_diagnostics: true,
         },
@@ -812,7 +818,7 @@ const AdminPriceLists = () => {
     setMatchLogApplying(true);
     try {
       const { data, error } = await supabase.functions.invoke("extract-pricelist-skus", {
-        body: { price_list_id: managingList.id, min_confidence: minConfidence },
+        body: { price_list_id: managingList.id, min_confidence: minConfidence, min_confidence_sku: minConfidenceSku, min_confidence_erp: minConfidenceErp },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
@@ -851,7 +857,7 @@ const AdminPriceLists = () => {
       setBulkAiProgress({ current: i + 1, total: candidates.length, currentTitle: list.title });
       try {
         const { data, error } = await supabase.functions.invoke("extract-pricelist-skus", {
-          body: { price_list_id: list.id, min_confidence: minConfidence },
+          body: { price_list_id: list.id, min_confidence: minConfidence, min_confidence_sku: minConfidenceSku, min_confidence_erp: minConfidenceErp },
         });
         if (error) throw error;
         if ((data as any)?.error) throw new Error((data as any).error);
@@ -1253,7 +1259,13 @@ const AdminPriceLists = () => {
             <span className="text-[10px] text-muted-foreground shrink-0">50%</span>
             <Slider
               value={[minConfidence]}
-              onValueChange={(v) => setMinConfidence(v[0] ?? 100)}
+              onValueChange={(v) => {
+                const next = v[0] ?? 100;
+                setMinConfidence(next);
+                // Keep per-field sliders in sync until the user tweaks them individually.
+                setMinConfidenceSku(next);
+                setMinConfidenceErp(next);
+              }}
               min={50}
               max={100}
               step={5}
@@ -1267,6 +1279,65 @@ const AdminPriceLists = () => {
             <span className="font-semibold text-foreground"> 100% = مطابقة تامة فقط</span> (الأكثر أماناً، قد يفوّت أكواد بها فروقات بسيطة).
             القيم الأقل تسمح بمطابقة تقريبية (Levenshtein) لاستيعاب الأخطاء الإملائية أو فروقات التنسيق.
           </p>
+
+          {/* Per-field thresholds — fine-tune SKU vs ERP independently */}
+          <div className="pt-2 mt-1 border-t border-border space-y-2">
+            <div className="text-[11px] font-semibold text-foreground">
+              ضبط دقيق حسب نوع الكود
+              <span className="text-[10px] font-normal text-muted-foreground mr-1">
+                (مفيد لو الكشف فيه نوع كود أدق من التاني)
+              </span>
+            </div>
+
+            {/* SKU threshold */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-medium text-foreground">SKU (رقم القطعة)</span>
+                <Badge variant={minConfidenceSku >= 100 ? "default" : "secondary"} className="text-[10px]">
+                  {minConfidenceSku}%
+                </Badge>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-muted-foreground shrink-0">50%</span>
+                <Slider
+                  value={[minConfidenceSku]}
+                  onValueChange={(v) => setMinConfidenceSku(v[0] ?? 100)}
+                  min={50}
+                  max={100}
+                  step={5}
+                  disabled={bulkAiRunning || aiLinking}
+                  className="flex-1"
+                />
+                <span className="text-[10px] text-muted-foreground shrink-0">100%</span>
+              </div>
+            </div>
+
+            {/* ERP threshold */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-medium text-foreground">ERP (كود الفيصل)</span>
+                <Badge variant={minConfidenceErp >= 100 ? "default" : "secondary"} className="text-[10px]">
+                  {minConfidenceErp}%
+                </Badge>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-muted-foreground shrink-0">50%</span>
+                <Slider
+                  value={[minConfidenceErp]}
+                  onValueChange={(v) => setMinConfidenceErp(v[0] ?? 100)}
+                  min={50}
+                  max={100}
+                  step={5}
+                  disabled={bulkAiRunning || aiLinking}
+                  className="flex-1"
+                />
+                <span className="text-[10px] text-muted-foreground shrink-0">100%</span>
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              مثال: لو أكواد الـ SKU في الكشف نظيفة، خلّيها 100%. ولو أكواد الفيصل فيها فروقات تنسيق، نزّلها لـ 85% للسماح بمطابقة مرنة عليها فقط.
+            </p>
+          </div>
         </div>
 
         {/* Bulk AI re-link progress and results */}
