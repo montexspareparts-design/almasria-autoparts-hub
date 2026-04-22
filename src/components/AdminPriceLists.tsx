@@ -1038,6 +1038,102 @@ const AdminPriceLists = () => {
         )}
       </CardContent>
     </Card>
+
+    <Dialog open={!!uploadReport} onOpenChange={(open) => { if (!open) setUploadReport(null); }}>
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <CheckCircle2 className="w-5 h-5 text-primary" />
+            ملخص رفع الكشف: {reportListTitle}
+          </DialogTitle>
+        </DialogHeader>
+
+        {/* Summary cards */}
+        <div className="grid grid-cols-4 gap-2">
+          <button
+            onClick={() => setReportFilter("all")}
+            className={`p-3 rounded-lg border text-center transition-colors ${reportFilter === "all" ? "border-primary bg-primary/10" : "border-border hover:bg-muted/50"}`}
+          >
+            <p className="text-2xl font-bold text-foreground">{reportCounts.total}</p>
+            <p className="text-xs text-muted-foreground">الإجمالي</p>
+          </button>
+          <button
+            onClick={() => setReportFilter("linked")}
+            className={`p-3 rounded-lg border text-center transition-colors ${reportFilter === "linked" ? "border-primary bg-primary/10" : "border-border hover:bg-muted/50"}`}
+          >
+            <p className="text-2xl font-bold text-emerald-600 flex items-center justify-center gap-1">
+              <LinkIcon className="w-4 h-4" />
+              {reportCounts.linked}
+            </p>
+            <p className="text-xs text-muted-foreground">تم ربطها</p>
+          </button>
+          <button
+            onClick={() => setReportFilter("created")}
+            className={`p-3 rounded-lg border text-center transition-colors ${reportFilter === "created" ? "border-primary bg-primary/10" : "border-border hover:bg-muted/50"}`}
+          >
+            <p className="text-2xl font-bold text-blue-600 flex items-center justify-center gap-1">
+              <PlusCircle className="w-4 h-4" />
+              {reportCounts.created}
+            </p>
+            <p className="text-xs text-muted-foreground">تم إنشاؤها</p>
+          </button>
+          <button
+            onClick={() => setReportFilter("failed")}
+            className={`p-3 rounded-lg border text-center transition-colors ${reportFilter === "failed" ? "border-primary bg-primary/10" : "border-border hover:bg-muted/50"}`}
+          >
+            <p className="text-2xl font-bold text-destructive flex items-center justify-center gap-1">
+              <AlertCircle className="w-4 h-4" />
+              {reportCounts.failed}
+            </p>
+            <p className="text-xs text-muted-foreground">فشل ربطها</p>
+          </button>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-muted-foreground">
+            عرض {filteredReport.length} من {reportCounts.total} صنف
+          </p>
+          <Button size="sm" variant="outline" onClick={downloadReportCsv} className="gap-1.5">
+            <Download className="w-3.5 h-3.5" />
+            تنزيل CSV
+          </Button>
+        </div>
+
+        {/* Table */}
+        <div className="flex-1 overflow-auto border border-border rounded-lg">
+          <table className="w-full text-xs">
+            <thead className="bg-muted/50 sticky top-0">
+              <tr>
+                <th className="text-right p-2 font-bold">الحالة</th>
+                <th className="text-right p-2 font-bold">رقم القطعة</th>
+                <th className="text-right p-2 font-bold">الاسم</th>
+                <th className="text-right p-2 font-bold">السعر</th>
+                <th className="text-right p-2 font-bold">السبب</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {filteredReport.length === 0 ? (
+                <tr><td colSpan={5} className="text-center text-muted-foreground py-6">لا توجد عناصر في هذه الفئة</td></tr>
+              ) : filteredReport.map((r, i) => (
+                <tr key={i} className="hover:bg-muted/30">
+                  <td className="p-2">
+                    {r.status === "linked" && <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px]">تم الربط</Badge>}
+                    {r.status === "created" && <Badge className="bg-blue-600 hover:bg-blue-700 text-white text-[10px]">إنشاء وربط</Badge>}
+                    {r.status === "failed" && <Badge variant="destructive" className="text-[10px]">فشل</Badge>}
+                  </td>
+                  <td className="p-2 font-mono">{r.sku}</td>
+                  <td className="p-2 truncate max-w-[200px]">{r.name || "—"}</td>
+                  <td className="p-2 font-mono">{r.price ?? "—"}</td>
+                  <td className="p-2 text-destructive">{r.reason || "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };
 
