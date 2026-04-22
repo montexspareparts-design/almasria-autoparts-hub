@@ -723,7 +723,45 @@ const AdminPriceLists = () => {
     }
   };
 
-  if (loading) return <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
+  const linkAllPriceListsFromPdfWithAI = async () => {
+    const candidates = lists.filter((l) => l.file_url);
+    if (candidates.length === 0) {
+      toast({ title: "لا توجد كشوفات بملفات PDF للتحليل", variant: "destructive" });
+      return;
+    }
+    if (!confirm(`سيتم تحليل ${candidates.length} كشف بالـ AI واستخراج أكواد الأصناف من ملفات PDF وربطها (سيتم استبدال الأصناف الحالية في كل كشف). هذه العملية قد تستغرق عدة دقائق. متابعة؟`)) return;
+
+    setBulkAiRunning(true);
+    setBulkAiResults([]);
+    setBulkAiProgress({ current: 0, total: candidates.length, currentTitle: "" });
+
+    const results: Array<{ title: string; linked: number; extracted: number; error?: string }> = [];
+
+    for (let i = 0; i < candidates.length; i++) {
+      const list = candidates[i];
+      setBulkAiProgress({ current: i + 1, total: candidates.length, currentTitle: list.title });
+      try {
+        const { data, error } = await supabase.functions.invoke("extract-pricelist-skus", {
+          body: { price_list_id: list.id },
+        });
+        if (error) throw error;
+        if ((data as any)?.error) throw new Error((data as any).error);
+        const res = data as { extracted_count: number; linked_count: number };
+        results.push({ title: list.title, linked: res.linked_count, extracted: res.extracted_count });
+      } catch (e: any) {
+        results.push({ title: list.title, linked: 0, extracted: 0, error: e.message || "خطأ غير معروف" });
+      }
+      setBulkAiResults([...results]);
+    }
+
+    const totalLinked = results.reduce((s, r) => s + r.linked, 0);
+    const failedCount = results.filter((r) => r.error).length;
+    toast({
+      title: "✅ اكتمل التحليل الجماعي",
+      description: `تم ربط ${totalLinked} صنف عبر ${candidates.length} كشف${failedCount ? ` (${failedCount} فشل)` : ""}`,
+    });
+    setBulkAiRunning(false);
+  };
 
   // Views report for a specific list
   if (viewingReport) {
