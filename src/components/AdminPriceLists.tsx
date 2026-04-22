@@ -6,9 +6,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, FileText, Trash2, Eye, EyeOff, Plus, Search, X, Package, Table2, CheckCircle2, Users, Download, AlertCircle, PlusCircle, LinkIcon, Sparkles } from "lucide-react";
+import { Loader2, Upload, FileText, Trash2, Eye, EyeOff, Plus, Search, X, Package, Table2, CheckCircle2, Users, Download, AlertCircle, PlusCircle, LinkIcon, Sparkles, Target } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Slider } from "@/components/ui/slider";
 
 type UploadReportRow = {
   sku: string;
