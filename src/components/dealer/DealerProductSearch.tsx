@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useProductListing } from "@/hooks/useProductListing";
 import ProductListingSection from "@/components/ProductListingSection";
 import CategoryBrowseSlider from "@/components/CategoryBrowseSlider";
+import DealerBestSellers from "@/components/dealer/DealerBestSellers";
 import { toast } from "@/hooks/use-toast";
 import { useDealerCart } from "@/hooks/useDealerCart";
 import { ShoppingCart, ArrowLeft } from "lucide-react";
