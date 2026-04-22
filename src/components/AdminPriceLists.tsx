@@ -784,19 +784,29 @@ const AdminPriceLists = () => {
           <div className="flex flex-wrap gap-2 p-3 rounded-lg border border-primary/20 bg-primary/5">
             <Button
               size="sm"
+              onClick={linkFromPdfWithAI}
+              disabled={aiLinking || bulkLinking}
+              className="gap-1.5 text-xs bg-gradient-to-r from-primary to-accent text-primary-foreground"
+            >
+              {aiLinking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+              ربط من ملف الـ PDF تلقائياً (AI)
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
               onClick={linkAllActiveProducts}
-              disabled={bulkLinking}
+              disabled={bulkLinking || aiLinking}
               className="gap-1.5 text-xs"
             >
               {bulkLinking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-              ربط جميع الأصناف النشطة بالكشف
+              ربط كل الأصناف النشطة
             </Button>
             {linkedProducts.length > 0 && (
               <Button
                 size="sm"
                 variant="outline"
                 onClick={unlinkAllProducts}
-                disabled={bulkLinking}
+                disabled={bulkLinking || aiLinking}
                 className="gap-1.5 text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -804,9 +814,46 @@ const AdminPriceLists = () => {
               </Button>
             )}
             <p className="text-[10px] text-muted-foreground self-center mr-auto">
-              💡 استخدم الزر لعرض كل الأصناف للتاجر تحت معاينة الـ PDF
+              💡 الذكاء الصناعي يستخرج أكواد الأصناف من الـ PDF ويربط الموجود منها تلقائياً
             </p>
           </div>
+
+          {/* AI extraction result */}
+          {aiResult && (
+            <div className="p-3 rounded-lg border border-primary/30 bg-primary/5 space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  نتيجة استخراج AI
+                </p>
+                <button onClick={() => setAiResult(null)} className="text-muted-foreground hover:text-foreground">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center text-[11px]">
+                <div className="p-2 rounded bg-background border border-border">
+                  <p className="text-muted-foreground">مستخرج</p>
+                  <p className="font-bold text-foreground">{aiResult.extracted_count}</p>
+                </div>
+                <div className="p-2 rounded bg-background border border-border">
+                  <p className="text-muted-foreground">تم ربطه</p>
+                  <p className="font-bold text-primary">{aiResult.linked_count}</p>
+                </div>
+                <div className="p-2 rounded bg-background border border-border">
+                  <p className="text-muted-foreground">بدون مطابقة</p>
+                  <p className="font-bold text-destructive">{aiResult.unmatched.length}</p>
+                </div>
+              </div>
+              {aiResult.unmatched.length > 0 && (
+                <details className="text-[10px] text-muted-foreground">
+                  <summary className="cursor-pointer hover:text-foreground">عرض الأكواد بدون مطابقة ({aiResult.unmatched.length})</summary>
+                  <div className="mt-1.5 p-2 bg-background rounded font-mono max-h-32 overflow-y-auto break-all" dir="ltr">
+                    {aiResult.unmatched.join(", ")}
+                  </div>
+                </details>
+              )}
+            </div>
+          )}
 
           {/* Search to add */}
           <div className="relative">
