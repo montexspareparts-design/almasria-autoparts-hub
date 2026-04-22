@@ -97,7 +97,13 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
     staleTime: 5 * 60 * 1000,
   });
 
-  const handleCategoryClick = (cat: { id: string; slug: string; name_ar: string }) => {
+  const handleCategoryClick = (
+    e: React.MouseEvent<HTMLButtonElement>,
+    cat: { id: string; slug: string; name_ar: string }
+  ) => {
+    // Prevent any unintended default/bubbling behavior (e.g. parent links/forms)
+    e.preventDefault();
+    e.stopPropagation();
     if (isDragging) return;
 
     if (onCategorySelect) {
