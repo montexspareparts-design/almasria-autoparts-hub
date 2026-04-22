@@ -571,14 +571,17 @@ const AdminLeads = () => {
           description: serverMsg || "فشل إعادة تعيين كلمة المرور",
           variant: "destructive",
         });
+        await logAttempt({ type: "reset_password", status: "failure", lead, errorMessage: serverMsg || "فشل إعادة تعيين كلمة المرور" });
       } else {
         setCredentials({ username: lead.phone, password: newPassword, phone: lead.phone });
         setLeadCredentials(prev => ({ ...prev, [lead.id]: { username: cleanPhone, password: newPassword } }));
         toast({ title: "تم", description: "تم إعادة تعيين كلمة المرور بنجاح وحفظها بشكل دائم" });
+        await logAttempt({ type: "reset_password", status: "success", lead });
       }
     } catch (e: any) {
       console.error("resetPassword error:", e);
       toast({ title: "خطأ", description: e?.message || "حدث خطأ غير متوقع", variant: "destructive" });
+      await logAttempt({ type: "reset_password", status: "failure", lead, errorMessage: e?.message || "Unexpected error" });
     }
     setRegistering(null);
   };
