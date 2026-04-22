@@ -58,6 +58,11 @@ const AdminPriceLists = () => {
   const [loadingLinked, setLoadingLinked] = useState(false);
   const [bulkLinking, setBulkLinking] = useState(false);
 
+  // Upload report
+  const [uploadReport, setUploadReport] = useState<UploadReportRow[] | null>(null);
+  const [reportListTitle, setReportListTitle] = useState("");
+  const [reportFilter, setReportFilter] = useState<"all" | "linked" | "created" | "failed">("all");
+
   // Views report
   const [viewingReport, setViewingReport] = useState<PriceListRow | null>(null);
   const [viewsData, setViewsData] = useState<{ user_name: string; phone: string; viewed_at: string }[]>([]);
