@@ -410,21 +410,49 @@ Deno.serve(async (req) => {
               });
             }
 
-            const { data: bulkResult, error: bulkErr } = await supabase.rpc("bulk_sync_stock", {
-              _items: bulkItems,
-            });
-            if (bulkErr) throw new Error(`Bulk stock sync failed: ${bulkErr.message}`);
+            // ── DRY-RUN: compute stock diffs without writing ──
+            if (isDryRun) {
+              const changes: Array<{ erp_id: string; name: string; old_qty: number; new_qty: number; delta: number; status: string }> = [];
+              for (const it of bulkItems) {
+                const prod = ourByCode.get(it.id);
+                if (!prod) continue;
+                const oldQty = Number(prod.stock_quantity || 0);
+                const newQty = it.qty;
+                if (oldQty === newQty) continue;
+                let status = newQty > oldQty ? "increase" : "decrease";
+                if (oldQty > 0 && newQty === 0) status = "out_of_stock";
+                else if (oldQty === 0 && newQty > 0) status = "back_in_stock";
+                changes.push({ erp_id: it.id, name: prod.name_ar || "", old_qty: oldQty, new_qty: newQty, delta: newQty - oldQty, status });
+              }
+              changes.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+              result = {
+                success: true, dry_run: true,
+                erp_total: stockMap.size, our_products: ourProducts.length,
+                matched: bulkItems.length, with_positive_stock: itemsWithPositiveQty.length,
+                changes_count: changes.length,
+                increases: changes.filter(c => c.status === "increase").length,
+                decreases: changes.filter(c => c.status === "decrease").length,
+                back_in_stock: changes.filter(c => c.status === "back_in_stock").length,
+                out_of_stock: changes.filter(c => c.status === "out_of_stock").length,
+                changes: changes.slice(0, 200),
+              };
+            } else {
+              const { data: bulkResult, error: bulkErr } = await supabase.rpc("bulk_sync_stock", {
+                _items: bulkItems,
+              });
+              if (bulkErr) throw new Error(`Bulk stock sync failed: ${bulkErr.message}`);
 
-            result = {
-              success: true,
-              updated: bulkResult?.updated || 0,
-              total: bulkItems.length,
-              erp_total: stockMap.size,
-              our_products: ourProducts.length,
-              matched: bulkItems.length,
-              with_positive_stock: itemsWithPositiveQty.length,
-              sample: bulkItems.filter(i => i.qty > 0).slice(0, 5),
-            };
+              result = {
+                success: true,
+                updated: bulkResult?.updated || 0,
+                total: bulkItems.length,
+                erp_total: stockMap.size,
+                our_products: ourProducts.length,
+                matched: bulkItems.length,
+                with_positive_stock: itemsWithPositiveQty.length,
+                sample: bulkItems.filter(i => i.qty > 0).slice(0, 5),
+              };
+            }
           } else {
             // ── Prices: /products now returns id + retailPrice + wholesaleprice directly ──
             const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
