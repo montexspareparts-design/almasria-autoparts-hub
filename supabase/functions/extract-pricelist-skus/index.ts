@@ -1,5 +1,6 @@
 // Extract SKUs from a price list PDF using Lovable AI (Gemini multimodal)
 // then match them to existing products and link to the price list.
+// Supports a `min_confidence` threshold (0-100) for fuzzy matching.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -12,7 +13,15 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { price_list_id } = await req.json();
+    const body = await req.json();
+    const { price_list_id } = body;
+    // Confidence threshold: 0-100. Default 80 = strict (exact or near-exact).
+    // 100 = exact match only. Lower values allow fuzzy matches.
+    const min_confidence = Math.max(
+      0,
+      Math.min(100, Number(body.min_confidence ?? 100))
+    );
+
     if (!price_list_id) {
       return json({ error: "price_list_id is required" }, 400);
     }
@@ -137,30 +146,62 @@ Deno.serve(async (req) => {
         matched_count: 0,
         linked_count: 0,
         unmatched: [],
+        min_confidence,
         message: "لم يتم استخراج أي أكواد من الـ PDF",
       });
     }
 
-    // 4) Match to products by sku OR erp_item_code (case-insensitive)
-    // Pull all candidate products in chunks
-    const matchedProducts = new Map<string, { id: string; sku: string }>(); // key: normalized code
-    const chunkSize = 200;
-    for (let i = 0; i < cleaned.length; i += chunkSize) {
-      const chunk = cleaned.slice(i, i + chunkSize);
-      // Build OR filter for sku and erp_item_code
-      const orParts = chunk
-        .flatMap((c) => [`sku.ilike.${c}`, `erp_item_code.ilike.${c}`])
-        .join(",");
-      const { data: prods } = await admin
+    // 4) Match to products
+    // - At 100% confidence → exact (case-insensitive) match against sku OR erp_item_code.
+    // - Below 100% → allow fuzzy match using normalized Levenshtein similarity.
+    const matchedProducts = new Map<string, { id: string; sku: string; score: number }>();
+
+    if (min_confidence >= 100) {
+      // Exact match path (fast, batched OR queries)
+      const chunkSize = 200;
+      for (let i = 0; i < cleaned.length; i += chunkSize) {
+        const chunk = cleaned.slice(i, i + chunkSize);
+        const orParts = chunk
+          .flatMap((c) => [`sku.ilike.${c}`, `erp_item_code.ilike.${c}`])
+          .join(",");
+        const { data: prods } = await admin
+          .from("products")
+          .select("id, sku, erp_item_code")
+          .or(orParts);
+        (prods || []).forEach((p: any) => {
+          const sk = norm(p.sku);
+          const er = norm(p.erp_item_code || "");
+          if (chunk.includes(sk)) matchedProducts.set(sk, { id: p.id, sku: p.sku, score: 100 });
+          if (chunk.includes(er)) matchedProducts.set(er, { id: p.id, sku: p.sku, score: 100 });
+        });
+      }
+    } else {
+      // Fuzzy path: pull all active products once, score each extracted code
+      const { data: allProds } = await admin
         .from("products")
         .select("id, sku, erp_item_code")
-        .or(orParts);
-      (prods || []).forEach((p: any) => {
-        const sk = norm(p.sku);
-        const er = norm(p.erp_item_code || "");
-        if (chunk.includes(sk)) matchedProducts.set(sk, { id: p.id, sku: p.sku });
-        if (chunk.includes(er)) matchedProducts.set(er, { id: p.id, sku: p.sku });
-      });
+        .eq("is_active", true);
+      const candidates = (allProds || []).map((p: any) => ({
+        id: p.id,
+        sku: p.sku,
+        nSku: norm(p.sku),
+        nErp: norm(p.erp_item_code || ""),
+      }));
+      for (const code of cleaned) {
+        let best: { id: string; sku: string; score: number } | null = null;
+        for (const c of candidates) {
+          const s1 = c.nSku ? similarity(code, c.nSku) : 0;
+          const s2 = c.nErp ? similarity(code, c.nErp) : 0;
+          const score = Math.max(s1, s2);
+          if (!best || score > best.score) {
+            best = { id: c.id, sku: c.sku, score };
+          }
+          if (score === 100) break;
+        }
+        if (best && best.score >= min_confidence) {
+          matchedProducts.set(code, best);
+        }
+      }
     }
 
     const unmatched = cleaned.filter((c) => !matchedProducts.has(c));
@@ -185,12 +226,20 @@ Deno.serve(async (req) => {
       linked = count ?? rows.length;
     }
 
+    // Compute average match score for transparency
+    const scores = Array.from(matchedProducts.values()).map((m) => m.score);
+    const avg_score = scores.length
+      ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+      : 0;
+
     return json({
       success: true,
       extracted_count: cleaned.length,
       matched_count: productIds.length,
       linked_count: linked,
       unmatched,
+      min_confidence,
+      avg_score,
       sample_extracted: cleaned.slice(0, 20),
     });
   } catch (e) {
@@ -216,4 +265,32 @@ function bytesToBase64(bytes: Uint8Array): string {
     );
   }
   return btoa(binary);
+}
+
+// Levenshtein-based similarity score (0-100). 100 = identical.
+function similarity(a: string, b: string): number {
+  if (a === b) return 100;
+  if (!a.length || !b.length) return 0;
+  const dist = levenshtein(a, b);
+  const maxLen = Math.max(a.length, b.length);
+  return Math.round(((maxLen - dist) / maxLen) * 100);
+}
+
+function levenshtein(a: string, b: string): number {
+  const m = a.length;
+  const n = b.length;
+  if (m === 0) return n;
+  if (n === 0) return m;
+  let prev = new Array(n + 1);
+  let curr = new Array(n + 1);
+  for (let j = 0; j <= n; j++) prev[j] = j;
+  for (let i = 1; i <= m; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= n; j++) {
+      const cost = a.charCodeAt(i - 1) === b.charCodeAt(j - 1) ? 0 : 1;
+      curr[j] = Math.min(curr[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
+    }
+    [prev, curr] = [curr, prev];
+  }
+  return prev[n];
 }
