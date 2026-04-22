@@ -441,6 +441,7 @@ const AdminPriceLists = () => {
           }
 
           let createdCount = 0;
+          const createdKeys = new Set<string>();
           if (missing.length > 0) {
             const importItems = missing.map(r => ({
               id: r.sku,
@@ -452,6 +453,14 @@ const AdminPriceLists = () => {
               .rpc("bulk_import_products", { _items: importItems as any });
             if (importErr) {
               console.error("bulk_import error:", importErr);
+              // Mark all missing as failed with reason
+              for (const r of missing) {
+                const idx = reportIndex.get(r.sku);
+                if (idx !== undefined) {
+                  reportRows[idx].status = "failed";
+                  reportRows[idx].reason = `فشل إنشاء الصنف: ${importErr.message}`;
+                }
+              }
             } else if (importRes) {
               const r = importRes as any;
               createdCount = (r.imported || 0) + (r.updated || 0);
@@ -471,6 +480,7 @@ const AdminPriceLists = () => {
                       b === p.sku || b === (p as any).erp_item_code
                     ) || p.sku;
                     matchedProducts.push({ id: p.id, sku: p.sku, matchedKey });
+                    createdKeys.add(matchedKey);
                   }
                 }
               }
