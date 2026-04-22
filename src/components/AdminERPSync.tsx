@@ -363,7 +363,26 @@ const AdminERPSync = () => {
     setSyncing(null);
   };
 
-  const runFullSync = async () => {
+  const runAutoSync = async () => {
+    setSyncing("auto_sync");
+    setAutoSyncReport(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("erp-sync-outbound", {
+        body: { action: "auto_sync_full", data: { stock_threshold: autoSyncThreshold } },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "فشل التنفيذ");
+      setAutoSyncReport(data);
+      toast({
+        title: "اكتملت المزامنة التلقائية ✓",
+        description: `تم تحديث ${data.sync.stock_updated} رصيد و ${data.sync.retail_updated} سعر قطاعي • ${data.new_items.added} صنف جديد مضاف`,
+      });
+      fetchData();
+    } catch (err: any) {
+      toast({ title: "فشل المزامنة التلقائية", description: err.message, variant: "destructive" });
+    }
+    setSyncing(null);
+  };
     setSyncing("full_sync");
     setFullSyncReport(null);
     let pricesUpdated = 0;
