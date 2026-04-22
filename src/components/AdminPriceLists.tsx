@@ -6,8 +6,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, FileText, Trash2, Eye, EyeOff, Plus, Search, X, Package, Table2, CheckCircle2, Users } from "lucide-react";
+import { Loader2, Upload, FileText, Trash2, Eye, EyeOff, Plus, Search, X, Package, Table2, CheckCircle2, Users, Download, AlertCircle, PlusCircle, LinkIcon } from "lucide-react";
 import * as XLSX from "xlsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+type UploadReportRow = {
+  sku: string;
+  name: string | null;
+  price: number | null;
+  status: "linked" | "created" | "failed";
+  reason?: string;
+  product_sku?: string;
+};
 
 interface PriceListRow {
   id: string;
@@ -47,6 +57,11 @@ const AdminPriceLists = () => {
   const [searchingProducts, setSearchingProducts] = useState(false);
   const [loadingLinked, setLoadingLinked] = useState(false);
   const [bulkLinking, setBulkLinking] = useState(false);
+
+  // Upload report
+  const [uploadReport, setUploadReport] = useState<UploadReportRow[] | null>(null);
+  const [reportListTitle, setReportListTitle] = useState("");
+  const [reportFilter, setReportFilter] = useState<"all" | "linked" | "created" | "failed">("all");
 
   // Views report
   const [viewingReport, setViewingReport] = useState<PriceListRow | null>(null);
@@ -311,10 +326,17 @@ const AdminPriceLists = () => {
     await notifyDealers(form.title);
 
     // Link products from Excel — and AUTO-CREATE missing ones
+    const reportRows: UploadReportRow[] = [];
     if (newList && selectedExcel) {
       try {
         const excelRows = await extractSkusFromExcel(selectedExcel);
         const skuStrings = excelRows.map(r => r.sku);
+        // Initialize report rows (default failed; we'll override below)
+        for (const r of excelRows) {
+          reportRows.push({ sku: r.sku, name: r.name, price: r.price, status: "failed", reason: "لم تتم المعالجة" });
+        }
+        const reportIndex = new Map<string, number>();
+        excelRows.forEach((r, i) => reportIndex.set(r.sku, i));
         // Build maps from Excel: sku -> price/name (with normalized key)
         const priceMap = new Map<string, number | null>();
         const nameMap = new Map<string, string | null>();
@@ -419,6 +441,7 @@ const AdminPriceLists = () => {
           }
 
           let createdCount = 0;
+          const createdKeys = new Set<string>();
           if (missing.length > 0) {
             const importItems = missing.map(r => ({
               id: r.sku,
@@ -430,6 +453,14 @@ const AdminPriceLists = () => {
               .rpc("bulk_import_products", { _items: importItems as any });
             if (importErr) {
               console.error("bulk_import error:", importErr);
+              // Mark all missing as failed with reason
+              for (const r of missing) {
+                const idx = reportIndex.get(r.sku);
+                if (idx !== undefined) {
+                  reportRows[idx].status = "failed";
+                  reportRows[idx].reason = `فشل إنشاء الصنف: ${importErr.message}`;
+                }
+              }
             } else if (importRes) {
               const r = importRes as any;
               createdCount = (r.imported || 0) + (r.updated || 0);
@@ -449,6 +480,7 @@ const AdminPriceLists = () => {
                       b === p.sku || b === (p as any).erp_item_code
                     ) || p.sku;
                     matchedProducts.push({ id: p.id, sku: p.sku, matchedKey });
+                    createdKeys.add(matchedKey);
                   }
                 }
               }
@@ -465,7 +497,8 @@ const AdminPriceLists = () => {
 
           if (uniqueProducts.length > 0) {
             for (let i = 0; i < uniqueProducts.length; i += batchSize) {
-              const batch = uniqueProducts.slice(i, i + batchSize).map(product => {
+              const slice = uniqueProducts.slice(i, i + batchSize);
+              const batch = slice.map(product => {
                 const norm = product.matchedKey.replace(/[-\s]/g, "").toUpperCase();
                 const price = priceMap.get(product.matchedKey) ?? priceMap.get(norm) ?? null;
                 return {
@@ -474,10 +507,23 @@ const AdminPriceLists = () => {
                   price,
                 };
               });
-              await supabase.from("price_list_products").upsert(batch as any, {
+              const { error: linkErr } = await supabase.from("price_list_products").upsert(batch as any, {
                 onConflict: "price_list_id,product_id",
                 ignoreDuplicates: true,
               });
+              for (const product of slice) {
+                const idx = reportIndex.get(product.matchedKey);
+                if (idx !== undefined) {
+                  if (linkErr) {
+                    reportRows[idx].status = "failed";
+                    reportRows[idx].reason = `فشل الربط: ${linkErr.message}`;
+                  } else {
+                    reportRows[idx].status = createdKeys.has(product.matchedKey) ? "created" : "linked";
+                    reportRows[idx].product_sku = product.sku;
+                    reportRows[idx].reason = undefined;
+                  }
+                }
+              }
             }
             const withPrices = uniqueProducts.filter(p => {
               const norm = p.matchedKey.replace(/[-\s]/g, "").toUpperCase();
@@ -491,10 +537,20 @@ const AdminPriceLists = () => {
             toast({ title: "⚠️ لم يتم ربط أي صنف", variant: "destructive" });
           }
         }
-      } catch (e) {
+      } catch (e: any) {
         console.error("Excel linking error:", e);
         toast({ title: "⚠️ خطأ في ربط الأصناف من Excel", variant: "destructive" });
+        for (const r of reportRows) {
+          if (r.status === "failed" && !r.reason) r.reason = e?.message || "خطأ غير معروف";
+        }
       }
+    }
+
+    // Show report dialog if we processed an Excel
+    if (selectedExcel && reportRows.length > 0) {
+      setUploadReport(reportRows);
+      setReportListTitle(form.title);
+      setReportFilter("all");
     }
 
     if (newList) {
@@ -802,7 +858,52 @@ const AdminPriceLists = () => {
     );
   }
 
+  const downloadReportCsv = () => {
+    if (!uploadReport) return;
+    const headers = ["الحالة", "رقم القطعة (من Excel)", "اسم الصنف", "السعر", "رقم الصنف في النظام", "ملاحظة/سبب الفشل"];
+    const statusLabel = (s: UploadReportRow["status"]) =>
+      s === "linked" ? "تم الربط" : s === "created" ? "تم الإنشاء والربط" : "فشل";
+    const escape = (v: any) => {
+      const s = v == null ? "" : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const lines = [
+      headers.join(","),
+      ...uploadReport.map(r => [
+        statusLabel(r.status),
+        r.sku,
+        r.name ?? "",
+        r.price ?? "",
+        r.product_sku ?? "",
+        r.reason ?? "",
+      ].map(escape).join(",")),
+    ];
+    const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `price-list-upload-report-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const reportCounts = uploadReport
+    ? {
+        linked: uploadReport.filter(r => r.status === "linked").length,
+        created: uploadReport.filter(r => r.status === "created").length,
+        failed: uploadReport.filter(r => r.status === "failed").length,
+        total: uploadReport.length,
+      }
+    : { linked: 0, created: 0, failed: 0, total: 0 };
+
+  const filteredReport = uploadReport
+    ? reportFilter === "all"
+      ? uploadReport
+      : uploadReport.filter(r => r.status === reportFilter)
+    : [];
+
   return (
+    <>
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg">إدارة كشوفات المصرية</CardTitle>
@@ -937,6 +1038,102 @@ const AdminPriceLists = () => {
         )}
       </CardContent>
     </Card>
+
+    <Dialog open={!!uploadReport} onOpenChange={(open) => { if (!open) setUploadReport(null); }}>
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <CheckCircle2 className="w-5 h-5 text-primary" />
+            ملخص رفع الكشف: {reportListTitle}
+          </DialogTitle>
+        </DialogHeader>
+
+        {/* Summary cards */}
+        <div className="grid grid-cols-4 gap-2">
+          <button
+            onClick={() => setReportFilter("all")}
+            className={`p-3 rounded-lg border text-center transition-colors ${reportFilter === "all" ? "border-primary bg-primary/10" : "border-border hover:bg-muted/50"}`}
+          >
+            <p className="text-2xl font-bold text-foreground">{reportCounts.total}</p>
+            <p className="text-xs text-muted-foreground">الإجمالي</p>
+          </button>
+          <button
+            onClick={() => setReportFilter("linked")}
+            className={`p-3 rounded-lg border text-center transition-colors ${reportFilter === "linked" ? "border-primary bg-primary/10" : "border-border hover:bg-muted/50"}`}
+          >
+            <p className="text-2xl font-bold text-emerald-600 flex items-center justify-center gap-1">
+              <LinkIcon className="w-4 h-4" />
+              {reportCounts.linked}
+            </p>
+            <p className="text-xs text-muted-foreground">تم ربطها</p>
+          </button>
+          <button
+            onClick={() => setReportFilter("created")}
+            className={`p-3 rounded-lg border text-center transition-colors ${reportFilter === "created" ? "border-primary bg-primary/10" : "border-border hover:bg-muted/50"}`}
+          >
+            <p className="text-2xl font-bold text-blue-600 flex items-center justify-center gap-1">
+              <PlusCircle className="w-4 h-4" />
+              {reportCounts.created}
+            </p>
+            <p className="text-xs text-muted-foreground">تم إنشاؤها</p>
+          </button>
+          <button
+            onClick={() => setReportFilter("failed")}
+            className={`p-3 rounded-lg border text-center transition-colors ${reportFilter === "failed" ? "border-primary bg-primary/10" : "border-border hover:bg-muted/50"}`}
+          >
+            <p className="text-2xl font-bold text-destructive flex items-center justify-center gap-1">
+              <AlertCircle className="w-4 h-4" />
+              {reportCounts.failed}
+            </p>
+            <p className="text-xs text-muted-foreground">فشل ربطها</p>
+          </button>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-muted-foreground">
+            عرض {filteredReport.length} من {reportCounts.total} صنف
+          </p>
+          <Button size="sm" variant="outline" onClick={downloadReportCsv} className="gap-1.5">
+            <Download className="w-3.5 h-3.5" />
+            تنزيل CSV
+          </Button>
+        </div>
+
+        {/* Table */}
+        <div className="flex-1 overflow-auto border border-border rounded-lg">
+          <table className="w-full text-xs">
+            <thead className="bg-muted/50 sticky top-0">
+              <tr>
+                <th className="text-right p-2 font-bold">الحالة</th>
+                <th className="text-right p-2 font-bold">رقم القطعة</th>
+                <th className="text-right p-2 font-bold">الاسم</th>
+                <th className="text-right p-2 font-bold">السعر</th>
+                <th className="text-right p-2 font-bold">السبب</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {filteredReport.length === 0 ? (
+                <tr><td colSpan={5} className="text-center text-muted-foreground py-6">لا توجد عناصر في هذه الفئة</td></tr>
+              ) : filteredReport.map((r, i) => (
+                <tr key={i} className="hover:bg-muted/30">
+                  <td className="p-2">
+                    {r.status === "linked" && <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px]">تم الربط</Badge>}
+                    {r.status === "created" && <Badge className="bg-blue-600 hover:bg-blue-700 text-white text-[10px]">إنشاء وربط</Badge>}
+                    {r.status === "failed" && <Badge variant="destructive" className="text-[10px]">فشل</Badge>}
+                  </td>
+                  <td className="p-2 font-mono">{r.sku}</td>
+                  <td className="p-2 truncate max-w-[200px]">{r.name || "—"}</td>
+                  <td className="p-2 font-mono">{r.price ?? "—"}</td>
+                  <td className="p-2 text-destructive">{r.reason || "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };
 
