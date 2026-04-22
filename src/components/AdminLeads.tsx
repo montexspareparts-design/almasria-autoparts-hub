@@ -132,6 +132,50 @@ const AdminLeads = () => {
   const [leadCredentials, setLeadCredentials] = useState<Record<string, LeadCredentials>>({});
   const [showTablePasswords, setShowTablePasswords] = useState<Record<string, boolean>>({});
 
+  // Pre-flight check dialog
+  type PreflightState =
+    | { kind: "no_erp"; lead: Lead }
+    | { kind: "no_account"; lead: Lead }
+    | { kind: "has_password"; lead: Lead; password: string }
+    | { kind: "no_password"; lead: Lead };
+  const [preflight, setPreflight] = useState<PreflightState | null>(null);
+  const [preflightChecking, setPreflightChecking] = useState<string | null>(null);
+
+  // Pre-flight check before any Edge Function call
+  const runPreflight = async (lead: Lead) => {
+    setPreflightChecking(lead.id);
+    try {
+      if (!lead.erp_customer_code) {
+        setPreflight({ kind: "no_erp", lead });
+        return;
+      }
+      const { data: account } = await supabase
+        .from("dealer_accounts")
+        .select("id")
+        .eq("erp_customer_code", lead.erp_customer_code)
+        .maybeSingle();
+      if (!account) {
+        setPreflight({ kind: "no_account", lead });
+        return;
+      }
+      const { data: pw } = await supabase
+        .from("dealer_passwords" as any)
+        .select("initial_password")
+        .eq("dealer_account_id", (account as any).id)
+        .maybeSingle();
+      const stored = (pw as any)?.initial_password as string | undefined;
+      if (stored) {
+        setPreflight({ kind: "has_password", lead, password: stored });
+      } else {
+        setPreflight({ kind: "no_password", lead });
+      }
+    } catch (e: any) {
+      toast({ title: "خطأ", description: e?.message || "فشل الفحص", variant: "destructive" });
+    } finally {
+      setPreflightChecking(null);
+    }
+  };
+
   const fetchLeads = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -857,11 +901,11 @@ const AdminLeads = () => {
                           variant="outline"
                           size="sm"
                           className="h-7 text-[11px] gap-1 px-2"
-                          onClick={() => resetPassword(lead)}
-                          disabled={registering === lead.id}
-                          title="توليد كلمة مرور جديدة وحفظها"
+                          onClick={() => runPreflight(lead)}
+                          disabled={preflightChecking === lead.id || registering === lead.id}
+                          title="فحص الحساب وكلمة المرور قبل أي إجراء"
                         >
-                          {registering === lead.id ? (
+                          {preflightChecking === lead.id || registering === lead.id ? (
                             <Loader2 className="w-3 h-3 animate-spin" />
                           ) : (
                             <KeyRound className="w-3 h-3" />
@@ -969,6 +1013,106 @@ const AdminLeads = () => {
           </div>
         </div>
       )}
+
+      {/* Pre-flight Check Dialog — shown BEFORE calling any Edge Function */}
+      <Dialog open={!!preflight} onOpenChange={(o) => { if (!o) setPreflight(null); }}>
+        <DialogContent className="max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="w-4 h-4 text-primary" />
+              فحص حساب العميل
+            </DialogTitle>
+          </DialogHeader>
+          {preflight && (
+            <div className="space-y-3 text-sm">
+              <div className="rounded-md border bg-muted/30 p-3 space-y-1">
+                <div><span className="text-muted-foreground">الاسم:</span> <span className="font-semibold">{preflight.lead.name}</span></div>
+                <div><span className="text-muted-foreground">الهاتف:</span> <span className="font-mono" dir="ltr">{preflight.lead.phone}</span></div>
+                <div><span className="text-muted-foreground">كود الفيصل:</span> <span className="font-mono" dir="ltr">{preflight.lead.erp_customer_code || "—"}</span></div>
+              </div>
+
+              {preflight.kind === "no_erp" && (
+                <>
+                  <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-destructive text-xs">
+                    ⚠️ لا يوجد كود فيصل مرتبط بهذا العميل. يجب ربط الكود أولاً قبل إنشاء حساب.
+                  </div>
+                  <div className="flex justify-end">
+                    <Button variant="outline" size="sm" onClick={() => setPreflight(null)}>إغلاق</Button>
+                  </div>
+                </>
+              )}
+
+              {preflight.kind === "no_account" && (
+                <>
+                  <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-xs">
+                    ⚠️ لا يوجد <strong>حساب تاجر</strong> مرتبط بهذا الكود في النظام.
+                    <br />سيتم إنشاء الحساب الكامل (مستخدم + dealer_account + كلمة مرور + إرسال واتساب).
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setPreflight(null)}>إلغاء</Button>
+                    <Button
+                      size="sm"
+                      onClick={async () => { const l = preflight.lead; setPreflight(null); await registerClient(l); }}
+                      disabled={registering === preflight.lead.id}
+                    >
+                      <UserPlus className="w-3.5 h-3.5 ml-1" />
+                      إنشاء الحساب الآن
+                    </Button>
+                  </div>
+                </>
+              )}
+
+              {preflight.kind === "has_password" && (
+                <>
+                  <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs">
+                    ✅ الحساب موجود وكلمة المرور محفوظة. يمكنك عرضها أو نسخها مباشرة.
+                  </div>
+                  <div className="rounded-md border bg-background p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">كلمة المرور:</span>
+                      <span className="font-mono text-sm" dir="ltr">{preflight.password}</span>
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => copyToClipboard(preflight.password)}>
+                      <Copy className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setPreflight(null)}>إغلاق</Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={async () => { const l = preflight.lead; setPreflight(null); await resetPassword(l); }}
+                      disabled={registering === preflight.lead.id}
+                    >
+                      <RotateCcw className="w-3.5 h-3.5 ml-1" />
+                      إعادة تعيين كلمة مرور جديدة
+                    </Button>
+                  </div>
+                </>
+              )}
+
+              {preflight.kind === "no_password" && (
+                <>
+                  <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-xs">
+                    ⚠️ الحساب موجود لكن لا توجد كلمة مرور محفوظة. سيتم توليد كلمة مرور جديدة وحفظها بشكل دائم.
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setPreflight(null)}>إلغاء</Button>
+                    <Button
+                      size="sm"
+                      onClick={async () => { const l = preflight.lead; setPreflight(null); await resetPassword(l); }}
+                      disabled={registering === preflight.lead.id}
+                    >
+                      <KeyRound className="w-3.5 h-3.5 ml-1" />
+                      توليد كلمة مرور وحفظها
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Credentials Dialog */}
       <Dialog open={!!credentials} onOpenChange={() => { setCredentials(null); setShowPassword(false); }}>
