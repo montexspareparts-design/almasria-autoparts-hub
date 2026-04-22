@@ -155,6 +155,48 @@ export type Database = {
         }
         Relationships: []
       }
+      client_account_attempts: {
+        Row: {
+          attempt_type: string
+          attempted_by: string | null
+          client_name: string | null
+          created_at: string
+          details: Json | null
+          erp_customer_code: string | null
+          error_message: string | null
+          id: string
+          lead_id: string | null
+          phone: string | null
+          status: string
+        }
+        Insert: {
+          attempt_type: string
+          attempted_by?: string | null
+          client_name?: string | null
+          created_at?: string
+          details?: Json | null
+          erp_customer_code?: string | null
+          error_message?: string | null
+          id?: string
+          lead_id?: string | null
+          phone?: string | null
+          status: string
+        }
+        Update: {
+          attempt_type?: string
+          attempted_by?: string | null
+          client_name?: string | null
+          created_at?: string
+          details?: Json | null
+          erp_customer_code?: string | null
+          error_message?: string | null
+          id?: string
+          lead_id?: string | null
+          phone?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       coupon_usage: {
         Row: {
           coupon_id: string
