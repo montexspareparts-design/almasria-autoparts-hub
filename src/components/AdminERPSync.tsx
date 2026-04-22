@@ -324,6 +324,8 @@ const AdminERPSync = () => {
     fetchData();
     setSyncing(null);
   };
+
+  const handleBatchImport = async () => {
     setSyncing("import_products");
     setImportProgress({ phase: "جاري جلب الأصناف من الفيصل...", currentBatch: 0, totalBatches: 0, imported: 0, updated: 0, skipped: 0, totalItems: 0, done: false });
 
