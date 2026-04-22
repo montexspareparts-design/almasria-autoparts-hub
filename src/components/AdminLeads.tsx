@@ -428,6 +428,31 @@ const AdminLeads = () => {
     return data;
   };
 
+  // Log every create/reset attempt for audit trail
+  const logAttempt = async (params: {
+    type: "create" | "reset_password";
+    status: "success" | "failure";
+    lead: Lead;
+    errorMessage?: string | null;
+    details?: Record<string, unknown>;
+  }) => {
+    try {
+      await supabase.from("client_account_attempts" as any).insert({
+        attempted_by: user?.id,
+        attempt_type: params.type,
+        status: params.status,
+        lead_id: params.lead.id,
+        phone: params.lead.phone,
+        erp_customer_code: params.lead.erp_customer_code,
+        client_name: params.lead.name,
+        error_message: params.errorMessage || null,
+        details: params.details || {},
+      });
+    } catch (e) {
+      console.error("Failed to log attempt:", e);
+    }
+  };
+
   // Register client as a user account
   const registerClient = async (lead: Lead) => {
     if (!lead.erp_customer_code) {
