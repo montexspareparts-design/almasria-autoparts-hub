@@ -469,6 +469,104 @@ const AdminERPSync = () => {
     setSyncing(null);
   };
 
+  // ─── Preview / Dry-Run handlers ───
+  const runPricePreview = async () => {
+    setPreviewLoading("prices");
+    setPricePreview(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("erp-sync-outbound", {
+        body: { action: "sync_prices", dry_run: true, data: { dry_run: true } },
+      });
+      if (error) throw error;
+      if (data?.success === false) throw new Error(data?.message || "فشل المعاينة");
+      setPricePreview({
+        matched: data?.matched || 0,
+        erpTotal: data?.erp_total || 0,
+        ourProducts: data?.our_products || 0,
+        changesCount: data?.retail_changes_count || 0,
+        increases: data?.increases || 0,
+        decreases: data?.decreases || 0,
+        bigChanges: data?.big_changes || 0,
+        changes: data?.changes || [],
+        generatedAt: new Date().toISOString(),
+      });
+      setShowPricePreview(true);
+      toast({
+        title: "✅ المعاينة جاهزة",
+        description: `${data?.retail_changes_count || 0} تغيير سعر متوقع — راجعها قبل التنفيذ`,
+      });
+    } catch (err: any) {
+      toast({ title: "فشل المعاينة", description: err?.message || "خطأ غير معروف", variant: "destructive" });
+    } finally {
+      setPreviewLoading(null);
+    }
+  };
+
+  const runStockPreview = async () => {
+    setPreviewLoading("stock");
+    setStockPreview(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("erp-sync-outbound", {
+        body: { action: "sync_stock", dry_run: true, data: { dry_run: true } },
+      });
+      if (error) throw error;
+      if (data?.success === false) throw new Error(data?.message || "فشل المعاينة");
+      setStockPreview({
+        matched: data?.matched || 0,
+        erpTotal: data?.erp_total || 0,
+        ourProducts: data?.our_products || 0,
+        withPositiveStock: data?.with_positive_stock || 0,
+        changesCount: data?.changes_count || 0,
+        increases: data?.increases || 0,
+        decreases: data?.decreases || 0,
+        backInStock: data?.back_in_stock || 0,
+        outOfStock: data?.out_of_stock || 0,
+        changes: data?.changes || [],
+        generatedAt: new Date().toISOString(),
+      });
+      setShowStockPreview(true);
+      toast({
+        title: "✅ المعاينة جاهزة",
+        description: `${data?.changes_count || 0} تغيير رصيد متوقع — راجعها قبل التنفيذ`,
+      });
+    } catch (err: any) {
+      toast({ title: "فشل المعاينة", description: err?.message || "خطأ غير معروف", variant: "destructive" });
+    } finally {
+      setPreviewLoading(null);
+    }
+  };
+
+  const downloadPreviewCsv = (kind: "prices" | "stock") => {
+    if (kind === "prices" && pricePreview) {
+      const headers = ["كود الفيصل", "اسم الصنف", "السعر الحالي", "السعر الجديد", "الفرق", "النسبة %", "الاتجاه"];
+      const rows = pricePreview.changes.map(c => [
+        c.erp_id, c.name, c.old_price, c.new_price, c.delta, c.pct,
+        c.status === "increase" ? "ارتفاع ⬆️" : "انخفاض ⬇️",
+      ]);
+      const csv = "\uFEFF" + [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = `price-preview-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+      URL.revokeObjectURL(url);
+    } else if (kind === "stock" && stockPreview) {
+      const headers = ["كود الفيصل", "اسم الصنف", "الرصيد الحالي", "الرصيد الجديد", "الفرق", "الحالة"];
+      const labels: Record<string, string> = {
+        increase: "زيادة ⬆️", decrease: "نقصان ⬇️",
+        back_in_stock: "متوفر مرة أخرى ✅", out_of_stock: "نفد ⚠️",
+      };
+      const rows = stockPreview.changes.map(c => [
+        c.erp_id, c.name, c.old_qty, c.new_qty, c.delta, labels[c.status] || c.status,
+      ]);
+      const csv = "\uFEFF" + [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = `stock-preview-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+      URL.revokeObjectURL(url);
+    }
+  };
+
   const downloadPriceReportCsv = () => {
     if (!priceSyncReport) return;
     const headers = ["كود الفيصل", "اسم الصنف", "سعر القطاعي", "سعر الجملة", "الحالة", "ملاحظة"];
