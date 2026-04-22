@@ -147,14 +147,19 @@ const AdminLeads = () => {
     reason: "no_dealer_account" | "user_not_found";
   };
   const [autoCreateConfirm, setAutoCreateConfirm] = useState<AutoCreateConfirm | null>(null);
+  const autoCreateResolverRef = useRef<((v: boolean) => void) | null>(null);
 
   const requestAutoCreateConfirmation = (lead: Lead, reason: AutoCreateConfirm["reason"]) =>
     new Promise<boolean>((resolve) => {
-      setAutoCreateConfirm({ lead, reason });
-      // Stash resolver on window-scoped ref via state callback queue
       autoCreateResolverRef.current = resolve;
+      setAutoCreateConfirm({ lead, reason });
     });
-  const autoCreateResolverRef = { current: null as ((v: boolean) => void) | null };
+
+  const resolveAutoCreateConfirm = (confirmed: boolean) => {
+    autoCreateResolverRef.current?.(confirmed);
+    autoCreateResolverRef.current = null;
+    setAutoCreateConfirm(null);
+  };
 
   // Pre-flight check before any Edge Function call
   const runPreflight = async (lead: Lead) => {
