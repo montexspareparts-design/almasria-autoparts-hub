@@ -65,6 +65,10 @@ const AdminPriceLists = () => {
   const [bulkAiProgress, setBulkAiProgress] = useState<{ current: number; total: number; currentTitle: string }>({ current: 0, total: 0, currentTitle: "" });
   const [bulkAiResults, setBulkAiResults] = useState<Array<{ title: string; linked: number; extracted: number; error?: string }>>([]);
 
+  // Calibration: minimum confidence (0-100) for linking SKUs to products.
+  // 100 = exact match only. Lower = allow fuzzy matches.
+  const [minConfidence, setMinConfidence] = useState<number>(100);
+
   // Verification dialog (post bulk AI)
   const [verifyOpen, setVerifyOpen] = useState(false);
   const [verifyLoading, setVerifyLoading] = useState(false);
