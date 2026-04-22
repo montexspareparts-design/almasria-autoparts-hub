@@ -359,18 +359,36 @@ const AdminLeads = () => {
         .join("")
         .slice(0, 8);
 
-      const { error } = await supabase.functions.invoke("create-client-account", {
+      const { data, error } = await supabase.functions.invoke("create-client-account", {
         body: { action: "reset_password", email, new_password: newPassword, erp_customer_code: lead.erp_customer_code },
       });
-      if (error) {
-        toast({ title: "خطأ", description: "فشل إعادة تعيين كلمة المرور", variant: "destructive" });
+
+      // Edge function returned non-2xx — try to extract server-side message
+      if (error || (data && (data as any).error)) {
+        const serverMsg = (data as any)?.error || (error as any)?.context?.error || (error as any)?.message;
+        // If user truly doesn't exist → offer to create it instead
+        if (typeof serverMsg === "string" && serverMsg.includes("غير موجود")) {
+          toast({
+            title: "الحساب غير موجود",
+            description: "هذا العميل ليس له حساب بعد. سيتم إنشاء حساب جديد الآن…",
+          });
+          // Re-trigger the full registration flow which creates user + dealer account + sends WhatsApp
+          await registerClient(lead);
+          return;
+        }
+        toast({
+          title: "خطأ",
+          description: serverMsg || "فشل إعادة تعيين كلمة المرور",
+          variant: "destructive",
+        });
       } else {
         setCredentials({ username: lead.phone, password: newPassword, phone: lead.phone });
         setLeadCredentials(prev => ({ ...prev, [lead.id]: { username: cleanPhone, password: newPassword } }));
-        toast({ title: "تم", description: "تم إعادة تعيين كلمة المرور بنجاح" });
+        toast({ title: "تم", description: "تم إعادة تعيين كلمة المرور بنجاح وحفظها بشكل دائم" });
       }
-    } catch {
-      toast({ title: "خطأ", description: "حدث خطأ غير متوقع", variant: "destructive" });
+    } catch (e: any) {
+      console.error("resetPassword error:", e);
+      toast({ title: "خطأ", description: e?.message || "حدث خطأ غير متوقع", variant: "destructive" });
     }
     setRegistering(null);
   };
