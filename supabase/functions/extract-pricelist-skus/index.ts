@@ -160,11 +160,30 @@ Deno.serve(async (req) => {
     // 4) Match to products
     // - At 100% confidence → exact (case-insensitive) match against sku OR erp_item_code.
     // - Below 100% → allow fuzzy match using normalized Levenshtein similarity.
-    const matchedProducts = new Map<string, { id: string; sku: string; score: number }>();
+    const matchedProducts = new Map<
+      string,
+      { id: string; sku: string; score: number; matchedField: "sku" | "erp" }
+    >();
+
+    // Per-extracted-code diagnostics: top candidates + chosen-match reason.
+    type Candidate = {
+      product_id: string;
+      sku: string;
+      erp_item_code: string | null;
+      score: number;
+      matchedField: "sku" | "erp";
+    };
+    const diagnostics: Array<{
+      code: string;
+      chosen: { product_id: string; sku: string; score: number; matchedField: "sku" | "erp" } | null;
+      reason: string;
+      candidates: Candidate[];
+    }> = [];
 
     if (min_confidence >= 100) {
       // Exact match path (fast, batched OR queries)
       const chunkSize = 200;
+      const exactByCode = new Map<string, Candidate[]>();
       for (let i = 0; i < cleaned.length; i += chunkSize) {
         const chunk = cleaned.slice(i, i + chunkSize);
         const orParts = chunk
@@ -177,12 +196,51 @@ Deno.serve(async (req) => {
         (prods || []).forEach((p: any) => {
           const sk = norm(p.sku);
           const er = norm(p.erp_item_code || "");
-          if (chunk.includes(sk)) matchedProducts.set(sk, { id: p.id, sku: p.sku, score: 100 });
-          if (chunk.includes(er)) matchedProducts.set(er, { id: p.id, sku: p.sku, score: 100 });
+          for (const code of chunk) {
+            if (sk === code) {
+              const arr = exactByCode.get(code) || [];
+              arr.push({ product_id: p.id, sku: p.sku, erp_item_code: p.erp_item_code, score: 100, matchedField: "sku" });
+              exactByCode.set(code, arr);
+            } else if (er === code) {
+              const arr = exactByCode.get(code) || [];
+              arr.push({ product_id: p.id, sku: p.sku, erp_item_code: p.erp_item_code, score: 100, matchedField: "erp" });
+              exactByCode.set(code, arr);
+            }
+          }
         });
       }
+      for (const code of cleaned) {
+        const cands = exactByCode.get(code) || [];
+        // Tie-break: SKU match wins over ERP match.
+        const sorted = [...cands].sort((a, b) =>
+          a.matchedField === b.matchedField ? 0 : a.matchedField === "sku" ? -1 : 1
+        );
+        const chosen = sorted[0] || null;
+        if (chosen) {
+          matchedProducts.set(code, {
+            id: chosen.product_id,
+            sku: chosen.sku,
+            score: 100,
+            matchedField: chosen.matchedField,
+          });
+        }
+        if (include_diagnostics) {
+          diagnostics.push({
+            code,
+            chosen: chosen
+              ? { product_id: chosen.product_id, sku: chosen.sku, score: 100, matchedField: chosen.matchedField }
+              : null,
+            reason: !chosen
+              ? "لا يوجد تطابق تام (exact) على sku أو erp_item_code"
+              : sorted.length === 1
+                ? `تطابق تام وحيد على ${chosen.matchedField === "sku" ? "SKU" : "ERP code"}`
+                : `${sorted.length} مرشحين بنفس الـ score — تم تفضيل التطابق على ${chosen.matchedField === "sku" ? "SKU" : "ERP code"}`,
+            candidates: sorted.slice(0, 5),
+          });
+        }
+      }
     } else {
-      // Fuzzy path: pull all active products once, score each extracted code
+      // Fuzzy path
       const { data: allProds } = await admin
         .from("products")
         .select("id, sku, erp_item_code")
@@ -190,42 +248,60 @@ Deno.serve(async (req) => {
       const candidates = (allProds || []).map((p: any) => ({
         id: p.id,
         sku: p.sku,
+        erp_item_code: p.erp_item_code,
         nSku: norm(p.sku),
         nErp: norm(p.erp_item_code || ""),
       }));
       for (const code of cleaned) {
-        // Track best match with tie-breaking: prefer SKU matches over ERP matches.
-        // matchedField: 'sku' beats 'erp' when scores are equal.
-        let best:
-          | { id: string; sku: string; score: number; matchedField: "sku" | "erp" }
-          | null = null;
+        const scored: Candidate[] = [];
         for (const c of candidates) {
           const s1 = c.nSku ? similarity(code, c.nSku) : 0;
           const s2 = c.nErp ? similarity(code, c.nErp) : 0;
-          // Pick the better field for THIS candidate (SKU wins ties at candidate level too)
           const candScore = Math.max(s1, s2);
+          if (candScore <= 0) continue;
           const candField: "sku" | "erp" = s1 >= s2 ? "sku" : "erp";
-
-          if (!best) {
-            best = { id: c.id, sku: c.sku, score: candScore, matchedField: candField };
-          } else if (candScore > best.score) {
-            best = { id: c.id, sku: c.sku, score: candScore, matchedField: candField };
-          } else if (
-            candScore === best.score &&
-            candField === "sku" &&
-            best.matchedField === "erp"
-          ) {
-            // Same score but this candidate matched on SKU → prefer it
-            best = { id: c.id, sku: c.sku, score: candScore, matchedField: candField };
-          }
-
-          if (candScore === 100 && candField === "sku") break;
+          scored.push({
+            product_id: c.id,
+            sku: c.sku,
+            erp_item_code: c.erp_item_code,
+            score: candScore,
+            matchedField: candField,
+          });
         }
-        if (best && best.score >= min_confidence) {
+        // Sort: highest score first, then SKU before ERP on ties.
+        scored.sort((a, b) => {
+          if (b.score !== a.score) return b.score - a.score;
+          if (a.matchedField !== b.matchedField) return a.matchedField === "sku" ? -1 : 1;
+          return 0;
+        });
+        const top = scored.slice(0, 5);
+        const best = scored[0] || null;
+        const passes = !!(best && best.score >= min_confidence);
+        if (passes && best) {
           matchedProducts.set(code, {
-            id: best.id,
+            id: best.product_id,
             sku: best.sku,
             score: best.score,
+            matchedField: best.matchedField,
+          });
+        }
+        if (include_diagnostics) {
+          let reason: string;
+          if (!best) reason = "لا يوجد مرشحين";
+          else if (!passes) reason = `أعلى score (${best.score}) أقل من الحد الأدنى (${min_confidence})`;
+          else {
+            const tied = scored.filter((s) => s.score === best.score);
+            reason = tied.length > 1
+              ? `${tied.length} مرشحين بنفس الـ score (${best.score}) — تم تفضيل التطابق على ${best.matchedField === "sku" ? "SKU" : "ERP code"}`
+              : `أفضل مرشح بـ score ${best.score} على ${best.matchedField === "sku" ? "SKU" : "ERP code"}`;
+          }
+          diagnostics.push({
+            code,
+            chosen: passes && best
+              ? { product_id: best.product_id, sku: best.sku, score: best.score, matchedField: best.matchedField }
+              : null,
+            reason,
+            candidates: top,
           });
         }
       }
@@ -234,23 +310,24 @@ Deno.serve(async (req) => {
     const unmatched = cleaned.filter((c) => !matchedProducts.has(c));
     const productIds = Array.from(new Set(Array.from(matchedProducts.values()).map((p) => p.id)));
 
-    // 5) Replace existing links: clear old, insert new
-    await admin.from("price_list_products").delete().eq("price_list_id", price_list_id);
-
     let linked = 0;
-    if (productIds.length > 0) {
-      const rows = productIds.map((pid) => ({
-        price_list_id,
-        product_id: pid,
-      }));
-      const { error: insErr, count } = await admin
-        .from("price_list_products")
-        .insert(rows, { count: "exact" });
-      if (insErr) {
-        console.error("Insert error", insErr);
-        return json({ error: `Failed to link: ${insErr.message}` }, 500);
+    if (!dry_run) {
+      // Replace existing links: clear old, insert new
+      await admin.from("price_list_products").delete().eq("price_list_id", price_list_id);
+      if (productIds.length > 0) {
+        const rows = productIds.map((pid) => ({
+          price_list_id,
+          product_id: pid,
+        }));
+        const { error: insErr, count } = await admin
+          .from("price_list_products")
+          .insert(rows, { count: "exact" });
+        if (insErr) {
+          console.error("Insert error", insErr);
+          return json({ error: `Failed to link: ${insErr.message}` }, 500);
+        }
+        linked = count ?? rows.length;
       }
-      linked = count ?? rows.length;
     }
 
     // Compute average match score for transparency
