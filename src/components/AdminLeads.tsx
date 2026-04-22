@@ -221,9 +221,35 @@ const AdminLeads = () => {
       const leadsList = data as Lead[];
       setLeads(leadsList);
       fetchLeadCredentials(leadsList);
+      fetchLeadAttempts(leadsList);
     }
     setLoading(false);
   };
+
+  // Fetch the latest account-creation/reset attempt per lead
+  const fetchLeadAttempts = useCallback(async (leadsList: Lead[]) => {
+    if (leadsList.length === 0) return;
+    const ids = leadsList.map(l => l.id);
+    const { data } = await supabase
+      .from("client_account_attempts" as any)
+      .select("lead_id, attempt_type, status, error_message, created_at")
+      .in("lead_id", ids)
+      .order("created_at", { ascending: false });
+    if (!data) return;
+    const map: Record<string, LeadAttemptInfo> = {};
+    for (const row of data as any[]) {
+      const lid = row.lead_id as string;
+      if (lid && !map[lid]) {
+        map[lid] = {
+          attempt_type: row.attempt_type,
+          status: row.status,
+          error_message: row.error_message ?? null,
+          created_at: row.created_at,
+        };
+      }
+    }
+    setLeadAttempts(map);
+  }, []);
 
   // Fetch credentials for converted leads
   const fetchLeadCredentials = useCallback(async (leadsList: Lead[]) => {
