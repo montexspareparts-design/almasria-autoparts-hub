@@ -162,6 +162,8 @@ Deno.serve(async (req) => {
         linked_count: 0,
         unmatched: [],
         min_confidence,
+        min_confidence_sku,
+        min_confidence_erp,
         message: "لم يتم استخراج أي أكواد من الـ PDF",
       });
     }
@@ -371,6 +373,8 @@ Deno.serve(async (req) => {
       linked_count: linked,
       unmatched,
       min_confidence,
+      min_confidence_sku,
+      min_confidence_erp,
       avg_score,
       sample_extracted: cleaned.slice(0, 20),
       ...(include_diagnostics ? { diagnostics } : {}),
