@@ -107,6 +107,30 @@ const AdminERPSync = () => {
   } | null>(null);
   const [showStockReport, setShowStockReport] = useState(false);
 
+  // ─── Auto Sync state ───
+  const [autoSyncReport, setAutoSyncReport] = useState<{
+    started_at: string;
+    finished_at: string;
+    erp_total: number;
+    our_active_products: number;
+    sync: {
+      stock_updated: number;
+      retail_updated: number;
+      wholesale_updated: number;
+      stock_disabled: boolean;
+      price_disabled: boolean;
+    };
+    new_items: {
+      detected: number;
+      added: number;
+      failed: number;
+      threshold: number;
+      samples: Array<{ erp_id: string; name: string; qty: number; retailPrice: number; wholesalePrice: number; action?: string }>;
+      failed_samples: Array<{ erp_id: string; name: string; error: string }>;
+    };
+  } | null>(null);
+  const [autoSyncThreshold, setAutoSyncThreshold] = useState(10);
+
   // ─── Preview (Dry-Run) state ───
   const [previewLoading, setPreviewLoading] = useState<"prices" | "stock" | null>(null);
   const [pricePreview, setPricePreview] = useState<{
