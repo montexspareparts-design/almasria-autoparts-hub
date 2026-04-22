@@ -21,6 +21,8 @@ type LeadsFilters = {
   clientType: string;
   erp: "all" | "linked" | "unlinked";
   account: "all" | "with_account" | "without_account";
+  attemptStatus: "all" | "success" | "failed" | "none";
+  errorSearch: string;
 };
 
 const defaultFilters: LeadsFilters = {
@@ -29,6 +31,15 @@ const defaultFilters: LeadsFilters = {
   clientType: "all",
   erp: "all",
   account: "all",
+  attemptStatus: "all",
+  errorSearch: "",
+};
+
+type LeadAttemptInfo = {
+  attempt_type: "create" | "reset_password" | string;
+  status: "success" | "failure" | string;
+  error_message: string | null;
+  created_at: string;
 };
 
 const loadStoredFilters = (): LeadsFilters => {
@@ -132,6 +143,9 @@ const AdminLeads = () => {
   const [leadCredentials, setLeadCredentials] = useState<Record<string, LeadCredentials>>({});
   const [showTablePasswords, setShowTablePasswords] = useState<Record<string, boolean>>({});
 
+  // Latest account-creation/reset attempt per lead (for status & error filtering)
+  const [leadAttempts, setLeadAttempts] = useState<Record<string, LeadAttemptInfo>>({});
+
   // Pre-flight check dialog
   type PreflightState =
     | { kind: "no_erp"; lead: Lead }
@@ -207,9 +221,35 @@ const AdminLeads = () => {
       const leadsList = data as Lead[];
       setLeads(leadsList);
       fetchLeadCredentials(leadsList);
+      fetchLeadAttempts(leadsList);
     }
     setLoading(false);
   };
+
+  // Fetch the latest account-creation/reset attempt per lead
+  const fetchLeadAttempts = useCallback(async (leadsList: Lead[]) => {
+    if (leadsList.length === 0) return;
+    const ids = leadsList.map(l => l.id);
+    const { data } = await supabase
+      .from("client_account_attempts" as any)
+      .select("lead_id, attempt_type, status, error_message, created_at")
+      .in("lead_id", ids)
+      .order("created_at", { ascending: false });
+    if (!data) return;
+    const map: Record<string, LeadAttemptInfo> = {};
+    for (const row of data as any[]) {
+      const lid = row.lead_id as string;
+      if (lid && !map[lid]) {
+        map[lid] = {
+          attempt_type: row.attempt_type,
+          status: row.status,
+          error_message: row.error_message ?? null,
+          created_at: row.created_at,
+        };
+      }
+    }
+    setLeadAttempts(map);
+  }, []);
 
   // Fetch credentials for converted leads
   const fetchLeadCredentials = useCallback(async (leadsList: Lead[]) => {
@@ -269,7 +309,9 @@ const AdminLeads = () => {
     filters.status !== "all" ||
     filters.clientType !== "all" ||
     filters.erp !== "all" ||
-    filters.account !== "all";
+    filters.account !== "all" ||
+    filters.attemptStatus !== "all" ||
+    filters.errorSearch.trim() !== "";
 
   const fetchErpCustomers = useCallback(async () => {
     if (erpCustomers.length > 0) return;
@@ -624,6 +666,22 @@ const AdminLeads = () => {
       if (filters.account === "with_account" && !hasAccount) return false;
       if (filters.account === "without_account" && hasAccount) return false;
     }
+
+    // Latest attempt status filter
+    const lastAttempt = leadAttempts[l.id];
+    if (filters.attemptStatus !== "all") {
+      if (filters.attemptStatus === "none" && lastAttempt) return false;
+      if (filters.attemptStatus === "success" && lastAttempt?.status !== "success") return false;
+      if (filters.attemptStatus === "failed" && lastAttempt?.status !== "failure") return false;
+    }
+
+    // Last error message free-text search
+    const eq = filters.errorSearch.trim().toLowerCase();
+    if (eq) {
+      const err = (lastAttempt?.error_message || "").toLowerCase();
+      if (!err.includes(eq)) return false;
+    }
+
     return true;
   });
 
@@ -853,13 +911,46 @@ const AdminLeads = () => {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Select value={filters.account} onValueChange={v => updateFilter("account", v as LeadsFilters["account"])}>
-              <SelectTrigger className="h-9 text-xs w-[200px]"><SelectValue placeholder="حالة الحساب" /></SelectTrigger>
+              <SelectTrigger className="h-9 text-xs w-[180px]"><SelectValue placeholder="حالة الحساب" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">كل الحسابات</SelectItem>
                 <SelectItem value="with_account">له حساب مفعل</SelectItem>
                 <SelectItem value="without_account">بدون حساب بعد</SelectItem>
               </SelectContent>
             </Select>
+            <Select
+              value={filters.attemptStatus}
+              onValueChange={v => updateFilter("attemptStatus", v as LeadsFilters["attemptStatus"])}
+            >
+              <SelectTrigger className="h-9 text-xs w-[200px]">
+                <SelectValue placeholder="حالة آخر محاولة" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل المحاولات</SelectItem>
+                <SelectItem value="success">آخر محاولة: نجاح ✅</SelectItem>
+                <SelectItem value="failed">آخر محاولة: فشل ❌</SelectItem>
+                <SelectItem value="none">لا توجد محاولات</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="relative w-[260px]">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <Input
+                value={filters.errorSearch}
+                onChange={e => updateFilter("errorSearch", e.target.value)}
+                placeholder="بحث في رسالة آخر خطأ..."
+                className="pr-8 h-9 text-xs"
+              />
+              {filters.errorSearch && (
+                <button
+                  type="button"
+                  onClick={() => updateFilter("errorSearch", "")}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label="مسح بحث الخطأ"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
             <span className="text-xs text-muted-foreground">
               عرض <span className="font-semibold text-foreground">{filtered.length}</span> من {leads.length}
             </span>
