@@ -121,25 +121,26 @@ const AdminLeads = () => {
       .select("id, erp_customer_code")
       .in("erp_customer_code", erpCodes);
     
+    const creds: Record<string, LeadCredentials> = {};
     if (accounts && accounts.length > 0) {
       const accountIds = accounts.map(a => a.id);
       const { data: passwords } = await supabase
         .from("dealer_passwords" as any)
         .select("dealer_account_id, initial_password")
         .in("dealer_account_id", accountIds);
-      
-      const creds: Record<string, LeadCredentials> = {};
+
       for (const lead of convertedLeads) {
         const account = accounts.find(a => a.erp_customer_code === lead.erp_customer_code);
+        if (!account) continue; // no dealer account → skip (no creds row)
         const pw = (passwords as any[])?.find((p: any) => p.dealer_account_id === account?.id);
         const cleanPhone = lead.phone.replace(/\D/g, "");
-        creds[lead.id] = {
-          username: cleanPhone,
-          password: pw?.initial_password || "غير محفوظة",
-        };
+        if (pw?.initial_password) {
+          creds[lead.id] = { username: cleanPhone, password: pw.initial_password };
+        }
+        // If no stored password → leave undefined so UI shows "عرض/إنشاء" button
       }
-      setLeadCredentials(creds);
     }
+    setLeadCredentials(creds);
   }, []);
 
   useEffect(() => { 
