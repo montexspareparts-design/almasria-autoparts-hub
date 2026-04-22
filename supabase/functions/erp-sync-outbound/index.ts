@@ -143,7 +143,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { action, data } = await req.json();
+    const body = await req.json();
+    const { action, data } = body;
 
     // Admin-only actions (service role bypasses)
     if (!isServiceRole && (action === "sync_stock" || action === "sync_prices")) {
