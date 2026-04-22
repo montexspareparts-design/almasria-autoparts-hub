@@ -87,7 +87,12 @@ export async function sendWhatsAppPayload(
   });
 
   const rawText = await response.text();
-  const data = rawText ? JSON.parse(rawText) : null;
+  let data: any = null;
+  try {
+    data = rawText ? JSON.parse(rawText) : null;
+  } catch {
+    data = { raw: rawText };
+  }
   const messageId = data?.messages?.[0]?.id ?? null;
 
   if (!response.ok) {
