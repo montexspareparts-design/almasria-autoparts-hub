@@ -771,6 +771,69 @@ const AdminPriceLists = () => {
       description: `تم ربط ${totalLinked} صنف عبر ${candidates.length} كشف${failedCount ? ` (${failedCount} فشل)` : ""}`,
     });
     setBulkAiRunning(false);
+
+    // Open verification dialog with sample SKUs from each linked list
+    const successful = candidates.filter((c, i) => !results[i]?.error && results[i]?.linked > 0);
+    if (successful.length > 0) {
+      await openVerificationFor(successful.map((c) => ({ id: c.id, title: c.title })));
+    }
+  };
+
+  const openVerificationFor = async (
+    items: Array<{ id: string; title: string }>
+  ) => {
+    setVerifyLoading(true);
+    setVerifyOpen(true);
+    setVerifyData([]);
+    const out: Array<{
+      listId: string;
+      listTitle: string;
+      totalLinked: number;
+      samples: Array<{ id: string; sku: string; name_ar: string }>;
+    }> = [];
+    for (const it of items) {
+      const { data, count } = await supabase
+        .from("price_list_products")
+        .select("product_id, products:product_id(id, sku, name_ar)", { count: "exact" })
+        .eq("price_list_id", it.id)
+        .limit(8) as any;
+      const samples = (data || [])
+        .map((r: any) => r.products)
+        .filter(Boolean) as Array<{ id: string; sku: string; name_ar: string }>;
+      out.push({
+        listId: it.id,
+        listTitle: it.title,
+        totalLinked: count ?? samples.length,
+        samples,
+      });
+      setVerifyData([...out]);
+    }
+    setVerifyLoading(false);
+  };
+
+  const removeSampleFromList = async (listId: string, productId: string) => {
+    await supabase
+      .from("price_list_products")
+      .delete()
+      .eq("price_list_id", listId)
+      .eq("product_id", productId);
+    setVerifyData((prev) =>
+      prev.map((d) =>
+        d.listId === listId
+          ? { ...d, samples: d.samples.filter((s) => s.id !== productId), totalLinked: Math.max(0, d.totalLinked - 1) }
+          : d
+      )
+    );
+    toast({ title: "تم حذف الصنف من الكشف" });
+  };
+
+  const clearListLinks = async (listId: string) => {
+    if (!confirm("سيتم إلغاء كل الأصناف المربوطة بهذا الكشف. متابعة؟")) return;
+    await supabase.from("price_list_products").delete().eq("price_list_id", listId);
+    setVerifyData((prev) =>
+      prev.map((d) => (d.listId === listId ? { ...d, samples: [], totalLinked: 0 } : d))
+    );
+    toast({ title: "تم إلغاء الربط لهذا الكشف" });
   };
 
   // Views report for a specific list
