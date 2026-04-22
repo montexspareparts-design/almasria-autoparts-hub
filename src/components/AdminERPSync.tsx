@@ -106,6 +106,35 @@ const AdminERPSync = () => {
     finishedAt: string;
   } | null>(null);
   const [showStockReport, setShowStockReport] = useState(false);
+
+  // ─── Preview (Dry-Run) state ───
+  const [previewLoading, setPreviewLoading] = useState<"prices" | "stock" | null>(null);
+  const [pricePreview, setPricePreview] = useState<{
+    matched: number;
+    erpTotal: number;
+    ourProducts: number;
+    changesCount: number;
+    increases: number;
+    decreases: number;
+    bigChanges: number;
+    changes: Array<{ erp_id: string; name: string; old_price: number; new_price: number; delta: number; pct: number; status: string }>;
+    generatedAt: string;
+  } | null>(null);
+  const [stockPreview, setStockPreview] = useState<{
+    matched: number;
+    erpTotal: number;
+    ourProducts: number;
+    withPositiveStock: number;
+    changesCount: number;
+    increases: number;
+    decreases: number;
+    backInStock: number;
+    outOfStock: number;
+    changes: Array<{ erp_id: string; name: string; old_qty: number; new_qty: number; delta: number; status: string }>;
+    generatedAt: string;
+  } | null>(null);
+  const [showPricePreview, setShowPricePreview] = useState(false);
+  const [showStockPreview, setShowStockPreview] = useState(false);
   const [importProgress, setImportProgress] = useState<{
     phase: string;
     currentBatch: number;
