@@ -50,16 +50,36 @@ const DealerVehicleRecommendations = ({ compact }: DealerVehicleRecommendationsP
 
   // Map of revealed prices for products currently shown
   const { data: revealedPrices = {} } = useQuery({
-    queryKey: ["dealer_revealed_prices", user?.id, viewedProductIds.join(",")],
+    queryKey: ["dealer_revealed_prices", user?.id, dealerAccount?.tier, viewedProductIds.join(",")],
     queryFn: async () => {
       if (!viewedProductIds.length) return {} as Record<string, number>;
-      const { data: prods } = await supabase
-        .from("products")
-        .select("id, base_price, sale_price, is_on_sale")
-        .in("id", viewedProductIds);
+      const [prodsRes, tierRes] = await Promise.all([
+        supabase
+          .from("products")
+          .select("id, base_price, sale_price, is_on_sale")
+          .in("id", viewedProductIds),
+        dealerAccount?.tier
+          ? supabase
+              .from("product_tier_prices")
+              .select("product_id, price")
+              .eq("tier", dealerAccount.tier as any)
+              .in("product_id", viewedProductIds)
+          : Promise.resolve({ data: [] as { product_id: string; price: number }[] }),
+      ]);
+      const tierMap: Record<string, number> = {};
+      (tierRes.data || []).forEach((tp: any) => {
+        tierMap[tp.product_id] = Number(tp.price);
+      });
       const map: Record<string, number> = {};
-      (prods || []).forEach((p) => {
-        map[p.id] = p.is_on_sale && p.sale_price ? p.sale_price : p.base_price;
+      (prodsRes.data || []).forEach((p) => {
+        // Priority: tier price > sale price > base price
+        if (tierMap[p.id] !== undefined) {
+          map[p.id] = tierMap[p.id];
+        } else if (p.is_on_sale && p.sale_price) {
+          map[p.id] = p.sale_price;
+        } else {
+          map[p.id] = p.base_price;
+        }
       });
       return map;
     },
