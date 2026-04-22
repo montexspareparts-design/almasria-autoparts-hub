@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, FileText, Trash2, Eye, EyeOff, Plus, Search, X, Package, Table2, CheckCircle2, Users, Download, AlertCircle, PlusCircle, LinkIcon } from "lucide-react";
+import { Loader2, Upload, FileText, Trash2, Eye, EyeOff, Plus, Search, X, Package, Table2, CheckCircle2, Users, Download, AlertCircle, PlusCircle, LinkIcon, Sparkles } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -57,6 +57,8 @@ const AdminPriceLists = () => {
   const [searchingProducts, setSearchingProducts] = useState(false);
   const [loadingLinked, setLoadingLinked] = useState(false);
   const [bulkLinking, setBulkLinking] = useState(false);
+  const [aiLinking, setAiLinking] = useState(false);
+  const [aiResult, setAiResult] = useState<{ extracted_count: number; matched_count: number; linked_count: number; unmatched: string[]; sample_extracted?: string[] } | null>(null);
 
   // Upload report
   const [uploadReport, setUploadReport] = useState<UploadReportRow[] | null>(null);
