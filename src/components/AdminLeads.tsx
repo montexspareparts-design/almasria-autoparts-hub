@@ -575,12 +575,11 @@ const AdminLeads = () => {
       // Edge function returned non-2xx — try to extract server-side message
       if (error || (data && (data as any).error)) {
         const serverMsg = await extractFunctionErrorMessage(error as EdgeFunctionErrorLike | null, data);
-        // If user truly doesn't exist → offer to create it instead
+        // If user truly doesn't exist → confirm before creating
         if (typeof serverMsg === "string" && serverMsg.includes("غير موجود")) {
-          toast({
-            title: "الحساب غير موجود",
-            description: "هذا العميل ليس له حساب بعد. سيتم إنشاء حساب جديد الآن…",
-          });
+          setRegistering(null);
+          const ok = await requestAutoCreateConfirmation(lead, "user_not_found");
+          if (!ok) return;
           // Re-trigger the full registration flow which creates user + dealer account + sends WhatsApp
           await registerClient(lead);
           return;
