@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { phone, name, username, password } = await req.json();
+    const { phone, name, username, password, lead_id } = await req.json();
 
     if (!phone || !username || !password) {
       return new Response(JSON.stringify({ error: "Missing fields" }), {
@@ -30,6 +30,22 @@ Deno.serve(async (req) => {
     const msg = `🎉 مبروك ${name || ""}!\n\nتم قبول طلبك كتاجر في المصرية جروب ✅\n\n📱 بيانات الدخول:\nاسم المستخدم: ${username}\nكلمة السر: ${password}\n\n🔗 سجل دخولك الآن:\nhttps://almasria-autoparts-hub.lovable.app/dealer-login\n\n⚠️ يرجى تغيير كلمة السر بعد أول تسجيل دخول.\n\nالمصرية جروب 🚗`;
 
     const waResult = await sendWhatsAppText(phone, msg);
+
+    // Log send result for staff visibility
+    try {
+      await supabase.from("whatsapp_send_logs").insert({
+        lead_id: lead_id || null,
+        phone,
+        recipient_name: name || null,
+        template: "dealer_welcome",
+        message_preview: msg.slice(0, 300),
+        status: waResult.ok ? "sent" : (waResult.requiresTemplate ? "requires_template" : "failed"),
+        error_message: waResult.ok ? null : (waResult.error || null),
+        provider_response: waResult as any,
+      });
+    } catch (logErr) {
+      console.error("Failed to log whatsapp send:", logErr);
+    }
 
     return new Response(JSON.stringify({
       success: waResult.ok,

@@ -261,6 +261,7 @@ serve(async (req) => {
           name: name,
           username: phone,
           password: password,
+          lead_id: lead_id || null,
         }),
       });
       const waText = await waRes.text();

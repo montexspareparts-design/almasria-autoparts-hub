@@ -51,6 +51,7 @@ const StaffAccountSettings = lazy(() => import("@/components/admin/StaffAccountS
 const AdminNewOrderAlert = lazy(() => import("@/components/admin/AdminNewOrderAlert"));
 const AdminSupportRequestAlert = lazy(() => import("@/components/admin/AdminSupportRequestAlert"));
 const AdminNotificationPhones = lazy(() => import("@/components/AdminNotificationPhones"));
+const AdminWhatsAppDeliveryStatus = lazy(() => import("@/components/admin/AdminWhatsAppDeliveryStatus"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];
@@ -111,6 +112,7 @@ const sidebarGroups: SidebarGroup[] = [
       label: "التنبيهات والربط",
       items: [
         { id: "whatsapp-inbox", label: "صندوق الواتساب", icon: MessageCircle },
+        { id: "whatsapp-delivery", label: "حالة إرسال الواتساب", icon: MessageCircle },
         { id: "instapay-receipts", label: "إيصالات InstaPay", icon: Banknote },
         { id: "payment-reminders", label: "متابعة التذكيرات", icon: Clock },
         { id: "push-notifications", label: "إشعارات Push", icon: Bell },
@@ -681,6 +683,8 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminAuditLog /></Suspense>;
       case "whatsapp-inbox":
         return <Suspense fallback={<SectionLoader />}><AdminWhatsAppInbox /></Suspense>;
+      case "whatsapp-delivery":
+        return <Suspense fallback={<SectionLoader />}><AdminWhatsAppDeliveryStatus /></Suspense>;
       case "bundles":
         return <Suspense fallback={<SectionLoader />}><AdminMaintenanceBundles /></Suspense>;
       case "account-settings":

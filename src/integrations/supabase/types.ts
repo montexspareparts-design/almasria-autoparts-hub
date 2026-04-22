@@ -2119,6 +2119,53 @@ export type Database = {
           },
         ]
       }
+      whatsapp_send_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          lead_id: string | null
+          message_preview: string | null
+          phone: string
+          provider_response: Json | null
+          recipient_name: string | null
+          status: string
+          template: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          lead_id?: string | null
+          message_preview?: string | null
+          phone: string
+          provider_response?: Json | null
+          recipient_name?: string | null
+          status?: string
+          template?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          lead_id?: string | null
+          message_preview?: string | null
+          phone?: string
+          provider_response?: Json | null
+          recipient_name?: string | null
+          status?: string
+          template?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_send_logs_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       product_reviews_public: {
