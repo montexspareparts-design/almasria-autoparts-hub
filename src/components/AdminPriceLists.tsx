@@ -1155,6 +1155,26 @@ const AdminPriceLists = () => {
                 ))}
               </div>
             )}
+            {!bulkAiRunning && bulkAiResults.length > 0 && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-primary/40 text-primary hover:bg-primary/10"
+                onClick={() => {
+                  const successful = bulkAiResults
+                    .filter((r) => !r.error && r.linked > 0)
+                    .map((r) => {
+                      const list = lists.find((l) => l.title === r.title);
+                      return list ? { id: list.id, title: list.title } : null;
+                    })
+                    .filter(Boolean) as Array<{ id: string; title: string }>;
+                  if (successful.length > 0) openVerificationFor(successful);
+                }}
+              >
+                <Eye className="w-4 h-4 ml-1" />
+                مراجعة عينات SKU من النتائج
+              </Button>
+            )}
           </div>
         )}
 
