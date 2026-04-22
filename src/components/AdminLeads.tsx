@@ -37,6 +37,14 @@ interface ERPCustomer {
   name: string;
 }
 
+type EdgeFunctionErrorLike = {
+  message?: string;
+  context?: {
+    json?: () => Promise<any>;
+    text?: () => Promise<string>;
+  };
+};
+
 const statusLabels: Record<string, string> = {
   new: "جديد",
   contacted: "تم التواصل",
@@ -278,6 +286,50 @@ const AdminLeads = () => {
     if (!code) return null;
     const found = erpCustomers.find(c => c.code === code);
     return found?.name || null;
+  };
+
+  const extractFunctionErrorMessage = async (error: EdgeFunctionErrorLike | null, data?: any) => {
+    if (typeof data?.error === "string" && data.error.trim()) return data.error;
+
+    const response = error?.context;
+    if (response?.json) {
+      try {
+        const payload = await response.json();
+        if (typeof payload?.error === "string" && payload.error.trim()) return payload.error;
+      } catch {
+        // ignore invalid json body
+      }
+    }
+
+    if (response?.text) {
+      try {
+        const raw = await response.text();
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw);
+            if (typeof parsed?.error === "string" && parsed.error.trim()) return parsed.error;
+          } catch {
+            return raw;
+          }
+        }
+      } catch {
+        // ignore unreadable body
+      }
+    }
+
+    return error?.message || null;
+  };
+
+  const getLeadDealerAccount = async (erpCustomerCode: string | null) => {
+    if (!erpCustomerCode) return null;
+
+    const { data } = await supabase
+      .from("dealer_accounts")
+      .select("id, user_id")
+      .eq("erp_customer_code", erpCustomerCode)
+      .maybeSingle();
+
+    return data;
   };
 
   // Register client as a user account
