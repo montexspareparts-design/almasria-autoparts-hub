@@ -901,11 +901,11 @@ const AdminLeads = () => {
                           variant="outline"
                           size="sm"
                           className="h-7 text-[11px] gap-1 px-2"
-                          onClick={() => resetPassword(lead)}
-                          disabled={registering === lead.id}
-                          title="توليد كلمة مرور جديدة وحفظها"
+                          onClick={() => runPreflight(lead)}
+                          disabled={preflightChecking === lead.id || registering === lead.id}
+                          title="فحص الحساب وكلمة المرور قبل أي إجراء"
                         >
-                          {registering === lead.id ? (
+                          {preflightChecking === lead.id || registering === lead.id ? (
                             <Loader2 className="w-3 h-3 animate-spin" />
                           ) : (
                             <KeyRound className="w-3 h-3" />
