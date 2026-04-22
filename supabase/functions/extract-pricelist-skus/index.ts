@@ -189,7 +189,7 @@ Deno.serve(async (req) => {
       candidates: Candidate[];
     }> = [];
 
-    if (min_confidence >= 100) {
+    if (effective_min_confidence >= 100) {
       // Exact match path (fast, batched OR queries)
       const chunkSize = 200;
       const exactByCode = new Map<string, Candidate[]>();
