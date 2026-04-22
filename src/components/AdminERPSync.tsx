@@ -1969,6 +1969,215 @@ const AdminERPSync = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* ─── Price Preview (Dry-Run) Dialog ─── */}
+      <Dialog open={showPricePreview} onOpenChange={setShowPricePreview}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <TestTube className="w-5 h-5 text-amber-600" />
+              معاينة تغييرات الأسعار قبل التنفيذ
+              <Badge variant="outline" className="ms-2">Dry-Run</Badge>
+            </DialogTitle>
+          </DialogHeader>
+          {pricePreview && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
+                <div className="bg-muted rounded p-2 text-center">
+                  <p className="font-bold text-foreground">{pricePreview.matched}</p>
+                  <p className="text-muted-foreground">صنف مطابق</p>
+                </div>
+                <div className="bg-amber-500/10 rounded p-2 text-center border border-amber-500/30">
+                  <p className="font-bold text-foreground">{pricePreview.changesCount}</p>
+                  <p className="text-muted-foreground">سيتم تعديله</p>
+                </div>
+                <div className="bg-emerald-500/10 rounded p-2 text-center">
+                  <p className="font-bold text-foreground">{pricePreview.increases}</p>
+                  <p className="text-muted-foreground">ارتفاع ⬆️</p>
+                </div>
+                <div className="bg-rose-500/10 rounded p-2 text-center">
+                  <p className="font-bold text-foreground">{pricePreview.decreases}</p>
+                  <p className="text-muted-foreground">انخفاض ⬇️</p>
+                </div>
+                <div className="bg-orange-500/10 rounded p-2 text-center border border-orange-500/30">
+                  <p className="font-bold text-foreground">{pricePreview.bigChanges}</p>
+                  <p className="text-muted-foreground">تغيير ≥ 10%</p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={() => downloadPreviewCsv("prices")} variant="outline" size="sm" className="gap-2">
+                  <Copy className="w-4 h-4" /> تحميل المعاينة (CSV)
+                </Button>
+                <Button
+                  onClick={() => { setShowPricePreview(false); runPriceSync(); }}
+                  size="sm"
+                  className="gap-2 bg-amber-600 hover:bg-amber-700 text-white ms-auto"
+                  disabled={pricePreview.changesCount === 0}
+                >
+                  <CheckCircle className="w-4 h-4" /> تأكيد وتنفيذ التغييرات الآن
+                </Button>
+              </div>
+
+              {pricePreview.changes.length === 0 ? (
+                <div className="p-6 rounded-lg bg-muted/50 text-center text-sm text-muted-foreground">
+                  ✅ لا توجد تغييرات أسعار — كل الأصناف المطابقة بنفس السعر بين موقعنا والفيصل
+                </div>
+              ) : (
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full text-xs">
+                    <thead className="bg-muted sticky top-0">
+                      <tr>
+                        <th className="p-2 text-right">كود</th>
+                        <th className="p-2 text-right">الصنف</th>
+                        <th className="p-2 text-right">السعر الحالي</th>
+                        <th className="p-2 text-right">السعر الجديد</th>
+                        <th className="p-2 text-right">الفرق</th>
+                        <th className="p-2 text-right">النسبة</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pricePreview.changes.map((c, i) => (
+                        <tr key={i} className="border-t hover:bg-muted/30">
+                          <td className="p-2 font-mono">{c.erp_id}</td>
+                          <td className="p-2 max-w-[200px] truncate" title={c.name}>{c.name || "—"}</td>
+                          <td className="p-2 text-muted-foreground line-through">{c.old_price.toLocaleString("ar-EG")}</td>
+                          <td className="p-2 font-bold">{c.new_price.toLocaleString("ar-EG")}</td>
+                          <td className={`p-2 font-medium ${c.delta > 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                            {c.delta > 0 ? "+" : ""}{c.delta.toLocaleString("ar-EG")}
+                          </td>
+                          <td className="p-2">
+                            <Badge variant={Math.abs(c.pct) >= 10 ? "destructive" : "secondary"} className="text-[10px]">
+                              {c.pct > 0 ? "+" : ""}{c.pct}%
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {pricePreview.changesCount > pricePreview.changes.length && (
+                    <p className="p-2 text-center text-xs text-muted-foreground bg-muted">
+                      عرض أول {pricePreview.changes.length} من {pricePreview.changesCount} — حمّل CSV للقائمة الكاملة
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <p className="text-xs text-muted-foreground text-center">
+                ⏱️ تم التوليد: {new Date(pricePreview.generatedAt).toLocaleString("ar-EG")} — لم يتم كتابة أي شيء بعد
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── Stock Preview (Dry-Run) Dialog ─── */}
+      <Dialog open={showStockPreview} onOpenChange={setShowStockPreview}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <TestTube className="w-5 h-5 text-cyan-600" />
+              معاينة تغييرات الأرصدة قبل التنفيذ
+              <Badge variant="outline" className="ms-2">Dry-Run</Badge>
+            </DialogTitle>
+          </DialogHeader>
+          {stockPreview && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
+                <div className="bg-muted rounded p-2 text-center">
+                  <p className="font-bold text-foreground">{stockPreview.matched}</p>
+                  <p className="text-muted-foreground">صنف مطابق</p>
+                </div>
+                <div className="bg-cyan-500/10 rounded p-2 text-center border border-cyan-500/30">
+                  <p className="font-bold text-foreground">{stockPreview.changesCount}</p>
+                  <p className="text-muted-foreground">سيتم تعديله</p>
+                </div>
+                <div className="bg-emerald-500/10 rounded p-2 text-center">
+                  <p className="font-bold text-foreground">{stockPreview.backInStock}</p>
+                  <p className="text-muted-foreground">يعود متوفر ✅</p>
+                </div>
+                <div className="bg-rose-500/10 rounded p-2 text-center">
+                  <p className="font-bold text-foreground">{stockPreview.outOfStock}</p>
+                  <p className="text-muted-foreground">سينفد ⚠️</p>
+                </div>
+                <div className="bg-blue-500/10 rounded p-2 text-center">
+                  <p className="font-bold text-foreground">{stockPreview.increases + stockPreview.decreases}</p>
+                  <p className="text-muted-foreground">تعديل كمية</p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={() => downloadPreviewCsv("stock")} variant="outline" size="sm" className="gap-2">
+                  <Copy className="w-4 h-4" /> تحميل المعاينة (CSV)
+                </Button>
+                <Button
+                  onClick={() => { setShowStockPreview(false); runStockSync(); }}
+                  size="sm"
+                  className="gap-2 bg-cyan-600 hover:bg-cyan-700 text-white ms-auto"
+                  disabled={stockPreview.changesCount === 0}
+                >
+                  <CheckCircle className="w-4 h-4" /> تأكيد وتنفيذ التغييرات الآن
+                </Button>
+              </div>
+
+              {stockPreview.changes.length === 0 ? (
+                <div className="p-6 rounded-lg bg-muted/50 text-center text-sm text-muted-foreground">
+                  ✅ لا توجد تغييرات أرصدة — كل الأصناف المطابقة بنفس الكمية
+                </div>
+              ) : (
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full text-xs">
+                    <thead className="bg-muted sticky top-0">
+                      <tr>
+                        <th className="p-2 text-right">كود</th>
+                        <th className="p-2 text-right">الصنف</th>
+                        <th className="p-2 text-right">الرصيد الحالي</th>
+                        <th className="p-2 text-right">الرصيد الجديد</th>
+                        <th className="p-2 text-right">الفرق</th>
+                        <th className="p-2 text-right">الحالة</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {stockPreview.changes.map((c, i) => {
+                        const labelMap: Record<string, { text: string; cls: string }> = {
+                          increase: { text: "زيادة ⬆️", cls: "bg-emerald-600 text-white" },
+                          decrease: { text: "نقصان ⬇️", cls: "bg-amber-600 text-white" },
+                          back_in_stock: { text: "متوفر مرة أخرى ✅", cls: "bg-emerald-700 text-white" },
+                          out_of_stock: { text: "نفد ⚠️", cls: "bg-rose-600 text-white" },
+                        };
+                        const lbl = labelMap[c.status] || { text: c.status, cls: "" };
+                        return (
+                          <tr key={i} className="border-t hover:bg-muted/30">
+                            <td className="p-2 font-mono">{c.erp_id}</td>
+                            <td className="p-2 max-w-[200px] truncate" title={c.name}>{c.name || "—"}</td>
+                            <td className="p-2 text-muted-foreground line-through">{c.old_qty}</td>
+                            <td className="p-2 font-bold">{c.new_qty}</td>
+                            <td className={`p-2 font-medium ${c.delta > 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                              {c.delta > 0 ? "+" : ""}{c.delta}
+                            </td>
+                            <td className="p-2">
+                              <Badge className={`text-[10px] ${lbl.cls}`}>{lbl.text}</Badge>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                  {stockPreview.changesCount > stockPreview.changes.length && (
+                    <p className="p-2 text-center text-xs text-muted-foreground bg-muted">
+                      عرض أول {stockPreview.changes.length} من {stockPreview.changesCount} — حمّل CSV للقائمة الكاملة
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <p className="text-xs text-muted-foreground text-center">
+                ⏱️ تم التوليد: {new Date(stockPreview.generatedAt).toLocaleString("ar-EG")} — لم يتم كتابة أي شيء بعد
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
