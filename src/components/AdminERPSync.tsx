@@ -270,7 +270,60 @@ const AdminERPSync = () => {
     setSyncing(null);
   };
 
-  const handleBatchImport = async () => {
+  const runFullSync = async () => {
+    setSyncing("full_sync");
+    setFullSyncReport(null);
+    let pricesUpdated = 0;
+    let stockUpdated = 0;
+    let pricesError: string | undefined;
+    let stockError: string | undefined;
+    let stockWarning: string | undefined;
+
+    // 1) Prices
+    try {
+      const { data, error } = await supabase.functions.invoke("erp-sync-outbound", {
+        body: { action: "sync_prices", data: {} },
+      });
+      if (error) throw error;
+      pricesUpdated = data?.updated_count || 0;
+    } catch (err: any) {
+      pricesError = err?.message || "خطأ غير معروف";
+    }
+
+    // 2) Stock
+    try {
+      const { data, error } = await supabase.functions.invoke("erp-sync-outbound", {
+        body: { action: "sync_stock", data: {} },
+      });
+      if (error) throw error;
+      if (data?.warning === "ERP_ALL_ZERO_STOCK") {
+        stockWarning = data?.message || "كل الأرصدة من الـ ERP وصلت بقيمة صفر — تم تجاهلها";
+      } else {
+        stockUpdated = data?.updated_count || 0;
+      }
+    } catch (err: any) {
+      stockError = err?.message || "خطأ غير معروف";
+    }
+
+    setFullSyncReport({
+      pricesUpdated,
+      stockUpdated,
+      pricesError,
+      stockError,
+      stockWarning,
+      finishedAt: new Date().toISOString(),
+    });
+
+    const hasError = pricesError || stockError;
+    toast({
+      title: hasError ? "اكتملت المزامنة مع أخطاء" : "✅ تمت المزامنة الشاملة",
+      description: `أسعار: ${pricesUpdated} | أرصدة: ${stockUpdated}${stockWarning ? " — " + stockWarning : ""}`,
+      variant: hasError ? "destructive" : "default",
+    });
+
+    fetchData();
+    setSyncing(null);
+  };
     setSyncing("import_products");
     setImportProgress({ phase: "جاري جلب الأصناف من الفيصل...", currentBatch: 0, totalBatches: 0, imported: 0, updated: 0, skipped: 0, totalItems: 0, done: false });
 
