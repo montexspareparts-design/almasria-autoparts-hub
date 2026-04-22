@@ -480,14 +480,17 @@ const AdminLeads = () => {
           description: serverMsg || "فشل إنشاء الحساب",
           variant: "destructive",
         });
+        await logAttempt({ type: "create", status: "failure", lead, errorMessage: serverMsg || "فشل إنشاء الحساب" });
       } else if (data?.success) {
         setCredentials({ username: data.username, password: data.password, phone: lead.phone });
         setLeadCredentials(prev => ({ ...prev, [lead.id]: { username: lead.phone.replace(/\D/g, ""), password: data.password } }));
         toast({ title: "تم التسجيل", description: "تم إنشاء حساب العميل بنجاح" });
+        await logAttempt({ type: "create", status: "success", lead, details: { user_id: data.user_id, tier: data.tier } });
         fetchLeads();
       }
-    } catch (err) {
+    } catch (err: any) {
       toast({ title: "خطأ", description: "حدث خطأ غير متوقع", variant: "destructive" });
+      await logAttempt({ type: "create", status: "failure", lead, errorMessage: err?.message || "Unexpected error" });
     }
     setRegistering(null);
   };
