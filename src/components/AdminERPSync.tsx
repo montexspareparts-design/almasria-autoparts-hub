@@ -383,6 +383,8 @@ const AdminERPSync = () => {
     }
     setSyncing(null);
   };
+
+  const runFullSync = async () => {
     setSyncing("full_sync");
     setFullSyncReport(null);
     let pricesUpdated = 0;
