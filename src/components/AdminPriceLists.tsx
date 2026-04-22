@@ -497,7 +497,8 @@ const AdminPriceLists = () => {
 
           if (uniqueProducts.length > 0) {
             for (let i = 0; i < uniqueProducts.length; i += batchSize) {
-              const batch = uniqueProducts.slice(i, i + batchSize).map(product => {
+              const slice = uniqueProducts.slice(i, i + batchSize);
+              const batch = slice.map(product => {
                 const norm = product.matchedKey.replace(/[-\s]/g, "").toUpperCase();
                 const price = priceMap.get(product.matchedKey) ?? priceMap.get(norm) ?? null;
                 return {
@@ -506,10 +507,23 @@ const AdminPriceLists = () => {
                   price,
                 };
               });
-              await supabase.from("price_list_products").upsert(batch as any, {
+              const { error: linkErr } = await supabase.from("price_list_products").upsert(batch as any, {
                 onConflict: "price_list_id,product_id",
                 ignoreDuplicates: true,
               });
+              for (const product of slice) {
+                const idx = reportIndex.get(product.matchedKey);
+                if (idx !== undefined) {
+                  if (linkErr) {
+                    reportRows[idx].status = "failed";
+                    reportRows[idx].reason = `فشل الربط: ${linkErr.message}`;
+                  } else {
+                    reportRows[idx].status = createdKeys.has(product.matchedKey) ? "created" : "linked";
+                    reportRows[idx].product_sku = product.sku;
+                    reportRows[idx].reason = undefined;
+                  }
+                }
+              }
             }
             const withPrices = uniqueProducts.filter(p => {
               const norm = p.matchedKey.replace(/[-\s]/g, "").toUpperCase();
@@ -523,10 +537,20 @@ const AdminPriceLists = () => {
             toast({ title: "⚠️ لم يتم ربط أي صنف", variant: "destructive" });
           }
         }
-      } catch (e) {
+      } catch (e: any) {
         console.error("Excel linking error:", e);
         toast({ title: "⚠️ خطأ في ربط الأصناف من Excel", variant: "destructive" });
+        for (const r of reportRows) {
+          if (r.status === "failed" && !r.reason) r.reason = e?.message || "خطأ غير معروف";
+        }
       }
+    }
+
+    // Show report dialog if we processed an Excel
+    if (selectedExcel && reportRows.length > 0) {
+      setUploadReport(reportRows);
+      setReportListTitle(form.title);
+      setReportFilter("all");
     }
 
     if (newList) {
