@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, FileText, Trash2, Eye, EyeOff, Plus, Search, X, Package, Table2, CheckCircle2, Users, Download, AlertCircle, PlusCircle, LinkIcon } from "lucide-react";
+import { Loader2, Upload, FileText, Trash2, Eye, EyeOff, Plus, Search, X, Package, Table2, CheckCircle2, Users, Download, AlertCircle, PlusCircle, LinkIcon, Sparkles } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -57,6 +57,8 @@ const AdminPriceLists = () => {
   const [searchingProducts, setSearchingProducts] = useState(false);
   const [loadingLinked, setLoadingLinked] = useState(false);
   const [bulkLinking, setBulkLinking] = useState(false);
+  const [aiLinking, setAiLinking] = useState(false);
+  const [aiResult, setAiResult] = useState<{ extracted_count: number; matched_count: number; linked_count: number; unmatched: string[]; sample_extracted?: string[] } | null>(null);
 
   // Upload report
   const [uploadReport, setUploadReport] = useState<UploadReportRow[] | null>(null);
@@ -691,6 +693,31 @@ const AdminPriceLists = () => {
     setBulkLinking(false);
   };
 
+  const linkFromPdfWithAI = async () => {
+    if (!managingList) return;
+    if (!confirm("سيتم استخراج أكواد الأصناف من ملف الـ PDF تلقائياً عبر الذكاء الصناعي وربطها بالكشف (سيتم استبدال الأصناف الحالية). متابعة؟")) return;
+    setAiLinking(true);
+    setAiResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("extract-pricelist-skus", {
+        body: { price_list_id: managingList.id },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const res = data as { extracted_count: number; matched_count: number; linked_count: number; unmatched: string[]; sample_extracted?: string[] };
+      setAiResult(res);
+      toast({
+        title: "✅ تم التحليل",
+        description: `استخرج ${res.extracted_count} كود، ربط ${res.linked_count} صنف${res.unmatched.length ? `، ${res.unmatched.length} بدون مطابقة` : ""}`,
+      });
+      fetchLinkedProducts(managingList.id);
+    } catch (e: any) {
+      toast({ title: "فشل التحليل", description: e.message, variant: "destructive" });
+    } finally {
+      setAiLinking(false);
+    }
+  };
+
   if (loading) return <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
 
   // Views report for a specific list
@@ -757,19 +784,29 @@ const AdminPriceLists = () => {
           <div className="flex flex-wrap gap-2 p-3 rounded-lg border border-primary/20 bg-primary/5">
             <Button
               size="sm"
+              onClick={linkFromPdfWithAI}
+              disabled={aiLinking || bulkLinking}
+              className="gap-1.5 text-xs bg-gradient-to-r from-primary to-accent text-primary-foreground"
+            >
+              {aiLinking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+              ربط من ملف الـ PDF تلقائياً (AI)
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
               onClick={linkAllActiveProducts}
-              disabled={bulkLinking}
+              disabled={bulkLinking || aiLinking}
               className="gap-1.5 text-xs"
             >
               {bulkLinking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-              ربط جميع الأصناف النشطة بالكشف
+              ربط كل الأصناف النشطة
             </Button>
             {linkedProducts.length > 0 && (
               <Button
                 size="sm"
                 variant="outline"
                 onClick={unlinkAllProducts}
-                disabled={bulkLinking}
+                disabled={bulkLinking || aiLinking}
                 className="gap-1.5 text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -777,9 +814,46 @@ const AdminPriceLists = () => {
               </Button>
             )}
             <p className="text-[10px] text-muted-foreground self-center mr-auto">
-              💡 استخدم الزر لعرض كل الأصناف للتاجر تحت معاينة الـ PDF
+              💡 الذكاء الصناعي يستخرج أكواد الأصناف من الـ PDF ويربط الموجود منها تلقائياً
             </p>
           </div>
+
+          {/* AI extraction result */}
+          {aiResult && (
+            <div className="p-3 rounded-lg border border-primary/30 bg-primary/5 space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  نتيجة استخراج AI
+                </p>
+                <button onClick={() => setAiResult(null)} className="text-muted-foreground hover:text-foreground">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center text-[11px]">
+                <div className="p-2 rounded bg-background border border-border">
+                  <p className="text-muted-foreground">مستخرج</p>
+                  <p className="font-bold text-foreground">{aiResult.extracted_count}</p>
+                </div>
+                <div className="p-2 rounded bg-background border border-border">
+                  <p className="text-muted-foreground">تم ربطه</p>
+                  <p className="font-bold text-primary">{aiResult.linked_count}</p>
+                </div>
+                <div className="p-2 rounded bg-background border border-border">
+                  <p className="text-muted-foreground">بدون مطابقة</p>
+                  <p className="font-bold text-destructive">{aiResult.unmatched.length}</p>
+                </div>
+              </div>
+              {aiResult.unmatched.length > 0 && (
+                <details className="text-[10px] text-muted-foreground">
+                  <summary className="cursor-pointer hover:text-foreground">عرض الأكواد بدون مطابقة ({aiResult.unmatched.length})</summary>
+                  <div className="mt-1.5 p-2 bg-background rounded font-mono max-h-32 overflow-y-auto break-all" dir="ltr">
+                    {aiResult.unmatched.join(", ")}
+                  </div>
+                </details>
+              )}
+            </div>
+          )}
 
           {/* Search to add */}
           <div className="relative">
