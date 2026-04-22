@@ -2093,6 +2093,50 @@ const AdminERPSync = () => {
                 </div>
               )}
 
+              {/* Wholesale changes table */}
+              {pricePreview.wholesaleChanges.length > 0 && (
+                <div className="border rounded-lg overflow-hidden border-blue-500/30">
+                  <div className="bg-blue-500/10 p-2 text-xs font-semibold text-foreground">
+                    📋 تغييرات أسعار الجملة (wholesale_tier1) — {pricePreview.wholesaleChangesCount} صنف
+                  </div>
+                  <table className="w-full text-xs">
+                    <thead className="bg-muted sticky top-0">
+                      <tr>
+                        <th className="p-2 text-right">كود</th>
+                        <th className="p-2 text-right">الصنف</th>
+                        <th className="p-2 text-right">السعر الحالي</th>
+                        <th className="p-2 text-right">السعر الجديد</th>
+                        <th className="p-2 text-right">الفرق</th>
+                        <th className="p-2 text-right">النسبة</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pricePreview.wholesaleChanges.map((c, i) => (
+                        <tr key={i} className="border-t hover:bg-muted/30">
+                          <td className="p-2 font-mono">{c.erp_id}</td>
+                          <td className="p-2 max-w-[200px] truncate" title={c.name}>{c.name || "—"}</td>
+                          <td className="p-2 text-muted-foreground line-through">{c.old_price.toLocaleString("ar-EG")}</td>
+                          <td className="p-2 font-bold">{c.new_price.toLocaleString("ar-EG")}</td>
+                          <td className={`p-2 font-medium ${c.delta > 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                            {c.delta > 0 ? "+" : ""}{c.delta.toLocaleString("ar-EG")}
+                          </td>
+                          <td className="p-2">
+                            <Badge variant={c.status === "new" ? "default" : (Math.abs(c.pct) >= 10 ? "destructive" : "secondary")} className="text-[10px]">
+                              {c.status === "new" ? "جديد 🆕" : `${c.pct > 0 ? "+" : ""}${c.pct}%`}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {pricePreview.wholesaleChangesCount > pricePreview.wholesaleChanges.length && (
+                    <p className="p-2 text-center text-xs text-muted-foreground bg-muted">
+                      عرض أول {pricePreview.wholesaleChanges.length} من {pricePreview.wholesaleChangesCount}
+                    </p>
+                  )}
+                </div>
+              )}
+
               <p className="text-xs text-muted-foreground text-center">
                 ⏱️ تم التوليد: {new Date(pricePreview.generatedAt).toLocaleString("ar-EG")} — لم يتم كتابة أي شيء بعد
               </p>
