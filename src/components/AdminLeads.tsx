@@ -13,6 +13,36 @@ import WhatsAppQuickChat from "@/components/admin/WhatsAppQuickChat";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
+const FILTERS_STORAGE_KEY = "admin_leads_filters_v1";
+
+type LeadsFilters = {
+  search: string;
+  status: string;
+  clientType: string;
+  erp: "all" | "linked" | "unlinked";
+  account: "all" | "with_account" | "without_account";
+};
+
+const defaultFilters: LeadsFilters = {
+  search: "",
+  status: "all",
+  clientType: "all",
+  erp: "all",
+  account: "all",
+};
+
+const loadStoredFilters = (): LeadsFilters => {
+  if (typeof window === "undefined") return defaultFilters;
+  try {
+    const raw = window.localStorage.getItem(FILTERS_STORAGE_KEY);
+    if (!raw) return defaultFilters;
+    const parsed = JSON.parse(raw);
+    return { ...defaultFilters, ...parsed } as LeadsFilters;
+  } catch {
+    return defaultFilters;
+  }
+};
+
 interface Lead {
   id: string;
   name: string;
