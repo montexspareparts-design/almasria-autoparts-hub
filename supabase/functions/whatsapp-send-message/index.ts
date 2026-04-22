@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendWhatsAppPayload } from "../_shared/whatsapp.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,8 +9,6 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const META_TOKEN = Deno.env.get("META_WHATSAPP_ACCESS_TOKEN")!;
-const PHONE_ID = Deno.env.get("META_WHATSAPP_PHONE_NUMBER_ID")!;
 
 function formatPhone(phone: string): string {
   let p = phone.replace(/[\s\-()]/g, "");
@@ -108,19 +107,9 @@ Deno.serve(async (req) => {
     }
 
     // Send to Meta
-    const resp = await fetch(
-      `https://crm.whats-meta.com/api/meta/v19.0/${PHONE_ID}/messages`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${META_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(metaPayload),
-      }
-    );
-    const respData = await resp.json();
-    const metaMessageId = respData?.messages?.[0]?.id || null;
+    const sendResult = await sendWhatsAppPayload(to, metaPayload);
+    const respData = sendResult.data;
+    const metaMessageId = sendResult.messageId;
 
     // Insert into messages table (use service key to bypass RLS for the moderator-on-unassigned case)
     const adminSb = createClient(SUPABASE_URL, SERVICE_KEY);
@@ -137,8 +126,8 @@ Deno.serve(async (req) => {
         media_mime: mediaMime || null,
         media_caption: caption || null,
         meta_message_id: metaMessageId,
-        status: resp.ok ? "sent" : "failed",
-        error_message: resp.ok ? null : JSON.stringify(respData).slice(0, 500),
+        status: sendResult.ok ? "sent" : "failed",
+        error_message: sendResult.ok ? null : String(sendResult.error || JSON.stringify(respData)).slice(0, 500),
         sent_by: user.id,
         raw_payload: respData,
       })
@@ -147,8 +136,12 @@ Deno.serve(async (req) => {
 
     if (insertErr) console.error("Insert error:", insertErr);
 
-    if (!resp.ok) {
-      return new Response(JSON.stringify({ error: "Meta API failed", details: respData }), {
+    if (!sendResult.ok) {
+      return new Response(JSON.stringify({
+        error: "Meta API failed",
+        details: respData,
+        requiresTemplate: sendResult.requiresTemplate ?? false,
+      }), {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
