@@ -89,6 +89,23 @@ const AdminERPSync = () => {
     finishedAt: string;
   } | null>(null);
   const [showPriceReport, setShowPriceReport] = useState(false);
+  const [stockSyncProgress, setStockSyncProgress] = useState<{
+    phase: string;
+    percent: number;
+    done: boolean;
+    error?: string;
+  } | null>(null);
+  const [stockSyncReport, setStockSyncReport] = useState<{
+    updated: number;
+    matched: number;
+    erpTotal: number;
+    ourProducts: number;
+    withPositiveStock: number;
+    sample: Array<{ id: string; qty: number; status: "in_stock" | "out_of_stock" }>;
+    failures: Array<{ id: string; reason: string }>;
+    finishedAt: string;
+  } | null>(null);
+  const [showStockReport, setShowStockReport] = useState(false);
   const [importProgress, setImportProgress] = useState<{
     phase: string;
     currentBatch: number;
@@ -443,6 +460,105 @@ const AdminERPSync = () => {
     URL.revokeObjectURL(url);
   };
 
+  const runStockSync = async () => {
+    setSyncing("stock_sync");
+    setStockSyncReport(null);
+    setStockSyncProgress({ phase: "جاري الاتصال بنظام الفيصل...", percent: 10, done: false });
+
+    const t1 = setTimeout(() => {
+      setStockSyncProgress(p => p && !p.done ? { ...p, phase: "جاري جلب الأرصدة من الفيصل...", percent: 35 } : p);
+    }, 800);
+    const t2 = setTimeout(() => {
+      setStockSyncProgress(p => p && !p.done ? { ...p, phase: "جاري مطابقة المنتجات بالكود...", percent: 60 } : p);
+    }, 2000);
+    const t3 = setTimeout(() => {
+      setStockSyncProgress(p => p && !p.done ? { ...p, phase: "جاري تحديث الأرصدة في قاعدة البيانات...", percent: 85 } : p);
+    }, 3500);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("erp-sync-outbound", {
+        body: { action: "sync_stock", data: {} },
+      });
+
+      clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
+
+      if (error) throw error;
+      if (data?.success === false) throw new Error(data?.message || "فشلت المزامنة");
+
+      const updated = data?.updated || 0;
+      const matched = data?.matched || 0;
+      const erpTotal = data?.erp_total || 0;
+      const ourProducts = data?.our_products || 0;
+      const withPositiveStock = data?.with_positive_stock || 0;
+      const sample = (data?.sample || []) as Array<any>;
+
+      const sampleWithStatus = sample.map((s) => ({
+        id: String(s.id || ""),
+        qty: Number(s.qty || 0),
+        status: (Number(s.qty || 0) > 0 ? "in_stock" : "out_of_stock") as "in_stock" | "out_of_stock",
+      }));
+
+      const unmatchedCount = Math.max(0, ourProducts - matched);
+      const failures: Array<{ id: string; reason: string }> = [];
+      if (unmatchedCount > 0) {
+        failures.push({
+          id: "—",
+          reason: `${unmatchedCount} صنف على موقعنا بدون كود الفيصل (erp_item_code) أو غير موجود في الفيصل`,
+        });
+      }
+      if (withPositiveStock === 0 && matched > 0) {
+        failures.push({
+          id: "⚠️",
+          reason: `كل الأصناف المطابقة (${matched}) رصيدها = 0 من الفيصل. تأكد من حالة المخزون في النظام.`,
+        });
+      }
+
+      setStockSyncProgress({ phase: "✅ اكتملت مزامنة الأرصدة", percent: 100, done: true });
+      setStockSyncReport({
+        updated, matched, erpTotal, ourProducts, withPositiveStock,
+        sample: sampleWithStatus, failures,
+        finishedAt: new Date().toISOString(),
+      });
+
+      toast({
+        title: "✅ تمت مزامنة الأرصدة",
+        description: `تم تحديث ${updated} صنف من ${matched} مطابق (${withPositiveStock} منهم برصيد موجب)`,
+      });
+    } catch (err: any) {
+      clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
+      setStockSyncProgress({ phase: "❌ فشلت المزامنة", percent: 100, done: true, error: err?.message || "خطأ غير معروف" });
+      toast({
+        title: "فشل مزامنة الأرصدة",
+        description: err?.message || "خطأ غير معروف",
+        variant: "destructive",
+      });
+    }
+
+    fetchData();
+    setSyncing(null);
+  };
+
+  const downloadStockReportCsv = () => {
+    if (!stockSyncReport) return;
+    const headers = ["كود الفيصل", "الرصيد الجديد", "الحالة", "ملاحظة"];
+    const rows = [
+      ...stockSyncReport.sample.map(s => [
+        s.id, s.qty,
+        s.status === "in_stock" ? "متوفر ✅" : "نافذ ⚠️",
+        "",
+      ]),
+      ...stockSyncReport.failures.map(f => [f.id, "", "فشل", f.reason]),
+    ];
+    const csv = "\uFEFF" + [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `stock-sync-report-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handleBatchImport = async () => {
     setSyncing("import_products");
     setImportProgress({ phase: "جاري جلب الأصناف من الفيصل...", currentBatch: 0, totalBatches: 0, imported: 0, updated: 0, skipped: 0, totalItems: 0, done: false });
@@ -790,6 +906,90 @@ const AdminERPSync = () => {
             </CardContent>
           </Card>
 
+          {/* Stock-Only Sync Card with Live Progress + Per-Record Report */}
+          <Card className="border-2 border-cyan-500/40 hover:border-cyan-500/70 transition-colors bg-cyan-500/5">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center">
+                  <Package className="w-5 h-5 text-cyan-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-foreground">📦 مزامنة الأرصدة فقط (مع تقدّم وتقرير تفصيلي)</h3>
+                  <p className="text-xs text-muted-foreground">
+                    تحديث كميات المخزون من الفيصل لكل المنتجات المربوطة بـ erp_item_code أو SKU — مع عرض حي للتقدم وتقرير لكل سجل
+                  </p>
+                </div>
+              </div>
+
+              {stockSyncProgress && (
+                <div className="mb-3 p-4 rounded-lg bg-muted/50 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground flex items-center gap-2">
+                      {!stockSyncProgress.done && <Loader2 className="w-4 h-4 animate-spin" />}
+                      {stockSyncProgress.phase}
+                    </span>
+                    {stockSyncProgress.done && (
+                      <Button variant="ghost" size="sm" onClick={() => { setStockSyncProgress(null); setStockSyncReport(null); }} className="h-6 px-2 text-xs">✕</Button>
+                    )}
+                  </div>
+                  <Progress value={stockSyncProgress.percent} className="h-2" />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>{stockSyncProgress.percent}%</span>
+                  </div>
+                  {stockSyncProgress.error && (
+                    <p className="text-xs text-destructive">❌ {stockSyncProgress.error}</p>
+                  )}
+                </div>
+              )}
+
+              {stockSyncReport && (
+                <div className="mb-3 p-4 rounded-lg bg-background border space-y-3">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                    <div className="bg-emerald-500/10 rounded p-3 text-center border border-emerald-500/30">
+                      <p className="font-bold text-lg text-foreground">{stockSyncReport.updated}</p>
+                      <p className="text-muted-foreground">صنف محدّث ✅</p>
+                    </div>
+                    <div className="bg-blue-500/10 rounded p-3 text-center border border-blue-500/30">
+                      <p className="font-bold text-lg text-foreground">{stockSyncReport.matched}</p>
+                      <p className="text-muted-foreground">صنف مطابق</p>
+                    </div>
+                    <div className="bg-emerald-500/10 rounded p-3 text-center border border-emerald-500/30">
+                      <p className="font-bold text-lg text-foreground">{stockSyncReport.withPositiveStock}</p>
+                      <p className="text-muted-foreground">برصيد موجب</p>
+                    </div>
+                    <div className="bg-amber-500/10 rounded p-3 text-center border border-amber-500/30">
+                      <p className="font-bold text-lg text-foreground">{Math.max(0, stockSyncReport.ourProducts - stockSyncReport.matched)}</p>
+                      <p className="text-muted-foreground">غير مطابق ⚠️</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setShowStockReport(true)} className="flex-1 gap-2">
+                      <Database className="w-4 h-4" /> عرض التقرير التفصيلي
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={downloadStockReportCsv} className="gap-2">
+                      <Copy className="w-4 h-4" /> CSV
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <Button
+                className="w-full gap-2 bg-cyan-600 hover:bg-cyan-700 text-white"
+                onClick={runStockSync}
+                disabled={syncing !== null}
+              >
+                {syncing === "stock_sync" ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Package className="w-4 h-4" />
+                )}
+                {syncing === "stock_sync" ? "جاري المزامنة..." : "تشغيل مزامنة الأرصدة الآن"}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Import Products Card - Full Width */}
           <Card className="border-2 border-primary/30 hover:border-primary/60 transition-colors bg-primary/5">
             <CardContent className="p-5">
               <div className="flex items-center gap-3 mb-3">
@@ -1501,6 +1701,106 @@ const AdminERPSync = () => {
 
               <p className="text-xs text-muted-foreground text-center">
                 ⏱️ اكتمل في: {new Date(priceSyncReport.finishedAt).toLocaleString("ar-EG")}
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Detailed Per-Record Stock Sync Report Dialog */}
+      <Dialog open={showStockReport} onOpenChange={setShowStockReport}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Package className="w-5 h-5 text-cyan-600" />
+              تقرير مزامنة الأرصدة التفصيلي
+            </DialogTitle>
+          </DialogHeader>
+
+          {stockSyncReport && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
+                <div className="bg-muted rounded p-2 text-center">
+                  <p className="font-bold text-foreground">{stockSyncReport.erpTotal}</p>
+                  <p className="text-muted-foreground">في الفيصل</p>
+                </div>
+                <div className="bg-muted rounded p-2 text-center">
+                  <p className="font-bold text-foreground">{stockSyncReport.ourProducts}</p>
+                  <p className="text-muted-foreground">على موقعنا</p>
+                </div>
+                <div className="bg-emerald-500/10 rounded p-2 text-center">
+                  <p className="font-bold text-foreground">{stockSyncReport.matched}</p>
+                  <p className="text-muted-foreground">مطابق ✅</p>
+                </div>
+                <div className="bg-emerald-500/10 rounded p-2 text-center">
+                  <p className="font-bold text-foreground">{stockSyncReport.updated}</p>
+                  <p className="text-muted-foreground">تم تحديثه</p>
+                </div>
+                <div className="bg-blue-500/10 rounded p-2 text-center">
+                  <p className="font-bold text-foreground">{stockSyncReport.withPositiveStock}</p>
+                  <p className="text-muted-foreground">برصيد &gt; 0</p>
+                </div>
+              </div>
+
+              <Button onClick={downloadStockReportCsv} variant="outline" size="sm" className="w-full gap-2">
+                <Copy className="w-4 h-4" /> تحميل التقرير الكامل (CSV)
+              </Button>
+
+              <div>
+                <h4 className="font-semibold mb-2 text-sm flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-600" />
+                  عيّنة من السجلات المحدّثة (أول 5 برصيد موجب)
+                </h4>
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full text-xs">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="p-2 text-right">كود الفيصل</th>
+                        <th className="p-2 text-right">الرصيد الجديد</th>
+                        <th className="p-2 text-right">الحالة</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {stockSyncReport.sample.length === 0 && (
+                        <tr><td colSpan={3} className="p-4 text-center text-muted-foreground">لا توجد عيّنة برصيد موجب</td></tr>
+                      )}
+                      {stockSyncReport.sample.map((s, i) => (
+                        <tr key={i} className="border-t">
+                          <td className="p-2 font-mono">{s.id}</td>
+                          <td className="p-2 font-bold">{s.qty}</td>
+                          <td className="p-2">
+                            {s.status === "in_stock" ? (
+                              <Badge variant="default" className="bg-emerald-600">متوفر ✅</Badge>
+                            ) : (
+                              <Badge variant="secondary">نافذ ⚠️</Badge>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {stockSyncReport.failures.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-2 text-sm flex items-center gap-2">
+                    <XCircle className="w-4 h-4 text-destructive" />
+                    تنبيهات / أصناف بدون مطابقة
+                  </h4>
+                  <div className="space-y-2">
+                    {stockSyncReport.failures.map((f, i) => (
+                      <div key={i} className="p-3 rounded border border-destructive/30 bg-destructive/5 text-xs">
+                        <p className="font-medium text-destructive">{f.reason}</p>
+                        <p className="text-muted-foreground mt-1">💡 الحل: تأكد من إضافة كود الفيصل (erp_item_code) لكل منتج في صفحة "المنتجات"</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <p className="text-xs text-muted-foreground text-center">
+                ⏱️ اكتمل في: {new Date(stockSyncReport.finishedAt).toLocaleString("ar-EG")}
               </p>
             </div>
           )}
