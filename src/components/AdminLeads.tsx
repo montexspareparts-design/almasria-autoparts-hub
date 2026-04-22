@@ -13,6 +13,36 @@ import WhatsAppQuickChat from "@/components/admin/WhatsAppQuickChat";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
+const FILTERS_STORAGE_KEY = "admin_leads_filters_v1";
+
+type LeadsFilters = {
+  search: string;
+  status: string;
+  clientType: string;
+  erp: "all" | "linked" | "unlinked";
+  account: "all" | "with_account" | "without_account";
+};
+
+const defaultFilters: LeadsFilters = {
+  search: "",
+  status: "all",
+  clientType: "all",
+  erp: "all",
+  account: "all",
+};
+
+const loadStoredFilters = (): LeadsFilters => {
+  if (typeof window === "undefined") return defaultFilters;
+  try {
+    const raw = window.localStorage.getItem(FILTERS_STORAGE_KEY);
+    if (!raw) return defaultFilters;
+    const parsed = JSON.parse(raw);
+    return { ...defaultFilters, ...parsed } as LeadsFilters;
+  } catch {
+    return defaultFilters;
+  }
+};
+
 interface Lead {
   id: string;
   name: string;
@@ -80,7 +110,7 @@ const AdminLeads = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState<LeadsFilters>(() => loadStoredFilters());
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [registering, setRegistering] = useState<string | null>(null);
@@ -154,6 +184,28 @@ const AdminLeads = () => {
   useEffect(() => { 
     fetchLeads();
   }, []);
+
+  // Persist filters across sessions
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(filters));
+    } catch {
+      // ignore quota errors
+    }
+  }, [filters]);
+
+  const updateFilter = <K extends keyof LeadsFilters>(key: K, value: LeadsFilters[K]) => {
+    setFilters(f => ({ ...f, [key]: value }));
+  };
+
+  const resetFilters = () => setFilters(defaultFilters);
+  const hasActiveFilters =
+    filters.search.trim() !== "" ||
+    filters.status !== "all" ||
+    filters.clientType !== "all" ||
+    filters.erp !== "all" ||
+    filters.account !== "all";
 
   const fetchErpCustomers = useCallback(async () => {
     if (erpCustomers.length > 0) return;
@@ -459,12 +511,28 @@ const AdminLeads = () => {
     setRegistering(null);
   };
 
-  const filtered = leads.filter(l =>
-    l.name.includes(searchQuery) ||
-    l.phone.includes(searchQuery) ||
-    (l.shop_name || "").includes(searchQuery) ||
-    (l.erp_customer_code || "").includes(searchQuery)
-  );
+  const filtered = leads.filter(l => {
+    const q = filters.search.trim().toLowerCase();
+    if (q) {
+      const haystack = [
+        l.name,
+        l.phone,
+        l.shop_name || "",
+        l.erp_customer_code || "",
+      ].join(" ").toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
+    if (filters.status !== "all" && l.status !== filters.status) return false;
+    if (filters.clientType !== "all" && (l.client_type || "retail") !== filters.clientType) return false;
+    if (filters.erp === "linked" && !l.erp_customer_code) return false;
+    if (filters.erp === "unlinked" && l.erp_customer_code) return false;
+    if (filters.account !== "all") {
+      const hasAccount = !!leadCredentials[l.id];
+      if (filters.account === "with_account" && !hasAccount) return false;
+      if (filters.account === "without_account" && hasAccount) return false;
+    }
+    return true;
+  });
 
   return (
     <div className="space-y-4">
@@ -640,23 +708,84 @@ const AdminLeads = () => {
         </Card>
       )}
 
-      {/* Search */}
-      <div className="relative max-w-sm">
-        <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          placeholder="بحث بالاسم أو الهاتف أو كود الفيصل..."
-          className="pr-9"
-        />
-      </div>
+      {/* Search & Filters */}
+      <Card>
+        <CardContent className="p-3 space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
+            <div className="relative lg:col-span-2">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                value={filters.search}
+                onChange={e => updateFilter("search", e.target.value)}
+                placeholder="بحث بالاسم أو الهاتف أو كود الفيصل أو المحل..."
+                className="pr-9 h-9"
+              />
+              {filters.search && (
+                <button
+                  type="button"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-destructive"
+                  onClick={() => updateFilter("search", "")}
+                  title="مسح البحث"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            <Select value={filters.status} onValueChange={v => updateFilter("status", v)}>
+              <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="الحالة" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل الحالات</SelectItem>
+                {Object.entries(statusLabels).map(([k, v]) => (
+                  <SelectItem key={k} value={k}>{v}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filters.clientType} onValueChange={v => updateFilter("clientType", v)}>
+              <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="النوع" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل الأنواع</SelectItem>
+                {Object.entries(clientTypeLabels).map(([k, v]) => (
+                  <SelectItem key={k} value={k}>{v}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filters.erp} onValueChange={v => updateFilter("erp", v as LeadsFilters["erp"])}>
+              <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="كود الفيصل" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">الكل (الفيصل)</SelectItem>
+                <SelectItem value="linked">مربوط بالفيصل</SelectItem>
+                <SelectItem value="unlinked">غير مربوط</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={filters.account} onValueChange={v => updateFilter("account", v as LeadsFilters["account"])}>
+              <SelectTrigger className="h-9 text-xs w-[200px]"><SelectValue placeholder="حالة الحساب" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل الحسابات</SelectItem>
+                <SelectItem value="with_account">له حساب مفعل</SelectItem>
+                <SelectItem value="without_account">بدون حساب بعد</SelectItem>
+              </SelectContent>
+            </Select>
+            <span className="text-xs text-muted-foreground">
+              عرض <span className="font-semibold text-foreground">{filtered.length}</span> من {leads.length}
+            </span>
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" onClick={resetFilters} className="h-8 gap-1 text-xs ml-auto">
+                <X className="w-3.5 h-3.5" />
+                مسح الفلاتر
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Table */}
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
-          {searchQuery ? "لا توجد نتائج" : "لا يوجد عملاء حتى الآن — ابدأ بإضافة أول عميل"}
+          {hasActiveFilters ? "لا توجد نتائج تطابق الفلاتر الحالية" : "لا يوجد عملاء حتى الآن — ابدأ بإضافة أول عميل"}
         </div>
       ) : (
         <div className="rounded-xl border overflow-hidden">
