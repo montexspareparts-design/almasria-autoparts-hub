@@ -21,6 +21,8 @@ type LeadsFilters = {
   clientType: string;
   erp: "all" | "linked" | "unlinked";
   account: "all" | "with_account" | "without_account";
+  attemptStatus: "all" | "success" | "failed" | "none";
+  errorSearch: string;
 };
 
 const defaultFilters: LeadsFilters = {
@@ -29,6 +31,15 @@ const defaultFilters: LeadsFilters = {
   clientType: "all",
   erp: "all",
   account: "all",
+  attemptStatus: "all",
+  errorSearch: "",
+};
+
+type LeadAttemptInfo = {
+  attempt_type: "create" | "reset_password" | string;
+  status: "success" | "failure" | string;
+  error_message: string | null;
+  created_at: string;
 };
 
 const loadStoredFilters = (): LeadsFilters => {
