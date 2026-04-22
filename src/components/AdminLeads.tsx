@@ -911,13 +911,46 @@ const AdminLeads = () => {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Select value={filters.account} onValueChange={v => updateFilter("account", v as LeadsFilters["account"])}>
-              <SelectTrigger className="h-9 text-xs w-[200px]"><SelectValue placeholder="حالة الحساب" /></SelectTrigger>
+              <SelectTrigger className="h-9 text-xs w-[180px]"><SelectValue placeholder="حالة الحساب" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">كل الحسابات</SelectItem>
                 <SelectItem value="with_account">له حساب مفعل</SelectItem>
                 <SelectItem value="without_account">بدون حساب بعد</SelectItem>
               </SelectContent>
             </Select>
+            <Select
+              value={filters.attemptStatus}
+              onValueChange={v => updateFilter("attemptStatus", v as LeadsFilters["attemptStatus"])}
+            >
+              <SelectTrigger className="h-9 text-xs w-[200px]">
+                <SelectValue placeholder="حالة آخر محاولة" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل المحاولات</SelectItem>
+                <SelectItem value="success">آخر محاولة: نجاح ✅</SelectItem>
+                <SelectItem value="failed">آخر محاولة: فشل ❌</SelectItem>
+                <SelectItem value="none">لا توجد محاولات</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="relative w-[260px]">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <Input
+                value={filters.errorSearch}
+                onChange={e => updateFilter("errorSearch", e.target.value)}
+                placeholder="بحث في رسالة آخر خطأ..."
+                className="pr-8 h-9 text-xs"
+              />
+              {filters.errorSearch && (
+                <button
+                  type="button"
+                  onClick={() => updateFilter("errorSearch", "")}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label="مسح بحث الخطأ"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
             <span className="text-xs text-muted-foreground">
               عرض <span className="font-semibold text-foreground">{filtered.length}</span> من {leads.length}
             </span>
