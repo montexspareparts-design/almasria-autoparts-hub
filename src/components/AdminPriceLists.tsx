@@ -835,11 +835,18 @@ const AdminPriceLists = () => {
               )}
 
               {matchResult && (
-                <div className={`flex items-center gap-2 text-xs p-2.5 rounded border ${matchResult.matched > 0 ? "bg-primary/5 border-primary/20 text-primary" : "bg-destructive/5 border-destructive/20 text-destructive"}`}>
-                  <CheckCircle2 className="w-4 h-4 shrink-0" />
-                  <span>
-                    <strong>{matchResult.matched}</strong> صنف مطابق من أصل <strong>{matchResult.total}</strong> رقم قطعة في الملف
-                  </span>
+                <div className="flex flex-col gap-1 text-xs p-2.5 rounded border bg-primary/5 border-primary/20 text-primary">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    <span>
+                      <strong>{matchResult.matched}</strong> صنف موجود + <strong>{matchResult.toCreate}</strong> سيُضاف جديد للنظام (إجمالي <strong>{matchResult.total}</strong>)
+                    </span>
+                  </div>
+                  {matchResult.toCreate > 0 && (
+                    <p className="text-[10px] text-muted-foreground pr-6">
+                      الأصناف الجديدة سيتم إنشاؤها تلقائياً وستظهر في البحث للعملاء
+                    </p>
+                  )}
                 </div>
               )}
 
