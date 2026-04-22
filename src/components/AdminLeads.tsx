@@ -708,23 +708,84 @@ const AdminLeads = () => {
         </Card>
       )}
 
-      {/* Search */}
-      <div className="relative max-w-sm">
-        <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          placeholder="بحث بالاسم أو الهاتف أو كود الفيصل..."
-          className="pr-9"
-        />
-      </div>
+      {/* Search & Filters */}
+      <Card>
+        <CardContent className="p-3 space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
+            <div className="relative lg:col-span-2">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                value={filters.search}
+                onChange={e => updateFilter("search", e.target.value)}
+                placeholder="بحث بالاسم أو الهاتف أو كود الفيصل أو المحل..."
+                className="pr-9 h-9"
+              />
+              {filters.search && (
+                <button
+                  type="button"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-destructive"
+                  onClick={() => updateFilter("search", "")}
+                  title="مسح البحث"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            <Select value={filters.status} onValueChange={v => updateFilter("status", v)}>
+              <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="الحالة" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل الحالات</SelectItem>
+                {Object.entries(statusLabels).map(([k, v]) => (
+                  <SelectItem key={k} value={k}>{v}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filters.clientType} onValueChange={v => updateFilter("clientType", v)}>
+              <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="النوع" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل الأنواع</SelectItem>
+                {Object.entries(clientTypeLabels).map(([k, v]) => (
+                  <SelectItem key={k} value={k}>{v}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filters.erp} onValueChange={v => updateFilter("erp", v as LeadsFilters["erp"])}>
+              <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="كود الفيصل" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">الكل (الفيصل)</SelectItem>
+                <SelectItem value="linked">مربوط بالفيصل</SelectItem>
+                <SelectItem value="unlinked">غير مربوط</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={filters.account} onValueChange={v => updateFilter("account", v as LeadsFilters["account"])}>
+              <SelectTrigger className="h-9 text-xs w-[200px]"><SelectValue placeholder="حالة الحساب" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل الحسابات</SelectItem>
+                <SelectItem value="with_account">له حساب مفعل</SelectItem>
+                <SelectItem value="without_account">بدون حساب بعد</SelectItem>
+              </SelectContent>
+            </Select>
+            <span className="text-xs text-muted-foreground">
+              عرض <span className="font-semibold text-foreground">{filtered.length}</span> من {leads.length}
+            </span>
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" onClick={resetFilters} className="h-8 gap-1 text-xs ml-auto">
+                <X className="w-3.5 h-3.5" />
+                مسح الفلاتر
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Table */}
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
-          {searchQuery ? "لا توجد نتائج" : "لا يوجد عملاء حتى الآن — ابدأ بإضافة أول عميل"}
+          {hasActiveFilters ? "لا توجد نتائج تطابق الفلاتر الحالية" : "لا يوجد عملاء حتى الآن — ابدأ بإضافة أول عميل"}
         </div>
       ) : (
         <div className="rounded-xl border overflow-hidden">
