@@ -68,7 +68,11 @@ const AdminPriceLists = () => {
 
   // Calibration: minimum confidence (0-100) for linking SKUs to products.
   // 100 = exact match only. Lower = allow fuzzy matches.
+  // Per-field thresholds: SKU and ERP code can be tuned independently
+  // because price lists often use one type of code more reliably than the other.
   const [minConfidence, setMinConfidence] = useState<number>(100);
+  const [minConfidenceSku, setMinConfidenceSku] = useState<number>(100);
+  const [minConfidenceErp, setMinConfidenceErp] = useState<number>(100);
 
   // Matching log (dry-run preview) — top candidates per extracted SKU + reason.
   type MatchCandidate = {
