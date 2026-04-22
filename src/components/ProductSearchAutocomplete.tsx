@@ -330,13 +330,45 @@ const ProductSearchAutocomplete = ({
                 </button>
               )}
 
-              {/* No results message */}
+              {/* No results message — enhanced with CTAs */}
               {noResults && !didYouMean && (
-                <div className="px-4 py-8 text-center">
-                  <Package className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-                  <p className="text-sm font-bold text-muted-foreground mb-1">لا توجد نتائج لـ "{value}"</p>
-                  <p className="text-xs text-muted-foreground/60">جرّب البحث بكلمات مختلفة أو رقم القطعة</p>
+                <div className="px-4 py-6 text-center">
+                  <Package className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+                  <p className="text-sm font-bold text-foreground mb-1">لا توجد نتائج لـ "{value}"</p>
+                  <p className="text-xs text-muted-foreground mb-4">جرّب كلمات مختلفة، رقم القطعة، أو موديل السيارة</p>
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={() => { onChange(""); inputRef.current?.focus(); }}
+                      className="w-full px-4 py-2.5 rounded-xl bg-muted hover:bg-accent text-foreground text-xs font-bold transition-colors"
+                    >
+                      مسح البحث وإعادة المحاولة
+                    </button>
+                    <a
+                      href={`https://wa.me/201027815696?text=${encodeURIComponent(`أبحث عن قطعة: ${value}`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full px-4 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition-colors flex items-center justify-center gap-2"
+                    >
+                      اطلب القطعة عبر واتساب
+                    </a>
+                  </div>
                 </div>
+              )}
+
+              {/* Mobile quick-pick: select first suggestion */}
+              {suggestions.length > 0 && (
+                <button
+                  onClick={() => { onProductClick?.(suggestions[0]); setIsFocused(false); }}
+                  className="sm:hidden w-full flex items-center justify-between gap-2 px-4 py-2.5 bg-primary/10 hover:bg-primary/15 transition-colors text-right border-b border-border/30"
+                >
+                  <span className="text-[11px] text-primary font-bold flex items-center gap-1.5">
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    اختيار أول اقتراح
+                  </span>
+                  <span className="text-[11px] text-foreground font-medium truncate max-w-[60%]">
+                    {suggestions[0].name_ar}
+                  </span>
+                </button>
               )}
 
               {/* No search: popular items */}
