@@ -554,10 +554,9 @@ const AdminLeads = () => {
     try {
       const dealerAccount = await getLeadDealerAccount(lead.erp_customer_code);
       if (!dealerAccount) {
-        toast({
-          title: "إنشاء الحساب",
-          description: "هذا العميل محوّل لكن الحساب غير مكتمل بعد، سيتم إنشاؤه الآن.",
-        });
+        setRegistering(null);
+        const ok = await requestAutoCreateConfirmation(lead, "no_dealer_account");
+        if (!ok) return;
         await registerClient(lead);
         return;
       }
