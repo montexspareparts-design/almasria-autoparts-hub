@@ -115,8 +115,8 @@ const AdminPriceLists = () => {
     await supabase.from("notifications").insert(notifications);
   };
 
-  // Extract SKUs and prices from Excel file
-  const extractSkusFromExcel = (file: File): Promise<{ sku: string; price: number | null }[]> => {
+  // Extract SKUs, names, and prices from Excel file
+  const extractSkusFromExcel = (file: File): Promise<{ sku: string; name: string | null; price: number | null }[]> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -131,14 +131,15 @@ const AdminPriceLists = () => {
             return;
           }
 
-          // Find the SKU column
           const headerRow = rows[0] as string[];
-          const skuHeaders = ["sku", "SKU", "رقم القطعة", "part number", "Part Number", "PART NUMBER", "رقم_القطعة", "part_number", "OEM", "oem", "الرقم", "رقم"];
+          const skuHeaders = ["sku", "SKU", "رقم القطعة", "part number", "Part Number", "PART NUMBER", "رقم_القطعة", "part_number", "OEM", "oem", "الرقم", "رقم", "كود الصنف", "كود"];
           const priceHeaders = ["price", "Price", "PRICE", "السعر", "سعر", "الثمن", "سعر_البيع", "سعر البيع", "Unit Price", "unit_price"];
-          
+          const nameHeaders = ["name", "Name", "NAME", "اسم الصنف", "الاسم", "اسم", "name_ar", "البيان", "بيان", "Description", "description", "وصف"];
+
           let skuColIndex = -1;
           let priceColIndex = -1;
-          
+          let nameColIndex = -1;
+
           if (headerRow) {
             for (let i = 0; i < headerRow.length; i++) {
               const cell = String(headerRow[i] || "").trim();
@@ -148,16 +149,17 @@ const AdminPriceLists = () => {
               if (priceColIndex === -1 && priceHeaders.some(h => cell.toLowerCase() === h.toLowerCase() || cell.includes(h))) {
                 priceColIndex = i;
               }
+              if (nameColIndex === -1 && nameHeaders.some(h => cell.toLowerCase() === h.toLowerCase() || cell.includes(h))) {
+                nameColIndex = i;
+              }
             }
           }
 
-          // If no header found, assume first column for SKU
           if (skuColIndex === -1) {
             skuColIndex = 0;
           }
 
-          // Extract SKUs and prices from all data rows (skip header)
-          const results: { sku: string; price: number | null }[] = [];
+          const results: { sku: string; name: string | null; price: number | null }[] = [];
           const seenSkus = new Set<string>();
           for (let i = 1; i < rows.length; i++) {
             const row = rows[i] as any[];
@@ -172,7 +174,12 @@ const AdminPriceLists = () => {
                     price = parsed;
                   }
                 }
-                results.push({ sku, price });
+                let name: string | null = null;
+                if (nameColIndex !== -1 && row[nameColIndex] != null) {
+                  const n = String(row[nameColIndex]).trim();
+                  if (n) name = n;
+                }
+                results.push({ sku, name, price });
               }
             }
           }
@@ -196,7 +203,7 @@ const AdminPriceLists = () => {
     try {
       const excelRows = await extractSkusFromExcel(file);
       const skuStrings = excelRows.map(r => r.sku);
-      
+
       if (skuStrings.length === 0) {
         toast({ title: "لم يتم العثور على أرقام قطع في الملف", variant: "destructive" });
         setMatchingSkus(false);
@@ -204,46 +211,54 @@ const AdminPriceLists = () => {
       }
 
       const hasPrices = excelRows.some(r => r.price !== null);
+      const hasNames = excelRows.some(r => r.name !== null);
 
-      // Match with database in batches
+      // Match with database in batches (by SKU and erp_item_code)
       const batchSize = 50;
-      let matchedCount = 0;
-      const matchedSkus: string[] = [];
+      const matchedSkus = new Set<string>();
 
       for (let i = 0; i < skuStrings.length; i += batchSize) {
         const batch = skuStrings.slice(i, i + batchSize);
         const { data } = await supabase
           .from("products")
-          .select("sku", { count: "exact" })
-          .eq("is_active", true)
+          .select("sku, erp_item_code")
           .in("sku", batch);
+        if (data) data.forEach((p: any) => matchedSkus.add(p.sku));
 
-        if (data) {
-          matchedCount += data.length;
-          matchedSkus.push(...data.map(p => p.sku));
-        }
+        const { data: data2 } = await supabase
+          .from("products")
+          .select("sku, erp_item_code")
+          .in("erp_item_code", batch);
+        if (data2) data2.forEach((p: any) => p.erp_item_code && matchedSkus.add(p.erp_item_code));
       }
 
-      // Also try normalized matching
+      // Normalized matching
       const { data: allProducts } = await supabase
         .from("products")
-        .select("sku")
-        .eq("is_active", true);
+        .select("sku, erp_item_code");
 
       if (allProducts) {
-        const normalizedExcelSkus = skuStrings.map(s => s.replace(/[-\s]/g, "").toUpperCase());
+        const normalizedExcelMap = new Map<string, string>();
+        skuStrings.forEach(s => normalizedExcelMap.set(s.replace(/[-\s]/g, "").toUpperCase(), s));
         for (const product of allProducts) {
-          const normalizedDbSku = product.sku.replace(/[-\s]/g, "").toUpperCase();
-          if (normalizedExcelSkus.includes(normalizedDbSku) && !matchedSkus.includes(product.sku)) {
-            matchedCount++;
-            matchedSkus.push(product.sku);
+          const candidates = [product.sku, product.erp_item_code].filter(Boolean);
+          for (const c of candidates) {
+            const norm = String(c).replace(/[-\s]/g, "").toUpperCase();
+            const original = normalizedExcelMap.get(norm);
+            if (original) matchedSkus.add(original);
           }
         }
       }
 
-      setMatchResult({ matched: matchedCount, total: skuStrings.length, skus: skuStrings });
-      const priceNote = hasPrices ? " (مع أسعار)" : "";
-      toast({ title: `تم العثور على ${matchedCount} صنف مطابق من أصل ${skuStrings.length} رقم قطعة${priceNote}` });
+      const matchedCount = matchedSkus.size;
+      const toCreate = skuStrings.length - matchedCount;
+
+      setMatchResult({ matched: matchedCount, toCreate, total: skuStrings.length, skus: skuStrings });
+      const priceNote = hasPrices ? " مع أسعار" : "";
+      const nameNote = hasNames ? " مع أسماء" : "";
+      toast({
+        title: `✓ ${matchedCount} موجود + ${toCreate} سيُضاف جديد (إجمالي ${skuStrings.length})${priceNote}${nameNote}`,
+      });
     } catch (err) {
       console.error("Excel parse error:", err);
       toast({ title: "خطأ في قراءة ملف Excel", variant: "destructive" });
