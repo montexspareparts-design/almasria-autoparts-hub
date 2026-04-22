@@ -13,6 +13,7 @@ import {
   Zap, TestTube, Globe, Copy
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface SyncLog {
   id: string;
@@ -1401,6 +1402,110 @@ const AdminERPSync = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Detailed Per-Record Price Sync Report Dialog */}
+      <Dialog open={showPriceReport} onOpenChange={setShowPriceReport}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-amber-600" />
+              تقرير مزامنة الأسعار التفصيلي
+            </DialogTitle>
+          </DialogHeader>
+
+          {priceSyncReport && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
+                <div className="bg-muted rounded p-2 text-center">
+                  <p className="font-bold text-foreground">{priceSyncReport.erpTotal}</p>
+                  <p className="text-muted-foreground">في الفيصل</p>
+                </div>
+                <div className="bg-muted rounded p-2 text-center">
+                  <p className="font-bold text-foreground">{priceSyncReport.ourProducts}</p>
+                  <p className="text-muted-foreground">على موقعنا</p>
+                </div>
+                <div className="bg-emerald-500/10 rounded p-2 text-center">
+                  <p className="font-bold text-foreground">{priceSyncReport.matched}</p>
+                  <p className="text-muted-foreground">مطابق ✅</p>
+                </div>
+                <div className="bg-emerald-500/10 rounded p-2 text-center">
+                  <p className="font-bold text-foreground">{priceSyncReport.retailUpdated}</p>
+                  <p className="text-muted-foreground">سعر قطاعي محدّث</p>
+                </div>
+                <div className="bg-emerald-500/10 rounded p-2 text-center">
+                  <p className="font-bold text-foreground">{priceSyncReport.wholesaleUpdated}</p>
+                  <p className="text-muted-foreground">سعر جملة محدّث</p>
+                </div>
+              </div>
+
+              <Button onClick={downloadPriceReportCsv} variant="outline" size="sm" className="w-full gap-2">
+                <Copy className="w-4 h-4" /> تحميل التقرير الكامل (CSV)
+              </Button>
+
+              <div>
+                <h4 className="font-semibold mb-2 text-sm flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-600" />
+                  عيّنة من السجلات الناجحة (أول 5)
+                </h4>
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full text-xs">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="p-2 text-right">كود الفيصل</th>
+                        <th className="p-2 text-right">الاسم</th>
+                        <th className="p-2 text-right">قطاعي</th>
+                        <th className="p-2 text-right">جملة</th>
+                        <th className="p-2 text-right">الحالة</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {priceSyncReport.sample.length === 0 && (
+                        <tr><td colSpan={5} className="p-4 text-center text-muted-foreground">لا توجد سجلات</td></tr>
+                      )}
+                      {priceSyncReport.sample.map((s, i) => (
+                        <tr key={i} className="border-t">
+                          <td className="p-2 font-mono">{s.id}</td>
+                          <td className="p-2">{s.name || "—"}</td>
+                          <td className="p-2">{s.retailPrice ? `${s.retailPrice} ج.م` : "—"}</td>
+                          <td className="p-2">{s.wholesalePrice ? `${s.wholesalePrice} ج.م` : "—"}</td>
+                          <td className="p-2">
+                            {s.status === "success" ? (
+                              <Badge variant="default" className="bg-emerald-600">نجح</Badge>
+                            ) : (
+                              <Badge variant="secondary" title={s.reason}>تخطي</Badge>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {priceSyncReport.failures.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-2 text-sm flex items-center gap-2">
+                    <XCircle className="w-4 h-4 text-destructive" />
+                    أصناف فشلت أو بدون مطابقة
+                  </h4>
+                  <div className="space-y-2">
+                    {priceSyncReport.failures.map((f, i) => (
+                      <div key={i} className="p-3 rounded border border-destructive/30 bg-destructive/5 text-xs">
+                        <p className="font-medium text-destructive">{f.reason}</p>
+                        <p className="text-muted-foreground mt-1">💡 الحل: تأكد من إضافة كود الفيصل (erp_item_code) لكل منتج في صفحة "المنتجات"</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <p className="text-xs text-muted-foreground text-center">
+                ⏱️ اكتمل في: {new Date(priceSyncReport.finishedAt).toLocaleString("ar-EG")}
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
