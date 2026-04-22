@@ -60,6 +60,11 @@ const AdminPriceLists = () => {
   const [aiLinking, setAiLinking] = useState(false);
   const [aiResult, setAiResult] = useState<{ extracted_count: number; matched_count: number; linked_count: number; unmatched: string[]; sample_extracted?: string[] } | null>(null);
 
+  // Bulk AI re-link across all price lists
+  const [bulkAiRunning, setBulkAiRunning] = useState(false);
+  const [bulkAiProgress, setBulkAiProgress] = useState<{ current: number; total: number; currentTitle: string }>({ current: 0, total: 0, currentTitle: "" });
+  const [bulkAiResults, setBulkAiResults] = useState<Array<{ title: string; linked: number; extracted: number; error?: string }>>([]);
+
   // Upload report
   const [uploadReport, setUploadReport] = useState<UploadReportRow[] | null>(null);
   const [reportListTitle, setReportListTitle] = useState("");
@@ -718,7 +723,45 @@ const AdminPriceLists = () => {
     }
   };
 
-  if (loading) return <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
+  const linkAllPriceListsFromPdfWithAI = async () => {
+    const candidates = lists.filter((l) => l.file_url);
+    if (candidates.length === 0) {
+      toast({ title: "لا توجد كشوفات بملفات PDF للتحليل", variant: "destructive" });
+      return;
+    }
+    if (!confirm(`سيتم تحليل ${candidates.length} كشف بالـ AI واستخراج أكواد الأصناف من ملفات PDF وربطها (سيتم استبدال الأصناف الحالية في كل كشف). هذه العملية قد تستغرق عدة دقائق. متابعة؟`)) return;
+
+    setBulkAiRunning(true);
+    setBulkAiResults([]);
+    setBulkAiProgress({ current: 0, total: candidates.length, currentTitle: "" });
+
+    const results: Array<{ title: string; linked: number; extracted: number; error?: string }> = [];
+
+    for (let i = 0; i < candidates.length; i++) {
+      const list = candidates[i];
+      setBulkAiProgress({ current: i + 1, total: candidates.length, currentTitle: list.title });
+      try {
+        const { data, error } = await supabase.functions.invoke("extract-pricelist-skus", {
+          body: { price_list_id: list.id },
+        });
+        if (error) throw error;
+        if ((data as any)?.error) throw new Error((data as any).error);
+        const res = data as { extracted_count: number; linked_count: number };
+        results.push({ title: list.title, linked: res.linked_count, extracted: res.extracted_count });
+      } catch (e: any) {
+        results.push({ title: list.title, linked: 0, extracted: 0, error: e.message || "خطأ غير معروف" });
+      }
+      setBulkAiResults([...results]);
+    }
+
+    const totalLinked = results.reduce((s, r) => s + r.linked, 0);
+    const failedCount = results.filter((r) => r.error).length;
+    toast({
+      title: "✅ اكتمل التحليل الجماعي",
+      description: `تم ربط ${totalLinked} صنف عبر ${candidates.length} كشف${failedCount ? ` (${failedCount} فشل)` : ""}`,
+    });
+    setBulkAiRunning(false);
+  };
 
   // Views report for a specific list
   if (viewingReport) {
@@ -979,14 +1022,70 @@ const AdminPriceLists = () => {
   return (
     <>
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
         <CardTitle className="text-lg">إدارة كشوفات المصرية</CardTitle>
-        <Button size="sm" onClick={() => setShowForm(!showForm)}>
-          <Plus className="w-4 h-4 ml-1" />
-          رفع كشف جديد
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={linkAllPriceListsFromPdfWithAI}
+            disabled={bulkAiRunning || lists.length === 0}
+            className="border-primary/40 text-primary hover:bg-primary/10"
+          >
+            {bulkAiRunning ? (
+              <>
+                <Loader2 className="w-4 h-4 ml-1 animate-spin" />
+                جاري التحليل ({bulkAiProgress.current}/{bulkAiProgress.total})
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4 ml-1" />
+                ربط أصناف جميع الكشوفات بالـ AI
+              </>
+            )}
+          </Button>
+          <Button size="sm" onClick={() => setShowForm(!showForm)}>
+            <Plus className="w-4 h-4 ml-1" />
+            رفع كشف جديد
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Bulk AI re-link progress and results */}
+        {(bulkAiRunning || bulkAiResults.length > 0) && (
+          <div className="p-3 rounded-lg border border-primary/30 bg-primary/5 space-y-2">
+            <div className="flex items-center gap-2 text-sm font-bold text-primary">
+              <Sparkles className="w-4 h-4" />
+              <span>تحليل جميع الكشوفات بالذكاء الاصطناعي</span>
+              {bulkAiRunning && <Loader2 className="w-4 h-4 animate-spin mr-auto" />}
+            </div>
+            {bulkAiRunning && bulkAiProgress.currentTitle && (
+              <div className="text-xs text-muted-foreground">
+                جاري تحليل: <span className="font-semibold text-foreground">{bulkAiProgress.currentTitle}</span> ({bulkAiProgress.current}/{bulkAiProgress.total})
+              </div>
+            )}
+            {bulkAiResults.length > 0 && (
+              <div className="space-y-1 max-h-48 overflow-y-auto text-xs">
+                {bulkAiResults.map((r, i) => (
+                  <div key={i} className="flex items-center justify-between gap-2 p-1.5 rounded bg-background/60 border border-border">
+                    <span className="truncate flex-1 text-foreground">{r.title}</span>
+                    {r.error ? (
+                      <span className="text-destructive font-semibold flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" /> {r.error.slice(0, 40)}
+                      </span>
+                    ) : (
+                      <span className="text-primary font-semibold">
+                        ربط {r.linked} من {r.extracted}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+
         {showForm && (
           <div className="space-y-3 p-4 border border-border rounded-lg bg-muted/30">
             <Input
