@@ -70,6 +70,32 @@ const AdminPriceLists = () => {
   // 100 = exact match only. Lower = allow fuzzy matches.
   const [minConfidence, setMinConfidence] = useState<number>(100);
 
+  // Matching log (dry-run preview) — top candidates per extracted SKU + reason.
+  type MatchCandidate = {
+    product_id: string;
+    sku: string;
+    erp_item_code: string | null;
+    score: number;
+    matchedField: "sku" | "erp";
+  };
+  type MatchDiagnostic = {
+    code: string;
+    chosen: { product_id: string; sku: string; score: number; matchedField: "sku" | "erp" } | null;
+    reason: string;
+    candidates: MatchCandidate[];
+  };
+  const [matchLogOpen, setMatchLogOpen] = useState(false);
+  const [matchLogLoading, setMatchLogLoading] = useState(false);
+  const [matchLogApplying, setMatchLogApplying] = useState(false);
+  const [matchLogData, setMatchLogData] = useState<{
+    extracted_count: number;
+    matched_count: number;
+    unmatched: string[];
+    avg_score: number;
+    diagnostics: MatchDiagnostic[];
+  } | null>(null);
+  const [matchLogFilter, setMatchLogFilter] = useState<"all" | "matched" | "unmatched" | "tied">("all");
+
   // Verification dialog (post bulk AI)
   const [verifyOpen, setVerifyOpen] = useState(false);
   const [verifyLoading, setVerifyLoading] = useState(false);
