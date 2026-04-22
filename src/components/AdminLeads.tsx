@@ -511,12 +511,28 @@ const AdminLeads = () => {
     setRegistering(null);
   };
 
-  const filtered = leads.filter(l =>
-    l.name.includes(searchQuery) ||
-    l.phone.includes(searchQuery) ||
-    (l.shop_name || "").includes(searchQuery) ||
-    (l.erp_customer_code || "").includes(searchQuery)
-  );
+  const filtered = leads.filter(l => {
+    const q = filters.search.trim().toLowerCase();
+    if (q) {
+      const haystack = [
+        l.name,
+        l.phone,
+        l.shop_name || "",
+        l.erp_customer_code || "",
+      ].join(" ").toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
+    if (filters.status !== "all" && l.status !== filters.status) return false;
+    if (filters.clientType !== "all" && (l.client_type || "retail") !== filters.clientType) return false;
+    if (filters.erp === "linked" && !l.erp_customer_code) return false;
+    if (filters.erp === "unlinked" && l.erp_customer_code) return false;
+    if (filters.account !== "all") {
+      const hasAccount = !!leadCredentials[l.id];
+      if (filters.account === "with_account" && !hasAccount) return false;
+      if (filters.account === "without_account" && hasAccount) return false;
+    }
+    return true;
+  });
 
   return (
     <div className="space-y-4">
