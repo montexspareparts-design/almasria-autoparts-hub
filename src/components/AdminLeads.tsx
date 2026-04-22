@@ -110,7 +110,7 @@ const AdminLeads = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState<LeadsFilters>(() => loadStoredFilters());
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [registering, setRegistering] = useState<string | null>(null);
@@ -184,6 +184,28 @@ const AdminLeads = () => {
   useEffect(() => { 
     fetchLeads();
   }, []);
+
+  // Persist filters across sessions
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(filters));
+    } catch {
+      // ignore quota errors
+    }
+  }, [filters]);
+
+  const updateFilter = <K extends keyof LeadsFilters>(key: K, value: LeadsFilters[K]) => {
+    setFilters(f => ({ ...f, [key]: value }));
+  };
+
+  const resetFilters = () => setFilters(defaultFilters);
+  const hasActiveFilters =
+    filters.search.trim() !== "" ||
+    filters.status !== "all" ||
+    filters.clientType !== "all" ||
+    filters.erp !== "all" ||
+    filters.account !== "all";
 
   const fetchErpCustomers = useCallback(async () => {
     if (erpCustomers.length > 0) return;
