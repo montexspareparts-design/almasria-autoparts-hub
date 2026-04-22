@@ -309,7 +309,9 @@ const AdminLeads = () => {
     filters.status !== "all" ||
     filters.clientType !== "all" ||
     filters.erp !== "all" ||
-    filters.account !== "all";
+    filters.account !== "all" ||
+    filters.attemptStatus !== "all" ||
+    filters.errorSearch.trim() !== "";
 
   const fetchErpCustomers = useCallback(async () => {
     if (erpCustomers.length > 0) return;
