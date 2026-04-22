@@ -1022,12 +1022,33 @@ const AdminPriceLists = () => {
   return (
     <>
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
         <CardTitle className="text-lg">إدارة كشوفات المصرية</CardTitle>
-        <Button size="sm" onClick={() => setShowForm(!showForm)}>
-          <Plus className="w-4 h-4 ml-1" />
-          رفع كشف جديد
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={linkAllPriceListsFromPdfWithAI}
+            disabled={bulkAiRunning || lists.length === 0}
+            className="border-primary/40 text-primary hover:bg-primary/10"
+          >
+            {bulkAiRunning ? (
+              <>
+                <Loader2 className="w-4 h-4 ml-1 animate-spin" />
+                جاري التحليل ({bulkAiProgress.current}/{bulkAiProgress.total})
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4 ml-1" />
+                ربط أصناف جميع الكشوفات بالـ AI
+              </>
+            )}
+          </Button>
+          <Button size="sm" onClick={() => setShowForm(!showForm)}>
+            <Plus className="w-4 h-4 ml-1" />
+            رفع كشف جديد
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {showForm && (
