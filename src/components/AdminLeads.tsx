@@ -612,10 +612,10 @@ const AdminLeads = () => {
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      {leadCredentials[lead.id] ? (
+                      {lead.status === "converted" && lead.erp_customer_code ? (
                         <div className="flex items-center gap-1">
-                          <span className="font-mono text-xs" dir="ltr">{leadCredentials[lead.id].username}</span>
-                          <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => copyToClipboard(leadCredentials[lead.id].username)}>
+                          <span className="font-mono text-xs" dir="ltr">{lead.phone.replace(/\D/g, "")}</span>
+                          <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => copyToClipboard(lead.phone.replace(/\D/g, ""))}>
                             <Copy className="w-3 h-3" />
                           </Button>
                         </div>
@@ -636,6 +636,22 @@ const AdminLeads = () => {
                             <Copy className="w-3 h-3" />
                           </Button>
                         </div>
+                      ) : lead.status === "converted" && lead.erp_customer_code ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-[11px] gap-1 px-2"
+                          onClick={() => resetPassword(lead)}
+                          disabled={registering === lead.id}
+                          title="توليد كلمة مرور جديدة وحفظها"
+                        >
+                          {registering === lead.id ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <KeyRound className="w-3 h-3" />
+                          )}
+                          عرض/إنشاء
+                        </Button>
                       ) : (
                         <span className="text-muted-foreground text-xs">—</span>
                       )}
