@@ -1448,6 +1448,7 @@ Deno.serve(async (req) => {
           status: "success",
         });
       }
+    }
     // ─── AUTO SYNC FULL: Prices + Stock + Detect new genuine items ───
     // Runs on cron OR manually from admin. No auth required from cron (service role).
     else if (action === "auto_sync_full") {
