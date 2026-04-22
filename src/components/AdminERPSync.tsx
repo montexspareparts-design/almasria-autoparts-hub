@@ -342,6 +342,106 @@ const AdminERPSync = () => {
     setSyncing(null);
   };
 
+  const runPriceSync = async () => {
+    setSyncing("price_sync");
+    setPriceSyncReport(null);
+    setPriceSyncProgress({ phase: "جاري الاتصال بنظام الفيصل...", percent: 10, done: false });
+
+    const t1 = setTimeout(() => {
+      setPriceSyncProgress(p => p && !p.done ? { ...p, phase: "جاري جلب الأسعار من الفيصل...", percent: 35 } : p);
+    }, 800);
+    const t2 = setTimeout(() => {
+      setPriceSyncProgress(p => p && !p.done ? { ...p, phase: "جاري مطابقة المنتجات...", percent: 60 } : p);
+    }, 2000);
+    const t3 = setTimeout(() => {
+      setPriceSyncProgress(p => p && !p.done ? { ...p, phase: "جاري تحديث قاعدة البيانات...", percent: 85 } : p);
+    }, 3500);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("erp-sync-outbound", {
+        body: { action: "sync_prices", data: {} },
+      });
+
+      clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
+
+      if (error) throw error;
+      if (data?.success === false) throw new Error(data?.message || "فشلت المزامنة");
+
+      const retailUpdated = data?.retail_updated || 0;
+      const wholesaleUpdated = data?.wholesale_updated || 0;
+      const matched = data?.matched || 0;
+      const erpTotal = data?.erp_total || 0;
+      const ourProducts = data?.our_products || 0;
+      const sample = (data?.sample || []) as Array<any>;
+
+      const sampleWithStatus = sample.map((s) => {
+        const r = Number(s.retailPrice || 0);
+        const w = Number(s.wholesalePrice || 0);
+        const ok = r > 0 || w > 0;
+        return {
+          id: String(s.id || ""),
+          name: s.name,
+          retailPrice: r,
+          wholesalePrice: w,
+          status: ok ? ("success" as const) : ("skipped" as const),
+          reason: !ok ? "السعر = 0 من الفيصل" : undefined,
+        };
+      });
+
+      const unmatchedCount = Math.max(0, ourProducts - matched);
+      const failures: Array<{ id: string; name?: string; reason: string }> = [];
+      if (unmatchedCount > 0) {
+        failures.push({
+          id: "—",
+          reason: `${unmatchedCount} صنف على موقعنا بدون كود الفيصل (erp_item_code) أو غير موجود في الفيصل`,
+        });
+      }
+
+      setPriceSyncProgress({ phase: "✅ اكتملت المزامنة", percent: 100, done: true });
+      setPriceSyncReport({
+        retailUpdated, wholesaleUpdated, matched, erpTotal, ourProducts,
+        sample: sampleWithStatus, failures,
+        finishedAt: new Date().toISOString(),
+      });
+
+      toast({
+        title: "✅ تمت مزامنة الأسعار",
+        description: `تم تحديث ${retailUpdated} سعر قطاعي و ${wholesaleUpdated} سعر جملة من ${matched} صنف مطابق`,
+      });
+    } catch (err: any) {
+      clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
+      setPriceSyncProgress({ phase: "❌ فشلت المزامنة", percent: 100, done: true, error: err?.message || "خطأ غير معروف" });
+      toast({
+        title: "فشل مزامنة الأسعار",
+        description: err?.message || "خطأ غير معروف",
+        variant: "destructive",
+      });
+    }
+
+    fetchData();
+    setSyncing(null);
+  };
+
+  const downloadPriceReportCsv = () => {
+    if (!priceSyncReport) return;
+    const headers = ["كود الفيصل", "اسم الصنف", "سعر القطاعي", "سعر الجملة", "الحالة", "ملاحظة"];
+    const rows = [
+      ...priceSyncReport.sample.map(s => [
+        s.id, s.name || "", s.retailPrice || 0, s.wholesalePrice || 0,
+        s.status === "success" ? "نجح" : "تم التخطي", s.reason || "",
+      ]),
+      ...priceSyncReport.failures.map(f => [f.id, f.name || "", "", "", "فشل", f.reason]),
+    ];
+    const csv = "\uFEFF" + [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `price-sync-report-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handleBatchImport = async () => {
     setSyncing("import_products");
     setImportProgress({ phase: "جاري جلب الأصناف من الفيصل...", currentBatch: 0, totalBatches: 0, imported: 0, updated: 0, skipped: 0, totalItems: 0, done: false });
