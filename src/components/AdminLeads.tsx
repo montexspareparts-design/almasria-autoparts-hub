@@ -428,6 +428,31 @@ const AdminLeads = () => {
     return data;
   };
 
+  // Log every create/reset attempt for audit trail
+  const logAttempt = async (params: {
+    type: "create" | "reset_password";
+    status: "success" | "failure";
+    lead: Lead;
+    errorMessage?: string | null;
+    details?: Record<string, unknown>;
+  }) => {
+    try {
+      await supabase.from("client_account_attempts" as any).insert({
+        attempted_by: user?.id,
+        attempt_type: params.type,
+        status: params.status,
+        lead_id: params.lead.id,
+        phone: params.lead.phone,
+        erp_customer_code: params.lead.erp_customer_code,
+        client_name: params.lead.name,
+        error_message: params.errorMessage || null,
+        details: params.details || {},
+      });
+    } catch (e) {
+      console.error("Failed to log attempt:", e);
+    }
+  };
+
   // Register client as a user account
   const registerClient = async (lead: Lead) => {
     if (!lead.erp_customer_code) {
@@ -455,14 +480,17 @@ const AdminLeads = () => {
           description: serverMsg || "فشل إنشاء الحساب",
           variant: "destructive",
         });
+        await logAttempt({ type: "create", status: "failure", lead, errorMessage: serverMsg || "فشل إنشاء الحساب" });
       } else if (data?.success) {
         setCredentials({ username: data.username, password: data.password, phone: lead.phone });
         setLeadCredentials(prev => ({ ...prev, [lead.id]: { username: lead.phone.replace(/\D/g, ""), password: data.password } }));
         toast({ title: "تم التسجيل", description: "تم إنشاء حساب العميل بنجاح" });
+        await logAttempt({ type: "create", status: "success", lead, details: { user_id: data.user_id, tier: data.tier } });
         fetchLeads();
       }
-    } catch (err) {
+    } catch (err: any) {
       toast({ title: "خطأ", description: "حدث خطأ غير متوقع", variant: "destructive" });
+      await logAttempt({ type: "create", status: "failure", lead, errorMessage: err?.message || "Unexpected error" });
     }
     setRegistering(null);
   };
@@ -543,14 +571,17 @@ const AdminLeads = () => {
           description: serverMsg || "فشل إعادة تعيين كلمة المرور",
           variant: "destructive",
         });
+        await logAttempt({ type: "reset_password", status: "failure", lead, errorMessage: serverMsg || "فشل إعادة تعيين كلمة المرور" });
       } else {
         setCredentials({ username: lead.phone, password: newPassword, phone: lead.phone });
         setLeadCredentials(prev => ({ ...prev, [lead.id]: { username: cleanPhone, password: newPassword } }));
         toast({ title: "تم", description: "تم إعادة تعيين كلمة المرور بنجاح وحفظها بشكل دائم" });
+        await logAttempt({ type: "reset_password", status: "success", lead });
       }
     } catch (e: any) {
       console.error("resetPassword error:", e);
       toast({ title: "خطأ", description: e?.message || "حدث خطأ غير متوقع", variant: "destructive" });
+      await logAttempt({ type: "reset_password", status: "failure", lead, errorMessage: e?.message || "Unexpected error" });
     }
     setRegistering(null);
   };
