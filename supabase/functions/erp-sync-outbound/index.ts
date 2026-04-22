@@ -315,14 +315,17 @@ Deno.serve(async (req) => {
     // ─── SYNC PRODUCTS (Stock + Prices) FROM ERP ───
     // NEW v2: Match by ID (not index), only update products on our website
     else if (action === "sync_stock" || action === "sync_prices") {
-      // Block if disabled
-      if (action === "sync_stock" && isStockSyncDisabled) {
+      // Dry-run mode: preview changes without writing to DB
+      const isDryRun = body?.dry_run === true || body?.data?.dry_run === true;
+
+      // Block if disabled (only for actual writes, not preview)
+      if (!isDryRun && action === "sync_stock" && isStockSyncDisabled) {
         return new Response(
           JSON.stringify({ success: false, message: "⛔ مزامنة الأرصدة متوقفة حالياً. فعّلها من إعدادات ERP (erp_stock_sync_enabled)." }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      if (action === "sync_prices" && isPriceSyncDisabled) {
+      if (!isDryRun && action === "sync_prices" && isPriceSyncDisabled) {
         return new Response(
           JSON.stringify({ success: false, message: "⛔ مزامنة الأسعار متوقفة — الأسعار تُدار من الملفات المرفوعة. فعّلها من إعدادات ERP (erp_price_sync_enabled)." }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -336,15 +339,26 @@ Deno.serve(async (req) => {
         if (!baseUrl) throw new Error("ERP base URL is not configured");
 
         // ── Step 1: Get OUR products from DB (only active ones) ──
+        // For dry-run we also include current stock/price + name for preview
+        const selectCols = isDryRun
+          ? "id, sku, erp_item_code, name_ar, base_price, stock_quantity"
+          : "id, sku, erp_item_code";
         const { data: ourProducts, error: dbErr } = await supabase
           .from("products")
-          .select("id, sku, erp_item_code")
+          .select(selectCols)
           .eq("is_active", true);
 
         if (dbErr) throw new Error(`Failed to fetch our products: ${dbErr.message}`);
         if (!ourProducts || ourProducts.length === 0) {
           result = { success: true, message: "No active products on website", updated: 0, total: 0 };
         } else {
+          // Build code → product map for dry-run lookups
+          const ourByCode = new Map<string, any>();
+          if (isDryRun) {
+            ourProducts.forEach((p: any) => {
+              if (p.erp_item_code) ourByCode.set(p.erp_item_code.trim(), p);
+            });
+          }
           // Build lookup: match ERP items by erp_item_code ONLY (the Faisal code)
           const ourCodeSet = new Set<string>();
           ourProducts.forEach((p: any) => {
