@@ -249,9 +249,13 @@ serve(async (req) => {
 
     // Send WhatsApp welcome message with credentials
     try {
-      await fetch(`${supabaseUrl}/functions/v1/notify-dealer-welcome`, {
+      const waRes = await fetch(`${supabaseUrl}/functions/v1/notify-dealer-welcome`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${serviceRoleKey}`,
+          "apikey": serviceRoleKey,
+        },
         body: JSON.stringify({
           phone: cleanPhone,
           name: name,
@@ -259,6 +263,8 @@ serve(async (req) => {
           password: password,
         }),
       });
+      const waText = await waRes.text();
+      console.log("notify-dealer-welcome response:", waRes.status, waText);
     } catch (e) {
       console.error("Welcome WhatsApp failed (non-blocking):", e);
     }
