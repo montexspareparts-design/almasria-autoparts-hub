@@ -315,14 +315,17 @@ Deno.serve(async (req) => {
     // ─── SYNC PRODUCTS (Stock + Prices) FROM ERP ───
     // NEW v2: Match by ID (not index), only update products on our website
     else if (action === "sync_stock" || action === "sync_prices") {
-      // Block if disabled
-      if (action === "sync_stock" && isStockSyncDisabled) {
+      // Dry-run mode: preview changes without writing to DB
+      const isDryRun = body?.dry_run === true || body?.data?.dry_run === true;
+
+      // Block if disabled (only for actual writes, not preview)
+      if (!isDryRun && action === "sync_stock" && isStockSyncDisabled) {
         return new Response(
           JSON.stringify({ success: false, message: "⛔ مزامنة الأرصدة متوقفة حالياً. فعّلها من إعدادات ERP (erp_stock_sync_enabled)." }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      if (action === "sync_prices" && isPriceSyncDisabled) {
+      if (!isDryRun && action === "sync_prices" && isPriceSyncDisabled) {
         return new Response(
           JSON.stringify({ success: false, message: "⛔ مزامنة الأسعار متوقفة — الأسعار تُدار من الملفات المرفوعة. فعّلها من إعدادات ERP (erp_price_sync_enabled)." }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -336,15 +339,26 @@ Deno.serve(async (req) => {
         if (!baseUrl) throw new Error("ERP base URL is not configured");
 
         // ── Step 1: Get OUR products from DB (only active ones) ──
+        // For dry-run we also include current stock/price + name for preview
+        const selectCols = isDryRun
+          ? "id, sku, erp_item_code, name_ar, base_price, stock_quantity"
+          : "id, sku, erp_item_code";
         const { data: ourProducts, error: dbErr } = await supabase
           .from("products")
-          .select("id, sku, erp_item_code")
+          .select(selectCols)
           .eq("is_active", true);
 
         if (dbErr) throw new Error(`Failed to fetch our products: ${dbErr.message}`);
         if (!ourProducts || ourProducts.length === 0) {
           result = { success: true, message: "No active products on website", updated: 0, total: 0 };
         } else {
+          // Build code → product map for dry-run lookups
+          const ourByCode = new Map<string, any>();
+          if (isDryRun) {
+            ourProducts.forEach((p: any) => {
+              if (p.erp_item_code) ourByCode.set(p.erp_item_code.trim(), p);
+            });
+          }
           // Build lookup: match ERP items by erp_item_code ONLY (the Faisal code)
           const ourCodeSet = new Set<string>();
           ourProducts.forEach((p: any) => {
@@ -396,21 +410,49 @@ Deno.serve(async (req) => {
               });
             }
 
-            const { data: bulkResult, error: bulkErr } = await supabase.rpc("bulk_sync_stock", {
-              _items: bulkItems,
-            });
-            if (bulkErr) throw new Error(`Bulk stock sync failed: ${bulkErr.message}`);
+            // ── DRY-RUN: compute stock diffs without writing ──
+            if (isDryRun) {
+              const changes: Array<{ erp_id: string; name: string; old_qty: number; new_qty: number; delta: number; status: string }> = [];
+              for (const it of bulkItems) {
+                const prod = ourByCode.get(it.id);
+                if (!prod) continue;
+                const oldQty = Number(prod.stock_quantity || 0);
+                const newQty = it.qty;
+                if (oldQty === newQty) continue;
+                let status = newQty > oldQty ? "increase" : "decrease";
+                if (oldQty > 0 && newQty === 0) status = "out_of_stock";
+                else if (oldQty === 0 && newQty > 0) status = "back_in_stock";
+                changes.push({ erp_id: it.id, name: prod.name_ar || "", old_qty: oldQty, new_qty: newQty, delta: newQty - oldQty, status });
+              }
+              changes.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+              result = {
+                success: true, dry_run: true,
+                erp_total: stockMap.size, our_products: ourProducts.length,
+                matched: bulkItems.length, with_positive_stock: itemsWithPositiveQty.length,
+                changes_count: changes.length,
+                increases: changes.filter(c => c.status === "increase").length,
+                decreases: changes.filter(c => c.status === "decrease").length,
+                back_in_stock: changes.filter(c => c.status === "back_in_stock").length,
+                out_of_stock: changes.filter(c => c.status === "out_of_stock").length,
+                changes: changes.slice(0, 200),
+              };
+            } else {
+              const { data: bulkResult, error: bulkErr } = await supabase.rpc("bulk_sync_stock", {
+                _items: bulkItems,
+              });
+              if (bulkErr) throw new Error(`Bulk stock sync failed: ${bulkErr.message}`);
 
-            result = {
-              success: true,
-              updated: bulkResult?.updated || 0,
-              total: bulkItems.length,
-              erp_total: stockMap.size,
-              our_products: ourProducts.length,
-              matched: bulkItems.length,
-              with_positive_stock: itemsWithPositiveQty.length,
-              sample: bulkItems.filter(i => i.qty > 0).slice(0, 5),
-            };
+              result = {
+                success: true,
+                updated: bulkResult?.updated || 0,
+                total: bulkItems.length,
+                erp_total: stockMap.size,
+                our_products: ourProducts.length,
+                matched: bulkItems.length,
+                with_positive_stock: itemsWithPositiveQty.length,
+                sample: bulkItems.filter(i => i.qty > 0).slice(0, 5),
+              };
+            }
           } else {
             // ── Prices: /products now returns id + retailPrice + wholesaleprice directly ──
             const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
@@ -442,35 +484,71 @@ Deno.serve(async (req) => {
 
             console.log(`[ERP Price v3] ERP total: ${productsList.length}, Our products: ${ourProducts.length}, Matched: ${matchedCount}, Retail: ${retailItems.length}, Wholesale: ${wholesaleItems.length}`);
 
-            // Update retail prices (base_price)
-            let retailUpdated = 0;
-            if (retailItems.length > 0) {
-              const { data: bulkResult, error: bulkErr } = await supabase.rpc("bulk_update_product_prices", {
-                _items: retailItems,
-              });
-              if (bulkErr) console.error("Retail price sync error:", bulkErr.message);
-              retailUpdated = bulkResult?.updated || 0;
-            }
+            // ── DRY-RUN: compute price diffs without writing ──
+            if (isDryRun) {
+              const changes: Array<{ erp_id: string; name: string; old_price: number; new_price: number; delta: number; pct: number; status: string }> = [];
+              for (const r of retailItems) {
+                const prod = ourByCode.get(r.id);
+                if (!prod) continue;
+                const oldP = Number(prod.base_price || 0);
+                const newP = r.price;
+                if (Math.abs(oldP - newP) < 0.01) continue;
+                const delta = newP - oldP;
+                const pct = oldP > 0 ? (delta / oldP) * 100 : 100;
+                changes.push({
+                  erp_id: r.id,
+                  name: prod.name_ar || "",
+                  old_price: oldP,
+                  new_price: newP,
+                  delta,
+                  pct: Math.round(pct * 10) / 10,
+                  status: delta > 0 ? "increase" : "decrease",
+                });
+              }
+              changes.sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct));
+              result = {
+                success: true, dry_run: true,
+                erp_total: productsList.length,
+                our_products: ourProducts.length,
+                matched: matchedCount,
+                retail_changes_count: changes.length,
+                wholesale_items_in_erp: wholesaleItems.length,
+                increases: changes.filter(c => c.status === "increase").length,
+                decreases: changes.filter(c => c.status === "decrease").length,
+                big_changes: changes.filter(c => Math.abs(c.pct) >= 10).length,
+                changes: changes.slice(0, 200),
+              };
+            } else {
+              // Update retail prices (base_price)
+              let retailUpdated = 0;
+              if (retailItems.length > 0) {
+                const { data: bulkResult, error: bulkErr } = await supabase.rpc("bulk_update_product_prices", {
+                  _items: retailItems,
+                });
+                if (bulkErr) console.error("Retail price sync error:", bulkErr.message);
+                retailUpdated = bulkResult?.updated || 0;
+              }
 
-            // Update wholesale prices (wholesale_tier1)
-            let wholesaleUpdated = 0;
-            if (wholesaleItems.length > 0) {
-              const { data: wholesaleResult, error: wholesaleErr } = await supabase.rpc("bulk_upsert_wholesale_prices", {
-                _items: wholesaleItems,
-              });
-              if (wholesaleErr) console.error("Wholesale price sync error:", wholesaleErr.message);
-              wholesaleUpdated = wholesaleResult?.updated || 0;
-            }
+              // Update wholesale prices (wholesale_tier1)
+              let wholesaleUpdated = 0;
+              if (wholesaleItems.length > 0) {
+                const { data: wholesaleResult, error: wholesaleErr } = await supabase.rpc("bulk_upsert_wholesale_prices", {
+                  _items: wholesaleItems,
+                });
+                if (wholesaleErr) console.error("Wholesale price sync error:", wholesaleErr.message);
+                wholesaleUpdated = wholesaleResult?.updated || 0;
+              }
 
-            result = {
-              success: true,
-              retail_updated: retailUpdated,
-              wholesale_updated: wholesaleUpdated,
-              erp_total: productsList.length,
-              our_products: ourProducts.length,
-              matched: matchedCount,
-              sample: sampleItems,
-            };
+              result = {
+                success: true,
+                retail_updated: retailUpdated,
+                wholesale_updated: wholesaleUpdated,
+                erp_total: productsList.length,
+                our_products: ourProducts.length,
+                matched: matchedCount,
+                sample: sampleItems,
+              };
+            }
           }
         }
       }
