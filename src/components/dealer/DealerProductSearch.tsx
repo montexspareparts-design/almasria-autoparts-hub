@@ -92,6 +92,14 @@ const DealerProductSearch = ({ onNavigateToOrders, onNavigateToCart, sharedCart 
         }
       />
 
+      {/* الأكثر طلباً — يظهر دائماً في الأسفل لتسهيل الوصول السريع للأصناف الرائجة */}
+      <div className="container mx-auto px-4">
+        <DealerBestSellers
+          isRTL={true}
+          onAddToOrder={(p) => handleAddToCart({ ...p, min_order_qty: 1 })}
+        />
+      </div>
+
       {/* Floating Cart Bar — with running total */}
       <AnimatePresence>
         {cart.itemCount > 0 && onNavigateToCart && (
