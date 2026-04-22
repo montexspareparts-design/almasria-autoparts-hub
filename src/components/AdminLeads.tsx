@@ -1398,6 +1398,87 @@ const AdminLeads = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Last attempt details dialog */}
+      <Dialog open={!!attemptDetail} onOpenChange={(o) => { if (!o) setAttemptDetail(null); }}>
+        <DialogContent className="max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="w-4 h-4 text-primary" />
+              تفاصيل آخر محاولة
+            </DialogTitle>
+          </DialogHeader>
+          {attemptDetail && (
+            <div className="space-y-3 text-sm">
+              <div className="rounded-md border bg-muted/30 p-3 space-y-1">
+                <div><span className="text-muted-foreground">العميل:</span> <span className="font-semibold">{attemptDetail.lead.name}</span></div>
+                <div><span className="text-muted-foreground">الهاتف:</span> <span className="font-mono" dir="ltr">{attemptDetail.lead.phone}</span></div>
+                {attemptDetail.lead.erp_customer_code && (
+                  <div><span className="text-muted-foreground">كود الفيصل:</span> <span className="font-mono" dir="ltr">{attemptDetail.lead.erp_customer_code}</span></div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="rounded-md border p-3">
+                  <div className="text-[11px] text-muted-foreground mb-1">النوع</div>
+                  <Badge variant="outline" className="gap-1 text-[11px]">
+                    {attemptDetail.attempt_type === "create" ? <UserPlus className="w-3 h-3" /> : <KeyRound className="w-3 h-3" />}
+                    {attemptDetail.attempt_type === "create" ? "إنشاء حساب" : "إعادة تعيين"}
+                  </Badge>
+                </div>
+                <div className="rounded-md border p-3">
+                  <div className="text-[11px] text-muted-foreground mb-1">الحالة</div>
+                  {attemptDetail.status === "success" ? (
+                    <Badge className="gap-1 bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/20 border-emerald-500/30">
+                      <CheckCircle2 className="w-3 h-3" /> نجاح
+                    </Badge>
+                  ) : (
+                    <Badge variant="destructive" className="gap-1">
+                      <XCircle className="w-3 h-3" /> فشل
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-md border p-3">
+                <div className="text-[11px] text-muted-foreground mb-1">الوقت</div>
+                <div className="font-mono text-xs" dir="ltr">
+                  {new Date(attemptDetail.created_at).toLocaleString("ar-EG", {
+                    year: "numeric", month: "2-digit", day: "2-digit",
+                    hour: "2-digit", minute: "2-digit", second: "2-digit",
+                  })}
+                </div>
+              </div>
+
+              {attemptDetail.error_message && (
+                <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3">
+                  <div className="text-[11px] text-destructive font-semibold mb-1">رسالة الخطأ</div>
+                  <div className="text-xs text-destructive break-words">{attemptDetail.error_message}</div>
+                </div>
+              )}
+
+              <div className="flex justify-between gap-2 pt-2">
+                <Button variant="outline" size="sm" onClick={() => setAttemptDetail(null)}>إغلاق</Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => {
+                    setAttemptDetail(null);
+                    const url = new URL(window.location.href);
+                    url.searchParams.set("section", "client-attempts");
+                    window.history.pushState({}, "", url.toString());
+                    window.dispatchEvent(new PopStateEvent("popstate"));
+                  }}
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  فتح السجل الكامل
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Click outside handler for ERP dropdown */}
       {showErpDropdown && (
         <div className="fixed inset-0 z-40" onClick={() => setShowErpDropdown(false)} />
