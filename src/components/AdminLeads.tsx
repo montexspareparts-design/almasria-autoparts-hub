@@ -141,6 +141,21 @@ const AdminLeads = () => {
   const [preflight, setPreflight] = useState<PreflightState | null>(null);
   const [preflightChecking, setPreflightChecking] = useState<string | null>(null);
 
+  // Auto-create confirmation (when reset_password discovers no account exists yet)
+  type AutoCreateConfirm = {
+    lead: Lead;
+    reason: "no_dealer_account" | "user_not_found";
+  };
+  const [autoCreateConfirm, setAutoCreateConfirm] = useState<AutoCreateConfirm | null>(null);
+
+  const requestAutoCreateConfirmation = (lead: Lead, reason: AutoCreateConfirm["reason"]) =>
+    new Promise<boolean>((resolve) => {
+      setAutoCreateConfirm({ lead, reason });
+      // Stash resolver on window-scoped ref via state callback queue
+      autoCreateResolverRef.current = resolve;
+    });
+  const autoCreateResolverRef = { current: null as ((v: boolean) => void) | null };
+
   // Pre-flight check before any Edge Function call
   const runPreflight = async (lead: Lead) => {
     setPreflightChecking(lead.id);
