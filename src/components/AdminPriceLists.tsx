@@ -326,10 +326,17 @@ const AdminPriceLists = () => {
     await notifyDealers(form.title);
 
     // Link products from Excel — and AUTO-CREATE missing ones
+    const reportRows: UploadReportRow[] = [];
     if (newList && selectedExcel) {
       try {
         const excelRows = await extractSkusFromExcel(selectedExcel);
         const skuStrings = excelRows.map(r => r.sku);
+        // Initialize report rows (default failed; we'll override below)
+        for (const r of excelRows) {
+          reportRows.push({ sku: r.sku, name: r.name, price: r.price, status: "failed", reason: "لم تتم المعالجة" });
+        }
+        const reportIndex = new Map<string, number>();
+        excelRows.forEach((r, i) => reportIndex.set(r.sku, i));
         // Build maps from Excel: sku -> price/name (with normalized key)
         const priceMap = new Map<string, number | null>();
         const nameMap = new Map<string, string | null>();
