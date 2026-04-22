@@ -1,13 +1,18 @@
 /// <reference types="vite/client" />
 
-// Workaround for @types/react vs TS version mismatch causing TS2786 on
-// third-party class components (recharts, react-helmet-async, etc.).
-import 'react';
-
+// Workaround for @types/react vs TS version mismatch causing TS2786/TS2607
+// on third-party class components (recharts, react-helmet-async, etc.).
 declare global {
   namespace JSX {
     interface ElementClass {
-      render?: any;
+      props: any;
+      context: any;
+      setState: any;
+      forceUpdate: any;
+      refs: any;
+      state: any;
     }
   }
 }
+
+export {};
