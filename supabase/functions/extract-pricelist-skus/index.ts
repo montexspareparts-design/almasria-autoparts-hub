@@ -16,10 +16,19 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { price_list_id } = body;
     // Confidence threshold: 0-100. 100 = exact match only.
-    const min_confidence = Math.max(
-      0,
-      Math.min(100, Number(body.min_confidence ?? 100))
+    // Back-compat: `min_confidence` applies to both SKU & ERP unless overridden.
+    const clamp = (v: number) => Math.max(0, Math.min(100, v));
+    const min_confidence = clamp(Number(body.min_confidence ?? 100));
+    // Per-field thresholds — fall back to the global one when not provided.
+    const min_confidence_sku = clamp(
+      Number(body.min_confidence_sku ?? body.min_confidence ?? 100)
     );
+    const min_confidence_erp = clamp(
+      Number(body.min_confidence_erp ?? body.min_confidence ?? 100)
+    );
+    // The "gate" for the exact-vs-fuzzy branch is the *lowest* of the two
+    // (if either side allows fuzzy matching we must run the fuzzy path).
+    const effective_min_confidence = Math.min(min_confidence_sku, min_confidence_erp);
     // dry_run: do NOT delete/insert price_list_products — only return diagnostics.
     const dry_run: boolean = Boolean(body.dry_run ?? false);
     // include_diagnostics: return top candidates per extracted code so the admin
