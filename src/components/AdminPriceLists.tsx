@@ -1129,6 +1129,41 @@ const AdminPriceLists = () => {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Calibration: confidence threshold for SKU matching */}
+        <div className="p-3 rounded-lg border border-border bg-muted/30 space-y-2">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2 text-sm font-bold">
+              <Target className="w-4 h-4 text-primary" />
+              <span>وضع المعايرة — حد التشابه (Confidence)</span>
+            </div>
+            <Badge
+              variant={minConfidence >= 100 ? "default" : minConfidence >= 85 ? "secondary" : "outline"}
+              className="text-xs"
+            >
+              {minConfidence}%{" "}
+              {minConfidence >= 100 ? "(مطابقة تامة)" : minConfidence >= 85 ? "(صارم)" : minConfidence >= 70 ? "(متوسط)" : "(مرن)"}
+            </Badge>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] text-muted-foreground shrink-0">50%</span>
+            <Slider
+              value={[minConfidence]}
+              onValueChange={(v) => setMinConfidence(v[0] ?? 100)}
+              min={50}
+              max={100}
+              step={5}
+              disabled={bulkAiRunning || aiLinking}
+              className="flex-1"
+            />
+            <span className="text-[10px] text-muted-foreground shrink-0">100%</span>
+          </div>
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            يحدد هذا الإعداد مدى التطابق المطلوب بين الكود المستخرج من الـ PDF وكود المنتج في قاعدة البيانات قبل الربط.
+            <span className="font-semibold text-foreground"> 100% = مطابقة تامة فقط</span> (الأكثر أماناً، قد يفوّت أكواد بها فروقات بسيطة).
+            القيم الأقل تسمح بمطابقة تقريبية (Levenshtein) لاستيعاب الأخطاء الإملائية أو فروقات التنسيق.
+          </p>
+        </div>
+
         {/* Bulk AI re-link progress and results */}
         {(bulkAiRunning || bulkAiResults.length > 0) && (
           <div className="p-3 rounded-lg border border-primary/30 bg-primary/5 space-y-2">
