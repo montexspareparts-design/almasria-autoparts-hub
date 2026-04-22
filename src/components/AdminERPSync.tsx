@@ -1119,18 +1119,36 @@ const AdminERPSync = () => {
                 </div>
               )}
 
-              <Button
-                className="w-full gap-2 bg-cyan-600 hover:bg-cyan-700 text-white"
-                onClick={runStockSync}
-                disabled={syncing !== null}
-              >
-                {syncing === "stock_sync" ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Package className="w-4 h-4" />
-                )}
-                {syncing === "stock_sync" ? "جاري المزامنة..." : "تشغيل مزامنة الأرصدة الآن"}
-              </Button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <Button
+                  variant="outline"
+                  className="w-full gap-2 border-cyan-500/50 text-cyan-700 hover:bg-cyan-500/10"
+                  onClick={runStockPreview}
+                  disabled={syncing !== null || previewLoading !== null}
+                >
+                  {previewLoading === "stock" ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <TestTube className="w-4 h-4" />
+                  )}
+                  {previewLoading === "stock" ? "جاري المعاينة..." : "👁️ معاينة قبل التنفيذ"}
+                </Button>
+                <Button
+                  className="w-full gap-2 bg-cyan-600 hover:bg-cyan-700 text-white"
+                  onClick={runStockSync}
+                  disabled={syncing !== null || previewLoading !== null}
+                >
+                  {syncing === "stock_sync" ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Package className="w-4 h-4" />
+                  )}
+                  {syncing === "stock_sync" ? "جاري المزامنة..." : "✅ تنفيذ نهائي"}
+                </Button>
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-2 text-center">
+                💡 اضغط "معاينة" أولاً لرؤية كل التغييرات المتوقعة بدون تطبيقها
+              </p>
             </CardContent>
           </Card>
 
