@@ -2015,6 +2015,26 @@ const AdminERPSync = () => {
                 </div>
               </div>
 
+              {/* Wholesale stats row */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                <div className="bg-blue-500/10 rounded p-2 text-center border border-blue-500/30">
+                  <p className="font-bold text-foreground">{pricePreview.wholesaleChangesCount}</p>
+                  <p className="text-muted-foreground">سعر جملة سيتغيّر</p>
+                </div>
+                <div className="bg-emerald-500/10 rounded p-2 text-center">
+                  <p className="font-bold text-foreground">{pricePreview.wholesaleIncreases}</p>
+                  <p className="text-muted-foreground">جملة ⬆️</p>
+                </div>
+                <div className="bg-rose-500/10 rounded p-2 text-center">
+                  <p className="font-bold text-foreground">{pricePreview.wholesaleDecreases}</p>
+                  <p className="text-muted-foreground">جملة ⬇️</p>
+                </div>
+                <div className="bg-violet-500/10 rounded p-2 text-center border border-violet-500/30">
+                  <p className="font-bold text-foreground">{pricePreview.wholesaleNew}</p>
+                  <p className="text-muted-foreground">جملة جديدة 🆕</p>
+                </div>
+              </div>
+
               <div className="flex flex-wrap gap-2">
                 <Button onClick={() => downloadPreviewCsv("prices")} variant="outline" size="sm" className="gap-2">
                   <Copy className="w-4 h-4" /> تحميل المعاينة (CSV)
