@@ -1,48 +1,11 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendWhatsAppText } from "../_shared/whatsapp.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
-
-async function sendWhatsApp(phone: string, message: string) {
-  const accessToken = Deno.env.get("META_WHATSAPP_ACCESS_TOKEN");
-  const phoneNumberId = Deno.env.get("META_WHATSAPP_PHONE_NUMBER_ID");
-  if (!accessToken || !phoneNumberId) return;
-
-  let formatted = phone.replace(/[\s\-\(\)]/g, "");
-  if (formatted.startsWith("+")) formatted = formatted.slice(1);
-  if (formatted.startsWith("0")) formatted = "2" + formatted;
-  if (/^\d{10}$/.test(formatted)) formatted = "2" + formatted;
-
-  try {
-    const resp = await fetch(
-      `https://crm.whats-meta.com/api/meta/v19.0/${phoneNumberId}/messages`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          to: formatted,
-          type: "text",
-          text: { body: message },
-        }),
-      }
-    );
-    const data = await resp.json();
-    if (resp.ok) {
-      console.log(`WhatsApp sent to ${formatted}`);
-    } else {
-      console.error(`WhatsApp failed:`, JSON.stringify(data));
-    }
-  } catch (err) {
-    console.error("WhatsApp send error:", err);
-  }
-}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -103,7 +66,13 @@ Deno.serve(async (req) => {
 
         const msg = `Reminder ⏰\nطلبك رقم ${order.order_number} لم يتم دفعه بعد\nالإجمالي ${amount} جنيه\n\nادفع من هنا:\n${link}`;
 
-        await sendWhatsApp(profile.phone, msg);
+        const waResult = await sendWhatsAppText(profile.phone, msg);
+        if (!waResult.ok) {
+          console.error(
+            `Payment reminder WhatsApp failed to ${waResult.formattedPhone}: ${waResult.error} (template_required=${waResult.requiresTemplate ? "yes" : "no"})`,
+          );
+          continue;
+        }
 
         // Mark as sent to avoid duplicates
         await supabase.from("notifications").insert({
@@ -177,7 +146,12 @@ Deno.serve(async (req) => {
         const link = `${baseUrl}/payment?order_id=${order.id}&amount=${order.total_amount}`;
 
         const msg = `⚠️ تذكير أخير\nطلبك رقم ${order.order_number} لم يتم دفعه بعد\nالإجمالي: ${total} جنيه\n\nسيتم إلغاء الطلب قريبًا\nادفع الآن:\n${link}`;
-        await sendWhatsApp(profile.phone, msg);
+         const waResult = await sendWhatsAppText(profile.phone, msg);
+         if (!waResult.ok) {
+           console.error(
+             `Final payment reminder WhatsApp failed to ${waResult.formattedPhone}: ${waResult.error} (template_required=${waResult.requiresTemplate ? "yes" : "no"})`,
+           );
+         }
       }
 
       // Notify admins

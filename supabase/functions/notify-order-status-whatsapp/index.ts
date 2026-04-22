@@ -1,41 +1,11 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendWhatsAppText } from "../_shared/whatsapp.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
-
-async function sendWhatsApp(phone: string, message: string) {
-  const accessToken = Deno.env.get("META_WHATSAPP_ACCESS_TOKEN");
-  const phoneNumberId = Deno.env.get("META_WHATSAPP_PHONE_NUMBER_ID");
-  if (!accessToken || !phoneNumberId) return { ok: false };
-
-  let formatted = phone.replace(/[\s\-\(\)]/g, "");
-  if (formatted.startsWith("+")) formatted = formatted.slice(1);
-  if (formatted.startsWith("0")) formatted = "2" + formatted;
-  if (/^\d{10}$/.test(formatted)) formatted = "2" + formatted;
-
-  const resp = await fetch(
-    `https://crm.whats-meta.com/api/meta/v19.0/${phoneNumberId}/messages`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to: formatted,
-        type: "text",
-        text: { body: message },
-      }),
-    }
-  );
-  const data = await resp.json();
-  console.log(resp.ok ? `WhatsApp sent to ${formatted}` : `WhatsApp failed: ${JSON.stringify(data)}`);
-  return { ok: resp.ok };
-}
 
 const STATUS_MESSAGES: Record<string, (orderNum: string, extra?: any) => string> = {
   shipped: (orderNum, extra) => {
@@ -139,7 +109,12 @@ Deno.serve(async (req) => {
     }
 
     const message = msgBuilder(orderNumber!, { shipping_company: shippingCompany, tracking_number: trackingNumber });
-    await sendWhatsApp(profile.phone, message);
+    const customerResult = await sendWhatsAppText(profile.phone, message);
+    if (!customerResult.ok) {
+      console.error(
+        `Order status WhatsApp failed to ${customerResult.formattedPhone}: ${customerResult.error} (template_required=${customerResult.requiresTemplate ? "yes" : "no"})`,
+      );
+    }
 
     // Also notify admins for shipped/delivered
     if (newStatus === "shipped" || newStatus === "delivered") {
@@ -157,12 +132,23 @@ Deno.serve(async (req) => {
         const statusLabel = newStatus === "shipped" ? "تم شحنه" : "تم تسليمه";
         const adminMsg = `📦 طلب #${orderNumber} — ${statusLabel}\nالعميل: ${profile.full_name || "—"}\nالتليفون: ${profile.phone}`;
         for (const p of adminProfiles || []) {
-          if (p.phone) await sendWhatsApp(p.phone, adminMsg);
+          if (p.phone) {
+            const adminResult = await sendWhatsAppText(p.phone, adminMsg);
+            if (!adminResult.ok) {
+              console.error(
+                `Admin status WhatsApp failed to ${adminResult.formattedPhone}: ${adminResult.error} (template_required=${adminResult.requiresTemplate ? "yes" : "no"})`,
+              );
+            }
+          }
         }
       }
     }
 
-    return new Response(JSON.stringify({ success: true }), {
+    return new Response(JSON.stringify({
+      success: customerResult.ok,
+      customer_requires_template: customerResult.requiresTemplate ?? false,
+      customer_error: customerResult.ok ? null : customerResult.error,
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {

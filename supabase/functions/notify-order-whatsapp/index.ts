@@ -1,50 +1,11 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendWhatsAppText } from "../_shared/whatsapp.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
-
-async function sendWhatsApp(phone: string, message: string) {
-  const accessToken = Deno.env.get("META_WHATSAPP_ACCESS_TOKEN");
-  const phoneNumberId = Deno.env.get("META_WHATSAPP_PHONE_NUMBER_ID");
-
-  if (!accessToken || !phoneNumberId) {
-    console.warn("Meta WhatsApp credentials not configured — skipping");
-    return { ok: false };
-  }
-
-  let formatted = phone.replace(/[\s\-\(\)]/g, "");
-  if (formatted.startsWith("+")) formatted = formatted.slice(1);
-  if (formatted.startsWith("0")) formatted = "2" + formatted;
-  if (/^\d{10}$/.test(formatted)) formatted = "2" + formatted;
-
-  const resp = await fetch(
-    `https://crm.whats-meta.com/api/meta/v19.0/${phoneNumberId}/messages`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to: formatted,
-        type: "text",
-        text: { body: message },
-      }),
-    }
-  );
-
-  const data = await resp.json();
-  if (resp.ok) {
-    console.log(`WhatsApp sent to ${formatted}, ID: ${data.messages?.[0]?.id}`);
-  } else {
-    console.error(`WhatsApp failed to ${formatted}:`, JSON.stringify(data));
-  }
-  return { ok: resp.ok };
-}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -86,7 +47,12 @@ Deno.serve(async (req) => {
     msg += `\n\nشكراً لتعاملك مع المصرية جروب 🚗`;
 
     // Send to customer
-    await sendWhatsApp(customerPhone, msg);
+    const customerResult = await sendWhatsAppText(customerPhone, msg);
+    if (!customerResult.ok) {
+      console.error(
+        `Customer WhatsApp failed to ${customerResult.formattedPhone}: ${customerResult.error} (template_required=${customerResult.requiresTemplate ? "yes" : "no"})`,
+      );
+    }
 
     // Send to all admin/staff phones
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -106,11 +72,22 @@ Deno.serve(async (req) => {
 
       const adminMsg = `🆕 طلب جديد #${orderNumber}\nالعميل: ${clientName}\nالتليفون: ${customerPhone}\nالإجمالي: ${amountFormatted} جنيه${branchLine}`;
       for (const p of adminProfiles || []) {
-        if (p.phone) await sendWhatsApp(p.phone, adminMsg);
+        if (p.phone) {
+          const adminResult = await sendWhatsAppText(p.phone, adminMsg);
+          if (!adminResult.ok) {
+            console.error(
+              `Admin WhatsApp failed to ${adminResult.formattedPhone}: ${adminResult.error} (template_required=${adminResult.requiresTemplate ? "yes" : "no"})`,
+            );
+          }
+        }
       }
     }
 
-    return new Response(JSON.stringify({ success: true }), {
+    return new Response(JSON.stringify({
+      success: customerResult.ok,
+      customer_requires_template: customerResult.requiresTemplate ?? false,
+      customer_error: customerResult.ok ? null : customerResult.error,
+    }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

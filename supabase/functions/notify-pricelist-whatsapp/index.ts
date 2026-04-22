@@ -1,41 +1,11 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendWhatsAppText } from "../_shared/whatsapp.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
-
-async function sendWhatsApp(phone: string, message: string) {
-  const accessToken = Deno.env.get("META_WHATSAPP_ACCESS_TOKEN");
-  const phoneNumberId = Deno.env.get("META_WHATSAPP_PHONE_NUMBER_ID");
-  if (!accessToken || !phoneNumberId) return { ok: false };
-
-  let formatted = phone.replace(/[\s\-\(\)]/g, "");
-  if (formatted.startsWith("+")) formatted = formatted.slice(1);
-  if (formatted.startsWith("0")) formatted = "2" + formatted;
-  if (/^\d{10}$/.test(formatted)) formatted = "2" + formatted;
-
-  const resp = await fetch(
-    `https://crm.whats-meta.com/api/meta/v19.0/${phoneNumberId}/messages`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to: formatted,
-        type: "text",
-        text: { body: message },
-      }),
-    }
-  );
-  const data = await resp.json();
-  console.log(resp.ok ? `WhatsApp sent to ${formatted}` : `WhatsApp failed: ${JSON.stringify(data)}`);
-  return { ok: resp.ok };
-}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -89,18 +59,32 @@ Deno.serve(async (req) => {
       .in("user_id", dealers.map((d: any) => d.user_id));
 
     let sent = 0;
+    const failed: Array<{ phone: string; error: string; requiresTemplate: boolean }> = [];
     for (const profile of profiles || []) {
       if (!profile.phone) continue;
 
       const msg = `📋 كشف أسعار جديد!\n\nتم إضافة كشف أسعار جديد: "${priceListTitle}"\n\n🔗 اطلع عليه الآن من حسابك:\nhttps://almasria-autoparts-hub.lovable.app/dealer\n\nالمصرية جروب 🚗`;
 
-      await sendWhatsApp(profile.phone, msg);
-      sent++;
+      const result = await sendWhatsAppText(profile.phone, msg);
+
+      if (result.ok) {
+        console.log(`WhatsApp sent to ${result.formattedPhone}, id: ${result.messageId}`);
+        sent++;
+      } else {
+        console.error(
+          `WhatsApp failed to ${result.formattedPhone}: ${result.error} (template_required=${result.requiresTemplate ? "yes" : "no"})`,
+        );
+        failed.push({
+          phone: result.formattedPhone,
+          error: result.error || "unknown_error",
+          requiresTemplate: Boolean(result.requiresTemplate),
+        });
+      }
     }
 
-    console.log(`Price list WhatsApp sent to ${sent} dealers`);
+    console.log(`Price list WhatsApp sent to ${sent} dealers, failed for ${failed.length}`);
 
-    return new Response(JSON.stringify({ success: true, sent }), {
+    return new Response(JSON.stringify({ success: failed.length === 0, sent, failed }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
