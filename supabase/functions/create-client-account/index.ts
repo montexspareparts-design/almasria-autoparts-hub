@@ -62,35 +62,50 @@ serve(async (req) => {
         });
       }
 
-      // Find user by email - search through paginated results
-      let targetUser = null;
-      let page = 1;
-      const perPage = 100;
-      while (!targetUser) {
-        const { data: usersPage, error: listErr } = await adminClient.auth.admin.listUsers({ page, perPage });
-        if (listErr || !usersPage?.users?.length) break;
-        targetUser = usersPage.users.find((u: any) => u.email === email);
-        if (usersPage.users.length < perPage) break;
-        page++;
+      // Find user — try ERP code FIRST (most reliable for converted leads)
+      let targetUser: any = null;
+
+      if (erpCode) {
+        const { data: dealerAcc } = await adminClient
+          .from("dealer_accounts")
+          .select("user_id")
+          .eq("erp_customer_code", erpCode)
+          .maybeSingle();
+        if (dealerAcc?.user_id) {
+          const { data: userData } = await adminClient.auth.admin.getUserById(dealerAcc.user_id);
+          if (userData?.user) targetUser = userData.user;
+        }
       }
 
-      if (!targetUser) {
-        // Try to find via dealer_accounts + erp_customer_code as fallback
-        if (erpCode) {
-          const { data: dealerAcc } = await adminClient
-            .from("dealer_accounts")
-            .select("user_id")
-            .eq("erp_customer_code", erpCode)
-            .maybeSingle();
-          if (dealerAcc?.user_id) {
-            const { data: userData } = await adminClient.auth.admin.getUserById(dealerAcc.user_id);
-            if (userData?.user) targetUser = userData.user;
-          }
+      // Fallback: search by email through paginated listUsers
+      if (!targetUser && email) {
+        let page = 1;
+        const perPage = 200;
+        for (let i = 0; i < 20 && !targetUser; i++) {
+          const { data: usersPage, error: listErr } = await adminClient.auth.admin.listUsers({ page, perPage });
+          if (listErr || !usersPage?.users?.length) break;
+          targetUser = usersPage.users.find((u: any) => u.email === email);
+          if (usersPage.users.length < perPage) break;
+          page++;
+        }
+      }
+
+      // Final fallback: search profiles by phone (extracted from email)
+      if (!targetUser && email) {
+        const phoneFromEmail = email.split("@")[0];
+        const { data: profile } = await adminClient
+          .from("profiles")
+          .select("user_id")
+          .eq("phone", phoneFromEmail)
+          .maybeSingle();
+        if (profile?.user_id) {
+          const { data: userData } = await adminClient.auth.admin.getUserById(profile.user_id);
+          if (userData?.user) targetUser = userData.user;
         }
       }
 
       if (!targetUser) {
-        return new Response(JSON.stringify({ error: "المستخدم غير موجود" }), {
+        return new Response(JSON.stringify({ error: "المستخدم غير موجود — تأكد أن الحساب مرتبط بكود الفيصل" }), {
           status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
