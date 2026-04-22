@@ -460,6 +460,105 @@ const AdminERPSync = () => {
     URL.revokeObjectURL(url);
   };
 
+  const runStockSync = async () => {
+    setSyncing("stock_sync");
+    setStockSyncReport(null);
+    setStockSyncProgress({ phase: "جاري الاتصال بنظام الفيصل...", percent: 10, done: false });
+
+    const t1 = setTimeout(() => {
+      setStockSyncProgress(p => p && !p.done ? { ...p, phase: "جاري جلب الأرصدة من الفيصل...", percent: 35 } : p);
+    }, 800);
+    const t2 = setTimeout(() => {
+      setStockSyncProgress(p => p && !p.done ? { ...p, phase: "جاري مطابقة المنتجات بالكود...", percent: 60 } : p);
+    }, 2000);
+    const t3 = setTimeout(() => {
+      setStockSyncProgress(p => p && !p.done ? { ...p, phase: "جاري تحديث الأرصدة في قاعدة البيانات...", percent: 85 } : p);
+    }, 3500);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("erp-sync-outbound", {
+        body: { action: "sync_stock", data: {} },
+      });
+
+      clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
+
+      if (error) throw error;
+      if (data?.success === false) throw new Error(data?.message || "فشلت المزامنة");
+
+      const updated = data?.updated || 0;
+      const matched = data?.matched || 0;
+      const erpTotal = data?.erp_total || 0;
+      const ourProducts = data?.our_products || 0;
+      const withPositiveStock = data?.with_positive_stock || 0;
+      const sample = (data?.sample || []) as Array<any>;
+
+      const sampleWithStatus = sample.map((s) => ({
+        id: String(s.id || ""),
+        qty: Number(s.qty || 0),
+        status: (Number(s.qty || 0) > 0 ? "in_stock" : "out_of_stock") as "in_stock" | "out_of_stock",
+      }));
+
+      const unmatchedCount = Math.max(0, ourProducts - matched);
+      const failures: Array<{ id: string; reason: string }> = [];
+      if (unmatchedCount > 0) {
+        failures.push({
+          id: "—",
+          reason: `${unmatchedCount} صنف على موقعنا بدون كود الفيصل (erp_item_code) أو غير موجود في الفيصل`,
+        });
+      }
+      if (withPositiveStock === 0 && matched > 0) {
+        failures.push({
+          id: "⚠️",
+          reason: `كل الأصناف المطابقة (${matched}) رصيدها = 0 من الفيصل. تأكد من حالة المخزون في النظام.`,
+        });
+      }
+
+      setStockSyncProgress({ phase: "✅ اكتملت مزامنة الأرصدة", percent: 100, done: true });
+      setStockSyncReport({
+        updated, matched, erpTotal, ourProducts, withPositiveStock,
+        sample: sampleWithStatus, failures,
+        finishedAt: new Date().toISOString(),
+      });
+
+      toast({
+        title: "✅ تمت مزامنة الأرصدة",
+        description: `تم تحديث ${updated} صنف من ${matched} مطابق (${withPositiveStock} منهم برصيد موجب)`,
+      });
+    } catch (err: any) {
+      clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
+      setStockSyncProgress({ phase: "❌ فشلت المزامنة", percent: 100, done: true, error: err?.message || "خطأ غير معروف" });
+      toast({
+        title: "فشل مزامنة الأرصدة",
+        description: err?.message || "خطأ غير معروف",
+        variant: "destructive",
+      });
+    }
+
+    fetchData();
+    setSyncing(null);
+  };
+
+  const downloadStockReportCsv = () => {
+    if (!stockSyncReport) return;
+    const headers = ["كود الفيصل", "الرصيد الجديد", "الحالة", "ملاحظة"];
+    const rows = [
+      ...stockSyncReport.sample.map(s => [
+        s.id, s.qty,
+        s.status === "in_stock" ? "متوفر ✅" : "نافذ ⚠️",
+        "",
+      ]),
+      ...stockSyncReport.failures.map(f => [f.id, "", "فشل", f.reason]),
+    ];
+    const csv = "\uFEFF" + [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `stock-sync-report-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handleBatchImport = async () => {
     setSyncing("import_products");
     setImportProgress({ phase: "جاري جلب الأصناف من الفيصل...", currentBatch: 0, totalBatches: 0, imported: 0, updated: 0, skipped: 0, totalItems: 0, done: false });
