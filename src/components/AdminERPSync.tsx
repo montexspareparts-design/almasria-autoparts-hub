@@ -989,7 +989,12 @@ const AdminERPSync = () => {
             </CardContent>
           </Card>
 
-
+          {/* Import Products Card - Full Width */}
+          <Card className="border-2 border-primary/30 hover:border-primary/60 transition-colors bg-primary/5">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                  <Play className="w-5 h-5 text-primary" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-bold text-foreground">🚀 استيراد الأصناف من الفيصل</h3>
