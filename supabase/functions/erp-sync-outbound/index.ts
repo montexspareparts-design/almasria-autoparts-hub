@@ -484,35 +484,71 @@ Deno.serve(async (req) => {
 
             console.log(`[ERP Price v3] ERP total: ${productsList.length}, Our products: ${ourProducts.length}, Matched: ${matchedCount}, Retail: ${retailItems.length}, Wholesale: ${wholesaleItems.length}`);
 
-            // Update retail prices (base_price)
-            let retailUpdated = 0;
-            if (retailItems.length > 0) {
-              const { data: bulkResult, error: bulkErr } = await supabase.rpc("bulk_update_product_prices", {
-                _items: retailItems,
-              });
-              if (bulkErr) console.error("Retail price sync error:", bulkErr.message);
-              retailUpdated = bulkResult?.updated || 0;
-            }
+            // ── DRY-RUN: compute price diffs without writing ──
+            if (isDryRun) {
+              const changes: Array<{ erp_id: string; name: string; old_price: number; new_price: number; delta: number; pct: number; status: string }> = [];
+              for (const r of retailItems) {
+                const prod = ourByCode.get(r.id);
+                if (!prod) continue;
+                const oldP = Number(prod.base_price || 0);
+                const newP = r.price;
+                if (Math.abs(oldP - newP) < 0.01) continue;
+                const delta = newP - oldP;
+                const pct = oldP > 0 ? (delta / oldP) * 100 : 100;
+                changes.push({
+                  erp_id: r.id,
+                  name: prod.name_ar || "",
+                  old_price: oldP,
+                  new_price: newP,
+                  delta,
+                  pct: Math.round(pct * 10) / 10,
+                  status: delta > 0 ? "increase" : "decrease",
+                });
+              }
+              changes.sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct));
+              result = {
+                success: true, dry_run: true,
+                erp_total: productsList.length,
+                our_products: ourProducts.length,
+                matched: matchedCount,
+                retail_changes_count: changes.length,
+                wholesale_items_in_erp: wholesaleItems.length,
+                increases: changes.filter(c => c.status === "increase").length,
+                decreases: changes.filter(c => c.status === "decrease").length,
+                big_changes: changes.filter(c => Math.abs(c.pct) >= 10).length,
+                changes: changes.slice(0, 200),
+              };
+            } else {
+              // Update retail prices (base_price)
+              let retailUpdated = 0;
+              if (retailItems.length > 0) {
+                const { data: bulkResult, error: bulkErr } = await supabase.rpc("bulk_update_product_prices", {
+                  _items: retailItems,
+                });
+                if (bulkErr) console.error("Retail price sync error:", bulkErr.message);
+                retailUpdated = bulkResult?.updated || 0;
+              }
 
-            // Update wholesale prices (wholesale_tier1)
-            let wholesaleUpdated = 0;
-            if (wholesaleItems.length > 0) {
-              const { data: wholesaleResult, error: wholesaleErr } = await supabase.rpc("bulk_upsert_wholesale_prices", {
-                _items: wholesaleItems,
-              });
-              if (wholesaleErr) console.error("Wholesale price sync error:", wholesaleErr.message);
-              wholesaleUpdated = wholesaleResult?.updated || 0;
-            }
+              // Update wholesale prices (wholesale_tier1)
+              let wholesaleUpdated = 0;
+              if (wholesaleItems.length > 0) {
+                const { data: wholesaleResult, error: wholesaleErr } = await supabase.rpc("bulk_upsert_wholesale_prices", {
+                  _items: wholesaleItems,
+                });
+                if (wholesaleErr) console.error("Wholesale price sync error:", wholesaleErr.message);
+                wholesaleUpdated = wholesaleResult?.updated || 0;
+              }
 
-            result = {
-              success: true,
-              retail_updated: retailUpdated,
-              wholesale_updated: wholesaleUpdated,
-              erp_total: productsList.length,
-              our_products: ourProducts.length,
-              matched: matchedCount,
-              sample: sampleItems,
-            };
+              result = {
+                success: true,
+                retail_updated: retailUpdated,
+                wholesale_updated: wholesaleUpdated,
+                erp_total: productsList.length,
+                our_products: ourProducts.length,
+                matched: matchedCount,
+                sample: sampleItems,
+              };
+            }
           }
         }
       }
