@@ -666,6 +666,22 @@ const AdminLeads = () => {
       if (filters.account === "with_account" && !hasAccount) return false;
       if (filters.account === "without_account" && hasAccount) return false;
     }
+
+    // Latest attempt status filter
+    const lastAttempt = leadAttempts[l.id];
+    if (filters.attemptStatus !== "all") {
+      if (filters.attemptStatus === "none" && lastAttempt) return false;
+      if (filters.attemptStatus === "success" && lastAttempt?.status !== "success") return false;
+      if (filters.attemptStatus === "failed" && lastAttempt?.status !== "failure") return false;
+    }
+
+    // Last error message free-text search
+    const eq = filters.errorSearch.trim().toLowerCase();
+    if (eq) {
+      const err = (lastAttempt?.error_message || "").toLowerCase();
+      if (!err.includes(eq)) return false;
+    }
+
     return true;
   });
 
