@@ -63,6 +63,14 @@ const AdminERPSync = () => {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState<string | null>(null);
   const [savingConfig, setSavingConfig] = useState(false);
+  const [fullSyncReport, setFullSyncReport] = useState<{
+    pricesUpdated: number;
+    stockUpdated: number;
+    pricesError?: string;
+    stockError?: string;
+    stockWarning?: string;
+    finishedAt: string;
+  } | null>(null);
   const [importProgress, setImportProgress] = useState<{
     phase: string;
     currentBatch: number;
