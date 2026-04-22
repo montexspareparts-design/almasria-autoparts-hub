@@ -51,6 +51,7 @@ const StaffAccountSettings = lazy(() => import("@/components/admin/StaffAccountS
 const AdminNewOrderAlert = lazy(() => import("@/components/admin/AdminNewOrderAlert"));
 const AdminSupportRequestAlert = lazy(() => import("@/components/admin/AdminSupportRequestAlert"));
 const AdminNotificationPhones = lazy(() => import("@/components/AdminNotificationPhones"));
+const AdminWhatsAppDeliveryStatus = lazy(() => import("@/components/admin/AdminWhatsAppDeliveryStatus"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];
