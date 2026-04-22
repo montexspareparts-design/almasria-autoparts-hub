@@ -1051,6 +1051,41 @@ const AdminPriceLists = () => {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Bulk AI re-link progress and results */}
+        {(bulkAiRunning || bulkAiResults.length > 0) && (
+          <div className="p-3 rounded-lg border border-primary/30 bg-primary/5 space-y-2">
+            <div className="flex items-center gap-2 text-sm font-bold text-primary">
+              <Sparkles className="w-4 h-4" />
+              <span>تحليل جميع الكشوفات بالذكاء الاصطناعي</span>
+              {bulkAiRunning && <Loader2 className="w-4 h-4 animate-spin mr-auto" />}
+            </div>
+            {bulkAiRunning && bulkAiProgress.currentTitle && (
+              <div className="text-xs text-muted-foreground">
+                جاري تحليل: <span className="font-semibold text-foreground">{bulkAiProgress.currentTitle}</span> ({bulkAiProgress.current}/{bulkAiProgress.total})
+              </div>
+            )}
+            {bulkAiResults.length > 0 && (
+              <div className="space-y-1 max-h-48 overflow-y-auto text-xs">
+                {bulkAiResults.map((r, i) => (
+                  <div key={i} className="flex items-center justify-between gap-2 p-1.5 rounded bg-background/60 border border-border">
+                    <span className="truncate flex-1 text-foreground">{r.title}</span>
+                    {r.error ? (
+                      <span className="text-destructive font-semibold flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" /> {r.error.slice(0, 40)}
+                      </span>
+                    ) : (
+                      <span className="text-primary font-semibold">
+                        ربط {r.linked} من {r.extracted}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+
         {showForm && (
           <div className="space-y-3 p-4 border border-border rounded-lg bg-muted/30">
             <Input
