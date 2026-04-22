@@ -1009,6 +1009,17 @@ const AdminPriceLists = () => {
             <Button
               size="sm"
               variant="outline"
+              onClick={previewMatchingLog}
+              disabled={aiLinking || bulkLinking || matchLogLoading}
+              className="gap-1.5 text-xs border-primary/40"
+              title="معاينة سجل المطابقة قبل اعتمادها (Dry-run)"
+            >
+              {matchLogLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Target className="w-3.5 h-3.5" />}
+              معاينة سجل المطابقة
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
               onClick={linkAllActiveProducts}
               disabled={bulkLinking || aiLinking}
               className="gap-1.5 text-xs"
