@@ -37,6 +37,14 @@ interface ERPCustomer {
   name: string;
 }
 
+type EdgeFunctionErrorLike = {
+  message?: string;
+  context?: {
+    json?: () => Promise<any>;
+    text?: () => Promise<string>;
+  };
+};
+
 const statusLabels: Record<string, string> = {
   new: "جديد",
   contacted: "تم التواصل",
@@ -280,6 +288,50 @@ const AdminLeads = () => {
     return found?.name || null;
   };
 
+  const extractFunctionErrorMessage = async (error: EdgeFunctionErrorLike | null, data?: any) => {
+    if (typeof data?.error === "string" && data.error.trim()) return data.error;
+
+    const response = error?.context;
+    if (response?.json) {
+      try {
+        const payload = await response.json();
+        if (typeof payload?.error === "string" && payload.error.trim()) return payload.error;
+      } catch {
+        // ignore invalid json body
+      }
+    }
+
+    if (response?.text) {
+      try {
+        const raw = await response.text();
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw);
+            if (typeof parsed?.error === "string" && parsed.error.trim()) return parsed.error;
+          } catch {
+            return raw;
+          }
+        }
+      } catch {
+        // ignore unreadable body
+      }
+    }
+
+    return error?.message || null;
+  };
+
+  const getLeadDealerAccount = async (erpCustomerCode: string | null) => {
+    if (!erpCustomerCode) return null;
+
+    const { data } = await supabase
+      .from("dealer_accounts")
+      .select("id, user_id")
+      .eq("erp_customer_code", erpCustomerCode)
+      .maybeSingle();
+
+    return data;
+  };
+
   // Register client as a user account
   const registerClient = async (lead: Lead) => {
     if (!lead.erp_customer_code) {
@@ -299,10 +351,14 @@ const AdminLeads = () => {
         },
       });
 
-      if (error) {
-        toast({ title: "خطأ", description: "فشل إنشاء الحساب", variant: "destructive" });
-      } else if (data?.error) {
-        toast({ title: "خطأ", description: data.error, variant: "destructive" });
+      const serverMsg = await extractFunctionErrorMessage(error as EdgeFunctionErrorLike | null, data);
+
+      if (error || data?.error) {
+        toast({
+          title: "خطأ",
+          description: serverMsg || "فشل إنشاء الحساب",
+          variant: "destructive",
+        });
       } else if (data?.success) {
         setCredentials({ username: data.username, password: data.password, phone: lead.phone });
         setLeadCredentials(prev => ({ ...prev, [lead.id]: { username: lead.phone.replace(/\D/g, ""), password: data.password } }));
@@ -352,6 +408,16 @@ const AdminLeads = () => {
   const resetPassword = async (lead: Lead) => {
     setRegistering(lead.id);
     try {
+      const dealerAccount = await getLeadDealerAccount(lead.erp_customer_code);
+      if (!dealerAccount) {
+        toast({
+          title: "إنشاء الحساب",
+          description: "هذا العميل محوّل لكن الحساب غير مكتمل بعد، سيتم إنشاؤه الآن.",
+        });
+        await registerClient(lead);
+        return;
+      }
+
       const cleanPhone = lead.phone.replace(/\D/g, "");
       const email = `${cleanPhone}@phone.almasria.local`;
       const newPassword = Array.from(crypto.getRandomValues(new Uint8Array(6)))
@@ -365,7 +431,7 @@ const AdminLeads = () => {
 
       // Edge function returned non-2xx — try to extract server-side message
       if (error || (data && (data as any).error)) {
-        const serverMsg = (data as any)?.error || (error as any)?.context?.error || (error as any)?.message;
+        const serverMsg = await extractFunctionErrorMessage(error as EdgeFunctionErrorLike | null, data);
         // If user truly doesn't exist → offer to create it instead
         if (typeof serverMsg === "string" && serverMsg.includes("غير موجود")) {
           toast({
