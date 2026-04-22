@@ -117,7 +117,12 @@ const AdminERPSync = () => {
     increases: number;
     decreases: number;
     bigChanges: number;
+    wholesaleChangesCount: number;
+    wholesaleIncreases: number;
+    wholesaleDecreases: number;
+    wholesaleNew: number;
     changes: Array<{ erp_id: string; name: string; old_price: number; new_price: number; delta: number; pct: number; status: string }>;
+    wholesaleChanges: Array<{ erp_id: string; name: string; old_price: number; new_price: number; delta: number; pct: number; status: string }>;
     generatedAt: string;
   } | null>(null);
   const [stockPreview, setStockPreview] = useState<{
