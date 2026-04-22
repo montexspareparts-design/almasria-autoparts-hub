@@ -132,6 +132,50 @@ const AdminLeads = () => {
   const [leadCredentials, setLeadCredentials] = useState<Record<string, LeadCredentials>>({});
   const [showTablePasswords, setShowTablePasswords] = useState<Record<string, boolean>>({});
 
+  // Pre-flight check dialog
+  type PreflightState =
+    | { kind: "no_erp"; lead: Lead }
+    | { kind: "no_account"; lead: Lead }
+    | { kind: "has_password"; lead: Lead; password: string }
+    | { kind: "no_password"; lead: Lead };
+  const [preflight, setPreflight] = useState<PreflightState | null>(null);
+  const [preflightChecking, setPreflightChecking] = useState<string | null>(null);
+
+  // Pre-flight check before any Edge Function call
+  const runPreflight = async (lead: Lead) => {
+    setPreflightChecking(lead.id);
+    try {
+      if (!lead.erp_customer_code) {
+        setPreflight({ kind: "no_erp", lead });
+        return;
+      }
+      const { data: account } = await supabase
+        .from("dealer_accounts")
+        .select("id")
+        .eq("erp_customer_code", lead.erp_customer_code)
+        .maybeSingle();
+      if (!account) {
+        setPreflight({ kind: "no_account", lead });
+        return;
+      }
+      const { data: pw } = await supabase
+        .from("dealer_passwords" as any)
+        .select("initial_password")
+        .eq("dealer_account_id", (account as any).id)
+        .maybeSingle();
+      const stored = (pw as any)?.initial_password as string | undefined;
+      if (stored) {
+        setPreflight({ kind: "has_password", lead, password: stored });
+      } else {
+        setPreflight({ kind: "no_password", lead });
+      }
+    } catch (e: any) {
+      toast({ title: "خطأ", description: e?.message || "فشل الفحص", variant: "destructive" });
+    } finally {
+      setPreflightChecking(null);
+    }
+  };
+
   const fetchLeads = async () => {
     setLoading(true);
     const { data, error } = await supabase
