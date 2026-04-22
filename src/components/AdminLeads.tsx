@@ -1128,12 +1128,26 @@ const AdminLeads = () => {
                             context={lead.shop_name ? `بخصوص محل "${lead.shop_name}"` : undefined}
                           />
                         )}
+                        {leadAttempts[lead.id] && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={`h-7 w-7 ${leadAttempts[lead.id].status === "failure" ? "text-destructive hover:text-destructive" : "text-emerald-600 hover:text-emerald-700"}`}
+                            onClick={() => setAttemptDetail({ ...leadAttempts[lead.id], lead })}
+                            title="تفاصيل آخر محاولة"
+                          >
+                            <History className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(lead)}>
                           <Edit2 className="w-3.5 h-3.5" />
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </AlertDialogTrigger>
                               <Trash2 className="w-3.5 h-3.5" />
                             </Button>
                           </AlertDialogTrigger>
