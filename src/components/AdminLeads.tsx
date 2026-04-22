@@ -373,7 +373,7 @@ const AdminLeads = () => {
             description: "هذا العميل ليس له حساب بعد. سيتم إنشاء حساب جديد الآن…",
           });
           // Re-trigger the full registration flow which creates user + dealer account + sends WhatsApp
-          await registerAsClient(lead);
+          await registerClient(lead);
           return;
         }
         toast({
