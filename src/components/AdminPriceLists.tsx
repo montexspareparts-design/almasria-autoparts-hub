@@ -6,9 +6,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, FileText, Trash2, Eye, EyeOff, Plus, Search, X, Package, Table2, CheckCircle2, Users, Download, AlertCircle, PlusCircle, LinkIcon, Sparkles } from "lucide-react";
+import { Loader2, Upload, FileText, Trash2, Eye, EyeOff, Plus, Search, X, Package, Table2, CheckCircle2, Users, Download, AlertCircle, PlusCircle, LinkIcon, Sparkles, Target } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Slider } from "@/components/ui/slider";
 
 type UploadReportRow = {
   sku: string;
@@ -64,6 +65,10 @@ const AdminPriceLists = () => {
   const [bulkAiRunning, setBulkAiRunning] = useState(false);
   const [bulkAiProgress, setBulkAiProgress] = useState<{ current: number; total: number; currentTitle: string }>({ current: 0, total: 0, currentTitle: "" });
   const [bulkAiResults, setBulkAiResults] = useState<Array<{ title: string; linked: number; extracted: number; error?: string }>>([]);
+
+  // Calibration: minimum confidence (0-100) for linking SKUs to products.
+  // 100 = exact match only. Lower = allow fuzzy matches.
+  const [minConfidence, setMinConfidence] = useState<number>(100);
 
   // Verification dialog (post bulk AI)
   const [verifyOpen, setVerifyOpen] = useState(false);
@@ -715,7 +720,7 @@ const AdminPriceLists = () => {
     setAiResult(null);
     try {
       const { data, error } = await supabase.functions.invoke("extract-pricelist-skus", {
-        body: { price_list_id: managingList.id },
+        body: { price_list_id: managingList.id, min_confidence: minConfidence },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
@@ -752,7 +757,7 @@ const AdminPriceLists = () => {
       setBulkAiProgress({ current: i + 1, total: candidates.length, currentTitle: list.title });
       try {
         const { data, error } = await supabase.functions.invoke("extract-pricelist-skus", {
-          body: { price_list_id: list.id },
+          body: { price_list_id: list.id, min_confidence: minConfidence },
         });
         if (error) throw error;
         if ((data as any)?.error) throw new Error((data as any).error);
@@ -1124,6 +1129,41 @@ const AdminPriceLists = () => {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Calibration: confidence threshold for SKU matching */}
+        <div className="p-3 rounded-lg border border-border bg-muted/30 space-y-2">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2 text-sm font-bold">
+              <Target className="w-4 h-4 text-primary" />
+              <span>وضع المعايرة — حد التشابه (Confidence)</span>
+            </div>
+            <Badge
+              variant={minConfidence >= 100 ? "default" : minConfidence >= 85 ? "secondary" : "outline"}
+              className="text-xs"
+            >
+              {minConfidence}%{" "}
+              {minConfidence >= 100 ? "(مطابقة تامة)" : minConfidence >= 85 ? "(صارم)" : minConfidence >= 70 ? "(متوسط)" : "(مرن)"}
+            </Badge>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] text-muted-foreground shrink-0">50%</span>
+            <Slider
+              value={[minConfidence]}
+              onValueChange={(v) => setMinConfidence(v[0] ?? 100)}
+              min={50}
+              max={100}
+              step={5}
+              disabled={bulkAiRunning || aiLinking}
+              className="flex-1"
+            />
+            <span className="text-[10px] text-muted-foreground shrink-0">100%</span>
+          </div>
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            يحدد هذا الإعداد مدى التطابق المطلوب بين الكود المستخرج من الـ PDF وكود المنتج في قاعدة البيانات قبل الربط.
+            <span className="font-semibold text-foreground"> 100% = مطابقة تامة فقط</span> (الأكثر أماناً، قد يفوّت أكواد بها فروقات بسيطة).
+            القيم الأقل تسمح بمطابقة تقريبية (Levenshtein) لاستيعاب الأخطاء الإملائية أو فروقات التنسيق.
+          </p>
+        </div>
+
         {/* Bulk AI re-link progress and results */}
         {(bulkAiRunning || bulkAiResults.length > 0) && (
           <div className="p-3 rounded-lg border border-primary/30 bg-primary/5 space-y-2">
