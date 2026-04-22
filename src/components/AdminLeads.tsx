@@ -146,6 +146,10 @@ const AdminLeads = () => {
   // Latest account-creation/reset attempt per lead (for status & error filtering)
   const [leadAttempts, setLeadAttempts] = useState<Record<string, LeadAttemptInfo>>({});
 
+  // Last attempt details dialog
+  type AttemptDetail = LeadAttemptInfo & { lead: Lead };
+  const [attemptDetail, setAttemptDetail] = useState<AttemptDetail | null>(null);
+
   // Pre-flight check dialog
   type PreflightState =
     | { kind: "no_erp"; lead: Lead }
