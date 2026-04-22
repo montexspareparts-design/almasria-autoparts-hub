@@ -706,7 +706,89 @@ const AdminERPSync = () => {
             </CardContent>
           </Card>
 
-          {/* Import Products Card - Full Width */}
+          {/* Prices-Only Sync Card with Live Progress + Per-Record Report */}
+          <Card className="border-2 border-amber-500/40 hover:border-amber-500/70 transition-colors bg-amber-500/5">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                  <DollarSign className="w-5 h-5 text-amber-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-foreground">💰 مزامنة الأسعار فقط (مع تقدّم وتقرير تفصيلي)</h3>
+                  <p className="text-xs text-muted-foreground">
+                    تحديث أسعار القطاعي والجملة من الفيصل لكل المنتجات المربوطة بـ erp_item_code — مع عرض حي للتقدم وتقرير نتائج لكل سجل
+                  </p>
+                </div>
+              </div>
+
+              {priceSyncProgress && (
+                <div className="mb-3 p-4 rounded-lg bg-muted/50 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground flex items-center gap-2">
+                      {!priceSyncProgress.done && <Loader2 className="w-4 h-4 animate-spin" />}
+                      {priceSyncProgress.phase}
+                    </span>
+                    {priceSyncProgress.done && (
+                      <Button variant="ghost" size="sm" onClick={() => { setPriceSyncProgress(null); setPriceSyncReport(null); }} className="h-6 px-2 text-xs">✕</Button>
+                    )}
+                  </div>
+                  <Progress value={priceSyncProgress.percent} className="h-2" />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>{priceSyncProgress.percent}%</span>
+                  </div>
+                  {priceSyncProgress.error && (
+                    <p className="text-xs text-destructive">❌ {priceSyncProgress.error}</p>
+                  )}
+                </div>
+              )}
+
+              {priceSyncReport && (
+                <div className="mb-3 p-4 rounded-lg bg-background border space-y-3">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                    <div className="bg-emerald-500/10 rounded p-3 text-center border border-emerald-500/30">
+                      <p className="font-bold text-lg text-foreground">{priceSyncReport.retailUpdated}</p>
+                      <p className="text-muted-foreground">سعر قطاعي ✅</p>
+                    </div>
+                    <div className="bg-emerald-500/10 rounded p-3 text-center border border-emerald-500/30">
+                      <p className="font-bold text-lg text-foreground">{priceSyncReport.wholesaleUpdated}</p>
+                      <p className="text-muted-foreground">سعر جملة ✅</p>
+                    </div>
+                    <div className="bg-blue-500/10 rounded p-3 text-center border border-blue-500/30">
+                      <p className="font-bold text-lg text-foreground">{priceSyncReport.matched}</p>
+                      <p className="text-muted-foreground">صنف مطابق</p>
+                    </div>
+                    <div className="bg-amber-500/10 rounded p-3 text-center border border-amber-500/30">
+                      <p className="font-bold text-lg text-foreground">{Math.max(0, priceSyncReport.ourProducts - priceSyncReport.matched)}</p>
+                      <p className="text-muted-foreground">غير مطابق ⚠️</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setShowPriceReport(true)} className="flex-1 gap-2">
+                      <Database className="w-4 h-4" /> عرض التقرير التفصيلي
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={downloadPriceReportCsv} className="gap-2">
+                      <Copy className="w-4 h-4" /> CSV
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <Button
+                className="w-full gap-2 bg-amber-600 hover:bg-amber-700 text-white"
+                onClick={runPriceSync}
+                disabled={syncing !== null}
+              >
+                {syncing === "price_sync" ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <DollarSign className="w-4 h-4" />
+                )}
+                {syncing === "price_sync" ? "جاري المزامنة..." : "تشغيل مزامنة الأسعار الآن"}
+              </Button>
+            </CardContent>
+          </Card>
+
           <Card className="border-2 border-primary/30 hover:border-primary/60 transition-colors bg-primary/5">
             <CardContent className="p-5">
               <div className="flex items-center gap-3 mb-3">
