@@ -683,6 +683,8 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminStaffRoles /></Suspense>;
       case "audit-log":
         return <Suspense fallback={<SectionLoader />}><AdminAuditLog /></Suspense>;
+      case "account-attempts":
+        return <Suspense fallback={<SectionLoader />}><AdminClientAccountAttempts /></Suspense>;
       case "whatsapp-inbox":
         return <Suspense fallback={<SectionLoader />}><AdminWhatsAppInbox /></Suspense>;
       case "whatsapp-delivery":
