@@ -37,7 +37,7 @@ const AdminPriceLists = () => {
   const [selectedPdf, setSelectedPdf] = useState<File | null>(null);
   const [selectedExcel, setSelectedExcel] = useState<File | null>(null);
   const [matchingSkus, setMatchingSkus] = useState(false);
-  const [matchResult, setMatchResult] = useState<{ matched: number; total: number; skus: string[] } | null>(null);
+  const [matchResult, setMatchResult] = useState<{ matched: number; toCreate: number; total: number; skus: string[] } | null>(null);
 
   // Product association
   const [managingList, setManagingList] = useState<PriceListRow | null>(null);
