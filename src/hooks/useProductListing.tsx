@@ -112,6 +112,30 @@ const generateSearchVariants = (term: string): string[] => {
   return Array.from(variants);
 };
 
+/**
+ * Levenshtein distance — minimum edits (insert/delete/replace) to transform a→b.
+ * Used for tolerating 1-char typos in product names (e.g., "فلتير" vs "فلتر").
+ */
+const levenshtein = (a: string, b: string): number => {
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+  // Cap for performance — don't compare very long strings
+  if (Math.abs(a.length - b.length) > 3) return 99;
+  const m = a.length, n = b.length;
+  let prev = new Array(n + 1).fill(0).map((_, i) => i);
+  let curr = new Array(n + 1).fill(0);
+  for (let i = 1; i <= m; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      curr[j] = Math.min(curr[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
+    }
+    [prev, curr] = [curr, prev];
+  }
+  return prev[n];
+};
+
 const getWordMatchScore = (word: string, text: string): number => {
   const normalizedWord = normalizeArabic(word);
   const normalizedText = normalizeArabic(text);
@@ -133,10 +157,25 @@ const getWordMatchScore = (word: string, text: string): number => {
       }
     }
 
+    // Substring match (e.g., "فلتر" inside "فلترزيت") — useful for compound words
+    if (normalizedWord.length >= 3 && targetWord.includes(normalizedWord)) {
+      bestScore = Math.max(bestScore, 65);
+    }
+
     const wordSkeleton = toConsonantSkeleton(normalizedWord);
     const targetSkeleton = toConsonantSkeleton(targetWord);
     if (wordSkeleton.length >= 2 && targetSkeleton.length >= 2 && wordSkeleton === targetSkeleton) {
       bestScore = Math.max(bestScore, 75);
+    }
+
+    // Levenshtein typo tolerance — only for words ≥4 chars to avoid false positives on short tokens
+    if (normalizedWord.length >= 4 && targetWord.length >= 4) {
+      const dist = levenshtein(normalizedWord, targetWord);
+      // Allow 1 edit for words ≤6 chars, 2 edits for longer words
+      const maxAllowedDist = normalizedWord.length <= 6 ? 1 : 2;
+      if (dist > 0 && dist <= maxAllowedDist) {
+        bestScore = Math.max(bestScore, 70 - dist * 15);
+      }
     }
   }
 
