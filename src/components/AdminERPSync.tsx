@@ -1706,6 +1706,106 @@ const AdminERPSync = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Detailed Per-Record Stock Sync Report Dialog */}
+      <Dialog open={showStockReport} onOpenChange={setShowStockReport}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Package className="w-5 h-5 text-cyan-600" />
+              تقرير مزامنة الأرصدة التفصيلي
+            </DialogTitle>
+          </DialogHeader>
+
+          {stockSyncReport && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
+                <div className="bg-muted rounded p-2 text-center">
+                  <p className="font-bold text-foreground">{stockSyncReport.erpTotal}</p>
+                  <p className="text-muted-foreground">في الفيصل</p>
+                </div>
+                <div className="bg-muted rounded p-2 text-center">
+                  <p className="font-bold text-foreground">{stockSyncReport.ourProducts}</p>
+                  <p className="text-muted-foreground">على موقعنا</p>
+                </div>
+                <div className="bg-emerald-500/10 rounded p-2 text-center">
+                  <p className="font-bold text-foreground">{stockSyncReport.matched}</p>
+                  <p className="text-muted-foreground">مطابق ✅</p>
+                </div>
+                <div className="bg-emerald-500/10 rounded p-2 text-center">
+                  <p className="font-bold text-foreground">{stockSyncReport.updated}</p>
+                  <p className="text-muted-foreground">تم تحديثه</p>
+                </div>
+                <div className="bg-blue-500/10 rounded p-2 text-center">
+                  <p className="font-bold text-foreground">{stockSyncReport.withPositiveStock}</p>
+                  <p className="text-muted-foreground">برصيد &gt; 0</p>
+                </div>
+              </div>
+
+              <Button onClick={downloadStockReportCsv} variant="outline" size="sm" className="w-full gap-2">
+                <Copy className="w-4 h-4" /> تحميل التقرير الكامل (CSV)
+              </Button>
+
+              <div>
+                <h4 className="font-semibold mb-2 text-sm flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-600" />
+                  عيّنة من السجلات المحدّثة (أول 5 برصيد موجب)
+                </h4>
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full text-xs">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="p-2 text-right">كود الفيصل</th>
+                        <th className="p-2 text-right">الرصيد الجديد</th>
+                        <th className="p-2 text-right">الحالة</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {stockSyncReport.sample.length === 0 && (
+                        <tr><td colSpan={3} className="p-4 text-center text-muted-foreground">لا توجد عيّنة برصيد موجب</td></tr>
+                      )}
+                      {stockSyncReport.sample.map((s, i) => (
+                        <tr key={i} className="border-t">
+                          <td className="p-2 font-mono">{s.id}</td>
+                          <td className="p-2 font-bold">{s.qty}</td>
+                          <td className="p-2">
+                            {s.status === "in_stock" ? (
+                              <Badge variant="default" className="bg-emerald-600">متوفر ✅</Badge>
+                            ) : (
+                              <Badge variant="secondary">نافذ ⚠️</Badge>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {stockSyncReport.failures.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-2 text-sm flex items-center gap-2">
+                    <XCircle className="w-4 h-4 text-destructive" />
+                    تنبيهات / أصناف بدون مطابقة
+                  </h4>
+                  <div className="space-y-2">
+                    {stockSyncReport.failures.map((f, i) => (
+                      <div key={i} className="p-3 rounded border border-destructive/30 bg-destructive/5 text-xs">
+                        <p className="font-medium text-destructive">{f.reason}</p>
+                        <p className="text-muted-foreground mt-1">💡 الحل: تأكد من إضافة كود الفيصل (erp_item_code) لكل منتج في صفحة "المنتجات"</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <p className="text-xs text-muted-foreground text-center">
+                ⏱️ اكتمل في: {new Date(stockSyncReport.finishedAt).toLocaleString("ar-EG")}
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
