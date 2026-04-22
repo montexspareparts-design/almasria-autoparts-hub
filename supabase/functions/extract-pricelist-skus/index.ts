@@ -188,18 +188,39 @@ Deno.serve(async (req) => {
         nErp: norm(p.erp_item_code || ""),
       }));
       for (const code of cleaned) {
-        let best: { id: string; sku: string; score: number } | null = null;
+        // Track best match with tie-breaking: prefer SKU matches over ERP matches.
+        // matchedField: 'sku' beats 'erp' when scores are equal.
+        let best:
+          | { id: string; sku: string; score: number; matchedField: "sku" | "erp" }
+          | null = null;
         for (const c of candidates) {
           const s1 = c.nSku ? similarity(code, c.nSku) : 0;
           const s2 = c.nErp ? similarity(code, c.nErp) : 0;
-          const score = Math.max(s1, s2);
-          if (!best || score > best.score) {
-            best = { id: c.id, sku: c.sku, score };
+          // Pick the better field for THIS candidate (SKU wins ties at candidate level too)
+          const candScore = Math.max(s1, s2);
+          const candField: "sku" | "erp" = s1 >= s2 ? "sku" : "erp";
+
+          if (!best) {
+            best = { id: c.id, sku: c.sku, score: candScore, matchedField: candField };
+          } else if (candScore > best.score) {
+            best = { id: c.id, sku: c.sku, score: candScore, matchedField: candField };
+          } else if (
+            candScore === best.score &&
+            candField === "sku" &&
+            best.matchedField === "erp"
+          ) {
+            // Same score but this candidate matched on SKU → prefer it
+            best = { id: c.id, sku: c.sku, score: candScore, matchedField: candField };
           }
-          if (score === 100) break;
+
+          if (candScore === 100 && candField === "sku") break;
         }
         if (best && best.score >= min_confidence) {
-          matchedProducts.set(code, best);
+          matchedProducts.set(code, {
+            id: best.id,
+            sku: best.sku,
+            score: best.score,
+          });
         }
       }
     }
