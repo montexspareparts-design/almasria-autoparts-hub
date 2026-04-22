@@ -112,6 +112,7 @@ const sidebarGroups: SidebarGroup[] = [
       label: "التنبيهات والربط",
       items: [
         { id: "whatsapp-inbox", label: "صندوق الواتساب", icon: MessageCircle },
+        { id: "whatsapp-delivery", label: "حالة إرسال الواتساب", icon: MessageCircle },
         { id: "instapay-receipts", label: "إيصالات InstaPay", icon: Banknote },
         { id: "payment-reminders", label: "متابعة التذكيرات", icon: Clock },
         { id: "push-notifications", label: "إشعارات Push", icon: Bell },
