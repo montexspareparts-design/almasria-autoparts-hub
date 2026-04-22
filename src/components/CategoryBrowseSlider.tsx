@@ -303,7 +303,8 @@ const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) =
                   className="shrink-0"
                 >
                   <button
-                    onClick={() => handleCategoryClick(cat)}
+                    type="button"
+                    onClick={(e) => handleCategoryClick(e, cat)}
                     className="group/card block relative w-[68px] sm:w-[145px] rounded-lg sm:rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 text-center border border-border/40 hover:border-primary/40"
                   >
                     {/* Bold dynamic count badge — top-left corner */}
