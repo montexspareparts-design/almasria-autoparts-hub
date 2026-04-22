@@ -503,7 +503,7 @@ const AdminERPSync = () => {
       setShowPricePreview(true);
       toast({
         title: "✅ المعاينة جاهزة",
-        description: `${data?.retail_changes_count || 0} تغيير سعر متوقع — راجعها قبل التنفيذ`,
+        description: `قطاعي: ${data?.retail_changes_count || 0} • جملة: ${data?.wholesale_changes_count || 0} — راجعها قبل التنفيذ`,
       });
     } catch (err: any) {
       toast({ title: "فشل المعاينة", description: err?.message || "خطأ غير معروف", variant: "destructive" });
