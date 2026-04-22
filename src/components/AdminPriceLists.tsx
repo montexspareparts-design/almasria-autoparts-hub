@@ -693,6 +693,31 @@ const AdminPriceLists = () => {
     setBulkLinking(false);
   };
 
+  const linkFromPdfWithAI = async () => {
+    if (!managingList) return;
+    if (!confirm("سيتم استخراج أكواد الأصناف من ملف الـ PDF تلقائياً عبر الذكاء الصناعي وربطها بالكشف (سيتم استبدال الأصناف الحالية). متابعة؟")) return;
+    setAiLinking(true);
+    setAiResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("extract-pricelist-skus", {
+        body: { price_list_id: managingList.id },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const res = data as { extracted_count: number; matched_count: number; linked_count: number; unmatched: string[]; sample_extracted?: string[] };
+      setAiResult(res);
+      toast({
+        title: "✅ تم التحليل",
+        description: `استخرج ${res.extracted_count} كود، ربط ${res.linked_count} صنف${res.unmatched.length ? `، ${res.unmatched.length} بدون مطابقة` : ""}`,
+      });
+      fetchLinkedProducts(managingList.id);
+    } catch (e: any) {
+      toast({ title: "فشل التحليل", description: e.message, variant: "destructive" });
+    } finally {
+      setAiLinking(false);
+    }
+  };
+
   if (loading) return <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
 
   // Views report for a specific list
