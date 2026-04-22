@@ -285,7 +285,8 @@ const ProductSearchAutocomplete = ({
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onKeyDown={handleKeyDown}
-          className="pr-12 pl-16 bg-background border-2 border-border/70 h-14 sm:h-12 text-base sm:text-sm font-medium placeholder:text-muted-foreground/60 placeholder:font-normal rounded-2xl sm:rounded-full shadow-md transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-offset-0 focus-visible:border-primary/50 focus-visible:shadow-xl focus-visible:shadow-primary/10"
+          dir="rtl"
+          className="pr-12 pl-10 sm:pl-16 bg-background border-2 border-border/70 h-14 sm:h-12 text-base sm:text-sm font-medium placeholder:text-muted-foreground/60 placeholder:font-normal rounded-2xl sm:rounded-full shadow-md transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-offset-0 focus-visible:border-primary/50 focus-visible:shadow-xl focus-visible:shadow-primary/10 text-right truncate"
         />
         <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
           {value && (
@@ -313,7 +314,7 @@ const ProductSearchAutocomplete = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -2 }}
             transition={{ duration: 0.12 }}
-            className="absolute top-full right-0 left-0 mt-1 w-[min(96vw,28rem)] sm:w-auto bg-background border border-border/70 rounded-2xl shadow-2xl shadow-black/10 overflow-hidden z-[60]"
+            className="absolute top-full right-0 left-0 mt-1 bg-background border border-border/70 rounded-2xl shadow-2xl shadow-black/10 overflow-hidden z-[60]"
           >
             <div className="max-h-[65vh] sm:max-h-[480px] overflow-y-auto">
               {/* Did you mean */}
