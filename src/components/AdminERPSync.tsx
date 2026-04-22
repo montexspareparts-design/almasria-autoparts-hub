@@ -71,6 +71,23 @@ const AdminERPSync = () => {
     stockWarning?: string;
     finishedAt: string;
   } | null>(null);
+  const [priceSyncProgress, setPriceSyncProgress] = useState<{
+    phase: string;
+    percent: number;
+    done: boolean;
+    error?: string;
+  } | null>(null);
+  const [priceSyncReport, setPriceSyncReport] = useState<{
+    retailUpdated: number;
+    wholesaleUpdated: number;
+    matched: number;
+    erpTotal: number;
+    ourProducts: number;
+    sample: Array<{ id: string; name?: string; retailPrice?: number; wholesalePrice?: number; status: "success" | "skipped"; reason?: string }>;
+    failures: Array<{ id: string; name?: string; reason: string }>;
+    finishedAt: string;
+  } | null>(null);
+  const [showPriceReport, setShowPriceReport] = useState(false);
   const [importProgress, setImportProgress] = useState<{
     phase: string;
     currentBatch: number;
