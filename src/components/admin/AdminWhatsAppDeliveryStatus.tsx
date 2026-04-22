@@ -1,11 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, RefreshCw, CheckCircle2, XCircle, AlertTriangle, MessageCircle, Search } from "lucide-react";
+import {
+  Loader2, RefreshCw, CheckCircle2, XCircle, AlertTriangle, MessageCircle, Search,
+  ExternalLink, KeyRound, UserPlus, User, Link2,
+} from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
 
 type Log = {
   id: string;
@@ -16,6 +21,29 @@ type Log = {
   message_preview: string | null;
   status: string;
   error_message: string | null;
+  created_at: string;
+};
+
+type Lead = {
+  id: string;
+  name: string;
+  phone: string;
+  shop_name: string | null;
+  erp_customer_code: string | null;
+  client_type: string;
+  status: string;
+};
+
+type Attempt = {
+  id: string;
+  attempt_type: string;
+  status: string;
+  lead_id: string | null;
+  phone: string | null;
+  client_name: string | null;
+  erp_customer_code: string | null;
+  error_message: string | null;
+  details: Record<string, unknown> | null;
   created_at: string;
 };
 
@@ -32,24 +60,73 @@ const fmtDate = (d: string) =>
     hour: "2-digit", minute: "2-digit",
   });
 
+// Normalize Egyptian phone numbers for cross-source matching
+const normalizePhone = (p: string | null | undefined): string => {
+  if (!p) return "";
+  let v = p.replace(/[\s\-()+]/g, "");
+  if (v.startsWith("00")) v = v.slice(2);
+  if (v.startsWith("20")) v = v.slice(2);
+  if (v.startsWith("0")) v = v.slice(1);
+  return v;
+};
+
 export default function AdminWhatsAppDeliveryStatus() {
   const [logs, setLogs] = useState<Log[]>([]);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
+  const [detailLog, setDetailLog] = useState<Log | null>(null);
 
   const fetchLogs = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("whatsapp_send_logs")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(500);
-    setLogs((data as Log[]) || []);
+    const [logsRes, leadsRes, attemptsRes] = await Promise.all([
+      supabase.from("whatsapp_send_logs").select("*").order("created_at", { ascending: false }).limit(500),
+      supabase.from("leads").select("id, name, phone, shop_name, erp_customer_code, client_type, status").limit(2000),
+      supabase
+        .from("client_account_attempts" as any)
+        .select("id, attempt_type, status, lead_id, phone, client_name, erp_customer_code, error_message, details, created_at")
+        .order("created_at", { ascending: false })
+        .limit(1000),
+    ]);
+    setLogs((logsRes.data as Log[]) || []);
+    setLeads((leadsRes.data as Lead[]) || []);
+    setAttempts((attemptsRes.data as unknown as Attempt[]) || []);
     setLoading(false);
   };
 
   useEffect(() => { fetchLogs(); }, []);
+
+  // Index leads by id and by normalized phone for fast lookup
+  const { leadById, leadByPhone } = useMemo(() => {
+    const byId: Record<string, Lead> = {};
+    const byPhone: Record<string, Lead> = {};
+    leads.forEach((l) => {
+      byId[l.id] = l;
+      const np = normalizePhone(l.phone);
+      if (np) byPhone[np] = l;
+    });
+    return { leadById: byId, leadByPhone: byPhone };
+  }, [leads]);
+
+  // Resolve linked lead for a log (by lead_id, then by phone fallback)
+  const resolveLead = (log: Log): Lead | null => {
+    if (log.lead_id && leadById[log.lead_id]) return leadById[log.lead_id];
+    const np = normalizePhone(log.phone);
+    return np ? leadByPhone[np] || null : null;
+  };
+
+  // Find latest attempt for a given lead/phone
+  const findLatestAttempt = (lead: Lead | null, phone: string): Attempt | null => {
+    const np = normalizePhone(phone);
+    const match = attempts.find((a) => {
+      if (lead && a.lead_id === lead.id) return true;
+      if (normalizePhone(a.phone) === np && np) return true;
+      return false;
+    });
+    return match || null;
+  };
 
   const stats = {
     total: logs.length,
