@@ -317,7 +317,10 @@ const AdminLeads = () => {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast({ title: "تم النسخ" });
+    toast({
+      title: "✅ تم النسخ بنجاح",
+      description: "البيانات محفوظة دائماً ويمكنك استرجاعها في أي وقت من نفس الصفحة.",
+    });
   };
 
   // View stored credentials for a converted lead
