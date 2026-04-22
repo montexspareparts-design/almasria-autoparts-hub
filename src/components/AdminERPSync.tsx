@@ -597,6 +597,70 @@ const AdminERPSync = () => {
     URL.revokeObjectURL(url);
   };
 
+  const downloadLastRunReport = () => {
+    if (!priceSyncReport && !stockSyncReport && !fullSyncReport) {
+      toast({ title: "لا يوجد تقرير", description: "شغّل مزامنة أولاً ثم نزّل التقرير", variant: "destructive" });
+      return;
+    }
+    const headers = ["نوع المزامنة", "كود الفيصل", "اسم الصنف", "القيمة", "الحالة", "رسالة الخطأ / الملاحظة"];
+    const rows: (string | number)[][] = [];
+
+    if (priceSyncReport) {
+      priceSyncReport.sample.forEach(s => {
+        rows.push([
+          "أسعار", s.id, s.name || "",
+          `قطاعي:${s.retailPrice ?? 0} | جملة:${s.wholesalePrice ?? 0}`,
+          s.status === "success" ? "نجح ✅" : "تم التخطي ⚠️",
+          s.reason || "",
+        ]);
+      });
+      priceSyncReport.failures.forEach(f => {
+        rows.push(["أسعار - غير مطابق", f.id, f.name || "", "—", "فشل ❌", f.reason]);
+      });
+    }
+
+    if (stockSyncReport) {
+      stockSyncReport.sample.forEach(s => {
+        rows.push([
+          "أرصدة", s.id, "", s.qty,
+          s.status === "in_stock" ? "متوفر ✅" : "نافذ ⚠️", "",
+        ]);
+      });
+      stockSyncReport.failures.forEach(f => {
+        rows.push(["أرصدة - غير مطابق", f.id, "", "—", "فشل ❌", f.reason]);
+      });
+    }
+
+    if (fullSyncReport) {
+      if (fullSyncReport.pricesError) {
+        rows.push(["مزامنة شاملة - أسعار", "—", "", "—", "فشل ❌", fullSyncReport.pricesError]);
+      }
+      if (fullSyncReport.stockError) {
+        rows.push(["مزامنة شاملة - أرصدة", "—", "", "—", "فشل ❌", fullSyncReport.stockError]);
+      }
+      if (fullSyncReport.stockWarning) {
+        rows.push(["مزامنة شاملة - أرصدة", "—", "", "—", "تحذير ⚠️", fullSyncReport.stockWarning]);
+      }
+    }
+
+    if (rows.length === 0) {
+      toast({ title: "لا توجد بيانات للتنزيل", variant: "destructive" });
+      return;
+    }
+
+    const csv = "\uFEFF" + [headers, ...rows]
+      .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `erp-last-sync-report-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "✅ تم تنزيل التقرير", description: `${rows.length} سجل` });
+  };
+
   const runStockSync = async () => {
     setSyncing("stock_sync");
     setStockSyncReport(null);
