@@ -374,8 +374,50 @@ const AdminPriceLists = () => {
             }
           }
 
-          // Step 2: AUTO-CREATE missing items via bulk_import_products RPC
-          const missing = excelRows.filter(r => !matchedKeys.has(r.sku));
+          // Step 2: AUTO-CREATE missing items — with strict pre-check to avoid duplicates
+          let missing = excelRows.filter(r => !matchedKeys.has(r.sku));
+
+          // Final safety check: re-verify each "missing" item against DB by sku, erp_item_code,
+          // and normalized variants (strip dashes/spaces, uppercase). Skip any that exist.
+          if (missing.length > 0) {
+            const normalize = (s: string) => s.replace(/[-\s]/g, "").toUpperCase();
+            const { data: allProductsCheck } = await supabase
+              .from("products").select("id, sku, erp_item_code");
+            const existingNormSet = new Set<string>();
+            const existingExactSet = new Set<string>();
+            if (allProductsCheck) {
+              for (const p of allProductsCheck) {
+                for (const c of [p.sku, (p as any).erp_item_code].filter(Boolean)) {
+                  existingExactSet.add(String(c));
+                  existingNormSet.add(normalize(String(c)));
+                }
+              }
+            }
+            const beforeCount = missing.length;
+            missing = missing.filter(r => {
+              const exact = existingExactSet.has(r.sku);
+              const norm = existingNormSet.has(normalize(r.sku));
+              if (exact || norm) {
+                // Already exists — link instead of create
+                const found = allProductsCheck?.find(p =>
+                  p.sku === r.sku || (p as any).erp_item_code === r.sku ||
+                  normalize(p.sku) === normalize(r.sku) ||
+                  ((p as any).erp_item_code && normalize((p as any).erp_item_code) === normalize(r.sku))
+                );
+                if (found && !matchedProducts.some(m => m.id === found.id)) {
+                  matchedProducts.push({ id: found.id, sku: found.sku, matchedKey: r.sku });
+                  matchedKeys.add(r.sku);
+                }
+                return false;
+              }
+              return true;
+            });
+            const skippedDuplicates = beforeCount - missing.length;
+            if (skippedDuplicates > 0) {
+              console.log(`✅ Prevented ${skippedDuplicates} duplicate product creation(s) — linked to existing instead.`);
+            }
+          }
+
           let createdCount = 0;
           if (missing.length > 0) {
             const importItems = missing.map(r => ({
