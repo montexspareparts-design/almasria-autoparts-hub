@@ -143,6 +143,9 @@ const AdminLeads = () => {
   const [leadCredentials, setLeadCredentials] = useState<Record<string, LeadCredentials>>({});
   const [showTablePasswords, setShowTablePasswords] = useState<Record<string, boolean>>({});
 
+  // Latest account-creation/reset attempt per lead (for status & error filtering)
+  const [leadAttempts, setLeadAttempts] = useState<Record<string, LeadAttemptInfo>>({});
+
   // Pre-flight check dialog
   type PreflightState =
     | { kind: "no_erp"; lead: Lead }
