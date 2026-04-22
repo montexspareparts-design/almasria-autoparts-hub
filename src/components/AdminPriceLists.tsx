@@ -70,6 +70,32 @@ const AdminPriceLists = () => {
   // 100 = exact match only. Lower = allow fuzzy matches.
   const [minConfidence, setMinConfidence] = useState<number>(100);
 
+  // Matching log (dry-run preview) — top candidates per extracted SKU + reason.
+  type MatchCandidate = {
+    product_id: string;
+    sku: string;
+    erp_item_code: string | null;
+    score: number;
+    matchedField: "sku" | "erp";
+  };
+  type MatchDiagnostic = {
+    code: string;
+    chosen: { product_id: string; sku: string; score: number; matchedField: "sku" | "erp" } | null;
+    reason: string;
+    candidates: MatchCandidate[];
+  };
+  const [matchLogOpen, setMatchLogOpen] = useState(false);
+  const [matchLogLoading, setMatchLogLoading] = useState(false);
+  const [matchLogApplying, setMatchLogApplying] = useState(false);
+  const [matchLogData, setMatchLogData] = useState<{
+    extracted_count: number;
+    matched_count: number;
+    unmatched: string[];
+    avg_score: number;
+    diagnostics: MatchDiagnostic[];
+  } | null>(null);
+  const [matchLogFilter, setMatchLogFilter] = useState<"all" | "matched" | "unmatched" | "tied">("all");
+
   // Verification dialog (post bulk AI)
   const [verifyOpen, setVerifyOpen] = useState(false);
   const [verifyLoading, setVerifyLoading] = useState(false);
@@ -738,6 +764,74 @@ const AdminPriceLists = () => {
     }
   };
 
+  // Dry-run preview: extract SKUs and compute matches WITHOUT writing to DB.
+  // Opens a "سجل المطابقة" dialog with top candidates + reason per code.
+  const previewMatchingLog = async () => {
+    if (!managingList) return;
+    setMatchLogOpen(true);
+    setMatchLogLoading(true);
+    setMatchLogData(null);
+    setMatchLogFilter("all");
+    try {
+      const { data, error } = await supabase.functions.invoke("extract-pricelist-skus", {
+        body: {
+          price_list_id: managingList.id,
+          min_confidence: minConfidence,
+          dry_run: true,
+          include_diagnostics: true,
+        },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const res = data as {
+        extracted_count: number;
+        matched_count: number;
+        unmatched: string[];
+        avg_score: number;
+        diagnostics: MatchDiagnostic[];
+      };
+      setMatchLogData({
+        extracted_count: res.extracted_count,
+        matched_count: res.matched_count,
+        unmatched: res.unmatched || [],
+        avg_score: res.avg_score || 0,
+        diagnostics: res.diagnostics || [],
+      });
+    } catch (e: any) {
+      toast({ title: "فشل التحليل", description: e.message, variant: "destructive" });
+      setMatchLogOpen(false);
+    } finally {
+      setMatchLogLoading(false);
+    }
+  };
+
+  // Apply (commit) the previewed matching by re-running without dry_run.
+  const applyMatchingFromLog = async () => {
+    if (!managingList) return;
+    if (!confirm("سيتم اعتماد المطابقة وكتابتها في الكشف (سيتم استبدال الأصناف الحالية). متابعة؟")) return;
+    setMatchLogApplying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("extract-pricelist-skus", {
+        body: { price_list_id: managingList.id, min_confidence: minConfidence },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const res = data as { extracted_count: number; matched_count: number; linked_count: number; unmatched: string[] };
+      setAiResult(res);
+      toast({
+        title: "✅ تم اعتماد المطابقة",
+        description: `تم ربط ${res.linked_count} صنف`,
+      });
+      fetchLinkedProducts(managingList.id);
+      setMatchLogOpen(false);
+    } catch (e: any) {
+      toast({ title: "فشل الاعتماد", description: e.message, variant: "destructive" });
+    } finally {
+      setMatchLogApplying(false);
+    }
+  };
+
+
   const linkAllPriceListsFromPdfWithAI = async () => {
     const candidates = lists.filter((l) => l.file_url);
     if (candidates.length === 0) {
@@ -911,6 +1005,17 @@ const AdminPriceLists = () => {
             >
               {aiLinking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
               ربط من ملف الـ PDF تلقائياً (AI)
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={previewMatchingLog}
+              disabled={aiLinking || bulkLinking || matchLogLoading}
+              className="gap-1.5 text-xs border-primary/40"
+              title="معاينة سجل المطابقة قبل اعتمادها (Dry-run)"
+            >
+              {matchLogLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Target className="w-3.5 h-3.5" />}
+              معاينة سجل المطابقة
             </Button>
             <Button
               size="sm"
@@ -1550,6 +1655,149 @@ const AdminPriceLists = () => {
             اعتماد النتائج
           </Button>
         </div>
+      </DialogContent>
+    </Dialog>
+
+    {/* Matching Log Dialog (dry-run preview before commit) */}
+    <Dialog open={matchLogOpen} onOpenChange={setMatchLogOpen}>
+      <DialogContent className="max-w-5xl max-h-[88vh] overflow-y-auto" dir="rtl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Target className="w-5 h-5 text-primary" />
+            سجل المطابقة — معاينة قبل الاعتماد
+            {managingList && <span className="text-sm text-muted-foreground">({managingList.title})</span>}
+          </DialogTitle>
+        </DialogHeader>
+
+        {matchLogLoading && (
+          <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            جاري استخراج الأكواد وحساب التطابقات...
+          </div>
+        )}
+
+        {!matchLogLoading && matchLogData && (
+          <div className="space-y-4">
+            {/* Summary KPIs */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+              <div className="p-3 rounded-lg bg-muted/40 border">
+                <div className="text-muted-foreground">SKUs مستخرجة</div>
+                <div className="text-lg font-bold text-foreground">{matchLogData.extracted_count}</div>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/40 border">
+                <div className="text-muted-foreground">تم تطابقها</div>
+                <div className="text-lg font-bold text-primary">{matchLogData.matched_count}</div>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/40 border">
+                <div className="text-muted-foreground">بدون مطابقة</div>
+                <div className="text-lg font-bold text-destructive">{matchLogData.unmatched.length}</div>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/40 border">
+                <div className="text-muted-foreground">متوسط الـ score</div>
+                <div className="text-lg font-bold text-foreground">{matchLogData.avg_score}%</div>
+              </div>
+            </div>
+
+            {/* Filter chips */}
+            <div className="flex flex-wrap gap-2 text-xs">
+              {([
+                { k: "all", label: "الكل" },
+                { k: "matched", label: "تم تطابقها" },
+                { k: "unmatched", label: "بدون مطابقة" },
+                { k: "tied", label: "تعادل (Tie-break)" },
+              ] as const).map((f) => (
+                <Button
+                  key={f.k}
+                  size="sm"
+                  variant={matchLogFilter === f.k ? "default" : "outline"}
+                  onClick={() => setMatchLogFilter(f.k)}
+                  className="text-xs h-7"
+                >
+                  {f.label}
+                </Button>
+              ))}
+            </div>
+
+            {/* Diagnostics list */}
+            <div className="border rounded-lg divide-y max-h-[50vh] overflow-y-auto">
+              {matchLogData.diagnostics
+                .filter((d) => {
+                  if (matchLogFilter === "matched") return !!d.chosen;
+                  if (matchLogFilter === "unmatched") return !d.chosen;
+                  if (matchLogFilter === "tied") {
+                    if (!d.candidates.length) return false;
+                    const top = d.candidates[0].score;
+                    return d.candidates.filter((c) => c.score === top).length > 1;
+                  }
+                  return true;
+                })
+                .slice(0, 500)
+                .map((d, idx) => (
+                  <div key={idx} className="p-3 text-xs space-y-2">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <code className="px-2 py-0.5 rounded bg-muted font-mono">{d.code}</code>
+                        {d.chosen ? (
+                          <Badge variant="default" className="text-[10px]">
+                            ✓ مطابق ({d.chosen.score}%) على {d.chosen.matchedField === "sku" ? "SKU" : "ERP"}
+                          </Badge>
+                        ) : (
+                          <Badge variant="destructive" className="text-[10px]">بدون مطابقة</Badge>
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-muted-foreground">{d.reason}</p>
+                    {d.candidates.length > 0 && (
+                      <div className="space-y-1">
+                        <div className="text-[10px] text-muted-foreground font-semibold">أفضل المرشحين:</div>
+                        {d.candidates.map((c, i) => {
+                          const isChosen = d.chosen?.product_id === c.product_id && d.chosen?.matchedField === c.matchedField;
+                          return (
+                            <div
+                              key={i}
+                              className={`flex items-center gap-2 p-1.5 rounded text-[11px] ${
+                                isChosen ? "bg-primary/10 border border-primary/30" : "bg-muted/30"
+                              }`}
+                            >
+                              <span className="font-bold w-10 text-center">{c.score}%</span>
+                              <Badge
+                                variant={c.matchedField === "sku" ? "default" : "secondary"}
+                                className="text-[9px] px-1.5"
+                              >
+                                {c.matchedField === "sku" ? "SKU" : "ERP"}
+                              </Badge>
+                              <code className="font-mono">{c.matchedField === "sku" ? c.sku : (c.erp_item_code || c.sku)}</code>
+                              {isChosen && <span className="ml-auto text-primary font-bold">← المختار</span>}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              {matchLogData.diagnostics.length === 0 && (
+                <div className="p-8 text-center text-sm text-muted-foreground">
+                  لا توجد بيانات لعرضها
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 justify-end pt-2 border-t">
+              <Button variant="outline" size="sm" onClick={() => setMatchLogOpen(false)}>
+                إغلاق
+              </Button>
+              <Button
+                size="sm"
+                onClick={applyMatchingFromLog}
+                disabled={matchLogApplying || matchLogData.matched_count === 0}
+                className="gap-1.5 bg-gradient-to-r from-primary to-accent text-primary-foreground"
+              >
+                {matchLogApplying ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                اعتماد المطابقة وحفظها ({matchLogData.matched_count})
+              </Button>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
     </>
