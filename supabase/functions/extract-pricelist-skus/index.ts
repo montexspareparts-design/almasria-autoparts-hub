@@ -338,6 +338,7 @@ Deno.serve(async (req) => {
 
     return json({
       success: true,
+      dry_run,
       extracted_count: cleaned.length,
       matched_count: productIds.length,
       linked_count: linked,
@@ -345,6 +346,7 @@ Deno.serve(async (req) => {
       min_confidence,
       avg_score,
       sample_extracted: cleaned.slice(0, 20),
+      ...(include_diagnostics ? { diagnostics } : {}),
     });
   } catch (e) {
     console.error("extract-pricelist-skus error", e);
