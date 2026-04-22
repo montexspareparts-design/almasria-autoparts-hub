@@ -492,7 +492,12 @@ const AdminERPSync = () => {
         increases: data?.increases || 0,
         decreases: data?.decreases || 0,
         bigChanges: data?.big_changes || 0,
+        wholesaleChangesCount: data?.wholesale_changes_count || 0,
+        wholesaleIncreases: data?.wholesale_increases || 0,
+        wholesaleDecreases: data?.wholesale_decreases || 0,
+        wholesaleNew: data?.wholesale_new || 0,
         changes: data?.changes || [],
+        wholesaleChanges: data?.wholesale_changes || [],
         generatedAt: new Date().toISOString(),
       });
       setShowPricePreview(true);
