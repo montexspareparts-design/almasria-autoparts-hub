@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -140,6 +140,26 @@ const AdminLeads = () => {
     | { kind: "no_password"; lead: Lead };
   const [preflight, setPreflight] = useState<PreflightState | null>(null);
   const [preflightChecking, setPreflightChecking] = useState<string | null>(null);
+
+  // Auto-create confirmation (when reset_password discovers no account exists yet)
+  type AutoCreateConfirm = {
+    lead: Lead;
+    reason: "no_dealer_account" | "user_not_found";
+  };
+  const [autoCreateConfirm, setAutoCreateConfirm] = useState<AutoCreateConfirm | null>(null);
+  const autoCreateResolverRef = useRef<((v: boolean) => void) | null>(null);
+
+  const requestAutoCreateConfirmation = (lead: Lead, reason: AutoCreateConfirm["reason"]) =>
+    new Promise<boolean>((resolve) => {
+      autoCreateResolverRef.current = resolve;
+      setAutoCreateConfirm({ lead, reason });
+    });
+
+  const resolveAutoCreateConfirm = (confirmed: boolean) => {
+    autoCreateResolverRef.current?.(confirmed);
+    autoCreateResolverRef.current = null;
+    setAutoCreateConfirm(null);
+  };
 
   // Pre-flight check before any Edge Function call
   const runPreflight = async (lead: Lead) => {
@@ -534,10 +554,9 @@ const AdminLeads = () => {
     try {
       const dealerAccount = await getLeadDealerAccount(lead.erp_customer_code);
       if (!dealerAccount) {
-        toast({
-          title: "إنشاء الحساب",
-          description: "هذا العميل محوّل لكن الحساب غير مكتمل بعد، سيتم إنشاؤه الآن.",
-        });
+        setRegistering(null);
+        const ok = await requestAutoCreateConfirmation(lead, "no_dealer_account");
+        if (!ok) return;
         await registerClient(lead);
         return;
       }
@@ -556,12 +575,11 @@ const AdminLeads = () => {
       // Edge function returned non-2xx — try to extract server-side message
       if (error || (data && (data as any).error)) {
         const serverMsg = await extractFunctionErrorMessage(error as EdgeFunctionErrorLike | null, data);
-        // If user truly doesn't exist → offer to create it instead
+        // If user truly doesn't exist → confirm before creating
         if (typeof serverMsg === "string" && serverMsg.includes("غير موجود")) {
-          toast({
-            title: "الحساب غير موجود",
-            description: "هذا العميل ليس له حساب بعد. سيتم إنشاء حساب جديد الآن…",
-          });
+          setRegistering(null);
+          const ok = await requestAutoCreateConfirmation(lead, "user_not_found");
+          if (!ok) return;
           // Re-trigger the full registration flow which creates user + dealer account + sends WhatsApp
           await registerClient(lead);
           return;
@@ -1144,6 +1162,73 @@ const AdminLeads = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Auto-Create Confirmation Dialog — تأكيد قبل الإنشاء التلقائي للعملاء المحوّلين غير المكتملين */}
+      <AlertDialog open={!!autoCreateConfirm} onOpenChange={(o) => { if (!o) resolveAutoCreateConfirm(false); }}>
+        <AlertDialogContent dir="rtl" className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <UserPlus className="w-5 h-5 text-primary" />
+              تأكيد إنشاء حساب تلقائي
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-right">
+              {autoCreateConfirm?.reason === "no_dealer_account"
+                ? "هذا العميل محوّل لكن لا يوجد له حساب تاجر مكتمل بعد. سيتم إنشاء الحساب الآن وإرسال بيانات الدخول له."
+                : "لا يوجد مستخدم بهذا البريد في النظام. سيتم إنشاء حساب جديد كامل (مستخدم + حساب تاجر) وإرسال بيانات الدخول."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          {autoCreateConfirm && (
+            <div className="rounded-lg border bg-muted/30 p-3 space-y-2 text-sm">
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">الاسم:</span>
+                <span className="font-semibold">{autoCreateConfirm.lead.name}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">رقم الهاتف:</span>
+                <span className="font-mono" dir="ltr">{autoCreateConfirm.lead.phone}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">البريد المتوقع:</span>
+                <span className="font-mono text-xs break-all" dir="ltr">
+                  {autoCreateConfirm.lead.phone.replace(/\D/g, "")}@phone.almasria.local
+                </span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">كود الفيصل:</span>
+                <span className="font-mono" dir="ltr">{autoCreateConfirm.lead.erp_customer_code || "—"}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">نوع العميل:</span>
+                <span>{clientTypeLabels[autoCreateConfirm.lead.client_type] || autoCreateConfirm.lead.client_type}</span>
+              </div>
+              {autoCreateConfirm.lead.shop_name && (
+                <div className="flex justify-between gap-3">
+                  <span className="text-muted-foreground">اسم المحل:</span>
+                  <span>{autoCreateConfirm.lead.shop_name}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-2.5 text-[11px] text-amber-800 dark:text-amber-300">
+            ⚠️ تأكد من صحة رقم الهاتف وكود الفيصل قبل المتابعة — لا يمكن التراجع بعد إرسال بيانات الدخول.
+          </div>
+
+          <AlertDialogFooter className="flex-row-reverse gap-2">
+            <AlertDialogAction
+              onClick={() => resolveAutoCreateConfirm(true)}
+              className="gap-1.5"
+            >
+              <UserPlus className="w-4 h-4" />
+              نعم، أنشئ الحساب
+            </AlertDialogAction>
+            <AlertDialogCancel onClick={() => resolveAutoCreateConfirm(false)}>
+              إلغاء
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Credentials Dialog */}
       <Dialog open={!!credentials} onOpenChange={() => { setCredentials(null); setShowPassword(false); }}>
