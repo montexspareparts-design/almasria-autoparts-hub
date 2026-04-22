@@ -1657,6 +1657,149 @@ const AdminPriceLists = () => {
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Matching Log Dialog (dry-run preview before commit) */}
+    <Dialog open={matchLogOpen} onOpenChange={setMatchLogOpen}>
+      <DialogContent className="max-w-5xl max-h-[88vh] overflow-y-auto" dir="rtl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Target className="w-5 h-5 text-primary" />
+            سجل المطابقة — معاينة قبل الاعتماد
+            {managingList && <span className="text-sm text-muted-foreground">({managingList.title})</span>}
+          </DialogTitle>
+        </DialogHeader>
+
+        {matchLogLoading && (
+          <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            جاري استخراج الأكواد وحساب التطابقات...
+          </div>
+        )}
+
+        {!matchLogLoading && matchLogData && (
+          <div className="space-y-4">
+            {/* Summary KPIs */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+              <div className="p-3 rounded-lg bg-muted/40 border">
+                <div className="text-muted-foreground">SKUs مستخرجة</div>
+                <div className="text-lg font-bold text-foreground">{matchLogData.extracted_count}</div>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/40 border">
+                <div className="text-muted-foreground">تم تطابقها</div>
+                <div className="text-lg font-bold text-primary">{matchLogData.matched_count}</div>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/40 border">
+                <div className="text-muted-foreground">بدون مطابقة</div>
+                <div className="text-lg font-bold text-destructive">{matchLogData.unmatched.length}</div>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/40 border">
+                <div className="text-muted-foreground">متوسط الـ score</div>
+                <div className="text-lg font-bold text-foreground">{matchLogData.avg_score}%</div>
+              </div>
+            </div>
+
+            {/* Filter chips */}
+            <div className="flex flex-wrap gap-2 text-xs">
+              {([
+                { k: "all", label: "الكل" },
+                { k: "matched", label: "تم تطابقها" },
+                { k: "unmatched", label: "بدون مطابقة" },
+                { k: "tied", label: "تعادل (Tie-break)" },
+              ] as const).map((f) => (
+                <Button
+                  key={f.k}
+                  size="sm"
+                  variant={matchLogFilter === f.k ? "default" : "outline"}
+                  onClick={() => setMatchLogFilter(f.k)}
+                  className="text-xs h-7"
+                >
+                  {f.label}
+                </Button>
+              ))}
+            </div>
+
+            {/* Diagnostics list */}
+            <div className="border rounded-lg divide-y max-h-[50vh] overflow-y-auto">
+              {matchLogData.diagnostics
+                .filter((d) => {
+                  if (matchLogFilter === "matched") return !!d.chosen;
+                  if (matchLogFilter === "unmatched") return !d.chosen;
+                  if (matchLogFilter === "tied") {
+                    if (!d.candidates.length) return false;
+                    const top = d.candidates[0].score;
+                    return d.candidates.filter((c) => c.score === top).length > 1;
+                  }
+                  return true;
+                })
+                .slice(0, 500)
+                .map((d, idx) => (
+                  <div key={idx} className="p-3 text-xs space-y-2">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <code className="px-2 py-0.5 rounded bg-muted font-mono">{d.code}</code>
+                        {d.chosen ? (
+                          <Badge variant="default" className="text-[10px]">
+                            ✓ مطابق ({d.chosen.score}%) على {d.chosen.matchedField === "sku" ? "SKU" : "ERP"}
+                          </Badge>
+                        ) : (
+                          <Badge variant="destructive" className="text-[10px]">بدون مطابقة</Badge>
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-muted-foreground">{d.reason}</p>
+                    {d.candidates.length > 0 && (
+                      <div className="space-y-1">
+                        <div className="text-[10px] text-muted-foreground font-semibold">أفضل المرشحين:</div>
+                        {d.candidates.map((c, i) => {
+                          const isChosen = d.chosen?.product_id === c.product_id && d.chosen?.matchedField === c.matchedField;
+                          return (
+                            <div
+                              key={i}
+                              className={`flex items-center gap-2 p-1.5 rounded text-[11px] ${
+                                isChosen ? "bg-primary/10 border border-primary/30" : "bg-muted/30"
+                              }`}
+                            >
+                              <span className="font-bold w-10 text-center">{c.score}%</span>
+                              <Badge
+                                variant={c.matchedField === "sku" ? "default" : "secondary"}
+                                className="text-[9px] px-1.5"
+                              >
+                                {c.matchedField === "sku" ? "SKU" : "ERP"}
+                              </Badge>
+                              <code className="font-mono">{c.matchedField === "sku" ? c.sku : (c.erp_item_code || c.sku)}</code>
+                              {isChosen && <span className="ml-auto text-primary font-bold">← المختار</span>}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              {matchLogData.diagnostics.length === 0 && (
+                <div className="p-8 text-center text-sm text-muted-foreground">
+                  لا توجد بيانات لعرضها
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 justify-end pt-2 border-t">
+              <Button variant="outline" size="sm" onClick={() => setMatchLogOpen(false)}>
+                إغلاق
+              </Button>
+              <Button
+                size="sm"
+                onClick={applyMatchingFromLog}
+                disabled={matchLogApplying || matchLogData.matched_count === 0}
+                className="gap-1.5 bg-gradient-to-r from-primary to-accent text-primary-foreground"
+              >
+                {matchLogApplying ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                اعتماد المطابقة وحفظها ({matchLogData.matched_count})
+              </Button>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
     </>
   );
 };
