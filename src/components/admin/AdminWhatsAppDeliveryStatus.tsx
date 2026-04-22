@@ -220,6 +220,8 @@ export default function AdminWhatsAppDeliveryStatus() {
               {filtered.map(log => {
                 const meta = STATUS_META[log.status] || STATUS_META.pending;
                 const { Icon } = meta;
+                const lead = resolveLead(log);
+                const lastAttempt = findLatestAttempt(lead, log.phone);
                 return (
                   <div key={log.id} className="p-4 hover:bg-muted/30 transition-colors">
                     <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -230,7 +232,7 @@ export default function AdminWhatsAppDeliveryStatus() {
                             {meta.label}
                           </Badge>
                           <span className="font-semibold text-sm">
-                            {log.recipient_name || "—"}
+                            {log.recipient_name || lead?.name || "—"}
                           </span>
                           <span className="text-xs text-muted-foreground" dir="ltr">
                             {log.phone}
@@ -240,7 +242,29 @@ export default function AdminWhatsAppDeliveryStatus() {
                               {log.template}
                             </Badge>
                           )}
+                          {lead ? (
+                            <Badge variant="outline" className="text-[10px] gap-1 bg-primary/5 border-primary/30 text-primary">
+                              <Link2 className="w-3 h-3" />
+                              عميل محوّل
+                              {lead.erp_customer_code && (
+                                <span className="font-mono" dir="ltr">· {lead.erp_customer_code}</span>
+                              )}
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-[10px] gap-1 text-muted-foreground">
+                              <User className="w-3 h-3" />
+                              غير مرتبط بـ Lead
+                            </Badge>
+                          )}
                         </div>
+
+                        {lead && (
+                          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+                            {lead.shop_name && <span>🏪 {lead.shop_name}</span>}
+                            <span>الحالة: {lead.status}</span>
+                            <span>النوع: {lead.client_type}</span>
+                          </div>
+                        )}
 
                         {log.message_preview && (
                           <p className="text-xs text-muted-foreground mt-2 line-clamp-2 whitespace-pre-wrap">
@@ -256,6 +280,37 @@ export default function AdminWhatsAppDeliveryStatus() {
                             </p>
                           </div>
                         )}
+
+                        {lastAttempt && (
+                          <button
+                            type="button"
+                            onClick={() => setDetailLog(log)}
+                            className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-medium text-primary hover:underline"
+                          >
+                            {lastAttempt.attempt_type === "create" ? (
+                              <UserPlus className="w-3 h-3" />
+                            ) : (
+                              <KeyRound className="w-3 h-3" />
+                            )}
+                            آخر محاولة:{" "}
+                            {lastAttempt.attempt_type === "create" ? "إنشاء" : "إعادة تعيين"}
+                            {" — "}
+                            <span className={lastAttempt.status === "success" ? "text-emerald-600" : "text-destructive"}>
+                              {lastAttempt.status === "success" ? "نجاح" : "فشل"}
+                            </span>
+                            <span className="text-muted-foreground">({fmtDate(lastAttempt.created_at)})</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </button>
+                        )}
+                        {!lastAttempt && lead && (
+                          <button
+                            type="button"
+                            onClick={() => setDetailLog(log)}
+                            className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-primary hover:underline"
+                          >
+                            عرض تفاصيل العميل <ExternalLink className="w-3 h-3" />
+                          </button>
+                        )}
                       </div>
 
                       <span className="text-[11px] text-muted-foreground whitespace-nowrap">
@@ -269,6 +324,121 @@ export default function AdminWhatsAppDeliveryStatus() {
           )}
         </CardContent>
       </Card>
+
+      {/* Detail Dialog — تفاصيل آخر محاولة + سبب الخطأ + بيانات العميل المحوّل */}
+      <Dialog open={!!detailLog} onOpenChange={(o) => { if (!o) setDetailLog(null); }}>
+        <DialogContent dir="rtl" className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageCircle className="w-5 h-5 text-primary" />
+              تفاصيل سجل الإرسال
+            </DialogTitle>
+            <DialogDescription>
+              السبب التفصيلي للخطأ + ربط العميل المحوّل + آخر محاولة
+            </DialogDescription>
+          </DialogHeader>
+
+          {detailLog && (() => {
+            const lead = resolveLead(detailLog);
+            const lastAttempt = findLatestAttempt(lead, detailLog.phone);
+            const meta = STATUS_META[detailLog.status] || STATUS_META.pending;
+            const { Icon } = meta;
+            return (
+              <div className="space-y-4 text-sm">
+                <section className="rounded-lg border bg-muted/20 p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <Badge variant="outline" className={meta.cls}>
+                      <Icon className="w-3 h-3 ml-1" />
+                      {meta.label}
+                    </Badge>
+                    <span className="text-[11px] text-muted-foreground">{fmtDate(detailLog.created_at)}</span>
+                  </div>
+                  <div className="flex justify-between gap-2 text-xs">
+                    <span className="text-muted-foreground">المستلم:</span>
+                    <span className="font-medium">{detailLog.recipient_name || lead?.name || "—"}</span>
+                  </div>
+                  <div className="flex justify-between gap-2 text-xs">
+                    <span className="text-muted-foreground">الهاتف:</span>
+                    <span className="font-mono" dir="ltr">{detailLog.phone}</span>
+                  </div>
+                  {detailLog.template && (
+                    <div className="flex justify-between gap-2 text-xs">
+                      <span className="text-muted-foreground">القالب:</span>
+                      <span className="font-mono">{detailLog.template}</span>
+                    </div>
+                  )}
+                  {detailLog.message_preview && (
+                    <div className="rounded-md bg-background p-2 text-xs whitespace-pre-wrap border">
+                      {detailLog.message_preview}
+                    </div>
+                  )}
+                  {detailLog.error_message && (
+                    <div className="rounded-md border border-destructive/30 bg-destructive/5 p-2">
+                      <div className="text-[11px] font-semibold text-destructive">سبب الفشل (الإرسال):</div>
+                      <div className="text-xs text-destructive/90 mt-1 break-all">{detailLog.error_message}</div>
+                    </div>
+                  )}
+                </section>
+
+                <section className="rounded-lg border p-3 space-y-2">
+                  <div className="text-xs font-semibold flex items-center gap-1.5">
+                    <Link2 className="w-3.5 h-3.5 text-primary" />
+                    العميل المرتبط
+                  </div>
+                  {lead ? (
+                    <div className="space-y-1.5 text-xs">
+                      <div className="flex justify-between"><span className="text-muted-foreground">الاسم:</span><span className="font-medium">{lead.name}</span></div>
+                      {lead.shop_name && <div className="flex justify-between"><span className="text-muted-foreground">المحل:</span><span>{lead.shop_name}</span></div>}
+                      <div className="flex justify-between"><span className="text-muted-foreground">كود الفيصل:</span><span className="font-mono" dir="ltr">{lead.erp_customer_code || "—"}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">النوع:</span><span>{lead.client_type}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">الحالة:</span><span>{lead.status}</span></div>
+                    </div>
+                  ) : (
+                    <div className="text-xs text-muted-foreground">لا يوجد Lead مرتبط بهذا الرقم.</div>
+                  )}
+                </section>
+
+                <Separator />
+
+                <section className="rounded-lg border p-3 space-y-2">
+                  <div className="text-xs font-semibold flex items-center gap-1.5">
+                    {lastAttempt?.attempt_type === "create"
+                      ? <UserPlus className="w-3.5 h-3.5 text-primary" />
+                      : <KeyRound className="w-3.5 h-3.5 text-primary" />}
+                    آخر محاولة لإنشاء/إعادة تعيين الحساب
+                  </div>
+                  {lastAttempt ? (
+                    <div className="space-y-1.5 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">النوع:</span>
+                        <span>{lastAttempt.attempt_type === "create" ? "إنشاء حساب" : "إعادة تعيين كلمة مرور"}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">الحالة:</span>
+                        <span className={lastAttempt.status === "success" ? "text-emerald-600 font-semibold" : "text-destructive font-semibold"}>
+                          {lastAttempt.status === "success" ? "نجاح" : "فشل"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">الوقت:</span>
+                        <span className="font-mono text-[11px]" dir="ltr">{fmtDate(lastAttempt.created_at)}</span>
+                      </div>
+                      {lastAttempt.error_message && (
+                        <div className="rounded-md border border-destructive/30 bg-destructive/5 p-2 mt-2">
+                          <div className="text-[11px] font-semibold text-destructive">سبب الفشل (المحاولة):</div>
+                          <div className="text-xs text-destructive/90 mt-1 break-all">{lastAttempt.error_message}</div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-xs text-muted-foreground">لا توجد محاولات سابقة لهذا العميل.</div>
+                  )}
+                </section>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
