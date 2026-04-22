@@ -858,7 +858,52 @@ const AdminPriceLists = () => {
     );
   }
 
+  const downloadReportCsv = () => {
+    if (!uploadReport) return;
+    const headers = ["الحالة", "رقم القطعة (من Excel)", "اسم الصنف", "السعر", "رقم الصنف في النظام", "ملاحظة/سبب الفشل"];
+    const statusLabel = (s: UploadReportRow["status"]) =>
+      s === "linked" ? "تم الربط" : s === "created" ? "تم الإنشاء والربط" : "فشل";
+    const escape = (v: any) => {
+      const s = v == null ? "" : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const lines = [
+      headers.join(","),
+      ...uploadReport.map(r => [
+        statusLabel(r.status),
+        r.sku,
+        r.name ?? "",
+        r.price ?? "",
+        r.product_sku ?? "",
+        r.reason ?? "",
+      ].map(escape).join(",")),
+    ];
+    const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `price-list-upload-report-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const reportCounts = uploadReport
+    ? {
+        linked: uploadReport.filter(r => r.status === "linked").length,
+        created: uploadReport.filter(r => r.status === "created").length,
+        failed: uploadReport.filter(r => r.status === "failed").length,
+        total: uploadReport.length,
+      }
+    : { linked: 0, created: 0, failed: 0, total: 0 };
+
+  const filteredReport = uploadReport
+    ? reportFilter === "all"
+      ? uploadReport
+      : uploadReport.filter(r => r.status === reportFilter)
+    : [];
+
   return (
+    <>
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg">إدارة كشوفات المصرية</CardTitle>
