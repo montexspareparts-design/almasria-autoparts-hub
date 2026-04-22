@@ -487,6 +487,19 @@ Deno.serve(async (req) => {
 
             // ── DRY-RUN: compute price diffs without writing ──
             if (isDryRun) {
+              // Fetch existing wholesale tier1 prices for comparison
+              const productIds = ourProducts.map((p: any) => p.id);
+              const { data: existingTierPrices } = await supabase
+                .from("product_tier_prices")
+                .select("product_id, price")
+                .eq("tier", "wholesale_tier1")
+                .in("product_id", productIds);
+              const wholesaleByProductId = new Map<string, number>();
+              (existingTierPrices || []).forEach((tp: any) => {
+                wholesaleByProductId.set(tp.product_id, Number(tp.price || 0));
+              });
+
+              // Retail (base_price) changes
               const changes: Array<{ erp_id: string; name: string; old_price: number; new_price: number; delta: number; pct: number; status: string }> = [];
               for (const r of retailItems) {
                 const prod = ourByCode.get(r.id);
@@ -507,17 +520,45 @@ Deno.serve(async (req) => {
                 });
               }
               changes.sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct));
+
+              // Wholesale (tier1) changes
+              const wholesaleChanges: Array<{ erp_id: string; name: string; old_price: number; new_price: number; delta: number; pct: number; status: string }> = [];
+              for (const w of wholesaleItems) {
+                const prod = ourByCode.get(w.id);
+                if (!prod) continue;
+                const oldP = wholesaleByProductId.get(prod.id) ?? 0;
+                const newP = w.wholesalePrice;
+                if (Math.abs(oldP - newP) < 0.01) continue;
+                const delta = newP - oldP;
+                const pct = oldP > 0 ? (delta / oldP) * 100 : 100;
+                wholesaleChanges.push({
+                  erp_id: w.id,
+                  name: prod.name_ar || "",
+                  old_price: oldP,
+                  new_price: newP,
+                  delta,
+                  pct: Math.round(pct * 10) / 10,
+                  status: oldP === 0 ? "new" : (delta > 0 ? "increase" : "decrease"),
+                });
+              }
+              wholesaleChanges.sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct));
+
               result = {
                 success: true, dry_run: true,
                 erp_total: productsList.length,
                 our_products: ourProducts.length,
                 matched: matchedCount,
                 retail_changes_count: changes.length,
+                wholesale_changes_count: wholesaleChanges.length,
                 wholesale_items_in_erp: wholesaleItems.length,
                 increases: changes.filter(c => c.status === "increase").length,
                 decreases: changes.filter(c => c.status === "decrease").length,
                 big_changes: changes.filter(c => Math.abs(c.pct) >= 10).length,
+                wholesale_increases: wholesaleChanges.filter(c => c.status === "increase").length,
+                wholesale_decreases: wholesaleChanges.filter(c => c.status === "decrease").length,
+                wholesale_new: wholesaleChanges.filter(c => c.status === "new").length,
                 changes: changes.slice(0, 200),
+                wholesale_changes: wholesaleChanges.slice(0, 200),
               };
             } else {
               // Update retail prices (base_price)
