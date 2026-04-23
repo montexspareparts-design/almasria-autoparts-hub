@@ -2,6 +2,9 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { setupLazyImportRecovery } from "@/lib/lazyImportRecovery";
+import { installMobileErrorReporter } from "@/lib/mobileErrorReport";
+
+installMobileErrorReporter();
 
 const removeSplash = () => {
   const splash = document.getElementById("splash-screen");
