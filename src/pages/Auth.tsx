@@ -269,19 +269,19 @@ const Auth = () => {
           {forgotMode ? (
             <ForgotPasswordForm onBack={() => setForgotMode(false)} />
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3.5 sm:space-y-4">
               {!isLogin && (
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-foreground/80">الاسم الكامل <span className="text-primary">*</span></Label>
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label className="text-[11px] sm:text-xs font-semibold text-foreground/80">الاسم الكامل <span className="text-primary">*</span></Label>
                   <div className="relative">
-                    <Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="الاسم الكامل" required className="bg-muted/40 border-border/40 h-11 text-sm pr-10 focus:border-primary/50 focus:ring-primary/20 transition-all" />
+                    <Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="الاسم الكامل" required className="bg-muted/40 border-border/40 h-11 sm:h-11 pr-10 focus:border-primary/50 focus:ring-primary/20 transition-all" />
                     <User className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30" />
                   </div>
                 </div>
               )}
 
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold text-foreground/80 text-right block">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label className="text-[11px] sm:text-xs font-semibold text-foreground/80 text-right block">
                   {isLogin ? (loginMethod === "phone" ? "رقم الهاتف" : "البريد الإلكتروني") : "رقم الهاتف أو البريد الإلكتروني"} <span className="text-primary">*</span>
                 </Label>
                 <div className="relative">
@@ -291,7 +291,9 @@ const Auth = () => {
                     placeholder={isLogin ? (loginMethod === "phone" ? "01xxxxxxxxx" : "example@email.com") : "01xxxxxxxxx أو example@email.com"}
                     required 
                     dir="ltr" 
-                    className="bg-muted/40 border-border/40 h-11 text-sm pl-10 focus:border-primary/50 focus:ring-primary/20 transition-all" 
+                    inputMode={isLogin && loginMethod === "phone" ? "tel" : "text"}
+                    autoComplete={isLogin && loginMethod === "phone" ? "tel" : "email"}
+                    className="bg-muted/40 border-border/40 h-11 pl-10 focus:border-primary/50 focus:ring-primary/20 transition-all" 
                   />
                   {(isLogin ? loginMethod === "phone" : credIsPhone) ? (
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30" />
@@ -301,35 +303,36 @@ const Auth = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold text-foreground/80 text-right block">كلمة المرور <span className="text-primary">*</span></Label>
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label className="text-[11px] sm:text-xs font-semibold text-foreground/80 text-right block">كلمة المرور <span className="text-primary">*</span></Label>
                 <div className="relative">
-                  <Input type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="أدخل كلمة المرور" required minLength={6} dir="ltr" className="bg-muted/40 border-border/40 h-11 text-sm pl-10 focus:border-primary/50 focus:ring-primary/20 transition-all" />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/30 hover:text-muted-foreground transition-colors">
+                  <Input type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="أدخل كلمة المرور" required minLength={6} dir="ltr" autoComplete={isLogin ? "current-password" : "new-password"} className="bg-muted/40 border-border/40 h-11 pl-10 focus:border-primary/50 focus:ring-primary/20 transition-all" />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/30 hover:text-muted-foreground transition-colors p-1 -m-1">
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
 
               {!isLogin && (
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-foreground/80">العنوان <span className="text-muted-foreground/50 text-[10px]">(اختياري)</span></Label>
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label className="text-[11px] sm:text-xs font-semibold text-foreground/80">العنوان <span className="text-muted-foreground/50 text-[10px]">(اختياري)</span></Label>
                   <div className="relative">
-                    <Input value={address} onChange={e => setAddress(e.target.value)} placeholder="المحافظة — العنوان التفصيلي" className="bg-muted/40 border-border/40 h-11 text-sm pr-10 focus:border-primary/50 focus:ring-primary/20 transition-all" />
+                    <Input value={address} onChange={e => setAddress(e.target.value)} placeholder="المحافظة — العنوان التفصيلي" className="bg-muted/40 border-border/40 h-11 pr-10 focus:border-primary/50 focus:ring-primary/20 transition-all" />
                     <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30" />
                   </div>
                 </div>
               )}
 
               {!isLogin && (
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-foreground/80 flex items-center gap-1.5">
-                    <Car className="w-3.5 h-3.5 text-primary" />
-                    عربيتك إيه؟ <span className="text-muted-foreground/50 text-[10px]">(اختياري — هنقترحلك قطع غيار مناسبة)</span>
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label className="text-[11px] sm:text-xs font-semibold text-foreground/80 flex items-center gap-1.5 flex-wrap">
+                    <Car className="w-3.5 h-3.5 text-primary shrink-0" />
+                    <span>عربيتك إيه؟</span>
+                    <span className="text-muted-foreground/50 text-[10px]">(اختياري)</span>
                   </Label>
                   <div className="grid grid-cols-2 gap-2">
                     <Select value={carModel} onValueChange={setCarModel}>
-                      <SelectTrigger className="bg-muted/40 border-border/40 h-11 text-sm">
+                      <SelectTrigger className="bg-muted/40 border-border/40 h-11">
                         <SelectValue placeholder="الموديل" />
                       </SelectTrigger>
                       <SelectContent>
@@ -339,7 +342,7 @@ const Auth = () => {
                       </SelectContent>
                     </Select>
                     <Select value={carYear} onValueChange={setCarYear}>
-                      <SelectTrigger className="bg-muted/40 border-border/40 h-11 text-sm">
+                      <SelectTrigger className="bg-muted/40 border-border/40 h-11">
                         <SelectValue placeholder="السنة" />
                       </SelectTrigger>
                       <SelectContent>
@@ -352,7 +355,7 @@ const Auth = () => {
                 </div>
               )}
 
-              <Button type="submit" className="w-full h-12 font-bold text-sm rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all duration-300" disabled={loading}>
+              <Button type="submit" className="w-full h-11 sm:h-12 font-bold text-sm rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all duration-300" disabled={loading}>
                 {loading ? "جاري التحميل..." : isLogin ? "تسجيل الدخول" : "إنشاء الحساب"}
               </Button>
 
