@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useProductListing } from "@/hooks/useProductListing";
 import ProductListingSection from "@/components/ProductListingSection";
@@ -6,7 +6,7 @@ import CategoryBrowseSlider from "@/components/CategoryBrowseSlider";
 import DealerBestSellers from "@/components/dealer/DealerBestSellers";
 import { toast } from "@/hooks/use-toast";
 import { useDealerCart } from "@/hooks/useDealerCart";
-import { ShoppingCart, ArrowLeft } from "lucide-react";
+import { ShoppingCart, ArrowLeft, Home, X, ChevronLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ToastAction } from "@/components/ui/toast";
 interface DealerProductSearchProps {
@@ -46,8 +46,55 @@ const DealerProductSearch = ({ onNavigateToOrders, onNavigateToCart, sharedCart 
     }
   }, [cart.addItem, onNavigateToCart]);
 
+  const activeCategoryId = listing.filters?.categoryId || null;
+  const activeCategoryName = useMemo(() => {
+    if (!activeCategoryId) return null;
+    const c = (listing.visibleCategories || []).find((x: any) => x.id === activeCategoryId);
+    return c?.name_ar || null;
+  }, [activeCategoryId, listing.visibleCategories]);
+
+  const clearCategory = useCallback(() => {
+    listing.setFilters((prev: any) => ({ ...prev, categoryId: null }));
+  }, [listing.setFilters]);
+
   return (
     <div className="space-y-4 relative">
+      {/* Active category breadcrumb — appears when a category is selected */}
+      <AnimatePresence>
+        {activeCategoryName && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+            className="container mx-auto px-4"
+          >
+            <nav
+              dir="rtl"
+              aria-label="مسار التصفح"
+              className="flex items-center gap-2 text-xs sm:text-sm bg-primary/5 border border-primary/20 rounded-xl px-3 py-2 sm:px-4 sm:py-2.5 shadow-sm"
+            >
+              <button
+                onClick={clearCategory}
+                className="flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors font-medium"
+              >
+                <Home className="w-3.5 h-3.5" />
+                <span>كل الفئات</span>
+              </button>
+              <ChevronLeft className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0" />
+              <span className="font-extrabold text-primary truncate flex-1">{activeCategoryName}</span>
+              <button
+                onClick={clearCategory}
+                aria-label="إزالة الفلتر"
+                className="shrink-0 w-6 h-6 rounded-full bg-primary/10 hover:bg-primary/20 text-primary flex items-center justify-center transition-colors"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <ProductListingSection
         filters={listing.filters}
         setFilters={listing.setFilters}
@@ -86,6 +133,7 @@ const DealerProductSearch = ({ onNavigateToOrders, onNavigateToCart, sharedCart 
           <>
             <CategoryBrowseSlider
               onCategorySelect={handleCategorySelect}
+              activeCategoryId={activeCategoryId}
             />
             <div ref={productsAnchorRef} aria-hidden className="scroll-mt-24" />
           </>
