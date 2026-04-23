@@ -3,6 +3,12 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import {
+  scanProjectForLegacyClasses,
+  buildEditorLink,
+  type LegacyFileReport,
+} from "@/lib/devLegacyClassScan";
 import {
   ChevronLeft,
   ChevronRight,
@@ -13,6 +19,10 @@ import {
   Languages,
   CheckCircle2,
   AlertTriangle,
+  ChevronDown,
+  ExternalLink,
+  Copy,
+  FileWarning,
 } from "lucide-react";
 
 /* ───────────────────────── Check definitions ───────────────────────── */
@@ -298,10 +308,181 @@ const DevDealerPreview = () => {
           </div>
         </div>
 
+        {/* Static source scan: legacy Tailwind classes across dealer + admin */}
+        <LegacyClassPanel />
+
         {/* Conversion log */}
         <ConversionLog />
       </div>
     </div>
+  );
+};
+
+/* ───────────────────────── Legacy class panel ───────────────────────── */
+
+const LegacyClassPanel = () => {
+  const [reports, setReports] = useState<LegacyFileReport[]>([]);
+  const [open, setOpen] = useState<Record<string, boolean>>({});
+  const [scanning, setScanning] = useState(false);
+
+  const runScan = () => {
+    setScanning(true);
+    // Defer to next frame so the spinner can render
+    requestAnimationFrame(() => {
+      try {
+        const next = scanProjectForLegacyClasses();
+        setReports(next);
+      } finally {
+        setScanning(false);
+      }
+    });
+  };
+
+  useEffect(() => {
+    runScan();
+  }, []);
+
+  const totals = useMemo(() => {
+    const filesWithIssues = reports.length;
+    const totalMatches = reports.reduce((acc, r) => acc + r.matches.length, 0);
+    return { filesWithIssues, totalMatches };
+  }, [reports]);
+
+  const copyPath = async (file: string, line: number) => {
+    try {
+      await navigator.clipboard.writeText(`${file}:${line}`);
+      toast.success(`نسخ: ${file}:${line}`);
+    } catch {
+      toast.error("تعذّر النسخ");
+    }
+  };
+
+  const openInEditor = (file: string, line: number) => {
+    const url = buildEditorLink(file, line);
+    // VS Code custom protocol — silently no-op if handler isn't installed.
+    window.location.href = url;
+    // Always offer the copy fallback toast
+    toast.message(`فتح ${file}:${line}`, {
+      description: "إذا لم يفتح المحرر تلقائياً، استخدم زر النسخ.",
+    });
+  };
+
+  return (
+    <Card className="p-4 md:p-5 space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 className="text-lg font-black flex items-center gap-2">
+            <FileWarning className="w-5 h-5 text-amber-500" />
+            مسح الملفات: كلاسات Tailwind قديمة
+          </h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            فحص ثابت لمصادر <code className="px-1 bg-muted rounded">src/components/dealer/**</code>،{" "}
+            <code className="px-1 bg-muted rounded">src/components/admin/**</code>، و{" "}
+            <code className="px-1 bg-muted rounded">src/pages/Dealer*.tsx</code>.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-0">
+            ملفات: {totals.filesWithIssues}
+          </Badge>
+          <Badge className="bg-rose-500/15 text-rose-700 dark:text-rose-400 border-0">
+            مخالفات: {totals.totalMatches}
+          </Badge>
+          <Button size="sm" variant="outline" onClick={runScan} disabled={scanning}>
+            {scanning ? "جارٍ المسح…" : "إعادة المسح"}
+          </Button>
+        </div>
+      </div>
+
+      {reports.length === 0 ? (
+        <div className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-400">
+          <CheckCircle2 className="w-4 h-4" />
+          ممتاز — لا توجد كلاسات اتجاهية قديمة في النطاق الممسوح.
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {reports.map((r) => {
+            const isOpen = open[r.file] ?? false;
+            return (
+              <div key={r.file} className="border border-border rounded-lg overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setOpen((s) => ({ ...s, [r.file]: !isOpen }))}
+                  className="w-full flex items-center justify-between gap-2 px-3 py-2 text-start hover:bg-muted/50 transition-colors"
+                >
+                  <div className="min-w-0 flex items-center gap-2">
+                    <ChevronDown
+                      className={
+                        "w-4 h-4 shrink-0 transition-transform " +
+                        (isOpen ? "" : "-rotate-90 rtl:rotate-90")
+                      }
+                    />
+                    <code className="text-xs md:text-sm truncate font-mono">{r.file}</code>
+                  </div>
+                  <Badge className="bg-rose-500/15 text-rose-700 dark:text-rose-400 border-0 shrink-0">
+                    {r.matches.length}
+                  </Badge>
+                </button>
+
+                {isOpen && (
+                  <div className="border-t border-border bg-muted/20 divide-y divide-border">
+                    {r.matches.slice(0, 50).map((m, i) => (
+                      <div
+                        key={`${m.line}-${m.column}-${i}`}
+                        className="flex items-start justify-between gap-2 px-3 py-2 text-xs"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <span className="font-mono">L{m.line}:{m.column}</span>
+                            <Badge variant="outline" className="font-mono text-[10px] py-0 px-1.5">
+                              {m.match}
+                            </Badge>
+                          </div>
+                          <code className="block mt-1 font-mono text-[11px] text-foreground/80 break-all">
+                            {m.snippet}
+                          </code>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            title="فتح في المحرر (VS Code)"
+                            onClick={() => openInEditor(r.file, m.line)}
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            title="نسخ المسار:السطر"
+                            onClick={() => copyPath(r.file, m.line)}
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    {r.matches.length > 50 && (
+                      <div className="px-3 py-2 text-[11px] text-muted-foreground">
+                        …و{r.matches.length - 50} مخالفة إضافية في نفس الملف.
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="text-[11px] text-muted-foreground leading-relaxed">
+        التحويل المطلوب: <code className="bg-muted rounded px-1">mr/ml → ms/me</code>،{" "}
+        <code className="bg-muted rounded px-1">pr/pl → ps/pe</code>،{" "}
+        <code className="bg-muted rounded px-1">text-right/left → text-start/end</code>.
+      </div>
+    </Card>
   );
 };
 
