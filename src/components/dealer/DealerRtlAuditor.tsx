@@ -21,7 +21,11 @@ const DealerRtlAuditor = () => {
     let cancelled = false;
     const run = () => {
       if (cancelled) return;
-      const offenders = auditDirectionalAndWarn(`route ${location.pathname}`);
+      // Only scan inside the dealer page container so we don't flag
+      // shared shell components (Navbar, toasts, floating buttons, etc.)
+      const scope = document.querySelector<HTMLElement>("[data-dealer-scope]");
+      if (!scope) return;
+      const offenders = auditDirectionalAndWarn(`route ${location.pathname}`, scope);
       if (offenders.length > 0 && !toastShown) {
         toastShown = true;
         toast.warning(
