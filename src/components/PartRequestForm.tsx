@@ -60,6 +60,7 @@ const PartRequestForm = ({ defaultModel, compact }: PartRequestFormProps) => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [lastError, setLastError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const validateField = (key: FieldKey, value: string) => {
@@ -115,6 +116,7 @@ const PartRequestForm = ({ defaultModel, compact }: PartRequestFormProps) => {
       return;
     }
     setSending(true);
+    setLastError(null);
 
     try {
       const { error } = await supabase.from("part_requests" as any).insert({
@@ -132,27 +134,55 @@ const PartRequestForm = ({ defaultModel, compact }: PartRequestFormProps) => {
 
       setSubmitted(true);
       toast.success("تم إرسال طلبك بنجاح! سنتواصل معك قريبًا.");
-      setForm({ name: "", phone: "", model: defaultModel || "", year: "", vin: "", notes: "" });
+      // ملاحظة: لا نمسح الـ form هنا حتى يبقى زر الواتساب مُحمَّلاً ببيانات العميل
       setErrors({});
       setTouched({});
-      removeImage();
 
       setTimeout(() => setSubmitted(false), 8000);
     } catch (err) {
       console.error("Error submitting part request:", err);
+      const msg = err instanceof Error ? err.message : "خطأ غير معروف";
+      setLastError(msg);
       toast.error("حدث خطأ أثناء الإرسال. يرجى المحاولة مرة أخرى أو التواصل عبر واتساب.");
     } finally {
       setSending(false);
     }
   };
 
-  const whatsappMessage = encodeURIComponent(
-    `مرحبًا، أريد طلب قطعة غيار:\n` +
-    `الموديل: ${form.model || "—"}\n` +
-    `السنة: ${form.year || "—"}\n` +
-    `رقم الشاسيه: ${form.vin || "—"}\n` +
-    `ملاحظات: ${form.notes || "—"}`
-  );
+  /**
+   * يبني رسالة واتساب منسّقة حسب الحالة:
+   * - "success": تأكيد طلب تم إرساله مع كل البيانات
+   * - "error":   إبلاغ عن فشل + كل البيانات حتى يتمكن الفريق من إنشاء الطلب يدوياً
+   * - "draft":   استفسار مع البيانات المتاحة (الزر أثناء الملء)
+   */
+  const buildWhatsAppMessage = (mode: "success" | "error" | "draft" = "draft") => {
+    const header =
+      mode === "success"
+        ? "✅ تم إرسال طلب قطعة غيار عبر الموقع — هذه نسخة للمتابعة:"
+        : mode === "error"
+        ? "⚠️ حدث خطأ أثناء إرسال الطلب من الموقع — برجاء استلام البيانات يدوياً:"
+        : "مرحبًا، أريد طلب قطعة غيار:";
+
+    const lines = [
+      header,
+      "",
+      `👤 الاسم: ${form.name || "—"}`,
+      `📱 الموبايل: ${form.phone || "—"}`,
+      `🚙 الموديل: ${form.model || "—"}`,
+      `📅 السنة: ${form.year || "—"}`,
+      `🔢 رقم الشاسيه: ${form.vin || "—"}`,
+      `📝 ملاحظات: ${form.notes || "—"}`,
+    ];
+    if (image) lines.push(`📷 صورة مرفقة: نعم (سأرسلها هنا)`);
+    if (mode === "error" && lastError) {
+      lines.push("", `🐞 سبب الخطأ التقني: ${lastError.slice(0, 120)}`);
+    }
+    lines.push("", `🕐 ${new Date().toLocaleString("ar-EG")}`);
+    return encodeURIComponent(lines.join("\n"));
+  };
+
+  const whatsappHref = (mode: "success" | "error" | "draft") =>
+    `https://wa.me/201153961008?text=${buildWhatsAppMessage(mode)}`;
 
   if (submitted) {
     return (
@@ -166,12 +196,15 @@ const PartRequestForm = ({ defaultModel, compact }: PartRequestFormProps) => {
         </div>
         <h3 className="text-xl font-bold text-foreground mb-2">تم استلام طلبك بنجاح ✓</h3>
         <p className="text-muted-foreground text-sm mb-6">فريقنا سيتواصل معك خلال ساعات عمل قليلة لتأكيد توفر القطعة والسعر.</p>
-        <Button variant="outline" className="gap-2 border-green-500/30 text-green-600 h-12" asChild>
-          <a href={`https://wa.me/201153961008?text=${whatsappMessage}`} target="_blank" rel="noopener noreferrer" onClick={() => trackClickWhatsApp("form_success")}>
+        <Button size="lg" className="gap-2 bg-green-600 hover:bg-green-700 text-white h-12 px-6 font-bold" asChild>
+          <a href={whatsappHref("success")} target="_blank" rel="noopener noreferrer" onClick={() => trackClickWhatsApp("form_success")}>
             <MessageCircle className="w-4 h-4" />
-            تواصل عبر واتساب للاستعجال
+            أرسل نسخة للفريق عبر واتساب
           </a>
         </Button>
+        <p className="text-[11px] text-muted-foreground/80 mt-3">
+          الزر يُرسل رسالة منسّقة تحتوي على كل بياناتك للمتابعة الفورية
+        </p>
       </motion.div>
     );
   }
@@ -340,6 +373,41 @@ const PartRequestForm = ({ defaultModel, compact }: PartRequestFormProps) => {
           </FieldWrap>
         )}
 
+        {/* Error banner — يظهر عند فشل الإرسال مع زر واتساب جاهز للبيانات */}
+        {lastError && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 space-y-3"
+          >
+            <div className="flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-bold text-destructive">تعذّر إرسال الطلب</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  لا تقلق — اضغط الزر التالي لإرسال بياناتك مباشرة لفريقنا عبر واتساب وسيتم تسجيل الطلب يدوياً.
+                </p>
+              </div>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold gap-2 h-11"
+              asChild
+            >
+              <a
+                href={whatsappHref("error")}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackClickWhatsApp("part_request_error")}
+              >
+                <MessageCircle className="w-4 h-4" />
+                أرسل البيانات عبر واتساب الآن
+              </a>
+            </Button>
+          </motion.div>
+        )}
+
         {/* Buttons — stacked on mobile, side-by-side on sm+ */}
         <div className="flex flex-col sm:flex-row gap-3 pt-2">
           <Button type="submit" size="lg" className="flex-1 gap-2 font-bold h-12 rounded-xl" disabled={sending}>
@@ -354,7 +422,7 @@ const PartRequestForm = ({ defaultModel, compact }: PartRequestFormProps) => {
             asChild
           >
             <a
-              href={`https://wa.me/201153961008?text=${whatsappMessage}`}
+              href={whatsappHref("draft")}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackClickWhatsApp("part_request_form")}
