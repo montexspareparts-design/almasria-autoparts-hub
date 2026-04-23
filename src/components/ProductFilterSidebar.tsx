@@ -104,8 +104,8 @@ const ProductFilterSidebar = ({
       {/* Sidebar */}
       <motion.aside
         className={`
-          fixed top-0 right-0 h-full w-[300px] bg-card border-l border-border z-50 overflow-y-auto
-          lg:sticky lg:top-24 lg:h-[calc(100vh-6rem)] lg:z-auto lg:border lg:rounded-xl lg:w-[280px] lg:shrink-0
+          fixed top-0 right-0 h-[100dvh] w-[88vw] max-w-[320px] bg-card border-l border-border z-50 overflow-y-auto overscroll-contain pb-24
+          lg:sticky lg:top-24 lg:h-[calc(100vh-6rem)] lg:z-auto lg:border lg:rounded-xl lg:w-[280px] lg:max-w-none lg:shrink-0 lg:pb-4
           ${isOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"}
           transition-transform duration-300 ease-out
         `}
