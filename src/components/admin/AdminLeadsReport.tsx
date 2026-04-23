@@ -223,13 +223,13 @@ const AdminLeadsReport = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-right">الاسم</TableHead>
-                <TableHead className="text-right">الهاتف</TableHead>
-                <TableHead className="text-right">المحل</TableHead>
-                <TableHead className="text-right">النوع</TableHead>
-                <TableHead className="text-right">التسعير</TableHead>
-                <TableHead className="text-right">الحالة</TableHead>
-                <TableHead className="text-right">ملخص</TableHead>
+                <TableHead className="text-start">الاسم</TableHead>
+                <TableHead className="text-start">الهاتف</TableHead>
+                <TableHead className="text-start">المحل</TableHead>
+                <TableHead className="text-start">النوع</TableHead>
+                <TableHead className="text-start">التسعير</TableHead>
+                <TableHead className="text-start">الحالة</TableHead>
+                <TableHead className="text-start">ملخص</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

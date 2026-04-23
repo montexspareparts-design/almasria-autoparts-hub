@@ -158,7 +158,7 @@ export default function AdminWhatsAppDeliveryStatus() {
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={fetchLogs} disabled={loading}>
-          <RefreshCw className={`w-4 h-4 ml-2 ${loading ? "animate-spin" : ""}`} />
+          <RefreshCw className={`w-4 h-4 me-2 ${loading ? "animate-spin" : ""}`} />
           تحديث
         </Button>
       </div>
@@ -196,7 +196,7 @@ export default function AdminWhatsAppDeliveryStatus() {
             placeholder="بحث برقم الهاتف أو الاسم..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="pr-9"
+            className="ps-9"
           />
         </div>
       </div>
@@ -228,7 +228,7 @@ export default function AdminWhatsAppDeliveryStatus() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <Badge variant="outline" className={meta.cls}>
-                            <Icon className="w-3 h-3 ml-1" />
+                            <Icon className="w-3 h-3 me-1" />
                             {meta.label}
                           </Badge>
                           <span className="font-semibold text-sm">
@@ -348,7 +348,7 @@ export default function AdminWhatsAppDeliveryStatus() {
                 <section className="rounded-lg border bg-muted/20 p-3 space-y-2">
                   <div className="flex items-center justify-between gap-2">
                     <Badge variant="outline" className={meta.cls}>
-                      <Icon className="w-3 h-3 ml-1" />
+                      <Icon className="w-3 h-3 me-1" />
                       {meta.label}
                     </Badge>
                     <span className="text-[11px] text-muted-foreground">{fmtDate(detailLog.created_at)}</span>

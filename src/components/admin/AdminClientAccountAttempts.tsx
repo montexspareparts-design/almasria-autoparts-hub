@@ -142,7 +142,7 @@ const AdminClientAccountAttempts = () => {
               placeholder="بحث (اسم، هاتف، كود فيصل، خطأ، موظف)..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="pr-9"
+              className="ps-9"
             />
           </div>
           <Select value={statusFilter} onValueChange={(v: any) => setStatusFilter(v)}>
@@ -180,14 +180,14 @@ const AdminClientAccountAttempts = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-right">الوقت</TableHead>
-                  <TableHead className="text-right">النوع</TableHead>
-                  <TableHead className="text-right">الحالة</TableHead>
-                  <TableHead className="text-right">العميل</TableHead>
-                  <TableHead className="text-right">الهاتف</TableHead>
-                  <TableHead className="text-right">كود الفيصل</TableHead>
-                  <TableHead className="text-right">الموظف</TableHead>
-                  <TableHead className="text-right">السبب / التفاصيل</TableHead>
+                  <TableHead className="text-start">الوقت</TableHead>
+                  <TableHead className="text-start">النوع</TableHead>
+                  <TableHead className="text-start">الحالة</TableHead>
+                  <TableHead className="text-start">العميل</TableHead>
+                  <TableHead className="text-start">الهاتف</TableHead>
+                  <TableHead className="text-start">كود الفيصل</TableHead>
+                  <TableHead className="text-start">الموظف</TableHead>
+                  <TableHead className="text-start">السبب / التفاصيل</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

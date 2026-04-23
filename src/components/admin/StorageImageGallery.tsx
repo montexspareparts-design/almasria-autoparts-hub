@@ -198,7 +198,7 @@ const StorageImageGallery = () => {
             placeholder="فلترة الصور..."
             value={imageFilter}
             onChange={(e) => setImageFilter(e.target.value)}
-            className="pr-8 h-8 text-xs"
+            className="ps-8 h-8 text-xs"
           />
         </div>
       </div>
@@ -256,7 +256,7 @@ const StorageImageGallery = () => {
                   placeholder="ابحث عن المنتج بالاسم أو رقم القطعة..."
                   value={productSearch}
                   onChange={(e) => setProductSearch(e.target.value)}
-                  className="pr-10"
+                  className="ps-10"
                   autoFocus
                 />
               </div>
@@ -369,7 +369,7 @@ const StorageImageGallery = () => {
       <Dialog open={!!selectedImage && !quickLinkMode} onOpenChange={(open) => { if (!open) setSelectedImage(null); }}>
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-right flex items-center gap-2">
+            <DialogTitle className="text-start flex items-center gap-2">
               <Link2 className="w-4 h-4" />
               ربط الصورة بمنتج
             </DialogTitle>
@@ -388,7 +388,7 @@ const StorageImageGallery = () => {
                   placeholder="ابحث عن المنتج بالاسم أو رقم القطعة..."
                   value={productSearch}
                   onChange={(e) => setProductSearch(e.target.value)}
-                  className="pr-10"
+                  className="ps-10"
                   autoFocus
                 />
               </div>

@@ -178,7 +178,7 @@ const AdminNewOrderAlert = () => {
                     </a>
                   )}
                 </div>
-                <div className="text-left">
+                <div className="text-end">
                   <p className="font-bold text-lg text-primary">
                     {Number(o.total_amount).toLocaleString("ar-EG")} ج.م
                   </p>

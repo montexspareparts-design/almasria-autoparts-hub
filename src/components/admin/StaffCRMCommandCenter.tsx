@@ -543,7 +543,7 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
             placeholder="بحث بالاسم أو الموبايل..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pr-8 h-9 text-sm"
+            className="ps-8 h-9 text-sm"
           />
         </div>
       </div>
@@ -820,7 +820,7 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                                 {s.is_dealer ? "تاجر" : "قطاعي"}
                               </Badge>
                               <Badge variant="outline" className="text-[10px] h-5 text-orange-600 border-orange-300">
-                                <Search className="w-3 h-3 ml-0.5" />
+                                <Search className="w-3 h-3 me-0.5" />
                                 {s.search_count} بحث
                               </Badge>
                             </div>

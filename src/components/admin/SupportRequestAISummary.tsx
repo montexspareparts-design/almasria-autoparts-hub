@@ -89,7 +89,7 @@ export default function SupportRequestAISummary({ requestId, customerName, open,
             <Sparkles className="w-5 h-5 text-purple-600" />
             ملخص المحادثة الذكي
             {cached && (
-              <Badge variant="outline" className="text-[10px] h-5 mr-2">من الكاش</Badge>
+              <Badge variant="outline" className="text-[10px] h-5 ms-2">من الكاش</Badge>
             )}
           </DialogTitle>
           <DialogDescription>

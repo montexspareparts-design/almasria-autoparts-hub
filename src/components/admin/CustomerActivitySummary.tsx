@@ -102,7 +102,7 @@ export default function CustomerActivitySummary({ open, onOpenChange, userId, cu
             <Activity className="w-5 h-5 text-primary" />
             ملخص نشاط العميل
           </SheetTitle>
-          <SheetDescription className="text-right">
+          <SheetDescription className="text-start">
             <div className="flex items-center gap-2 mt-1 flex-wrap">
               <span className="font-bold text-foreground">{customerName || "عميل"}</span>
               <Badge variant={isDealer ? "default" : "secondary"} className="text-[10px] h-5">
@@ -180,7 +180,7 @@ export default function CustomerActivitySummary({ open, onOpenChange, userId, cu
                             <p className="font-bold text-foreground">{o.order_number}</p>
                             <p className="text-[10px] text-muted-foreground">{fmtDate(o.created_at)}</p>
                           </div>
-                          <div className="text-left">
+                          <div className="text-end">
                             <p className="font-bold text-primary">{Number(o.total_amount).toLocaleString("ar-EG")} ج.م</p>
                             <Badge variant="outline" className="text-[9px] h-4 mt-0.5">{statusLabel(o.status)}</Badge>
                           </div>
@@ -200,7 +200,7 @@ export default function CustomerActivitySummary({ open, onOpenChange, userId, cu
                             <p className="font-medium text-foreground truncate">{v.product_name || "منتج"}</p>
                             {v.product_sku && <p className="text-[10px] text-muted-foreground">SKU: {v.product_sku}</p>}
                           </div>
-                          <span className="text-[10px] text-muted-foreground shrink-0 mr-2">{fmtDate(v.viewed_at)}</span>
+                          <span className="text-[10px] text-muted-foreground shrink-0 ms-2">{fmtDate(v.viewed_at)}</span>
                         </div>
                       ))}
                     </div>
@@ -217,7 +217,7 @@ export default function CustomerActivitySummary({ open, onOpenChange, userId, cu
                             <p className="font-medium text-foreground truncate">{f.product_name || "منتج"}</p>
                             {f.product_sku && <p className="text-[10px] text-muted-foreground">SKU: {f.product_sku}</p>}
                           </div>
-                          <span className="text-[10px] text-muted-foreground shrink-0 mr-2">{fmtDate(f.created_at)}</span>
+                          <span className="text-[10px] text-muted-foreground shrink-0 ms-2">{fmtDate(f.created_at)}</span>
                         </div>
                       ))}
                     </div>

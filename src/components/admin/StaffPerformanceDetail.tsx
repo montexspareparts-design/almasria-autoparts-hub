@@ -123,7 +123,7 @@ export default function StaffPerformanceDetail({ open, onOpenChange, staffUserId
             <Activity className="w-5 h-5 text-primary" />
             تقرير أداء — {staffName}
           </SheetTitle>
-          <SheetDescription className="text-right text-xs">
+          <SheetDescription className="text-start text-xs">
             من {new Date(dateFrom).toLocaleDateString("ar-EG")} إلى {new Date(dateTo).toLocaleDateString("ar-EG")}
           </SheetDescription>
         </SheetHeader>
