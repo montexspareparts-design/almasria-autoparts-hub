@@ -292,6 +292,7 @@ const CategoryBrowseSlider = ({ onCategorySelect, activeCategoryId }: CategoryBr
           >
             {items.map((cat, index) => {
               const assets = categoryAssets[cat.slug] || { image: catFilters, accent: defaultAccent, searchTerm: cat.name_ar };
+              const isActive = activeCategoryId === cat.id;
               return (
                 <motion.div
                   key={cat.id}
@@ -301,13 +302,27 @@ const CategoryBrowseSlider = ({ onCategorySelect, activeCategoryId }: CategoryBr
                   transition={{ delay: index * 0.04, type: "spring", stiffness: 260, damping: 20 }}
                   whileHover={{ scale: 1.07, y: -6 }}
                   whileTap={{ scale: 0.95 }}
+                  animate={isActive ? { scale: 1.06, y: -4 } : { scale: 1, y: 0 }}
                   className="shrink-0"
                 >
                   <button
                     type="button"
                     onClick={(e) => handleCategoryClick(e, cat)}
-                    className="group/card block relative w-[68px] sm:w-[145px] rounded-lg sm:rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 text-center border border-border/40 hover:border-primary/40"
+                    aria-pressed={isActive}
+                    className={`group/card block relative w-[68px] sm:w-[145px] rounded-lg sm:rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 text-center ${
+                      isActive
+                        ? "border-2 border-primary ring-2 ring-primary/40 shadow-primary/30 shadow-2xl"
+                        : "border border-border/40 hover:border-primary/40"
+                    }`}
                   >
+                    {/* Active checkmark badge — top-right */}
+                    {isActive && (
+                      <div className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 z-20 w-[18px] h-[18px] sm:w-[24px] sm:h-[24px] rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg ring-2 ring-white">
+                        <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 sm:w-4 sm:h-4">
+                          <path fillRule="evenodd" d="M16.704 5.29a1 1 0 010 1.42l-7.5 7.5a1 1 0 01-1.42 0l-3.5-3.5a1 1 0 011.42-1.42L8.5 12.08l6.79-6.79a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    )}
                     {/* Bold dynamic count badge — top-left corner */}
                     <div className="absolute top-1 left-1 sm:top-1.5 sm:left-1.5 z-10 min-w-[18px] sm:min-w-[28px] h-[18px] sm:h-[28px] px-1 sm:px-1.5 rounded-full bg-primary text-primary-foreground text-[9px] sm:text-xs font-extrabold flex items-center justify-center shadow-lg ring-1 sm:ring-2 ring-white/90">
                       {cat.count}
@@ -327,7 +342,7 @@ const CategoryBrowseSlider = ({ onCategorySelect, activeCategoryId }: CategoryBr
                       <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 pointer-events-none" />
                     </div>
                     <div className={`relative bg-gradient-to-br ${assets.accent} px-1 py-1 sm:px-2.5 sm:py-2.5 overflow-hidden`}>
-                      <div className="absolute inset-0 bg-white/0 group-hover/card:bg-white/10 transition-colors duration-300" />
+                      <div className={`absolute inset-0 transition-colors duration-300 ${isActive ? "bg-white/15" : "bg-white/0 group-hover/card:bg-white/10"}`} />
                       <span className="relative text-white font-bold text-[9px] sm:text-xs block leading-tight sm:leading-snug drop-shadow-sm truncate">{cat.name_ar}</span>
                       <span className="relative text-white/80 text-[7px] sm:text-[10px] block mt-0.5 font-semibold">{cat.count} صنف</span>
                     </div>
