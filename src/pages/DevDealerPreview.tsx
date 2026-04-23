@@ -440,44 +440,116 @@ const LegacyClassPanel = () => {
 
                 {isOpen && (
                   <div className="border-t border-border bg-muted/20 divide-y divide-border">
-                    {r.matches.slice(0, 50).map((m, i) => (
-                      <div
-                        key={`${m.line}-${m.column}-${i}`}
-                        className="flex items-start justify-between gap-2 px-3 py-2 text-xs"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <span className="font-mono">L{m.line}:{m.column}</span>
-                            <Badge variant="outline" className="font-mono text-[10px] py-0 px-1.5">
-                              {m.match}
-                            </Badge>
+                    {r.matches.slice(0, 50).map((m, i) => {
+                      const suggestKey = `${r.file}:${m.line}:${m.column}:${i}`;
+                      const suggested = suggestReplacement(m.match);
+                      const isSuggestOpen = openSuggest[suggestKey] ?? false;
+                      const replacedSnippet = m.snippet.replace(m.match, suggested);
+                      return (
+                        <div
+                          key={suggestKey}
+                          className="px-3 py-2 text-xs space-y-2"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2 text-muted-foreground flex-wrap">
+                                <span className="font-mono">L{m.line}:{m.column}</span>
+                                <Badge variant="outline" className="font-mono text-[10px] py-0 px-1.5">
+                                  {m.match}
+                                </Badge>
+                                <ArrowRightLeft className="w-3 h-3 opacity-60" />
+                                <Badge className="font-mono text-[10px] py-0 px-1.5 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-0">
+                                  {suggested}
+                                </Badge>
+                              </div>
+                              <code className="block mt-1 font-mono text-[11px] text-foreground/80 break-all">
+                                {m.snippet}
+                              </code>
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <Button
+                                size="sm"
+                                variant={isSuggestOpen ? "default" : "outline"}
+                                className="h-7 px-2 gap-1 text-[11px]"
+                                title="عرض اقتراح الإصلاح"
+                                onClick={() =>
+                                  setOpenSuggest((s) => ({ ...s, [suggestKey]: !isSuggestOpen }))
+                                }
+                              >
+                                <Wand2 className="w-3 h-3" />
+                                اقتراح إصلاح
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7"
+                                title="فتح في المحرر (VS Code)"
+                                onClick={() => openInEditor(r.file, m.line)}
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7"
+                                title="نسخ المسار:السطر"
+                                onClick={() => copyPath(r.file, m.line)}
+                              >
+                                <Copy className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
                           </div>
-                          <code className="block mt-1 font-mono text-[11px] text-foreground/80 break-all">
-                            {m.snippet}
-                          </code>
+
+                          {isSuggestOpen && (
+                            <div className="rounded-md border border-emerald-500/30 bg-emerald-500/5 p-2.5 space-y-2">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
+                                  استبدل الكلاس القديم بالبديل المنطقي
+                                </span>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 px-2 gap-1 text-[10px]"
+                                  onClick={() => copyText(suggested, suggested)}
+                                >
+                                  <Copy className="w-3 h-3" />
+                                  نسخ البديل
+                                </Button>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                <div className="rounded bg-rose-500/10 border border-rose-500/20 p-2">
+                                  <div className="text-[10px] font-bold text-rose-700 dark:text-rose-400 mb-1">قبل</div>
+                                  <code className="font-mono text-[11px] break-all text-foreground/80">
+                                    {m.snippet}
+                                  </code>
+                                </div>
+                                <div className="rounded bg-emerald-500/10 border border-emerald-500/20 p-2">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <div className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">بعد</div>
+                                    <button
+                                      type="button"
+                                      onClick={() => copyText(replacedSnippet, "السطر بعد التعديل")}
+                                      className="text-[10px] text-emerald-700 dark:text-emerald-400 hover:underline"
+                                    >
+                                      نسخ السطر كاملاً
+                                    </button>
+                                  </div>
+                                  <code className="font-mono text-[11px] break-all text-foreground/80">
+                                    {replacedSnippet}
+                                  </code>
+                                </div>
+                              </div>
+                              <div className="text-[10px] text-muted-foreground leading-relaxed">
+                                هذا اقتراح للنسخ اليدوي فقط — لن يُعدَّل أي ملف تلقائياً. القاعدة:
+                                {" "}<code className="bg-muted rounded px-1">mr/ml → me/ms</code>،{" "}
+                                <code className="bg-muted rounded px-1">pr/pl → pe/ps</code>،{" "}
+                                <code className="bg-muted rounded px-1">text-right/left → text-end/start</code>.
+                              </div>
+                            </div>
+                          )}
                         </div>
-                        <div className="flex items-center gap-1 shrink-0">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-7 w-7"
-                            title="فتح في المحرر (VS Code)"
-                            onClick={() => openInEditor(r.file, m.line)}
-                          >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-7 w-7"
-                            title="نسخ المسار:السطر"
-                            onClick={() => copyPath(r.file, m.line)}
-                          >
-                            <Copy className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                     {r.matches.length > 50 && (
                       <div className="px-3 py-2 text-[11px] text-muted-foreground">
                         …و{r.matches.length - 50} مخالفة إضافية في نفس الملف.
