@@ -60,13 +60,21 @@ const faqItems = [
 const Index = () => {
   const { dealerAccount, isAdmin, isModerator, loading } = useAuth();
   const isDealer = !!dealerAccount && !isModerator;
+  const savedRole = typeof window !== "undefined" ? localStorage.getItem("almasria_last_role") : null;
 
   // Moderator-only employees should never see the B2C homepage
   if (!loading && isModerator && !isAdmin && !isDealer) {
     return <Navigate to="/admin" replace />;
   }
 
-  if (!loading && isDealer) {
+  // Dual-role users (admin + dealer): respect their saved choice; otherwise stay on homepage
+  // so the role-selection dialog can be shown without instantly redirecting.
+  if (!loading && isDealer && isAdmin) {
+    if (savedRole === "dealer") return <Navigate to="/dealer" replace />;
+    if (savedRole === "admin") return <Navigate to="/admin" replace />;
+    // No saved role → render homepage; RoleSelectionDialog (in AuthProvider) handles the choice.
+  } else if (!loading && isDealer) {
+    // Pure dealer (no admin role) → always go to dealer dashboard
     return <Navigate to="/dealer" replace />;
   }
 
