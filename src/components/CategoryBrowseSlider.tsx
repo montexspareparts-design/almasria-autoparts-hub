@@ -54,9 +54,10 @@ const defaultAccent = "from-primary/80 to-primary/90";
 interface CategoryBrowseSliderProps {
   onCategorySelect?: (categoryId: string, categoryName: string) => void;
   activeCategoryId?: string | null;
+  pendingCategoryId?: string | null;
 }
 
-const CategoryBrowseSlider = ({ onCategorySelect, activeCategoryId }: CategoryBrowseSliderProps) => {
+const CategoryBrowseSlider = ({ onCategorySelect, activeCategoryId, pendingCategoryId }: CategoryBrowseSliderProps) => {
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
