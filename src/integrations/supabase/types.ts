@@ -2033,6 +2033,42 @@ export type Database = {
         }
         Relationships: []
       }
+      ui_translations: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value_ar: string
+          value_en: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value_ar?: string
+          value_en?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value_ar?: string
+          value_en?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
