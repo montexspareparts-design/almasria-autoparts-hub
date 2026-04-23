@@ -18,7 +18,9 @@ const DealerRtlAuditor = () => {
     if (!location.pathname.startsWith("/dealer")) return;
 
     let toastShown = false;
+    let cancelled = false;
     const run = () => {
+      if (cancelled) return;
       const offenders = auditDirectionalAndWarn(`route ${location.pathname}`);
       if (offenders.length > 0 && !toastShown) {
         toastShown = true;
@@ -33,14 +35,37 @@ const DealerRtlAuditor = () => {
       }
     };
 
-    // Initial pass after layout settles
-    const t1 = window.setTimeout(run, 800);
-    // Second pass after lazy content typically loads
-    const t2 = window.setTimeout(run, 2500);
+    // Pass 1: right after the browser commits the first paint of this route.
+    // Double rAF guarantees React has flushed and layout is computed.
+    let raf1 = 0;
+    let raf2 = 0;
+    raf1 = window.requestAnimationFrame(() => {
+      raf2 = window.requestAnimationFrame(run);
+    });
+
+    // Pass 2: after lazy/suspended dealer content typically resolves.
+    // Prefer requestIdleCallback so we never block interactions.
+    type IdleHandle = number;
+    let idleHandle: IdleHandle | null = null;
+    let fallbackTimer: number | null = null;
+    const ric = (window as unknown as {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => IdleHandle;
+      cancelIdleCallback?: (h: IdleHandle) => void;
+    });
+    if (typeof ric.requestIdleCallback === "function") {
+      idleHandle = ric.requestIdleCallback(run, { timeout: 3000 });
+    } else {
+      fallbackTimer = window.setTimeout(run, 2500);
+    }
 
     return () => {
-      window.clearTimeout(t1);
-      window.clearTimeout(t2);
+      cancelled = true;
+      if (raf1) window.cancelAnimationFrame(raf1);
+      if (raf2) window.cancelAnimationFrame(raf2);
+      if (idleHandle !== null && typeof ric.cancelIdleCallback === "function") {
+        ric.cancelIdleCallback(idleHandle);
+      }
+      if (fallbackTimer !== null) window.clearTimeout(fallbackTimer);
     };
   }, [location.pathname]);
 
