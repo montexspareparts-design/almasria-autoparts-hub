@@ -297,8 +297,161 @@ const DevDealerPreview = () => {
             </div>
           </div>
         </div>
+
+        {/* Conversion log */}
+        <ConversionLog />
       </div>
     </div>
+  );
+};
+
+/* ───────────────────────── Conversion log ───────────────────────── */
+
+type ConversionStatus = "done" | "partial" | "pending";
+
+interface ConversionEntry {
+  area: string;
+  files: string[];
+  status: ConversionStatus;
+  note?: string;
+}
+
+const conversionLog: ConversionEntry[] = [
+  {
+    area: "Bootstrap اتجاهي بدون Flash",
+    files: ["index.html"],
+    status: "done",
+    note: "ضبط <html dir/lang> فور التحميل من localStorage قبل React.",
+  },
+  {
+    area: "نظام i18n + LanguageContext",
+    files: ["src/contexts/LanguageContext.tsx"],
+    status: "done",
+    note: "تبديل ar/en + تبديل dir تلقائياً + حفظ في localStorage.",
+  },
+  {
+    area: "صفحة DealerDashboard الرئيسية",
+    files: ["src/pages/DealerDashboard.tsx"],
+    status: "done",
+    note: "نظيفة — لا تحتوي كلاسات mr/ml/pr/pl (تفويض للمكونات الفرعية).",
+  },
+  {
+    area: "صفحة DealerProductPage",
+    files: ["src/pages/DealerProductPage.tsx"],
+    status: "done",
+    note: "نظيفة بالكامل — لا توجد كلاسات اتجاهية قديمة.",
+  },
+  {
+    area: "مكونات لوحة الإدارة (admin)",
+    files: [
+      "AdminClientAccountAttempts.tsx",
+      "AdminLeadsReport.tsx",
+      "AdminNewOrderAlert.tsx",
+      "AdminWhatsAppDeliveryStatus.tsx",
+      "CustomerActivitySummary.tsx",
+      "CustomerCommunicationLog.tsx",
+      "StaffAccountSettings.tsx",
+      "StaffCRMCommandCenter.tsx",
+      "StaffPerformanceDetail.tsx",
+      "StorageImageGallery.tsx",
+      "SupportRequestAISummary.tsx",
+      "TransferToColleagueDialog.tsx",
+    ],
+    status: "done",
+    note: "تحويل ml/mr→me/ms، pl/pr→pe/ps، text-right/left→text-start/end.",
+  },
+  {
+    area: "صفحة /dev/dealer-preview",
+    files: ["src/pages/DevDealerPreview.tsx"],
+    status: "done",
+    note: "5 فحوصات تلقائية: html dir, legacy classes, directional icons, computed dir, overflow.",
+  },
+  {
+    area: "مكونات Dealer (DealerSidebar / Cart / QuickOrder / ...)",
+    files: ["src/components/dealer/*"],
+    status: "pending",
+    note: "بحاجة لمسح وتحويل لاحق على دفعات لتقليل المخاطر.",
+  },
+  {
+    area: "ترجمة فعلية للنصوص (ar ⇄ en)",
+    files: ["src/contexts/LanguageContext.tsx", "dealer pages"],
+    status: "pending",
+    note: "البنية جاهزة — يبقى ربط مفاتيح الترجمة بالنصوص في الواجهات.",
+  },
+];
+
+const statusMeta: Record<ConversionStatus, { label: string; cls: string }> = {
+  done: { label: "تم", cls: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400" },
+  partial: { label: "جزئي", cls: "bg-amber-500/15 text-amber-700 dark:text-amber-400" },
+  pending: { label: "متبقّي", cls: "bg-muted text-muted-foreground" },
+};
+
+const ConversionLog = () => {
+  const counts = useMemo(() => {
+    return conversionLog.reduce(
+      (acc, e) => ({ ...acc, [e.status]: (acc as any)[e.status] + 1 }),
+      { done: 0, partial: 0, pending: 0 } as Record<ConversionStatus, number>,
+    );
+  }, []);
+
+  return (
+    <Card className="p-4 md:p-5 space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 className="text-lg font-black">سجل التحويل الاتجاهي · Dealer Dashboard</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            ملخص المناطق التي تم تحويلها لكلاسات منطقية (ms/me/ps/pe/text-start/end) ودعم RTL/LTR.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 text-xs">
+          <Badge className={statusMeta.done.cls + " border-0"}>تم: {counts.done}</Badge>
+          <Badge className={statusMeta.partial.cls + " border-0"}>جزئي: {counts.partial}</Badge>
+          <Badge className={statusMeta.pending.cls + " border-0"}>متبقّي: {counts.pending}</Badge>
+        </div>
+      </div>
+
+      <div className="overflow-x-auto -mx-4 md:-mx-5 px-4 md:px-5">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-xs text-muted-foreground border-b border-border">
+              <th className="py-2 ps-0 pe-2 text-start font-semibold">المنطقة</th>
+              <th className="py-2 px-2 text-start font-semibold">الملفات</th>
+              <th className="py-2 px-2 text-start font-semibold">الحالة</th>
+              <th className="py-2 ps-2 pe-0 text-start font-semibold">ملاحظات</th>
+            </tr>
+          </thead>
+          <tbody>
+            {conversionLog.map((e, i) => (
+              <tr key={i} className="border-b border-border/50 last:border-0 align-top">
+                <td className="py-2.5 ps-0 pe-2 font-bold">{e.area}</td>
+                <td className="py-2.5 px-2">
+                  <div className="flex flex-wrap gap-1">
+                    {e.files.slice(0, 4).map((f) => (
+                      <code key={f} className="text-[10px] px-1.5 py-0.5 rounded bg-muted font-mono">
+                        {f}
+                      </code>
+                    ))}
+                    {e.files.length > 4 && (
+                      <span className="text-[10px] text-muted-foreground self-center">
+                        +{e.files.length - 4}
+                      </span>
+                    )}
+                  </div>
+                </td>
+                <td className="py-2.5 px-2">
+                  <Badge className={statusMeta[e.status].cls + " border-0"}>
+                    {statusMeta[e.status].label}
+                  </Badge>
+                </td>
+                <td className="py-2.5 ps-2 pe-0 text-xs text-muted-foreground leading-relaxed">
+                  {e.note}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Card>
   );
 };
 
