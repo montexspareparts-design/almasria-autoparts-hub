@@ -345,6 +345,64 @@ const AdminProductImages = () => {
     bulkAbortRef.current = true;
   };
 
+  const handleAiMatchAll = async () => {
+    if (!confirm("سيتم فحص كل صور Storage بالذكاء الاصطناعي ومطابقة البارت نمبر فيها مع المنتجات.\n\nالشروط:\n• تطابق نصي 100% فقط بين الكود في الصورة و SKU/erp_item_code\n• لن يتم استبدال الصور الموجودة\n• قد يستغرق وقتاً ويستهلك credits\n\nمتابعة؟")) return;
+
+    setAiMatching(true);
+    aiAbortRef.current = false;
+    setAiProgress({ scanned: 0, total: 0, applied: 0, candidates: 0 });
+
+    let offset = 0;
+    const batchSize = 25;
+    let totalApplied = 0;
+    let totalCandidates = 0;
+    let totalFiles = 0;
+
+    try {
+      while (!aiAbortRef.current) {
+        const { data, error } = await supabase.functions.invoke("match-product-images-by-vision", {
+          body: { dryRun: false, limit: batchSize, offset, onlyUnassigned: true },
+        });
+
+        if (error) throw error;
+        if (!data) break;
+
+        totalFiles = data.totalFilesInBucket || totalFiles;
+        totalApplied += data.applied || 0;
+        totalCandidates += data.candidateMatches || 0;
+
+        setAiProgress({
+          scanned: data.nextOffset,
+          total: totalFiles,
+          applied: totalApplied,
+          candidates: totalCandidates,
+        });
+
+        if (data.scanned === 0 || data.nextOffset >= totalFiles) break;
+        offset = data.nextOffset;
+      }
+
+      toast({
+        title: "اكتمل الفحص الذكي ✅",
+        description: `تم تعيين ${totalApplied} صورة من أصل ${totalCandidates} تطابق محتمل`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    } catch (e: any) {
+      toast({
+        title: "خطأ في الفحص الذكي",
+        description: e.message || String(e),
+        variant: "destructive",
+      });
+    } finally {
+      setAiMatching(false);
+    }
+  };
+
+  const handleStopAi = () => {
+    aiAbortRef.current = true;
+  };
+
   const openGoogleSearch = (sku: string) => {
     window.open(`https://www.google.com/search?q=${encodeURIComponent(sku + " toyota genuine part")}&tbm=isch`, "_blank");
   };
