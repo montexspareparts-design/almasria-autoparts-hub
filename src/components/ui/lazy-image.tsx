@@ -25,6 +25,30 @@ interface LazyImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, "src"
  */
 const loadedCache = new Set<string>();
 
+/**
+ * Auto-optimize Supabase Storage URLs via Image Transformations.
+ * Converts /object/public/ -> /render/image/public/ and adds width/quality params.
+ * Uses devicePixelRatio capped at 2 for retina but never exceeds the requested width.
+ * Skips URLs that aren't from Supabase Storage (e.g. /placeholder.svg, external CDNs).
+ */
+const optimizeSrc = (src: string, targetWidth?: number): string => {
+  if (!src || !src.includes("/storage/v1/object/public/")) return src;
+  try {
+    const url = new URL(src, window.location.origin);
+    // Skip SVGs (transformations not supported / unnecessary)
+    if (url.pathname.endsWith(".svg")) return src;
+    const dpr = typeof window !== "undefined" ? Math.min(window.devicePixelRatio || 1, 2) : 1;
+    const width = Math.round((targetWidth || 600) * dpr);
+    url.pathname = url.pathname.replace("/object/public/", "/render/image/public/");
+    url.searchParams.set("width", String(width));
+    url.searchParams.set("quality", "70");
+    url.searchParams.set("resize", "contain");
+    return url.toString();
+  } catch {
+    return src;
+  }
+};
+
 export const LazyImage = ({
   src,
   alt,
@@ -32,8 +56,9 @@ export const LazyImage = ({
   className,
   fallbackIcon = true,
   eager = false,
+  optimizeWidth,
   ...rest
-}: LazyImageProps) => {
+}: LazyImageProps & { optimizeWidth?: number }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(eager);
   const [loaded, setLoaded] = useState(() => (src ? loadedCache.has(src) : false));
@@ -84,7 +109,7 @@ export const LazyImage = ({
     >
       {showImage && (
         <img
-          src={src!}
+          src={optimizeSrc(src!, optimizeWidth)}
           alt={alt}
           loading={eager ? "eager" : "lazy"}
           decoding="async"

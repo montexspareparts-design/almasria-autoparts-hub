@@ -5,6 +5,7 @@ import { TrendingUp, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import ProductDetailDialog from "@/components/ProductDetailDialog";
+import { LazyImage } from "@/components/ui/lazy-image";
 import { useDealerCart } from "@/hooks/useDealerCart";
 import { toast } from "sonner";
 
@@ -94,13 +95,14 @@ const DealerRecommendations = ({ userId, tier, onNavigateToQuotes }: { userId: s
             onClick={() => setSelectedProduct(p)}
           >
             <div className="aspect-square bg-muted/50 relative overflow-hidden">
-              <img
+              <LazyImage
                 src={p.image_url || "/placeholder.svg"}
                 alt={p.name_ar}
+                wrapperClassName="w-full h-full"
                 className="w-full h-full object-contain p-2"
-                loading="lazy"
+                optimizeWidth={300}
               />
-              <Badge className="absolute top-1.5 right-1.5 text-[8px] px-1.5 py-0 bg-secondary text-secondary-foreground">
+              <Badge className="absolute top-1.5 right-1.5 text-[8px] px-1.5 py-0 bg-secondary text-secondary-foreground z-10">
                 {brandLabels[p.brand] || p.brand}
               </Badge>
             </div>
