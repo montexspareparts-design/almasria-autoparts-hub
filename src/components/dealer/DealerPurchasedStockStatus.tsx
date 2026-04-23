@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { LazyImage } from "@/components/ui/lazy-image";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2, Package } from "lucide-react";
+import { Loader2, Package, Search, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 interface PurchasedProduct {
@@ -14,9 +15,11 @@ interface PurchasedProduct {
   stock_quantity: number;
   safety_stock: number;
   last_ordered_at: string;
+  category_slug: string | null;
 }
 
 type StockStatus = "available" | "low" | "out";
+type CategoryGroup = "all" | "engine" | "suspension" | "filters" | "electrical" | "cooling" | "other";
 
 const getStatus = (stock: number, safety: number): StockStatus => {
   const available = Math.max(0, stock - (safety || 0));
@@ -24,6 +27,40 @@ const getStatus = (stock: number, safety: number): StockStatus => {
   if (available <= 5) return "low";
   return "available";
 };
+
+// Map DB category slugs → user-facing groups
+const SLUG_TO_GROUP: Record<string, Exclude<CategoryGroup, "all">> = {
+  "spark-plugs-coils": "engine",
+  "belts-bearings": "engine",
+  "gaskets": "engine",
+  "oil-seals": "engine",
+  "oils-gasoline": "engine",
+  "oils-diesel": "engine",
+  "oils-transmission": "engine",
+  "clutch": "engine",
+  "suspension": "suspension",
+  "shocks": "suspension",
+  "brakes": "suspension",
+  "steering": "suspension",
+  "rubber": "suspension",
+  "filters": "filters",
+  "electrical": "electrical",
+  "lights": "electrical",
+  "water-cooling": "cooling",
+};
+
+const groupOf = (slug: string | null): Exclude<CategoryGroup, "all"> =>
+  (slug && SLUG_TO_GROUP[slug]) || "other";
+
+const categoryChips: { key: CategoryGroup; label: string }[] = [
+  { key: "all", label: "كل الفئات" },
+  { key: "engine", label: "محرك" },
+  { key: "suspension", label: "عفشة" },
+  { key: "filters", label: "فلاتر" },
+  { key: "electrical", label: "كهرباء" },
+  { key: "cooling", label: "تبريد" },
+  { key: "other", label: "أخرى" },
+];
 
 const statusConfig: Record<StockStatus, { label: string; dot: string; bg: string; text: string }> = {
   available: {
@@ -50,7 +87,9 @@ const DealerPurchasedStockStatus = () => {
   const { user } = useAuth();
   const [products, setProducts] = useState<PurchasedProduct[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | StockStatus>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | StockStatus>("all");
+  const [categoryFilter, setCategoryFilter] = useState<CategoryGroup>("all");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     const fetchPurchased = async () => {
@@ -72,7 +111,9 @@ const DealerPurchasedStockStatus = () => {
 
       const { data: items } = await supabase
         .from("order_items")
-        .select("product_id, order_id, product:products(id, name_ar, sku, image_url, stock_quantity, safety_stock, is_active)")
+        .select(
+          "product_id, order_id, product:products(id, name_ar, sku, image_url, stock_quantity, safety_stock, is_active, category:product_categories(slug))"
+        )
         .in("order_id", orderIds);
 
       const map = new Map<string, PurchasedProduct>();
@@ -90,6 +131,7 @@ const DealerPurchasedStockStatus = () => {
             stock_quantity: p.stock_quantity ?? 0,
             safety_stock: p.safety_stock ?? 0,
             last_ordered_at: lastDate,
+            category_slug: p.category?.slug ?? null,
           });
         }
       });
@@ -104,6 +146,16 @@ const DealerPurchasedStockStatus = () => {
 
     fetchPurchased();
   }, [user]);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return products.filter((p) => {
+      if (statusFilter !== "all" && getStatus(p.stock_quantity, p.safety_stock) !== statusFilter) return false;
+      if (categoryFilter !== "all" && groupOf(p.category_slug) !== categoryFilter) return false;
+      if (q && !p.name_ar.toLowerCase().includes(q) && !p.sku.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [products, statusFilter, categoryFilter, search]);
 
   if (loading) {
     return (
@@ -122,12 +174,7 @@ const DealerPurchasedStockStatus = () => {
     out: products.filter((p) => getStatus(p.stock_quantity, p.safety_stock) === "out").length,
   };
 
-  const filtered =
-    filter === "all"
-      ? products
-      : products.filter((p) => getStatus(p.stock_quantity, p.safety_stock) === filter);
-
-  const filterChips: { key: typeof filter; label: string; count: number }[] = [
+  const statusChips: { key: typeof statusFilter; label: string; count: number }[] = [
     { key: "all", label: "الكل", count: counts.all },
     { key: "available", label: "متوفر", count: counts.available },
     { key: "low", label: "قريب النفاد", count: counts.low },
@@ -146,14 +193,54 @@ const DealerPurchasedStockStatus = () => {
         </span>
       </div>
 
+      {/* Search box */}
+      <div className="relative">
+        <Search className="absolute top-1/2 -translate-y-1/2 start-3 w-4 h-4 text-muted-foreground pointer-events-none" />
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="ابحث باسم المنتج أو رقم القطعة..."
+          className="ps-9 pe-9 h-9 text-sm"
+        />
+        {search && (
+          <button
+            type="button"
+            onClick={() => setSearch("")}
+            className="absolute top-1/2 -translate-y-1/2 end-2 p-1 rounded hover:bg-muted"
+            aria-label="مسح البحث"
+          >
+            <X className="w-3.5 h-3.5 text-muted-foreground" />
+          </button>
+        )}
+      </div>
+
+      {/* Category filter */}
       <div className="flex items-center gap-1.5 flex-wrap">
-        {filterChips.map((c) => (
+        {categoryChips.map((c) => (
           <button
             key={c.key}
-            onClick={() => setFilter(c.key)}
+            onClick={() => setCategoryFilter(c.key)}
             className={cn(
               "px-2.5 py-1 rounded-full text-[11px] font-bold transition-colors border",
-              filter === c.key
+              categoryFilter === c.key
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-card text-muted-foreground border-border hover:border-primary/40"
+            )}
+          >
+            {c.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Status filter */}
+      <div className="flex items-center gap-1.5 flex-wrap">
+        {statusChips.map((c) => (
+          <button
+            key={c.key}
+            onClick={() => setStatusFilter(c.key)}
+            className={cn(
+              "px-2.5 py-1 rounded-full text-[11px] font-bold transition-colors border",
+              statusFilter === c.key
                 ? "bg-primary text-primary-foreground border-primary"
                 : "bg-card text-muted-foreground border-border hover:border-primary/40"
             )}
@@ -191,7 +278,7 @@ const DealerPurchasedStockStatus = () => {
         })}
         {filtered.length === 0 && (
           <div className="p-6 text-center text-xs text-muted-foreground">
-            لا توجد منتجات بهذه الحالة
+            لا توجد منتجات مطابقة للبحث
           </div>
         )}
       </div>
