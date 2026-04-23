@@ -177,8 +177,8 @@ const Auth = () => {
 
   return (
     <div
-      className="auth-page min-h-[100svh] w-full max-w-[100vw] relative flex items-center justify-center px-3 py-5 sm:px-4 sm:py-8 md:py-12 overflow-x-hidden"
-      style={{ overflowX: "clip" }}
+      className="auth-page w-full max-w-[100vw] relative flex items-start sm:items-center justify-center px-3 py-5 sm:px-4 sm:py-8 md:py-12 overflow-x-hidden"
+      style={{ overflowX: "clip", minHeight: "100svh" }}
       dir="rtl"
     >
       {/* Background — clamped to viewport so blurs/patterns can't leak */}
@@ -204,8 +204,8 @@ const Auth = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease: "easeOut" }}
       >
-        {/* Logo & Header */}
-        <div className="text-center mb-5 sm:mb-7 md:mb-8">
+        {/* Logo & Header — fixed min-height to prevent shift when keyboard opens */}
+        <div className="text-center mb-5 sm:mb-7 md:mb-8 shrink-0" style={{ minHeight: "120px" }}>
           <Link to="/" className="inline-block mb-3 sm:mb-5">
             <img src={logo} alt="المصرية جروب" width={160} height={48} className="h-10 sm:h-12 w-auto mx-auto" />
           </Link>
