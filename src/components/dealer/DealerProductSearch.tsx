@@ -20,14 +20,27 @@ const DealerProductSearch = ({ onNavigateToOrders, onNavigateToCart, sharedCart 
   const fallbackCart = useDealerCart();
   const cart = sharedCart || fallbackCart;
   const productsAnchorRef = useRef<HTMLDivElement>(null);
+  const [pendingCategoryId, setPendingCategoryId] = useState<string | null>(null);
 
   const handleCategorySelect = useCallback((categoryId: string, _categoryName: string) => {
+    setPendingCategoryId(categoryId);
     listing.setFilters((prev: any) => ({ ...prev, categoryId, search: "", brandKey: null }));
     // Smooth scroll to products grid after a short delay to let the filter apply
     setTimeout(() => {
       productsAnchorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 100);
   }, [listing.setFilters]);
+
+  // Clear pending indicator once the filter actually applies (or after a short safety timeout)
+  useEffect(() => {
+    if (!pendingCategoryId) return;
+    if (listing.filters?.categoryId === pendingCategoryId && !listing.isLoading) {
+      const t = setTimeout(() => setPendingCategoryId(null), 250);
+      return () => clearTimeout(t);
+    }
+    const safety = setTimeout(() => setPendingCategoryId(null), 2500);
+    return () => clearTimeout(safety);
+  }, [pendingCategoryId, listing.filters?.categoryId, listing.isLoading]);
 
   const handleAddToCart = useCallback(async (product: any) => {
     try {
