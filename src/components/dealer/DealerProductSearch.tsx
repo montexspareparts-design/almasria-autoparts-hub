@@ -1,4 +1,4 @@
-import { useCallback, useRef, useMemo } from "react";
+import { useCallback, useRef, useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useProductListing } from "@/hooks/useProductListing";
 import ProductListingSection from "@/components/ProductListingSection";
@@ -6,7 +6,7 @@ import CategoryBrowseSlider from "@/components/CategoryBrowseSlider";
 import DealerBestSellers from "@/components/dealer/DealerBestSellers";
 import { toast } from "@/hooks/use-toast";
 import { useDealerCart } from "@/hooks/useDealerCart";
-import { ShoppingCart, ArrowLeft, Home, X, ChevronLeft } from "lucide-react";
+import { ShoppingCart, ArrowLeft, Home, X, ChevronLeft, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ToastAction } from "@/components/ui/toast";
 interface DealerProductSearchProps {
