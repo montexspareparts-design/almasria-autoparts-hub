@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import {
   scanProjectForLegacyClasses,
   buildEditorLink,
+  suggestReplacement,
   type LegacyFileReport,
 } from "@/lib/devLegacyClassScan";
 import {
@@ -23,6 +24,8 @@ import {
   ExternalLink,
   Copy,
   FileWarning,
+  Wand2,
+  ArrowRightLeft,
 } from "lucide-react";
 
 /* ───────────────────────── Check definitions ───────────────────────── */
