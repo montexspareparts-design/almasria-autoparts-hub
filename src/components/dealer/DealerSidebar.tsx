@@ -4,10 +4,26 @@ import {
   LayoutDashboard, Search, ClipboardList, FileText, Receipt,
   Heart, Upload, Bell, Tag, Settings, LogOut, User, CreditCard,
   ListPlus, Scale, ChevronDown, ChevronUp, Package, Zap,
-  BarChart3, ShoppingCart, Shield, Eye
+  BarChart3, ShoppingCart, Shield, Eye, Languages
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+
+const LanguageToggleButton = () => {
+  const { lang, setLang } = useLanguage();
+  return (
+    <button
+      onClick={() => setLang(lang === "ar" ? "en" : "ar")}
+      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
+      aria-label="Toggle language"
+    >
+      <Languages className="w-4 h-4" />
+      <span>{lang === "ar" ? "English" : "العربية"}</span>
+      <span className="ms-auto text-[10px] font-bold uppercase opacity-60">{lang === "ar" ? "EN" : "AR"}</span>
+    </button>
+  );
+};
 
 export type DealerTab =
   | "quotes" | "priced_today" | "cart" | "orders" | "invoices" | "price_lists"
@@ -236,6 +252,7 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
           <Settings className="w-4 h-4" />
           <span>الإعدادات</span>
         </button>
+        <LanguageToggleButton />
         <SwitchToAdminButton />
         <button
           onClick={onSignOut}
