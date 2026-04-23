@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Briefcase, Shield, Users } from "lucide-react";
+import { Briefcase, Shield, Users, Home } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -19,6 +19,13 @@ const RoleSelectionDialog = ({ open, onOpenChange }: RoleSelectionDialogProps) =
     navigate(role === "dealer" ? "/dealer" : "/admin", { replace: true });
   };
 
+  const handleBrowseAsGuest = () => {
+    // علامة "مرفوض" حتى لا يعود الديالوج للظهور في نفس الجلسة
+    localStorage.setItem("almasria_role_dismissed", "1");
+    onOpenChange(false);
+    // لا توجيه — يبقى المستخدم على الصفحة الحالية (الرئيسية)
+  };
+
   const adminLabel = isAdmin ? "مدير" : "موظف";
   const adminDesc = isAdmin ? "لوحة الإدارة" : "لوحة الموظفين";
   const AdminIcon = isAdmin ? Shield : Users;
@@ -33,7 +40,7 @@ const RoleSelectionDialog = ({ open, onOpenChange }: RoleSelectionDialogProps) =
             اختر وضع الدخول
           </DialogTitle>
           <DialogDescription className="text-xs text-muted-foreground mt-1">
-            حسابك يملك صلاحيتين — اختر اللوحة المناسبة
+            حسابك يملك صلاحيتين — اختر اللوحة المناسبة أو تصفّح الموقع كزائر
           </DialogDescription>
         </DialogHeader>
 
@@ -68,9 +75,25 @@ const RoleSelectionDialog = ({ open, onOpenChange }: RoleSelectionDialogProps) =
             </div>
           </motion.button>
         </div>
+
+        {/* خيار التصفّح كزائر — صف منفصل أسفل الخيارات، واضح وسهل اللمس على الموبايل */}
+        <div className="px-6 pb-6 pt-1" dir="rtl">
+          <button
+            type="button"
+            onClick={handleBrowseAsGuest}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-border/50 bg-muted/40 hover:bg-muted active:bg-muted/80 text-foreground text-sm font-semibold transition-colors min-h-[44px]"
+          >
+            <Home className="w-4 h-4" />
+            تصفّح كزائر (الصفحة الرئيسية)
+          </button>
+          <p className="text-[10px] text-muted-foreground text-center mt-2">
+            يمكنك العودة لاختيار الدور من قائمة الحساب في أي وقت
+          </p>
+        </div>
       </DialogContent>
     </Dialog>
   );
 };
 
 export default RoleSelectionDialog;
+
