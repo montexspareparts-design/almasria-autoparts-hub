@@ -243,7 +243,7 @@ const DealerBusinessBanner = ({ businessType, dealerName, onNavigateToProduct }:
                     key={p.id}
                     onClick={() => onNavigateToProduct?.(p.id)}
                     whileHover={{ y: -2 }}
-                    className="group relative overflow-hidden rounded-xl border border-border/60 bg-white hover:border-primary/40 hover:shadow-md transition-all text-right"
+                    className="group relative overflow-hidden rounded-xl border border-border/60 bg-white hover:border-primary/40 hover:shadow-md transition-all text-end"
                   >
                     <div className="aspect-square bg-white p-2 flex items-center justify-center">
                       {p.image_url ? (

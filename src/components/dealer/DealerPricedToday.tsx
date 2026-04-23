@@ -229,7 +229,7 @@ const DealerPricedToday = ({ onConvertToOrder, sharedCart }: DealerPricedTodayPr
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="w-6 h-6 animate-spin text-primary" />
-        <span className="text-sm text-muted-foreground mr-2">جاري التحميل...</span>
+        <span className="text-sm text-muted-foreground me-2">جاري التحميل...</span>
       </div>
     );
   }
@@ -277,7 +277,7 @@ const DealerPricedToday = ({ onConvertToOrder, sharedCart }: DealerPricedTodayPr
                   size="sm"
                   onClick={handleConvertToOrder}
                   disabled={selectedIds.size === 0 || converting}
-                  className="gap-1.5 text-xs h-8 mr-auto"
+                  className="gap-1.5 text-xs h-8 me-auto"
                 >
                   {converting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShoppingCart className="w-3.5 h-3.5" />}
                   أضف للسلة ({selectedIds.size})

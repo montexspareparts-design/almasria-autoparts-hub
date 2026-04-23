@@ -78,7 +78,7 @@ const DealerOffers = () => {
                   />
                   {discount > 0 && (
                     <Badge className="absolute top-2 right-2 bg-destructive text-destructive-foreground text-[10px] z-10">
-                      <Percent className="w-3 h-3 ml-0.5" />
+                      <Percent className="w-3 h-3 ms-0.5" />
                       خصم {discount}%
                     </Badge>
                   )}

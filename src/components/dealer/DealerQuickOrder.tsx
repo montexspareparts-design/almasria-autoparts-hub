@@ -215,7 +215,7 @@ const DealerQuickOrder = () => {
               value={sku}
               onChange={e => handleSkuChange(e.target.value)}
               placeholder="ابحث برقم القطعة أو الاسم..."
-              className="h-11 text-sm pr-9"
+              className="h-11 text-sm pe-9"
               onKeyDown={e => e.key === "Enter" && (suggestions.length > 0 ? addFromSuggestion(suggestions[0]) : addManualLine())}
             />
             {searching && <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary animate-spin" />}
@@ -228,13 +228,13 @@ const DealerQuickOrder = () => {
                 <button
                   key={product.id}
                   onClick={() => addFromSuggestion(product)}
-                  className="w-full flex items-center gap-3 p-3 hover:bg-muted/70 transition-colors text-right border-b border-border/50 last:border-0"
+                  className="w-full flex items-center gap-3 p-3 hover:bg-muted/70 transition-colors text-end border-b border-border/50 last:border-0"
                 >
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-foreground truncate">{product.name_ar}</p>
                     <p className="text-[10px] text-muted-foreground font-mono">{product.sku}</p>
                   </div>
-                  <div className="text-left shrink-0">
+                  <div className="text-start shrink-0">
                     <p className={`text-[10px] ${product.stock_quantity > 0 ? "text-emerald-600" : "text-destructive"}`}>
                       {product.stock_quantity > 0 ? `متوفر` : "نفذ"}
                     </p>
@@ -328,7 +328,7 @@ const DealerQuickOrder = () => {
           </div>
 
           <Button className="w-full h-12 text-base mt-2" onClick={() => setShowConfirm(true)} disabled={submitting || !pickupBranch}>
-            <ShoppingCart className="w-5 h-5 ml-2" />
+            <ShoppingCart className="w-5 h-5 ms-2" />
             اطلب الآن ({lines.length} صنف)
           </Button>
         </div>
@@ -372,7 +372,7 @@ const DealerQuickOrder = () => {
           <AlertDialogFooter className="flex gap-2 mt-2">
             <AlertDialogCancel className="flex-1">تراجع</AlertDialogCancel>
             <AlertDialogAction className="flex-1" onClick={submitOrder} disabled={submitting}>
-              {submitting ? <Loader2 className="w-4 h-4 ml-1 animate-spin" /> : <Zap className="w-4 h-4 ml-1" />}
+              {submitting ? <Loader2 className="w-4 h-4 ms-1 animate-spin" /> : <Zap className="w-4 h-4 ms-1" />}
               تأكيد وإرسال
             </AlertDialogAction>
           </AlertDialogFooter>

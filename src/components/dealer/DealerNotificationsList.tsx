@@ -241,7 +241,7 @@ const DealerNotificationsList = ({ userId, onNavigate }: { userId: string; onNav
         <h2 className="text-lg font-bold text-foreground">الإشعارات ({filteredNotifications.length})</h2>
         {unreadCount > 0 && (
           <Button variant="ghost" size="sm" onClick={markAllRead} className="text-xs text-primary">
-            <CheckCheck className="w-3.5 h-3.5 ml-1" />
+            <CheckCheck className="w-3.5 h-3.5 ms-1" />
             تحديد الكل كمقروء
           </Button>
         )}
@@ -312,7 +312,7 @@ const DealerNotificationsList = ({ userId, onNavigate }: { userId: string; onNav
                   }
                 }}
                 className={cn(
-                  "w-full text-right rounded-lg border p-3.5 transition-all cursor-pointer hover:bg-muted/30",
+                  "w-full text-end rounded-lg border p-3.5 transition-all cursor-pointer hover:bg-muted/30",
                   isContact && !n.is_read
                     ? "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-400 dark:border-emerald-700 shadow-md"
                     : isOrderEdit && !n.is_read

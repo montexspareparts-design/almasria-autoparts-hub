@@ -171,7 +171,7 @@ const DealerShoppingLists = () => {
           {lists.map(list => (
             <motion.div key={list.id} layout>
               <Card className="border-border/40 rounded-2xl overflow-hidden">
-                <button onClick={() => setExpandedList(expandedList === list.id ? null : list.id)} className="w-full text-right">
+                <button onClick={() => setExpandedList(expandedList === list.id ? null : list.id)} className="w-full text-end">
                   <CardContent className="p-4 flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center shrink-0">
                       <ListPlus className="w-5 h-5 text-violet-600" />

@@ -224,7 +224,7 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
                         <span className="truncate">{item.label}</span>
 
                         {(item.badge || 0) > 0 && (
-                          <span className="mr-auto bg-primary text-primary-foreground text-[9px] font-bold rounded-md min-w-[20px] h-5 flex items-center justify-center px-1.5">
+                          <span className="me-auto bg-primary text-primary-foreground text-[9px] font-bold rounded-md min-w-[20px] h-5 flex items-center justify-center px-1.5">
                             {item.badge}
                           </span>
                         )}

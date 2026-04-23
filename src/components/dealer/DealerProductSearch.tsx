@@ -207,7 +207,7 @@ const DealerProductSearch = ({ onNavigateToOrders, onNavigateToCart, sharedCart 
                     {cart.itemCount}
                   </Badge>
                 </div>
-                <div className="text-right min-w-0">
+                <div className="text-end min-w-0">
                   <p className="text-sm font-black leading-tight">أكمل الطلبية</p>
                   <p className="text-[11px] opacity-85 mt-0.5">
                     {cart.items.length} صنف · {cart.itemCount} قطعة
@@ -215,7 +215,7 @@ const DealerProductSearch = ({ onNavigateToOrders, onNavigateToCart, sharedCart 
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <div className="text-left">
+                <div className="text-start">
                   <p className="text-[10px] opacity-75 leading-none mb-0.5">إجمالي</p>
                   <p className="text-sm font-black tabular-nums">
                     {cart.items.reduce((s: number, i: any) => s + i.product.base_price * i.quantity, 0).toLocaleString("ar-EG")} ج.م

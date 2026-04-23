@@ -231,7 +231,7 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount, on
               <div className="bg-gradient-to-r from-violet-600 to-violet-700 p-5 text-white text-center">
                 <p className="text-xs opacity-80 mb-1">المبلغ المطلوب تحويله</p>
                 {targetOrderAmount != null && targetOrderAmount > 0 && (
-                  <div dir="ltr"><span className="text-3xl font-black">{targetOrderAmount.toLocaleString("ar-EG")}</span><span className="text-sm opacity-70 mr-1">ج.م</span></div>
+                  <div dir="ltr"><span className="text-3xl font-black">{targetOrderAmount.toLocaleString("ar-EG")}</span><span className="text-sm opacity-70 me-1">ج.م</span></div>
                 )}
               </div>
               {/* InstaPay address */}
@@ -361,7 +361,7 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount, on
                 transition={{ delay: i * 0.05 }}
                 whileTap={{ scale: 0.96 }}
                 onClick={() => setSelectedMethod(method.id)}
-                className={`relative text-right p-4 rounded-2xl border-2 transition-all duration-200 ${
+                className={`relative text-end p-4 rounded-2xl border-2 transition-all duration-200 ${
                   isSelected
                     ? "border-primary bg-primary/[0.04] shadow-sm"
                     : "border-border/60 bg-card hover:border-border"
@@ -426,7 +426,7 @@ const DealerPayment = ({ targetOrderId, targetOrderNumber, targetOrderAmount, on
               <Lock className="w-4 h-4" />
               {selectedMethod === "instapay" ? "متابعة التحويل" : "ادفع الآن"}
               {targetOrderAmount != null && targetOrderAmount > 0 && (
-                <span className="text-primary-foreground/60 text-sm font-normal mr-1">
+                <span className="text-primary-foreground/60 text-sm font-normal me-1">
                   ({targetOrderAmount.toLocaleString("ar-EG")} ج.م)
                 </span>
               )}

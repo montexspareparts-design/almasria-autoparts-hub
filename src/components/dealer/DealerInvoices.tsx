@@ -392,7 +392,7 @@ const DealerInvoices = ({ userId }: { userId: string }) => {
                       </div>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
-                      <div className="text-left space-y-1">
+                      <div className="text-start space-y-1">
                         <p className="font-bold text-foreground text-sm">{Number(inv.total_amount).toLocaleString("ar-EG")} ج.م</p>
                         <Badge variant="secondary" className={`text-[10px] h-5 border-0 ${st.color}`}>
                           {st.label}

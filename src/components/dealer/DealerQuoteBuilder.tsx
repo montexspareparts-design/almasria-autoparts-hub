@@ -577,7 +577,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
               placeholder="ابحث بالاسم أو رقم القطعة لإضافة صنف..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pr-10 h-11 text-sm bg-card"
+              className="pe-10 h-11 text-sm bg-card"
               disabled={remainingViews === 0}
             />
             {searchQuery && (
@@ -604,9 +604,9 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
             return (
               <div
                 key={product.id}
-                className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted transition-colors text-right"
+                className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted transition-colors text-end"
               >
-                <button onClick={() => addToQuote(product)} className="flex items-center gap-3 flex-1 min-w-0 text-right">
+                <button onClick={() => addToQuote(product)} className="flex items-center gap-3 flex-1 min-w-0 text-end">
                   {product.image_url ? (
                     <LazyImage
                       src={product.image_url}
@@ -711,7 +711,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
                 </div>
 
                 {/* Line Total */}
-                <p className="text-sm font-bold text-foreground shrink-0 w-20 sm:w-24 text-left">
+                <p className="text-sm font-bold text-foreground shrink-0 w-20 sm:w-24 text-start">
                   {(item.unit_price * item.quantity).toLocaleString("ar-EG")} ج.م
                 </p>
               </div>
@@ -739,7 +739,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
               <Button variant="outline" onClick={downloadPDF} disabled={saving} className="h-10">
-                <Download className="w-4 h-4 ml-1.5" />
+                <Download className="w-4 h-4 ms-1.5" />
                 تحميل PDF
               </Button>
               <Button
@@ -747,7 +747,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
                 className="h-10 border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/10"
                 onClick={() => shareQuoteWhatsApp(buildQuoteData())}
               >
-                <MessageCircle className="w-4 h-4 ml-1.5" />
+                <MessageCircle className="w-4 h-4 ms-1.5" />
                 واتساب
               </Button>
               <Button
@@ -755,15 +755,15 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
                 className="h-10 border-blue-400/30 text-blue-600 hover:bg-blue-500/10"
                 onClick={() => shareQuoteEmail(buildQuoteData())}
               >
-                <Mail className="w-4 h-4 ml-1.5" />
+                <Mail className="w-4 h-4 ms-1.5" />
                 إيميل
               </Button>
               <Button variant="secondary" onClick={saveQuote} disabled={saving} className="h-10">
-                {saving ? <Loader2 className="w-4 h-4 ml-1.5 animate-spin" /> : <Save className="w-4 h-4 ml-1.5" />}
+                {saving ? <Loader2 className="w-4 h-4 ms-1.5 animate-spin" /> : <Save className="w-4 h-4 ms-1.5" />}
                 {editingQuoteId ? "تحديث" : "حفظ"}
               </Button>
               <Button onClick={convertToOrder} disabled={saving || !pickupBranch} className="h-10 bg-primary hover:bg-primary/90">
-                {saving ? <Loader2 className="w-4 h-4 ml-1.5 animate-spin" /> : <ShoppingCart className="w-4 h-4 ml-1.5" />}
+                {saving ? <Loader2 className="w-4 h-4 ms-1.5 animate-spin" /> : <ShoppingCart className="w-4 h-4 ms-1.5" />}
                 تحويل لطلب
               </Button>
             </div>
@@ -791,7 +791,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
           className="h-9 shrink-0"
           onClick={() => { setActiveView("today"); fetchTodayPricedItems(); }}
         >
-          <Eye className="w-4 h-4 ml-1.5" />
+          <Eye className="w-4 h-4 ms-1.5" />
           تم تسعيرها اليوم ({todayItems.length})
         </Button>
         <Button
@@ -807,7 +807,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
             setNotes("");
           }}
         >
-          <FileText className="w-4 h-4 ml-1.5" />
+          <FileText className="w-4 h-4 ms-1.5" />
           {editingQuoteId ? `تعديل عرض` : "إنشاء عرض سعر"}
         </Button>
         <Button
@@ -816,7 +816,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
           className="h-9 shrink-0"
           onClick={() => setActiveView("saved")}
         >
-          <Save className="w-4 h-4 ml-1.5" />
+          <Save className="w-4 h-4 ms-1.5" />
           المحفوظة ({savedQuotes.length})
         </Button>
       </div>
@@ -904,7 +904,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
                         generateQuotePdf(data);
                       }}
                     >
-                      <Download className="w-4 h-4 ml-1.5" />
+                      <Download className="w-4 h-4 ms-1.5" />
                       تحميل PDF
                     </Button>
                     <Button
@@ -919,7 +919,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
                         });
                       }}
                     >
-                      <MessageCircle className="w-4 h-4 ml-1.5" />
+                      <MessageCircle className="w-4 h-4 ms-1.5" />
                       واتساب
                     </Button>
                     <Button
@@ -931,7 +931,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
                         toast({ title: "✅", description: "تم نقل الأصناف لمنشئ عرض الأسعار" });
                       }}
                     >
-                      <Edit3 className="w-4 h-4 ml-1.5" />
+                      <Edit3 className="w-4 h-4 ms-1.5" />
                       تعديل كعرض
                     </Button>
                     <Button
@@ -968,7 +968,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
                       }}
                       disabled={saving || todayItems.every(i => i.product.stock_quantity === 0) || !pickupBranch}
                     >
-                      {saving ? <Loader2 className="w-4 h-4 ml-1.5 animate-spin" /> : <ShoppingCart className="w-4 h-4 ml-1.5" />}
+                      {saving ? <Loader2 className="w-4 h-4 ms-1.5 animate-spin" /> : <ShoppingCart className="w-4 h-4 ms-1.5" />}
                       تحويل لطلب
                     </Button>
                   </div>
@@ -1030,7 +1030,7 @@ const DealerQuoteBuilder = ({ onNavigateToPriceLists }: DealerQuoteBuilderProps)
 
                     {/* Notes preview */}
                     {q.notes && (
-                      <p className="text-[11px] text-muted-foreground/70 truncate mb-3 pr-11">{q.notes}</p>
+                      <p className="text-[11px] text-muted-foreground/70 truncate mb-3 pe-11">{q.notes}</p>
                     )}
 
                     {/* Bottom row: total + actions */}

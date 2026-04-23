@@ -359,7 +359,7 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="w-6 h-6 animate-spin text-primary" />
-        <span className="text-sm text-muted-foreground mr-2">جاري التحميل...</span>
+        <span className="text-sm text-muted-foreground me-2">جاري التحميل...</span>
       </div>
     );
   }
@@ -396,7 +396,7 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
               onChange={(e) => handleSearch(e.target.value)}
               onFocus={() => setShowSearch(true)}
               placeholder="ابحث عن صنف بالاسم أو رقم القطعة لإضافته..."
-              className="pr-10 pl-10 h-11 text-sm bg-muted/30 border-border/50 rounded-xl"
+              className="pe-10 ps-10 h-11 text-sm bg-muted/30 border-border/50 rounded-xl"
             />
             {searchQuery && (
               <button
@@ -436,7 +436,7 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
                         {/* Product info - clickable for details */}
                         <button
                           onClick={() => setDetailProduct(product)}
-                          className="flex-1 min-w-0 text-right"
+                          className="flex-1 min-w-0 text-end"
                         >
                           <p className="text-sm font-bold text-foreground truncate leading-tight">{product.name_ar}</p>
                           <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
@@ -559,7 +559,7 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
                     </div>
 
                     {/* Total + Remove */}
-                    <div className="text-left shrink-0 flex items-center gap-2">
+                    <div className="text-start shrink-0 flex items-center gap-2">
                       <motion.p
                         key={price * item.quantity}
                         initial={{ scale: 1.15 }}

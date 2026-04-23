@@ -128,9 +128,9 @@ const DealerFavorites = () => {
                       disabled={addingToOrder === product.id}
                     >
                       {addingToOrder === product.id ? (
-                        <Loader2 className="w-3.5 h-3.5 ml-1 animate-spin" />
+                        <Loader2 className="w-3.5 h-3.5 ms-1 animate-spin" />
                       ) : (
-                        <ShoppingCart className="w-3.5 h-3.5 ml-1" />
+                        <ShoppingCart className="w-3.5 h-3.5 ms-1" />
                       )}
                       طلب سريع
                     </Button>
