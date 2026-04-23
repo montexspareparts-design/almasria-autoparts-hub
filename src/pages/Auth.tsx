@@ -279,7 +279,7 @@ const Auth = () => {
                 <div className="space-y-1.5 sm:space-y-2">
                   <Label className="text-[11px] sm:text-xs font-semibold text-foreground/80">الاسم الكامل <span className="text-primary">*</span></Label>
                   <div className="relative">
-                    <Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="الاسم الكامل" required className="bg-muted/40 border-border/40 h-11 sm:h-11 pr-10 focus:border-primary/50 focus:ring-primary/20 transition-all" />
+                    <Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="الاسم الكامل" required autoComplete="name" style={{ fontSize: '16px' }} className="bg-muted/40 border-border/40 h-11 sm:h-11 pr-10 text-base focus:border-primary/50 focus:ring-primary/20 transition-all touch-manipulation" />
                     <User className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30" />
                   </div>
                 </div>
@@ -298,7 +298,8 @@ const Auth = () => {
                     dir="ltr" 
                     inputMode={isLogin && loginMethod === "phone" ? "tel" : "text"}
                     autoComplete={isLogin && loginMethod === "phone" ? "tel" : "email"}
-                    className="bg-muted/40 border-border/40 h-11 pl-10 focus:border-primary/50 focus:ring-primary/20 transition-all" 
+                    style={{ fontSize: '16px' }}
+                    className="bg-muted/40 border-border/40 h-11 pl-10 text-base focus:border-primary/50 focus:ring-primary/20 transition-all touch-manipulation" 
                   />
                   {(isLogin ? loginMethod === "phone" : credIsPhone) ? (
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30" />
@@ -311,7 +312,7 @@ const Auth = () => {
               <div className="space-y-1.5 sm:space-y-2">
                 <Label className="text-[11px] sm:text-xs font-semibold text-foreground/80 text-right block">كلمة المرور <span className="text-primary">*</span></Label>
                 <div className="relative">
-                  <Input type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="أدخل كلمة المرور" required minLength={6} dir="ltr" autoComplete={isLogin ? "current-password" : "new-password"} className="bg-muted/40 border-border/40 h-11 pl-10 focus:border-primary/50 focus:ring-primary/20 transition-all" />
+                  <Input type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="أدخل كلمة المرور" required minLength={6} dir="ltr" autoComplete={isLogin ? "current-password" : "new-password"} style={{ fontSize: '16px' }} className="bg-muted/40 border-border/40 h-11 pl-10 text-base focus:border-primary/50 focus:ring-primary/20 transition-all touch-manipulation" />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/30 hover:text-muted-foreground transition-colors p-1 -m-1">
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -322,7 +323,7 @@ const Auth = () => {
                 <div className="space-y-1.5 sm:space-y-2">
                   <Label className="text-[11px] sm:text-xs font-semibold text-foreground/80">العنوان <span className="text-muted-foreground/50 text-[10px]">(اختياري)</span></Label>
                   <div className="relative">
-                    <Input value={address} onChange={e => setAddress(e.target.value)} placeholder="المحافظة — العنوان التفصيلي" className="bg-muted/40 border-border/40 h-11 pr-10 focus:border-primary/50 focus:ring-primary/20 transition-all" />
+                    <Input value={address} onChange={e => setAddress(e.target.value)} placeholder="المحافظة — العنوان التفصيلي" autoComplete="street-address" style={{ fontSize: '16px' }} className="bg-muted/40 border-border/40 h-11 pr-10 text-base focus:border-primary/50 focus:ring-primary/20 transition-all touch-manipulation" />
                     <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30" />
                   </div>
                 </div>
