@@ -177,7 +177,7 @@ const Auth = () => {
 
   return (
     <div
-      className="min-h-[100svh] w-full max-w-[100vw] relative flex items-center justify-center px-3 py-5 sm:px-4 sm:py-8 md:py-12 overflow-x-hidden"
+      className="auth-page min-h-[100svh] w-full max-w-[100vw] relative flex items-center justify-center px-3 py-5 sm:px-4 sm:py-8 md:py-12 overflow-x-hidden"
       style={{ overflowX: "clip" }}
       dir="rtl"
     >
