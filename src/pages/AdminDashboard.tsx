@@ -699,6 +699,8 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><StaffAccountSettings /></Suspense>;
       case "translations":
         return <Suspense fallback={<SectionLoader />}><AdminTranslations /></Suspense>;
+      case "seo-preview":
+        return <Suspense fallback={<SectionLoader />}><AdminSEOPreview /></Suspense>;
       default:
         return <Suspense fallback={<SectionLoader />}><AdminAnalytics /></Suspense>;
     }
