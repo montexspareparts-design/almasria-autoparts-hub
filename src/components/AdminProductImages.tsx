@@ -463,7 +463,7 @@ const AdminProductImages = () => {
         </div>
 
         {/* Bulk Search Button */}
-        <div className="mb-4 flex items-center gap-3">
+        <div className="mb-4 flex flex-col gap-2">
           {bulkSearching ? (
             <div className="flex items-center gap-3 w-full bg-muted/50 rounded-lg p-3">
               <Loader2 className="w-4 h-4 animate-spin text-primary shrink-0" />
@@ -485,11 +485,45 @@ const AdminProductImages = () => {
                 إيقاف
               </Button>
             </div>
+          ) : aiMatching ? (
+            <div className="flex items-center gap-3 w-full bg-primary/10 border border-primary/30 rounded-lg p-3">
+              <Loader2 className="w-4 h-4 animate-spin text-primary shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-muted-foreground">
+                    🤖 فحص ذكي: {aiProgress.scanned}/{aiProgress.total || "..."} صورة
+                  </span>
+                  <span className="text-primary font-semibold">
+                    ✅ تم ربط {aiProgress.applied} • محتمل {aiProgress.candidates}
+                  </span>
+                </div>
+                <div className="w-full bg-border rounded-full h-1.5">
+                  <div
+                    className="bg-primary h-1.5 rounded-full transition-all"
+                    style={{ width: aiProgress.total ? `${(aiProgress.scanned / aiProgress.total) * 100}%` : "5%" }}
+                  />
+                </div>
+              </div>
+              <Button variant="destructive" size="sm" onClick={handleStopAi} className="shrink-0 text-xs">
+                إيقاف
+              </Button>
+            </div>
           ) : (
-            <Button variant="outline" className="gap-2" onClick={handleBulkSearch}>
-              <Wand2 className="w-4 h-4" />
-              بحث تلقائي مجمّع (كل المنتجات بدون صور)
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" className="gap-2" onClick={handleBulkSearch}>
+                <Wand2 className="w-4 h-4" />
+                بحث تلقائي مجمّع
+              </Button>
+              <Button
+                variant="default"
+                className="gap-2 bg-primary hover:bg-primary/90"
+                onClick={handleAiMatchAll}
+                title="يفحص كل صور Storage بالذكاء الاصطناعي ويطابق البارت نمبر بدقة 100%"
+              >
+                <Wand2 className="w-4 h-4" />
+                🤖 مطابقة الصور بالـ AI (تطابق 100%)
+              </Button>
+            </div>
           )}
         </div>
 
