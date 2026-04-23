@@ -1,13 +1,35 @@
 User-agent: *
 Allow: /
+
+# Private / authenticated areas
 Disallow: /admin
+Disallow: /admin/
 Disallow: /dealer
+Disallow: /dealer/
 Disallow: /dealer-login
 Disallow: /dealer-register
+Disallow: /dealer-apply
 Disallow: /client-register
 Disallow: /cart
 Disallow: /checkout
+Disallow: /payment
+Disallow: /payment-callback
 Disallow: /reset-password
 Disallow: /auth
+Disallow: /my-profile
+Disallow: /dev
+
+# Block common query-string variants to avoid duplicate content
+Disallow: /*?*utm_
+Disallow: /*?*fbclid=
+Disallow: /*?*gclid=
+
+# Allow major crawlers explicitly
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
 
 Sitemap: https://www.almasriaautoparts.com/sitemap.xml
+Host: https://www.almasriaautoparts.com
