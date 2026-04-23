@@ -14,41 +14,41 @@ interface RouteMeta {
 const ROUTE_META: Record<string, RouteMeta> = {
   "/": {
     ar: {
-      title: "المصرية جروب | موزع معتمد لقطع غيار تويوتا الأصلية والزيوت في مصر",
+      title: "المصرية جروب | موزع تويوتا الأصلية والزيوت في مصر",
       description: "موزع معتمد رسمي لقطع غيار وزيوت تويوتا الأصلية في مصر منذ 1999. شبكة توزيع تغطي جميع المحافظات وتسليم خلال 48 ساعة.",
     },
     en: {
-      title: "Al Masria Group | Authorized Toyota Genuine Parts & Oils Distributor in Egypt",
+      title: "Al Masria Group | Toyota Genuine Parts & Oils Egypt",
       description: "Official authorized distributor of Toyota genuine parts and oils in Egypt since 1999. Nationwide distribution network with 48-hour delivery.",
     },
   },
   "/about": {
     ar: { title: "من نحن | المصرية جروب — موزع تويوتا المعتمد منذ 1999", description: "تعرف على المصرية جروب، الموزع المعتمد لقطع غيار وزيوت تويوتا الأصلية في مصر. خبرة 25 عامًا، فروع في مصر ودبي، شبكة توزيع وطنية." },
-    en: { title: "About Us | Al Masria Group — Authorized Toyota Distributor Since 1999", description: "Learn about Al Masria Group, the authorized distributor of Toyota genuine parts and oils in Egypt. 25 years of experience, offices in Egypt and Dubai." },
+    en: { title: "About Al Masria Group — Toyota Distributor Since 1999", description: "Learn about Al Masria Group, the authorized distributor of Toyota genuine parts and oils in Egypt. 25 years of experience, offices in Egypt and Dubai." },
   },
   "/products": {
-    ar: { title: "منتجاتنا | قطع غيار تويوتا الأصلية وزيوت وMTX — المصرية جروب", description: "تصفح كتالوج قطع غيار تويوتا الأصلية، الزيوت، وقطع MTX البديلة بأسعار الجملة وضمان الجودة." },
-    en: { title: "Our Products | Toyota Genuine Parts, Oils & MTX — Al Masria Group", description: "Browse our catalog of Toyota genuine parts, oils, and MTX aftermarket parts at wholesale prices with quality guarantee." },
+    ar: { title: "منتجاتنا | قطع غيار تويوتا الأصلية وزيوت وMTX", description: "تصفح كتالوج قطع غيار تويوتا الأصلية، الزيوت، وقطع MTX البديلة بأسعار الجملة وضمان الجودة." },
+    en: { title: "Toyota Genuine Parts, Oils & MTX | Al Masria Group", description: "Browse our catalog of Toyota genuine parts, oils, and MTX aftermarket parts at wholesale prices with quality guarantee." },
   },
   "/contact": {
-    ar: { title: "اتصل بنا | المصرية جروب — فروع وأرقام تواصل قطع غيار تويوتا", description: "تواصل مع المصرية جروب — فروع التوفيقية وأوسيم والأقصر ودبي. مبيعات وخدمة عملاء على مدار الأسبوع." },
-    en: { title: "Contact Us | Al Masria Group — Toyota Parts Branches & Phone Numbers", description: "Contact Al Masria Group — branches in Tawfikiya, Awsim, Luxor, and Dubai. Sales and customer service available." },
+    ar: { title: "اتصل بنا | المصرية جروب — فروع تويوتا في مصر", description: "تواصل مع المصرية جروب — فروع التوفيقية وأوسيم والأقصر ودبي. مبيعات وخدمة عملاء على مدار الأسبوع." },
+    en: { title: "Contact Al Masria Group | Toyota Parts Branches Egypt", description: "Contact Al Masria Group — branches in Tawfikiya, Awsim, Luxor, and Dubai. Sales and customer service available." },
   },
   "/mtx": {
-    ar: { title: "قطع غيار MTX | البديل المضمون لقطع غيار تويوتا — المصرية جروب", description: "قطع غيار MTX Aftermarket بجودة تضاهي الأصلية وأسعار اقتصادية. علامتنا التجارية الحصرية." },
-    en: { title: "MTX Parts | Premium Aftermarket Toyota Parts — Al Masria Group", description: "MTX aftermarket parts with OEM-matching quality and competitive pricing. Our exclusive brand." },
+    ar: { title: "قطع غيار MTX | البديل المضمون لتويوتا في مصر", description: "قطع غيار MTX Aftermarket بجودة تضاهي الأصلية وأسعار اقتصادية. علامتنا التجارية الحصرية لسيارات تويوتا في مصر." },
+    en: { title: "MTX Parts | Premium Aftermarket Toyota Parts", description: "MTX aftermarket parts with OEM-matching quality and competitive pricing. Our exclusive brand by Al Masria Group." },
   },
   "/toyota-genuine-parts-egypt": {
-    ar: { title: "قطع غيار تويوتا الأصلية في مصر | الموزع المعتمد — المصرية جروب", description: "قطع غيار تويوتا الأصلية 100٪ بضمان المصنع لجميع موديلات تويوتا في مصر. توصيل سريع لجميع المحافظات." },
-    en: { title: "Toyota Genuine Parts in Egypt | Authorized Distributor — Al Masria Group", description: "100% genuine Toyota parts with factory warranty for all Toyota models in Egypt. Fast delivery nationwide." },
+    ar: { title: "قطع غيار تويوتا الأصلية في مصر | موزع معتمد", description: "قطع غيار تويوتا الأصلية 100٪ بضمان المصنع لجميع موديلات تويوتا في مصر. توصيل سريع لجميع المحافظات." },
+    en: { title: "Toyota Genuine Parts Egypt | Authorized Distributor", description: "100% genuine Toyota parts with factory warranty for all Toyota models in Egypt. Fast delivery nationwide." },
   },
   "/catalogs": {
-    ar: { title: "كشوفات الأسعار | قطع غيار تويوتا والزيوت — المصرية جروب", description: "تحميل كشوفات أسعار قطع غيار تويوتا الأصلية والزيوت وMTX المحدثة." },
+    ar: { title: "كشوفات الأسعار | قطع غيار تويوتا والزيوت — المصرية جروب", description: "تحميل كشوفات أسعار قطع غيار تويوتا الأصلية والزيوت وMTX المحدثة من المصرية جروب — موزع معتمد." },
     en: { title: "Price Catalogs | Toyota Parts & Oils — Al Masria Group", description: "Download up-to-date price catalogs for Toyota genuine parts, oils, and MTX." },
   },
   "/what-sets-us-apart": {
     ar: { title: "ما يميزنا | لماذا تختار المصرية جروب لقطع غيار تويوتا", description: "اكتشف ما يميز المصرية جروب: شبكة توزيع وطنية، ضمان أصلي، ودعم فني متخصص." },
-    en: { title: "What Sets Us Apart | Why Choose Al Masria Group for Toyota Parts", description: "Discover what sets Al Masria Group apart: nationwide distribution, genuine warranty, and expert technical support." },
+    en: { title: "What Sets Us Apart | Al Masria Group Toyota", description: "Discover what sets Al Masria Group apart: nationwide distribution, genuine warranty, and expert technical support." },
   },
   "/policies": {
     ar: { title: "السياسات والشروط | المصرية جروب", description: "الشروط والأحكام، سياسة الخصوصية، الشحن، والاسترجاع لخدمات المصرية جروب." },
@@ -76,10 +76,10 @@ const ROUTE_META: Record<string, RouteMeta> = {
   },
   "/clients": {
     ar: { title: "خدمات المصرية جروب لكل عميل | تجار، شركات، أساطيل", description: "حلول قطع غيار تويوتا المتخصصة لتجار التجزئة والجملة، شركات السيارات، إدارات الأساطيل، ومراكز الخدمة." },
-    en: { title: "Al Masria Group Services for Every Client | Dealers, Companies, Fleets", description: "Specialized Toyota parts solutions for retail and wholesale dealers, automotive companies, fleet management, and service centers." },
+    en: { title: "Al Masria Group Services | Dealers, Companies, Fleets", description: "Specialized Toyota parts solutions for retail and wholesale dealers, automotive companies, fleet management, and service centers." },
   },
   "/track-order": {
-    ar: { title: "تتبع طلبك | المصرية جروب", description: "تتبع حالة طلب قطع الغيار من المصرية جروب برقم الطلب — تحديثات فورية لكل مرحلة." },
+    ar: { title: "تتبع طلبك | المصرية جروب لقطع غيار تويوتا", description: "تتبع حالة طلب قطع الغيار من المصرية جروب برقم الطلب — تحديثات فورية لكل مرحلة." },
     en: { title: "Track Your Order | Al Masria Group", description: "Track your Al Masria Group parts order status by order number — instant updates at every stage." },
   },
 };
