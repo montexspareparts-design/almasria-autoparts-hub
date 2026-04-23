@@ -194,7 +194,7 @@ const DealerProductSearch = ({ onNavigateToOrders, onNavigateToCart, sharedCart 
             initial={{ y: 80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 80, opacity: 0 }}
-            className="fixed bottom-20 lg:bottom-6 left-1/2 -translate-x-1/2 z-50 w-[95vw] max-w-[520px]"
+            className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom)+0.5rem)] lg:bottom-6 left-1/2 -translate-x-1/2 z-40 w-[94vw] max-w-[520px] px-2"
           >
             <button
               onClick={onNavigateToCart}
