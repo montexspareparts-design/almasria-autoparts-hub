@@ -195,6 +195,21 @@
   video::--ms-media-controls {
     display: none !important;
   }
+
+  /* Disable all animations/transitions on /auth on mobile to eliminate flicker */
+  @media (max-width: 767px) {
+    .auth-page,
+    .auth-page *,
+    .auth-page *::before,
+    .auth-page *::after {
+      animation: none !important;
+      transition: none !important;
+      animation-duration: 0s !important;
+      animation-delay: 0s !important;
+      transition-duration: 0s !important;
+      transition-delay: 0s !important;
+    }
+  }
 }
 
 @keyframes float-particle {
