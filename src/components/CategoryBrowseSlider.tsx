@@ -56,7 +56,7 @@ interface CategoryBrowseSliderProps {
   activeCategoryId?: string | null;
 }
 
-const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) => {
+const CategoryBrowseSlider = ({ onCategorySelect, activeCategoryId }: CategoryBrowseSliderProps) => {
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
