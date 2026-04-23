@@ -3,6 +3,12 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import {
+  scanProjectForLegacyClasses,
+  buildEditorLink,
+  type LegacyFileReport,
+} from "@/lib/devLegacyClassScan";
 import {
   ChevronLeft,
   ChevronRight,
@@ -13,6 +19,10 @@ import {
   Languages,
   CheckCircle2,
   AlertTriangle,
+  ChevronDown,
+  ExternalLink,
+  Copy,
+  FileWarning,
 } from "lucide-react";
 
 /* ───────────────────────── Check definitions ───────────────────────── */
