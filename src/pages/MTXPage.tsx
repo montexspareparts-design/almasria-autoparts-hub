@@ -223,9 +223,9 @@ const MTXPage = () => {
             <h2 className="text-3xl md:text-4xl font-black text-foreground mb-3">من يخدمهم <span className="text-primary">MTX</span>؟</h2>
             <motion.div initial={{ width: 0 }} whileInView={{ width: "4rem" }} viewport={{ once: true }} transition={{ duration: 0.8, delay: 0.3 }} className="h-1 bg-primary mx-auto rounded-full" />
           </motion.div>
-          <div className="flex flex-wrap justify-center gap-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 sm:gap-8 max-w-4xl mx-auto">
             {audiences.map((a, i) => (
-              <motion.div key={a.label} {...fadeUp} transition={{ ...stagger(i), duration: 0.5 }} className="flex flex-col items-center gap-4 text-center w-[calc(33.333%-2rem)] min-w-[160px]">
+              <motion.div key={a.label} {...fadeUp} transition={{ ...stagger(i), duration: 0.5 }} className="flex flex-col items-center gap-4 text-center w-full">
                 <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/15 flex items-center justify-center"><a.icon className="w-8 h-8 text-primary" /></div>
                 <h3 className="font-bold text-foreground text-sm">{a.label}</h3>
               </motion.div>
