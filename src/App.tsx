@@ -44,6 +44,9 @@ const PoliciesPage = lazy(() => import("./pages/PoliciesPage"));
 const MyProfilePage = lazy(() => import("./pages/MyProfilePage"));
 const TrackOrderPage = lazy(() => import("./pages/TrackOrderPage"));
 const DevDealerPreview = lazy(() => import("./pages/DevDealerPreview"));
+const DealerRtlAuditor = import.meta.env.DEV
+  ? lazy(() => import("./components/dealer/DealerRtlAuditor"))
+  : null;
 const queryClient = new QueryClient();
 
 const PageLoader = () => (
@@ -80,6 +83,11 @@ const App = () => (
               <DeferredComponent delay={2000}><InstallBannerLazy /></DeferredComponent>
               <DeferredComponent delay={4000}><AIChatBot /></DeferredComponent>
               <DeferredComponent delay={2500}><WhatsAppFloat /></DeferredComponent>
+              {DealerRtlAuditor && (
+                <Suspense fallback={null}>
+                  <DealerRtlAuditor />
+                </Suspense>
+              )}
                <Suspense fallback={<PageLoader />}>
                   <Routes>
                     <Route path="/" element={<Index />} />
