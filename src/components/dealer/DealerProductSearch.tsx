@@ -172,6 +172,7 @@ const DealerProductSearch = ({ onNavigateToOrders, onNavigateToCart, sharedCart 
             <CategoryBrowseSlider
               onCategorySelect={handleCategorySelect}
               activeCategoryId={activeCategoryId}
+              pendingCategoryId={pendingCategoryId}
             />
             <div ref={productsAnchorRef} aria-hidden className="scroll-mt-24" />
           </>
