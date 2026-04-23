@@ -1,5 +1,6 @@
 import { memo, useState, useCallback } from "react";
 import { Package, Lock, Eye, ShoppingCart, Check, Sparkles, Bell, BellOff } from "lucide-react";
+import { LazyImage } from "@/components/ui/lazy-image";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -61,11 +62,12 @@ const ProductCard = memo(({
           <div className="absolute inset-0 bg-gradient-to-br from-white via-white to-muted/10" />
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out z-10 pointer-events-none" />
           {product.image_url ? (
-            <img
+            <LazyImage
               src={product.image_url}
               alt={product.name_ar}
+              wrapperClassName="w-full h-full"
               className="w-full h-full object-contain mix-blend-multiply relative z-[1] group-hover:scale-110 transition-transform duration-700"
-              loading="lazy"
+              optimizeWidth={200}
             />
           ) : (
             <Package className="w-10 h-10 text-muted-foreground/10 relative z-[1]" />
@@ -150,12 +152,12 @@ const ProductCard = memo(({
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-[200%] group-hover:translate-x-[200%] transition-transform duration-[1.4s] ease-in-out z-10 pointer-events-none" />
 
         {product.image_url ? (
-          <img
+          <LazyImage
             src={product.image_url}
             alt={product.name_ar}
-            className="w-full h-full object-contain p-2 sm:p-6
-              group-hover:scale-[1.06] transition-transform duration-[800ms] ease-[cubic-bezier(0.23,1,0.32,1)]"
-            loading="lazy"
+            wrapperClassName="w-full h-full"
+            className="w-full h-full object-contain p-2 sm:p-6 group-hover:scale-[1.06] transition-transform duration-[800ms] ease-[cubic-bezier(0.23,1,0.32,1)]"
+            optimizeWidth={400}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
