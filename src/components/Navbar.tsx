@@ -51,6 +51,24 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsOpen(false);
+  }, [location.pathname, location.search, location.hash]);
+
+  // Lock body scroll + Escape to close while menu is open
+  useEffect(() => {
+    if (!isOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setIsOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [isOpen]);
+
   useEffect(() => {
     if (location.pathname !== "/") return;
     const sectionIds = ["hero", "brands", "distribution"];
@@ -166,6 +184,8 @@ const Navbar = () => {
           <button
             className="lg:hidden text-secondary-foreground p-2.5 -ml-2 relative z-10 touch-manipulation"
             onClick={() => setIsOpen(!isOpen)}
+            aria-label={isOpen ? "إغلاق القائمة" : "فتح القائمة"}
+            aria-expanded={isOpen}
           >
             {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -335,16 +355,30 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu — backdrop + scrollable panel */}
         <AnimatePresence>
           {isOpen && (
-            <motion.div
-              className="lg:hidden pb-4 border-t border-secondary-foreground/10 px-1 overflow-hidden"
-              variants={mobileMenuVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-            >
+            <>
+              {/* Backdrop overlay (click outside to close) */}
+              <motion.div
+                key="nav-backdrop"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="lg:hidden fixed inset-0 top-14 bg-black/50 backdrop-blur-sm -z-[1]"
+                onClick={() => setIsOpen(false)}
+                aria-hidden="true"
+              />
+              <motion.div
+                key="nav-panel"
+                className="lg:hidden pb-4 border-t border-secondary-foreground/10 px-1 overflow-y-auto overscroll-contain bg-secondary"
+                style={{ maxHeight: "calc(100dvh - 3.5rem)" }}
+                variants={mobileMenuVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+              >
               {links.map((link, i) => {
                 const active = isLinkActive(link.href, link.isRoute);
                 if (link.isRoute) {
@@ -436,6 +470,7 @@ const Navbar = () => {
                 )}
               </motion.div>
             </motion.div>
+            </>
           )}
         </AnimatePresence>
       </div>
