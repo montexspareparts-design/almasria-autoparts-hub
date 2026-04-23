@@ -249,8 +249,8 @@ const DealerDashboard = () => {
           unreadCount={unreadCount}
           cartItemCount={cartItemCount}
         />
-        <main className="flex-1 overflow-y-auto pb-20 lg:pb-6">
-          <div className="p-4 md:p-6 lg:p-8 max-w-7xl">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden pb-20 lg:pb-6">
+          <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto w-full">
             <Suspense fallback={<div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>}>
               {renderContent()}
             </Suspense>
