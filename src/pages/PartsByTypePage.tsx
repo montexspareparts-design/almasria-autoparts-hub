@@ -17,6 +17,9 @@ interface PartTypeData {
   intro: string;
   compatibleModels: string[];
   commonParts: { name: string; description: string }[];
+  seoTitle: string;
+  seoDescription: string;
+  keywords: string;
 }
 
 const partTypes: PartTypeData[] = [
