@@ -167,12 +167,15 @@ const PartRequestForm = ({ defaultModel, compact }: PartRequestFormProps) => {
         </div>
         <h3 className="text-xl font-bold text-foreground mb-2">تم استلام طلبك بنجاح ✓</h3>
         <p className="text-muted-foreground text-sm mb-6">فريقنا سيتواصل معك خلال ساعات عمل قليلة لتأكيد توفر القطعة والسعر.</p>
-        <Button variant="outline" className="gap-2 border-green-500/30 text-green-600 h-12" asChild>
-          <a href={`https://wa.me/201153961008?text=${whatsappMessage}`} target="_blank" rel="noopener noreferrer" onClick={() => trackClickWhatsApp("form_success")}>
+        <Button size="lg" className="gap-2 bg-green-600 hover:bg-green-700 text-white h-12 px-6 font-bold" asChild>
+          <a href={whatsappHref("success")} target="_blank" rel="noopener noreferrer" onClick={() => trackClickWhatsApp("form_success")}>
             <MessageCircle className="w-4 h-4" />
-            تواصل عبر واتساب للاستعجال
+            أرسل نسخة للفريق عبر واتساب
           </a>
         </Button>
+        <p className="text-[11px] text-muted-foreground/80 mt-3">
+          الزر يُرسل رسالة منسّقة تحتوي على كل بياناتك للمتابعة الفورية
+        </p>
       </motion.div>
     );
   }
