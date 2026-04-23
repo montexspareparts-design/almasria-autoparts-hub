@@ -115,6 +115,12 @@ const DealerProductSearch = ({ onNavigateToOrders, onNavigateToCart, sharedCart 
               </button>
               <ChevronLeft className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0" />
               <span className="font-extrabold text-primary truncate flex-1">{activeCategoryName}</span>
+              {pendingCategoryId && (
+                <span className="flex items-center gap-1 text-[10px] sm:text-xs text-primary/80 font-semibold shrink-0">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  جاري التحميل…
+                </span>
+              )}
               <button
                 onClick={clearCategory}
                 aria-label="إزالة الفلتر"
