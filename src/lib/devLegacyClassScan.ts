@@ -81,3 +81,47 @@ export const buildEditorLink = (file: string, line: number): string => {
   // VS Code style URL — works locally if user has the handler registered.
   return `vscode://file/${file}:${line}`;
 };
+
+/**
+ * Suggest the logical-property replacement for a legacy directional class.
+ * Handles variant prefixes (sm:, hover:, etc.) and negative margins.
+ *
+ * Examples:
+ *   mr-2          → me-2
+ *   ml-4          → ms-4
+ *   -mr-1         → -me-1
+ *   md:pr-3       → md:pe-3
+ *   hover:pl-2    → hover:ps-2
+ *   text-right    → text-end
+ *   text-left     → text-start
+ */
+export const suggestReplacement = (legacyClass: string): string => {
+  // Split off variant prefixes (e.g. "md:hover:pr-3" → ["md:hover:", "pr-3"])
+  const variantMatch = legacyClass.match(/^((?:[a-z0-9-]+:)+)?(.*)$/);
+  const prefix = variantMatch?.[1] ?? "";
+  let body = variantMatch?.[2] ?? legacyClass;
+
+  // Negative-margin support
+  let negative = "";
+  if (body.startsWith("-")) {
+    negative = "-";
+    body = body.slice(1);
+  }
+
+  // text-right / text-left
+  if (body === "text-right") return `${prefix}text-end`;
+  if (body === "text-left") return `${prefix}text-start`;
+
+  // m{r,l}-* / p{r,l}-*
+  const dirMatch = body.match(/^([mp])([rl])-(.+)$/);
+  if (dirMatch) {
+    const [, mp, rl, rest] = dirMatch;
+    // r → e (end), l → s (start)
+    const logical = rl === "r" ? "e" : "s";
+    return `${prefix}${negative}${mp}${logical}-${rest}`;
+  }
+
+  // Fallback (shouldn't happen for tokens that matched LEGACY_PATTERN)
+  return legacyClass;
+};
+
