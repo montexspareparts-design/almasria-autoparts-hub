@@ -39,10 +39,8 @@ vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => mockAuth,
 }));
 
-// Stub heavy / side-effectful sub-components so Index renders cheaply.
-const stub = (label: string) => () => <div data-testid={label}>{label}</div>;
-vi.mock("@/components/Navbar", () => ({ default: stub("navbar") }));
-vi.mock("@/components/HeroSection", () => ({ default: stub("hero") }));
+vi.mock("@/components/Navbar", () => ({ default: () => <div data-testid="navbar">navbar</div> }));
+vi.mock("@/components/HeroSection", () => ({ default: () => <div data-testid="hero">hero</div> }));
 vi.mock("@/components/SEOSchemaMarkup", () => ({
   OrganizationSchema: () => null,
   WebSiteSchema: () => null,
