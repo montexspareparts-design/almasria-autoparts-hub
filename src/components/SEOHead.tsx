@@ -53,6 +53,34 @@ const ROUTE_META: Record<string, RouteMeta> = {
     ar: { title: "السياسات والشروط | المصرية جروب", description: "الشروط والأحكام، سياسة الخصوصية، الشحن، والاسترجاع لخدمات المصرية جروب." },
     en: { title: "Policies & Terms | Al Masria Group", description: "Terms & conditions, privacy policy, shipping, and refund policies for Al Masria Group services." },
   },
+  "/install": {
+    ar: { title: "حمّل تطبيق المصرية جروب | قطع غيار تويوتا في جيبك", description: "حمّل تطبيق المصرية جروب على Android و iOS لتصفح وطلب قطع غيار تويوتا الأصلية والزيوت بسهولة." },
+    en: { title: "Install Al Masria Group App | Toyota Parts in Your Pocket", description: "Install the Al Masria Group app on Android and iOS to browse and order Toyota genuine parts and oils with ease." },
+  },
+  "/products/genuine-toyota-parts": {
+    ar: { title: "قطع غيار تويوتا الأصلية 100٪ | بضمان الموزع المعتمد", description: "تسوق قطع غيار تويوتا الأصلية 100٪ بضمان المصنع — موزع معتمد رسمي في مصر منذ 1999." },
+    en: { title: "100% Genuine Toyota Parts | Authorized Distributor Warranty", description: "Shop 100% genuine Toyota parts with factory warranty — official authorized distributor in Egypt since 1999." },
+  },
+  "/products/toyota-oils": {
+    ar: { title: "زيوت تويوتا الأصلية | حماية مثالية لمحرك سيارتك", description: "زيوت تويوتا الأصلية لجميع موديلات المحركات. حماية مثالية وأداء طويل الأمد بضمان الموزع المعتمد." },
+    en: { title: "Toyota Genuine Oils | Optimal Engine Protection", description: "Toyota genuine motor oils for all engine models. Optimal protection and long-lasting performance with authorized distributor warranty." },
+  },
+  "/parts-by-model": {
+    ar: { title: "قطع غيار تويوتا حسب الموديل | ابحث بسهولة", description: "تصفح قطع غيار تويوتا الأصلية مرتبة حسب الموديل (كورولا، كامري، هايلكس، فورتشنر، رافور وغيرها)." },
+    en: { title: "Toyota Parts by Model | Easy Browsing", description: "Browse genuine Toyota parts sorted by model (Corolla, Camry, Hilux, Fortuner, RAV4, and more)." },
+  },
+  "/parts-by-type": {
+    ar: { title: "قطع غيار تويوتا حسب النوع | فلاتر، فرامل، شموع", description: "ابحث عن قطع غيار تويوتا الأصلية حسب نوع القطعة — فلاتر زيت، فرامل، شموع احتراق، بطاريات وأكثر." },
+    en: { title: "Toyota Parts by Type | Filters, Brakes, Spark Plugs", description: "Find genuine Toyota parts by component type — oil filters, brakes, spark plugs, batteries, and more." },
+  },
+  "/clients": {
+    ar: { title: "خدمات المصرية جروب لكل عميل | تجار، شركات، أساطيل", description: "حلول قطع غيار تويوتا المتخصصة لتجار التجزئة والجملة، شركات السيارات، إدارات الأساطيل، ومراكز الخدمة." },
+    en: { title: "Al Masria Group Services for Every Client | Dealers, Companies, Fleets", description: "Specialized Toyota parts solutions for retail and wholesale dealers, automotive companies, fleet management, and service centers." },
+  },
+  "/track-order": {
+    ar: { title: "تتبع طلبك | المصرية جروب", description: "تتبع حالة طلب قطع الغيار من المصرية جروب برقم الطلب — تحديثات فورية لكل مرحلة." },
+    en: { title: "Track Your Order | Al Masria Group", description: "Track your Al Masria Group parts order status by order number — instant updates at every stage." },
+  },
 };
 
 /* Routes that should NOT be indexed (private/dealer/admin/checkout) */
