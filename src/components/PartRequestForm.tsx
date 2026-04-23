@@ -373,6 +373,41 @@ const PartRequestForm = ({ defaultModel, compact }: PartRequestFormProps) => {
           </FieldWrap>
         )}
 
+        {/* Error banner — يظهر عند فشل الإرسال مع زر واتساب جاهز للبيانات */}
+        {lastError && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 space-y-3"
+          >
+            <div className="flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-bold text-destructive">تعذّر إرسال الطلب</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  لا تقلق — اضغط الزر التالي لإرسال بياناتك مباشرة لفريقنا عبر واتساب وسيتم تسجيل الطلب يدوياً.
+                </p>
+              </div>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold gap-2 h-11"
+              asChild
+            >
+              <a
+                href={whatsappHref("error")}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackClickWhatsApp("part_request_error")}
+              >
+                <MessageCircle className="w-4 h-4" />
+                أرسل البيانات عبر واتساب الآن
+              </a>
+            </Button>
+          </motion.div>
+        )}
+
         {/* Buttons — stacked on mobile, side-by-side on sm+ */}
         <div className="flex flex-col sm:flex-row gap-3 pt-2">
           <Button type="submit" size="lg" className="flex-1 gap-2 font-bold h-12 rounded-xl" disabled={sending}>
@@ -387,7 +422,7 @@ const PartRequestForm = ({ defaultModel, compact }: PartRequestFormProps) => {
             asChild
           >
             <a
-              href={`https://wa.me/201153961008?text=${whatsappMessage}`}
+              href={whatsappHref("draft")}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackClickWhatsApp("part_request_form")}
