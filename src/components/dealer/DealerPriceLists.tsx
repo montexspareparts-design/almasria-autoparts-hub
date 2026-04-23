@@ -637,7 +637,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
       <div className="space-y-4">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" onClick={() => setCreatedQuote(null)}>
-            <ArrowLeft className="w-4 h-4 ml-1" />
+            <ArrowLeft className="w-4 h-4 ms-1" />
             رجوع للكشف
           </Button>
         </div>
@@ -662,7 +662,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
                   <p className="text-sm font-medium text-foreground truncate">{item.product.name_ar}</p>
                   <p className="text-[10px] text-muted-foreground font-mono">{item.product.sku}</p>
                 </div>
-                <div className="text-left shrink-0 space-y-0.5">
+                <div className="text-start shrink-0 space-y-0.5">
                   <p className="text-xs text-muted-foreground">×{item.quantity}</p>
                   <p className="text-xs font-bold text-foreground">{(item.price * item.quantity).toLocaleString("ar-EG")} ج.م</p>
                 </div>
@@ -719,7 +719,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
               إيميل
             </Button>
             <Button variant="ghost" onClick={() => setCreatedQuote(null)}>
-              <ArrowLeft className="w-4 h-4 ml-1" />
+              <ArrowLeft className="w-4 h-4 ms-1" />
               عودة للكشف
             </Button>
           </div>
@@ -791,7 +791,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
         {/* Header */}
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" onClick={() => { setViewingList(null); setSelectedProducts([]); setSearchQuery(""); setPdfSignedUrl(null); setEditingQuoteId(null); setEditingQuoteNumber(null); setLinkedProducts([]); setLinkedFilter(""); }}>
-            <ArrowLeft className="w-4 h-4 ml-1" />
+            <ArrowLeft className="w-4 h-4 ms-1" />
             رجوع
           </Button>
           <div className="flex-1 min-w-0">
@@ -805,7 +805,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
           )}
           {pdfSignedUrl && (
             <Button variant="outline" size="sm" onClick={downloadPdf}>
-              <Download className="w-4 h-4 ml-1" />
+              <Download className="w-4 h-4 ms-1" />
               تحميل
             </Button>
           )}
@@ -843,7 +843,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
                 className="w-full flex items-center gap-2 p-3 border-b border-border hover:bg-muted/50 transition-colors"
               >
                 <Package className="w-4 h-4 text-primary" />
-                <span className="text-sm font-bold text-foreground flex-1 text-right">
+                <span className="text-sm font-bold text-foreground flex-1 text-end">
                   أصناف الكشف ({linkedProducts.length})
                 </span>
                 <span className="text-xs text-muted-foreground">اضغط على الصنف لتحديده</span>
@@ -860,7 +860,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
                         placeholder="فلتر الأصناف..."
                         value={linkedFilter}
                         onChange={(e) => setLinkedFilter(e.target.value)}
-                        className="pr-9 h-8 text-xs"
+                        className="pe-9 h-8 text-xs"
                       />
                     </div>
                   </div>
@@ -898,7 +898,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
                             transition={{ duration: 0.2 }}
                             onClick={() => toggleProductSelection(product)}
                             disabled={!selected && remainingToday === 0}
-                            className={`w-full flex items-center gap-3 p-3 text-right transition-all ${
+                            className={`w-full flex items-center gap-3 p-3 text-end transition-all ${
                               selected
                                 ? "bg-primary/5 border-r-2 border-r-primary"
                                 : "hover:bg-muted/50"
@@ -990,7 +990,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
                 placeholder="ابحث برقم القطعة أو الاسم..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pr-10 h-10 text-sm"
+                className="pe-10 h-10 text-sm"
                 disabled={remainingToday === 0}
               />
               {searchQuery && (
@@ -1007,7 +1007,7 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
                   <button
                     key={product.id}
                     onClick={() => addProduct(product)}
-                    className="w-full flex items-center gap-2 p-2.5 hover:bg-muted transition-colors text-right border-b border-border last:border-0"
+                    className="w-full flex items-center gap-2 p-2.5 hover:bg-muted transition-colors text-end border-b border-border last:border-0"
                   >
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium text-foreground truncate">{product.name_ar}</p>
@@ -1192,12 +1192,12 @@ const DealerPriceLists = ({ onNavigateToQuotes, editingQuoteData, onClearEditing
         <div className="flex items-center gap-2">
           {onNavigateToQuotes && (
             <Button variant="outline" size="sm" onClick={onNavigateToQuotes}>
-              <ShoppingCart className="w-4 h-4 ml-1" />
+              <ShoppingCart className="w-4 h-4 ms-1" />
               عروض الأسعار
             </Button>
           )}
           <Button variant="ghost" size="sm" onClick={fetchLists}>
-            <RefreshCw className="w-4 h-4 ml-1" />
+            <RefreshCw className="w-4 h-4 ms-1" />
             تحديث
           </Button>
         </div>

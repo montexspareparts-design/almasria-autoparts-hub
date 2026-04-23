@@ -392,7 +392,7 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
             placeholder="ابحث برقم الطلب أو كود الفيصل..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pr-9 h-9 text-xs rounded-xl border-border/60"
+            className="pe-9 h-9 text-xs rounded-xl border-border/60"
           />
         </div>
       </div>
@@ -455,7 +455,7 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
             return (
               <Card key={order.id} className="border-border/40 rounded-2xl overflow-hidden shadow-sm">
                 {/* ─── Order Header ─── */}
-                <button onClick={() => toggleOrder(order.id)} className="w-full text-right">
+                <button onClick={() => toggleOrder(order.id)} className="w-full text-end">
                   <CardContent className="p-4 flex items-center gap-3">
                     <div className="w-11 h-11 rounded-xl bg-primary/8 flex items-center justify-center shrink-0">
                       <Package className="w-5 h-5 text-primary" />
@@ -628,11 +628,11 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
                         </div>
                         <div className="flex items-center gap-1.5">
                           <Button variant="ghost" size="sm" className="text-xs h-7 rounded-lg" onClick={cancelEditing} disabled={saving}>
-                            <X className="w-3.5 h-3.5 ml-1" />
+                            <X className="w-3.5 h-3.5 ms-1" />
                             إلغاء
                           </Button>
                           <Button size="sm" className="text-xs h-7 rounded-lg" onClick={() => saveEdits(order)} disabled={saving}>
-                            {saving ? <Loader2 className="w-3.5 h-3.5 ml-1 animate-spin" /> : <Save className="w-3.5 h-3.5 ml-1" />}
+                            {saving ? <Loader2 className="w-3.5 h-3.5 ms-1 animate-spin" /> : <Save className="w-3.5 h-3.5 ms-1" />}
                             حفظ
                           </Button>
                         </div>
@@ -683,7 +683,7 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
                               <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">راجع تفاصيل الطلب المحدّثة ووافق أو ارفض</p>
                             </div>
                           </div>
-                          <div className="flex gap-2 mr-8">
+                          <div className="flex gap-2 me-8">
                             <Button
                               size="sm"
                               className="h-8 text-xs gap-1 rounded-lg"
@@ -784,7 +784,7 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
                                     <span className="text-sm font-bold">+</span>
                                   </Button>
                                 </div>
-                                <p className="text-xs font-bold text-foreground shrink-0 w-16 text-left">
+                                <p className="text-xs font-bold text-foreground shrink-0 w-16 text-start">
                                   {(item.unit_price * (editQuantities[item.id] ?? item.quantity)).toLocaleString("ar-EG")} ج.م
                                 </p>
                                 <AlertDialog>

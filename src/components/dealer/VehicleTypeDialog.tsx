@@ -155,7 +155,7 @@ const VehicleTypeDialog = ({ open, dealerAccountId, dealerName, onComplete }: Ve
                   onClick={() => setStep("vehicle")}
                   className="w-full h-12 text-sm font-bold rounded-xl shadow-lg shadow-primary/20"
                 >
-                  <Sparkles className="w-4 h-4 ml-2" />
+                  <Sparkles className="w-4 h-4 ms-2" />
                   يلا نبدأ
                 </Button>
               </motion.div>
@@ -210,7 +210,7 @@ const VehicleTypeDialog = ({ open, dealerAccountId, dealerName, onComplete }: Ve
                       transition={{ delay: 0.3 + index * 0.12, type: "spring", stiffness: 300, damping: 25 }}
                       whileTap={{ scale: 0.97 }}
                       onClick={() => toggle(opt.id)}
-                      className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 transition-all duration-300 text-right relative overflow-hidden ${
+                      className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 transition-all duration-300 text-end relative overflow-hidden ${
                         isSelected
                           ? `border-primary/60 ${opt.bgGlow} shadow-md shadow-primary/10 ring-2 ${opt.ring}`
                           : "border-border/40 bg-card hover:border-primary/20 hover:bg-muted/20"
@@ -272,9 +272,9 @@ const VehicleTypeDialog = ({ open, dealerAccountId, dealerName, onComplete }: Ve
                   className="w-full h-12 text-sm font-bold mt-4 rounded-xl shadow-lg shadow-primary/20 transition-all duration-300 disabled:shadow-none"
                 >
                   {saving ? (
-                    <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                    <Loader2 className="w-4 h-4 ms-2 animate-spin" />
                   ) : (
-                    <Check className="w-4 h-4 ml-2" />
+                    <Check className="w-4 h-4 ms-2" />
                   )}
                   تأكيد
                 </Button>
@@ -332,7 +332,7 @@ const VehicleTypeDialog = ({ open, dealerAccountId, dealerName, onComplete }: Ve
                   variant="outline"
                   className="w-full h-12 text-sm font-bold rounded-xl border-2 border-primary/30 hover:bg-primary/5"
                 >
-                  <UserCog className="w-4 h-4 ml-2" />
+                  <UserCog className="w-4 h-4 ms-2" />
                   تعديل بياناتي
                 </Button>
 
@@ -340,7 +340,7 @@ const VehicleTypeDialog = ({ open, dealerAccountId, dealerName, onComplete }: Ve
                   onClick={handleFinish}
                   className="w-full h-12 text-sm font-bold rounded-xl shadow-lg shadow-primary/20"
                 >
-                  <ArrowLeft className="w-4 h-4 ml-2" />
+                  <ArrowLeft className="w-4 h-4 ms-2" />
                   ابدأ التصفح
                 </Button>
               </motion.div>

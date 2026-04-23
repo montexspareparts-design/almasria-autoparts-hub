@@ -180,7 +180,7 @@ const DealerAccountSettings = () => {
                     <opt.icon className="w-4 h-4" />
                   </div>
                   <span className="text-sm font-bold text-foreground">{opt.label}</span>
-                  {isSelected && <Check className="w-4 h-4 text-primary mr-auto" />}
+                  {isSelected && <Check className="w-4 h-4 text-primary me-auto" />}
                 </button>
               );
             })}
@@ -198,7 +198,7 @@ const DealerAccountSettings = () => {
               setSavingVehicle(false);
             }}
           >
-            {savingVehicle ? <Loader2 className="w-3 h-3 ml-1 animate-spin" /> : <Save className="w-3 h-3 ml-1" />}
+            {savingVehicle ? <Loader2 className="w-3 h-3 ms-1 animate-spin" /> : <Save className="w-3 h-3 ms-1" />}
             حفظ
           </Button>
         </CardContent>
@@ -221,7 +221,7 @@ const DealerAccountSettings = () => {
                 id="name"
                 value={profile.full_name}
                 onChange={(e) => setProfile(p => ({ ...p, full_name: e.target.value }))}
-                className="pr-10"
+                className="pe-10"
                 placeholder="اسم التاجر"
               />
             </div>
@@ -234,7 +234,7 @@ const DealerAccountSettings = () => {
                 id="phone"
                 value={profile.phone}
                 onChange={(e) => setProfile(p => ({ ...p, phone: e.target.value }))}
-                className="pr-10"
+                className="pe-10"
                 placeholder="01xxxxxxxxx"
                 dir="ltr"
               />
@@ -242,7 +242,7 @@ const DealerAccountSettings = () => {
           </div>
 
           <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto">
-            {saving ? <Loader2 className="w-4 h-4 ml-1.5 animate-spin" /> : <Save className="w-4 h-4 ml-1.5" />}
+            {saving ? <Loader2 className="w-4 h-4 ms-1.5 animate-spin" /> : <Save className="w-4 h-4 ms-1.5" />}
             حفظ التغييرات
           </Button>
         </CardContent>
@@ -294,7 +294,7 @@ const DealerAccountSettings = () => {
               </button>
               <div className="flex-1 text-center">
                 <span className="text-lg font-bold text-foreground">{fontSize}</span>
-                <span className="text-[10px] text-muted-foreground mr-1">px</span>
+                <span className="text-[10px] text-muted-foreground me-1">px</span>
               </div>
               <button
                 onClick={() => adjustFontSize(1)}

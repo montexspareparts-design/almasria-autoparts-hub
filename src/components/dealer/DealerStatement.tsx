@@ -174,7 +174,7 @@ const DealerStatement = ({ userId }: { userId: string }) => {
                       {new Date(order.created_at).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric" })}
                     </p>
                   </div>
-                  <div className="text-left shrink-0">
+                  <div className="text-start shrink-0">
                     <p className={cn("text-sm font-bold", order.status === "cancelled" ? "text-muted-foreground line-through" : "text-foreground")}>
                       {Number(order.total_amount).toLocaleString("ar-EG")} ج.م
                     </p>
