@@ -157,9 +157,21 @@ const TypeDetailView = ({ type }: { type: PartTypeData }) => {
   return (
     <>
       <Helmet>
-        <title>{type.nameAr} تويوتا الأصلية | المصرية جروب</title>
-        <meta name="description" content={`${type.nameAr} تويوتا الأصلية لجميع الموديلات. ${type.intro.slice(0, 120)}...`} />
+        <title>{type.seoTitle}</title>
+        <meta name="description" content={type.seoDescription} />
+        <meta name="keywords" content={type.keywords} />
         <link rel="canonical" href={`${SITE}/parts-by-type/${type.slug}`} />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={type.seoTitle} />
+        <meta property="og:description" content={type.seoDescription} />
+        <meta property="og:url" content={`${SITE}/parts-by-type/${type.slug}`} />
+        <meta property="og:locale" content="ar_EG" />
+        <meta property="og:site_name" content="المصرية جروب" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={type.seoTitle} />
+        <meta name="twitter:description" content={type.seoDescription} />
+        <link rel="alternate" hrefLang="ar" href={`${SITE}/parts-by-type/${type.slug}`} />
+        <link rel="alternate" hrefLang="x-default" href={`${SITE}/parts-by-type/${type.slug}`} />
       </Helmet>
       <BreadcrumbSchema items={[
         { name: "الرئيسية", url: SITE },
