@@ -205,7 +205,7 @@ export default function TransferToColleagueDialog({
                 rows={3}
                 maxLength={300}
               />
-              <p className="text-xs text-muted-foreground text-left">{note.length}/300</p>
+              <p className="text-xs text-muted-foreground text-end">{note.length}/300</p>
             </div>
 
             {history.length > 0 && (
@@ -223,7 +223,7 @@ export default function TransferToColleagueDialog({
                           <span className="font-medium">{h.from_name}</span>
                           <ArrowRightLeft className="w-3 h-3 text-primary" />
                           <span className="font-medium">{h.to_name}</span>
-                          <span className="text-muted-foreground mr-auto">
+                          <span className="text-muted-foreground ms-auto">
                             {new Date(h.created_at).toLocaleString("ar-EG", { dateStyle: "short", timeStyle: "short" })}
                           </span>
                         </div>

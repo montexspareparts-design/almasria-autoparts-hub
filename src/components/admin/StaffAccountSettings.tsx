@@ -161,9 +161,9 @@ const StaffAccountSettings = () => {
               disabled={uploadingAvatar}
             >
               {uploadingAvatar ? (
-                <><Loader2 className="w-4 h-4 ml-2 animate-spin" /> جاري الرفع...</>
+                <><Loader2 className="w-4 h-4 me-2 animate-spin" /> جاري الرفع...</>
               ) : (
-                <><Camera className="w-4 h-4 ml-2" /> تغيير الصورة</>
+                <><Camera className="w-4 h-4 me-2" /> تغيير الصورة</>
               )}
             </Button>
             <p className="text-xs text-muted-foreground">JPG, PNG — حد أقصى 2MB</p>
@@ -193,7 +193,7 @@ const StaffAccountSettings = () => {
             <Input value={phone} onChange={(e) => setPhone(e.target.value)} dir="ltr" />
           </div>
           <Button onClick={handleSaveProfile} disabled={savingProfile}>
-            {savingProfile ? <Loader2 className="w-4 h-4 ml-2 animate-spin" /> : <Save className="w-4 h-4 ml-2" />}
+            {savingProfile ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <Save className="w-4 h-4 me-2" />}
             حفظ التغييرات
           </Button>
         </CardContent>
@@ -226,7 +226,7 @@ const StaffAccountSettings = () => {
             />
           </div>
           <Button onClick={handleChangePassword} disabled={changingPassword || !newPassword}>
-            {changingPassword ? <Loader2 className="w-4 h-4 ml-2 animate-spin" /> : <KeyRound className="w-4 h-4 ml-2" />}
+            {changingPassword ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <KeyRound className="w-4 h-4 me-2" />}
             تغيير كلمة المرور
           </Button>
         </CardContent>

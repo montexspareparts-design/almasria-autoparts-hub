@@ -119,7 +119,7 @@ export default function CustomerCommunicationLog({ customerUserId, compact = fal
               disabled={saving}
               className="shrink-0"
             >
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4 mr-1" />}
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4 ms-1" />}
               سجّل
             </Button>
           </div>
