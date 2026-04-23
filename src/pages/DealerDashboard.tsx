@@ -196,7 +196,7 @@ const DealerDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-muted/40 flex flex-col" dir="rtl">
+    <div data-dealer-scope className="min-h-screen bg-muted/40 flex flex-col" dir="rtl">
       {/* Top Bar */}
       <header className="bg-card border-b border-border/50 sticky top-0 z-40 shadow-sm">
         <div className="flex items-center justify-between h-14 px-4 lg:px-6">
