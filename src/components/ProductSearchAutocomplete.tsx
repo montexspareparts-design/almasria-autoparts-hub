@@ -272,7 +272,7 @@ const ProductSearchAutocomplete = ({
   let renderFlatIdx = 0;
 
   return (
-    <div ref={wrapperRef} className="relative flex-1">
+    <div ref={wrapperRef} className="relative w-full flex-1">
       {/* Google-style search bar */}
       <div className="relative group">
         <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center">
