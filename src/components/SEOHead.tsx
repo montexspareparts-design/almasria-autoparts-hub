@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const SITE_URL = "https://www.almasriaautoparts.com";
+const OG_IMAGE = `${SITE_URL}/og-image.jpg`;
 
 interface RouteMeta {
   ar: { title: string; description: string };
@@ -147,11 +148,17 @@ const SEOHead = () => {
       <meta property="og:locale" content={ogLocale} />
       <meta property="og:locale:alternate" content={ogLocaleAlt} />
       <meta property="og:site_name" content={lang === "ar" ? "المصرية جروب" : "Al Masria Group"} />
+      <meta property="og:image" content={OG_IMAGE} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta property="og:image:alt" content={title} />
 
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
+      <meta name="twitter:image" content={OG_IMAGE} />
+      <meta name="twitter:site" content="@almasriagroup" />
     </Helmet>
   );
 };
