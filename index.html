@@ -1,6 +1,18 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
   <head>
+    <script>
+      // Apply saved language direction synchronously to prevent RTL/LTR flash
+      (function () {
+        try {
+          var saved = localStorage.getItem('app-lang');
+          var lang = saved === 'en' ? 'en' : 'ar';
+          var dir = lang === 'ar' ? 'rtl' : 'ltr';
+          document.documentElement.lang = lang;
+          document.documentElement.dir = dir;
+        } catch (e) {}
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
     <title>المصرية جروب | موزع معتمد لقطع غيار تويوتا الأصلية والزيوت في مصر</title>
