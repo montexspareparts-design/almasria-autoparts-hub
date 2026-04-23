@@ -286,12 +286,17 @@ const ProductSearchAutocomplete = ({
           onFocus={() => setIsFocused(true)}
           onKeyDown={handleKeyDown}
           dir="rtl"
-          className="pr-12 pl-10 sm:pl-16 bg-background border-2 border-border/70 h-14 sm:h-12 text-base sm:text-sm font-medium placeholder:text-muted-foreground/60 placeholder:font-normal rounded-2xl sm:rounded-full shadow-md transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-offset-0 focus-visible:border-primary/50 focus-visible:shadow-xl focus-visible:shadow-primary/10 text-right truncate"
+          className="pr-12 pl-14 sm:pl-16 bg-background border-2 border-border/70 h-14 sm:h-12 text-base sm:text-sm font-medium placeholder:text-muted-foreground/60 placeholder:font-normal rounded-2xl sm:rounded-full shadow-md transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-offset-0 focus-visible:border-primary/50 focus-visible:shadow-xl focus-visible:shadow-primary/10 text-right truncate"
         />
         <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
           {value && (
-            <button onClick={() => onChange("")} className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-full hover:bg-muted">
-              <X className="w-4 h-4" />
+            <button
+              type="button"
+              onClick={() => { onChange(""); setSelectedIndex(-1); inputRef.current?.focus(); }}
+              aria-label="مسح البحث"
+              className="text-muted-foreground hover:text-foreground active:scale-95 transition-all w-9 h-9 sm:w-7 sm:h-7 rounded-full bg-muted/70 hover:bg-muted flex items-center justify-center shadow-sm"
+            >
+              <X className="w-5 h-5 sm:w-4 sm:h-4" />
             </button>
           )}
           {onCommandPaletteOpen && (
