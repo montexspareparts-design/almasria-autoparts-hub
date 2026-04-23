@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, XCircle, Clock, Eye, LogOut, Trash2, Users, ShoppingBag, Video, FileText, Image, Brain, Zap, Bell, ListVideo, Menu, X, ChevronRight, Package, BarChart3, Tag, Layers, TrendingUp, ArrowLeftRight, Briefcase, Banknote, Shield, Building2, ShieldCheck, MessageCircle, User as UserIcon, Phone, KeyRound } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Clock, Eye, LogOut, Trash2, Users, ShoppingBag, Video, FileText, Image, Brain, Zap, Bell, ListVideo, Menu, X, ChevronRight, Package, BarChart3, Tag, Layers, TrendingUp, ArrowLeftRight, Briefcase, Banknote, Shield, Building2, ShieldCheck, MessageCircle, User as UserIcon, Phone, KeyRound, Smartphone } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Database } from "@/integrations/supabase/types";
@@ -55,6 +55,7 @@ const AdminWhatsAppDeliveryStatus = lazy(() => import("@/components/admin/AdminW
 const AdminClientAccountAttempts = lazy(() => import("@/components/admin/AdminClientAccountAttempts"));
 const AdminTranslations = lazy(() => import("@/components/admin/AdminTranslations"));
 const AdminSEOPreview = lazy(() => import("@/components/admin/AdminSEOPreview"));
+const AdminResponsivePreview = lazy(() => import("@/components/admin/AdminResponsivePreview"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];
@@ -129,6 +130,7 @@ const sidebarGroups: SidebarGroup[] = [
         { id: "account-attempts", label: "محاولات إنشاء/إعادة تعيين الحسابات", icon: KeyRound },
         { id: "translations", label: "إدارة الترجمات (AR/EN)", icon: FileText },
         { id: "seo-preview", label: "معاينة SEO قبل النشر", icon: Eye },
+        { id: "responsive-preview", label: "معاينة الأجهزة (موبايل/تابلت)", icon: Smartphone },
       ],
     },
     {
@@ -701,6 +703,8 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminTranslations /></Suspense>;
       case "seo-preview":
         return <Suspense fallback={<SectionLoader />}><AdminSEOPreview /></Suspense>;
+      case "responsive-preview":
+        return <Suspense fallback={<SectionLoader />}><AdminResponsivePreview /></Suspense>;
       default:
         return <Suspense fallback={<SectionLoader />}><AdminAnalytics /></Suspense>;
     }
