@@ -33,6 +33,11 @@ const AdminProductImages = () => {
   const [dragOverProductId, setDragOverProductId] = useState<string | null>(null);
   const [copiedSku, setCopiedSku] = useState<string | null>(null);
 
+  // AI Vision matching state
+  const [aiMatching, setAiMatching] = useState(false);
+  const [aiProgress, setAiProgress] = useState({ scanned: 0, total: 0, applied: 0, candidates: 0 });
+  const aiAbortRef = useRef(false);
+
   const handleCopySku = (sku: string) => {
     navigator.clipboard.writeText(sku);
     setCopiedSku(sku);
