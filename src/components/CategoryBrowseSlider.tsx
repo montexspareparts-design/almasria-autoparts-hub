@@ -294,6 +294,7 @@ const CategoryBrowseSlider = ({ onCategorySelect, activeCategoryId, pendingCateg
             {items.map((cat, index) => {
               const assets = categoryAssets[cat.slug] || { image: catFilters, accent: defaultAccent, searchTerm: cat.name_ar };
               const isActive = activeCategoryId === cat.id;
+              const isPending = pendingCategoryId === cat.id;
               return (
                 <motion.div
                   key={cat.id}
@@ -310,14 +311,22 @@ const CategoryBrowseSlider = ({ onCategorySelect, activeCategoryId, pendingCateg
                     type="button"
                     onClick={(e) => handleCategoryClick(e, cat)}
                     aria-pressed={isActive}
+                    aria-busy={isPending}
+                    disabled={isPending}
                     className={`group/card block relative w-[68px] sm:w-[145px] rounded-lg sm:rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 text-center ${
                       isActive
                         ? "border-2 border-primary ring-2 ring-primary/40 shadow-primary/30 shadow-2xl"
                         : "border border-border/40 hover:border-primary/40"
                     }`}
                   >
+                    {/* Loading overlay while filter is being applied */}
+                    {isPending && (
+                      <div className="absolute inset-0 z-30 bg-background/70 backdrop-blur-[2px] flex items-center justify-center">
+                        <Loader2 className="w-5 h-5 sm:w-7 sm:h-7 text-primary animate-spin" />
+                      </div>
+                    )}
                     {/* Active checkmark badge — top-right */}
-                    {isActive && (
+                    {isActive && !isPending && (
                       <div className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 z-20 w-[18px] h-[18px] sm:w-[24px] sm:h-[24px] rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg ring-2 ring-white">
                         <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 sm:w-4 sm:h-4">
                           <path fillRule="evenodd" d="M16.704 5.29a1 1 0 010 1.42l-7.5 7.5a1 1 0 01-1.42 0l-3.5-3.5a1 1 0 011.42-1.42L8.5 12.08l6.79-6.79a1 1 0 011.414 0z" clipRule="evenodd" />
