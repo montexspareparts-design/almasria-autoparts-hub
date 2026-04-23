@@ -43,6 +43,7 @@ const PaymentPage = lazy(() => import("./pages/PaymentPage"));
 const PoliciesPage = lazy(() => import("./pages/PoliciesPage"));
 const MyProfilePage = lazy(() => import("./pages/MyProfilePage"));
 const TrackOrderPage = lazy(() => import("./pages/TrackOrderPage"));
+const DevDealerPreview = lazy(() => import("./pages/DevDealerPreview"));
 const queryClient = new QueryClient();
 
 const PageLoader = () => (
@@ -117,6 +118,7 @@ const App = () => (
                     <Route path="/policies" element={<PoliciesPage />} />
                     <Route path="/my-profile" element={<MyProfilePage />} />
                     <Route path="/track-order" element={<TrackOrderPage />} />
+                    <Route path="/dev/dealer-preview" element={<DevDealerPreview />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                </Suspense>
