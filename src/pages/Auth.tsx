@@ -382,7 +382,7 @@ const Auth = () => {
 
         {/* Footer */}
         {!forgotMode && (
-          <div className="mt-6 space-y-4 animate-fade-in">
+          <div className="mt-6 space-y-4 shrink-0">
             {/* Toggle login/register */}
             <div className="text-center">
               {isLogin ? (
