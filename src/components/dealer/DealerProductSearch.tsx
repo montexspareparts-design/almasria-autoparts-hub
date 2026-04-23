@@ -1,4 +1,4 @@
-import { useCallback, useRef, useMemo } from "react";
+import { useCallback, useRef, useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useProductListing } from "@/hooks/useProductListing";
 import ProductListingSection from "@/components/ProductListingSection";
@@ -6,7 +6,7 @@ import CategoryBrowseSlider from "@/components/CategoryBrowseSlider";
 import DealerBestSellers from "@/components/dealer/DealerBestSellers";
 import { toast } from "@/hooks/use-toast";
 import { useDealerCart } from "@/hooks/useDealerCart";
-import { ShoppingCart, ArrowLeft, Home, X, ChevronLeft } from "lucide-react";
+import { ShoppingCart, ArrowLeft, Home, X, ChevronLeft, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ToastAction } from "@/components/ui/toast";
 interface DealerProductSearchProps {
@@ -20,14 +20,27 @@ const DealerProductSearch = ({ onNavigateToOrders, onNavigateToCart, sharedCart 
   const fallbackCart = useDealerCart();
   const cart = sharedCart || fallbackCart;
   const productsAnchorRef = useRef<HTMLDivElement>(null);
+  const [pendingCategoryId, setPendingCategoryId] = useState<string | null>(null);
 
   const handleCategorySelect = useCallback((categoryId: string, _categoryName: string) => {
+    setPendingCategoryId(categoryId);
     listing.setFilters((prev: any) => ({ ...prev, categoryId, search: "", brandKey: null }));
     // Smooth scroll to products grid after a short delay to let the filter apply
     setTimeout(() => {
       productsAnchorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 100);
   }, [listing.setFilters]);
+
+  // Clear pending indicator once the filter actually applies (or after a short safety timeout)
+  useEffect(() => {
+    if (!pendingCategoryId) return;
+    if (listing.filters?.categoryId === pendingCategoryId && !listing.isLoading) {
+      const t = setTimeout(() => setPendingCategoryId(null), 250);
+      return () => clearTimeout(t);
+    }
+    const safety = setTimeout(() => setPendingCategoryId(null), 2500);
+    return () => clearTimeout(safety);
+  }, [pendingCategoryId, listing.filters?.categoryId, listing.isLoading]);
 
   const handleAddToCart = useCallback(async (product: any) => {
     try {
@@ -59,6 +72,25 @@ const DealerProductSearch = ({ onNavigateToOrders, onNavigateToCart, sharedCart 
 
   return (
     <div className="space-y-4 relative">
+      {/* Top progress bar — shows while a category filter is being applied */}
+      <AnimatePresence>
+        {pendingCategoryId && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed top-0 left-0 right-0 z-[60] h-0.5 bg-primary/20 overflow-hidden"
+          >
+            <motion.div
+              initial={{ x: "-40%" }}
+              animate={{ x: "120%" }}
+              transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
+              className="h-full w-2/5 bg-primary shadow-[0_0_8px_hsl(var(--primary))]"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Active category breadcrumb — appears when a category is selected */}
       <AnimatePresence>
         {activeCategoryName && (
@@ -83,6 +115,12 @@ const DealerProductSearch = ({ onNavigateToOrders, onNavigateToCart, sharedCart 
               </button>
               <ChevronLeft className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0" />
               <span className="font-extrabold text-primary truncate flex-1">{activeCategoryName}</span>
+              {pendingCategoryId && (
+                <span className="flex items-center gap-1 text-[10px] sm:text-xs text-primary/80 font-semibold shrink-0">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  جاري التحميل…
+                </span>
+              )}
               <button
                 onClick={clearCategory}
                 aria-label="إزالة الفلتر"
@@ -134,6 +172,7 @@ const DealerProductSearch = ({ onNavigateToOrders, onNavigateToCart, sharedCart 
             <CategoryBrowseSlider
               onCategorySelect={handleCategorySelect}
               activeCategoryId={activeCategoryId}
+              pendingCategoryId={pendingCategoryId}
             />
             <div ref={productsAnchorRef} aria-hidden className="scroll-mt-24" />
           </>
