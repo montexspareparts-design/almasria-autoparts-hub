@@ -176,13 +176,13 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center px-4 py-8 overflow-hidden" dir="rtl">
+    <div className="min-h-[100svh] relative flex items-center justify-center px-4 py-8 overflow-x-hidden" dir="rtl">
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--foreground))] via-[hsl(220,20%,12%)] to-[hsl(var(--foreground))]" />
       <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")' }} />
       
       {/* Subtle red glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-primary/8 rounded-full blur-[120px]" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] max-w-full h-[300px] bg-primary/8 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Back to home - top right */}
       <Link 
@@ -195,14 +195,14 @@ const Auth = () => {
 
       <motion.div 
         className="w-full max-w-[440px] relative z-10"
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
       >
         {/* Logo & Header */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-block mb-5">
-            <img src={logo} alt="المصرية جروب" className="h-12 mx-auto" />
+            <img src={logo} alt="المصرية جروب" width={160} height={48} className="h-12 w-auto mx-auto" />
           </Link>
           <h1 className="text-2xl font-black text-white tracking-tight">
             {forgotMode ? "استعادة كلمة المرور" : isLogin ? "تسجيل الدخول" : "إنشاء حساب جديد"}
@@ -215,9 +215,9 @@ const Auth = () => {
         {/* Main Card */}
         <motion.div 
           className="bg-card/95 backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6 shadow-2xl shadow-black/40"
-          initial={{ opacity: 0, scale: 0.97 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.15, duration: 0.4 }}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.3, ease: "easeOut" }}
         >
           {!forgotMode && (
             <>
