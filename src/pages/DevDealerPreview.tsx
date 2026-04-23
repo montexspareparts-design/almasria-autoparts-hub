@@ -327,6 +327,17 @@ const LegacyClassPanel = () => {
   const [reports, setReports] = useState<LegacyFileReport[]>([]);
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [scanning, setScanning] = useState(false);
+  // key = `${file}:${line}:${column}` → expanded suggestion card
+  const [openSuggest, setOpenSuggest] = useState<Record<string, boolean>>({});
+
+  const copyText = async (text: string, label?: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success(label ? `نُسخ: ${label}` : `نُسخ: ${text}`);
+    } catch {
+      toast.error("تعذّر النسخ");
+    }
+  };
 
   const runScan = () => {
     setScanning(true);
