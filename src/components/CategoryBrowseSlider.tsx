@@ -53,6 +53,7 @@ const defaultAccent = "from-primary/80 to-primary/90";
 
 interface CategoryBrowseSliderProps {
   onCategorySelect?: (categoryId: string, categoryName: string) => void;
+  activeCategoryId?: string | null;
 }
 
 const CategoryBrowseSlider = ({ onCategorySelect }: CategoryBrowseSliderProps) => {
