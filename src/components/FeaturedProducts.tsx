@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { useState, useCallback } from "react";
 import ProductDetailDialog from "@/components/ProductDetailDialog";
+import { LazyImage } from "@/components/ui/lazy-image";
 import { Link } from "react-router-dom";
 
 const DAILY_LIMIT = 20;
@@ -181,11 +182,12 @@ const FeaturedProducts = () => {
                 {/* Image */}
                 <div className="aspect-[4/3] bg-white relative overflow-hidden p-2 sm:p-4">
                   {product.image_url ? (
-                    <img
+                    <LazyImage
                       src={product.image_url}
                       alt={product.name_ar}
+                      wrapperClassName="w-full h-full"
                       className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 mix-blend-multiply"
-                      loading="lazy"
+                      optimizeWidth={400}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
