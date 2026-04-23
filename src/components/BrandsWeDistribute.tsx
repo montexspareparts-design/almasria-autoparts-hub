@@ -30,9 +30,9 @@ const BrandsWeDistribute = () => {
           </h2>
         </motion.div>
 
-        <div className="flex flex-wrap justify-center gap-6 max-w-4xl mx-auto">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 max-w-4xl mx-auto">
           {brands.map((b, i) => (
-            <motion.div key={b.label} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08, duration: 0.4 }} className="flex flex-col items-center gap-3 w-[calc(33.333%-1.5rem)] min-w-[160px]">
+            <motion.div key={b.label} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08, duration: 0.4 }} className="flex flex-col items-center gap-3 w-full">
               <Link to={b.to} className="bg-white rounded-xl aspect-[4/3] w-full flex items-center justify-center border border-border hover:border-primary/40 transition-all duration-300 overflow-hidden group">
                 <img src={b.image} alt={b.label} loading="lazy" decoding="async" className={`w-[80%] h-[80%] object-contain ${b.scale} transition-transform duration-300 group-hover:scale-105`} />
               </Link>
