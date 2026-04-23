@@ -33,6 +33,11 @@ const AdminProductImages = () => {
   const [dragOverProductId, setDragOverProductId] = useState<string | null>(null);
   const [copiedSku, setCopiedSku] = useState<string | null>(null);
 
+  // AI Vision matching state
+  const [aiMatching, setAiMatching] = useState(false);
+  const [aiProgress, setAiProgress] = useState({ scanned: 0, total: 0, applied: 0, candidates: 0 });
+  const aiAbortRef = useRef(false);
+
   const handleCopySku = (sku: string) => {
     navigator.clipboard.writeText(sku);
     setCopiedSku(sku);
@@ -340,6 +345,64 @@ const AdminProductImages = () => {
     bulkAbortRef.current = true;
   };
 
+  const handleAiMatchAll = async () => {
+    if (!confirm("سيتم فحص كل صور Storage بالذكاء الاصطناعي ومطابقة البارت نمبر فيها مع المنتجات.\n\nالشروط:\n• تطابق نصي 100% فقط بين الكود في الصورة و SKU/erp_item_code\n• لن يتم استبدال الصور الموجودة\n• قد يستغرق وقتاً ويستهلك credits\n\nمتابعة؟")) return;
+
+    setAiMatching(true);
+    aiAbortRef.current = false;
+    setAiProgress({ scanned: 0, total: 0, applied: 0, candidates: 0 });
+
+    let offset = 0;
+    const batchSize = 25;
+    let totalApplied = 0;
+    let totalCandidates = 0;
+    let totalFiles = 0;
+
+    try {
+      while (!aiAbortRef.current) {
+        const { data, error } = await supabase.functions.invoke("match-product-images-by-vision", {
+          body: { dryRun: false, limit: batchSize, offset, onlyUnassigned: true },
+        });
+
+        if (error) throw error;
+        if (!data) break;
+
+        totalFiles = data.totalFilesInBucket || totalFiles;
+        totalApplied += data.applied || 0;
+        totalCandidates += data.candidateMatches || 0;
+
+        setAiProgress({
+          scanned: data.nextOffset,
+          total: totalFiles,
+          applied: totalApplied,
+          candidates: totalCandidates,
+        });
+
+        if (data.scanned === 0 || data.nextOffset >= totalFiles) break;
+        offset = data.nextOffset;
+      }
+
+      toast({
+        title: "اكتمل الفحص الذكي ✅",
+        description: `تم تعيين ${totalApplied} صورة من أصل ${totalCandidates} تطابق محتمل`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    } catch (e: any) {
+      toast({
+        title: "خطأ في الفحص الذكي",
+        description: e.message || String(e),
+        variant: "destructive",
+      });
+    } finally {
+      setAiMatching(false);
+    }
+  };
+
+  const handleStopAi = () => {
+    aiAbortRef.current = true;
+  };
+
   const openGoogleSearch = (sku: string) => {
     window.open(`https://www.google.com/search?q=${encodeURIComponent(sku + " toyota genuine part")}&tbm=isch`, "_blank");
   };
@@ -400,7 +463,7 @@ const AdminProductImages = () => {
         </div>
 
         {/* Bulk Search Button */}
-        <div className="mb-4 flex items-center gap-3">
+        <div className="mb-4 flex flex-col gap-2">
           {bulkSearching ? (
             <div className="flex items-center gap-3 w-full bg-muted/50 rounded-lg p-3">
               <Loader2 className="w-4 h-4 animate-spin text-primary shrink-0" />
@@ -422,11 +485,45 @@ const AdminProductImages = () => {
                 إيقاف
               </Button>
             </div>
+          ) : aiMatching ? (
+            <div className="flex items-center gap-3 w-full bg-primary/10 border border-primary/30 rounded-lg p-3">
+              <Loader2 className="w-4 h-4 animate-spin text-primary shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-muted-foreground">
+                    🤖 فحص ذكي: {aiProgress.scanned}/{aiProgress.total || "..."} صورة
+                  </span>
+                  <span className="text-primary font-semibold">
+                    ✅ تم ربط {aiProgress.applied} • محتمل {aiProgress.candidates}
+                  </span>
+                </div>
+                <div className="w-full bg-border rounded-full h-1.5">
+                  <div
+                    className="bg-primary h-1.5 rounded-full transition-all"
+                    style={{ width: aiProgress.total ? `${(aiProgress.scanned / aiProgress.total) * 100}%` : "5%" }}
+                  />
+                </div>
+              </div>
+              <Button variant="destructive" size="sm" onClick={handleStopAi} className="shrink-0 text-xs">
+                إيقاف
+              </Button>
+            </div>
           ) : (
-            <Button variant="outline" className="gap-2" onClick={handleBulkSearch}>
-              <Wand2 className="w-4 h-4" />
-              بحث تلقائي مجمّع (كل المنتجات بدون صور)
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" className="gap-2" onClick={handleBulkSearch}>
+                <Wand2 className="w-4 h-4" />
+                بحث تلقائي مجمّع
+              </Button>
+              <Button
+                variant="default"
+                className="gap-2 bg-primary hover:bg-primary/90"
+                onClick={handleAiMatchAll}
+                title="يفحص كل صور Storage بالذكاء الاصطناعي ويطابق البارت نمبر بدقة 100%"
+              >
+                <Wand2 className="w-4 h-4" />
+                🤖 مطابقة الصور بالـ AI (تطابق 100%)
+              </Button>
+            </div>
           )}
         </div>
 
