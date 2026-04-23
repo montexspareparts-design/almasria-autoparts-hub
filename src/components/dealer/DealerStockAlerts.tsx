@@ -6,6 +6,7 @@ import { Bell, BellOff, Loader2, Package, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
+import DealerPurchasedStockStatus from "./DealerPurchasedStockStatus";
 
 interface StockAlert {
   id: string;
@@ -75,6 +76,9 @@ const DealerStockAlerts = () => {
           هتوصلك إشعار لما المنتج يرجع متوفر أو ينزل عليه عرض
         </p>
       </div>
+
+      {/* Purchased products stock status */}
+      <DealerPurchasedStockStatus />
 
       {/* Active Alerts */}
       {activeAlerts.length === 0 && notifiedAlerts.length === 0 ? (
