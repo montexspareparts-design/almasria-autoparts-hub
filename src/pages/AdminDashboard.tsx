@@ -55,6 +55,7 @@ const AdminWhatsAppDeliveryStatus = lazy(() => import("@/components/admin/AdminW
 const AdminClientAccountAttempts = lazy(() => import("@/components/admin/AdminClientAccountAttempts"));
 const AdminTranslations = lazy(() => import("@/components/admin/AdminTranslations"));
 const AdminSEOPreview = lazy(() => import("@/components/admin/AdminSEOPreview"));
+const AdminResponsivePreview = lazy(() => import("@/components/admin/AdminResponsivePreview"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];
@@ -129,6 +130,7 @@ const sidebarGroups: SidebarGroup[] = [
         { id: "account-attempts", label: "محاولات إنشاء/إعادة تعيين الحسابات", icon: KeyRound },
         { id: "translations", label: "إدارة الترجمات (AR/EN)", icon: FileText },
         { id: "seo-preview", label: "معاينة SEO قبل النشر", icon: Eye },
+        { id: "responsive-preview", label: "معاينة الأجهزة (موبايل/تابلت)", icon: Smartphone },
       ],
     },
     {
@@ -701,6 +703,8 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminTranslations /></Suspense>;
       case "seo-preview":
         return <Suspense fallback={<SectionLoader />}><AdminSEOPreview /></Suspense>;
+      case "responsive-preview":
+        return <Suspense fallback={<SectionLoader />}><AdminResponsivePreview /></Suspense>;
       default:
         return <Suspense fallback={<SectionLoader />}><AdminAnalytics /></Suspense>;
     }
