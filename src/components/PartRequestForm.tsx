@@ -116,6 +116,7 @@ const PartRequestForm = ({ defaultModel, compact }: PartRequestFormProps) => {
       return;
     }
     setSending(true);
+    setLastError(null);
 
     try {
       const { error } = await supabase.from("part_requests" as any).insert({
@@ -133,27 +134,55 @@ const PartRequestForm = ({ defaultModel, compact }: PartRequestFormProps) => {
 
       setSubmitted(true);
       toast.success("تم إرسال طلبك بنجاح! سنتواصل معك قريبًا.");
-      setForm({ name: "", phone: "", model: defaultModel || "", year: "", vin: "", notes: "" });
+      // ملاحظة: لا نمسح الـ form هنا حتى يبقى زر الواتساب مُحمَّلاً ببيانات العميل
       setErrors({});
       setTouched({});
-      removeImage();
 
       setTimeout(() => setSubmitted(false), 8000);
     } catch (err) {
       console.error("Error submitting part request:", err);
+      const msg = err instanceof Error ? err.message : "خطأ غير معروف";
+      setLastError(msg);
       toast.error("حدث خطأ أثناء الإرسال. يرجى المحاولة مرة أخرى أو التواصل عبر واتساب.");
     } finally {
       setSending(false);
     }
   };
 
-  const whatsappMessage = encodeURIComponent(
-    `مرحبًا، أريد طلب قطعة غيار:\n` +
-    `الموديل: ${form.model || "—"}\n` +
-    `السنة: ${form.year || "—"}\n` +
-    `رقم الشاسيه: ${form.vin || "—"}\n` +
-    `ملاحظات: ${form.notes || "—"}`
-  );
+  /**
+   * يبني رسالة واتساب منسّقة حسب الحالة:
+   * - "success": تأكيد طلب تم إرساله مع كل البيانات
+   * - "error":   إبلاغ عن فشل + كل البيانات حتى يتمكن الفريق من إنشاء الطلب يدوياً
+   * - "draft":   استفسار مع البيانات المتاحة (الزر أثناء الملء)
+   */
+  const buildWhatsAppMessage = (mode: "success" | "error" | "draft" = "draft") => {
+    const header =
+      mode === "success"
+        ? "✅ تم إرسال طلب قطعة غيار عبر الموقع — هذه نسخة للمتابعة:"
+        : mode === "error"
+        ? "⚠️ حدث خطأ أثناء إرسال الطلب من الموقع — برجاء استلام البيانات يدوياً:"
+        : "مرحبًا، أريد طلب قطعة غيار:";
+
+    const lines = [
+      header,
+      "",
+      `👤 الاسم: ${form.name || "—"}`,
+      `📱 الموبايل: ${form.phone || "—"}`,
+      `🚙 الموديل: ${form.model || "—"}`,
+      `📅 السنة: ${form.year || "—"}`,
+      `🔢 رقم الشاسيه: ${form.vin || "—"}`,
+      `📝 ملاحظات: ${form.notes || "—"}`,
+    ];
+    if (image) lines.push(`📷 صورة مرفقة: نعم (سأرسلها هنا)`);
+    if (mode === "error" && lastError) {
+      lines.push("", `🐞 سبب الخطأ التقني: ${lastError.slice(0, 120)}`);
+    }
+    lines.push("", `🕐 ${new Date().toLocaleString("ar-EG")}`);
+    return encodeURIComponent(lines.join("\n"));
+  };
+
+  const whatsappHref = (mode: "success" | "error" | "draft") =>
+    `https://wa.me/201153961008?text=${buildWhatsAppMessage(mode)}`;
 
   if (submitted) {
     return (
