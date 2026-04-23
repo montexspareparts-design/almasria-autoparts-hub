@@ -60,6 +60,7 @@ const PartRequestForm = ({ defaultModel, compact }: PartRequestFormProps) => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [lastError, setLastError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const validateField = (key: FieldKey, value: string) => {
