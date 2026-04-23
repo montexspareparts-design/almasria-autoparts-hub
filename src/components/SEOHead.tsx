@@ -1,0 +1,131 @@
+import { Helmet } from "react-helmet-async";
+import { useLocation } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
+
+const SITE_URL = "https://www.almasriaautoparts.com";
+
+interface RouteMeta {
+  ar: { title: string; description: string };
+  en: { title: string; description: string };
+}
+
+/* ── Per-route meta dictionary (Arabic + English) ── */
+const ROUTE_META: Record<string, RouteMeta> = {
+  "/": {
+    ar: {
+      title: "المصرية جروب | موزع معتمد لقطع غيار تويوتا الأصلية والزيوت في مصر",
+      description: "موزع معتمد رسمي لقطع غيار وزيوت تويوتا الأصلية في مصر منذ 1999. شبكة توزيع تغطي جميع المحافظات وتسليم خلال 48 ساعة.",
+    },
+    en: {
+      title: "Al Masria Group | Authorized Toyota Genuine Parts & Oils Distributor in Egypt",
+      description: "Official authorized distributor of Toyota genuine parts and oils in Egypt since 1999. Nationwide distribution network with 48-hour delivery.",
+    },
+  },
+  "/about": {
+    ar: { title: "من نحن | المصرية جروب — موزع تويوتا المعتمد منذ 1999", description: "تعرف على المصرية جروب، الموزع المعتمد لقطع غيار وزيوت تويوتا الأصلية في مصر. خبرة 25 عامًا، فروع في مصر ودبي، شبكة توزيع وطنية." },
+    en: { title: "About Us | Al Masria Group — Authorized Toyota Distributor Since 1999", description: "Learn about Al Masria Group, the authorized distributor of Toyota genuine parts and oils in Egypt. 25 years of experience, offices in Egypt and Dubai." },
+  },
+  "/products": {
+    ar: { title: "منتجاتنا | قطع غيار تويوتا الأصلية وزيوت وMTX — المصرية جروب", description: "تصفح كتالوج قطع غيار تويوتا الأصلية، الزيوت، وقطع MTX البديلة بأسعار الجملة وضمان الجودة." },
+    en: { title: "Our Products | Toyota Genuine Parts, Oils & MTX — Al Masria Group", description: "Browse our catalog of Toyota genuine parts, oils, and MTX aftermarket parts at wholesale prices with quality guarantee." },
+  },
+  "/contact": {
+    ar: { title: "اتصل بنا | المصرية جروب — فروع وأرقام تواصل قطع غيار تويوتا", description: "تواصل مع المصرية جروب — فروع التوفيقية وأوسيم والأقصر ودبي. مبيعات وخدمة عملاء على مدار الأسبوع." },
+    en: { title: "Contact Us | Al Masria Group — Toyota Parts Branches & Phone Numbers", description: "Contact Al Masria Group — branches in Tawfikiya, Awsim, Luxor, and Dubai. Sales and customer service available." },
+  },
+  "/mtx": {
+    ar: { title: "قطع غيار MTX | البديل المضمون لقطع غيار تويوتا — المصرية جروب", description: "قطع غيار MTX Aftermarket بجودة تضاهي الأصلية وأسعار اقتصادية. علامتنا التجارية الحصرية." },
+    en: { title: "MTX Parts | Premium Aftermarket Toyota Parts — Al Masria Group", description: "MTX aftermarket parts with OEM-matching quality and competitive pricing. Our exclusive brand." },
+  },
+  "/toyota-genuine-parts-egypt": {
+    ar: { title: "قطع غيار تويوتا الأصلية في مصر | الموزع المعتمد — المصرية جروب", description: "قطع غيار تويوتا الأصلية 100٪ بضمان المصنع لجميع موديلات تويوتا في مصر. توصيل سريع لجميع المحافظات." },
+    en: { title: "Toyota Genuine Parts in Egypt | Authorized Distributor — Al Masria Group", description: "100% genuine Toyota parts with factory warranty for all Toyota models in Egypt. Fast delivery nationwide." },
+  },
+  "/catalogs": {
+    ar: { title: "كشوفات الأسعار | قطع غيار تويوتا والزيوت — المصرية جروب", description: "تحميل كشوفات أسعار قطع غيار تويوتا الأصلية والزيوت وMTX المحدثة." },
+    en: { title: "Price Catalogs | Toyota Parts & Oils — Al Masria Group", description: "Download up-to-date price catalogs for Toyota genuine parts, oils, and MTX." },
+  },
+  "/what-sets-us-apart": {
+    ar: { title: "ما يميزنا | لماذا تختار المصرية جروب لقطع غيار تويوتا", description: "اكتشف ما يميز المصرية جروب: شبكة توزيع وطنية، ضمان أصلي، ودعم فني متخصص." },
+    en: { title: "What Sets Us Apart | Why Choose Al Masria Group for Toyota Parts", description: "Discover what sets Al Masria Group apart: nationwide distribution, genuine warranty, and expert technical support." },
+  },
+  "/policies": {
+    ar: { title: "السياسات والشروط | المصرية جروب", description: "الشروط والأحكام، سياسة الخصوصية، الشحن، والاسترجاع لخدمات المصرية جروب." },
+    en: { title: "Policies & Terms | Al Masria Group", description: "Terms & conditions, privacy policy, shipping, and refund policies for Al Masria Group services." },
+  },
+};
+
+/* Routes that should NOT be indexed (private/dealer/admin/checkout) */
+const NOINDEX_PREFIXES = [
+  "/admin",
+  "/dealer",
+  "/dealer-login",
+  "/dealer-register",
+  "/dealer-apply",
+  "/client-register",
+  "/cart",
+  "/checkout",
+  "/payment",
+  "/payment-callback",
+  "/reset-password",
+  "/auth",
+  "/my-profile",
+  "/dev",
+];
+
+const SEOHead = () => {
+  const { lang } = useLanguage();
+  const { pathname } = useLocation();
+
+  const isNoIndex = NOINDEX_PREFIXES.some(
+    (p) => pathname === p || pathname.startsWith(p + "/")
+  );
+
+  // Find best route match (exact first, then prefix fallback)
+  const meta =
+    ROUTE_META[pathname] ||
+    ROUTE_META[Object.keys(ROUTE_META).find((k) => k !== "/" && pathname.startsWith(k)) || "/"] ||
+    ROUTE_META["/"];
+
+  const { title, description } = meta[lang];
+  const canonical = `${SITE_URL}${pathname === "/" ? "/" : pathname}`;
+  const ogLocale = lang === "ar" ? "ar_EG" : "en_US";
+  const ogLocaleAlt = lang === "ar" ? "en_US" : "ar_EG";
+
+  return (
+    <Helmet>
+      <html lang={lang} dir={lang === "ar" ? "rtl" : "ltr"} />
+      <title>{title}</title>
+      <meta name="description" content={description} />
+
+      {/* Canonical + hreflang alternates */}
+      <link rel="canonical" href={canonical} />
+      <link rel="alternate" hrefLang="ar" href={canonical} />
+      <link rel="alternate" hrefLang="en" href={canonical} />
+      <link rel="alternate" hrefLang="x-default" href={canonical} />
+
+      {/* Robots */}
+      {isNoIndex ? (
+        <meta name="robots" content="noindex, nofollow" />
+      ) : (
+        <meta name="robots" content="index, follow, max-image-preview:large" />
+      )}
+
+      {/* Open Graph */}
+      <meta property="og:type" content="website" />
+      <meta property="og:title" content={title} />
+      <meta property="og:description" content={description} />
+      <meta property="og:url" content={canonical} />
+      <meta property="og:locale" content={ogLocale} />
+      <meta property="og:locale:alternate" content={ogLocaleAlt} />
+      <meta property="og:site_name" content={lang === "ar" ? "المصرية جروب" : "Al Masria Group"} />
+
+      {/* Twitter */}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={title} />
+      <meta name="twitter:description" content={description} />
+    </Helmet>
+  );
+};
+
+export default SEOHead;
