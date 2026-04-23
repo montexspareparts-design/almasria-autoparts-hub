@@ -47,6 +47,7 @@ const ProductCard = memo(({
   if (viewMode === "list") {
     return (
       <div
+        dir="rtl"
         className="group relative bg-card rounded-2xl overflow-hidden cursor-pointer flex
           border border-border/40
           shadow-[0_2px_8px_rgba(0,0,0,0.04)]
@@ -77,8 +78,8 @@ const ProductCard = memo(({
         </div>
 
         {/* Content */}
-        <div className="flex-1 p-3 sm:p-4 flex flex-col justify-center min-w-0 gap-1.5 sm:gap-2" onClick={(e) => e.stopPropagation()}>
-          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+        <div className="flex-1 p-3 sm:p-4 flex flex-col justify-center min-w-0 gap-1.5 sm:gap-2 text-right" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-end gap-1.5 sm:gap-2 flex-wrap">
             <span className="text-[8px] sm:text-[10px] font-mono bg-muted/50 text-muted-foreground/70 px-1.5 sm:px-2 py-0.5 rounded-md leading-none tracking-widest">{product.sku}</span>
             <StockBadge available={stockAvailable} />
             {brandRouteMap[product.brand] && (
@@ -91,21 +92,26 @@ const ProductCard = memo(({
               </Link>
             )}
           </div>
-          <h3 className="font-bold text-card-foreground text-[11px] sm:text-sm leading-snug sm:leading-relaxed line-clamp-2 group-hover:text-primary transition-colors duration-300">
+          <h3 className="font-bold text-card-foreground text-[11px] sm:text-sm leading-snug sm:leading-relaxed line-clamp-2 group-hover:text-primary transition-colors duration-300 text-right">
             {product.name_ar}
           </h3>
           {product.product_categories && (
-            <p className="text-[9px] sm:text-xs text-muted-foreground/50 leading-none">{(product.product_categories as any).name_ar}</p>
+            <p className="text-[9px] sm:text-xs text-muted-foreground/50 leading-none text-right">{(product.product_categories as any).name_ar}</p>
           )}
-          <div className="flex items-center gap-2 sm:gap-3 flex-wrap mt-0.5">
+          <div className="mt-1 flex flex-col items-stretch gap-2 sm:mt-0.5 sm:flex-row sm:items-center sm:justify-between">
             <PriceSection
               user={user} isDealer={isDealer} price={price} hasViewed={hasViewed}
               limitReached={limitReached} dailyViewCount={dailyViewCount} dailyLimit={dailyLimit}
               productId={product.id} onRecordView={onRecordView} onLoginRequired={onLoginRequired} compact
             />
             {stockAvailable && canSeePrice && (
-              <Button size="sm" className="gap-1.5 text-[9px] sm:text-xs h-7 sm:h-8 px-3 sm:px-4 rounded-xl font-bold shadow-sm" onClick={() => onAddToCart(product)}>
-                <ShoppingCart className="w-3 h-3" />أضف
+              <Button
+                size="sm"
+                className="w-full sm:w-auto flex-row-reverse gap-1.5 text-[9px] sm:text-xs h-8 sm:h-8 px-3 sm:px-4 rounded-xl font-bold shadow-sm"
+                onClick={() => onAddToCart(product)}
+              >
+                <ShoppingCart className="w-3 h-3" />
+                أضف
               </Button>
             )}
           </div>
@@ -119,6 +125,7 @@ const ProductCard = memo(({
   // ═══════════════════════════════════════════════
   return (
     <div
+      dir="rtl"
       className="group relative bg-card rounded-[20px] overflow-hidden cursor-pointer flex flex-col
         border border-border/20
         shadow-[0_2px_12px_rgba(0,0,0,0.03),0_1px_3px_rgba(0,0,0,0.02)]
@@ -186,10 +193,13 @@ const ProductCard = memo(({
       </div>
 
       {/* ── Content Section ── */}
-      <div className="relative flex-1 flex flex-col p-2 sm:p-[18px] z-[1]" onClick={(e) => e.stopPropagation()}>
+      <div className="relative flex-1 flex flex-col p-2 sm:p-[18px] z-[1] text-right" onClick={(e) => e.stopPropagation()}>
         {/* Top row: Stock + Brand + SKU */}
-        <div className="flex items-center justify-between gap-1 mb-2.5">
-          <div className="flex items-center gap-1.5">
+        <div className="mb-2.5 flex items-start justify-between gap-1">
+          <span className="text-[8px] sm:text-[9px] font-mono text-muted-foreground/35 tracking-[0.15em] leading-none select-all text-left shrink-0">
+            {product.sku}
+          </span>
+          <div className="flex items-center justify-end gap-1.5 flex-wrap min-w-0">
             <StockBadge available={stockAvailable} />
             {brandRouteMap[product.brand] && (
               <Link
@@ -201,20 +211,17 @@ const ProductCard = memo(({
               </Link>
             )}
           </div>
-          <span className="text-[8px] sm:text-[9px] font-mono text-muted-foreground/35 tracking-[0.15em] leading-none select-all">
-            {product.sku}
-          </span>
         </div>
 
         {/* Name */}
-        <h3 className="font-bold text-card-foreground text-[10px] sm:text-[13px] leading-[1.5] line-clamp-2 min-h-[2.4em] mb-1
+        <h3 className="font-bold text-card-foreground text-[10px] sm:text-[13px] leading-[1.5] line-clamp-2 min-h-[2.4em] mb-1 text-right
           group-hover:text-primary transition-colors duration-400">
           {product.name_ar}
         </h3>
 
         {/* Category */}
         {product.product_categories && (
-          <p className="text-[8px] sm:text-[10px] text-muted-foreground/40 leading-none truncate mb-2.5">
+          <p className="text-[8px] sm:text-[10px] text-muted-foreground/40 leading-none truncate mb-2.5 text-right">
             {(product.product_categories as any).name_ar}
           </p>
         )}
@@ -235,7 +242,7 @@ const ProductCard = memo(({
         {stockAvailable && canSeePrice && (
           <Button
             size="sm"
-            className="w-full gap-1.5 text-[9px] sm:text-xs h-7 sm:h-10 rounded-xl font-extrabold mt-1.5 sm:mt-3
+            className="w-full flex-row-reverse gap-1.5 text-[9px] sm:text-xs h-8 sm:h-10 rounded-xl font-extrabold mt-2 sm:mt-3
               bg-primary hover:bg-primary/90
               shadow-[0_4px_14px_-3px_hsl(var(--primary)/0.4)]
               hover:shadow-[0_6px_20px_-3px_hsl(var(--primary)/0.5)]
@@ -315,7 +322,7 @@ const StockAlertButton = ({ productId, userId, productName }: { productId: strin
     <Button
       size="sm"
       variant="outline"
-      className={`w-full gap-1.5 text-[9px] sm:text-xs h-7 sm:h-9 rounded-xl font-bold mt-1.5 sm:mt-2.5 transition-all duration-300
+      className={`w-full flex-row-reverse gap-1.5 text-[9px] sm:text-xs h-8 sm:h-9 rounded-xl font-bold mt-2 sm:mt-2.5 transition-all duration-300
         ${subscribed 
           ? "border-amber-400/40 bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-700/30" 
           : "border-border/40 hover:border-primary/30 hover:bg-primary/5"
@@ -362,24 +369,26 @@ const PriceSection = ({
 }: PriceSectionProps) => {
   if (!user) {
     return compact ? (
-      <Button variant="outline" size="sm" className="gap-1.5 text-[10px] sm:text-xs h-7 sm:h-8 rounded-xl border-border/50 font-bold" onClick={onLoginRequired}>
-        <Lock className="w-3 h-3" />سجل لعرض السعر
+      <Button variant="outline" size="sm" className="w-full sm:w-auto flex-row-reverse gap-1.5 text-[10px] sm:text-xs h-8 sm:h-8 rounded-xl border-border/50 font-bold" onClick={onLoginRequired}>
+        <Lock className="w-3 h-3" />
+        سجل لعرض السعر
       </Button>
     ) : (
-      <Button variant="outline" size="sm" className="w-full gap-2 text-[10px] sm:text-xs h-9 rounded-xl border-border/40 font-bold hover:bg-primary/5 hover:border-primary/25 transition-all duration-300" onClick={onLoginRequired}>
-        <Lock className="w-3.5 h-3.5 text-muted-foreground/60" />سجل دخولك لعرض السعر
+      <Button variant="outline" size="sm" className="w-full flex-row-reverse gap-2 text-[10px] sm:text-xs h-9 rounded-xl border-border/40 font-bold hover:bg-primary/5 hover:border-primary/25 transition-all duration-300" onClick={onLoginRequired}>
+        <Lock className="w-3.5 h-3.5 text-muted-foreground/60" />
+        سجل دخولك لعرض السعر
       </Button>
     );
   }
 
   if (price !== null) {
     return (
-      <div className={compact ? "flex items-baseline gap-1.5" : "space-y-1 py-1"}>
-        <div className="text-primary font-black text-lg sm:text-xl tracking-tight leading-tight">
-          {price.toLocaleString("ar-EG")}
-          <span className="text-[10px] sm:text-xs font-bold text-primary/50 mr-1">ج.م</span>
+      <div className={compact ? "flex flex-wrap items-baseline justify-start gap-1.5 text-right" : "space-y-1 py-1 text-right"}>
+        <div className="inline-flex items-baseline gap-1 text-primary font-black text-lg sm:text-xl tracking-tight leading-tight">
+          <span>{price.toLocaleString("ar-EG")}</span>
+          <span className="text-[10px] sm:text-xs font-bold text-primary/50">ج.م</span>
         </div>
-        <p className={`text-[8px] sm:text-[10px] font-semibold leading-none ${
+        <p className={`w-full text-[8px] sm:text-[10px] font-semibold leading-none ${
           isDealer && hasViewed ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground/40"
         }`}>
           {isDealer && hasViewed ? "✓ سعر الجملة الخاص بك" : "سعر قطاعي"}
@@ -390,12 +399,13 @@ const PriceSection = ({
 
   if (isDealer && !limitReached) {
     return compact ? (
-      <Button variant="outline" size="sm" className="gap-1.5 text-[10px] sm:text-xs h-7 sm:h-8 rounded-xl font-bold" onClick={() => onRecordView(productId)}>
-        <Eye className="w-3 h-3" />اعرض السعر
+      <Button variant="outline" size="sm" className="w-full sm:w-auto flex-row-reverse gap-1.5 text-[10px] sm:text-xs h-8 sm:h-8 rounded-xl font-bold" onClick={() => onRecordView(productId)}>
+        <Eye className="w-3 h-3" />
+        اعرض السعر
       </Button>
     ) : (
       <button
-        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold
+        className="w-full flex flex-row-reverse items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold
           bg-primary/8 text-primary border border-primary/15
           hover:bg-primary/15 hover:border-primary/25 active:scale-[0.97]
           transition-all duration-300"
@@ -410,7 +420,7 @@ const PriceSection = ({
 
   if (isDealer && limitReached) {
     return (
-      <div className="flex items-center justify-center gap-1.5 text-muted-foreground/50 text-[10px] sm:text-xs py-2.5 rounded-xl bg-muted/20">
+      <div className="flex flex-row-reverse items-center justify-center gap-1.5 text-muted-foreground/50 text-[10px] sm:text-xs py-2.5 rounded-xl bg-muted/20">
         <Lock className="w-3 h-3" />
         <span>استنفدت الحد اليومي</span>
       </div>
