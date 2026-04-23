@@ -373,12 +373,7 @@ const Auth = () => {
 
         {/* Footer */}
         {!forgotMode && (
-          <motion.div 
-            className="mt-6 space-y-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.4 }}
-          >
+          <div className="mt-6 space-y-4 animate-fade-in">
             {/* Toggle login/register */}
             <div className="text-center">
               {isLogin ? (
@@ -411,7 +406,7 @@ const Auth = () => {
                 ← العودة للرئيسية
               </Link>
             </div>
-          </motion.div>
+          </div>
         )}
       </motion.div>
     </div>
