@@ -416,6 +416,45 @@ const AdminCustomerIntelligence = () => {
   // === Call outcomes (per-day, per-task) — drives auto score/priority adjustments ===
   type CallOutcome = "answered" | "no_answer" | "agreed" | "not_suitable";
   const outcomesStorageKey = `aci_call_outcomes_${todayKey}`;
+
+  // === Handled meta — who/when/how the staff worked on a task (prevents duplicate work) ===
+  type HandledAction = "call" | "whatsapp" | "note" | "outcome" | "manual";
+  type HandledRecord = { at: string; by: string; byName?: string | null; action: HandledAction };
+  const handledStorageKey = `aci_handled_meta_${todayKey}`;
+  const [handledMeta, setHandledMeta] = useState<Record<string, HandledRecord>>(() => {
+    try {
+      const raw = localStorage.getItem(handledStorageKey);
+      return raw ? (JSON.parse(raw) as Record<string, HandledRecord>) : {};
+    } catch { return {}; }
+  });
+  const markHandled = (taskId: string, action: HandledAction) => {
+    if (!user?.id) return;
+    setHandledMeta(prev => {
+      // First action wins for the day — preserve original timestamp/owner
+      if (prev[taskId]) return prev;
+      const next = {
+        ...prev,
+        [taskId]: {
+          at: new Date().toISOString(),
+          by: user.id,
+          byName: (user as any).user_metadata?.full_name || user.email || "موظف",
+          action,
+        } as HandledRecord,
+      };
+      try { localStorage.setItem(handledStorageKey, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+  const unmarkHandled = (taskId: string) => {
+    setHandledMeta(prev => {
+      if (!prev[taskId]) return prev;
+      const next = { ...prev };
+      delete next[taskId];
+      try { localStorage.setItem(handledStorageKey, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+
   const [callOutcomes, setCallOutcomes] = useState<Record<string, CallOutcome>>(() => {
     try {
       const raw = localStorage.getItem(outcomesStorageKey);
@@ -429,6 +468,9 @@ const AdminCustomerIntelligence = () => {
       try { localStorage.setItem(outcomesStorageKey, JSON.stringify(next)); } catch {}
       return next;
     });
+    // Mark task as handled (outcome action) so other staff can see it's already worked on
+    if (outcome) markHandled(taskId, "outcome");
+    else unmarkHandled(taskId);
     // Auto-complete outcomes that close the loop
     if (outcome === "agreed" || outcome === "not_suitable") {
       setCompletedTasks(prev => {
@@ -880,6 +922,27 @@ const AdminCustomerIntelligence = () => {
     });
     return map;
   }, [lastVisitData]);
+
+  // Visits grouped by user → grouped by calendar day for the activity timeline
+  const visitsByUser = useMemo(() => {
+    const map: Record<string, { date: string; count: number; lastAt: string }[]> = {};
+    lastVisitData?.forEach(v => {
+      if (!v.user_id) return;
+      const day = v.visited_at.slice(0, 10); // YYYY-MM-DD
+      if (!map[v.user_id]) map[v.user_id] = [];
+      const bucket = map[v.user_id].find(b => b.date === day);
+      if (bucket) {
+        bucket.count++;
+        if (v.visited_at > bucket.lastAt) bucket.lastAt = v.visited_at;
+      } else {
+        map[v.user_id].push({ date: day, count: 1, lastAt: v.visited_at });
+      }
+    });
+    // Sort each user's days descending (newest first)
+    Object.values(map).forEach(arr => arr.sort((a, b) => b.date.localeCompare(a.date)));
+    return map;
+  }, [lastVisitData]);
+
 
   // Build user search logs map
   const userSearchMap: Record<string, { query: string; count: number; lastAt: string }[]> = {};
@@ -2332,9 +2395,37 @@ const AdminCustomerIntelligence = () => {
                                 {outcomeMeta[callOutcomes[task.id]].label}
                               </span>
                             )}
+                            {handledMeta[task.id] && (() => {
+                              const h = handledMeta[task.id];
+                              const mine = h.by === user?.id;
+                              const actionLabel = h.action === "call" ? "اتصل" : h.action === "whatsapp" ? "راسل واتساب" : h.action === "note" ? "أضاف ملاحظة" : h.action === "outcome" ? "سجّل نتيجة" : "تعامل";
+                              const mins = Math.max(0, Math.floor((Date.now() - new Date(h.at).getTime()) / 60000));
+                              const ago = mins < 1 ? "الآن" : mins < 60 ? `منذ ${mins}د` : mins < 1440 ? `منذ ${Math.floor(mins/60)}س` : `منذ ${Math.floor(mins/1440)}ي`;
+                              return (
+                                <span
+                                  className={cn(
+                                    "text-[9px] font-black px-1.5 py-0.5 rounded inline-flex items-center gap-1 border",
+                                    mine
+                                      ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-400/40"
+                                      : "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-400/40"
+                                  )}
+                                  title={`${actionLabel} بواسطة ${h.byName || "موظف"} — ${new Date(h.at).toLocaleString("ar-EG")}`}
+                                >
+                                  ✋ {mine ? "أنت" : (h.byName || "موظف")} • {actionLabel} {ago}
+                                </span>
+                              );
+                            })()}
                           </div>
                           <p className={cn("text-xs font-black text-foreground", isDone && "line-through text-muted-foreground")}>{task.title}</p>
                           <p className={cn("text-[10px] text-muted-foreground mt-0.5 line-clamp-2", isDone && "opacity-70")}>{task.reason}</p>
+                          {handledMeta[task.id] && handledMeta[task.id].by !== user?.id && (
+                            <div className="mt-1 rounded-md bg-amber-500/10 border border-amber-400/40 px-2 py-1 flex items-center gap-1.5">
+                              <span className="text-amber-600 text-sm leading-none">⚠️</span>
+                              <span className="text-[10px] font-bold text-amber-800 dark:text-amber-300 flex-1">
+                                {handledMeta[task.id].byName || "موظف آخر"} بدأ يتعامل مع العميل ده — تجنب التكرار
+                              </span>
+                            </div>
+                          )}
                           <p
                             className={cn("text-[11px] font-bold text-primary mt-1 truncate max-w-full text-right", isDone && "opacity-70")}
                             title={task.userName}
@@ -2431,6 +2522,88 @@ const AdminCustomerIntelligence = () => {
                                 ))}
                               </div>
                             )}
+                            {/* Activity Timeline — multiple sessions grouped by day */}
+                            {(() => {
+                              const visitDays = visitsByUser[task.userId] || [];
+                              const userSearches = userSearchMap[task.userId] || [];
+                              // Group searches by date
+                              const searchByDay: Record<string, { query: string; count: number; lastAt: string }[]> = {};
+                              userSearches.forEach(s => {
+                                const day = s.lastAt.slice(0, 10);
+                                if (!searchByDay[day]) searchByDay[day] = [];
+                                searchByDay[day].push(s);
+                              });
+                              // Merge all unique days
+                              const allDays = Array.from(new Set([
+                                ...visitDays.map(v => v.date),
+                                ...Object.keys(searchByDay),
+                              ])).sort((a, b) => b.localeCompare(a));
+                              if (allDays.length === 0) return null;
+                              const fmtDay = (iso: string) => {
+                                const d = new Date(iso + "T00:00:00");
+                                const today = new Date(); today.setHours(0,0,0,0);
+                                const diff = Math.floor((today.getTime() - d.getTime()) / 86400000);
+                                if (diff === 0) return "اليوم";
+                                if (diff === 1) return "أمس";
+                                if (diff < 7) return `منذ ${diff} أيام`;
+                                return d.toLocaleDateString("ar-EG", { day: "numeric", month: "short" });
+                              };
+                              const fmtTime = (iso: string) => new Date(iso).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
+                              return (
+                                <div className="rounded-lg border border-border/50 bg-background/70 overflow-hidden">
+                                  <div className="px-2 py-1.5 bg-muted/40 border-b border-border/40 flex items-center justify-between">
+                                    <span className="text-[10px] font-black text-foreground inline-flex items-center gap-1">
+                                      🕒 سجل الجلسات ({allDays.length} يوم)
+                                    </span>
+                                    <span className="text-[9px] text-muted-foreground">الأحدث أولاً</span>
+                                  </div>
+                                  <div className="max-h-44 overflow-y-auto divide-y divide-border/30">
+                                    {allDays.slice(0, 8).map(day => {
+                                      const v = visitDays.find(x => x.date === day);
+                                      const s = searchByDay[day] || [];
+                                      return (
+                                        <div key={day} className="px-2 py-1.5 space-y-1">
+                                          <div className="flex items-center justify-between">
+                                            <span className="text-[10px] font-black text-foreground">{fmtDay(day)}</span>
+                                            <span className="text-[9px] text-muted-foreground" dir="ltr">{day}</span>
+                                          </div>
+                                          {v && (
+                                            <div className="flex items-center gap-1 text-[9px] text-muted-foreground">
+                                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-700 dark:text-blue-400 font-bold">
+                                                👁️ {v.count} صفحة
+                                              </span>
+                                              <span className="opacity-70">آخر زيارة {fmtTime(v.lastAt)}</span>
+                                            </div>
+                                          )}
+                                          {s.length > 0 && (
+                                            <div className="flex flex-wrap gap-1">
+                                              {s.slice(0, 4).map((q, i) => (
+                                                <span
+                                                  key={i}
+                                                  className="text-[9px] px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-700 dark:text-orange-400 font-bold inline-flex items-center gap-1"
+                                                  title={`${q.query} — ${fmtTime(q.lastAt)}`}
+                                                >
+                                                  🔍 {q.query.length > 18 ? q.query.slice(0, 18) + "…" : q.query}
+                                                  {q.count > 1 && <span className="opacity-70">×{q.count}</span>}
+                                                </span>
+                                              ))}
+                                              {s.length > 4 && (
+                                                <span className="text-[9px] text-muted-foreground">+{s.length - 4}</span>
+                                              )}
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                    {allDays.length > 8 && (
+                                      <div className="px-2 py-1 text-[9px] text-center text-muted-foreground">
+                                        + {allDays.length - 8} أيام أقدم — افتح الملف الكامل
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })()}
                             <button
                               type="button"
                               onClick={(e) => {
@@ -2540,7 +2713,7 @@ const AdminCustomerIntelligence = () => {
                           <>
                             <a
                               href={`tel:${task.phone}`}
-                              onClick={(e) => e.stopPropagation()}
+                              onClick={(e) => { e.stopPropagation(); markHandled(task.id, "call"); }}
                               className={cn(
                                 "inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors",
                                 isDone && "opacity-60"
@@ -2552,7 +2725,7 @@ const AdminCustomerIntelligence = () => {
                               href={`https://wa.me/${waNumber}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
+                              onClick={(e) => { e.stopPropagation(); markHandled(task.id, "whatsapp"); }}
                               className={cn(
                                 "inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md bg-green-500/15 text-green-700 dark:text-green-400 hover:bg-green-500/25 transition-colors",
                                 isDone && "opacity-60"
