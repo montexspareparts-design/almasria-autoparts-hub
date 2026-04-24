@@ -1705,7 +1705,15 @@ const AdminCustomerIntelligence = () => {
       <div
         ref={sectionContentRef}
         key={activeSection}
-        className="animate-section-enter will-change-transform"
+        tabIndex={-1}
+        role="region"
+        aria-label={
+          activeSection === "filters" ? "البحث والفلاتر"
+          : activeSection === "tasks" ? "مهام اليوم"
+          : activeSection === "customers" ? "قائمة العملاء"
+          : "التحليلات والتقارير"
+        }
+        className="animate-section-enter will-change-transform outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-md"
         style={{ scrollMarginTop: "calc(var(--aci-nav-height, 64px) + 8px)" }}
       >
 
