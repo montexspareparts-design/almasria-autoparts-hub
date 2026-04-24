@@ -256,6 +256,8 @@ const AdminCustomerIntelligence = () => {
     } catch { return new Set(); }
   });
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
+  const [analyticsOpen, setAnalyticsOpen] = useState(false);
+  const [tasksOpen, setTasksOpen] = useState(true);
   const toggleTaskComplete = (taskId: string) => {
     setCompletedTasks(prev => {
       const next = new Set(prev);
