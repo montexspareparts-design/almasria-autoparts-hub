@@ -763,17 +763,25 @@ export default function VisitorSessionSummary() {
   );
 }
 
-function KpiCard({ icon: Icon, label, value, valueText, sub, color }: { icon: any; label: string; value?: number; valueText?: string; sub?: string; color: string }) {
+function KpiCard({ icon: Icon, label, value, valueText, sub, color, onClick }: { icon: any; label: string; value?: number; valueText?: string; sub?: string; color: string; onClick?: () => void }) {
   const map: Record<string, string> = {
     blue: "from-blue-500/15 to-blue-500/5 text-blue-700 dark:text-blue-400 border-blue-200/60 dark:border-blue-900/40",
     purple: "from-purple-500/15 to-purple-500/5 text-purple-700 dark:text-purple-400 border-purple-200/60 dark:border-purple-900/40",
     orange: "from-orange-500/15 to-orange-500/5 text-orange-700 dark:text-orange-400 border-orange-200/60 dark:border-orange-900/40",
     emerald: "from-emerald-500/15 to-emerald-500/5 text-emerald-700 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-900/40",
   };
+  const interactive = !!onClick;
   return (
-    <div className={`rounded-2xl p-4 border bg-gradient-to-br ${map[color]} shadow-sm hover:shadow-md transition`}>
+    <div
+      onClick={onClick}
+      role={interactive ? "button" : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      onKeyDown={interactive ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick?.(); } } : undefined}
+      className={`rounded-2xl p-4 border bg-gradient-to-br ${map[color]} shadow-sm transition ${interactive ? "cursor-pointer hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-current/40" : "hover:shadow-md"}`}
+    >
       <div className="flex items-center justify-between mb-2">
         <Icon className="w-5 h-5" />
+        {interactive && <span className="text-[9px] opacity-60 font-bold">اضغط للتفاصيل ↓</span>}
       </div>
       <p className="text-2xl md:text-3xl font-black leading-none">{valueText ?? value ?? 0}</p>
       <p className="text-[11px] mt-2 font-bold opacity-90">{label}</p>
