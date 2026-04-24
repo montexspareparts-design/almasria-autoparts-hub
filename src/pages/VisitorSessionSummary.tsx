@@ -584,7 +584,7 @@ export default function VisitorSessionSummary() {
                   </div>
 
                   {/* Pages timeline */}
-                  <div>
+                  <div id="section-pages" className="scroll-mt-24 rounded-xl">
                     <SectionTitle icon={FileText} title="رحلة الصفحات" count={lastSession.pages.length} />
                     <ol className="relative border-r-2 border-primary/15 pr-5 mt-3 space-y-2">
                       {lastSession.pages.map((p, idx) => (
