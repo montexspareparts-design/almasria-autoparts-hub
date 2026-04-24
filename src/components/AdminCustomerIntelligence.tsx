@@ -134,7 +134,9 @@ import {
   Package, Calendar as CalendarIcon, Filter, X, Download,
   MessageCircle, Send, Copy, ExternalLink, Briefcase,
   Star, Activity, AlertTriangle, AlertCircle, CheckCircle2, ListOrdered, FileText, RefreshCw, Zap,
+  Settings2, RotateCcw,
 } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 
 interface CustomerProfile {
@@ -258,6 +260,30 @@ const AdminCustomerIntelligence = () => {
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [tasksOpen, setTasksOpen] = useState(true);
+
+  // === Priority weights (configurable, persisted in localStorage) ===
+  type PriorityWeights = { alerts: number; recency: number; buyability: number };
+  const DEFAULT_WEIGHTS: PriorityWeights = { alerts: 30, recency: 40, buyability: 30 };
+  const WEIGHTS_STORAGE_KEY = "aci_priority_weights_v1";
+  const [priorityWeights, setPriorityWeights] = useState<PriorityWeights>(() => {
+    try {
+      const raw = localStorage.getItem(WEIGHTS_STORAGE_KEY);
+      if (!raw) return DEFAULT_WEIGHTS;
+      const parsed = JSON.parse(raw);
+      if (
+        typeof parsed?.alerts === "number" &&
+        typeof parsed?.recency === "number" &&
+        typeof parsed?.buyability === "number"
+      ) return parsed;
+      return DEFAULT_WEIGHTS;
+    } catch { return DEFAULT_WEIGHTS; }
+  });
+  const [weightsDialogOpen, setWeightsDialogOpen] = useState(false);
+  const updatePriorityWeights = (next: PriorityWeights) => {
+    setPriorityWeights(next);
+    try { localStorage.setItem(WEIGHTS_STORAGE_KEY, JSON.stringify(next)); } catch {}
+  };
+  const weightsTotal = priorityWeights.alerts + priorityWeights.recency + priorityWeights.buyability;
   const toggleTaskComplete = (taskId: string) => {
     setCompletedTasks(prev => {
       const next = new Set(prev);
@@ -985,26 +1011,32 @@ const AdminCustomerIntelligence = () => {
       candidateDays.push(daysSinceJoin);
       const freshestDays = candidateDays.length ? Math.min(...candidateDays) : null;
 
-      // === Unified scoring components (max 100) ===
-      // 1) Alerts (0-30): weighted by emoji severity
+      // === Raw scoring components (base scale: 30/40/30) ===
+      // 1) Alerts (raw 0-30): weighted by emoji severity
       const alertWeights: Record<string, number> = {
         "🛒": 18, "🔥": 16, "⚠️": 14, "👋": 10, "✨": 6, "💰": 8,
       };
-      const alertsScore = Math.min(30, alerts.reduce((s, a) => s + (alertWeights[a.icon] ?? 4), 0));
+      const alertsRaw = Math.min(30, alerts.reduce((s, a) => s + (alertWeights[a.icon] ?? 4), 0));
 
-      // 2) Recency (0-40)
-      const recScore = recencyScore(freshestDays);
+      // 2) Recency (raw 0-40)
+      const recRaw = recencyScore(freshestDays);
 
-      // 3) Buyability (0-30): conversion likelihood
-      let buyScore = 0;
-      if (cart && cart.count > 0) buyScore += 12;
-      if (totalSearch >= 10) buyScore += 10; else if (totalSearch >= 3) buyScore += 6;
-      if (orders && orders.count > 0) buyScore += 6;
-      if (orders && orders.count >= 3) buyScore += 2;
-      if (isDealer) buyScore += 4;
-      if (p.phone) buyScore += 2;
-      if (lifecycle === "vip" || lifecycle === "active") buyScore += 2;
-      buyScore = Math.min(30, buyScore);
+      // 3) Buyability (raw 0-30): conversion likelihood
+      let buyRaw = 0;
+      if (cart && cart.count > 0) buyRaw += 12;
+      if (totalSearch >= 10) buyRaw += 10; else if (totalSearch >= 3) buyRaw += 6;
+      if (orders && orders.count > 0) buyRaw += 6;
+      if (orders && orders.count >= 3) buyRaw += 2;
+      if (isDealer) buyRaw += 4;
+      if (p.phone) buyRaw += 2;
+      if (lifecycle === "vip" || lifecycle === "active") buyRaw += 2;
+      buyRaw = Math.min(30, buyRaw);
+
+      // Apply configurable weights — rescale each raw component to its configured ceiling
+      // (raw / baseMax) * configuredWeight  → so total still sums to ~100 when weights sum to 100
+      const alertsScore = Math.round((alertsRaw / 30) * priorityWeights.alerts);
+      const recScore = Math.round((recRaw / 40) * priorityWeights.recency);
+      const buyScore = Math.round((buyRaw / 30) * priorityWeights.buyability);
 
       const totalScore = alertsScore + recScore + buyScore;
       const breakdown = { alerts: alertsScore, recency: recScore, buyability: buyScore };
@@ -1054,7 +1086,7 @@ const AdminCustomerIntelligence = () => {
     // Sort by unified score desc, then by priority bucket
     return tasks.sort((a, b) => b.score - a.score || a.priority - b.priority);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profiles, ordersMap, cartByUser, userSearchMap, dealerUserIds, lastVisitByUser]);
+  }, [profiles, ordersMap, cartByUser, userSearchMap, dealerUserIds, lastVisitByUser, priorityWeights]);
 
   const visibleTasks = todayTasks.filter(t => showCompletedTasks || !completedTasks.has(t.id));
   const pendingTasksCount = todayTasks.filter(t => !completedTasks.has(t.id)).length;
@@ -1721,6 +1753,15 @@ const AdminCustomerIntelligence = () => {
                   variant="ghost"
                   size="sm"
                   className="h-7 w-7 p-0"
+                  onClick={() => setWeightsDialogOpen(true)}
+                  title="إعدادات أوزان الأولوية"
+                >
+                  <Settings2 className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0"
                   onClick={() => setTasksOpen(v => !v)}
                   title={tasksOpen ? "طي المهام" : "إظهار المهام"}
                 >
@@ -1802,13 +1843,13 @@ const AdminCustomerIntelligence = () => {
                             <span
                               className={cn(
                                 "text-[9px] font-black px-1.5 py-0.5 rounded inline-flex items-center gap-0.5",
-                                task.score >= 70 ? "bg-red-500/20 text-red-700 dark:text-red-400"
-                                : task.score >= 50 ? "bg-orange-500/20 text-orange-700 dark:text-orange-400"
-                                : task.score >= 30 ? "bg-amber-500/20 text-amber-700 dark:text-amber-400"
+                                task.score >= weightsTotal * 0.70 ? "bg-red-500/20 text-red-700 dark:text-red-400"
+                                : task.score >= weightsTotal * 0.50 ? "bg-orange-500/20 text-orange-700 dark:text-orange-400"
+                                : task.score >= weightsTotal * 0.30 ? "bg-amber-500/20 text-amber-700 dark:text-amber-400"
                                 : "bg-muted text-muted-foreground",
                                 isDone && "opacity-60"
                               )}
-                              title={`درجة الأولوية: ${task.score}/100\n• إنذارات: ${task.scoreBreakdown.alerts}/30\n• حداثة النشاط: ${task.scoreBreakdown.recency}/40\n• إمكانية الشراء: ${task.scoreBreakdown.buyability}/30`}
+                              title={`درجة الأولوية: ${task.score}/${weightsTotal}\n• إنذارات: ${task.scoreBreakdown.alerts}/${priorityWeights.alerts}\n• حداثة النشاط: ${task.scoreBreakdown.recency}/${priorityWeights.recency}\n• إمكانية الشراء: ${task.scoreBreakdown.buyability}/${priorityWeights.buyability}`}
                             >
                               ⚡{task.score}
                             </span>
@@ -1857,24 +1898,24 @@ const AdminCustomerIntelligence = () => {
                       >
                         <div className="flex items-center justify-between text-[9px] font-bold text-muted-foreground">
                           <span>تفصيل الأولوية</span>
-                          <span className="font-black text-foreground">{task.score}<span className="opacity-60">/100</span></span>
+                          <span className="font-black text-foreground">{task.score}<span className="opacity-60">/{weightsTotal}</span></span>
                         </div>
-                        {/* Stacked bar */}
+                        {/* Stacked bar — width relative to current configured weight totals */}
                         <div className="flex h-1.5 w-full rounded-full overflow-hidden bg-muted/40">
                           <div
                             className="bg-red-500/80 transition-all"
-                            style={{ width: `${task.scoreBreakdown.alerts}%` }}
-                            title={`إنذارات: ${task.scoreBreakdown.alerts}/30`}
+                            style={{ width: `${weightsTotal > 0 ? (task.scoreBreakdown.alerts / weightsTotal) * 100 : 0}%` }}
+                            title={`إنذارات: ${task.scoreBreakdown.alerts}/${priorityWeights.alerts}`}
                           />
                           <div
                             className="bg-amber-500/80 transition-all"
-                            style={{ width: `${task.scoreBreakdown.recency}%` }}
-                            title={`حداثة النشاط: ${task.scoreBreakdown.recency}/40`}
+                            style={{ width: `${weightsTotal > 0 ? (task.scoreBreakdown.recency / weightsTotal) * 100 : 0}%` }}
+                            title={`حداثة النشاط: ${task.scoreBreakdown.recency}/${priorityWeights.recency}`}
                           />
                           <div
                             className="bg-emerald-500/80 transition-all"
-                            style={{ width: `${task.scoreBreakdown.buyability}%` }}
-                            title={`إمكانية الشراء: ${task.scoreBreakdown.buyability}/30`}
+                            style={{ width: `${weightsTotal > 0 ? (task.scoreBreakdown.buyability / weightsTotal) * 100 : 0}%` }}
+                            title={`إمكانية الشراء: ${task.scoreBreakdown.buyability}/${priorityWeights.buyability}`}
                           />
                         </div>
                         {/* Legend with values */}
@@ -3544,6 +3585,126 @@ const AdminCustomerIntelligence = () => {
         </CollapsibleContent>
       </Collapsible>
 
+
+      {/* Priority Weights Settings Dialog */}
+      <Dialog open={weightsDialogOpen} onOpenChange={setWeightsDialogOpen}>
+        <DialogContent className="sm:max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base font-black">
+              <Settings2 className="w-5 h-5 text-primary" />
+              إعدادات أوزان الأولوية
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="text-[11px] text-muted-foreground bg-muted/40 rounded-lg p-2.5 leading-relaxed">
+              تتحكم هذه الأوزان في كيفية ترتيب مهام اليوم. التغييرات <strong className="text-foreground">تُطبَّق فوراً</strong> وتُحفظ على هذا الجهاز.
+              <br />
+              المجموع المثالي = <strong className="text-foreground">100</strong> (المجموع الحالي: <strong className={cn(weightsTotal === 100 ? "text-emerald-600" : "text-amber-600")}>{weightsTotal}</strong>).
+            </div>
+
+            {/* Alerts weight */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-red-500" />
+                  الإنذارات (سلة، بحث ساخن، حرج…)
+                </label>
+                <span className="text-xs font-black text-foreground tabular-nums">{priorityWeights.alerts}</span>
+              </div>
+              <Slider
+                value={[priorityWeights.alerts]}
+                onValueChange={([v]) => updatePriorityWeights({ ...priorityWeights, alerts: v })}
+                min={0} max={100} step={5}
+                className="w-full"
+              />
+            </div>
+
+            {/* Recency weight */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                  حداثة آخر نشاط (سلة/طلب/زيارة)
+                </label>
+                <span className="text-xs font-black text-foreground tabular-nums">{priorityWeights.recency}</span>
+              </div>
+              <Slider
+                value={[priorityWeights.recency]}
+                onValueChange={([v]) => updatePriorityWeights({ ...priorityWeights, recency: v })}
+                min={0} max={100} step={5}
+                className="w-full"
+              />
+            </div>
+
+            {/* Buyability weight */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  إمكانية الشراء (سلة، بحث، تاجر، تاريخ…)
+                </label>
+                <span className="text-xs font-black text-foreground tabular-nums">{priorityWeights.buyability}</span>
+              </div>
+              <Slider
+                value={[priorityWeights.buyability]}
+                onValueChange={([v]) => updatePriorityWeights({ ...priorityWeights, buyability: v })}
+                min={0} max={100} step={5}
+                className="w-full"
+              />
+            </div>
+
+            {/* Live preview bar */}
+            <div className="rounded-lg border border-border/40 bg-background/60 p-2.5 space-y-1.5">
+              <p className="text-[10px] font-bold text-muted-foreground">معاينة التوزيع النسبي</p>
+              <div className="flex h-2 w-full rounded-full overflow-hidden bg-muted/40">
+                {weightsTotal > 0 && (
+                  <>
+                    <div className="bg-red-500/80" style={{ width: `${(priorityWeights.alerts / weightsTotal) * 100}%` }} />
+                    <div className="bg-amber-500/80" style={{ width: `${(priorityWeights.recency / weightsTotal) * 100}%` }} />
+                    <div className="bg-emerald-500/80" style={{ width: `${(priorityWeights.buyability / weightsTotal) * 100}%` }} />
+                  </>
+                )}
+              </div>
+              <div className="flex items-center justify-between text-[9px] font-bold text-muted-foreground">
+                <span>إنذارات {weightsTotal > 0 ? Math.round((priorityWeights.alerts / weightsTotal) * 100) : 0}%</span>
+                <span>حداثة {weightsTotal > 0 ? Math.round((priorityWeights.recency / weightsTotal) * 100) : 0}%</span>
+                <span>شراء {weightsTotal > 0 ? Math.round((priorityWeights.buyability / weightsTotal) * 100) : 0}%</span>
+              </div>
+            </div>
+
+            {/* Quick presets */}
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-bold text-muted-foreground">قوالب سريعة</p>
+              <div className="grid grid-cols-3 gap-1.5">
+                <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold" onClick={() => updatePriorityWeights({ alerts: 50, recency: 30, buyability: 20 })}>
+                  🚨 إنذارات أولاً
+                </Button>
+                <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold" onClick={() => updatePriorityWeights({ alerts: 20, recency: 50, buyability: 30 })}>
+                  ⏰ النشاط أولاً
+                </Button>
+                <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold" onClick={() => updatePriorityWeights({ alerts: 25, recency: 25, buyability: 50 })}>
+                  💰 شراء أولاً
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => updatePriorityWeights(DEFAULT_WEIGHTS)}
+              className="gap-1.5"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              استعادة الافتراضي (30/40/30)
+            </Button>
+            <Button size="sm" onClick={() => setWeightsDialogOpen(false)}>
+              تم
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Bulk WhatsApp Dialog */}
       <Dialog open={bulkWhatsAppOpen} onOpenChange={(open) => { setBulkWhatsAppOpen(open); if (!open) setSendingIndex(-1); }}>
