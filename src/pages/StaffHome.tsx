@@ -96,11 +96,14 @@ const StaffHome = () => {
           .filter(Boolean)
       );
 
-      // 2) Signups today
-      const { count: signupCount } = await supabase
+      // 2) Signups within range — fetch full list (for the popup) + count
+      const { data: signupRows, count: signupCount } = await supabase
         .from("profiles")
-        .select("id", { count: "exact", head: true })
-        .gte("created_at", start);
+        .select("user_id, full_name, phone, email, created_at", { count: "exact" })
+        .gte("created_at", start)
+        .order("created_at", { ascending: false })
+        .limit(100);
+      setNewSignups(signupRows || []);
 
       // 3) Users who added to cart today (distinct)
       const { data: cartItems } = await supabase
