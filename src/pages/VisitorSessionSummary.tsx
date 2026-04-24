@@ -368,6 +368,47 @@ export default function VisitorSessionSummary() {
     }
   };
 
+  const saveCommunication = async () => {
+    if (!user?.id) return;
+    setSavingComm(true);
+    try {
+      const { data, error } = await supabase
+        .from("customer_communications")
+        .insert({
+          customer_user_id: userId,
+          staff_user_id: user.id,
+          comm_type: commType,
+          note: commNote.trim() || null,
+        })
+        .select("id, comm_type, note, created_at, staff_user_id")
+        .single();
+      if (error) throw error;
+      if (data) {
+        setComms((prev) => [
+          { ...data, staff_name: user?.user_metadata?.full_name || user?.email || "أنا" },
+          ...prev,
+        ]);
+      }
+      toast({ title: "✅ تم تسجيل التواصل", description: "تم تسجيل تعاملك مع العميل لمنع التكرار." });
+      setCommNote("");
+      setCommType("phone");
+      setCommOpen(false);
+    } catch (e: any) {
+      toast({ title: "فشل الحفظ", description: e.message, variant: "destructive" });
+    } finally {
+      setSavingComm(false);
+    }
+  };
+
+  const COMM_TYPES: Record<string, { label: string; icon: any; color: string }> = {
+    phone: { label: "📞 مكالمة هاتفية", icon: Phone, color: "text-emerald-600" },
+    whatsapp: { label: "💬 واتساب", icon: MessageCircle, color: "text-green-600" },
+    visit: { label: "🤝 زيارة شخصية", icon: MapPin, color: "text-blue-600" },
+    no_answer: { label: "📵 لم يرد", icon: AlertTriangle, color: "text-amber-600" },
+    other: { label: "📌 وسيلة أخرى", icon: Headphones, color: "text-purple-600" },
+  };
+  const lastComm = comms[0];
+
   const callPhone = () => { if (profile?.phone) window.location.href = `tel:${profile.phone}`; };
   const openWhatsApp = () => {
     if (!profile?.phone) return;
