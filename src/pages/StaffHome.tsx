@@ -369,10 +369,44 @@ const StaffHome = () => {
       <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
         {/* KPI Cards */}
         <section>
-          <h2 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4" />
-            مؤشرات اليوم
-          </h2>
+          <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+            <h2 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" />
+              {range === "today" ? "مؤشرات اليوم" : "مؤشرات آخر 7 أيام"}
+            </h2>
+            <div
+              role="tablist"
+              aria-label="فلتر النطاق الزمني"
+              className="inline-flex items-center bg-muted/60 rounded-lg p-0.5 border border-border/50"
+            >
+              <button
+                role="tab"
+                aria-selected={range === "today"}
+                onClick={() => setRange("today")}
+                className={cn(
+                  "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                  range === "today"
+                    ? "bg-background shadow-sm text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                اليوم
+              </button>
+              <button
+                role="tab"
+                aria-selected={range === "7d"}
+                onClick={() => setRange("7d")}
+                className={cn(
+                  "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                  range === "7d"
+                    ? "bg-background shadow-sm text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                آخر 7 أيام
+              </button>
+            </div>
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             {kpiCards.map((kpi, i) => (
               <button
