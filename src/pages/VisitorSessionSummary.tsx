@@ -7,11 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 import {
   Activity, ArrowRight, Clock, Eye, FileText, Globe, Hash,
   Search, ShoppingBag, Phone, MessageCircle, Timer, User as UserIcon,
   Calendar, Sparkles, TrendingUp, MousePointerClick, History,
-  ExternalLink, Quote, Flame,
+  ExternalLink, Quote, Flame, StickyNote, Loader2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -65,7 +68,8 @@ const friendlyPath = (path: string): string => {
 export default function VisitorSessionSummary() {
   const { userId = "" } = useParams<{ userId: string }>();
   const navigate = useNavigate();
-  const { isAdmin, isModerator, loading: authLoading } = useAuth();
+  const { user, isAdmin, isModerator, loading: authLoading } = useAuth();
+  const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<{ full_name: string | null; email: string | null; phone: string | null; created_at: string | null } | null>(null);
@@ -74,6 +78,13 @@ export default function VisitorSessionSummary() {
   const [searches, setSearches] = useState<SearchEntry[]>([]);
   const [priceViews, setPriceViews] = useState<PriceView[]>([]);
   const [productMap, setProductMap] = useState<Map<string, ProductInfo>>(new Map());
+  const [hasOrders, setHasOrders] = useState(false);
+  const [hasCart, setHasCart] = useState(false);
+
+  // Note dialog
+  const [noteOpen, setNoteOpen] = useState(false);
+  const [noteText, setNoteText] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -91,12 +102,14 @@ export default function VisitorSessionSummary() {
         // Flush any visits that were queued in this admin's own browser before fetching
         await flushPendingVisits().catch(() => 0);
 
-        const [profRes, dealerRes, visitsRes, searchesRes, viewsRes] = await Promise.all([
+        const [profRes, dealerRes, visitsRes, searchesRes, viewsRes, ordersRes, cartRes] = await Promise.all([
           supabase.from("profiles").select("full_name, email, phone, created_at").eq("user_id", userId).maybeSingle(),
           supabase.from("dealer_accounts").select("id").eq("user_id", userId).maybeSingle(),
           supabase.from("page_visits").select("id, path, page_title, visited_at, referrer").eq("user_id", userId).order("visited_at", { ascending: true }).limit(500),
           supabase.from("customer_search_logs").select("id, search_query, created_at, results_count").eq("user_id", userId).order("created_at", { ascending: false }).limit(50),
           supabase.from("dealer_price_views").select("id, product_id, viewed_at").eq("user_id", userId).order("viewed_at", { ascending: false }).limit(50),
+          supabase.from("orders").select("id", { count: "exact", head: true }).eq("user_id", userId),
+          supabase.from("dealer_cart_items").select("id", { count: "exact", head: true }).eq("user_id", userId),
         ]);
 
         if (cancelled) return;
@@ -106,6 +119,8 @@ export default function VisitorSessionSummary() {
         setVisits(visitsRes.data || []);
         setSearches(searchesRes.data || []);
         setPriceViews(viewsRes.data || []);
+        setHasOrders((ordersRes.count || 0) > 0);
+        setHasCart((cartRes.count || 0) > 0);
 
         const productIds = [...new Set((viewsRes.data || []).map((v: any) => v.product_id))];
         if (productIds.length > 0) {
@@ -214,6 +229,55 @@ export default function VisitorSessionSummary() {
     return `https://wa.me/${phone}?text=${text}`;
   };
 
+  // Lead scoring (visit=5, search=10, repeat product view=20, cart=40)
+  const leadScore = useMemo(() => {
+    let score = 0;
+    if (visits.length > 0) score += 5;
+    score += Math.min(searches.length, 5) * 10;
+    const dupViews = topProducts.filter(p => p.count > 1).length;
+    score += dupViews * 20;
+    if (hasCart) score += 40;
+    return score;
+  }, [visits.length, searches.length, topProducts, hasCart]);
+
+  const leadTier: "hot" | "warm" | "cold" = hasOrders
+    ? "warm"
+    : leadScore >= 70 ? "hot" : leadScore >= 30 ? "warm" : "cold";
+
+  const lastActivityLabel = useMemo(() => {
+    if (lastSessionPriceViews.length > 0) return `شاف سعر منتج (${lastSessionPriceViews.length})`;
+    if (lastSessionSearches.length > 0) return `بحث: "${lastSessionSearches[0].search_query}"`;
+    if (lastSession?.pages?.length) return `زار: ${friendlyPath(lastSession.pages[lastSession.pages.length - 1].path)}`;
+    return "لا يوجد نشاط حديث";
+  }, [lastSession, lastSessionPriceViews, lastSessionSearches]);
+
+  const saveNote = async () => {
+    if (!noteText.trim() || !user?.id) return;
+    setSavingNote(true);
+    try {
+      const { error } = await supabase.from("customer_notes").insert({
+        customer_user_id: userId,
+        staff_user_id: user.id,
+        note: noteText.trim(),
+      });
+      if (error) throw error;
+      toast({ title: "✅ تم حفظ الملاحظة" });
+      setNoteText("");
+      setNoteOpen(false);
+    } catch (e: any) {
+      toast({ title: "فشل الحفظ", description: e.message, variant: "destructive" });
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
+  const callPhone = () => { if (profile?.phone) window.location.href = `tel:${profile.phone}`; };
+  const openWhatsApp = () => {
+    if (!profile?.phone) return;
+    const cleaned = profile.phone.replace(/\D/g, "").replace(/^0/, "20");
+    const msg = encodeURIComponent(`أهلاً ${profile.full_name || ""}، معاك المصرية جروب 🚗 — حابب أساعدك في طلبك؟`);
+    window.open(`https://wa.me/${cleaned}?text=${msg}`, "_blank");
+  };
 
   if (authLoading || loading) {
     return (
@@ -263,8 +327,22 @@ export default function VisitorSessionSummary() {
                 <div className="hidden md:block">
                   <h1 className="text-2xl md:text-3xl font-black leading-tight">{profile?.full_name || "زائر بدون اسم"}</h1>
                   <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    <Badge className={
+                      leadTier === "hot"
+                        ? "bg-red-500 text-white border-0 hover:bg-red-600"
+                        : leadTier === "warm"
+                        ? "bg-amber-500 text-white border-0 hover:bg-amber-600"
+                        : "bg-white/20 text-primary-foreground border-white/20 backdrop-blur"
+                    }>
+                      {leadTier === "hot" ? "🔥 جاهز يشتري" : leadTier === "warm" ? "🟡 مهتم" : "🔴 بارد"}
+                      <span className="opacity-80 mr-1">· {leadScore}</span>
+                    </Badge>
                     <Badge className="bg-white/20 hover:bg-white/30 text-primary-foreground border-white/20 backdrop-blur">
                       {isDealer ? "🏢 حساب تاجر" : "👤 عميل قطاعي"}
+                    </Badge>
+                    <Badge variant="outline" className="border-white/30 text-primary-foreground/90 bg-white/5 backdrop-blur gap-1">
+                      <Activity className="w-3 h-3" />
+                      {lastActivityLabel}
                     </Badge>
                     {profile?.created_at && (
                       <Badge variant="outline" className="border-white/30 text-primary-foreground/90 bg-white/5 backdrop-blur gap-1">
@@ -615,13 +693,72 @@ export default function VisitorSessionSummary() {
           </>
         )}
 
-        <div className="text-center pt-4">
+        <div className="text-center pt-4 pb-24">
           <Link to="/admin" className="text-xs text-muted-foreground hover:text-primary underline">
             ← الرجوع إلى لوحة الإدارة
           </Link>
           <p className="text-[10px] text-muted-foreground/60 mt-2 font-mono">UID: {userId}</p>
         </div>
       </div>
+
+      {/* Sticky Action Bar — اتصال / واتساب / ملاحظة */}
+      <div className="fixed bottom-0 inset-x-0 z-50 bg-background/95 backdrop-blur-xl border-t border-border shadow-2xl">
+        <div className="max-w-6xl mx-auto px-3 py-2.5 grid grid-cols-3 gap-2">
+          <Button
+            onClick={callPhone}
+            disabled={!profile?.phone}
+            className="h-12 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md"
+          >
+            <Phone className="w-5 h-5" />
+            اتصال
+          </Button>
+          <Button
+            onClick={openWhatsApp}
+            disabled={!profile?.phone}
+            className="h-12 gap-2 bg-green-600 hover:bg-green-700 text-white font-bold shadow-md"
+          >
+            <MessageCircle className="w-5 h-5" />
+            واتساب
+          </Button>
+          <Button
+            onClick={() => setNoteOpen(true)}
+            variant="outline"
+            className="h-12 gap-2 border-2 border-primary/40 text-primary hover:bg-primary/10 font-bold"
+          >
+            <StickyNote className="w-5 h-5" />
+            تسجيل ملاحظة
+          </Button>
+        </div>
+      </div>
+
+      {/* Quick Note Dialog */}
+      <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
+        <DialogContent dir="rtl" className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <StickyNote className="w-5 h-5 text-primary" />
+              تسجيل ملاحظة عن {profile?.full_name || "العميل"}
+            </DialogTitle>
+          </DialogHeader>
+          <Textarea
+            value={noteText}
+            onChange={(e) => setNoteText(e.target.value)}
+            placeholder="اكتب تفاصيل المكالمة، اهتمامات العميل، أو خطوة المتابعة القادمة..."
+            rows={5}
+            className="resize-none"
+            autoFocus
+          />
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setNoteOpen(false)} disabled={savingNote}>
+              إلغاء
+            </Button>
+            <Button onClick={saveNote} disabled={!noteText.trim() || savingNote} className="gap-2">
+              {savingNote ? <Loader2 className="w-4 h-4 animate-spin" /> : <StickyNote className="w-4 h-4" />}
+              حفظ الملاحظة
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
