@@ -300,6 +300,21 @@ const AdminCustomerIntelligence = () => {
     try { localStorage.setItem(TASK_WINDOW_STORAGE_KEY, String(days)); } catch {}
   };
 
+  // === Active staff count for workload distribution (persisted) ===
+  const STAFF_COUNT_STORAGE_KEY = "aci_active_staff_count_v1";
+  const [activeStaffCount, setActiveStaffCount] = useState<number>(() => {
+    try {
+      const raw = localStorage.getItem(STAFF_COUNT_STORAGE_KEY);
+      const n = raw ? parseInt(raw, 10) : 3;
+      return n > 0 && n <= 50 ? n : 3;
+    } catch { return 3; }
+  });
+  const updateActiveStaffCount = (n: number) => {
+    const safe = Math.max(1, Math.min(50, Math.floor(n) || 1));
+    setActiveStaffCount(safe);
+    try { localStorage.setItem(STAFF_COUNT_STORAGE_KEY, String(safe)); } catch {}
+  };
+
   const toggleTaskComplete = (taskId: string) => {
     setCompletedTasks(prev => {
       const next = new Set(prev);
