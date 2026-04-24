@@ -94,6 +94,15 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [badgesEnabled, setBadgesEnabled] = useState(true);
+  const [perfPanelOpen, setPerfPanelOpen] = useState(false);
+
+  // Performance tracker — يقيس mount, renders, badges, tab switches
+  const perf = usePerfTracker({
+    componentName: "StaffCRMCommandCenter",
+    badgesEnabled,
+    activeTab: tab,
+  });
 
   // Data
   const [urgentOrders, setUrgentOrders] = useState<UrgentOrder[]>([]);
