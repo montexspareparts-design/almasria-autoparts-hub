@@ -88,6 +88,15 @@ export default function VisitorSessionSummary() {
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [notes, setNotes] = useState<Array<{ id: string; note: string; created_at: string; staff_user_id: string; staff_name?: string | null }>>([]);
   const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
+  const [focusedSection, setFocusedSection] = useState<string | null>(null);
+
+  const clearFocus = () => {
+    document.querySelectorAll("[data-focus-target='true']").forEach((n) => {
+      n.classList.remove("ring-4", "ring-primary", "ring-offset-2", "shadow-2xl", "scale-[1.01]");
+      (n as HTMLElement).removeAttribute("data-focus-target");
+    });
+    setFocusedSection(null);
+  };
 
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
@@ -95,11 +104,12 @@ export default function VisitorSessionSummary() {
       toast({ title: "لا توجد بيانات في هذا القسم", description: "هذا الزائر لم يسجّل نشاطًا هنا بعد." });
       return;
     }
+    // Clear any previous focus highlight
+    clearFocus();
     el.scrollIntoView({ behavior: "smooth", block: "start" });
-    el.classList.add("ring-4", "ring-primary/40", "ring-offset-2", "transition-all");
-    setTimeout(() => {
-      el.classList.remove("ring-4", "ring-primary/40", "ring-offset-2");
-    }, 1800);
+    el.classList.add("ring-4", "ring-primary", "ring-offset-2", "shadow-2xl", "scale-[1.01]", "transition-all");
+    el.setAttribute("data-focus-target", "true");
+    setFocusedSection(id);
   };
 
   useEffect(() => {
