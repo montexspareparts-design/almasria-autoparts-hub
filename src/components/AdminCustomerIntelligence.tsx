@@ -4796,6 +4796,90 @@ const AdminCustomerIntelligence = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Quick action dialog — تسجيل إجراء سريع على العميل */}
+      <Dialog open={!!actionDialogUser} onOpenChange={(open) => { if (!open) setActionDialogUser(null); }}>
+        <DialogContent className="max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <CheckCircle2 className="w-5 h-5 text-amber-600" />
+              تسجيل إجراء على العميل
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-bold text-muted-foreground mb-1.5 block">نوع الإجراء</label>
+              <div className="grid grid-cols-4 gap-1.5">
+                {[
+                  { v: "phone", l: "📞 اتصال", c: "bg-blue-500/15 text-blue-700 border-blue-300" },
+                  { v: "whatsapp", l: "💬 واتساب", c: "bg-emerald-500/15 text-emerald-700 border-emerald-300" },
+                  { v: "visit", l: "🏪 زيارة", c: "bg-purple-500/15 text-purple-700 border-purple-300" },
+                  { v: "other", l: "📝 ملاحظة", c: "bg-amber-500/15 text-amber-700 border-amber-300" },
+                ].map(opt => (
+                  <button
+                    key={opt.v}
+                    type="button"
+                    onClick={() => setActionDialogType(opt.v as any)}
+                    className={cn(
+                      "text-[11px] font-bold px-2 py-2 rounded-lg border transition-all",
+                      actionDialogType === opt.v ? opt.c + " ring-2 ring-offset-1 ring-current" : "bg-muted/30 border-border/40 text-muted-foreground hover:bg-muted/60"
+                    )}
+                  >
+                    {opt.l}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-muted-foreground mb-1.5 block">ملاحظة المتابعة *</label>
+              <Textarea
+                placeholder="مثال: تم الاتصال — العميل سيراجعنا الأسبوع القادم لشراء فلتر زيت..."
+                value={actionDialogNote}
+                onChange={(e) => setActionDialogNote(e.target.value)}
+                rows={4}
+                className="text-sm"
+                autoFocus
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">يحفظ الإجراء في سجل العميل ويظهر للموظفين الآخرين</p>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 flex-row-reverse sm:flex-row-reverse">
+            <Button
+              type="button"
+              disabled={savingAction || !actionDialogNote.trim() || !actionDialogUser}
+              onClick={async () => {
+                if (!actionDialogUser || !user) return;
+                setSavingAction(true);
+                const { error } = await supabase.from("customer_communications").insert({
+                  customer_user_id: actionDialogUser,
+                  staff_user_id: user.id,
+                  comm_type: actionDialogType,
+                  note: actionDialogNote.trim(),
+                });
+                setSavingAction(false);
+                if (error) {
+                  toast({ title: "فشل حفظ الإجراء", description: error.message, variant: "destructive" });
+                  return;
+                }
+                toast({ title: "✅ تم تسجيل الإجراء بنجاح" });
+                queryClient.invalidateQueries({ queryKey: ["admin_customer_communications"] });
+                setActionDialogUser(null);
+                setActionDialogNote("");
+              }}
+              className="gap-1.5 bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              {savingAction ? "جاري الحفظ..." : "حفظ الإجراء"}
+            </Button>
+            <Button type="button" variant="outline" onClick={() => setActionDialogUser(null)}>
+              إلغاء
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
