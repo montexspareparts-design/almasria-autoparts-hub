@@ -279,6 +279,83 @@ export default function VisitorSessionSummary() {
       .slice(0, 5);
   }, [searches]);
 
+  // Unified activity timeline — combines ALL events into one chronological log
+  const unifiedTimeline = useMemo(() => {
+    type Evt = {
+      id: string;
+      at: string;
+      kind: "session" | "search" | "comm" | "note" | "order";
+      title: string;
+      detail?: string;
+      icon: any;
+      color: string;
+    };
+    const events: Evt[] = [];
+
+    sessions.forEach((s, idx) => {
+      events.push({
+        id: `session-${idx}`,
+        at: s.start,
+        kind: "session",
+        title: `جلسة #${sessions.length - idx} — ${s.pages.length} صفحة`,
+        detail: `المدة: ${fmtDuration(s.durationMs)} • آخر صفحة: ${friendlyPath(s.pages[s.pages.length - 1].path)}`,
+        icon: Globe,
+        color: "text-purple-600 bg-purple-500/10 border-purple-500/30",
+      });
+    });
+
+    searches.forEach((s) => {
+      events.push({
+        id: `search-${s.id}`,
+        at: s.created_at,
+        kind: "search",
+        title: `بحث: "${s.search_query}"`,
+        detail: `${s.results_count || 0} نتيجة`,
+        icon: Search,
+        color: "text-orange-600 bg-orange-500/10 border-orange-500/30",
+      });
+    });
+
+    comms.forEach((c) => {
+      const meta = COMM_TYPES[c.comm_type] || COMM_TYPES.other;
+      events.push({
+        id: `comm-${c.id}`,
+        at: c.created_at,
+        kind: "comm",
+        title: `${meta.label} — ${c.staff_name || "موظف"}`,
+        detail: c.note || undefined,
+        icon: meta.icon,
+        color: "text-blue-600 bg-blue-500/10 border-blue-500/30",
+      });
+    });
+
+    notes.forEach((n) => {
+      events.push({
+        id: `note-${n.id}`,
+        at: n.created_at,
+        kind: "note",
+        title: `ملاحظة — ${n.staff_name || "موظف"}`,
+        detail: n.note,
+        icon: StickyNote,
+        color: "text-amber-600 bg-amber-500/10 border-amber-500/30",
+      });
+    });
+
+    orders.forEach((o) => {
+      events.push({
+        id: `order-${o.id}`,
+        at: o.created_at,
+        kind: "order",
+        title: `طلب #${o.order_number}`,
+        detail: `الحالة: ${o.status} • المبلغ: ${Number(o.total_amount || 0).toLocaleString("ar-EG")} ج.م`,
+        icon: ShoppingCart,
+        color: "text-emerald-600 bg-emerald-500/10 border-emerald-500/30",
+      });
+    });
+
+    return events.sort((a, b) => (a.at > b.at ? -1 : 1));
+  }, [sessions, searches, comms, notes, orders]);
+
   const buildQuoteWhatsApp = (productLabel: string) => {
     const phone = "201027815696"; // WhatsMeta CRM number
     const customer = profile?.full_name || "العميل";
