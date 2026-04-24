@@ -275,7 +275,11 @@ const AdminCustomerIntelligence = () => {
     return (localStorage.getItem("aci_active_section_v1") as SectionKey) || "tasks";
   });
   const sectionContentRef = useRef<HTMLDivElement | null>(null);
+  const [isSwitchingSection, setIsSwitchingSection] = useState(false);
   const switchSection = (key: SectionKey) => {
+    if (key === activeSection) return;
+    // Show light skeleton briefly to signal content refresh
+    setIsSwitchingSection(true);
     setActiveSection(key);
     try { localStorage.setItem("aci_active_section_v1", key); } catch {}
     // Smooth scroll directly to the start of the section content (just below the sticky nav)
@@ -293,6 +297,8 @@ const AdminCustomerIntelligence = () => {
         }, 80); // wait for section render
       });
     }
+    // Hide skeleton after a short delay for smooth perceived transition
+    window.setTimeout(() => setIsSwitchingSection(false), 280);
   };
 
   // === Call outcomes (per-day, per-task) — drives auto score/priority adjustments ===
