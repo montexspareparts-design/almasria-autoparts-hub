@@ -468,6 +468,9 @@ const AdminCustomerIntelligence = () => {
       try { localStorage.setItem(outcomesStorageKey, JSON.stringify(next)); } catch {}
       return next;
     });
+    // Mark task as handled (outcome action) so other staff can see it's already worked on
+    if (outcome) markHandled(taskId, "outcome");
+    else unmarkHandled(taskId);
     // Auto-complete outcomes that close the loop
     if (outcome === "agreed" || outcome === "not_suitable") {
       setCompletedTasks(prev => {
