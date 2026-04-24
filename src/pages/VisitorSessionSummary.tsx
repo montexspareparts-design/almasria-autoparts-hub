@@ -1051,7 +1051,77 @@ export default function VisitorSessionSummary() {
         </DialogContent>
       </Dialog>
 
-      {/* Floating focus indicator — stays until user dismisses */}
+      {/* Communication Log Dialog */}
+      <Dialog
+        open={commOpen}
+        onOpenChange={(open) => {
+          setCommOpen(open);
+          if (!open) {
+            setCommNote("");
+            setCommType("phone");
+          }
+        }}
+      >
+        <DialogContent dir="rtl" className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-blue-600" />
+              تسجيل تواصل مع {profile?.full_name || "العميل"}
+            </DialogTitle>
+            <p className="text-xs text-muted-foreground mt-1">
+              سجّل تعاملك مع العميل عشان باقي الفريق يعرف وما يكررش نفس الخطوة.
+            </p>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-bold text-muted-foreground mb-1.5 block">نوع التواصل</label>
+              <Select value={commType} onValueChange={setCommType}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(COMM_TYPES).map(([k, v]) => (
+                    <SelectItem key={k} value={k}>{v.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-muted-foreground mb-1.5 block">ملاحظة (اختياري)</label>
+              <Textarea
+                value={commNote}
+                onChange={(e) => setCommNote(e.target.value)}
+                placeholder="نتيجة التواصل، اهتمام العميل، أو خطوة المتابعة..."
+                rows={4}
+                maxLength={500}
+                className="resize-none"
+              />
+              <p className="text-[10px] text-muted-foreground mt-1 text-left">{commNote.length}/500</p>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => { setCommOpen(false); setCommNote(""); setCommType("phone"); }}
+              disabled={savingComm}
+            >
+              إلغاء
+            </Button>
+            <Button
+              onClick={saveCommunication}
+              disabled={savingComm}
+              className="gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              {savingComm ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+              تسجيل التواصل
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {focusedSection && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4">
           <div className="flex items-center gap-2 rounded-full bg-primary text-primary-foreground shadow-2xl border border-primary-foreground/20 px-4 py-2">
