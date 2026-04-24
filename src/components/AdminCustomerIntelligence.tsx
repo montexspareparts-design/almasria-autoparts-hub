@@ -1168,10 +1168,19 @@ const AdminCustomerIntelligence = () => {
     const filtered = taskWindowDays === 0
       ? tasks
       : tasks.filter(t => t.freshestDays !== null && t.freshestDays <= taskWindowDays);
-    // Sort by unified score desc, then by priority bucket
-    return filtered.sort((a, b) => b.score - a.score || a.priority - b.priority);
+    // Apply call-outcome score deltas → re-bucket priority automatically.
+    const bucketize = (s: number): 1 | 2 | 3 => (s >= 55 ? 1 : s >= 30 ? 2 : 3);
+    const adjusted = filtered.map(t => {
+      const outcome = callOutcomes[t.id];
+      if (!outcome) return t;
+      const delta = outcomeMeta[outcome].delta;
+      const newScore = Math.max(0, t.score + delta);
+      return { ...t, score: newScore, priority: bucketize(newScore) };
+    });
+    // Sort by unified (post-outcome) score desc, then by priority bucket
+    return adjusted.sort((a, b) => b.score - a.score || a.priority - b.priority);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profiles, ordersMap, cartByUser, userSearchMap, dealerUserIds, lastVisitByUser, priorityWeights, taskWindowDays]);
+  }, [profiles, ordersMap, cartByUser, userSearchMap, dealerUserIds, lastVisitByUser, priorityWeights, taskWindowDays, callOutcomes]);
 
   const visibleTasks = todayTasks.filter(t => showCompletedTasks || !completedTasks.has(t.id));
   const pendingTasksCount = todayTasks.filter(t => !completedTasks.has(t.id)).length;
