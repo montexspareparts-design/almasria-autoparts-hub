@@ -14,6 +14,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip as UITooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { format, differenceInDays } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -2029,344 +2030,96 @@ const AdminCustomerIntelligence = () => {
                     transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
                     className="overflow-hidden"
                   >
-                  <div className="px-5 pb-5 space-y-4 border-t border-border/30 pt-4 bg-gradient-to-b from-muted/20 to-transparent">
-                    {/* === ALERTS BAR — يلفت نظر الموظف للحالات اللي محتاجة تحرك === */}
+                  <div className="px-5 pb-5 border-t border-border/30 pt-4 bg-gradient-to-b from-muted/20 to-transparent">
                     {(() => {
                       const alerts = getCustomerAlerts(profile.user_id);
-                      if (alerts.length === 0) return null;
-                      return (
-                        <div className="flex flex-wrap gap-2 p-3 rounded-xl bg-gradient-to-l from-red-50/50 via-orange-50/30 to-transparent dark:from-red-950/20 dark:via-orange-950/10 border border-red-200/40 dark:border-red-900/30">
-                          <div className="flex items-center gap-1.5 text-[11px] font-bold text-red-700 dark:text-red-400 shrink-0 ml-1">
-                            <AlertTriangle className="w-3.5 h-3.5" />
-                            تنبيهات:
-                          </div>
-                          {alerts.map((a, i) => (
-                            <span
-                              key={i}
-                              className={cn(
-                                "text-[11px] font-bold px-2.5 py-1 rounded-lg border flex items-center gap-1",
-                                a.color
-                              )}
-                            >
-                              <span>{a.icon}</span>
-                              {a.label}
-                            </span>
-                          ))}
-                        </div>
-                      );
-                    })()}
-
-                    {/* === سكريبت اتصال جاهز — يوفر وقت الموظف === */}
-                    {profile.phone && (
-                      <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-blue-500/5 p-4">
-                        <div className="flex items-start justify-between gap-3 mb-2">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
-                              <MessageCircle className="w-4 h-4 text-primary" />
-                            </div>
-                            <div>
-                              <p className="text-xs font-bold text-foreground">سكريبت اتصال مقترح</p>
-                              <p className="text-[10px] text-muted-foreground">مبني تلقائياً على سلوك العميل</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigator.clipboard.writeText(buildCallScript(profile.user_id));
-                                toast({ title: "✅ تم نسخ السكريبت" });
-                              }}
-                              className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary flex items-center gap-1 transition-colors"
-                              title="نسخ السكريبت"
-                            >
-                              <Copy className="w-3 h-3" />
-                              نسخ
-                            </button>
-                            <a
-                              href={`https://wa.me/${formatPhoneForWhatsApp(profile.phone)}?text=${encodeURIComponent(buildCallScript(profile.user_id))}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 flex items-center gap-1 transition-colors"
-                              title="إرسال عبر واتساب"
-                            >
-                              <Send className="w-3 h-3" />
-                              إرسال
-                            </a>
-                          </div>
-                        </div>
-                        <p className="text-xs text-foreground/85 leading-relaxed whitespace-pre-line bg-background/60 rounded-lg p-3 border border-border/30">
-                          {buildCallScript(profile.user_id)}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* === سجل المكالمات السابقة === */}
-                    {(() => {
                       const comms = communicationsByUser[profile.user_id] || [];
-                      if (comms.length === 0) {
-                        return (
-                          <div className="rounded-xl border border-dashed border-border/50 bg-muted/10 p-3 flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                              <FileText className="w-3.5 h-3.5" />
-                              لا يوجد سجل تواصل سابق مع هذا العميل
-                            </div>
-                            <span className="text-[10px] text-muted-foreground italic">
-                              سجّل مكالمتك من ملف العميل
-                            </span>
-                          </div>
-                        );
+                      const hasNoActivity = searches.length === 0 && viewedProducts.length === 0 && !orders;
+                      if (hasNoActivity && alerts.length === 0) {
+                        return (<p className="text-sm text-muted-foreground text-center py-6">لا يوجد نشاط مسجل لهذا العميل بعد</p>);
                       }
-                      const lastComm = comms[0];
-                      const daysSince = differenceInDays(new Date(), new Date(lastComm.created_at));
                       const commLabel: Record<string, { label: string; color: string }> = {
                         phone: { label: "📞 مكالمة", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" },
                         whatsapp: { label: "💬 واتساب", color: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" },
                         email: { label: "✉️ إيميل", color: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400" },
                         meeting: { label: "🤝 مقابلة", color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
                       };
+                      const lastComm = comms[0];
+                      const daysSince = lastComm ? differenceInDays(new Date(), new Date(lastComm.created_at)) : 0;
+                      const brandCounts: Record<string, number> = {};
+                      if (productsMap) { viewedProducts.forEach(pid => { const b = productsMap[pid]?.brand; if (b) brandCounts[b] = (brandCounts[b] || 0) + 1; }); }
+                      const topBrands = Object.entries(brandCounts).sort((a, b) => b[1] - a[1]).slice(0, 4);
                       return (
-                        <div className="rounded-xl border border-border/40 bg-card/50 overflow-hidden">
-                          <div className="px-3 py-2 bg-muted/30 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <FileText className="w-3.5 h-3.5 text-primary" />
-                              <span className="text-xs font-bold text-foreground">سجل التواصل</span>
-                              <span className="text-[10px] font-bold bg-primary/10 text-primary px-1.5 py-0.5 rounded-md">
-                                {comms.length}
-                              </span>
+                        <Tabs defaultValue="basic" className="w-full">
+                          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto p-1 bg-muted/40 rounded-xl">
+                            <TabsTrigger value="basic" className="text-[11px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2"><Users className="w-3.5 h-3.5" />بيانات أساسية</TabsTrigger>
+                            <TabsTrigger value="needs" className="text-[11px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2"><AlertTriangle className="w-3.5 h-3.5" />احتياجات{alerts.length > 0 && (<span className="text-[9px] bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center font-black">{alerts.length}</span>)}</TabsTrigger>
+                            <TabsTrigger value="prefs" className="text-[11px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2"><Car className="w-3.5 h-3.5" />تفضيلات</TabsTrigger>
+                            <TabsTrigger value="activity" className="text-[11px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2"><Search className="w-3.5 h-3.5" />سجل التصفح</TabsTrigger>
+                          </TabsList>
+                          <TabsContent value="basic" className="space-y-3 mt-4 focus-visible:outline-none">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                              <div className="bg-muted/30 rounded-xl p-3 flex items-center gap-2.5"><div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"><Mail className="w-4 h-4 text-primary" /></div><div className="min-w-0"><p className="text-[10px] text-muted-foreground">البريد الإلكتروني</p><p className="text-xs font-semibold text-foreground truncate">{profile.email || "—"}</p></div></div>
+                              <div className="bg-muted/30 rounded-xl p-3 flex items-center gap-2.5"><div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"><Phone className="w-4 h-4 text-primary" /></div><div className="min-w-0"><p className="text-[10px] text-muted-foreground">الهاتف</p><p className="text-xs font-semibold text-foreground" dir="ltr">{profile.phone || "—"}</p></div></div>
+                              <div className="bg-muted/30 rounded-xl p-3 flex items-center gap-2.5"><div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"><CalendarIcon className="w-4 h-4 text-primary" /></div><div className="min-w-0"><p className="text-[10px] text-muted-foreground">تاريخ التسجيل</p><p className="text-xs font-semibold text-foreground">{format(new Date(profile.created_at), "dd/MM/yyyy", { locale: ar })}</p></div></div>
                             </div>
-                            <span className="text-[10px] text-muted-foreground">
-                              آخر تواصل منذ <strong className="text-foreground">{daysSince === 0 ? "اليوم" : `${daysSince} يوم`}</strong>
-                            </span>
-                          </div>
-                          <div className="divide-y divide-border/30 max-h-48 overflow-y-auto">
-                            {comms.slice(0, 5).map(c => {
-                              const info = commLabel[c.comm_type] || { label: c.comm_type, color: "bg-muted text-foreground" };
-                              return (
-                                <div key={c.id} className="px-3 py-2 flex items-start gap-2">
-                                  <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0", info.color)}>
-                                    {info.label}
-                                  </span>
-                                  <div className="min-w-0 flex-1">
-                                    {c.note && (
-                                      <p className="text-[11px] text-foreground/85 line-clamp-2">{c.note}</p>
-                                    )}
-                                    <p className="text-[10px] text-muted-foreground mt-0.5">
-                                      {format(new Date(c.created_at), "dd/MM/yyyy hh:mm a", { locale: ar })}
-                                    </p>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                              <div className="bg-emerald-50/70 dark:bg-emerald-950/20 rounded-xl p-3"><div className="flex items-center gap-2 mb-1"><ShoppingCart className="w-3.5 h-3.5 text-emerald-600" /><span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">الطلبات</span></div>{orders ? (<><p className="text-lg font-black text-foreground">{orders.count}</p><p className="text-[10px] text-muted-foreground">إجمالي {orders.total.toLocaleString("ar-EG")} ج.م</p><p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">آخر طلب: {format(new Date(orders.lastOrderDate), "dd/MM/yyyy")}</p></>) : (<p className="text-sm text-muted-foreground">لا توجد طلبات</p>)}</div>
+                              <div className="bg-violet-50/70 dark:bg-violet-950/20 rounded-xl p-3"><div className="flex items-center gap-2 mb-1"><FileText className="w-3.5 h-3.5 text-violet-600" /><span className="text-[10px] font-bold text-violet-700 dark:text-violet-400">عروض الأسعار</span></div><p className="text-lg font-black text-foreground">{quotes}</p><p className="text-[10px] text-muted-foreground">{quotes > 0 ? "عرض سعر مقدم" : "لم يطلب عروض"}</p></div>
+                              <div className="bg-cyan-50/70 dark:bg-cyan-950/20 rounded-xl p-3"><div className="flex items-center gap-2 mb-1"><Search className="w-3.5 h-3.5 text-cyan-600" /><span className="text-[10px] font-bold text-cyan-700 dark:text-cyan-400">عمليات البحث</span></div><p className="text-lg font-black text-foreground">{searches.reduce((s, x) => s + x.count, 0)}</p><p className="text-[10px] text-muted-foreground">{searches.length} كلمة فريدة</p></div>
+                              <div className="bg-amber-50/70 dark:bg-amber-950/20 rounded-xl p-3"><div className="flex items-center gap-2 mb-1"><RefreshCw className="w-3.5 h-3.5 text-amber-600" /><span className="text-[10px] font-bold text-amber-700 dark:text-amber-400">معدل العودة</span></div><p className="text-lg font-black text-foreground">{returnDays} يوم</p><p className="text-[10px] text-muted-foreground">{returnDays > 5 ? "عميل متكرر 🔥" : returnDays > 1 ? "عاد أكثر من مرة" : "زيارة واحدة"}</p></div>
+                            </div>
+                            {comms.length === 0 ? (
+                              <div className="rounded-xl border border-dashed border-border/50 bg-muted/10 p-3 flex items-center justify-between"><div className="flex items-center gap-2 text-[11px] text-muted-foreground"><FileText className="w-3.5 h-3.5" />لا يوجد سجل تواصل سابق مع هذا العميل</div><span className="text-[10px] text-muted-foreground italic">سجّل مكالمتك من ملف العميل</span></div>
+                            ) : (
+                              <div className="rounded-xl border border-border/40 bg-card/50 overflow-hidden">
+                                <div className="px-3 py-2 bg-muted/30 flex items-center justify-between"><div className="flex items-center gap-2"><FileText className="w-3.5 h-3.5 text-primary" /><span className="text-xs font-bold text-foreground">سجل التواصل</span><span className="text-[10px] font-bold bg-primary/10 text-primary px-1.5 py-0.5 rounded-md">{comms.length}</span></div><span className="text-[10px] text-muted-foreground">آخر تواصل منذ <strong className="text-foreground">{daysSince === 0 ? "اليوم" : `${daysSince} يوم`}</strong></span></div>
+                                <div className="divide-y divide-border/30 max-h-48 overflow-y-auto">{comms.slice(0, 5).map(c => { const info = commLabel[c.comm_type] || { label: c.comm_type, color: "bg-muted text-foreground" }; return (<div key={c.id} className="px-3 py-2 flex items-start gap-2"><span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0", info.color)}>{info.label}</span><div className="min-w-0 flex-1">{c.note && (<p className="text-[11px] text-foreground/85 line-clamp-2">{c.note}</p>)}<p className="text-[10px] text-muted-foreground mt-0.5">{format(new Date(c.created_at), "dd/MM/yyyy hh:mm a", { locale: ar })}</p></div></div>); })}</div>
+                              </div>
+                            )}
+                          </TabsContent>
+                          <TabsContent value="needs" className="space-y-3 mt-4 focus-visible:outline-none">
+                            {alerts.length > 0 ? (
+                              <div className="flex flex-wrap gap-2 p-3 rounded-xl bg-gradient-to-l from-red-50/50 via-orange-50/30 to-transparent dark:from-red-950/20 dark:via-orange-950/10 border border-red-200/40 dark:border-red-900/30"><div className="flex items-center gap-1.5 text-[11px] font-bold text-red-700 dark:text-red-400 shrink-0 ml-1"><AlertTriangle className="w-3.5 h-3.5" />تنبيهات عاجلة:</div>{alerts.map((a, i) => (<span key={i} className={cn("text-[11px] font-bold px-2.5 py-1 rounded-lg border flex items-center gap-1", a.color)}><span>{a.icon}</span>{a.label}</span>))}</div>
+                            ) : (
+                              <div className="rounded-xl border border-dashed border-emerald-200/50 dark:border-emerald-900/30 bg-emerald-50/30 dark:bg-emerald-950/10 p-3 flex items-center gap-2 text-[11px] text-emerald-700 dark:text-emerald-400"><CheckCircle2 className="w-4 h-4" />لا توجد تنبيهات عاجلة لهذا العميل حالياً</div>
+                            )}
+                            {profile.phone && (
+                              <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-blue-500/5 p-4">
+                                <div className="flex items-start justify-between gap-3 mb-2"><div className="flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center"><MessageCircle className="w-4 h-4 text-primary" /></div><div><p className="text-xs font-bold text-foreground">سكريبت اتصال مقترح</p><p className="text-[10px] text-muted-foreground">مبني تلقائياً على سلوك العميل</p></div></div><div className="flex items-center gap-1.5"><button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(buildCallScript(profile.user_id)); toast({ title: "✅ تم نسخ السكريبت" }); }} className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary flex items-center gap-1 transition-colors"><Copy className="w-3 h-3" />نسخ</button><a href={`https://wa.me/${formatPhoneForWhatsApp(profile.phone)}?text=${encodeURIComponent(buildCallScript(profile.user_id))}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 flex items-center gap-1 transition-colors"><Send className="w-3 h-3" />إرسال</a></div></div>
+                                <p className="text-xs text-foreground/85 leading-relaxed whitespace-pre-line bg-background/60 rounded-lg p-3 border border-border/30">{buildCallScript(profile.user_id)}</p>
+                              </div>
+                            )}
+                          </TabsContent>
+                          <TabsContent value="prefs" className="space-y-3 mt-4 focus-visible:outline-none">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                              <div className="bg-muted/30 rounded-xl p-3 flex items-center gap-2.5"><div className="w-9 h-9 rounded-lg bg-violet-500/15 flex items-center justify-center shrink-0"><Car className="w-4 h-4 text-violet-600 dark:text-violet-400" /></div><div className="min-w-0"><p className="text-[10px] text-muted-foreground">سيارة العميل</p><p className="text-sm font-bold text-foreground">{profile.car_model ? `${profile.car_model}${profile.car_year ? ` (${profile.car_year})` : ""}` : "لم يحدد"}</p>{!profile.car_model && (<p className="text-[10px] text-amber-600 dark:text-amber-400 mt-0.5">💡 اسأل العميل عن موديل سيارته</p>)}</div></div>
+                              <div className="bg-muted/30 rounded-xl p-3 flex items-center gap-2.5"><div className="w-9 h-9 rounded-lg bg-cyan-500/15 flex items-center justify-center shrink-0"><ListOrdered className="w-4 h-4 text-cyan-600 dark:text-cyan-400" /></div><div className="min-w-0 flex-1"><p className="text-[10px] text-muted-foreground">قوائم التسوق</p><p className="text-sm font-bold text-foreground">{shoppingLists?.count || 0}</p>{shoppingLists && shoppingLists.names.length > 0 && (<div className="flex flex-wrap gap-1 mt-1">{shoppingLists.names.slice(0, 3).map((name, ni) => (<span key={ni} className="text-[9px] bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 px-1.5 py-0.5 rounded">{name}</span>))}</div>)}</div></div>
+                            </div>
+                            {topBrands.length > 0 && (
+                              <div className="rounded-xl border border-border/40 bg-card/50 p-3"><p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-amber-500" />الماركات المفضلة (حسب التصفح)</p><div className="flex flex-wrap gap-1.5">{topBrands.map(([brand, cnt]) => (<span key={brand} className="text-[11px] font-bold bg-primary/10 text-primary px-2.5 py-1 rounded-lg flex items-center gap-1.5">{brand}<span className="text-[9px] bg-primary/20 px-1.5 py-0.5 rounded-full">{cnt}</span></span>))}</div></div>
+                            )}
+                            {dealerUserIds?.has(profile.user_id) && (
+                              <div className="rounded-xl border border-blue-200/40 dark:border-blue-900/30 bg-blue-50/40 dark:bg-blue-950/15 p-3"><p className="text-xs font-bold text-blue-700 dark:text-blue-400 flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5" />حساب تاجر — راجع تفضيلاته من ملف التاجر</p></div>
+                            )}
+                          </TabsContent>
+                          <TabsContent value="activity" className="space-y-3 mt-4 focus-visible:outline-none">
+                            {searches.length > 0 && productsMap && (
+                              <div><p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1.5"><Search className="w-3.5 h-3.5 text-primary" />تقرير الأصناف المبحوث عنها ({searches.length} صنف)</p>
+                                <div className="overflow-x-auto rounded-xl border border-border/40"><table className="w-full text-xs"><thead><tr className="bg-muted/50 text-muted-foreground"><th className="px-3 py-2 text-right font-bold">كلمة البحث</th><th className="px-3 py-2 text-center font-bold">عدد المرات</th><th className="px-3 py-2 text-center font-bold">آخر بحث</th><th className="px-3 py-2 text-center font-bold">حالة الشراء</th></tr></thead><tbody>{searches.sort((a, b) => b.count - a.count).slice(0, 20).map((s, i) => { const queryLower = s.query.toLowerCase(); const matchedPurchased = purchasedProducts ? Object.values(productsMap).some((p: any) => purchasedProducts.has(p.id) && (p.name_ar?.toLowerCase().includes(queryLower) || p.sku?.toLowerCase().includes(queryLower))) : false; return (<tr key={i} className={cn("border-t border-border/30", i % 2 === 0 ? "bg-card" : "bg-muted/10")}><td className="px-3 py-2 font-medium text-foreground">{s.query}</td><td className="px-3 py-2 text-center"><Badge variant="secondary" className="text-[10px]">{s.count}×</Badge></td><td className="px-3 py-2 text-center text-muted-foreground">{format(new Date(s.lastAt), "dd/MM/yyyy", { locale: ar })}</td><td className="px-3 py-2 text-center">{matchedPurchased ? (<span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded-md"><CheckCircle2 className="w-3 h-3" />تم الشراء ✓</span>) : (<span className="text-[10px] font-bold text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-md">لم يشترِ</span>)}</td></tr>); })}</tbody></table></div>
+                              </div>
+                            )}
+                            {viewedProducts.length > 0 && productsMap && (
+                              <div><p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1.5"><Eye className="w-3.5 h-3.5 text-primary" />الأصناف المسعّرة ({viewedProducts.length} صنف)</p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">{viewedProducts.slice(0, 10).map((pid) => { const product = productsMap[pid]; if (!product) return null; const wasPurchased = purchasedProducts?.has(pid); return (<div key={pid} className={cn("flex items-center gap-2.5 rounded-xl p-2.5", wasPurchased ? "bg-emerald-50/60 dark:bg-emerald-950/15 border border-emerald-200/40" : "bg-muted/30")}><div className={cn("w-7 h-7 rounded-lg flex items-center justify-center shrink-0", wasPurchased ? "bg-emerald-500/15" : "bg-primary/10")}>{wasPurchased ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> : <Package className="w-3.5 h-3.5 text-primary" />}</div><div className="min-w-0 flex-1"><p className="text-xs font-semibold text-foreground truncate">{product.name_ar}</p><p className="text-[10px] text-muted-foreground font-mono">{product.sku}</p></div>{wasPurchased && (<span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded shrink-0">تم الشراء ✓</span>)}</div>); })}</div>
+                              </div>
+                            )}
+                            {searches.length === 0 && viewedProducts.length === 0 && (<p className="text-sm text-muted-foreground text-center py-6">لا يوجد سجل تصفح لهذا العميل</p>)}
+                          </TabsContent>
+                        </Tabs>
                       );
                     })()}
-
-                    {/* Contact cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                      <div className="bg-muted/30 rounded-xl p-3 flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                          <Mail className="w-4 h-4 text-primary" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-[10px] text-muted-foreground">البريد الإلكتروني</p>
-                          <p className="text-xs font-semibold text-foreground truncate">{profile.email || "—"}</p>
-                        </div>
-                      </div>
-                      <div className="bg-muted/30 rounded-xl p-3 flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                          <Phone className="w-4 h-4 text-primary" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-[10px] text-muted-foreground">الهاتف</p>
-                          <p className="text-xs font-semibold text-foreground" dir="ltr">{profile.phone || "—"}</p>
-                        </div>
-                      </div>
-                      <div className="bg-muted/30 rounded-xl p-3 flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                          <Car className="w-4 h-4 text-primary" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-[10px] text-muted-foreground">السيارة</p>
-                          <p className="text-xs font-semibold text-foreground">
-                            {profile.car_model ? `${profile.car_model}${profile.car_year ? ` (${profile.car_year})` : ""}` : "لم يحدد"}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Stats row: orders, quotes, shopping lists, return rate */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                      {/* Last order */}
-                      <div className="bg-emerald-50/70 dark:bg-emerald-950/20 rounded-xl p-3">
-                        <div className="flex items-center gap-2 mb-1">
-                          <ShoppingCart className="w-3.5 h-3.5 text-emerald-600" />
-                          <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">الطلبات</span>
-                        </div>
-                        {orders ? (
-                          <>
-                            <p className="text-lg font-black text-foreground">{orders.count}</p>
-                            <p className="text-[10px] text-muted-foreground">
-                              إجمالي {orders.total.toLocaleString("ar-EG")} ج.م
-                            </p>
-                            <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">
-                              آخر طلب: {format(new Date(orders.lastOrderDate), "dd/MM/yyyy")}
-                            </p>
-                          </>
-                        ) : (
-                          <p className="text-sm text-muted-foreground">لا توجد طلبات</p>
-                        )}
-                      </div>
-
-                      {/* Quotes */}
-                      <div className="bg-violet-50/70 dark:bg-violet-950/20 rounded-xl p-3">
-                        <div className="flex items-center gap-2 mb-1">
-                          <FileText className="w-3.5 h-3.5 text-violet-600" />
-                          <span className="text-[10px] font-bold text-violet-700 dark:text-violet-400">عروض الأسعار</span>
-                        </div>
-                        <p className="text-lg font-black text-foreground">{quotes}</p>
-                        <p className="text-[10px] text-muted-foreground">
-                          {quotes > 0 ? "عرض سعر مقدم" : "لم يطلب عروض"}
-                        </p>
-                      </div>
-
-                      {/* Shopping Lists */}
-                      <div className="bg-cyan-50/70 dark:bg-cyan-950/20 rounded-xl p-3">
-                        <div className="flex items-center gap-2 mb-1">
-                          <ListOrdered className="w-3.5 h-3.5 text-cyan-600" />
-                          <span className="text-[10px] font-bold text-cyan-700 dark:text-cyan-400">قوائم التسوق</span>
-                        </div>
-                        <p className="text-lg font-black text-foreground">{shoppingLists?.count || 0}</p>
-                        {shoppingLists && shoppingLists.names.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {shoppingLists.names.slice(0, 3).map((name, ni) => (
-                              <span key={ni} className="text-[9px] bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 px-1.5 py-0.5 rounded">{name}</span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Return Rate */}
-                      <div className="bg-amber-50/70 dark:bg-amber-950/20 rounded-xl p-3">
-                        <div className="flex items-center gap-2 mb-1">
-                          <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
-                          <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400">معدل العودة</span>
-                        </div>
-                        <p className="text-lg font-black text-foreground">{returnDays} يوم</p>
-                        <p className="text-[10px] text-muted-foreground">
-                          {returnDays > 5 ? "عميل متكرر 🔥" : returnDays > 1 ? "عاد أكثر من مرة" : "زيارة واحدة"}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Searched Products Report with Purchase Status */}
-                    {searches.length > 0 && productsMap && (
-                      <div>
-                        <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1.5">
-                          <Search className="w-3.5 h-3.5 text-primary" />
-                          تقرير الأصناف المبحوث عنها ({searches.length} صنف)
-                        </p>
-                        <div className="overflow-x-auto rounded-xl border border-border/40">
-                          <table className="w-full text-xs">
-                            <thead>
-                              <tr className="bg-muted/50 text-muted-foreground">
-                                <th className="px-3 py-2 text-right font-bold">كلمة البحث</th>
-                                <th className="px-3 py-2 text-center font-bold">عدد المرات</th>
-                                <th className="px-3 py-2 text-center font-bold">آخر بحث</th>
-                                <th className="px-3 py-2 text-center font-bold">حالة الشراء</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {searches
-                                .sort((a, b) => b.count - a.count)
-                                .slice(0, 20)
-                                .map((s, i) => {
-                                  // Check if any product matching this search query was purchased
-                                  const queryLower = s.query.toLowerCase();
-                                  const matchedPurchased = purchasedProducts
-                                    ? Object.values(productsMap).some(
-                                        (p: any) =>
-                                          purchasedProducts.has(p.id) &&
-                                          (p.name_ar?.toLowerCase().includes(queryLower) || p.sku?.toLowerCase().includes(queryLower))
-                                      )
-                                    : false;
-
-                                  return (
-                                    <tr key={i} className={cn("border-t border-border/30", i % 2 === 0 ? "bg-card" : "bg-muted/10")}>
-                                      <td className="px-3 py-2 font-medium text-foreground">{s.query}</td>
-                                      <td className="px-3 py-2 text-center">
-                                        <Badge variant="secondary" className="text-[10px]">{s.count}×</Badge>
-                                      </td>
-                                      <td className="px-3 py-2 text-center text-muted-foreground">
-                                        {format(new Date(s.lastAt), "dd/MM/yyyy", { locale: ar })}
-                                      </td>
-                                      <td className="px-3 py-2 text-center">
-                                        {matchedPurchased ? (
-                                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded-md">
-                                            <CheckCircle2 className="w-3 h-3" />
-                                            تم الشراء ✓
-                                          </span>
-                                        ) : (
-                                          <span className="text-[10px] font-bold text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-md">
-                                            لم يشترِ
-                                          </span>
-                                        )}
-                                      </td>
-                                    </tr>
-                                  );
-                                })}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Viewed products */}
-                    {viewedProducts.length > 0 && productsMap && (
-                      <div>
-                        <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1.5">
-                          <Eye className="w-3.5 h-3.5 text-primary" />
-                          الأصناف المسعّرة ({viewedProducts.length} صنف)
-                        </p>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          {viewedProducts.slice(0, 10).map((pid) => {
-                            const product = productsMap[pid];
-                            if (!product) return null;
-                            const wasPurchased = purchasedProducts?.has(pid);
-                            return (
-                              <div key={pid} className={cn(
-                                "flex items-center gap-2.5 rounded-xl p-2.5",
-                                wasPurchased ? "bg-emerald-50/60 dark:bg-emerald-950/15 border border-emerald-200/40" : "bg-muted/30"
-                              )}>
-                                <div className={cn(
-                                  "w-7 h-7 rounded-lg flex items-center justify-center shrink-0",
-                                  wasPurchased ? "bg-emerald-500/15" : "bg-primary/10"
-                                )}>
-                                  {wasPurchased ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> : <Package className="w-3.5 h-3.5 text-primary" />}
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <p className="text-xs font-semibold text-foreground truncate">{product.name_ar}</p>
-                                  <p className="text-[10px] text-muted-foreground font-mono">{product.sku}</p>
-                                </div>
-                                {wasPurchased && (
-                                  <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded shrink-0">
-                                    تم الشراء ✓
-                                  </span>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* No activity */}
-                    {searches.length === 0 && viewedProducts.length === 0 && !orders && (
-                      <p className="text-sm text-muted-foreground text-center py-4">
-                        لا يوجد نشاط مسجل لهذا العميل بعد
-                      </p>
-                    )}
+                  </div>
                   </div>
                   </motion.div>
                 )}
