@@ -42,7 +42,7 @@ const statusConfig = {
 
 const DealerLogin = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isAdmin, isModerator, dealerAccount, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const [identifier, setIdentifier] = useState(""); // single field for phone or email
   const [password, setPassword] = useState("");
@@ -73,7 +73,14 @@ const DealerLogin = () => {
     }
   }, []);
 
-  useEffect(() => { if (user) checkDealerStatus(user.id); }, [user]);
+  // Hard guard: staff (admin/moderator) must NEVER see the dealer portal — redirect immediately
+  useEffect(() => {
+    if (!authLoading && user && (isAdmin || isModerator)) {
+      navigate("/admin", { replace: true });
+    }
+  }, [authLoading, user, isAdmin, isModerator, navigate]);
+
+  useEffect(() => { if (user && !isAdmin && !isModerator) checkDealerStatus(user.id); }, [user, isAdmin, isModerator]);
 
   const checkDealerStatus = async (userId: string) => {
     setCheckingStatus(true);
@@ -119,6 +126,18 @@ const DealerLogin = () => {
     const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: `${window.location.origin}/dealer-login` });
     if (result.error) toast({ title: "خطأ", description: String(result.error), variant: "destructive" });
   };
+
+  // ─── Block staff from seeing dealer portal ───
+  if (user && (isAdmin || isModerator)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-3" />
+          <p className="text-sm text-muted-foreground">جارٍ تحويلك للوحة الموظفين...</p>
+        </div>
+      </div>
+    );
+  }
 
   // ─── Application Status View ───
   if (user && (applicationStatus || checkingStatus)) {
