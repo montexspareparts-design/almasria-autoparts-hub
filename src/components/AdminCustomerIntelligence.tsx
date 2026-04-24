@@ -1009,26 +1009,32 @@ const AdminCustomerIntelligence = () => {
       candidateDays.push(daysSinceJoin);
       const freshestDays = candidateDays.length ? Math.min(...candidateDays) : null;
 
-      // === Unified scoring components (max 100) ===
-      // 1) Alerts (0-30): weighted by emoji severity
+      // === Raw scoring components (base scale: 30/40/30) ===
+      // 1) Alerts (raw 0-30): weighted by emoji severity
       const alertWeights: Record<string, number> = {
         "🛒": 18, "🔥": 16, "⚠️": 14, "👋": 10, "✨": 6, "💰": 8,
       };
-      const alertsScore = Math.min(30, alerts.reduce((s, a) => s + (alertWeights[a.icon] ?? 4), 0));
+      const alertsRaw = Math.min(30, alerts.reduce((s, a) => s + (alertWeights[a.icon] ?? 4), 0));
 
-      // 2) Recency (0-40)
-      const recScore = recencyScore(freshestDays);
+      // 2) Recency (raw 0-40)
+      const recRaw = recencyScore(freshestDays);
 
-      // 3) Buyability (0-30): conversion likelihood
-      let buyScore = 0;
-      if (cart && cart.count > 0) buyScore += 12;
-      if (totalSearch >= 10) buyScore += 10; else if (totalSearch >= 3) buyScore += 6;
-      if (orders && orders.count > 0) buyScore += 6;
-      if (orders && orders.count >= 3) buyScore += 2;
-      if (isDealer) buyScore += 4;
-      if (p.phone) buyScore += 2;
-      if (lifecycle === "vip" || lifecycle === "active") buyScore += 2;
-      buyScore = Math.min(30, buyScore);
+      // 3) Buyability (raw 0-30): conversion likelihood
+      let buyRaw = 0;
+      if (cart && cart.count > 0) buyRaw += 12;
+      if (totalSearch >= 10) buyRaw += 10; else if (totalSearch >= 3) buyRaw += 6;
+      if (orders && orders.count > 0) buyRaw += 6;
+      if (orders && orders.count >= 3) buyRaw += 2;
+      if (isDealer) buyRaw += 4;
+      if (p.phone) buyRaw += 2;
+      if (lifecycle === "vip" || lifecycle === "active") buyRaw += 2;
+      buyRaw = Math.min(30, buyRaw);
+
+      // Apply configurable weights — rescale each raw component to its configured ceiling
+      // (raw / baseMax) * configuredWeight  → so total still sums to ~100 when weights sum to 100
+      const alertsScore = Math.round((alertsRaw / 30) * priorityWeights.alerts);
+      const recScore = Math.round((recRaw / 40) * priorityWeights.recency);
+      const buyScore = Math.round((buyRaw / 30) * priorityWeights.buyability);
 
       const totalScore = alertsScore + recScore + buyScore;
       const breakdown = { alerts: alertsScore, recency: recScore, buyability: buyScore };
