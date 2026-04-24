@@ -1246,7 +1246,146 @@ const AdminCustomerIntelligence = () => {
         </CardContent>
       </Card>
 
+      {/* ===== Today's Tasks for Staff ===== */}
+      {todayTasks.length > 0 && (
+        <Card className="rounded-2xl border-2 border-primary/25 shadow-sm overflow-hidden bg-gradient-to-l from-primary/5 via-background to-background">
+          <CardHeader className="py-3 px-4 border-b border-border/40">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <CardTitle className="text-sm font-black flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center shadow-md">
+                  <ListOrdered className="w-3.5 h-3.5 text-white" />
+                </div>
+                مهام اليوم
+                <Badge variant="secondary" className="text-[10px] h-5 mr-1">
+                  {pendingTasksCount} متبقي
+                </Badge>
+                {completedTasksCount > 0 && (
+                  <Badge className="text-[10px] h-5 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-300/30">
+                    <CheckCircle2 className="w-3 h-3 ml-1" />
+                    {completedTasksCount} مكتمل
+                  </Badge>
+                )}
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-muted-foreground font-medium hidden md:inline">
+                  {format(new Date(), "EEEE dd MMMM yyyy", { locale: ar })}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-[11px] gap-1"
+                  onClick={() => setShowCompletedTasks(v => !v)}
+                >
+                  {showCompletedTasks ? "إخفاء المكتمل" : "إظهار المكتمل"}
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-3">
+            {visibleTasks.length === 0 ? (
+              <div className="text-center py-6 text-muted-foreground text-xs flex flex-col items-center gap-2">
+                <CheckCircle2 className="w-8 h-8 text-emerald-500" />
+                <p className="font-bold">رائع! خلصت كل مهام اليوم 🎉</p>
+                <button
+                  className="text-[11px] text-primary hover:underline"
+                  onClick={() => setShowCompletedTasks(true)}
+                >
+                  إظهار {completedTasksCount} مهمة مكتملة
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                {visibleTasks.slice(0, 30).map((task) => {
+                  const isDone = completedTasks.has(task.id);
+                  const phoneDigits = task.phone?.replace(/\D/g, "") || "";
+                  const waNumber = phoneDigits.startsWith("0") ? "20" + phoneDigits.slice(1) : phoneDigits;
+                  const priorityColor =
+                    task.priority === 1 ? "border-red-300/60 bg-red-50/60 dark:bg-red-950/15 dark:border-red-800/40"
+                    : task.priority === 2 ? "border-amber-300/60 bg-amber-50/60 dark:bg-amber-950/15 dark:border-amber-800/40"
+                    : "border-border/50 bg-muted/20";
+                  const priorityLabel = task.priority === 1 ? "عاجل" : task.priority === 2 ? "متوسط" : "عادي";
+                  const priorityBadge =
+                    task.priority === 1 ? "bg-red-500/15 text-red-700 dark:text-red-400"
+                    : task.priority === 2 ? "bg-amber-500/15 text-amber-700 dark:text-amber-400"
+                    : "bg-muted text-muted-foreground";
+                  return (
+                    <div
+                      key={task.id}
+                      className={cn(
+                        "rounded-xl border p-3 transition-all flex flex-col gap-2",
+                        isDone ? "border-emerald-300/50 bg-emerald-50/40 dark:bg-emerald-950/10 opacity-60" : priorityColor
+                      )}
+                    >
+                      <div className="flex items-start gap-2">
+                        <span className="text-lg leading-none">{task.icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                            <span className={cn("text-[9px] font-black px-1.5 py-0.5 rounded", priorityBadge)}>
+                              {priorityLabel}
+                            </span>
+                            <span className={cn(
+                              "text-[9px] font-bold px-1.5 py-0.5 rounded",
+                              task.isDealer ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" : "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400"
+                            )}>
+                              {task.isDealer ? "تاجر" : "قطاعي"}
+                            </span>
+                          </div>
+                          <p className={cn("text-xs font-black text-foreground", isDone && "line-through")}>{task.title}</p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">{task.reason}</p>
+                          <button
+                            onClick={() => setExpandedUser(task.userId)}
+                            className="text-[11px] font-bold text-primary hover:underline mt-1 truncate block max-w-full text-right"
+                            title={task.userName}
+                          >
+                            {task.userName}
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-wrap pt-1.5 border-t border-border/30">
+                        {task.phone && (
+                          <>
+                            <a
+                              href={`tel:${task.phone}`}
+                              className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                            >
+                              <Phone className="w-3 h-3" /> اتصال
+                            </a>
+                            <a
+                              href={`https://wa.me/${waNumber}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md bg-green-500/15 text-green-700 dark:text-green-400 hover:bg-green-500/25 transition-colors"
+                            >
+                              <MessageCircle className="w-3 h-3" /> واتساب
+                            </a>
+                          </>
+                        )}
+                        <Button
+                          variant={isDone ? "outline" : "default"}
+                          size="sm"
+                          onClick={() => toggleTaskComplete(task.id)}
+                          className="h-7 text-[10px] gap-1 mr-auto"
+                        >
+                          <CheckCircle2 className="w-3 h-3" />
+                          {isDone ? "إلغاء" : "تم"}
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            {visibleTasks.length > 30 && (
+              <p className="text-center text-[10px] text-muted-foreground mt-3">
+                يتم عرض أول 30 مهمة من إجمالي {visibleTasks.length}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Customer list */}
+
       {loadingProfiles ? (
         <div className="space-y-3">
           {[1, 2, 3].map(i => (
