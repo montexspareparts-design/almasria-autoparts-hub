@@ -2395,9 +2395,37 @@ const AdminCustomerIntelligence = () => {
                                 {outcomeMeta[callOutcomes[task.id]].label}
                               </span>
                             )}
+                            {handledMeta[task.id] && (() => {
+                              const h = handledMeta[task.id];
+                              const mine = h.by === user?.id;
+                              const actionLabel = h.action === "call" ? "اتصل" : h.action === "whatsapp" ? "راسل واتساب" : h.action === "note" ? "أضاف ملاحظة" : h.action === "outcome" ? "سجّل نتيجة" : "تعامل";
+                              const mins = Math.max(0, Math.floor((Date.now() - new Date(h.at).getTime()) / 60000));
+                              const ago = mins < 1 ? "الآن" : mins < 60 ? `منذ ${mins}د` : mins < 1440 ? `منذ ${Math.floor(mins/60)}س` : `منذ ${Math.floor(mins/1440)}ي`;
+                              return (
+                                <span
+                                  className={cn(
+                                    "text-[9px] font-black px-1.5 py-0.5 rounded inline-flex items-center gap-1 border",
+                                    mine
+                                      ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-400/40"
+                                      : "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-400/40"
+                                  )}
+                                  title={`${actionLabel} بواسطة ${h.byName || "موظف"} — ${new Date(h.at).toLocaleString("ar-EG")}`}
+                                >
+                                  ✋ {mine ? "أنت" : (h.byName || "موظف")} • {actionLabel} {ago}
+                                </span>
+                              );
+                            })()}
                           </div>
                           <p className={cn("text-xs font-black text-foreground", isDone && "line-through text-muted-foreground")}>{task.title}</p>
                           <p className={cn("text-[10px] text-muted-foreground mt-0.5 line-clamp-2", isDone && "opacity-70")}>{task.reason}</p>
+                          {handledMeta[task.id] && handledMeta[task.id].by !== user?.id && (
+                            <div className="mt-1 rounded-md bg-amber-500/10 border border-amber-400/40 px-2 py-1 flex items-center gap-1.5">
+                              <span className="text-amber-600 text-sm leading-none">⚠️</span>
+                              <span className="text-[10px] font-bold text-amber-800 dark:text-amber-300 flex-1">
+                                {handledMeta[task.id].byName || "موظف آخر"} بدأ يتعامل مع العميل ده — تجنب التكرار
+                              </span>
+                            </div>
+                          )}
                           <p
                             className={cn("text-[11px] font-bold text-primary mt-1 truncate max-w-full text-right", isDone && "opacity-70")}
                             title={task.userName}
