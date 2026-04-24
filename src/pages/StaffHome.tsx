@@ -926,7 +926,8 @@ const StaffHome = () => {
                         key={detailKey}
                         className={cn(
                           "flex items-center justify-between gap-3 p-3 rounded-lg border transition flex-wrap",
-                          isAnon ? "bg-muted/20 hover:bg-muted/40" : "bg-muted/30 hover:bg-muted/60"
+                          isAnon ? "bg-muted/20 hover:bg-muted/40" : "bg-muted/30 hover:bg-muted/60",
+                          isViewed && "opacity-60 saturate-50"
                         )}
                       >
                     <div className="flex-1 min-w-0">
@@ -938,6 +939,12 @@ const StaffHome = () => {
                           </Badge>
                         ) : (
                           <Badge className="bg-blue-500/15 text-blue-700 hover:bg-blue-500/20 text-[10px] h-5">مسجّل</Badge>
+                        )}
+                        {isViewed && (
+                          <Badge variant="outline" className="text-[10px] h-5 bg-emerald-50 text-emerald-700 border-emerald-200 gap-1">
+                            <CheckCheck className="w-3 h-3" />
+                            تمت المعاينة
+                          </Badge>
                         )}
                         {isAnon && (() => {
                           const fp = v.first_path || "";
