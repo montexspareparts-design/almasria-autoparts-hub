@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Loader2, UserPlus, Trash2, Shield, Search, Users, Activity, ShoppingBag, UserCheck, FileText, Package, Clock, KeyRound, UserX, Crown } from "lucide-react";
+import { Loader2, UserPlus, Trash2, Shield, Search, Users, Activity, ShoppingBag, UserCheck, FileText, Package, Clock, KeyRound, UserX, Crown, Eye, EyeOff, Copy } from "lucide-react";
 
 const PROTECTED_ADMIN_EMAIL = "monmohanad9@gmail.com";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
