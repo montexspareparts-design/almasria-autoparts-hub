@@ -1264,6 +1264,7 @@ const AdminCustomerIntelligence = () => {
                 );
               })}
             </div>
+            )}
           </CardContent>
         </Card>
       )}
