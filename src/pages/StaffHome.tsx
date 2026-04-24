@@ -600,7 +600,12 @@ const StaffHome = () => {
                 {loading ? (
                   <Skeleton className="h-8 w-16 mb-1" />
                 ) : (
-                  <div className="text-3xl font-bold">{kpi.value}</div>
+                  <div className="text-3xl font-bold leading-none">{kpi.value}</div>
+                )}
+                {!loading && kpi.subText && (
+                  <div className="text-[11px] font-medium text-muted-foreground/90 mt-1.5">
+                    {kpi.subText}
+                  </div>
                 )}
                 <div className="text-xs text-muted-foreground mt-1">
                   {kpi.label}
