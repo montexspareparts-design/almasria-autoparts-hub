@@ -997,6 +997,7 @@ const AdminCustomerIntelligence = () => {
       lifecycle: string; isDealer: boolean;
       score: number; // 0-100 unified urgency score
       scoreBreakdown: { alerts: number; recency: number; buyability: number };
+      freshestDays: number | null;
     };
     if (!profiles) return [] as Task[];
 
