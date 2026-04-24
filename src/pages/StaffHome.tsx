@@ -297,6 +297,8 @@ const StaffHome = () => {
           email,
           pages: v.pages,
           last_visit: v.last_visit,
+          first_path: v.first_path,
+          referrer: v.referrer,
         };
       });
       // Sort strictly by last_visit desc — latest visitor first
