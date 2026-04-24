@@ -34,6 +34,8 @@ interface KPI {
   color: string;
   bg: string;
   onClick?: () => void;
+  /** Optional smaller stat shown under the main value (e.g. "تمت معاينة 3") */
+  subText?: string;
 }
 
 interface HotLead {
@@ -379,6 +381,17 @@ const StaffHome = () => {
 
   const rangeSuffix = range === "today" ? "اليوم" : "آخر 7 أيام";
 
+  // Count how many of the displayed (non-staff) visitors the current staff has already opened
+  const viewedVisitorsCount = useMemo(() => {
+    return visitorsList.reduce((acc, v) => {
+      if (!includeStaff && v.user_id && staffIdsSet.has(v.user_id)) return acc;
+      const isViewed =
+        (v.user_id && viewedKeys.has(`u:${v.user_id}`)) ||
+        (v.session_key && viewedKeys.has(`s:${v.session_key}`));
+      return isViewed ? acc + 1 : acc;
+    }, 0);
+  }, [visitorsList, viewedKeys, includeStaff, staffIdsSet]);
+
   const kpiCards: KPI[] = useMemo(
     () => [
       {
@@ -388,6 +401,7 @@ const StaffHome = () => {
         color: "text-blue-600",
         bg: "from-blue-500/10 to-blue-500/5",
         onClick: () => setVisitorsOpen(true),
+        subText: kpis.visitors > 0 ? `تمت معاينة ${viewedVisitorsCount} / ${kpis.visitors}` : undefined,
       },
       {
         label: `زوار متفاعلين (${rangeSuffix})`,
@@ -430,7 +444,7 @@ const StaffHome = () => {
         onClick: () => navigate("/admin?section=customer-intel"),
       },
     ],
-    [kpis, navigate, rangeSuffix]
+    [kpis, navigate, rangeSuffix, viewedVisitorsCount]
   );
 
   const tierBadge = (tier: HotLead["tier"]) => {
@@ -586,7 +600,12 @@ const StaffHome = () => {
                 {loading ? (
                   <Skeleton className="h-8 w-16 mb-1" />
                 ) : (
-                  <div className="text-3xl font-bold">{kpi.value}</div>
+                  <div className="text-3xl font-bold leading-none">{kpi.value}</div>
+                )}
+                {!loading && kpi.subText && (
+                  <div className="text-[11px] font-medium text-muted-foreground/90 mt-1.5">
+                    {kpi.subText}
+                  </div>
                 )}
                 <div className="text-xs text-muted-foreground mt-1">
                   {kpi.label}
