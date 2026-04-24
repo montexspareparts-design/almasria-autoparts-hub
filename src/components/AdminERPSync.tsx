@@ -1787,21 +1787,29 @@ const AdminERPSync = () => {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-foreground mb-1.5 block">API Key</label>
-                <Input
-                  value={config.erp_api_key}
-                  onChange={(e) => setConfig((c) => ({ ...c, erp_api_key: e.target.value }))}
-                  placeholder="أدخل مفتاح الـ API"
-                  type="password"
-                  dir="ltr"
-                />
-              </div>
-
-              <div>
                 <label className="text-sm font-medium text-foreground mb-1.5 block">Webhook Secret</label>
                 <Input value={config.webhook_secret} readOnly className="font-mono text-xs" dir="ltr" />
                 <p className="text-[10px] text-muted-foreground mt-1">
                   يتم توليده تلقائياً — أرسله للدعم الفني للفيصل
+                </p>
+              </div>
+
+              {/* ─── Secrets Info Panel ─── */}
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-primary" />
+                  <p className="text-sm font-bold text-foreground">بيانات الاعتماد (Secrets)</p>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  المصادقة مع نظام الفيصل تتم تلقائياً عبر Secrets محفوظة بأمان في الخادم — وليس من هذه الواجهة. الأسرار المُستخدمة فعلياً:
+                </p>
+                <ul className="text-xs space-y-1 text-foreground/80 pr-3">
+                  <li>• <code className="bg-muted px-1.5 py-0.5 rounded text-[10px]">ERP_FAISAL_USERNAME</code> — اسم المستخدم</li>
+                  <li>• <code className="bg-muted px-1.5 py-0.5 rounded text-[10px]">ERP_FAISAL_PASSWORD</code> — كلمة المرور</li>
+                  <li>• <code className="bg-muted px-1.5 py-0.5 rounded text-[10px]">ERP_FAISAL_API_KEY</code> — مفتاح داخلي للاستدعاءات الآلية</li>
+                </ul>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  لتحديث أي منها، استخدم إعدادات Lovable Cloud → Secrets.
                 </p>
               </div>
 
