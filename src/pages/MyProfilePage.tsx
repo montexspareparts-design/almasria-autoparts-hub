@@ -11,7 +11,8 @@ import { Separator } from "@/components/ui/separator";
 import CarModelSelector from "@/components/CarModelSelector";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { User, Phone, Mail, Car, Save, Loader2, ArrowRight, Lock, Eye, EyeOff } from "lucide-react";
+import { User, Phone, Mail, Car, Save, Loader2, ArrowRight, Lock, Eye, EyeOff, Sparkles, X } from "lucide-react";
+import { recoverPhoneFromChannels, type RecoveredPhone } from "@/lib/recoverPhone";
 
 const egyptianPhoneRegex = /^01[0-25]\d{8}$/;
 
