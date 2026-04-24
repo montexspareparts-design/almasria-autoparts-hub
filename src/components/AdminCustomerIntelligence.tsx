@@ -835,6 +835,70 @@ const AdminCustomerIntelligence = () => {
     return counts;
   }, [profiles, ordersMap, userSearchMap]);
 
+  // 🔥 Hot leads: customers needing urgent attention (high search activity, no orders yet, recent activity)
+  const hotLeads = useMemo(() => {
+    if (!filteredProfiles) return [];
+    const now = Date.now();
+    return filteredProfiles
+      .map(p => {
+        const searches = userSearchMap[p.user_id] || [];
+        const views = userViewsMap[p.user_id] || [];
+        const orders = ordersMap?.[p.user_id] || [];
+        const totalSearches = searches.reduce((s, x) => s + x.count, 0);
+        const lastSearchAt = searches.reduce((max, s) => s.lastAt > max ? s.lastAt : max, "");
+        const lastViewAt = (priceViews || []).find(v => v.user_id === p.user_id)?.viewed_at || "";
+        const lastActivity = [lastSearchAt, lastViewAt].filter(Boolean).sort().pop() || "";
+        const daysSinceActivity = lastActivity ? Math.floor((now - new Date(lastActivity).getTime()) / 86400000) : 999;
+        // Top searched query
+        const topSearch = [...searches].sort((a, b) => b.count - a.count)[0];
+        // Top viewed products (names)
+        const topProducts = views.slice(0, 3).map(pid => productsMap?.[pid]?.name_ar).filter(Boolean) as string[];
+        // Score: more search + recent activity + no orders = hotter
+        const noOrders = orders.length === 0;
+        const score =
+          (totalSearches * 3) +
+          (views.length * 2) +
+          (noOrders && totalSearches >= 3 ? 15 : 0) +
+          (daysSinceActivity <= 1 ? 10 : daysSinceActivity <= 3 ? 5 : 0);
+        // Need-reason classification
+        let needReason = "";
+        let needBadge: { label: string; color: string } = { label: "", color: "" };
+        if (noOrders && totalSearches >= 5) {
+          needReason = `بحث ${totalSearches} مرة بدون طلب — جاهز للتحويل`;
+          needBadge = { label: "🔥 فرصة تحويل", color: "bg-red-500/15 text-red-700 dark:text-red-400 border-red-300 dark:border-red-800" };
+        } else if (views.length >= 3 && noOrders) {
+          needReason = `كشف سعر ${views.length} منتج — قرار شراء قريب`;
+          needBadge = { label: "💰 سلة محتملة", color: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-800" };
+        } else if (daysSinceActivity <= 1 && totalSearches >= 2) {
+          needReason = `نشط الآن — يبحث عن ${topSearch?.query || "منتجات"}`;
+          needBadge = { label: "⚡ نشط الآن", color: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800" };
+        } else if (orders.length >= 2 && daysSinceActivity > 30) {
+          needReason = `عميل سابق غايب من ${daysSinceActivity} يوم — يحتاج تنشيط`;
+          needBadge = { label: "🔄 إعادة تنشيط", color: "bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-800" };
+        } else if (totalSearches >= 3) {
+          needReason = `يبحث عن ${topSearch?.query || "منتجات متعددة"}`;
+          needBadge = { label: "🔍 باحث نشط", color: "bg-cyan-500/15 text-cyan-700 dark:text-cyan-400 border-cyan-300 dark:border-cyan-800" };
+        }
+        return {
+          profile: p,
+          score,
+          totalSearches,
+          viewsCount: views.length,
+          ordersCount: orders.length,
+          daysSinceActivity,
+          lastActivity,
+          topSearch: topSearch?.query || null,
+          topProducts,
+          needReason,
+          needBadge,
+        };
+      })
+      .filter(x => x.needReason && x.score >= 8)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 6);
+  }, [filteredProfiles, userSearchMap, userViewsMap, ordersMap, priceViews, productsMap]);
+
+
   return (
     <div className="space-y-5" dir="rtl">
       {/* Hero Header */}
