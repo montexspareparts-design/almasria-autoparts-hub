@@ -1717,9 +1717,19 @@ const AdminCustomerIntelligence = () => {
                 >
                   {showCompletedTasks ? "إخفاء المكتمل" : "إظهار المكتمل"}
                 </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0"
+                  onClick={() => setTasksOpen(v => !v)}
+                  title={tasksOpen ? "طي المهام" : "إظهار المهام"}
+                >
+                  <ChevronDown className={cn("w-4 h-4 transition-transform", !tasksOpen && "-rotate-90")} />
+                </Button>
               </div>
             </div>
           </CardHeader>
+          {tasksOpen && (
           <CardContent className="p-3">
             {visibleTasks.length === 0 ? (
               <div className="text-center py-6 text-muted-foreground text-xs flex flex-col items-center gap-2">
