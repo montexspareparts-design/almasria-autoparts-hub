@@ -483,13 +483,6 @@ export default function VisitorSessionSummary() {
     }
   };
 
-  const COMM_TYPES: Record<string, { label: string; icon: any; color: string }> = {
-    phone: { label: "📞 مكالمة هاتفية", icon: Phone, color: "text-emerald-600" },
-    whatsapp: { label: "💬 واتساب", icon: MessageCircle, color: "text-green-600" },
-    visit: { label: "🤝 زيارة شخصية", icon: MapPin, color: "text-blue-600" },
-    no_answer: { label: "📵 لم يرد", icon: AlertTriangle, color: "text-amber-600" },
-    other: { label: "📌 وسيلة أخرى", icon: Headphones, color: "text-purple-600" },
-  };
   const lastComm = comms[0];
 
   const callPhone = () => { if (profile?.phone) window.location.href = `tel:${profile.phone}`; };
