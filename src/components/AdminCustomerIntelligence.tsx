@@ -942,14 +942,57 @@ const AdminCustomerIntelligence = () => {
     return counts;
   }, [profiles, ordersMap, userSearchMap]);
 
+  // Filters for Hot Leads summary
+  const [hotLeadsCategory, setHotLeadsCategory] = useState<"all" | "parts" | "oils">("all");
+  const [hotLeadsPeriod, setHotLeadsPeriod] = useState<"all" | "30d" | "90d">("all");
+
+  // Helper: is this product/query an "oil" item?
+  const isOilText = (text?: string | null) => {
+    if (!text) return false;
+    const t = text.toLowerCase();
+    return /زيت|زيوت|oil|atf|gear\s*oil|motor\s*oil|coolant|brake\s*fluid|محرك|فرامل/i.test(t);
+  };
+  const productMatchesCategory = (pid: string, cat: "all" | "parts" | "oils") => {
+    if (cat === "all") return true;
+    const prod = productsMap?.[pid];
+    if (!prod) return cat === "parts"; // unknown defaults to parts
+    const brand = (prod.brand || "").toLowerCase();
+    const isOil = isOilText(prod.name_ar) || isOilText(prod.sku) || /oil|lubricant/i.test(brand);
+    return cat === "oils" ? isOil : !isOil;
+  };
+
   // 🔥 Hot leads: customers needing urgent attention (high search activity, no orders yet, recent activity)
   const hotLeads = useMemo(() => {
     if (!filteredProfiles) return [];
     const now = Date.now();
+    const periodMs = hotLeadsPeriod === "30d" ? 30 * 86400000 : hotLeadsPeriod === "90d" ? 90 * 86400000 : Infinity;
+    const cutoff = hotLeadsPeriod === "all" ? 0 : now - periodMs;
     return filteredProfiles
       .map(p => {
-        const searches = userSearchMap[p.user_id] || [];
-        const views = userViewsMap[p.user_id] || [];
+        let searches = userSearchMap[p.user_id] || [];
+        let views = userViewsMap[p.user_id] || [];
+
+        // Apply period filter
+        if (hotLeadsPeriod !== "all") {
+          searches = searches.filter(s => new Date(s.lastAt).getTime() >= cutoff);
+          // For views, we don't have per-product timestamps in userViewsMap; fallback: use priceViews to filter
+          const recentViewedIds = new Set(
+            (priceViews || [])
+              .filter(v => v.user_id === p.user_id && new Date(v.viewed_at).getTime() >= cutoff)
+              .map(v => v.product_id)
+          );
+          views = views.filter(pid => recentViewedIds.has(pid));
+        }
+
+        // Apply category filter
+        if (hotLeadsCategory !== "all") {
+          searches = searches.filter(s => {
+            // match query text directly
+            if (hotLeadsCategory === "oils") return isOilText(s.query);
+            return !isOilText(s.query);
+          });
+          views = views.filter(pid => productMatchesCategory(pid, hotLeadsCategory));
+        }
         const orderInfo = ordersMap?.[p.user_id];
         const ordersCount = orderInfo?.count || 0;
         const totalSearches = searches.reduce((s, x) => s + x.count, 0);
