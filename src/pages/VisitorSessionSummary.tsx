@@ -16,7 +16,7 @@ import {
   Search, ShoppingBag, Phone, MessageCircle, Timer, User as UserIcon,
   Calendar, Sparkles, TrendingUp, MousePointerClick, History,
   ExternalLink, Quote, Flame, StickyNote, Loader2, Pencil, Trash2,
-  CheckCircle2, Headphones, MapPin, AlertTriangle, ShoppingCart, Layers,
+  CheckCircle2, Headphones, MapPin, AlertTriangle, ShoppingCart, Layers, Mail, Send, Zap,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { checkDuplicateCommunication } from "@/lib/duplicateCommCheck";
@@ -449,6 +449,72 @@ export default function VisitorSessionSummary() {
     return `https://wa.me/${phone}?text=${text}`;
   };
 
+  // Normalize Egyptian phone to international format (E.164 without +) for wa.me
+  const normalizePhoneForWa = (raw: string) => {
+    const digits = (raw || "").replace(/\D/g, "");
+    if (!digits) return "";
+    if (digits.startsWith("20")) return digits;
+    if (digits.startsWith("0")) return "20" + digits.slice(1);
+    if (digits.length === 10) return "20" + digits; // 10xxxxxxxx
+    return digits;
+  };
+
+  // Build a personalized quote-request message addressed TO the customer (sent from staff via WA Business)
+  const buildCustomerQuoteMessage = () => {
+    const name = profile?.full_name?.split(" ")[0] || "حضرتك";
+    const topProductName = topProducts[0]?.product?.name_ar;
+    const lastSearch = searches[0]?.search_query;
+    const interestLine = topProductName
+      ? `لاحظنا اهتمامك بـ: ${topProductName}`
+      : lastSearch
+      ? `لاحظنا بحثك عن: ${lastSearch}`
+      : "";
+    const lines = [
+      `أهلاً ${name} 👋`,
+      "معاك فريق المصرية جروب لقطع غيار تويوتا الأصلية.",
+      interestLine,
+      "حابين نقدّملك *عرض سعر مخصص* وكل التفاصيل اللي محتاجها.",
+      "ابعتلنا موديل وسنة سيارتك ورقم القطعة لو متاح، ونرجعلك فوراً بأفضل سعر متاح.",
+      "— almasriaautoparts.com",
+    ].filter(Boolean);
+    return lines.join("\n\n");
+  };
+
+  // Build mailto link with prefilled subject + body for quote request
+  const buildQuoteEmailHref = () => {
+    if (!profile?.email) return "#";
+    const topProductName = topProducts[0]?.product?.name_ar;
+    const lastSearch = searches[0]?.search_query;
+    const subject = `عرض سعر مخصص — المصرية جروب لقطع غيار تويوتا`;
+    const interestLine = topProductName
+      ? `لاحظنا اهتمامك بـ: ${topProductName}`
+      : lastSearch
+      ? `لاحظنا بحثك عن: ${lastSearch}`
+      : "";
+    const body = [
+      `أهلاً ${profile?.full_name || "حضرتك"},`,
+      `معاك فريق المصرية جروب لقطع غيار تويوتا الأصلية.`,
+      interestLine,
+      `يسعدنا تجهيز عرض سعر مخصص ليك بناءً على احتياجاتك.`,
+      `لو تقدر تبعتلنا موديل وسنة السيارة ورقم القطعة (لو متاح)، نرجعلك بأفضل سعر فوراً.`,
+      ``,
+      `للتواصل المباشر عبر واتساب: https://wa.me/201027815696`,
+      `الموقع: https://almasriaautoparts.com`,
+      ``,
+      `تحياتنا،`,
+      `فريق المصرية جروب`,
+    ].filter(Boolean).join("\n");
+    return `mailto:${profile.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  };
+
+  // Direct WhatsApp Business link to the customer with prefilled quote message
+  const customerWhatsAppHref = profile?.phone
+    ? `https://wa.me/${normalizePhoneForWa(profile.phone)}?text=${encodeURIComponent(buildCustomerQuoteMessage())}`
+    : "";
+
+  const hasUsableEmail = !!(profile?.email && !profile.email.includes("@phone.almasria.local"));
+
+
   // Lead scoring (visit=5, search=10, repeat product view=20, cart=40)
   const leadScore = useMemo(() => {
     let score = 0;
@@ -696,21 +762,61 @@ export default function VisitorSessionSummary() {
                         <Phone className="w-3.5 h-3.5" />
                         {profile.phone}
                       </a>
-                      <a
-                        href={`https://wa.me/${profile.phone.replace(/^0/, "20").replace(/\D/g, "")}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white font-bold transition shadow-md"
-                      >
-                        <MessageCircle className="w-3.5 h-3.5" />
-                        واتساب
-                      </a>
                     </div>
                   )}
-                  {profile?.email && !profile.email.includes("@phone.almasria.local") && (
-                    <p className="text-xs opacity-80 truncate">📧 {profile.email}</p>
+                  {hasUsableEmail && (
+                    <p className="text-xs opacity-80 truncate">📧 {profile!.email}</p>
                   )}
                 </div>
+
+                {/* Quick contact bar — pre-filled quote request to the customer */}
+                {(profile?.phone || hasUsableEmail) && (
+                  <div className="mt-4 p-3 rounded-xl bg-white/10 backdrop-blur border border-white/15">
+                    <div className="flex items-center gap-2 mb-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-amber-400/20 flex items-center justify-center">
+                        <Zap className="w-4 h-4 text-amber-200" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-extrabold leading-tight">تواصل سريع — عرض سعر مخصص</p>
+                        <p className="text-[10px] opacity-75 leading-tight">رسالة جاهزة بناءً على اهتمامات العميل</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {profile?.phone && (
+                        <a
+                          href={customerWhatsAppHref}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white font-bold transition shadow-md"
+                          title="افتح واتساب بيزنس مع رسالة طلب عرض سعر جاهزة"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          واتساب بيزنس
+                          <Send className="w-3 h-3 opacity-70" />
+                        </a>
+                      )}
+                      {hasUsableEmail && (
+                        <a
+                          href={buildQuoteEmailHref()}
+                          className="inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg bg-blue-500 hover:bg-blue-400 text-white font-bold transition shadow-md"
+                          title="افتح إيميل بموضوع ونص جاهز لطلب عرض سعر"
+                        >
+                          <Mail className="w-3.5 h-3.5" />
+                          إيميل عرض سعر
+                          <Send className="w-3 h-3 opacity-70" />
+                        </a>
+                      )}
+                      {(topProducts[0]?.product?.name_ar || searches[0]?.search_query) && (
+                        <span className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-md bg-white/10 opacity-90">
+                          سياق:&nbsp;
+                          <span className="font-bold truncate max-w-[180px]">
+                            {topProducts[0]?.product?.name_ar || searches[0]?.search_query}
+                          </span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>
