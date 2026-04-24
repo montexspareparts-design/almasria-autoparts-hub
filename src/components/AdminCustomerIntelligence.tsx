@@ -942,14 +942,57 @@ const AdminCustomerIntelligence = () => {
     return counts;
   }, [profiles, ordersMap, userSearchMap]);
 
+  // Filters for Hot Leads summary
+  const [hotLeadsCategory, setHotLeadsCategory] = useState<"all" | "parts" | "oils">("all");
+  const [hotLeadsPeriod, setHotLeadsPeriod] = useState<"all" | "30d" | "90d">("all");
+
+  // Helper: is this product/query an "oil" item?
+  const isOilText = (text?: string | null) => {
+    if (!text) return false;
+    const t = text.toLowerCase();
+    return /زيت|زيوت|oil|atf|gear\s*oil|motor\s*oil|coolant|brake\s*fluid|محرك|فرامل/i.test(t);
+  };
+  const productMatchesCategory = (pid: string, cat: "all" | "parts" | "oils") => {
+    if (cat === "all") return true;
+    const prod = productsMap?.[pid];
+    if (!prod) return cat === "parts"; // unknown defaults to parts
+    const brand = (prod.brand || "").toLowerCase();
+    const isOil = isOilText(prod.name_ar) || isOilText(prod.sku) || /oil|lubricant/i.test(brand);
+    return cat === "oils" ? isOil : !isOil;
+  };
+
   // 🔥 Hot leads: customers needing urgent attention (high search activity, no orders yet, recent activity)
   const hotLeads = useMemo(() => {
     if (!filteredProfiles) return [];
     const now = Date.now();
+    const periodMs = hotLeadsPeriod === "30d" ? 30 * 86400000 : hotLeadsPeriod === "90d" ? 90 * 86400000 : Infinity;
+    const cutoff = hotLeadsPeriod === "all" ? 0 : now - periodMs;
     return filteredProfiles
       .map(p => {
-        const searches = userSearchMap[p.user_id] || [];
-        const views = userViewsMap[p.user_id] || [];
+        let searches = userSearchMap[p.user_id] || [];
+        let views = userViewsMap[p.user_id] || [];
+
+        // Apply period filter
+        if (hotLeadsPeriod !== "all") {
+          searches = searches.filter(s => new Date(s.lastAt).getTime() >= cutoff);
+          // For views, we don't have per-product timestamps in userViewsMap; fallback: use priceViews to filter
+          const recentViewedIds = new Set(
+            (priceViews || [])
+              .filter(v => v.user_id === p.user_id && new Date(v.viewed_at).getTime() >= cutoff)
+              .map(v => v.product_id)
+          );
+          views = views.filter(pid => recentViewedIds.has(pid));
+        }
+
+        // Apply category filter
+        if (hotLeadsCategory !== "all") {
+          searches = searches.filter(s => {
+            // match query text directly
+            if (hotLeadsCategory === "oils") return isOilText(s.query);
+            return !isOilText(s.query);
+          });
+          views = views.filter(pid => productMatchesCategory(pid, hotLeadsCategory));
+        }
         const orderInfo = ordersMap?.[p.user_id];
         const ordersCount = orderInfo?.count || 0;
         const totalSearches = searches.reduce((s, x) => s + x.count, 0);
@@ -1004,7 +1047,7 @@ const AdminCustomerIntelligence = () => {
       .filter(x => x.needReason && x.score >= 8)
       .sort((a, b) => b.score - a.score)
       .slice(0, 6);
-  }, [filteredProfiles, userSearchMap, userViewsMap, ordersMap, priceViews, productsMap]);
+  }, [filteredProfiles, userSearchMap, userViewsMap, ordersMap, priceViews, productsMap, hotLeadsCategory, hotLeadsPeriod]);
 
 
   return (
@@ -1063,7 +1106,7 @@ const AdminCustomerIntelligence = () => {
       </div>
 
       {/* 🔥 Hot Leads — Smart Auto Summary */}
-      {hotLeads.length > 0 && (
+      {filteredProfiles && filteredProfiles.length > 0 && (
         <Card className="rounded-2xl border-2 border-primary/20 shadow-sm overflow-hidden bg-gradient-to-l from-primary/5 via-background to-background">
           <CardHeader className="py-3 px-4 border-b border-border/40">
             <div className="flex items-center justify-between flex-wrap gap-2">
@@ -1074,12 +1117,69 @@ const AdminCustomerIntelligence = () => {
                 ملخص ذكي — عملاء يحتاجون متابعة الآن
                 <Badge variant="secondary" className="text-[10px] h-5 mr-1">{hotLeads.length}</Badge>
               </CardTitle>
-              <span className="text-[10px] text-muted-foreground font-medium">
+              <span className="text-[10px] text-muted-foreground font-medium hidden md:inline">
                 مرتب حسب الأولوية والاحتياج المحتمل
               </span>
             </div>
+            {/* Filters */}
+            <div className="flex items-center gap-2 flex-wrap mt-3">
+              <div className="inline-flex items-center rounded-lg border border-border/50 bg-muted/30 p-0.5 gap-0.5">
+                {[
+                  { key: "all", label: "الكل", icon: "🗂️" },
+                  { key: "parts", label: "قطع غيار", icon: "🔧" },
+                  { key: "oils", label: "زيوت", icon: "🛢️" },
+                ].map(opt => (
+                  <button
+                    key={opt.key}
+                    onClick={() => setHotLeadsCategory(opt.key as any)}
+                    className={cn(
+                      "text-[10px] font-bold px-2.5 py-1 rounded-md transition-all",
+                      hotLeadsCategory === opt.key
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                    )}
+                  >
+                    <span className="mr-0.5">{opt.icon}</span>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              <div className="inline-flex items-center rounded-lg border border-border/50 bg-muted/30 p-0.5 gap-0.5">
+                {[
+                  { key: "all", label: "كل الفترات" },
+                  { key: "90d", label: "آخر 90 يوم" },
+                  { key: "30d", label: "آخر 30 يوم" },
+                ].map(opt => (
+                  <button
+                    key={opt.key}
+                    onClick={() => setHotLeadsPeriod(opt.key as any)}
+                    className={cn(
+                      "text-[10px] font-bold px-2.5 py-1 rounded-md transition-all",
+                      hotLeadsPeriod === opt.key
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              {(hotLeadsCategory !== "all" || hotLeadsPeriod !== "all") && (
+                <button
+                  onClick={() => { setHotLeadsCategory("all"); setHotLeadsPeriod("all"); }}
+                  className="text-[10px] text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
+                >
+                  مسح الفلاتر
+                </button>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="p-3">
+            {hotLeads.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-xs">
+                لا يوجد عملاء يطابقون الفلاتر الحالية. جرّب تغيير الفترة أو النوع.
+              </div>
+            ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
               {hotLeads.map((lead) => {
                 const p = lead.profile;
@@ -1164,6 +1264,7 @@ const AdminCustomerIntelligence = () => {
                 );
               })}
             </div>
+            )}
           </CardContent>
         </Card>
       )}
