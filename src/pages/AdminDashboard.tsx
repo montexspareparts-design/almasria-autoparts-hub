@@ -776,6 +776,17 @@ const AdminDashboard = () => {
               </div>
             )}
 
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/admin/staff-home")}
+              className="gap-1 text-[11px] font-bold text-primary hover:bg-primary/10 rounded-lg h-8 px-2"
+              title="الرئيسية للموظف"
+            >
+              <span className="text-sm leading-none">🏠</span>
+              <span className="hidden sm:inline">الرئيسية للموظف</span>
+            </Button>
+
             {isDealer && (
               <Button
                 variant="ghost"
