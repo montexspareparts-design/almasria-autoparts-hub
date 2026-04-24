@@ -79,13 +79,11 @@ const MyProfilePage = () => {
   const handleSave = async () => {
     if (!user) return;
 
-    if (phone) {
-      const err = validatePhone(phone);
-      if (err) {
-        setPhoneError(err);
-        toast.error(err);
-        return;
-      }
+    const err = validatePhone(phone);
+    if (err) {
+      setPhoneError(err);
+      toast.error(err);
+      return;
     }
 
     setSaving(true);
@@ -93,7 +91,7 @@ const MyProfilePage = () => {
       .from("profiles")
       .update({
         full_name: fullName || null,
-        phone: phone || null,
+        phone: phone,
         car_model: carModel || null,
         car_year: carYear ? parseInt(carYear) : null,
       })
