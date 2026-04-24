@@ -89,6 +89,7 @@ const App = () => (
               <DeferredComponent delay={2000}><InstallBannerLazy /></DeferredComponent>
               <DeferredComponent delay={4000}><AIChatBot /></DeferredComponent>
               <DeferredComponent delay={2500}><WhatsAppFloat /></DeferredComponent>
+              <DeferredComponent delay={5000}><AddPhonePrompt /></DeferredComponent>
               {DealerRtlAuditor && (
                 <Suspense fallback={null}>
                   <DealerRtlAuditor />
