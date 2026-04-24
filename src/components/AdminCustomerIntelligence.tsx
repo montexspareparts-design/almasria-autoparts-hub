@@ -200,6 +200,14 @@ const AdminCustomerIntelligence = () => {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
+  const [expandedTaskDetails, setExpandedTaskDetails] = useState<Set<string>>(new Set());
+  const toggleTaskDetails = (id: string) => {
+    setExpandedTaskDetails(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [customerTypeFilter, setCustomerTypeFilter] = useState<string>("all");
