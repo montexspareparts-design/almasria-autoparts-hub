@@ -483,7 +483,7 @@ export default function VisitorSessionSummary() {
   // Build mailto link with prefilled subject + body for quote request
   const buildQuoteEmailHref = () => {
     if (!profile?.email) return "#";
-    const topProductName = topProducts[0]?.product?.name_ar || topProducts[0]?.product?.name_en;
+    const topProductName = topProducts[0]?.product?.name_ar;
     const lastSearch = searches[0]?.search_query;
     const subject = `عرض سعر مخصص — المصرية جروب لقطع غيار تويوتا`;
     const interestLine = topProductName
