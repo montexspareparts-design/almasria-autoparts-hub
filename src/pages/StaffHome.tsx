@@ -300,7 +300,7 @@ const StaffHome = () => {
         icon: Users,
         color: "text-blue-600",
         bg: "from-blue-500/10 to-blue-500/5",
-        onClick: () => navigate("/admin?section=analytics"),
+        onClick: () => setVisitorsOpen(true),
       },
       {
         label: `تسجيلات جديدة (${rangeSuffix})`,
