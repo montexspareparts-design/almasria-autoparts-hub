@@ -1601,7 +1601,7 @@ const AdminCustomerIntelligence = () => {
       <div ref={sectionContentRef} key={activeSection} className="animate-section-enter scroll-mt-24 will-change-transform">
 
       {isSwitchingSection ? (
-        <Card className="rounded-xl border-border/40 shadow-sm">
+        <Card className="rounded-xl border-border/40 shadow-sm animate-fade-in">
           <CardContent className="py-4 px-4 space-y-3">
             <div className="flex items-center gap-2">
               <Skeleton className="h-6 w-6 rounded-md" />
