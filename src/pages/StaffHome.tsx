@@ -248,6 +248,28 @@ const StaffHome = () => {
 
       const hotCount = leads.filter((l) => l.tier === "hot").length;
 
+      // Build visitors list with profile details
+      const visitorsArr = Array.from(visitorAgg.values()).map((v) => {
+        const profile = v.user_id ? profileMap.get(v.user_id) : null;
+        const emailRaw = (profile as any)?.email as string | undefined;
+        const email = emailRaw && !emailRaw.includes("@phone.almasria.local") ? emailRaw : null;
+        return {
+          user_id: v.user_id,
+          session_key: v.session_key,
+          full_name: profile?.full_name || null,
+          phone: profile?.phone || null,
+          email,
+          pages: v.pages,
+          last_visit: v.last_visit,
+        };
+      });
+      // Logged-in users first, then by last_visit desc
+      visitorsArr.sort((a, b) => {
+        if (!!a.user_id !== !!b.user_id) return a.user_id ? -1 : 1;
+        return b.last_visit.localeCompare(a.last_visit);
+      });
+      setVisitorsList(visitorsArr);
+
       setKpis({
         visitors: visitorKeys.size,
         signups: signupCount || 0,
