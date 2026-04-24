@@ -837,11 +837,27 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                                 {s.search_count} بحث
                               </Badge>
                             </div>
-                            {s.phone && (
+                            {s.phone ? (
                               <a href={`tel:${s.phone}`} className="text-xs text-primary hover:underline flex items-center gap-1">
                                 <Phone className="w-3 h-3" />
                                 {s.phone}
                               </a>
+                            ) : s.email ? (
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <a href={`mailto:${s.email}`} className="text-xs text-blue-700 dark:text-blue-400 hover:underline flex items-center gap-1">
+                                  <Mail className="w-3 h-3" />
+                                  {s.email}
+                                </a>
+                                <Badge variant="outline" className="text-[10px] h-5 text-amber-700 border-amber-400 bg-amber-50 dark:bg-amber-950/30">
+                                  <AlertTriangle className="w-3 h-3 me-0.5" />
+                                  لا يوجد رقم تليفون
+                                </Badge>
+                              </div>
+                            ) : (
+                              <Badge variant="outline" className="text-[10px] h-5 text-red-700 border-red-400 bg-red-50 dark:bg-red-950/30">
+                                <AlertTriangle className="w-3 h-3 me-0.5" />
+                                لا توجد بيانات تواصل
+                              </Badge>
                             )}
                             <p className="text-xs text-muted-foreground mt-1">
                               آخر بحث: <span className="font-medium text-foreground">"{s.last_query}"</span>
@@ -863,6 +879,14 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                                   size="sm"
                                 />
                               </>
+                            )}
+                            {!s.phone && s.email && (
+                              <Button asChild size="sm" variant="outline" className="h-7 gap-1 text-xs border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-700 dark:text-amber-400">
+                                <a href={`mailto:${s.email}?subject=${encodeURIComponent('المصرية جروب — نحتاج رقم تواصلك')}&body=${encodeURIComponent(`مرحباً ${s.name}،\n\nلاحظنا اهتمامك بـ "${s.last_query}" على موقع المصرية جروب.\nلتقديم أفضل خدمة وعرض السعر بسرعة، يرجى تحديث ملفك الشخصي بإضافة رقم الموبايل من خلال الرابط:\nhttps://almasriaautoparts.com/my-profile\n\nأو يمكنك الرد على هذا الإيميل بالرقم مباشرةً.\n\nشكراً،\nفريق المصرية جروب`)}`}>
+                                  <Mail className="w-3 h-3" />
+                                  طلب الرقم
+                                </a>
+                              </Button>
                             )}
                             <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => setSummaryUser({ id: s.user_id, name: s.name, phone: s.phone, isDealer: s.is_dealer })}>
                               <Activity className="w-3 h-3" />
