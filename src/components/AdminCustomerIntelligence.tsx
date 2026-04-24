@@ -130,7 +130,7 @@ import {
   TrendingUp, TrendingDown, Clock, ChevronDown, ChevronUp, BarChart3,
   Package, Calendar as CalendarIcon, Filter, X, Download,
   MessageCircle, Send, Copy, ExternalLink, Briefcase,
-  Star, Activity, AlertTriangle, CheckCircle2, ListOrdered, FileText, RefreshCw,
+  Star, Activity, AlertTriangle, CheckCircle2, ListOrdered, FileText, RefreshCw, Zap,
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 
