@@ -18,6 +18,22 @@ const COMM_TYPES = [
   { value: "email", label: "📧 بريد إلكتروني", icon: Mail, color: "bg-purple-100 text-purple-800" },
 ] as const;
 
+const fmtFullDate = (iso: string) =>
+  new Date(iso).toLocaleDateString("ar-EG", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+const fmtFullTime = (iso: string) =>
+  new Date(iso).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit", hour12: true });
+const fmtRelative = (iso: string) => {
+  const diff = Date.now() - new Date(iso).getTime();
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return "الآن";
+  if (min < 60) return `منذ ${min} د`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `منذ ${h} س`;
+  const d = Math.floor(h / 24);
+  if (d < 30) return `منذ ${d} يوم`;
+  return "";
+};
+
 interface CommRecord {
   id: string;
   comm_type: string;
