@@ -47,6 +47,7 @@ const MyProfilePage = lazy(() => import("./pages/MyProfilePage"));
 const TrackOrderPage = lazy(() => import("./pages/TrackOrderPage"));
 const DevDealerPreview = lazy(() => import("./pages/DevDealerPreview"));
 const VisitorSessionSummary = lazy(() => import("./pages/VisitorSessionSummary"));
+const StaffHome = lazy(() => import("./pages/StaffHome"));
 import PageVisitTracker from "./components/PageVisitTracker";
 const DealerRtlAuditor = import.meta.env.DEV
   ? lazy(() => import("./components/dealer/DealerRtlAuditor"))
