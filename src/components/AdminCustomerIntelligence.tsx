@@ -179,6 +179,76 @@ const AdminCustomerIntelligence = () => {
   const [quickNoteDraft, setQuickNoteDraft] = useState<Record<string, string>>({});
   const [quickNoteType, setQuickNoteType] = useState<Record<string, string>>({});
   const [savingQuickNote, setSavingQuickNote] = useState<string | null>(null);
+  // Missing-fields editor: which user is editing + draft values + saving state
+  const [editingMissing, setEditingMissing] = useState<string | null>(null);
+  const [missingDraft, setMissingDraft] = useState<{ phone?: string; email?: string; full_name?: string; car_model?: string; car_year?: string }>({});
+  const [savingMissing, setSavingMissing] = useState(false);
+
+  const detectMissingFields = (p: { phone: string | null; email: string | null; full_name: string | null; car_model?: string | null; car_year?: number | null }) => {
+    const missing: { key: string; label: string; icon: string }[] = [];
+    if (!p.phone || p.phone.trim() === "") missing.push({ key: "phone", label: "رقم الموبايل", icon: "📱" });
+    if (!p.email || p.email.trim() === "" || p.email.endsWith("@phone.almasria.local")) missing.push({ key: "email", label: "البريد الإلكتروني", icon: "✉️" });
+    if (!p.full_name || p.full_name.trim() === "") missing.push({ key: "full_name", label: "الاسم الكامل", icon: "👤" });
+    if (!p.car_model) missing.push({ key: "car_model", label: "موديل السيارة", icon: "🚗" });
+    return missing;
+  };
+
+  const buildMissingFieldsRequest = (name: string, missing: { label: string }[]) => {
+    const fields = missing.map((m) => `• ${m.label}`).join("\n");
+    return `مرحباً ${name || "عميلنا الكريم"} 👋\n\nمن المصرية جروب — لاستكمال خدمتك بشكل أسرع وإرسال عروض الأسعار والطلبات في وقتها، نحتاج منك تحديث البيانات التالية:\n\n${fields}\n\nيمكنك تحديثها مباشرة من صفحة "حسابي" على الموقع، أو ترد علينا هنا بالبيانات وسنحدّثها لك.\n\nشكراً لثقتك 🌟`;
+  };
+
+  const openMissingEditor = (p: any) => {
+    setMissingDraft({
+      phone: p.phone || "",
+      email: p.email && !p.email.endsWith("@phone.almasria.local") ? p.email : "",
+      full_name: p.full_name || "",
+      car_model: p.car_model || "",
+      car_year: p.car_year ? String(p.car_year) : "",
+    });
+    setEditingMissing(p.user_id);
+  };
+
+  const saveMissingFields = async (userId: string) => {
+    // Light validation
+    if (missingDraft.phone && !/^01[0-9]{9}$/.test(missingDraft.phone.trim())) {
+      toast({ title: "رقم موبايل غير صحيح", description: "يجب أن يبدأ بـ 01 ومكون من 11 رقم", variant: "destructive" });
+      return;
+    }
+    if (missingDraft.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(missingDraft.email.trim())) {
+      toast({ title: "بريد إلكتروني غير صحيح", variant: "destructive" });
+      return;
+    }
+    if (missingDraft.car_year && (isNaN(Number(missingDraft.car_year)) || Number(missingDraft.car_year) < 1980 || Number(missingDraft.car_year) > 2100)) {
+      toast({ title: "سنة الصنع غير صحيحة", variant: "destructive" });
+      return;
+    }
+
+    setSavingMissing(true);
+    const updates: any = {};
+    if (missingDraft.phone?.trim()) updates.phone = missingDraft.phone.trim();
+    if (missingDraft.email?.trim()) updates.email = missingDraft.email.trim();
+    if (missingDraft.full_name?.trim()) updates.full_name = missingDraft.full_name.trim();
+    if (missingDraft.car_model?.trim()) updates.car_model = missingDraft.car_model.trim();
+    if (missingDraft.car_year?.trim()) updates.car_year = Number(missingDraft.car_year);
+
+    if (Object.keys(updates).length === 0) {
+      toast({ title: "لا يوجد ما يتم حفظه" });
+      setSavingMissing(false);
+      return;
+    }
+
+    const { error } = await supabase.from("profiles").update(updates).eq("user_id", userId);
+    setSavingMissing(false);
+    if (error) {
+      toast({ title: "خطأ في الحفظ", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "✅ تم تحديث البيانات" });
+    setEditingMissing(null);
+    queryClient.invalidateQueries({ queryKey: ["admin-profiles-intel"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-profiles"] });
+  };
 
   const saveQuickNote = async (customerUserId: string) => {
     const note = (quickNoteDraft[customerUserId] || "").trim();
@@ -2184,6 +2254,99 @@ const AdminCustomerIntelligence = () => {
                             <TabsTrigger value="activity" className="text-[11px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2"><Search className="w-3.5 h-3.5" />سجل التصفح</TabsTrigger>
                           </TabsList>
                           <TabsContent value="basic" className="space-y-3 mt-4 focus-visible:outline-none">
+                            {(() => {
+                              const missing = detectMissingFields(profile);
+                              if (missing.length === 0) return null;
+                              const isEditing = editingMissing === profile.user_id;
+                              const phoneForWA = profile.phone ? formatPhoneForWhatsApp(profile.phone) : "";
+                              const requestMsg = buildMissingFieldsRequest(profile.full_name || "", missing);
+                              return (
+                                <div className="rounded-xl border-2 border-amber-300/60 dark:border-amber-700/40 bg-gradient-to-br from-amber-50/80 to-orange-50/40 dark:from-amber-950/20 dark:to-orange-950/10 p-3 sm:p-3.5 shadow-sm">
+                                  <div className="flex items-start justify-between gap-3 mb-2.5">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <div className="w-9 h-9 rounded-xl bg-amber-500/15 flex items-center justify-center shrink-0">
+                                        <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                                      </div>
+                                      <div className="min-w-0">
+                                        <p className="text-xs font-black text-foreground flex items-center gap-1.5 flex-wrap">
+                                          حقول ناقصة في ملف العميل
+                                          <span className="text-[10px] font-bold bg-amber-500/20 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-md">{missing.length}</span>
+                                        </p>
+                                        <p className="text-[10px] text-muted-foreground mt-0.5">حدّث البيانات يدوياً أو اطلبها من العميل مباشرة</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex flex-wrap gap-1.5 mb-3">
+                                    {missing.map((m) => (
+                                      <span key={m.key} className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-background/70 border border-amber-300/50 text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                                        <span>{m.icon}</span>{m.label}
+                                      </span>
+                                    ))}
+                                  </div>
+                                  {!isEditing ? (
+                                    <div className="flex flex-wrap gap-2">
+                                      <Button size="sm" onClick={(e) => { e.stopPropagation(); openMissingEditor(profile); }} className="h-8 text-[11px] font-bold gap-1.5 bg-primary hover:bg-primary/90">
+                                        <FileText className="w-3.5 h-3.5" />تحديث يدوي الآن
+                                      </Button>
+                                      <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(requestMsg); toast({ title: "✅ تم نسخ نص الطلب" }); }} className="h-8 text-[11px] font-bold gap-1.5 border-amber-300/60">
+                                        <Copy className="w-3.5 h-3.5" />نسخ نص الطلب
+                                      </Button>
+                                      {phoneForWA && (
+                                        <a href={`https://wa.me/${phoneForWA}?text=${encodeURIComponent(requestMsg)}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-[11px] font-bold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 transition-colors">
+                                          <MessageCircle className="w-3.5 h-3.5" />طلب البيانات واتساب
+                                        </a>
+                                      )}
+                                      {profile.email && !profile.email.endsWith("@phone.almasria.local") && (
+                                        <a href={`mailto:${profile.email}?subject=${encodeURIComponent("استكمال بيانات حسابك — المصرية جروب")}&body=${encodeURIComponent(requestMsg)}`} onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-[11px] font-bold bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-400 border border-blue-500/30 transition-colors">
+                                          <Mail className="w-3.5 h-3.5" />إرسال بريد
+                                        </a>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <div className="space-y-2 rounded-lg bg-background/70 border border-amber-300/50 p-3" onClick={(e) => e.stopPropagation()}>
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        {missing.some(m => m.key === "full_name") && (
+                                          <div className="space-y-1">
+                                            <label className="text-[10px] font-bold text-muted-foreground">الاسم الكامل</label>
+                                            <Input value={missingDraft.full_name || ""} onChange={(e) => setMissingDraft(d => ({ ...d, full_name: e.target.value }))} placeholder="اسم العميل" className="h-8 text-xs" />
+                                          </div>
+                                        )}
+                                        {missing.some(m => m.key === "phone") && (
+                                          <div className="space-y-1">
+                                            <label className="text-[10px] font-bold text-muted-foreground">رقم الموبايل</label>
+                                            <Input value={missingDraft.phone || ""} onChange={(e) => setMissingDraft(d => ({ ...d, phone: e.target.value }))} placeholder="01xxxxxxxxx" maxLength={11} dir="ltr" inputMode="tel" className="h-8 text-xs" />
+                                          </div>
+                                        )}
+                                        {missing.some(m => m.key === "email") && (
+                                          <div className="space-y-1">
+                                            <label className="text-[10px] font-bold text-muted-foreground">البريد الإلكتروني</label>
+                                            <Input value={missingDraft.email || ""} onChange={(e) => setMissingDraft(d => ({ ...d, email: e.target.value }))} placeholder="example@email.com" dir="ltr" inputMode="email" className="h-8 text-xs" />
+                                          </div>
+                                        )}
+                                        {missing.some(m => m.key === "car_model") && (
+                                          <>
+                                            <div className="space-y-1">
+                                              <label className="text-[10px] font-bold text-muted-foreground">موديل السيارة</label>
+                                              <Input value={missingDraft.car_model || ""} onChange={(e) => setMissingDraft(d => ({ ...d, car_model: e.target.value }))} placeholder="مثال: كورولا" className="h-8 text-xs" />
+                                            </div>
+                                            <div className="space-y-1">
+                                              <label className="text-[10px] font-bold text-muted-foreground">سنة الصنع</label>
+                                              <Input value={missingDraft.car_year || ""} onChange={(e) => setMissingDraft(d => ({ ...d, car_year: e.target.value }))} placeholder="2020" maxLength={4} dir="ltr" inputMode="numeric" className="h-8 text-xs" />
+                                            </div>
+                                          </>
+                                        )}
+                                      </div>
+                                      <div className="flex gap-2 pt-1">
+                                        <Button size="sm" onClick={() => saveMissingFields(profile.user_id)} disabled={savingMissing} className="h-8 text-[11px] font-bold gap-1.5">
+                                          {savingMissing ? "جاري الحفظ..." : (<><CheckCircle2 className="w-3.5 h-3.5" />حفظ التحديثات</>)}
+                                        </Button>
+                                        <Button size="sm" variant="ghost" onClick={() => setEditingMissing(null)} disabled={savingMissing} className="h-8 text-[11px]">إلغاء</Button>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })()}
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                               <div className="bg-muted/30 rounded-xl p-3 flex items-center gap-2.5"><div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"><Mail className="w-4 h-4 text-primary" /></div><div className="min-w-0"><p className="text-[10px] text-muted-foreground">البريد الإلكتروني</p><p className="text-xs font-semibold text-foreground truncate">{profile.email || "—"}</p></div></div>
                               <div className="bg-muted/30 rounded-xl p-3 flex items-center gap-2.5"><div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"><Phone className="w-4 h-4 text-primary" /></div><div className="min-w-0"><p className="text-[10px] text-muted-foreground">الهاتف</p><p className="text-xs font-semibold text-foreground" dir="ltr">{profile.phone || "—"}</p></div></div>
