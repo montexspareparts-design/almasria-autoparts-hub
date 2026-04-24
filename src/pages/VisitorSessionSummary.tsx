@@ -686,6 +686,60 @@ export default function VisitorSessionSummary() {
           <KpiCard icon={Timer} label="إجمالي الوقت" valueText={fmtDuration(totalDurationMs)} sub={lastSession ? `آخر زيارة: ${fmtDate(lastSession.start)}` : "—"} color="emerald" onClick={() => scrollToSection("section-latest-session")} emptyHint={!lastSession ? "لا يوجد نشاط بعد" : undefined} />
         </div>
 
+        {/* Session Viewers — who already opened this customer's session */}
+        {viewers.length > 0 && (
+          <Card className="border-emerald-200/60 dark:border-emerald-900/40 shadow-sm overflow-hidden">
+            <CardHeader className="pb-2 bg-gradient-to-l from-emerald-500/10 via-emerald-500/5 to-transparent border-b">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/15 flex items-center justify-center">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                تمت المشاهدة بواسطة
+                <Badge variant="secondary" className="text-[10px] bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-0">
+                  {viewers.length} موظف
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-3 pb-3">
+              <div className="flex flex-wrap gap-2">
+                {viewers.map((v) => {
+                  const isMe = v.staff_user_id === user?.id;
+                  const lastSeen = new Date(v.last_viewed_at);
+                  const diffMin = Math.floor((Date.now() - lastSeen.getTime()) / 60000);
+                  const relTime =
+                    diffMin < 1 ? "الآن" :
+                    diffMin < 60 ? `منذ ${diffMin} د` :
+                    diffMin < 1440 ? `منذ ${Math.floor(diffMin / 60)} س` :
+                    `منذ ${Math.floor(diffMin / 1440)} يوم`;
+                  return (
+                    <div
+                      key={v.staff_user_id}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs border ${
+                        isMe
+                          ? "bg-primary/10 border-primary/30 text-primary font-bold"
+                          : "bg-muted/60 border-border text-foreground"
+                      }`}
+                      title={`${v.view_count} مرة مشاهدة • أول مرة ${fmtDateTime(v.first_viewed_at)}`}
+                    >
+                      <UserIcon className="w-3 h-3" />
+                      <span>{isMe ? "أنت" : v.staff_name}</span>
+                      <span className="text-[10px] text-muted-foreground">• {relTime}</span>
+                      {v.view_count > 1 && (
+                        <Badge variant="outline" className="text-[9px] h-4 px-1 border-current">
+                          ×{v.view_count}
+                        </Badge>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed">
+                💡 كل موظف يفتح هذه الصفحة يُسجَّل تلقائيًا — لتجنّب تكرار الاتصال بنفس العميل من أكثر من موظف.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Top Searched Products & Queries */}
         {(topProducts.length > 0 || topSearches.length > 0) && (
           <Card className="border-orange-200/60 dark:border-orange-900/40 shadow-md overflow-hidden">
