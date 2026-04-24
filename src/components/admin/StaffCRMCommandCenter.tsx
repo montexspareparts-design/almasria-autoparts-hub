@@ -874,6 +874,23 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
         {/* === Search leads === */}
         <TabsContent value="search" className="mt-4">
           <Card>
+            <div className="flex items-center justify-between gap-2 p-3 border-b bg-muted/20">
+              <div className="text-xs text-muted-foreground">
+                {filteredSearch.length > 0
+                  ? `${filteredSearch.length} عميل مرشح للمتابعة`
+                  : "لا يوجد عملاء حالياً"}
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={exportTopCustomersCSV}
+                disabled={filteredSearch.length === 0}
+                className="h-8 gap-1.5 text-xs border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-400"
+              >
+                <Download className="w-3.5 h-3.5" />
+                تصدير CSV / Excel
+              </Button>
+            </div>
             <CardContent className="p-0">
               <ScrollArea className="h-[60vh]">
                 {filteredSearch.length === 0 ? (
