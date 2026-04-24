@@ -329,6 +329,8 @@ const AdminCustomerIntelligence = () => {
 
   const switchSection = (key: SectionKey) => {
     if (key === activeSection || isSwitchingSection) return;
+    // Mark as user-initiated so the focus effect runs (a11y)
+    userSwitchedRef.current = true;
     // 1) Persist selection immediately
     try { localStorage.setItem("aci_active_section_v1", key); } catch {}
     // 2) Show skeleton placeholder (keeps layout while we scroll & swap)
