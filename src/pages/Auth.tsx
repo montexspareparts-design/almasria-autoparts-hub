@@ -156,9 +156,34 @@ const Auth = () => {
         // Redirect is handled by the useEffect auth listener
       }
     } else {
+      // Validate optional phone if provided (only relevant when registering with email)
+      const trimmedOptionalPhone = optionalPhone.trim();
+      if (!credIsPhone && trimmedOptionalPhone && !/^01[0-9]{9}$/.test(trimmedOptionalPhone)) {
+        toast({ title: "رقم موبايل غير صحيح", description: "أدخل رقم مصري يبدأ بـ 01 ومكون من 11 رقم", variant: "destructive" });
+        setLoading(false);
+        return;
+      }
+      // If user opted into WhatsApp, phone is required
+      if (!credIsPhone && whatsappOptIn && !trimmedOptionalPhone) {
+        toast({ title: "رقم الموبايل مطلوب لتفعيل واتساب", description: "أدخل رقم الموبايل أو أوقف خيار التواصل عبر واتساب", variant: "destructive" });
+        setLoading(false);
+        return;
+      }
+
+      const finalPhone = credIsPhone ? credential : trimmedOptionalPhone;
       const { error } = await supabase.auth.signUp({
         email: authEmail, password,
-        options: { data: { full_name: fullName, phone: credIsPhone ? credential : "", address, email: !credIsPhone ? credential : "", car_model: carModel || null, car_year: carYear ? parseInt(carYear) : null } },
+        options: {
+          data: {
+            full_name: fullName,
+            phone: finalPhone || "",
+            address,
+            email: !credIsPhone ? credential : "",
+            car_model: carModel || null,
+            car_year: carYear ? parseInt(carYear) : null,
+            whatsapp_opt_in: !!finalPhone && whatsappOptIn,
+          },
+        },
       });
       if (error) {
         toast({ title: error.message.includes("already registered") ? "الحساب مسجل بالفعل" : "خطأ", description: error.message.includes("already registered") ? "سجّل دخول بدلاً من ذلك" : error.message, variant: "destructive" });
