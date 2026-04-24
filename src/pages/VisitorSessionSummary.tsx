@@ -168,6 +168,53 @@ export default function VisitorSessionSummary() {
   const avgPagesPerSession = sessions.length > 0 ? Math.round(visits.length / sessions.length) : 0;
   const initials = (profile?.full_name || "?").trim().split(" ").map(s => s[0]).slice(0, 2).join("").toUpperCase();
 
+  // Top viewed products (aggregated from price views)
+  const topProducts = useMemo(() => {
+    const counts = new Map<string, { count: number; lastAt: string }>();
+    for (const v of priceViews) {
+      const cur = counts.get(v.product_id);
+      if (cur) {
+        cur.count += 1;
+        if (v.viewed_at > cur.lastAt) cur.lastAt = v.viewed_at;
+      } else {
+        counts.set(v.product_id, { count: 1, lastAt: v.viewed_at });
+      }
+    }
+    return Array.from(counts.entries())
+      .map(([product_id, { count, lastAt }]) => ({
+        product_id,
+        count,
+        lastAt,
+        product: productMap.get(product_id),
+      }))
+      .sort((a, b) => b.count - a.count || (b.lastAt > a.lastAt ? 1 : -1))
+      .slice(0, 5);
+  }, [priceViews, productMap]);
+
+  // Top search queries (aggregated)
+  const topSearches = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const s of searches) {
+      const q = s.search_query.trim();
+      if (!q) continue;
+      counts.set(q, (counts.get(q) || 0) + 1);
+    }
+    return Array.from(counts.entries())
+      .map(([query, count]) => ({ query, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+  }, [searches]);
+
+  const buildQuoteWhatsApp = (productLabel: string) => {
+    const phone = "201027815696"; // WhatsMeta CRM number
+    const customer = profile?.full_name || "العميل";
+    const text = encodeURIComponent(
+      `طلب عرض سعر للعميل: ${customer}\nالمنتج: ${productLabel}\n${profile?.phone ? `هاتف العميل: ${profile.phone}` : ""}`
+    );
+    return `https://wa.me/${phone}?text=${text}`;
+  };
+
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-background to-slate-100 dark:from-slate-950 dark:via-background dark:to-slate-900 p-4" dir="rtl">
