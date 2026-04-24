@@ -160,6 +160,8 @@ const LIFECYCLE_LABELS: Record<string, { label: string; color: string; icon: typ
 
 const AdminCustomerIntelligence = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
@@ -173,6 +175,39 @@ const AdminCustomerIntelligence = () => {
   const [expandedSearcher, setExpandedSearcher] = useState<string | null>(null);
   const [searchDetailFilter, setSearchDetailFilter] = useState("");
   const [searchDetailSort, setSearchDetailSort] = useState<"count" | "date">("count");
+  // Quick contact panel: per-user note draft + selected comm type + saving state
+  const [quickNoteDraft, setQuickNoteDraft] = useState<Record<string, string>>({});
+  const [quickNoteType, setQuickNoteType] = useState<Record<string, string>>({});
+  const [savingQuickNote, setSavingQuickNote] = useState<string | null>(null);
+
+  const saveQuickNote = async (customerUserId: string) => {
+    const note = (quickNoteDraft[customerUserId] || "").trim();
+    const commType = quickNoteType[customerUserId] || "phone";
+    if (!note) {
+      toast({ title: "اكتب ملاحظة قبل الحفظ", variant: "destructive" });
+      return;
+    }
+    if (!user) {
+      toast({ title: "يجب تسجيل الدخول", variant: "destructive" });
+      return;
+    }
+    setSavingQuickNote(customerUserId);
+    const { error } = await supabase.from("customer_communications").insert({
+      customer_user_id: customerUserId,
+      staff_user_id: user.id,
+      comm_type: commType,
+      note,
+    });
+    setSavingQuickNote(null);
+    if (error) {
+      toast({ title: "فشل حفظ الملاحظة", description: error.message, variant: "destructive" });
+      return;
+    }
+    setQuickNoteDraft(prev => ({ ...prev, [customerUserId]: "" }));
+    toast({ title: "✅ تم حفظ ملاحظة المتابعة" });
+    queryClient.invalidateQueries({ queryKey: ["admin_customer_communications"] });
+  };
+
 
   // All profiles
   const { data: profiles, isLoading: loadingProfiles } = useQuery({
