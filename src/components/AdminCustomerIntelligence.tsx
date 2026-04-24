@@ -150,6 +150,38 @@ const CUSTOMER_TYPES = [
   "عميل دائم", "عميل نشط", "مستكشف أسعار", "باحث متكرر", "زائر مهتم", "زائر جديد",
 ] as const;
 
+// Business type taxonomy used for advanced filtering (mapped from dealer_accounts.business_type)
+const BUSINESS_TYPE_OPTIONS: { value: string; label: string }[] = [
+  { value: "trader", label: "تاجر" },
+  { value: "workshop", label: "ورشة" },
+  { value: "fleet", label: "أسطول" },
+  { value: "retail", label: "قطاعي" },
+  { value: "other", label: "أخرى" },
+];
+
+const TIER_OPTIONS: { value: string; label: string }[] = [
+  { value: "wholesale_tier1", label: "جملة درجة أولى" },
+  { value: "wholesale_tier2", label: "جملة درجة ثانية" },
+  { value: "retail", label: "قطاعي" },
+];
+
+const LIFECYCLE_OPTIONS: { value: string; label: string }[] = [
+  { value: "vip", label: "VIP" },
+  { value: "active", label: "نشط" },
+  { value: "idle", label: "خامل (30-90 يوم)" },
+  { value: "lost", label: "مفقود (+90 يوم)" },
+  { value: "new", label: "جديد" },
+];
+
+const RECENT_ACTIVITY_OPTIONS: { value: string; label: string }[] = [
+  { value: "any", label: "أي نشاط" },
+  { value: "has_cart", label: "عنده سلة نشطة" },
+  { value: "searched_no_order", label: "بحث ولم يطلب" },
+  { value: "ordered_recently", label: "طلب خلال 7 أيام" },
+  { value: "no_orders", label: "لم يطلب أبداً" },
+  { value: "missing_phone", label: "بدون رقم هاتف" },
+];
+
 const LIFECYCLE_LABELS: Record<string, { label: string; color: string; icon: typeof Star }> = {
   vip: { label: "VIP", color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400", icon: Star },
   active: { label: "نشط", color: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400", icon: Activity },
