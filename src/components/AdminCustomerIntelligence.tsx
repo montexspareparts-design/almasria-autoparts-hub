@@ -258,6 +258,30 @@ const AdminCustomerIntelligence = () => {
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [tasksOpen, setTasksOpen] = useState(true);
+
+  // === Priority weights (configurable, persisted in localStorage) ===
+  type PriorityWeights = { alerts: number; recency: number; buyability: number };
+  const DEFAULT_WEIGHTS: PriorityWeights = { alerts: 30, recency: 40, buyability: 30 };
+  const WEIGHTS_STORAGE_KEY = "aci_priority_weights_v1";
+  const [priorityWeights, setPriorityWeights] = useState<PriorityWeights>(() => {
+    try {
+      const raw = localStorage.getItem(WEIGHTS_STORAGE_KEY);
+      if (!raw) return DEFAULT_WEIGHTS;
+      const parsed = JSON.parse(raw);
+      if (
+        typeof parsed?.alerts === "number" &&
+        typeof parsed?.recency === "number" &&
+        typeof parsed?.buyability === "number"
+      ) return parsed;
+      return DEFAULT_WEIGHTS;
+    } catch { return DEFAULT_WEIGHTS; }
+  });
+  const [weightsDialogOpen, setWeightsDialogOpen] = useState(false);
+  const updatePriorityWeights = (next: PriorityWeights) => {
+    setPriorityWeights(next);
+    try { localStorage.setItem(WEIGHTS_STORAGE_KEY, JSON.stringify(next)); } catch {}
+  };
+  const weightsTotal = priorityWeights.alerts + priorityWeights.recency + priorityWeights.buyability;
   const toggleTaskComplete = (taskId: string) => {
     setCompletedTasks(prev => {
       const next = new Set(prev);
