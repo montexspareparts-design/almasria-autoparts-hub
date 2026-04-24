@@ -357,6 +357,21 @@ const AdminCustomerIntelligence = () => {
     }
   };
 
+  // Auto-align: whenever the active section changes, scroll its content into view
+  // just below the sticky header (uses scroll-margin-top from --aci-nav-height).
+  // Runs after the new section is rendered (and after the skeleton is hidden).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (isSwitchingSection) return; // wait until skeleton is gone
+    const el = sectionContentRef.current;
+    if (!el) return;
+    // Defer one frame so the new content is laid out before we measure
+    const id = requestAnimationFrame(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [activeSection, isSwitchingSection]);
+
   // === Call outcomes (per-day, per-task) — drives auto score/priority adjustments ===
   type CallOutcome = "answered" | "no_answer" | "agreed" | "not_suitable";
   const outcomesStorageKey = `aci_call_outcomes_${todayKey}`;
