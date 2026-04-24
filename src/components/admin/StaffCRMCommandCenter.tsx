@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import {
   Flame, Search, UserCheck, Users, Trophy, Phone, Eye,
-  CheckCircle2, Clock, Building2, ShoppingBag, Loader2, RefreshCw, Briefcase, Activity, Bot, MessageSquare, ExternalLink, Mail, AlertTriangle
+  CheckCircle2, Clock, Building2, ShoppingBag, Loader2, RefreshCw, Briefcase, Activity, Bot, MessageSquare, ExternalLink, Mail, AlertTriangle, Download
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import WhatsAppQuickChat from "./WhatsAppQuickChat";
