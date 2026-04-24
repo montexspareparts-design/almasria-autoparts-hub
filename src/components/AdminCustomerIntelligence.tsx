@@ -1084,7 +1084,7 @@ const AdminCustomerIntelligence = () => {
     // Sort by unified score desc, then by priority bucket
     return tasks.sort((a, b) => b.score - a.score || a.priority - b.priority);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profiles, ordersMap, cartByUser, userSearchMap, dealerUserIds, lastVisitByUser]);
+  }, [profiles, ordersMap, cartByUser, userSearchMap, dealerUserIds, lastVisitByUser, priorityWeights]);
 
   const visibleTasks = todayTasks.filter(t => showCompletedTasks || !completedTasks.has(t.id));
   const pendingTasksCount = todayTasks.filter(t => !completedTasks.has(t.id)).length;
