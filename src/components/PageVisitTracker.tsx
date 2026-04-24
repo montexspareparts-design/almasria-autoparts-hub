@@ -53,7 +53,7 @@ export default function PageVisitTracker() {
     const heartbeat = window.setInterval(() => {
       if (document.visibilityState === "visible") {
         trackHeartbeatVisit(fullPath, document.title);
-        trackCustomerSession();
+        trackCustomerSession({ countPageView: false });
       }
     }, 20000);
 
