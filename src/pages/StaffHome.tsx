@@ -874,7 +874,15 @@ const StaffHome = () => {
             <DialogTitle className="flex items-center gap-2 text-base">
               <Users className="w-5 h-5 text-blue-600" />
               زوار {rangeSuffix}
-              <Badge variant="secondary" className="text-xs">{visitorsList.length}</Badge>
+              <Badge variant="secondary" className="text-xs">{visibleVisitorsCount}</Badge>
+              {!includeStaff && visibleVisitorsCount !== visitorsList.length && (
+                <span
+                  className="text-[10px] text-muted-foreground font-normal"
+                  title="إجمالي الزوار قبل استبعاد الموظفين"
+                >
+                  من أصل {visitorsList.length}
+                </span>
+              )}
             </DialogTitle>
             <DialogDescription className="text-xs">
               قائمة بكل زوار الموقع — المسجلين بأسمائهم وأرقامهم وإيميلاتهم، والزوار غير المسجلين كـ "زائر مجهول". اضغط "تفاصيل" لعرض كل نشاط الزائر.
