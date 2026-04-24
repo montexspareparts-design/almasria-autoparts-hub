@@ -86,6 +86,19 @@ export default function VisitorSessionSummary() {
   const [noteText, setNoteText] = useState("");
   const [savingNote, setSavingNote] = useState(false);
 
+  const scrollToSection = (id: string) => {
+    const el = document.getElementById(id);
+    if (!el) {
+      toast({ title: "لا توجد بيانات في هذا القسم", description: "هذا الزائر لم يسجّل نشاطًا هنا بعد." });
+      return;
+    }
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    el.classList.add("ring-4", "ring-primary/40", "ring-offset-2", "transition-all");
+    setTimeout(() => {
+      el.classList.remove("ring-4", "ring-primary/40", "ring-offset-2");
+    }, 1800);
+  };
+
   useEffect(() => {
     if (authLoading) return;
     if (!isAdmin && !isModerator) {
