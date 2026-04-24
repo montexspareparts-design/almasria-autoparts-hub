@@ -2766,6 +2766,22 @@ const AdminCustomerIntelligence = () => {
           • "مهام اليوم" card above
           • "يحتاجون متابعة الآن" tab inside the customer list */}
 
+      {/* === Analytics Section (Collapsed by default to shorten the page) === */}
+      <Collapsible open={analyticsOpen} onOpenChange={setAnalyticsOpen} className="rounded-xl border border-border/40 bg-card/50 overflow-hidden">
+        <CollapsibleTrigger className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/40 transition-colors group">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center shadow-sm">
+              <BarChart3 className="w-3.5 h-3.5 text-white" />
+            </div>
+            <span className="text-sm font-black text-foreground">📊 التحليلات والإحصائيات</span>
+            <Badge variant="secondary" className="text-[9px] h-5 font-bold">
+              خرائط حرارية + توزيع + أعلى الباحثين
+            </Badge>
+          </div>
+          <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform", analyticsOpen && "rotate-180")} />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="border-t border-border/40 p-4 space-y-4">
+
       {/* Charts Row: Heatmap + Customer Type */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Search Heatmap */}
