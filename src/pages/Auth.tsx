@@ -356,6 +356,51 @@ const Auth = () => {
                 </div>
               )}
 
+              {/* Optional phone + WhatsApp opt-in (only when registering with email) */}
+              {!isLogin && !credIsPhone && (
+                <div className="space-y-2 rounded-xl border border-primary/20 bg-primary/[0.04] p-3 sm:p-3.5">
+                  <div className="flex items-start gap-2">
+                    <Sparkles className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                    <p className="text-[11px] sm:text-[12px] leading-relaxed text-foreground/70">
+                      <strong className="text-foreground">إضافة رقم الموبايل تخلي طلب عرض السعر أسرع</strong> — هنقدر نتواصل معاك مباشرة بدل البريد.
+                    </p>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] sm:text-xs font-semibold text-foreground/80 text-right block">
+                      رقم الموبايل <span className="text-muted-foreground/50 text-[10px]">(اختياري)</span>
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        value={optionalPhone}
+                        onChange={e => setOptionalPhone(e.target.value)}
+                        placeholder="01xxxxxxxxx"
+                        dir="ltr"
+                        inputMode="tel"
+                        autoComplete="tel"
+                        maxLength={11}
+                        style={{ fontSize: '16px' }}
+                        className="bg-card/60 border-border/40 h-11 pl-10 text-base focus:border-primary/50 focus:ring-primary/20 transition-all touch-manipulation"
+                      />
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
+                    </div>
+                  </div>
+
+                  <label className="flex items-start gap-2 cursor-pointer pt-1">
+                    <Checkbox
+                      checked={whatsappOptIn}
+                      onCheckedChange={c => setWhatsappOptIn(!!c)}
+                      className="w-4 h-4 mt-0.5"
+                    />
+                    <span className="text-[11px] sm:text-[12px] leading-relaxed text-foreground/75 flex items-center gap-1.5 flex-wrap">
+                      <MessageCircle className="w-3.5 h-3.5 text-[#25D366] shrink-0" />
+                      أوافق على التواصل معي عبر <strong className="text-foreground">واتساب</strong> لمتابعة عروض الأسعار والطلبات
+                    </span>
+                  </label>
+                </div>
+              )}
+
+
               {!isLogin && (
                 <div className="space-y-1.5 sm:space-y-2">
                   <Label className="text-[11px] sm:text-xs font-semibold text-foreground/80 flex items-center gap-1.5 flex-wrap">
