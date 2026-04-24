@@ -533,7 +533,7 @@ export default function VisitorSessionSummary() {
           <>
             {/* Latest Session — main highlight */}
             {lastSession && (
-              <Card className="border-primary/20 shadow-lg overflow-hidden">
+              <Card id="section-latest-session" className="border-primary/20 shadow-lg overflow-hidden scroll-mt-24 rounded-2xl">
                 <CardHeader className="pb-4 bg-gradient-to-l from-primary/8 via-primary/4 to-transparent border-b">
                   <div className="flex items-start justify-between flex-wrap gap-3">
                     <div>
