@@ -275,30 +275,59 @@ const AdminCustomerIntelligence = () => {
     return (localStorage.getItem("aci_active_section_v1") as SectionKey) || "tasks";
   });
   const sectionContentRef = useRef<HTMLDivElement | null>(null);
+  const sectionNavRef = useRef<HTMLDivElement | null>(null);
   const [isSwitchingSection, setIsSwitchingSection] = useState(false);
+
+  // Wait until smooth scroll settles (no Y-change for ~120ms) before resolving
+  const waitForScrollEnd = (timeoutMs = 800): Promise<void> =>
+    new Promise((resolve) => {
+      if (typeof window === "undefined") return resolve();
+      let lastY = window.scrollY;
+      let stableSince = performance.now();
+      const start = performance.now();
+      const tick = () => {
+        const now = performance.now();
+        const y = window.scrollY;
+        if (y !== lastY) {
+          lastY = y;
+          stableSince = now;
+        }
+        if (now - stableSince >= 120 || now - start >= timeoutMs) {
+          return resolve();
+        }
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+
   const switchSection = (key: SectionKey) => {
-    if (key === activeSection) return;
-    // Show light skeleton briefly to signal content refresh
-    setIsSwitchingSection(true);
-    setActiveSection(key);
+    if (key === activeSection || isSwitchingSection) return;
+    // 1) Persist selection immediately
     try { localStorage.setItem("aci_active_section_v1", key); } catch {}
-    // Smooth scroll directly to the start of the section content (just below the sticky nav)
+    // 2) Show skeleton placeholder (keeps layout while we scroll & swap)
+    setIsSwitchingSection(true);
+
+    // 3) Smooth-scroll to the sticky nav top first (before swapping content)
     if (typeof window !== "undefined") {
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          const el = sectionContentRef.current;
-          if (el) {
-            const navHeight = 64; // sticky nav approximate height
-            const top = el.getBoundingClientRect().top + window.scrollY - navHeight;
-            window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
-          } else {
-            window.scrollTo({ top: 0, behavior: "smooth" });
-          }
-        }, 80); // wait for section render
+      const navEl = sectionNavRef.current;
+      const navHeight = 64;
+      const targetTop = navEl
+        ? navEl.getBoundingClientRect().top + window.scrollY - 8
+        : Math.max(0, (sectionContentRef.current?.getBoundingClientRect().top ?? 0) + window.scrollY - navHeight);
+      window.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
+
+      // 4) Wait for the scroll to actually settle, THEN swap section + trigger enter animation
+      waitForScrollEnd().then(() => {
+        setActiveSection(key);
+        // Hide skeleton on the next frame so the new section's enter animation starts cleanly
+        requestAnimationFrame(() => {
+          setIsSwitchingSection(false);
+        });
       });
+    } else {
+      setActiveSection(key);
+      setIsSwitchingSection(false);
     }
-    // Hide skeleton after a short delay for smooth perceived transition
-    window.setTimeout(() => setIsSwitchingSection(false), 280);
   };
 
   // === Call outcomes (per-day, per-task) — drives auto score/priority adjustments ===
