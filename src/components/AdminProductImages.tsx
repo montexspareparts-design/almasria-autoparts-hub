@@ -46,11 +46,27 @@ const AdminProductImages = () => {
   };
 
   const [page, setPage] = useState(0);
+  const [dealerOnly, setDealerOnly] = useState(false);
+  const [missingImageOnly, setMissingImageOnly] = useState(false);
   const PAGE_SIZE = 50;
 
   const { data: productsData, isLoading } = useQuery({
-    queryKey: ["admin-products", search, page],
+    queryKey: ["admin-products", search, page, dealerOnly, missingImageOnly],
     queryFn: async () => {
+      // If dealerOnly, fetch IDs of products that have wholesale tier prices
+      let dealerProductIds: string[] | null = null;
+      if (dealerOnly) {
+        const { data: tierRows, error: tierErr } = await supabase
+          .from("product_tier_prices")
+          .select("product_id")
+          .in("tier", ["wholesale_tier1", "wholesale_tier2"]);
+        if (tierErr) throw tierErr;
+        dealerProductIds = Array.from(new Set((tierRows || []).map((r: any) => r.product_id)));
+        if (dealerProductIds.length === 0) {
+          return { products: [], total: 0 };
+        }
+      }
+
       let query = supabase
         .from("products")
         .select("id, name_ar, sku, brand, image_url, product_categories(name_ar)", { count: "exact" })
@@ -59,6 +75,14 @@ const AdminProductImages = () => {
 
       if (search) {
         query = query.or(`name_ar.ilike.%${search}%,sku.ilike.%${search}%`);
+      }
+
+      if (missingImageOnly) {
+        query = query.or("image_url.is.null,image_url.eq.");
+      }
+
+      if (dealerProductIds) {
+        query = query.in("id", dealerProductIds);
       }
 
       const { data, error, count } = await query;
