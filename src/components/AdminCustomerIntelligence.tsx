@@ -257,6 +257,13 @@ const AdminCustomerIntelligence = () => {
   const [editingMissing, setEditingMissing] = useState<string | null>(null);
   const [missingDraft, setMissingDraft] = useState<{ phone?: string; email?: string; full_name?: string; car_model?: string; car_year?: string }>({});
   const [savingMissing, setSavingMissing] = useState(false);
+  // Quick action dialog: register call/whatsapp/visit/note in one click from the card
+  const [actionDialogUser, setActionDialogUser] = useState<string | null>(null);
+  const [actionDialogType, setActionDialogType] = useState<"phone" | "whatsapp" | "visit" | "other">("phone");
+  const [actionDialogNote, setActionDialogNote] = useState("");
+  const [savingAction, setSavingAction] = useState(false);
+  // Sort by priority (no action / oldest action first)
+  const [prioritySort, setPrioritySort] = useState(true);
 
   // Today's tasks: persistent completion state (resets daily via date-keyed localStorage)
   const todayKey = format(new Date(), "yyyy-MM-dd");
