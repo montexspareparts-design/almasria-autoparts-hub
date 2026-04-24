@@ -273,12 +273,24 @@ const AdminCustomerIntelligence = () => {
     if (typeof window === "undefined") return "tasks";
     return (localStorage.getItem("aci_active_section_v1") as SectionKey) || "tasks";
   });
+  const sectionContentRef = React.useRef<HTMLDivElement | null>(null);
   const switchSection = (key: SectionKey) => {
     setActiveSection(key);
     try { localStorage.setItem("aci_active_section_v1", key); } catch {}
-    // smooth scroll to top of content area
+    // Smooth scroll directly to the start of the section content (just below the sticky nav)
     if (typeof window !== "undefined") {
-      setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50);
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          const el = sectionContentRef.current;
+          if (el) {
+            const navHeight = 64; // sticky nav approximate height
+            const top = el.getBoundingClientRect().top + window.scrollY - navHeight;
+            window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+          } else {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }
+        }, 80); // wait for section render
+      });
     }
   };
 
