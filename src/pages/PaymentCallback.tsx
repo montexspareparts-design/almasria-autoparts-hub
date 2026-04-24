@@ -5,6 +5,7 @@ import { Check, XCircle, Loader2, ArrowRight, ShoppingBag, CreditCard, Package }
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import AuthorizedDistributorBadges from "@/components/AuthorizedDistributorBadges";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { normalizePaymobOrderReference } from "@/lib/paymob";

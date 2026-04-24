@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import AuthorizedDistributorBadges from "@/components/AuthorizedDistributorBadges";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -228,6 +229,9 @@ const PaymentPage = () => {
             </div>
             <h1 className="text-xl md:text-3xl font-black text-foreground">إتمام الدفع</h1>
             <p className="text-xs md:text-sm text-muted-foreground mt-1 md:mt-2">اختر طريقة الدفع المناسبة لك</p>
+            <div className="mt-4">
+              <AuthorizedDistributorBadges variant="compact" />
+            </div>
           </motion.div>
 
           {/* Order Summary */}
