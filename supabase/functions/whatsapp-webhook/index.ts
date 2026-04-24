@@ -123,25 +123,35 @@ Deno.serve(async (req) => {
           } else if (msgType === "image") {
             caption = msg.image?.caption || null;
             mediaMime = msg.image?.mime_type || "image/jpeg";
-            mediaPath = await downloadAndStoreMedia(supabase, msg.image?.id, mediaMime);
+            if (msg.image?.id) {
+              mediaPath = await downloadAndStoreMedia(supabase, msg.image.id, mediaMime);
+            }
             textBody = caption || "[صورة]";
           } else if (msgType === "audio") {
             mediaMime = msg.audio?.mime_type || "audio/ogg";
-            mediaPath = await downloadAndStoreMedia(supabase, msg.audio?.id, mediaMime);
+            if (msg.audio?.id) {
+              mediaPath = await downloadAndStoreMedia(supabase, msg.audio.id, mediaMime);
+            }
             textBody = "[رسالة صوتية]";
           } else if (msgType === "video") {
             caption = msg.video?.caption || null;
             mediaMime = msg.video?.mime_type || "video/mp4";
-            mediaPath = await downloadAndStoreMedia(supabase, msg.video?.id, mediaMime);
+            if (msg.video?.id) {
+              mediaPath = await downloadAndStoreMedia(supabase, msg.video.id, mediaMime);
+            }
             textBody = caption || "[فيديو]";
           } else if (msgType === "document") {
             caption = msg.document?.filename || null;
             mediaMime = msg.document?.mime_type || "application/octet-stream";
-            mediaPath = await downloadAndStoreMedia(supabase, msg.document?.id, mediaMime);
+            if (msg.document?.id) {
+              mediaPath = await downloadAndStoreMedia(supabase, msg.document.id, mediaMime);
+            }
             textBody = `[مستند] ${caption || ""}`;
           } else if (msgType === "sticker") {
             mediaMime = msg.sticker?.mime_type || "image/webp";
-            mediaPath = await downloadAndStoreMedia(supabase, msg.sticker?.id, mediaMime);
+            if (msg.sticker?.id) {
+              mediaPath = await downloadAndStoreMedia(supabase, msg.sticker.id, mediaMime);
+            }
             textBody = "[ملصق]";
           } else if (msgType === "location") {
             textBody = `[موقع] ${msg.location?.latitude},${msg.location?.longitude}`;
