@@ -139,6 +139,7 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+import { checkDuplicateCommunication } from "@/lib/duplicateCommCheck";
 
 interface CustomerProfile {
   user_id: string;
