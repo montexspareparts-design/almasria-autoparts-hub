@@ -444,7 +444,7 @@ const StaffHome = () => {
         onClick: () => navigate("/admin?section=customer-intel"),
       },
     ],
-    [kpis, navigate, rangeSuffix]
+    [kpis, navigate, rangeSuffix, viewedVisitorsCount]
   );
 
   const tierBadge = (tier: HotLead["tier"]) => {
