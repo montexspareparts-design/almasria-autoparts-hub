@@ -1106,7 +1106,7 @@ const AdminCustomerIntelligence = () => {
       </div>
 
       {/* 🔥 Hot Leads — Smart Auto Summary */}
-      {hotLeads.length > 0 && (
+      {filteredProfiles && filteredProfiles.length > 0 && (
         <Card className="rounded-2xl border-2 border-primary/20 shadow-sm overflow-hidden bg-gradient-to-l from-primary/5 via-background to-background">
           <CardHeader className="py-3 px-4 border-b border-border/40">
             <div className="flex items-center justify-between flex-wrap gap-2">
@@ -1117,9 +1117,61 @@ const AdminCustomerIntelligence = () => {
                 ملخص ذكي — عملاء يحتاجون متابعة الآن
                 <Badge variant="secondary" className="text-[10px] h-5 mr-1">{hotLeads.length}</Badge>
               </CardTitle>
-              <span className="text-[10px] text-muted-foreground font-medium">
+              <span className="text-[10px] text-muted-foreground font-medium hidden md:inline">
                 مرتب حسب الأولوية والاحتياج المحتمل
               </span>
+            </div>
+            {/* Filters */}
+            <div className="flex items-center gap-2 flex-wrap mt-3">
+              <div className="inline-flex items-center rounded-lg border border-border/50 bg-muted/30 p-0.5 gap-0.5">
+                {[
+                  { key: "all", label: "الكل", icon: "🗂️" },
+                  { key: "parts", label: "قطع غيار", icon: "🔧" },
+                  { key: "oils", label: "زيوت", icon: "🛢️" },
+                ].map(opt => (
+                  <button
+                    key={opt.key}
+                    onClick={() => setHotLeadsCategory(opt.key as any)}
+                    className={cn(
+                      "text-[10px] font-bold px-2.5 py-1 rounded-md transition-all",
+                      hotLeadsCategory === opt.key
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                    )}
+                  >
+                    <span className="mr-0.5">{opt.icon}</span>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              <div className="inline-flex items-center rounded-lg border border-border/50 bg-muted/30 p-0.5 gap-0.5">
+                {[
+                  { key: "all", label: "كل الفترات" },
+                  { key: "90d", label: "آخر 90 يوم" },
+                  { key: "30d", label: "آخر 30 يوم" },
+                ].map(opt => (
+                  <button
+                    key={opt.key}
+                    onClick={() => setHotLeadsPeriod(opt.key as any)}
+                    className={cn(
+                      "text-[10px] font-bold px-2.5 py-1 rounded-md transition-all",
+                      hotLeadsPeriod === opt.key
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              {(hotLeadsCategory !== "all" || hotLeadsPeriod !== "all") && (
+                <button
+                  onClick={() => { setHotLeadsCategory("all"); setHotLeadsPeriod("all"); }}
+                  className="text-[10px] text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
+                >
+                  مسح الفلاتر
+                </button>
+              )}
             </div>
           </CardHeader>
           <CardContent className="p-3">
