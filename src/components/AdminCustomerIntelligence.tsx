@@ -565,6 +565,121 @@ const AdminCustomerIntelligence = () => {
     return "2" + cleaned;
   };
 
+  // Generate quick alerts for a customer (red/orange flags for staff attention)
+  const getCustomerAlerts = (userId: string): { icon: string; label: string; color: string; type: "danger" | "warning" | "info" }[] => {
+    const alerts: { icon: string; label: string; color: string; type: "danger" | "warning" | "info" }[] = [];
+    const orders = ordersMap?.[userId];
+    const searches = userSearchMap[userId] || [];
+    const cart = cartByUser[userId];
+    const lastVisit = lastVisitByUser[userId];
+    const purchasedSet = purchasedProductsByUser[userId];
+
+    // 1. Abandoned cart
+    if (cart && cart.count > 0) {
+      const daysSince = differenceInDays(new Date(), new Date(cart.lastUpdated));
+      if (daysSince >= 1) {
+        alerts.push({
+          icon: "🛒",
+          label: `سلة متروكة (${cart.count} صنف منذ ${daysSince} يوم)`,
+          color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-300/50",
+          type: "danger",
+        });
+      }
+    }
+
+    // 2. Heavy searcher with no orders
+    const totalSearchCount = searches.reduce((s, q) => s + q.count, 0);
+    if (totalSearchCount >= 5 && !orders) {
+      alerts.push({
+        icon: "🔥",
+        label: `بحث ${totalSearchCount} مرة بدون أي طلب`,
+        color: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400 border-orange-300/50",
+        type: "warning",
+      });
+    }
+
+    // 3. Customer has not visited in long time
+    if (lastVisit) {
+      const daysSinceVisit = differenceInDays(new Date(), new Date(lastVisit));
+      if (daysSinceVisit >= 14 && orders) {
+        alerts.push({
+          icon: "👋",
+          label: `عميل غايب منذ ${daysSinceVisit} يوم`,
+          color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-300/50",
+          type: "warning",
+        });
+      }
+    }
+
+    // 4. Searched many but didn't buy what they searched
+    if (searches.length >= 3 && purchasedSet) {
+      const unpurchasedSearches = searches.filter(s => {
+        const ql = s.query.toLowerCase();
+        return !Object.values(productsMap || {}).some((p: any) =>
+          purchasedSet.has(p.id) && (p.name_ar?.toLowerCase().includes(ql) || p.sku?.toLowerCase().includes(ql))
+        );
+      });
+      if (unpurchasedSearches.length >= searches.length * 0.7 && orders) {
+        alerts.push({
+          icon: "🎯",
+          label: `${unpurchasedSearches.length} بحث بدون شراء — فرصة بيع`,
+          color: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 border-purple-300/50",
+          type: "info",
+        });
+      }
+    }
+
+    // 5. New customer (registered < 3 days, no order)
+    const profile = profiles?.find(p => p.user_id === userId);
+    if (profile) {
+      const daysSinceJoin = differenceInDays(new Date(), new Date(profile.created_at));
+      if (daysSinceJoin <= 3 && !orders && totalSearchCount > 0) {
+        alerts.push({
+          icon: "✨",
+          label: "عميل جديد نشط — رحب به!",
+          color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-300/50",
+          type: "info",
+        });
+      }
+    }
+
+    return alerts;
+  };
+
+  // Build a ready-to-use call/whatsapp script based on customer behavior
+  const buildCallScript = (userId: string): string => {
+    const profile = profiles?.find(p => p.user_id === userId);
+    const name = profile?.full_name?.split(" ")[0] || "حضرتك";
+    const orders = ordersMap?.[userId];
+    const searches = userSearchMap[userId] || [];
+    const cart = cartByUser[userId];
+    const topSearches = [...searches].sort((a, b) => b.count - a.count).slice(0, 3).map(s => s.query);
+    const isDealer = dealerUserIds?.has(userId);
+
+    let opening = `السلام عليكم أستاذ/${name}، معاك ${isDealer ? "خدمة عملاء التجار" : "خدمة عملاء"} المصرية جروب.`;
+    let body = "";
+
+    if (cart && cart.count > 0) {
+      body = `\n\nلاحظت إن حضرتك مضيف ${cart.count} صنف في عربة التسوق ومش كملت الطلب. هل في حاجة محتاج توضيح فيها؟ أنا هنا أساعدك.`;
+    } else if (topSearches.length > 0 && !orders) {
+      body = `\n\nلاحظت إن حضرتك بتبحث عن: ${topSearches.join("، ")}. الأصناف دي متوفرة عندنا وممكن أساعدك بأفضل سعر وأسرع توصيل.`;
+    } else if (orders) {
+      const daysSinceLast = differenceInDays(new Date(), new Date(orders.lastOrderDate));
+      if (daysSinceLast >= 30) {
+        body = `\n\nمر فترة من آخر طلب لحضرتك (${daysSinceLast} يوم). عندنا عروض جديدة ووصول أصناف جديدة، تحب أبعتها لحضرتك؟`;
+      } else {
+        body = `\n\nأطمن على طلبك الأخير (${orders.lastOrderNumber})، كل حاجة تمام؟ وفي أي حاجة تانية أقدر أساعدك فيها؟`;
+      }
+    } else if (topSearches.length > 0) {
+      body = `\n\nشفت إن حضرتك بحثت عن: ${topSearches.join("، ")}. تحب أساعدك تلاقي أفضل بدائل وأسعار؟`;
+    } else {
+      body = `\n\nأهلاً بحضرتك في المصرية جروب! هل في صنف معين بتدور عليه أقدر أساعدك فيه؟`;
+    }
+
+    return opening + body + "\n\nشكراً لتعاملك معانا 🙏";
+  };
+
+
   const filteredWithPhone = filteredProfiles?.filter(p => p.phone) || [];
 
   const handleBulkSend = () => {
