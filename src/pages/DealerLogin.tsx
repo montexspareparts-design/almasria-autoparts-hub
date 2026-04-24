@@ -73,7 +73,14 @@ const DealerLogin = () => {
     }
   }, []);
 
-  useEffect(() => { if (user) checkDealerStatus(user.id); }, [user]);
+  // Hard guard: staff (admin/moderator) must NEVER see the dealer portal — redirect immediately
+  useEffect(() => {
+    if (!authLoading && user && (isAdmin || isModerator)) {
+      navigate("/admin", { replace: true });
+    }
+  }, [authLoading, user, isAdmin, isModerator, navigate]);
+
+  useEffect(() => { if (user && !isAdmin && !isModerator) checkDealerStatus(user.id); }, [user, isAdmin, isModerator]);
 
   const checkDealerStatus = async (userId: string) => {
     setCheckingStatus(true);
