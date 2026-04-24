@@ -381,6 +381,17 @@ const StaffHome = () => {
 
   const rangeSuffix = range === "today" ? "اليوم" : "آخر 7 أيام";
 
+  // Count how many of the displayed (non-staff) visitors the current staff has already opened
+  const viewedVisitorsCount = useMemo(() => {
+    return visitorsList.reduce((acc, v) => {
+      if (!includeStaff && v.user_id && staffIdsSet.has(v.user_id)) return acc;
+      const isViewed =
+        (v.user_id && viewedKeys.has(`u:${v.user_id}`)) ||
+        (v.session_key && viewedKeys.has(`s:${v.session_key}`));
+      return isViewed ? acc + 1 : acc;
+    }, 0);
+  }, [visitorsList, viewedKeys, includeStaff, staffIdsSet]);
+
   const kpiCards: KPI[] = useMemo(
     () => [
       {
@@ -390,6 +401,7 @@ const StaffHome = () => {
         color: "text-blue-600",
         bg: "from-blue-500/10 to-blue-500/5",
         onClick: () => setVisitorsOpen(true),
+        subText: kpis.visitors > 0 ? `تمت معاينة ${viewedVisitorsCount} / ${kpis.visitors}` : undefined,
       },
       {
         label: `زوار متفاعلين (${rangeSuffix})`,
