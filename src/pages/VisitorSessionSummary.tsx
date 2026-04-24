@@ -781,6 +781,9 @@ export default function VisitorSessionSummary() {
 
         {/* Top Searched Products & Queries */}
         {(topProducts.length > 0 || topSearches.length > 0) && (
+          <div id="section-products" className="scroll-mt-24" />
+        )}
+        {(topProducts.length > 0 || topSearches.length > 0) && (
           <Card className="border-orange-200/60 dark:border-orange-900/40 shadow-md overflow-hidden">
             <CardHeader className="pb-3 bg-gradient-to-l from-orange-500/10 via-orange-500/5 to-transparent border-b">
               <CardTitle className="flex items-center gap-2 text-base">
