@@ -353,18 +353,37 @@ const AdminCustomerIntelligence = () => {
     },
   });
 
-  // Dealer user IDs
-  const { data: dealerUserIds } = useQuery({
-    queryKey: ["admin_dealer_user_ids"],
+  // Dealer accounts (with business_type, tier, vehicle_types) for advanced filtering
+  const { data: dealerAccountsData } = useQuery({
+    queryKey: ["admin_dealer_accounts_full"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("dealer_accounts")
-        .select("user_id")
+        .select("user_id, business_type, tier, vehicle_types")
         .eq("is_active", true);
       if (error) throw error;
-      return new Set(data?.map(d => d.user_id) || []);
+      return data || [];
     },
   });
+
+  // Derived: Set of dealer user IDs (for backward-compatible has() checks)
+  const dealerUserIds = useMemo(
+    () => new Set(dealerAccountsData?.map(d => d.user_id) || []),
+    [dealerAccountsData]
+  );
+
+  // Derived: Map of dealer info by user_id for advanced filtering
+  const dealerInfoByUser = useMemo(() => {
+    const map: Record<string, { business_type: string | null; tier: string | null; vehicle_types: string[] | null }> = {};
+    dealerAccountsData?.forEach(d => {
+      map[d.user_id] = {
+        business_type: d.business_type ?? null,
+        tier: d.tier ?? null,
+        vehicle_types: (d.vehicle_types as string[] | null) ?? null,
+      };
+    });
+    return map;
+  }, [dealerAccountsData]);
 
   // Orders with dates per user
   const { data: ordersData } = useQuery({
