@@ -8,7 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import {
   Activity, ArrowRight, Clock, Eye, FileText, Globe, Hash,
-  Search, ShoppingBag, Phone, MessageCircle, MapPin, Timer, User as UserIcon,
+  Search, ShoppingBag, Phone, MessageCircle, Timer, User as UserIcon,
+  Calendar, Sparkles, TrendingUp, MousePointerClick, History,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -19,11 +20,12 @@ interface ProductInfo { id: string; name_ar: string; sku: string; }
 
 const fmtTime = (iso: string) => new Date(iso).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
 const fmtDateTime = (iso: string) => new Date(iso).toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short" });
+const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("ar-EG", { dateStyle: "medium" });
 const fmtDuration = (ms: number) => {
-  if (ms <= 0) return "—";
+  if (ms <= 0) return "أقل من ثانية";
   const min = Math.floor(ms / 60000);
   const sec = Math.floor((ms % 60000) / 1000);
-  if (min < 1) return `${sec} ث`;
+  if (min < 1) return `${sec} ثانية`;
   if (min < 60) return `${min} د ${sec} ث`;
   const h = Math.floor(min / 60);
   return `${h} س ${min % 60} د`;
@@ -146,8 +148,6 @@ export default function VisitorSessionSummary() {
   }, [visits]);
 
   const lastSession = sessions[0];
-
-  // Filter searches and price views to the last session window (with small buffer)
   const lastSessionStart = lastSession ? new Date(lastSession.start).getTime() - 60_000 : 0;
   const lastSessionEnd = lastSession ? new Date(lastSession.end).getTime() + 60_000 : 0;
   const lastSessionSearches = searches.filter((s) => {
@@ -160,191 +160,243 @@ export default function VisitorSessionSummary() {
   });
 
   const totalDurationMs = sessions.reduce((sum, s) => sum + s.durationMs, 0);
+  const avgPagesPerSession = sessions.length > 0 ? Math.round(visits.length / sessions.length) : 0;
+  const initials = (profile?.full_name || "?").trim().split(" ").map(s => s[0]).slice(0, 2).join("").toUpperCase();
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-muted/30 p-4" dir="rtl">
-        <div className="max-w-5xl mx-auto space-y-4">
-          <Skeleton className="h-32 w-full" />
-          <Skeleton className="h-64 w-full" />
-          <Skeleton className="h-64 w-full" />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-background to-slate-100 dark:from-slate-950 dark:via-background dark:to-slate-900 p-4" dir="rtl">
+        <div className="max-w-6xl mx-auto space-y-4">
+          <Skeleton className="h-44 w-full rounded-2xl" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-2xl" />)}
+          </div>
+          <Skeleton className="h-96 w-full rounded-2xl" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-muted/40 via-background to-muted/20 p-4 pb-12" dir="rtl">
-      <div className="max-w-5xl mx-auto space-y-5">
-        {/* Header */}
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" onClick={() => navigate(-1)} className="gap-1.5">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-background to-slate-100/60 dark:from-slate-950 dark:via-background dark:to-slate-900/60 p-3 md:p-6 pb-12" dir="rtl">
+      <div className="max-w-6xl mx-auto space-y-5">
+        {/* Top bar */}
+        <div className="flex items-center justify-between gap-3">
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-1.5 hover:bg-background/80">
             <ArrowRight className="w-4 h-4" />
             رجوع
           </Button>
-          <h1 className="text-xl md:text-2xl font-black flex items-center gap-2">
-            <Activity className="w-6 h-6 text-primary" />
+          <Badge variant="outline" className="gap-1.5 bg-background/60 backdrop-blur">
+            <Activity className="w-3 h-3" />
             ملخص جلسة الزائر
-          </h1>
+          </Badge>
         </div>
 
-        {/* Visitor profile card */}
-        <Card className="overflow-hidden border-primary/10">
-          <CardHeader className="bg-gradient-to-l from-primary/5 to-transparent pb-4">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <UserIcon className="w-5 h-5 text-primary" />
-              بيانات الزائر
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div>
-              <p className="text-muted-foreground text-xs mb-1">الاسم</p>
-              <p className="font-bold">{profile?.full_name || "بدون اسم"}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground text-xs mb-1">النوع</p>
-              <Badge variant={isDealer ? "default" : "secondary"}>{isDealer ? "تاجر" : "قطاعي"}</Badge>
-            </div>
-            <div>
-              <p className="text-muted-foreground text-xs mb-1">الإيميل</p>
-              <p className="font-medium break-all">{profile?.email || "—"}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground text-xs mb-1">رقم التليفون</p>
-              {profile?.phone ? (
-                <div className="flex items-center gap-2 flex-wrap">
-                  <a href={`tel:${profile.phone}`} className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-400 font-bold">
-                    <Phone className="w-3.5 h-3.5" />
-                    {profile.phone}
-                  </a>
-                  <a
-                    href={`https://wa.me/${profile.phone.replace(/^0/, "20").replace(/\D/g, "")}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-400 font-bold"
-                  >
-                    <MessageCircle className="w-3.5 h-3.5" />
-                    واتساب
-                  </a>
+        {/* Hero / Visitor profile */}
+        <Card className="overflow-hidden border-0 shadow-xl bg-gradient-to-br from-primary/95 via-primary to-primary/80 text-primary-foreground">
+          <CardContent className="p-5 md:p-7">
+            <div className="flex flex-col md:flex-row md:items-center gap-5">
+              {/* Avatar */}
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white/15 backdrop-blur ring-4 ring-white/10 flex items-center justify-center shrink-0">
+                  <span className="text-2xl md:text-3xl font-black tracking-wide">{initials}</span>
                 </div>
-              ) : (
-                <p className="text-muted-foreground">—</p>
-              )}
-            </div>
-            <div>
-              <p className="text-muted-foreground text-xs mb-1">تاريخ التسجيل</p>
-              <p className="font-medium">{profile?.created_at ? fmtDateTime(profile.created_at) : "—"}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground text-xs mb-1">User ID</p>
-              <p className="font-mono text-[10px] text-muted-foreground break-all">{userId}</p>
+                <div className="md:hidden">
+                  <h1 className="text-xl font-black">{profile?.full_name || "زائر بدون اسم"}</h1>
+                  <p className="text-xs opacity-80 mt-0.5">{isDealer ? "حساب تاجر" : "عميل قطاعي"}</p>
+                </div>
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <div className="hidden md:block">
+                  <h1 className="text-2xl md:text-3xl font-black leading-tight">{profile?.full_name || "زائر بدون اسم"}</h1>
+                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    <Badge className="bg-white/20 hover:bg-white/30 text-primary-foreground border-white/20 backdrop-blur">
+                      {isDealer ? "🏢 حساب تاجر" : "👤 عميل قطاعي"}
+                    </Badge>
+                    {profile?.created_at && (
+                      <Badge variant="outline" className="border-white/30 text-primary-foreground/90 bg-white/5 backdrop-blur gap-1">
+                        <Calendar className="w-3 h-3" />
+                        مسجّل من {fmtDate(profile.created_at)}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-4">
+                  {profile?.phone && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <a href={`tel:${profile.phone}`} className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 backdrop-blur font-bold transition">
+                        <Phone className="w-3.5 h-3.5" />
+                        {profile.phone}
+                      </a>
+                      <a
+                        href={`https://wa.me/${profile.phone.replace(/^0/, "20").replace(/\D/g, "")}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white font-bold transition shadow-md"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" />
+                        واتساب
+                      </a>
+                    </div>
+                  )}
+                  {profile?.email && !profile.email.includes("@phone.almasria.local") && (
+                    <p className="text-xs opacity-80 truncate">📧 {profile.email}</p>
+                  )}
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Quick KPIs */}
+        {/* KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <KpiCard icon={Eye} label="إجمالي الصفحات" value={visits.length} color="blue" />
-          <KpiCard icon={Hash} label="عدد الجلسات" value={sessions.length} color="purple" />
-          <KpiCard icon={Search} label="عمليات البحث" value={searches.length} color="orange" />
-          <KpiCard icon={Timer} label="إجمالي الوقت" valueText={fmtDuration(totalDurationMs)} color="emerald" />
+          <KpiCard icon={Eye} label="إجمالي الصفحات المشاهدة" value={visits.length} sub={`${avgPagesPerSession || 0} صفحة/جلسة`} color="blue" />
+          <KpiCard icon={Hash} label="عدد الجلسات" value={sessions.length} sub={sessions.length > 1 ? "زائر عائد" : "زيارة واحدة"} color="purple" />
+          <KpiCard icon={Search} label="عمليات البحث" value={searches.length} sub={searches.length > 0 ? "نشاط بحث" : "لم يبحث"} color="orange" />
+          <KpiCard icon={Timer} label="إجمالي الوقت" valueText={fmtDuration(totalDurationMs)} sub={lastSession ? `آخر زيارة: ${fmtDate(lastSession.start)}` : "—"} color="emerald" />
         </div>
 
         {visits.length === 0 ? (
-          <Card>
-            <CardContent className="py-16 text-center text-muted-foreground">
-              <Globe className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p className="text-sm">لم يتم تسجيل أي زيارات لهذا المستخدم بعد.</p>
-              <p className="text-xs mt-2 opacity-70">
-                سيبدأ التسجيل تلقائياً مع كل صفحة يفتحها بعد الآن.
+          <Card className="border-dashed">
+            <CardContent className="py-20 text-center">
+              <div className="w-16 h-16 mx-auto rounded-2xl bg-muted flex items-center justify-center mb-4">
+                <Globe className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <p className="text-base font-bold text-foreground">لا يوجد نشاط مسجّل بعد</p>
+              <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
+                لم يفتح هذا الزائر أي صفحة بعد. سيبدأ التسجيل تلقائياً مع أول صفحة يدخلها.
               </p>
             </CardContent>
           </Card>
         ) : (
           <>
-            {/* Last session highlight */}
+            {/* Latest Session — main highlight */}
             {lastSession && (
-              <Card className="border-primary/30 shadow-md">
-                <CardHeader className="pb-3 bg-primary/5">
-                  <CardTitle className="flex items-center justify-between flex-wrap gap-2 text-base">
-                    <span className="flex items-center gap-2">
-                      <Clock className="w-5 h-5 text-primary" />
-                      أحدث جلسة
-                    </span>
-                    <span className="text-xs font-normal text-muted-foreground">
-                      {fmtDateTime(lastSession.start)} • مدة: {fmtDuration(lastSession.durationMs)}
-                    </span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-4 space-y-5">
-                  {/* Pages timeline */}
-                  <SectionTitle icon={FileText} title={`الصفحات اللي شافها (${lastSession.pages.length})`} />
-                  <ol className="relative border-r-2 border-primary/20 pr-4 space-y-2.5">
-                    {lastSession.pages.map((p, idx) => (
-                      <li key={p.id} className="relative">
-                        <span className="absolute -right-[22px] top-1 w-3 h-3 rounded-full bg-primary ring-4 ring-primary/10" />
-                        <div className="bg-muted/50 hover:bg-muted rounded-md p-2.5">
-                          <div className="flex items-center justify-between gap-2 flex-wrap">
-                            <p className="font-bold text-sm text-foreground">
-                              <span className="text-muted-foreground text-xs ml-1">#{idx + 1}</span>
-                              {friendlyPath(p.path)}
-                            </p>
-                            <span className="text-[10px] text-muted-foreground font-mono">{fmtTime(p.visited_at)}</span>
-                          </div>
-                          <p className="text-[10px] text-muted-foreground mt-0.5 break-all font-mono">{p.path}</p>
-                          {p.page_title && p.page_title !== document.title && (
-                            <p className="text-[10px] text-muted-foreground mt-0.5">{p.page_title}</p>
-                          )}
+              <Card className="border-primary/20 shadow-lg overflow-hidden">
+                <CardHeader className="pb-4 bg-gradient-to-l from-primary/8 via-primary/4 to-transparent border-b">
+                  <div className="flex items-start justify-between flex-wrap gap-3">
+                    <div>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center">
+                          <Sparkles className="w-5 h-5 text-primary" />
                         </div>
-                      </li>
-                    ))}
-                  </ol>
+                        أحدث جلسة
+                      </CardTitle>
+                      <p className="text-xs text-muted-foreground mt-2 mr-11">
+                        {fmtDateTime(lastSession.start)}
+                      </p>
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                      <Badge variant="secondary" className="gap-1.5 px-2.5 py-1">
+                        <FileText className="w-3 h-3" />
+                        {lastSession.pages.length} صفحة
+                      </Badge>
+                      <Badge variant="secondary" className="gap-1.5 px-2.5 py-1">
+                        <Timer className="w-3 h-3" />
+                        {fmtDuration(lastSession.durationMs)}
+                      </Badge>
+                    </div>
+                  </div>
+                </CardHeader>
 
-                  {/* Searches in this session */}
+                <CardContent className="pt-5 space-y-6">
+                  {/* Quick session insights */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+                    <InsightChip
+                      icon={MousePointerClick}
+                      label="بدأ من"
+                      value={friendlyPath(lastSession.pages[0].path)}
+                      tone="blue"
+                    />
+                    <InsightChip
+                      icon={TrendingUp}
+                      label="آخر صفحة"
+                      value={friendlyPath(lastSession.pages[lastSession.pages.length - 1].path)}
+                      tone="purple"
+                    />
+                    <InsightChip
+                      icon={lastSessionSearches.length > 0 ? Search : ShoppingBag}
+                      label={lastSessionSearches.length > 0 ? "أهم بحث" : "نشاط الأسعار"}
+                      value={lastSessionSearches[0]?.search_query || (lastSessionPriceViews.length > 0 ? `${lastSessionPriceViews.length} منتج` : "بدون")}
+                      tone="orange"
+                    />
+                  </div>
+
+                  {/* Pages timeline */}
+                  <div>
+                    <SectionTitle icon={FileText} title="رحلة الصفحات" count={lastSession.pages.length} />
+                    <ol className="relative border-r-2 border-primary/15 pr-5 mt-3 space-y-2">
+                      {lastSession.pages.map((p, idx) => (
+                        <li key={p.id} className="relative">
+                          <span className="absolute -right-[26px] top-3 w-3.5 h-3.5 rounded-full bg-primary ring-4 ring-primary/15 shadow" />
+                          <div className="bg-muted/40 hover:bg-muted/70 rounded-lg p-3 transition group">
+                            <div className="flex items-center justify-between gap-3 flex-wrap">
+                              <p className="font-bold text-sm flex items-center gap-2">
+                                <span className="text-[10px] font-mono text-muted-foreground bg-background rounded px-1.5 py-0.5">#{idx + 1}</span>
+                                {friendlyPath(p.path)}
+                              </p>
+                              <span className="text-[11px] text-muted-foreground font-mono shrink-0">{fmtTime(p.visited_at)}</span>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground mt-1 break-all font-mono opacity-70 group-hover:opacity-100">{p.path}</p>
+                          </div>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+
+                  {/* Searches */}
                   {lastSessionSearches.length > 0 && (
                     <>
                       <Separator />
-                      <SectionTitle icon={Search} title={`بحث خلال الجلسة (${lastSessionSearches.length})`} />
-                      <div className="flex flex-wrap gap-1.5">
-                        {lastSessionSearches.map((s) => (
-                          <Badge key={s.id} variant="outline" className="gap-1.5 text-xs border-orange-200 bg-orange-50 text-orange-700 dark:bg-orange-950/30 dark:text-orange-400">
-                            <Search className="w-3 h-3" />
-                            "{s.search_query}"
-                            {s.results_count !== null && (
-                              <span className="text-[10px] opacity-70">({s.results_count} نتيجة)</span>
-                            )}
-                          </Badge>
-                        ))}
+                      <div>
+                        <SectionTitle icon={Search} title="عمليات البحث" count={lastSessionSearches.length} />
+                        <div className="flex flex-wrap gap-1.5 mt-3">
+                          {lastSessionSearches.map((s) => (
+                            <Badge key={s.id} variant="outline" className="gap-1.5 text-xs px-2.5 py-1.5 border-orange-200 bg-orange-50 text-orange-700 dark:bg-orange-950/30 dark:text-orange-400 dark:border-orange-900/50">
+                              <Search className="w-3 h-3" />
+                              "{s.search_query}"
+                              {s.results_count !== null && (
+                                <span className="text-[10px] opacity-70 mr-1">({s.results_count})</span>
+                              )}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
                     </>
                   )}
 
-                  {/* Products viewed with price */}
+                  {/* Price views */}
                   {lastSessionPriceViews.length > 0 && (
                     <>
                       <Separator />
-                      <SectionTitle icon={ShoppingBag} title={`منتجات شاف سعرها (${lastSessionPriceViews.length})`} />
-                      <div className="space-y-1.5">
-                        {lastSessionPriceViews.map((v) => {
-                          const prod = productMap.get(v.product_id);
-                          return (
-                            <div key={v.id} className="flex items-center justify-between text-xs p-2 rounded-md bg-muted/50">
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium text-foreground truncate">{prod?.name_ar || "منتج"}</p>
-                                {prod?.sku && <p className="text-[10px] text-muted-foreground font-mono">SKU: {prod.sku}</p>}
+                      <div>
+                        <SectionTitle icon={ShoppingBag} title="منتجات شاف سعرها" count={lastSessionPriceViews.length} />
+                        <div className="space-y-1.5 mt-3">
+                          {lastSessionPriceViews.map((v) => {
+                            const prod = productMap.get(v.product_id);
+                            return (
+                              <div key={v.id} className="flex items-center justify-between text-xs p-2.5 rounded-lg bg-muted/40 hover:bg-muted/70 transition">
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-bold text-foreground truncate">{prod?.name_ar || "منتج"}</p>
+                                  {prod?.sku && <p className="text-[10px] text-muted-foreground font-mono mt-0.5">SKU: {prod.sku}</p>}
+                                </div>
+                                <span className="text-[10px] text-muted-foreground shrink-0 ms-2 font-mono">{fmtTime(v.viewed_at)}</span>
                               </div>
-                              <span className="text-[10px] text-muted-foreground shrink-0 ms-2">{fmtTime(v.viewed_at)}</span>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
                       </div>
                     </>
                   )}
 
                   {lastSessionSearches.length === 0 && lastSessionPriceViews.length === 0 && (
-                    <p className="text-xs text-muted-foreground text-center py-2">
-                      لم يقم الزائر بأي بحث أو مشاهدة أسعار خلال هذه الجلسة — مجرد تصفح صفحات.
-                    </p>
+                    <div className="rounded-lg border border-dashed bg-muted/20 p-4 text-center">
+                      <p className="text-xs text-muted-foreground">
+                        💡 الزائر تصفح صفحات فقط بدون بحث أو مشاهدة أسعار خلال هذه الجلسة.
+                      </p>
+                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -355,22 +407,33 @@ export default function VisitorSessionSummary() {
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-base">
-                    <MapPin className="w-5 h-5 text-muted-foreground" />
-                    الجلسات السابقة ({sessions.length - 1})
+                    <History className="w-5 h-5 text-muted-foreground" />
+                    الجلسات السابقة
+                    <Badge variant="secondary" className="text-xs">{sessions.length - 1}</Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {sessions.slice(1, 11).map((s, idx) => (
-                    <details key={idx} className="group rounded-md bg-muted/40 hover:bg-muted/60">
-                      <summary className="cursor-pointer p-3 flex items-center justify-between flex-wrap gap-2 text-sm">
-                        <span className="font-medium">
-                          {fmtDateTime(s.start)} • {s.pages.length} صفحة
+                    <details key={idx} className="group rounded-lg bg-muted/30 hover:bg-muted/60 transition">
+                      <summary className="cursor-pointer p-3 flex items-center justify-between flex-wrap gap-2 text-sm list-none">
+                        <span className="font-bold flex items-center gap-2">
+                          <span className="w-6 h-6 rounded-md bg-background flex items-center justify-center text-[10px] font-mono text-muted-foreground">{idx + 2}</span>
+                          {fmtDateTime(s.start)}
                         </span>
-                        <span className="text-xs text-muted-foreground">{fmtDuration(s.durationMs)}</span>
+                        <div className="flex gap-1.5">
+                          <Badge variant="outline" className="text-[10px] gap-1">
+                            <FileText className="w-2.5 h-2.5" />
+                            {s.pages.length}
+                          </Badge>
+                          <Badge variant="outline" className="text-[10px] gap-1">
+                            <Timer className="w-2.5 h-2.5" />
+                            {fmtDuration(s.durationMs)}
+                          </Badge>
+                        </div>
                       </summary>
                       <div className="px-3 pb-3 space-y-1">
                         {s.pages.map((p) => (
-                          <div key={p.id} className="text-xs flex items-center justify-between gap-2 p-1.5 rounded bg-background/60">
+                          <div key={p.id} className="text-xs flex items-center justify-between gap-2 p-2 rounded bg-background/60">
                             <span className="truncate">{friendlyPath(p.path)}</span>
                             <span className="text-[10px] text-muted-foreground font-mono shrink-0">{fmtTime(p.visited_at)}</span>
                           </div>
@@ -388,33 +451,55 @@ export default function VisitorSessionSummary() {
           <Link to="/admin" className="text-xs text-muted-foreground hover:text-primary underline">
             ← الرجوع إلى لوحة الإدارة
           </Link>
+          <p className="text-[10px] text-muted-foreground/60 mt-2 font-mono">UID: {userId}</p>
         </div>
       </div>
     </div>
   );
 }
 
-function KpiCard({ icon: Icon, label, value, valueText, color }: { icon: any; label: string; value?: number; valueText?: string; color: string }) {
+function KpiCard({ icon: Icon, label, value, valueText, sub, color }: { icon: any; label: string; value?: number; valueText?: string; sub?: string; color: string }) {
   const map: Record<string, string> = {
-    blue: "from-blue-500/10 to-blue-500/5 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-900/40",
-    purple: "from-purple-500/10 to-purple-500/5 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-900/40",
-    orange: "from-orange-500/10 to-orange-500/5 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-900/40",
-    emerald: "from-emerald-500/10 to-emerald-500/5 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/40",
+    blue: "from-blue-500/15 to-blue-500/5 text-blue-700 dark:text-blue-400 border-blue-200/60 dark:border-blue-900/40",
+    purple: "from-purple-500/15 to-purple-500/5 text-purple-700 dark:text-purple-400 border-purple-200/60 dark:border-purple-900/40",
+    orange: "from-orange-500/15 to-orange-500/5 text-orange-700 dark:text-orange-400 border-orange-200/60 dark:border-orange-900/40",
+    emerald: "from-emerald-500/15 to-emerald-500/5 text-emerald-700 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-900/40",
   };
   return (
-    <div className={`rounded-xl p-3 border bg-gradient-to-br ${map[color]}`}>
-      <Icon className="w-5 h-5 mb-1.5" />
-      <p className="text-2xl font-black leading-none">{valueText ?? value ?? 0}</p>
-      <p className="text-[11px] mt-1 opacity-80">{label}</p>
+    <div className={`rounded-2xl p-4 border bg-gradient-to-br ${map[color]} shadow-sm hover:shadow-md transition`}>
+      <div className="flex items-center justify-between mb-2">
+        <Icon className="w-5 h-5" />
+      </div>
+      <p className="text-2xl md:text-3xl font-black leading-none">{valueText ?? value ?? 0}</p>
+      <p className="text-[11px] mt-2 font-bold opacity-90">{label}</p>
+      {sub && <p className="text-[10px] mt-1 opacity-70">{sub}</p>}
     </div>
   );
 }
 
-function SectionTitle({ icon: Icon, title }: { icon: any; title: string }) {
+function SectionTitle({ icon: Icon, title, count }: { icon: any; title: string; count?: number }) {
   return (
-    <h3 className="text-sm font-bold flex items-center gap-1.5 text-foreground">
+    <h3 className="text-sm font-black flex items-center gap-2 text-foreground">
       <Icon className="w-4 h-4 text-primary" />
       {title}
+      {typeof count === "number" && <Badge variant="secondary" className="text-[10px] h-5">{count}</Badge>}
     </h3>
+  );
+}
+
+function InsightChip({ icon: Icon, label, value, tone }: { icon: any; label: string; value: string; tone: string }) {
+  const map: Record<string, string> = {
+    blue: "bg-blue-50 text-blue-900 dark:bg-blue-950/30 dark:text-blue-300 border-blue-100 dark:border-blue-900/40",
+    purple: "bg-purple-50 text-purple-900 dark:bg-purple-950/30 dark:text-purple-300 border-purple-100 dark:border-purple-900/40",
+    orange: "bg-orange-50 text-orange-900 dark:bg-orange-950/30 dark:text-orange-300 border-orange-100 dark:border-orange-900/40",
+  };
+  return (
+    <div className={`rounded-xl border p-3 ${map[tone]}`}>
+      <div className="flex items-center gap-1.5 text-[10px] font-bold opacity-80 mb-1">
+        <Icon className="w-3 h-3" />
+        {label}
+      </div>
+      <p className="text-xs font-black truncate" title={value}>{value}</p>
+    </div>
   );
 }
