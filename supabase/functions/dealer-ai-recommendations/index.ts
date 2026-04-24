@@ -164,46 +164,75 @@ ${JSON.stringify(candidatePool, null, 2)}
       }),
     });
 
+    // Helper: build fallback recs from top candidate pool (no AI needed)
+    const buildFallbackRecs = () => {
+      const reasons = ["reorder", "complementary", "seasonal", "opportunity"];
+      const purchasedSet = new Set(purchasedIds);
+      const sorted = [...candidatePool].sort((a: any, b: any) => {
+        // Prefer on-sale + in-stock
+        if (a.on_sale !== b.on_sale) return a.on_sale ? -1 : 1;
+        return (b.in_stock || 0) - (a.in_stock || 0);
+      });
+      return sorted.slice(0, 4).map((p: any, i: number) => ({
+        ...p,
+        reason_type: purchasedSet.has(p.id) ? "reorder" : reasons[i] || "opportunity",
+      }));
+    };
+
+    let aiPicks: { product_id: string; reason_type: string }[] = [];
+    let usedFallback = false;
+
     if (!aiResp.ok) {
       const errText = await aiResp.text();
       console.error("AI gateway error:", aiResp.status, errText);
-      if (aiResp.status === 429 || aiResp.status === 402) {
-        return new Response(JSON.stringify({ error: aiResp.status === 429 ? "Rate limited" : "Credits exhausted" }), {
-          status: aiResp.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      // For 402 (credits), 429 (rate limit), or any AI failure: fall back to candidate pool
+      // so the dealer always sees recommendations instead of a blank screen.
+      usedFallback = true;
+    } else {
+      const aiData = await aiResp.json();
+      const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+      if (toolCall) {
+        try {
+          const parsed = JSON.parse(toolCall.function.arguments);
+          aiPicks = parsed.recommendations || [];
+        } catch (parseErr) {
+          console.error("Failed to parse AI tool call:", parseErr);
+          usedFallback = true;
+        }
+      } else {
+        console.error("No tool call in AI response");
+        usedFallback = true;
       }
-      throw new Error(`AI gateway: ${aiResp.status}`);
     }
 
-    const aiData = await aiResp.json();
-    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall) throw new Error("No tool call in AI response");
-
-    const parsed = JSON.parse(toolCall.function.arguments);
-    const aiPicks: { product_id: string; reason_type: string }[] = parsed.recommendations || [];
-
-    // 6. Hydrate full product info from candidates
+    // 6. Hydrate full product info from candidates (or use fallback)
     const candidateMap = new Map(candidatePool.map((p: any) => [p.id, p]));
-    const finalRecs = aiPicks
-      .map(pick => {
-        const product = candidateMap.get(pick.product_id);
-        if (!product) return null;
-        return { ...product, reason_type: pick.reason_type };
-      })
-      .filter(Boolean)
-      .slice(0, 4);
+    let finalRecs: any[] = [];
 
-    // Fallback: if AI returned fewer than 4, fill from top candidates
+    if (!usedFallback && aiPicks.length > 0) {
+      finalRecs = aiPicks
+        .map(pick => {
+          const product = candidateMap.get(pick.product_id);
+          if (!product) return null;
+          return { ...product, reason_type: pick.reason_type };
+        })
+        .filter(Boolean)
+        .slice(0, 4);
+    }
+
+    // Fill from candidate pool if AI returned fewer than 4 (or fully fell back)
     if (finalRecs.length < 4) {
+      const fallbackPicks = buildFallbackRecs();
       const usedIds = new Set(finalRecs.map((r: any) => r.id));
-      for (const p of candidatePool) {
+      for (const p of fallbackPicks) {
         if (finalRecs.length >= 4) break;
-        if (!usedIds.has(p.id)) finalRecs.push({ ...p, reason_type: "opportunity" });
+        if (!usedIds.has(p.id)) finalRecs.push(p);
       }
     }
 
-    // 7. Cache results (24h)
-    const expiresAt = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
+    // 7. Cache results — 24h for AI results, 1h for fallback (so we retry AI sooner)
+    const cacheHours = usedFallback ? 1 : 24;
+    const expiresAt = new Date(Date.now() + cacheHours * 3600 * 1000).toISOString();
     await supabase.from("dealer_ai_recommendations").upsert({
       user_id,
       recommendations: finalRecs,
@@ -211,7 +240,7 @@ ${JSON.stringify(candidatePool, null, 2)}
       expires_at: expiresAt,
     }, { onConflict: "user_id" });
 
-    return new Response(JSON.stringify({ recommendations: finalRecs, cached: false }), {
+    return new Response(JSON.stringify({ recommendations: finalRecs, cached: false, fallback: usedFallback }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
