@@ -154,11 +154,12 @@ const MODERATOR_SECTIONS = new Set([
 
 const sidebarSections = sidebarGroups.flatMap(g => g.items);
 
-const SectionLoader = () => (
-  <div className="flex items-center justify-center py-16">
+const SectionLoader = React.forwardRef<HTMLDivElement>((_props, ref) => (
+  <div ref={ref} className="flex items-center justify-center py-16">
     <Loader2 className="w-8 h-8 animate-spin text-primary" />
   </div>
-);
+));
+SectionLoader.displayName = "SectionLoader";
 
 const AdminDashboard = () => {
   const { user, isAdmin, isModerator, isDealer, loading: authLoading, signOut } = useAuth();
