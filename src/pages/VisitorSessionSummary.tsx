@@ -225,6 +225,63 @@ export default function VisitorSessionSummary() {
     return () => { cancelled = true; };
   }, [userId]);
 
+  // Detect whether the param is a UUID (registered customer) or a session_key (anonymous)
+  const isAnonTarget = useMemo(() => {
+    return !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+  }, [userId]);
+
+  // Record this staff member's view + fetch full viewer list
+  useEffect(() => {
+    if (!userId || !user || (!isAdmin && !isModerator)) return;
+    let cancelled = false;
+    (async () => {
+      const target = isAnonTarget
+        ? { session_key: userId, customer_user_id: null }
+        : { customer_user_id: userId, session_key: null };
+
+      // Upsert: if record exists for this staff+target, bump view_count + last_viewed_at
+      const { data: existing } = await supabase
+        .from("visitor_session_views")
+        .select("id, view_count")
+        .eq("staff_user_id", user.id)
+        .eq(isAnonTarget ? "session_key" : "customer_user_id", userId)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase
+          .from("visitor_session_views")
+          .update({ last_viewed_at: new Date().toISOString(), view_count: (existing.view_count || 1) + 1 })
+          .eq("id", existing.id);
+      } else {
+        await supabase.from("visitor_session_views").insert({
+          staff_user_id: user.id,
+          ...target,
+        });
+      }
+
+      // Fetch all viewers for this target (newest first)
+      const { data: rows } = await supabase
+        .from("visitor_session_views")
+        .select("staff_user_id, first_viewed_at, last_viewed_at, view_count")
+        .eq(isAnonTarget ? "session_key" : "customer_user_id", userId)
+        .order("last_viewed_at", { ascending: false });
+
+      if (cancelled || !rows) return;
+
+      const ids = [...new Set(rows.map((r: any) => r.staff_user_id))];
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, email")
+        .in("user_id", ids);
+      const nameMap = new Map((profs || []).map((p: any) => [p.user_id, p.full_name || p.email]));
+
+      if (!cancelled) {
+        setViewers(rows.map((r: any) => ({ ...r, staff_name: nameMap.get(r.staff_user_id) || "موظف" })));
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [userId, user, isAdmin, isModerator, isAnonTarget]);
+
   // Group visits into sessions (gap > 30 min = new session)
   const sessions = useMemo(() => {
     if (visits.length === 0) return [] as { start: string; end: string; durationMs: number; pages: PageVisit[] }[];
