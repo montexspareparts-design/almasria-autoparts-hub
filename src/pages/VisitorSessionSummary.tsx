@@ -762,21 +762,61 @@ export default function VisitorSessionSummary() {
                         <Phone className="w-3.5 h-3.5" />
                         {profile.phone}
                       </a>
-                      <a
-                        href={`https://wa.me/${profile.phone.replace(/^0/, "20").replace(/\D/g, "")}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white font-bold transition shadow-md"
-                      >
-                        <MessageCircle className="w-3.5 h-3.5" />
-                        واتساب
-                      </a>
                     </div>
                   )}
-                  {profile?.email && !profile.email.includes("@phone.almasria.local") && (
-                    <p className="text-xs opacity-80 truncate">📧 {profile.email}</p>
+                  {hasUsableEmail && (
+                    <p className="text-xs opacity-80 truncate">📧 {profile!.email}</p>
                   )}
                 </div>
+
+                {/* Quick contact bar — pre-filled quote request to the customer */}
+                {(profile?.phone || hasUsableEmail) && (
+                  <div className="mt-4 p-3 rounded-xl bg-white/10 backdrop-blur border border-white/15">
+                    <div className="flex items-center gap-2 mb-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-amber-400/20 flex items-center justify-center">
+                        <Zap className="w-4 h-4 text-amber-200" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-extrabold leading-tight">تواصل سريع — عرض سعر مخصص</p>
+                        <p className="text-[10px] opacity-75 leading-tight">رسالة جاهزة بناءً على اهتمامات العميل</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {profile?.phone && (
+                        <a
+                          href={customerWhatsAppHref}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white font-bold transition shadow-md"
+                          title="افتح واتساب بيزنس مع رسالة طلب عرض سعر جاهزة"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          واتساب بيزنس
+                          <Send className="w-3 h-3 opacity-70" />
+                        </a>
+                      )}
+                      {hasUsableEmail && (
+                        <a
+                          href={buildQuoteEmailHref()}
+                          className="inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg bg-blue-500 hover:bg-blue-400 text-white font-bold transition shadow-md"
+                          title="افتح إيميل بموضوع ونص جاهز لطلب عرض سعر"
+                        >
+                          <Mail className="w-3.5 h-3.5" />
+                          إيميل عرض سعر
+                          <Send className="w-3 h-3 opacity-70" />
+                        </a>
+                      )}
+                      {(topProducts[0]?.product?.name_ar || searches[0]?.search_query) && (
+                        <span className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-md bg-white/10 opacity-90">
+                          سياق:&nbsp;
+                          <span className="font-bold truncate max-w-[180px]">
+                            {topProducts[0]?.product?.name_ar || searches[0]?.search_query}
+                          </span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>
