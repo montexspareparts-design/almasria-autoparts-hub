@@ -264,7 +264,7 @@ const StaffHome = () => {
         icon: UserPlus,
         color: "text-emerald-600",
         bg: "from-emerald-500/10 to-emerald-500/5",
-        onClick: () => navigate(`/admin?section=customers&filter=new&range=${range}`),
+        onClick: () => setSignupsOpen(true),
       },
       {
         label: `أضافوا للسلة (${rangeSuffix})`,
