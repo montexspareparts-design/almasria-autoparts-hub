@@ -69,6 +69,8 @@ const StaffHome = () => {
   const [range, setRange] = useState<RangeKey>("today");
   const [newSignups, setNewSignups] = useState<Array<{ user_id: string; full_name: string | null; phone: string | null; email: string | null; created_at: string }>>([]);
   const [signupsOpen, setSignupsOpen] = useState(false);
+  const [visitorsOpen, setVisitorsOpen] = useState(false);
+  const [visitorsList, setVisitorsList] = useState<Array<{ user_id: string | null; session_key: string | null; full_name: string | null; phone: string | null; email: string | null; pages: number; last_visit: string }>>([]);
 
   // Guard
   useEffect(() => {
@@ -86,15 +88,35 @@ const StaffHome = () => {
     try {
       const start = range === "today" ? todayISO() : sevenDaysISO();
 
-      // 1) Visitors (distinct sessions/users from page_visits)
+      // 1) Visitors (distinct sessions/users from page_visits) — with details
       const { data: visits } = await supabase
         .from("page_visits")
-        .select("session_key, user_id")
-        .gte("visited_at", start);
+        .select("session_key, user_id, visited_at, path")
+        .gte("visited_at", start)
+        .order("visited_at", { ascending: false });
       const visitorKeys = new Set(
         (visits || []).map((v) => v.session_key || v.user_id || "")
           .filter(Boolean)
       );
+
+      // Aggregate visitors: group by user_id (or session_key for anon) → page count + last visit
+      const visitorAgg = new Map<string, { user_id: string | null; session_key: string | null; pages: number; last_visit: string }>();
+      for (const v of visits || []) {
+        const key = v.user_id || v.session_key || "";
+        if (!key) continue;
+        const cur = visitorAgg.get(key);
+        if (cur) {
+          cur.pages += 1;
+          if (v.visited_at > cur.last_visit) cur.last_visit = v.visited_at;
+        } else {
+          visitorAgg.set(key, {
+            user_id: v.user_id || null,
+            session_key: v.user_id ? null : (v.session_key || null),
+            pages: 1,
+            last_visit: v.visited_at,
+          });
+        }
+      }
 
       // 2) Signups within range — fetch full list (for the popup) + count
       const { data: signupRows, count: signupCount } = await supabase
@@ -146,7 +168,7 @@ const StaffHome = () => {
             .gte("created_at", sevenDaysAgo),
           supabase
             .from("profiles")
-            .select("user_id, full_name, phone"),
+            .select("user_id, full_name, phone, email"),
         ]);
 
       const orderedUserIds = new Set(
@@ -226,6 +248,28 @@ const StaffHome = () => {
 
       const hotCount = leads.filter((l) => l.tier === "hot").length;
 
+      // Build visitors list with profile details
+      const visitorsArr = Array.from(visitorAgg.values()).map((v) => {
+        const profile = v.user_id ? profileMap.get(v.user_id) : null;
+        const emailRaw = (profile as any)?.email as string | undefined;
+        const email = emailRaw && !emailRaw.includes("@phone.almasria.local") ? emailRaw : null;
+        return {
+          user_id: v.user_id,
+          session_key: v.session_key,
+          full_name: profile?.full_name || null,
+          phone: profile?.phone || null,
+          email,
+          pages: v.pages,
+          last_visit: v.last_visit,
+        };
+      });
+      // Logged-in users first, then by last_visit desc
+      visitorsArr.sort((a, b) => {
+        if (!!a.user_id !== !!b.user_id) return a.user_id ? -1 : 1;
+        return b.last_visit.localeCompare(a.last_visit);
+      });
+      setVisitorsList(visitorsArr);
+
       setKpis({
         visitors: visitorKeys.size,
         signups: signupCount || 0,
@@ -256,7 +300,7 @@ const StaffHome = () => {
         icon: Users,
         color: "text-blue-600",
         bg: "from-blue-500/10 to-blue-500/5",
-        onClick: () => navigate("/admin?section=analytics"),
+        onClick: () => setVisitorsOpen(true),
       },
       {
         label: `تسجيلات جديدة (${rangeSuffix})`,
@@ -659,6 +703,112 @@ const StaffHome = () => {
                         <Eye className="w-3 h-3" />
                         تفاصيل
                       </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Visitors Dialog */}
+      <Dialog open={visitorsOpen} onOpenChange={setVisitorsOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <Users className="w-5 h-5 text-blue-600" />
+              زوار {rangeSuffix}
+              <Badge variant="secondary" className="text-xs">{visitorsList.length}</Badge>
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              قائمة بكل زوار الموقع — المسجلين بأسمائهم وأرقامهم وإيميلاتهم، والزوار غير المسجلين كـ "زائر مجهول". اضغط "تفاصيل" لعرض كل نشاط الزائر.
+            </DialogDescription>
+          </DialogHeader>
+
+          {visitorsList.length === 0 ? (
+            <div className="text-center py-10 text-sm text-muted-foreground">
+              مفيش زوار في الفترة دي
+            </div>
+          ) : (
+            <div className="space-y-2 mt-2">
+              {visitorsList.map((v, idx) => {
+                const isAnon = !v.user_id;
+                const name = v.full_name || (isAnon ? "زائر مجهول" : "بدون اسم");
+                const last = new Date(v.last_visit).toLocaleString("ar-EG", { dateStyle: "short", timeStyle: "short" });
+                const detailKey = v.user_id || v.session_key || `anon-${idx}`;
+                return (
+                  <div
+                    key={detailKey}
+                    className={cn(
+                      "flex items-center justify-between gap-3 p-3 rounded-lg border transition flex-wrap",
+                      isAnon ? "bg-muted/20 hover:bg-muted/40" : "bg-muted/30 hover:bg-muted/60"
+                    )}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-bold text-sm truncate">{name}</p>
+                        {isAnon ? (
+                          <Badge variant="outline" className="text-[10px] h-5">غير مسجّل</Badge>
+                        ) : (
+                          <Badge className="bg-blue-500/15 text-blue-700 hover:bg-blue-500/20 text-[10px] h-5">مسجّل</Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap text-[11px] text-muted-foreground">
+                        {v.phone && <span className="font-mono">📱 {v.phone}</span>}
+                        {v.email && <span className="truncate max-w-[200px]">✉️ {v.email}</span>}
+                        <span>👁️ {v.pages} صفحة</span>
+                        <span>🕒 {last}</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-1.5 shrink-0">
+                      {v.phone && (
+                        <>
+                          <Button asChild size="sm" variant="outline" className="h-8 gap-1 text-xs">
+                            <a href={`tel:${v.phone}`}>
+                              <Phone className="w-3 h-3" />
+                              اتصال
+                            </a>
+                          </Button>
+                          <Button asChild size="sm" className="h-8 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
+                            <a
+                              href={`https://wa.me/${v.phone.replace(/^0/, "20").replace(/[^\d]/g, "")}?text=${encodeURIComponent(`أهلاً ${v.full_name || ""}، معاك المصرية جروب — حابب أساعدك في طلبك؟`)}`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              <MessageCircle className="w-3 h-3" />
+                              واتساب
+                            </a>
+                          </Button>
+                        </>
+                      )}
+                      {v.user_id ? (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 gap-1 text-xs"
+                          onClick={() => {
+                            setVisitorsOpen(false);
+                            navigate(`/admin/visitor/${v.user_id}`);
+                          }}
+                        >
+                          <Eye className="w-3 h-3" />
+                          تفاصيل
+                        </Button>
+                      ) : v.session_key ? (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 gap-1 text-xs"
+                          onClick={() => {
+                            setVisitorsOpen(false);
+                            navigate(`/admin/visitor/${v.session_key}`);
+                          }}
+                        >
+                          <Eye className="w-3 h-3" />
+                          تفاصيل الجلسة
+                        </Button>
+                      ) : null}
                     </div>
                   </div>
                 );
