@@ -1101,10 +1101,14 @@ const AdminCustomerIntelligence = () => {
         tasks.push({ ...baseUser, id: `${p.user_id}:absent`, title: "تواصل مع عميل غايب", reason: absentAlert.label, priority: bucket(totalScore), icon: "👋" });
       }
     }
+    // Apply time-window filter (0 = all). Tasks without freshness signal are kept only when window is "all".
+    const filtered = taskWindowDays === 0
+      ? tasks
+      : tasks.filter(t => t.freshestDays !== null && t.freshestDays <= taskWindowDays);
     // Sort by unified score desc, then by priority bucket
-    return tasks.sort((a, b) => b.score - a.score || a.priority - b.priority);
+    return filtered.sort((a, b) => b.score - a.score || a.priority - b.priority);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profiles, ordersMap, cartByUser, userSearchMap, dealerUserIds, lastVisitByUser, priorityWeights]);
+  }, [profiles, ordersMap, cartByUser, userSearchMap, dealerUserIds, lastVisitByUser, priorityWeights, taskWindowDays]);
 
   const visibleTasks = todayTasks.filter(t => showCompletedTasks || !completedTasks.has(t.id));
   const pendingTasksCount = todayTasks.filter(t => !completedTasks.has(t.id)).length;
