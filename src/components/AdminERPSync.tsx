@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Loader2, RefreshCw, ArrowUpRight, ArrowDownLeft, CheckCircle,
   XCircle, Clock, Settings, Play, Database, DollarSign, Package,
-  Zap, TestTube, Globe, Copy
+  Zap, TestTube, Globe, Copy, ShieldCheck
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
