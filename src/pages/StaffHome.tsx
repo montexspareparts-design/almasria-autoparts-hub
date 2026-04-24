@@ -80,6 +80,9 @@ const StaffHome = () => {
   const [visitorTypeFilter, setVisitorTypeFilter] = useState<"all" | "registered" | "anon">("all");
   const [visitorDateFilter, setVisitorDateFilter] = useState<"all" | "today" | "yesterday" | "week">("all");
   const [visitorViewedFilter, setVisitorViewedFilter] = useState<"all" | "viewed" | "not_viewed">("all");
+  // Toggle: false = "Only Customers" (default, excludes staff). true = "All" (review only — shows staff too).
+  const [includeStaff, setIncludeStaff] = useState<boolean>(false);
+  const [staffIdsSet, setStaffIdsSet] = useState<Set<string>>(new Set());
 
   // Guard
   useEffect(() => {
@@ -295,16 +298,16 @@ const StaffHome = () => {
 
       const hotCount = leads.filter((l) => l.tier === "hot").length;
 
-      // Fetch staff (admins + moderators) to exclude from visitors
+      // Fetch staff (admins + moderators) — used to optionally exclude from visitors
       const { data: staffRoles } = await supabase
         .from("user_roles")
         .select("user_id")
         .in("role", ["admin", "moderator"]);
-      const staffIds = new Set((staffRoles || []).map((r: any) => r.user_id));
+      const staffIds = new Set<string>((staffRoles || []).map((r: any) => r.user_id));
+      setStaffIdsSet(staffIds);
 
-      // Build visitors list with profile details — EXCLUDE staff
+      // Build full visitors list — keep staff in the raw list; UI toggle decides whether to show them
       const visitorsArr = Array.from(visitorAgg.values())
-        .filter((v) => !v.user_id || !staffIds.has(v.user_id))
         .map((v) => {
           const profile = v.user_id ? profileMap.get(v.user_id) : null;
           const emailRaw = (profile as any)?.email as string | undefined;
@@ -867,6 +870,14 @@ const StaffHome = () => {
                 <SelectItem value="viewed">تمت المعاينة</SelectItem>
               </SelectContent>
             </Select>
+            {/* All / Only Customers toggle — default hides staff; "All" is for admin review */}
+            <Select value={includeStaff ? "all" : "customers"} onValueChange={(v) => setIncludeStaff(v === "all")}>
+              <SelectTrigger className="h-8 w-[170px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="customers">العملاء فقط (افتراضي)</SelectItem>
+                <SelectItem value="all">الكل (يشمل الموظفين)</SelectItem>
+              </SelectContent>
+            </Select>
             {(visitorTypeFilter !== "all" || visitorDateFilter !== "all" || visitorViewedFilter !== "all") && (
               <Button
                 size="sm"
@@ -885,6 +896,8 @@ const StaffHome = () => {
             const yesterdayStart = new Date(todayStart); yesterdayStart.setDate(yesterdayStart.getDate() - 1);
             const weekStart = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
             const filtered = visitorsList.filter((v) => {
+              // staff exclusion (default). Toggle "All" lets admins review staff visits too.
+              if (!includeStaff && v.user_id && staffIdsSet.has(v.user_id)) return false;
               // type
               if (visitorTypeFilter === "registered" && !v.user_id) return false;
               if (visitorTypeFilter === "anon" && v.user_id) return false;
