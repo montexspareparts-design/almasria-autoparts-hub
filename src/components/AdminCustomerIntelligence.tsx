@@ -3471,7 +3471,9 @@ const AdminCustomerIntelligence = () => {
         );
       })()}
 
-      
+        </CollapsibleContent>
+      </Collapsible>
+
 
       {/* Bulk WhatsApp Dialog */}
       <Dialog open={bulkWhatsAppOpen} onOpenChange={(open) => { setBulkWhatsAppOpen(open); if (!open) setSendingIndex(-1); }}>
