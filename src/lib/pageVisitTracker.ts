@@ -99,6 +99,25 @@ export async function trackPageVisit(path: string, title?: string) {
 
   try {
     const { data: { user } } = await supabase.auth.getUser();
+
+    // Skip recording for staff/admin users — they're operating the system, not visiting
+    if (user?.id) {
+      const { data: roleRow } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .in("role", ["admin", "moderator"])
+        .maybeSingle();
+      if (roleRow) {
+        // Drop from pending and skip
+        const remaining = readPending().filter(
+          (p) => !(p.path === visit.path && p.visited_at === visit.visited_at)
+        );
+        writePending(remaining);
+        return;
+      }
+    }
+
     const { error } = await supabase.from("page_visits").insert({
       user_id: user?.id ?? null,
       session_key: visit.session_key,
