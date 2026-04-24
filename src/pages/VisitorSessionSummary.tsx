@@ -455,10 +455,10 @@ export default function VisitorSessionSummary() {
 
         {/* KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <KpiCard icon={Eye} label="إجمالي الصفحات المشاهدة" value={visits.length} sub={`${avgPagesPerSession || 0} صفحة/جلسة`} color="blue" onClick={() => scrollToSection(visits.length > 0 ? "section-pages" : "section-latest-session")} />
-          <KpiCard icon={Hash} label="عدد الجلسات" value={sessions.length} sub={sessions.length > 1 ? "زائر عائد" : "زيارة واحدة"} color="purple" onClick={() => scrollToSection(sessions.length > 1 ? "section-sessions" : "section-latest-session")} />
-          <KpiCard icon={Search} label="عمليات البحث" value={searches.length} sub={searches.length > 0 ? "نشاط بحث" : "لم يبحث"} color="orange" onClick={() => scrollToSection(searches.length > 0 ? "section-searches" : "section-latest-session")} />
-          <KpiCard icon={Timer} label="إجمالي الوقت" valueText={fmtDuration(totalDurationMs)} sub={lastSession ? `آخر زيارة: ${fmtDate(lastSession.start)}` : "—"} color="emerald" onClick={() => scrollToSection("section-latest-session")} />
+          <KpiCard icon={Eye} label="إجمالي الصفحات المشاهدة" value={visits.length} sub={`${avgPagesPerSession || 0} صفحة/جلسة`} color="blue" onClick={() => scrollToSection(visits.length > 0 ? "section-pages" : "section-latest-session")} emptyHint={visits.length === 0 ? "لم يتصفح أي صفحة بعد" : undefined} />
+          <KpiCard icon={Hash} label="عدد الجلسات" value={sessions.length} sub={sessions.length > 1 ? "زائر عائد" : "زيارة واحدة"} color="purple" onClick={() => scrollToSection(sessions.length > 1 ? "section-sessions" : "section-latest-session")} emptyHint={sessions.length === 0 ? "لا توجد جلسات مسجّلة" : undefined} />
+          <KpiCard icon={Search} label="عمليات البحث" value={searches.length} sub={searches.length > 0 ? "نشاط بحث" : "لم يبحث"} color="orange" onClick={() => scrollToSection(searches.length > 0 ? "section-searches" : "section-latest-session")} emptyHint={searches.length === 0 ? "لم يبحث عن أي منتج" : undefined} />
+          <KpiCard icon={Timer} label="إجمالي الوقت" valueText={fmtDuration(totalDurationMs)} sub={lastSession ? `آخر زيارة: ${fmtDate(lastSession.start)}` : "—"} color="emerald" onClick={() => scrollToSection("section-latest-session")} emptyHint={!lastSession ? "لا يوجد نشاط بعد" : undefined} />
         </div>
 
         {/* Top Searched Products & Queries */}
@@ -920,7 +920,7 @@ export default function VisitorSessionSummary() {
   );
 }
 
-function KpiCard({ icon: Icon, label, value, valueText, sub, color, onClick }: { icon: any; label: string; value?: number; valueText?: string; sub?: string; color: string; onClick?: () => void }) {
+function KpiCard({ icon: Icon, label, value, valueText, sub, color, onClick, emptyHint }: { icon: any; label: string; value?: number; valueText?: string; sub?: string; color: string; onClick?: () => void; emptyHint?: string }) {
   const map: Record<string, string> = {
     blue: "from-blue-500/15 to-blue-500/5 text-blue-700 dark:text-blue-400 border-blue-200/60 dark:border-blue-900/40",
     purple: "from-purple-500/15 to-purple-500/5 text-purple-700 dark:text-purple-400 border-purple-200/60 dark:border-purple-900/40",
@@ -928,21 +928,29 @@ function KpiCard({ icon: Icon, label, value, valueText, sub, color, onClick }: {
     emerald: "from-emerald-500/15 to-emerald-500/5 text-emerald-700 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-900/40",
   };
   const interactive = !!onClick;
+  const isEmpty = !!emptyHint;
   return (
     <div
       onClick={onClick}
       role={interactive ? "button" : undefined}
       tabIndex={interactive ? 0 : undefined}
       onKeyDown={interactive ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick?.(); } } : undefined}
-      className={`rounded-2xl p-4 border bg-gradient-to-br ${map[color]} shadow-sm transition ${interactive ? "cursor-pointer hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-current/40" : "hover:shadow-md"}`}
+      className={`rounded-2xl p-4 border bg-gradient-to-br ${map[color]} shadow-sm transition ${interactive ? "cursor-pointer hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-current/40" : "hover:shadow-md"} ${isEmpty ? "opacity-80" : ""}`}
     >
       <div className="flex items-center justify-between mb-2">
         <Icon className="w-5 h-5" />
-        {interactive && <span className="text-[9px] opacity-60 font-bold">اضغط للتفاصيل ↓</span>}
+        {interactive && !isEmpty && <span className="text-[9px] opacity-60 font-bold">اضغط للتفاصيل ↓</span>}
       </div>
       <p className="text-2xl md:text-3xl font-black leading-none">{valueText ?? value ?? 0}</p>
       <p className="text-[11px] mt-2 font-bold opacity-90">{label}</p>
-      {sub && <p className="text-[10px] mt-1 opacity-70">{sub}</p>}
+      {isEmpty ? (
+        <div className="mt-2 rounded-lg bg-background/60 dark:bg-background/30 border border-current/10 px-2 py-1.5 text-[10px] font-bold opacity-90 flex items-center gap-1">
+          <span className="text-base leading-none">🚫</span>
+          <span>{emptyHint}</span>
+        </div>
+      ) : (
+        sub && <p className="text-[10px] mt-1 opacity-70">{sub}</p>
+      )}
     </div>
   );
 }
