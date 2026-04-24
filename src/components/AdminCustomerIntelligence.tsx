@@ -2447,10 +2447,11 @@ const AdminCustomerIntelligence = () => {
                             </div>
                           </div>
 
-                          <Tabs defaultValue="basic" className="w-full">
-                          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto p-1 bg-muted/40 rounded-xl">
-                            <TabsTrigger value="basic" className="text-[11px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2"><Users className="w-3.5 h-3.5" />بيانات أساسية</TabsTrigger>
+                          <Tabs defaultValue="contact" className="w-full">
+                          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 h-auto p-1 bg-muted/40 rounded-xl">
+                            <TabsTrigger value="contact" className="text-[11px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2"><Phone className="w-3.5 h-3.5" />التواصل</TabsTrigger>
                             <TabsTrigger value="needs" className="text-[11px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2"><AlertTriangle className="w-3.5 h-3.5" />احتياجات{alerts.length > 0 && (<span className="text-[9px] bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center font-black">{alerts.length}</span>)}</TabsTrigger>
+                            <TabsTrigger value="basic" className="text-[11px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2"><Users className="w-3.5 h-3.5" />الملف</TabsTrigger>
                             <TabsTrigger value="prefs" className="text-[11px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2"><Car className="w-3.5 h-3.5" />تفضيلات</TabsTrigger>
                             <TabsTrigger value="activity" className="text-[11px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2"><Search className="w-3.5 h-3.5" />سجل التصفح</TabsTrigger>
                           </TabsList>
