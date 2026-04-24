@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tooltip as UITooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { format, differenceInDays } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -255,6 +256,8 @@ const AdminCustomerIntelligence = () => {
     } catch { return new Set(); }
   });
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
+  const [analyticsOpen, setAnalyticsOpen] = useState(false);
+  const [tasksOpen, setTasksOpen] = useState(true);
   const toggleTaskComplete = (taskId: string) => {
     setCompletedTasks(prev => {
       const next = new Set(prev);
@@ -1714,9 +1717,19 @@ const AdminCustomerIntelligence = () => {
                 >
                   {showCompletedTasks ? "إخفاء المكتمل" : "إظهار المكتمل"}
                 </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0"
+                  onClick={() => setTasksOpen(v => !v)}
+                  title={tasksOpen ? "طي المهام" : "إظهار المهام"}
+                >
+                  <ChevronDown className={cn("w-4 h-4 transition-transform", !tasksOpen && "-rotate-90")} />
+                </Button>
               </div>
             </div>
           </CardHeader>
+          {tasksOpen && (
           <CardContent className="p-3">
             {visibleTasks.length === 0 ? (
               <div className="text-center py-6 text-muted-foreground text-xs flex flex-col items-center gap-2">
@@ -1881,6 +1894,7 @@ const AdminCustomerIntelligence = () => {
               </p>
             )}
           </CardContent>
+          )}
         </Card>
       )}
 
@@ -2759,261 +2773,25 @@ const AdminCustomerIntelligence = () => {
         ))}
       </div>
 
-      {/* 🔥 Hot Leads — Smart Auto Summary */}
-      {(() => {
-        const hasProfiles = !!filteredProfiles && filteredProfiles.length > 0;
-        const hasProducts = !!productsMap && Object.keys(productsMap).length > 0;
-        const hasSearchLogs = !!searchLogs && searchLogs.length > 0;
-        const hasPriceViews = !!priceViews && priceViews.length > 0;
-        const hasActivity = hasSearchLogs || hasPriceViews;
+      {/* Note: "ملخص ذكي" was removed — same data is now available in:
+          • "مهام اليوم" card above
+          • "يحتاجون متابعة الآن" tab inside the customer list */}
 
-        // Show alert when missing data instead of the section
-        if (!hasProfiles || !hasProducts || !hasActivity) {
-          return (
-            <div className="rounded-2xl border-2 border-dashed border-amber-300/60 dark:border-amber-700/50 bg-amber-50/50 dark:bg-amber-950/15 p-5 flex items-start gap-3">
-              <div className="w-9 h-9 rounded-xl bg-amber-500/15 flex items-center justify-center shrink-0">
-                <AlertCircle className="w-4.5 h-4.5 text-amber-600 dark:text-amber-400" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-black text-foreground mb-1">
-                  بيانات غير كافية لعرض الملخص الذكي
-                </p>
-                <p className="text-xs text-muted-foreground leading-relaxed mb-2">
-                  نحتاج إلى عدد أكبر من العملاء وسجل بحث/تسعير حتى نستطيع اقتراح عملاء يحتاجون متابعة. الملخص يظهر تلقائياً بمجرد توفر بيانات كافية.
-                </p>
-                <div className="flex items-center gap-1.5 flex-wrap mt-2">
-                  <Badge variant="outline" className={cn("text-[10px] h-5 font-bold", hasProfiles ? "border-emerald-300 text-emerald-700 dark:text-emerald-400" : "border-red-300 text-red-700 dark:text-red-400")}>
-                    {hasProfiles ? "✓" : "✗"} عملاء ({filteredProfiles?.length || 0})
-                  </Badge>
-                  <Badge variant="outline" className={cn("text-[10px] h-5 font-bold", hasProducts ? "border-emerald-300 text-emerald-700 dark:text-emerald-400" : "border-red-300 text-red-700 dark:text-red-400")}>
-                    {hasProducts ? "✓" : "✗"} منتجات ({productsMap ? Object.keys(productsMap).length : 0})
-                  </Badge>
-                  <Badge variant="outline" className={cn("text-[10px] h-5 font-bold", hasSearchLogs ? "border-emerald-300 text-emerald-700 dark:text-emerald-400" : "border-red-300 text-red-700 dark:text-red-400")}>
-                    {hasSearchLogs ? "✓" : "✗"} سجل بحث ({searchLogs?.length || 0})
-                  </Badge>
-                  <Badge variant="outline" className={cn("text-[10px] h-5 font-bold", hasPriceViews ? "border-emerald-300 text-emerald-700 dark:text-emerald-400" : "border-red-300 text-red-700 dark:text-red-400")}>
-                    {hasPriceViews ? "✓" : "✗"} كشف أسعار ({priceViews?.length || 0})
-                  </Badge>
-                </div>
-              </div>
+      {/* === Analytics Section (Collapsed by default to shorten the page) === */}
+      <Collapsible open={analyticsOpen} onOpenChange={setAnalyticsOpen} className="rounded-xl border border-border/40 bg-card/50 overflow-hidden">
+        <CollapsibleTrigger className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/40 transition-colors group">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center shadow-sm">
+              <BarChart3 className="w-3.5 h-3.5 text-white" />
             </div>
-          );
-        }
-
-        return (
-        <Card className="rounded-2xl border-2 border-primary/20 shadow-sm overflow-hidden bg-gradient-to-l from-primary/5 via-background to-background">
-          <CardHeader className="py-3 px-4 border-b border-border/40">
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <CardTitle className="text-sm font-black flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-md">
-                  <Zap className="w-3.5 h-3.5 text-white" />
-                </div>
-                ملخص ذكي — عملاء يحتاجون متابعة الآن
-                <Badge variant="secondary" className="text-[10px] h-5 mr-1">{hotLeads.length}</Badge>
-              </CardTitle>
-              <span className="text-[10px] text-muted-foreground font-medium hidden md:inline">
-                مرتب حسب الأولوية والاحتياج المحتمل
-              </span>
-            </div>
-            {/* Filters */}
-            <div className="flex items-center gap-2 flex-wrap mt-3">
-              <div className="inline-flex items-center rounded-lg border border-border/50 bg-muted/30 p-0.5 gap-0.5">
-                {[
-                  { key: "all", label: "الكل", icon: "🗂️" },
-                  { key: "parts", label: "قطع غيار", icon: "🔧" },
-                  { key: "oils", label: "زيوت", icon: "🛢️" },
-                ].map(opt => (
-                  <button
-                    key={opt.key}
-                    onClick={() => setHotLeadsCategory(opt.key as any)}
-                    className={cn(
-                      "text-[10px] font-bold px-2.5 py-1 rounded-md transition-all",
-                      hotLeadsCategory === opt.key
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                    )}
-                  >
-                    <span className="mr-0.5">{opt.icon}</span>
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-              <div className="inline-flex items-center rounded-lg border border-border/50 bg-muted/30 p-0.5 gap-0.5">
-                {[
-                  { key: "all", label: "كل الفترات" },
-                  { key: "90d", label: "آخر 90 يوم" },
-                  { key: "30d", label: "آخر 30 يوم" },
-                ].map(opt => (
-                  <button
-                    key={opt.key}
-                    onClick={() => setHotLeadsPeriod(opt.key as any)}
-                    className={cn(
-                      "text-[10px] font-bold px-2.5 py-1 rounded-md transition-all",
-                      hotLeadsPeriod === opt.key
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                    )}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-              {(hotLeadsCategory !== "all" || hotLeadsPeriod !== "all") && (
-                <button
-                  onClick={() => { setHotLeadsCategory("all"); setHotLeadsPeriod("all"); }}
-                  className="text-[10px] text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
-                >
-                  مسح الفلاتر
-                </button>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent className="p-3">
-            {hotLeads.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground text-xs">
-                لا يوجد عملاء يطابقون الفلاتر الحالية. جرّب تغيير الفترة أو النوع.
-              </div>
-            ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
-              {hotLeads.map((lead) => {
-                const p = lead.profile;
-                const phoneDigits = p.phone?.replace(/\D/g, "") || "";
-                const waNumber = phoneDigits.startsWith("0") ? "20" + phoneDigits.slice(1) : phoneDigits;
-                const waMsg = encodeURIComponent(
-                  `مرحباً ${p.full_name || "عميلنا الكريم"}، من المصرية جروب. لاحظنا اهتمامك بـ "${lead.topSearch || lead.topProducts[0] || "منتجاتنا"}" — هل يمكنني مساعدتك؟`
-                );
-                return (
-                  <div
-                    key={p.user_id}
-                    className="rounded-xl border border-border/50 bg-card p-3 hover:shadow-md hover:border-primary/30 transition-all cursor-pointer group"
-                    onClick={() => setExpandedUser(p.user_id)}
-                  >
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-bold text-foreground truncate">
-                          {p.full_name || "عميل بدون اسم"}
-                        </p>
-                        {p.phone && (
-                          <p className="text-[10px] text-muted-foreground font-mono mt-0.5" dir="ltr">{p.phone}</p>
-                        )}
-                      </div>
-                      <Badge variant="outline" className={cn("text-[9px] h-5 px-1.5 font-bold border whitespace-nowrap", lead.needBadge.color)}>
-                        {lead.needBadge.label}
-                      </Badge>
-                    </div>
-                    <p className="text-[11px] text-foreground/80 leading-relaxed mb-2 line-clamp-2">
-                      💡 {lead.needReason}
-                    </p>
-                    {lead.topProductsRich.length > 0 && (
-                      <div className="flex items-center gap-1 flex-wrap mb-2">
-                        <span className="text-[9px] text-muted-foreground font-bold">شاف سعر:</span>
-                        {lead.topProductsRich.slice(0, 2).map((prod, i) => {
-                          // Smart route: prefer SKU search → fallback to dealer product page
-                          const url = prod.sku
-                            ? `/products?search=${encodeURIComponent(prod.sku)}`
-                            : `/dealer/product/${prod.id}`;
-                          return (
-                            <a
-                              key={i}
-                              href={url}
-                              target="_blank"
-                              rel="noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              title={prod.sku ? `فتح بحث SKU: ${prod.sku}` : `فتح صفحة المنتج`}
-                              className="inline-block"
-                            >
-                              <Badge
-                                variant="secondary"
-                                className="text-[9px] h-4 px-1.5 max-w-[110px] truncate hover:bg-primary/15 hover:text-primary cursor-pointer transition-colors"
-                              >
-                                {prod.name}
-                              </Badge>
-                            </a>
-                          );
-                        })}
-                        {lead.viewsCount > 2 && (
-                          <span className="text-[9px] text-muted-foreground">+{lead.viewsCount - 2}</span>
-                        )}
-                      </div>
-                    )}
-                    <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/40">
-                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                        <span className="flex items-center gap-0.5"><Search className="w-2.5 h-2.5" />{lead.totalSearches}</span>
-                        <span className="flex items-center gap-0.5"><Eye className="w-2.5 h-2.5" />{lead.viewsCount}</span>
-                        <span className="flex items-center gap-0.5"><ShoppingCart className="w-2.5 h-2.5" />{lead.ordersCount}</span>
-                        {lead.daysSinceActivity < 999 && (
-                          <span className="flex items-center gap-0.5 font-bold text-foreground/70">
-                            <Clock className="w-2.5 h-2.5" />
-                            {lead.daysSinceActivity === 0 ? "اليوم" : `${lead.daysSinceActivity}ي`}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {!dealerUserIds?.has(p.user_id) && p.phone && (
-                          <button
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              const interests: string[] = [];
-                              if (lead.topSearch) interests.push(`بحث: ${lead.topSearch}`);
-                              if (lead.topProducts.length > 0) interests.push(`اهتم بـ: ${lead.topProducts.slice(0, 3).join("، ")}`);
-                              interests.push(`نشاط: ${lead.totalSearches} بحث، ${lead.viewsCount} كشف سعر، ${lead.ordersCount} طلب`);
-                              if (lead.daysSinceActivity < 999) interests.push(`آخر نشاط: ${lead.daysSinceActivity === 0 ? "اليوم" : `منذ ${lead.daysSinceActivity} يوم`}`);
-                              const notes = `[طلب حساب تاجر — مُنشأ من ملخص ذكاء العملاء]\n${interests.join("\n")}`;
-                              try {
-                                const { error } = await supabase.from("leads").insert({
-                                  name: p.full_name || "عميل بدون اسم",
-                                  phone: p.phone,
-                                  client_type: "wholesale",
-                                  status: "new",
-                                  notes,
-                                  created_by: (await supabase.auth.getUser()).data.user?.id,
-                                });
-                                if (error) throw error;
-                                toast({ title: "✅ تم إنشاء طلب حساب تاجر", description: "تجده في صفحة Leads مع كامل اهتمامات العميل." });
-                              } catch (err: any) {
-                                toast({ title: "تعذّر إنشاء الطلب", description: err.message || "حاول مرة أخرى", variant: "destructive" });
-                              }
-                            }}
-                            className="h-6 px-1.5 rounded-md bg-amber-500/15 hover:bg-amber-500/25 flex items-center gap-1 transition-colors"
-                            title="إنشاء طلب حساب تاجر مع تضمين آخر اهتمامات العميل"
-                          >
-                            <Briefcase className="w-3 h-3 text-amber-700 dark:text-amber-400" />
-                            <span className="text-[9px] font-bold text-amber-700 dark:text-amber-400">تاجر</span>
-                          </button>
-                        )}
-                        {p.phone && (
-                          <>
-                            <a
-                              href={`tel:${p.phone}`}
-                              onClick={(e) => e.stopPropagation()}
-                              className="w-6 h-6 rounded-md bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors"
-                              title="اتصال"
-                            >
-                              <Phone className="w-3 h-3 text-primary" />
-                            </a>
-                            <a
-                              href={`https://wa.me/${waNumber}?text=${waMsg}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="w-6 h-6 rounded-md bg-emerald-500/15 hover:bg-emerald-500/25 flex items-center justify-center transition-colors"
-                              title="واتساب"
-                            >
-                              <MessageCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                            </a>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            )}
-          </CardContent>
-        </Card>
-        );
-      })()}
+            <span className="text-sm font-black text-foreground">📊 التحليلات والإحصائيات</span>
+            <Badge variant="secondary" className="text-[9px] h-5 font-bold">
+              خرائط حرارية + توزيع + أعلى الباحثين
+            </Badge>
+          </div>
+          <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform", analyticsOpen && "rotate-180")} />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="border-t border-border/40 p-4 space-y-4">
 
       {/* Charts Row: Heatmap + Customer Type */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -3704,7 +3482,9 @@ const AdminCustomerIntelligence = () => {
         );
       })()}
 
-      
+        </CollapsibleContent>
+      </Collapsible>
+
 
       {/* Bulk WhatsApp Dialog */}
       <Dialog open={bulkWhatsAppOpen} onOpenChange={(open) => { setBulkWhatsAppOpen(open); if (!open) setSendingIndex(-1); }}>
