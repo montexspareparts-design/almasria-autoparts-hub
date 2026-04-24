@@ -2668,9 +2668,9 @@ const AdminCustomerIntelligence = () => {
                               <div className="rounded-xl border border-dashed border-emerald-200/50 dark:border-emerald-900/30 bg-emerald-50/30 dark:bg-emerald-950/10 p-3 flex items-center gap-2 text-[11px] text-emerald-700 dark:text-emerald-400"><CheckCircle2 className="w-4 h-4" />لا توجد تنبيهات عاجلة لهذا العميل حالياً</div>
                             )}
                             {profile.phone && (
-                              <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-blue-500/5 p-4">
-                                <div className="flex items-start justify-between gap-3 mb-2"><div className="flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center"><MessageCircle className="w-4 h-4 text-primary" /></div><div><p className="text-xs font-bold text-foreground">سكريبت اتصال مقترح</p><p className="text-[10px] text-muted-foreground">مبني تلقائياً على سلوك العميل</p></div></div><div className="flex items-center gap-1.5"><button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(buildCallScript(profile.user_id)); toast({ title: "✅ تم نسخ السكريبت" }); }} className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary flex items-center gap-1 transition-colors"><Copy className="w-3 h-3" />نسخ</button><a href={`https://wa.me/${formatPhoneForWhatsApp(profile.phone)}?text=${encodeURIComponent(buildCallScript(profile.user_id))}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 flex items-center gap-1 transition-colors"><Send className="w-3 h-3" />إرسال</a></div></div>
-                                <p className="text-xs text-foreground/85 leading-relaxed whitespace-pre-line bg-background/60 rounded-lg p-3 border border-border/30">{buildCallScript(profile.user_id)}</p>
+                              <div className="rounded-xl border border-primary/20 bg-primary/[0.04] p-3 flex items-center gap-2 text-[11px] text-foreground/80">
+                                <Phone className="w-3.5 h-3.5 text-primary shrink-0" />
+                                للاتصال أو إرسال السكريبت — افتح تبويب <strong className="text-foreground">"التواصل"</strong> الأول.
                               </div>
                             )}
                           </TabsContent>
