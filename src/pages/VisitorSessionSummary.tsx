@@ -693,13 +693,72 @@ export default function VisitorSessionSummary() {
           </>
         )}
 
-        <div className="text-center pt-4">
+        <div className="text-center pt-4 pb-24">
           <Link to="/admin" className="text-xs text-muted-foreground hover:text-primary underline">
             ← الرجوع إلى لوحة الإدارة
           </Link>
           <p className="text-[10px] text-muted-foreground/60 mt-2 font-mono">UID: {userId}</p>
         </div>
       </div>
+
+      {/* Sticky Action Bar — اتصال / واتساب / ملاحظة */}
+      <div className="fixed bottom-0 inset-x-0 z-50 bg-background/95 backdrop-blur-xl border-t border-border shadow-2xl">
+        <div className="max-w-6xl mx-auto px-3 py-2.5 grid grid-cols-3 gap-2">
+          <Button
+            onClick={callPhone}
+            disabled={!profile?.phone}
+            className="h-12 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md"
+          >
+            <Phone className="w-5 h-5" />
+            اتصال
+          </Button>
+          <Button
+            onClick={openWhatsApp}
+            disabled={!profile?.phone}
+            className="h-12 gap-2 bg-green-600 hover:bg-green-700 text-white font-bold shadow-md"
+          >
+            <MessageCircle className="w-5 h-5" />
+            واتساب
+          </Button>
+          <Button
+            onClick={() => setNoteOpen(true)}
+            variant="outline"
+            className="h-12 gap-2 border-2 border-primary/40 text-primary hover:bg-primary/10 font-bold"
+          >
+            <StickyNote className="w-5 h-5" />
+            تسجيل ملاحظة
+          </Button>
+        </div>
+      </div>
+
+      {/* Quick Note Dialog */}
+      <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
+        <DialogContent dir="rtl" className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <StickyNote className="w-5 h-5 text-primary" />
+              تسجيل ملاحظة عن {profile?.full_name || "العميل"}
+            </DialogTitle>
+          </DialogHeader>
+          <Textarea
+            value={noteText}
+            onChange={(e) => setNoteText(e.target.value)}
+            placeholder="اكتب تفاصيل المكالمة، اهتمامات العميل، أو خطوة المتابعة القادمة..."
+            rows={5}
+            className="resize-none"
+            autoFocus
+          />
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setNoteOpen(false)} disabled={savingNote}>
+              إلغاء
+            </Button>
+            <Button onClick={saveNote} disabled={!noteText.trim() || savingNote} className="gap-2">
+              {savingNote ? <Loader2 className="w-4 h-4 animate-spin" /> : <StickyNote className="w-4 h-4" />}
+              حفظ الملاحظة
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
