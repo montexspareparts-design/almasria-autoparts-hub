@@ -157,7 +157,9 @@ export default function VisitorSessionSummary() {
         setVisits(visitsRes.data || []);
         setSearches(searchesRes.data || []);
         setPriceViews(viewsRes.data || []);
-        setHasOrders((ordersRes.count || 0) > 0);
+        const ordersList = (ordersRes as any).data || [];
+        setOrders(ordersList);
+        setHasOrders(ordersList.length > 0);
         setHasCart((cartRes.count || 0) > 0);
 
         // Resolve staff display names (notes + comms)
