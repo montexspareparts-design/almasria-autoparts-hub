@@ -67,7 +67,7 @@ const StaffHome = () => {
   });
   const [hotLeads, setHotLeads] = useState<HotLead[]>([]);
   const [range, setRange] = useState<RangeKey>("today");
-  const [newSignups, setNewSignups] = useState<Array<{ user_id: string; full_name: string | null; phone: string | null; email: string | null; created_at: string }>>([]);
+  const [newSignups, setNewSignups] = useState<Array<{ user_id: string; full_name: string | null; phone: string | null; email: string | null; created_at: string; duplicates?: number; duplicateIds?: string[] }>>([]);
   const [signupsOpen, setSignupsOpen] = useState(false);
   const [visitorsOpen, setVisitorsOpen] = useState(false);
   const [visitorsList, setVisitorsList] = useState<Array<{ user_id: string | null; session_key: string | null; full_name: string | null; phone: string | null; email: string | null; pages: number; last_visit: string }>>([]);
@@ -125,7 +125,26 @@ const StaffHome = () => {
         .gte("created_at", start)
         .order("created_at", { ascending: false })
         .limit(100);
-      setNewSignups(signupRows || []);
+
+      // Deduplicate by normalized phone (or email fallback) — keep latest, count duplicates
+      const normalizePhone = (p: string | null) => (p || "").replace(/[^\d]/g, "").replace(/^20/, "0");
+      const dedupMap = new Map<string, typeof signupRows[number] & { duplicates: number; duplicateIds: string[] }>();
+      for (const s of signupRows || []) {
+        const phoneKey = normalizePhone(s.phone);
+        const emailKey = (s.email || "").toLowerCase().trim();
+        const key = phoneKey || emailKey || s.user_id;
+        const existing = dedupMap.get(key);
+        if (existing) {
+          existing.duplicates += 1;
+          existing.duplicateIds.push(s.user_id);
+        } else {
+          dedupMap.set(key, { ...s, duplicates: 1, duplicateIds: [s.user_id] });
+        }
+      }
+      const dedupedSignups = Array.from(dedupMap.values()).sort((a, b) =>
+        b.created_at.localeCompare(a.created_at)
+      );
+      setNewSignups(dedupedSignups);
 
       // 3) Users who added to cart today (distinct)
       const { data: cartItems } = await supabase
@@ -659,9 +678,19 @@ const StaffHome = () => {
                 const name = s.full_name || (s.email && !s.email.includes("@phone.almasria.local") ? s.email : null) || "بدون اسم";
                 const created = new Date(s.created_at).toLocaleString("ar-EG", { dateStyle: "short", timeStyle: "short" });
                 return (
-                  <div key={s.user_id} className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-muted/30 hover:bg-muted/60 transition flex-wrap">
+                  <div key={s.user_id} className={cn(
+                    "flex items-center justify-between gap-3 p-3 rounded-lg border transition flex-wrap",
+                    (s.duplicates && s.duplicates > 1) ? "bg-amber-50 border-amber-300 hover:bg-amber-100" : "bg-muted/30 hover:bg-muted/60"
+                  )}>
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-sm truncate">{name}</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-bold text-sm truncate">{name}</p>
+                        {s.duplicates && s.duplicates > 1 && (
+                          <Badge className="bg-amber-500 hover:bg-amber-600 text-white text-[10px] h-5">
+                            ⚠️ مكرر ×{s.duplicates}
+                          </Badge>
+                        )}
+                      </div>
                       <div className="flex items-center gap-2 mt-1 flex-wrap text-[11px] text-muted-foreground">
                         {s.phone && <span className="font-mono">📱 {s.phone}</span>}
                         <span>🕒 {created}</span>
