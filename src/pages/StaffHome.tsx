@@ -711,6 +711,112 @@ const StaffHome = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Visitors Dialog */}
+      <Dialog open={visitorsOpen} onOpenChange={setVisitorsOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <Users className="w-5 h-5 text-blue-600" />
+              زوار {rangeSuffix}
+              <Badge variant="secondary" className="text-xs">{visitorsList.length}</Badge>
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              قائمة بكل زوار الموقع — المسجلين بأسمائهم وأرقامهم وإيميلاتهم، والزوار غير المسجلين كـ "زائر مجهول". اضغط "تفاصيل" لعرض كل نشاط الزائر.
+            </DialogDescription>
+          </DialogHeader>
+
+          {visitorsList.length === 0 ? (
+            <div className="text-center py-10 text-sm text-muted-foreground">
+              مفيش زوار في الفترة دي
+            </div>
+          ) : (
+            <div className="space-y-2 mt-2">
+              {visitorsList.map((v, idx) => {
+                const isAnon = !v.user_id;
+                const name = v.full_name || (isAnon ? "زائر مجهول" : "بدون اسم");
+                const last = new Date(v.last_visit).toLocaleString("ar-EG", { dateStyle: "short", timeStyle: "short" });
+                const detailKey = v.user_id || v.session_key || `anon-${idx}`;
+                return (
+                  <div
+                    key={detailKey}
+                    className={cn(
+                      "flex items-center justify-between gap-3 p-3 rounded-lg border transition flex-wrap",
+                      isAnon ? "bg-muted/20 hover:bg-muted/40" : "bg-muted/30 hover:bg-muted/60"
+                    )}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-bold text-sm truncate">{name}</p>
+                        {isAnon ? (
+                          <Badge variant="outline" className="text-[10px] h-5">غير مسجّل</Badge>
+                        ) : (
+                          <Badge className="bg-blue-500/15 text-blue-700 hover:bg-blue-500/20 text-[10px] h-5">مسجّل</Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap text-[11px] text-muted-foreground">
+                        {v.phone && <span className="font-mono">📱 {v.phone}</span>}
+                        {v.email && <span className="truncate max-w-[200px]">✉️ {v.email}</span>}
+                        <span>👁️ {v.pages} صفحة</span>
+                        <span>🕒 {last}</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-1.5 shrink-0">
+                      {v.phone && (
+                        <>
+                          <Button asChild size="sm" variant="outline" className="h-8 gap-1 text-xs">
+                            <a href={`tel:${v.phone}`}>
+                              <Phone className="w-3 h-3" />
+                              اتصال
+                            </a>
+                          </Button>
+                          <Button asChild size="sm" className="h-8 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
+                            <a
+                              href={`https://wa.me/${v.phone.replace(/^0/, "20").replace(/[^\d]/g, "")}?text=${encodeURIComponent(`أهلاً ${v.full_name || ""}، معاك المصرية جروب — حابب أساعدك في طلبك؟`)}`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              <MessageCircle className="w-3 h-3" />
+                              واتساب
+                            </a>
+                          </Button>
+                        </>
+                      )}
+                      {v.user_id ? (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 gap-1 text-xs"
+                          onClick={() => {
+                            setVisitorsOpen(false);
+                            navigate(`/admin/visitor/${v.user_id}`);
+                          }}
+                        >
+                          <Eye className="w-3 h-3" />
+                          تفاصيل
+                        </Button>
+                      ) : v.session_key ? (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 gap-1 text-xs"
+                          onClick={() => {
+                            setVisitorsOpen(false);
+                            navigate(`/admin/visitor/${v.session_key}`);
+                          }}
+                        >
+                          <Eye className="w-3 h-3" />
+                          تفاصيل الجلسة
+                        </Button>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
