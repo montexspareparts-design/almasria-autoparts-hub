@@ -16,7 +16,7 @@ import {
   Search, ShoppingBag, Phone, MessageCircle, Timer, User as UserIcon,
   Calendar, Sparkles, TrendingUp, MousePointerClick, History,
   ExternalLink, Quote, Flame, StickyNote, Loader2, Pencil, Trash2,
-  CheckCircle2, Headphones, MapPin, AlertTriangle,
+  CheckCircle2, Headphones, MapPin, AlertTriangle, ShoppingCart, Layers,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { checkDuplicateCommunication } from "@/lib/duplicateCommCheck";
@@ -68,6 +68,14 @@ const friendlyPath = (path: string): string => {
   return p;
 };
 
+const COMM_TYPES: Record<string, { label: string; icon: any; color: string }> = {
+  phone: { label: "📞 مكالمة هاتفية", icon: Phone, color: "text-emerald-600" },
+  whatsapp: { label: "💬 واتساب", icon: MessageCircle, color: "text-green-600" },
+  visit: { label: "🤝 زيارة شخصية", icon: MapPin, color: "text-blue-600" },
+  no_answer: { label: "📵 لم يرد", icon: AlertTriangle, color: "text-amber-600" },
+  other: { label: "📌 وسيلة أخرى", icon: Headphones, color: "text-purple-600" },
+};
+
 export default function VisitorSessionSummary() {
   const { userId = "" } = useParams<{ userId: string }>();
   const navigate = useNavigate();
@@ -83,6 +91,7 @@ export default function VisitorSessionSummary() {
   const [productMap, setProductMap] = useState<Map<string, ProductInfo>>(new Map());
   const [hasOrders, setHasOrders] = useState(false);
   const [hasCart, setHasCart] = useState(false);
+  const [orders, setOrders] = useState<Array<{ id: string; order_number: string; status: string; total_amount: number; created_at: string }>>([]);
 
   // Notes
   const [noteOpen, setNoteOpen] = useState(false);
@@ -144,7 +153,7 @@ export default function VisitorSessionSummary() {
           supabase.from("page_visits").select("id, path, page_title, visited_at, referrer").eq("user_id", userId).order("visited_at", { ascending: true }).limit(500),
           supabase.from("customer_search_logs").select("id, search_query, created_at, results_count").eq("user_id", userId).order("created_at", { ascending: false }).limit(50),
           supabase.from("dealer_price_views").select("id, product_id, viewed_at").eq("user_id", userId).order("viewed_at", { ascending: false }).limit(50),
-          supabase.from("orders").select("id", { count: "exact", head: true }).eq("user_id", userId),
+          supabase.from("orders").select("id, order_number, status, total_amount, created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(50),
           supabase.from("dealer_cart_items").select("id", { count: "exact", head: true }).eq("user_id", userId),
           supabase.from("customer_notes").select("id, note, created_at, staff_user_id").eq("customer_user_id", userId).order("created_at", { ascending: false }).limit(50),
           supabase.from("customer_communications").select("id, comm_type, note, created_at, staff_user_id").eq("customer_user_id", userId).order("created_at", { ascending: false }).limit(50),
@@ -157,7 +166,9 @@ export default function VisitorSessionSummary() {
         setVisits(visitsRes.data || []);
         setSearches(searchesRes.data || []);
         setPriceViews(viewsRes.data || []);
-        setHasOrders((ordersRes.count || 0) > 0);
+        const ordersList = (ordersRes as any).data || [];
+        setOrders(ordersList);
+        setHasOrders(ordersList.length > 0);
         setHasCart((cartRes.count || 0) > 0);
 
         // Resolve staff display names (notes + comms)
@@ -275,6 +286,83 @@ export default function VisitorSessionSummary() {
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
   }, [searches]);
+
+  // Unified activity timeline — combines ALL events into one chronological log
+  const unifiedTimeline = useMemo(() => {
+    type Evt = {
+      id: string;
+      at: string;
+      kind: "session" | "search" | "comm" | "note" | "order";
+      title: string;
+      detail?: string;
+      icon: any;
+      color: string;
+    };
+    const events: Evt[] = [];
+
+    sessions.forEach((s, idx) => {
+      events.push({
+        id: `session-${idx}`,
+        at: s.start,
+        kind: "session",
+        title: `جلسة #${sessions.length - idx} — ${s.pages.length} صفحة`,
+        detail: `المدة: ${fmtDuration(s.durationMs)} • آخر صفحة: ${friendlyPath(s.pages[s.pages.length - 1].path)}`,
+        icon: Globe,
+        color: "text-purple-600 bg-purple-500/10 border-purple-500/30",
+      });
+    });
+
+    searches.forEach((s) => {
+      events.push({
+        id: `search-${s.id}`,
+        at: s.created_at,
+        kind: "search",
+        title: `بحث: "${s.search_query}"`,
+        detail: `${s.results_count || 0} نتيجة`,
+        icon: Search,
+        color: "text-orange-600 bg-orange-500/10 border-orange-500/30",
+      });
+    });
+
+    comms.forEach((c) => {
+      const meta = COMM_TYPES[c.comm_type] || COMM_TYPES.other;
+      events.push({
+        id: `comm-${c.id}`,
+        at: c.created_at,
+        kind: "comm",
+        title: `${meta.label} — ${c.staff_name || "موظف"}`,
+        detail: c.note || undefined,
+        icon: meta.icon,
+        color: "text-blue-600 bg-blue-500/10 border-blue-500/30",
+      });
+    });
+
+    notes.forEach((n) => {
+      events.push({
+        id: `note-${n.id}`,
+        at: n.created_at,
+        kind: "note",
+        title: `ملاحظة — ${n.staff_name || "موظف"}`,
+        detail: n.note,
+        icon: StickyNote,
+        color: "text-amber-600 bg-amber-500/10 border-amber-500/30",
+      });
+    });
+
+    orders.forEach((o) => {
+      events.push({
+        id: `order-${o.id}`,
+        at: o.created_at,
+        kind: "order",
+        title: `طلب #${o.order_number}`,
+        detail: `الحالة: ${o.status} • المبلغ: ${Number(o.total_amount || 0).toLocaleString("ar-EG")} ج.م`,
+        icon: ShoppingCart,
+        color: "text-emerald-600 bg-emerald-500/10 border-emerald-500/30",
+      });
+    });
+
+    return events.sort((a, b) => (a.at > b.at ? -1 : 1));
+  }, [sessions, searches, comms, notes, orders]);
 
   const buildQuoteWhatsApp = (productLabel: string) => {
     const phone = "201027815696"; // WhatsMeta CRM number
@@ -403,13 +491,6 @@ export default function VisitorSessionSummary() {
     }
   };
 
-  const COMM_TYPES: Record<string, { label: string; icon: any; color: string }> = {
-    phone: { label: "📞 مكالمة هاتفية", icon: Phone, color: "text-emerald-600" },
-    whatsapp: { label: "💬 واتساب", icon: MessageCircle, color: "text-green-600" },
-    visit: { label: "🤝 زيارة شخصية", icon: MapPin, color: "text-blue-600" },
-    no_answer: { label: "📵 لم يرد", icon: AlertTriangle, color: "text-amber-600" },
-    other: { label: "📌 وسيلة أخرى", icon: Headphones, color: "text-purple-600" },
-  };
   const lastComm = comms[0];
 
   const callPhone = () => { if (profile?.phone) window.location.href = `tel:${profile.phone}`; };
@@ -659,6 +740,56 @@ export default function VisitorSessionSummary() {
           </Card>
         ) : (
           <>
+            {/* Unified Activity Timeline — combines ALL events */}
+            {unifiedTimeline.length > 0 && (
+              <Card id="section-timeline" className="border-primary/30 shadow-xl overflow-hidden scroll-mt-24 rounded-2xl">
+                <CardHeader className="pb-4 bg-gradient-to-l from-primary/10 via-primary/5 to-transparent border-b">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center">
+                        <Layers className="w-5 h-5 text-primary" />
+                      </div>
+                      السجل الموحَّد لكل النشاط
+                      <Badge variant="secondary" className="text-[10px]">{unifiedTimeline.length}</Badge>
+                    </CardTitle>
+                    <div className="flex flex-wrap gap-1.5 text-[10px]">
+                      <Badge variant="outline" className="gap-1"><Globe className="w-2.5 h-2.5" />{sessions.length} جلسة</Badge>
+                      <Badge variant="outline" className="gap-1"><Search className="w-2.5 h-2.5" />{searches.length} بحث</Badge>
+                      <Badge variant="outline" className="gap-1"><CheckCircle2 className="w-2.5 h-2.5" />{comms.length} تواصل</Badge>
+                      <Badge variant="outline" className="gap-1"><StickyNote className="w-2.5 h-2.5" />{notes.length} ملاحظة</Badge>
+                      <Badge variant="outline" className="gap-1"><ShoppingCart className="w-2.5 h-2.5" />{orders.length} طلب</Badge>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2 mr-11">
+                    كل زيارة وكل بحث وكل اتصال وكل ملاحظة وكل طلب — مرتّبين زمنياً في خط واحد.
+                  </p>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <div className="relative pr-4 border-r-2 border-dashed border-border space-y-3 max-h-[600px] overflow-y-auto">
+                    {unifiedTimeline.map((evt) => {
+                      const Icon = evt.icon;
+                      return (
+                        <div key={evt.id} className="relative">
+                          <div className={`absolute -right-[26px] top-2 w-9 h-9 rounded-full border-2 flex items-center justify-center ${evt.color}`}>
+                            <Icon className="w-4 h-4" />
+                          </div>
+                          <div className="mr-6 p-3 rounded-lg bg-muted/40 border border-border hover:bg-muted/60 transition">
+                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                              <span className="font-bold text-sm text-foreground">{evt.title}</span>
+                              <span className="text-[11px] text-muted-foreground font-mono">{fmtDateTime(evt.at)}</span>
+                            </div>
+                            {evt.detail && (
+                              <p className="text-xs text-muted-foreground mt-1.5 whitespace-pre-wrap leading-relaxed">{evt.detail}</p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Latest Session — main highlight */}
             {lastSession && (
               <Card id="section-latest-session" className="border-primary/20 shadow-lg overflow-hidden scroll-mt-24 rounded-2xl">
