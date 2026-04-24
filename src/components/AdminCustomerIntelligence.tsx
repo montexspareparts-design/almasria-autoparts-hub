@@ -2609,20 +2609,16 @@ const AdminCustomerIntelligence = () => {
                                 </div>
                               );
                             })()}
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setExpandedUser(task.userId);
-                                setTimeout(() => {
-                                  const el = document.getElementById(`customer-card-${task.userId}`);
-                                  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-                                }, 100);
-                              }}
-                              className="w-full text-[10px] font-bold px-2 py-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors inline-flex items-center justify-center gap-1"
-                            >
-                              فتح الملف الكامل ↓
-                            </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/admin/visitor/${task.userId}`);
+                                }}
+                                className="w-full text-[10px] font-bold px-2 py-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors inline-flex items-center justify-center gap-1"
+                              >
+                                فتح ملف العميل ↗
+                              </button>
                           </div>
                         );
                       })()}
