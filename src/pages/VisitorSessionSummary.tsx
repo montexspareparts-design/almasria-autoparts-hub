@@ -606,6 +606,44 @@ export default function VisitorSessionSummary() {
           </Badge>
         </div>
 
+        {/* Quick Links Bar — ينقل بسرعة لأي قسم في الصفحة */}
+        <div className="sticky top-2 z-30 bg-background/80 backdrop-blur-md rounded-xl border shadow-sm p-2 flex items-center gap-1.5 overflow-x-auto">
+          <span className="text-[10px] font-bold text-muted-foreground px-2 shrink-0 hidden sm:inline">قفز إلى:</span>
+          {[
+            { id: "section-latest-session", label: "آخر جلسة", icon: Sparkles, count: lastSession ? 1 : 0 },
+            { id: "section-pages", label: "الصفحات", icon: Eye, count: visits.length },
+            { id: "section-sessions", label: "كل الجلسات", icon: Hash, count: sessions.length },
+            { id: "section-searches", label: "البحث", icon: Search, count: searches.length },
+            { id: "section-products", label: "منتجات شاف سعرها", icon: ShoppingBag, count: priceViews.length },
+            { id: "section-timeline", label: "الطلبات", icon: ShoppingCart, count: orders.length },
+            { id: "section-comms", label: "تواصل", icon: Phone, count: comms.length },
+            { id: "section-notes", label: "ملاحظات", icon: StickyNote, count: notes.length },
+          ].map((link) => {
+            const disabled = link.count === 0 && link.id !== "section-timeline";
+            return (
+              <button
+                key={link.id}
+                onClick={() => scrollToSection(link.id)}
+                disabled={disabled}
+                className={`shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition ${
+                  disabled
+                    ? "text-muted-foreground/40 cursor-not-allowed"
+                    : "text-foreground hover:bg-muted active:scale-95"
+                }`}
+                title={disabled ? "لا توجد بيانات" : `الانتقال إلى ${link.label}`}
+              >
+                <link.icon className="w-3.5 h-3.5" />
+                <span>{link.label}</span>
+                {link.count > 0 && (
+                  <Badge variant="secondary" className="h-4 px-1 text-[9px] font-bold">
+                    {link.count}
+                  </Badge>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
         {/* Hero / Visitor profile */}
         <Card className="overflow-hidden border-0 shadow-xl bg-gradient-to-br from-primary/95 via-primary to-primary/80 text-primary-foreground">
           <CardContent className="p-5 md:p-7">
@@ -741,6 +779,9 @@ export default function VisitorSessionSummary() {
         )}
 
         {/* Top Searched Products & Queries */}
+        {(topProducts.length > 0 || topSearches.length > 0) && (
+          <div id="section-products" className="scroll-mt-24" />
+        )}
         {(topProducts.length > 0 || topSearches.length > 0) && (
           <Card className="border-orange-200/60 dark:border-orange-900/40 shadow-md overflow-hidden">
             <CardHeader className="pb-3 bg-gradient-to-l from-orange-500/10 via-orange-500/5 to-transparent border-b">
