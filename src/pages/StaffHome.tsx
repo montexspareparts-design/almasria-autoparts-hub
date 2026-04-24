@@ -815,10 +815,26 @@ const StaffHome = () => {
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-bold text-sm truncate">{name}</p>
                         {isAnon ? (
-                          <Badge variant="outline" className="text-[10px] h-5">غير مسجّل</Badge>
+                          <Badge variant="outline" className="text-[10px] h-5 bg-amber-50 text-amber-700 border-amber-200">
+                            👤 لم يسجّل بعد
+                          </Badge>
                         ) : (
                           <Badge className="bg-blue-500/15 text-blue-700 hover:bg-blue-500/20 text-[10px] h-5">مسجّل</Badge>
                         )}
+                        {isAnon && (() => {
+                          const fp = v.first_path || "";
+                          const ref = v.referrer || "";
+                          const hay = (fp + " " + ref).toLowerCase();
+                          let source = "";
+                          if (hay.includes("fbclid") || hay.includes("facebook") || hay.includes("utm_source=fb")) source = "📘 فيسبوك";
+                          else if (hay.includes("instagram") || hay.includes("ig_")) source = "📷 إنستجرام";
+                          else if (hay.includes("google") || hay.includes("gclid")) source = "🔍 جوجل";
+                          else if (hay.includes("tiktok") || hay.includes("ttclid")) source = "🎵 تيك توك";
+                          else if (hay.includes("whatsapp") || hay.includes("wa.me")) source = "💬 واتساب";
+                          else if (ref) source = "🔗 موقع آخر";
+                          else source = "🌐 مباشر";
+                          return <Badge variant="outline" className="text-[10px] h-5">{source}</Badge>;
+                        })()}
                       </div>
                       <div className="flex items-center gap-2 mt-1 flex-wrap text-[11px] text-muted-foreground">
                         {v.phone && <span className="font-mono">📱 {v.phone}</span>}
@@ -826,6 +842,11 @@ const StaffHome = () => {
                         <span>👁️ {v.pages} صفحة</span>
                         <span className="font-bold text-foreground">🕒 {last}</span>
                       </div>
+                      {isAnon && !v.phone && !v.email && (
+                        <p className="text-[10px] text-muted-foreground/80 mt-1 italic leading-relaxed">
+                          ⚠️ هذا زائر دخل الموقع من إعلان/رابط ولم يُنشئ حساباً بعد — لذا لا توجد بيانات تواصل. يمكنك مشاهدة الصفحات اللي تصفحها من زر "تفاصيل الجلسة".
+                        </p>
+                      )}
                     </div>
                     <div className="flex gap-1.5 shrink-0">
                       {v.phone && (
