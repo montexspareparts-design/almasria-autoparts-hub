@@ -1133,6 +1133,37 @@ const AdminCustomerIntelligence = () => {
     return true;
   });
 
+  // Last action per customer (latest communication timestamp)
+  const lastActionByUser = useMemo(() => {
+    const map: Record<string, string> = {};
+    (communicationsData || []).forEach((c: any) => {
+      const cur = map[c.customer_user_id];
+      if (!cur || new Date(c.created_at) > new Date(cur)) {
+        map[c.customer_user_id] = c.created_at;
+      }
+    });
+    return map;
+  }, [communicationsData]);
+
+  // Sort: customers with NO action first (oldest registered first), then by oldest last action
+  const sortedProfiles = useMemo(() => {
+    if (!filteredProfiles) return filteredProfiles;
+    if (!prioritySort) return filteredProfiles;
+    return [...filteredProfiles].sort((a, b) => {
+      const la = lastActionByUser[a.user_id];
+      const lb = lastActionByUser[b.user_id];
+      // No action: priority bucket 0; with action: bucket 1
+      if (!la && !lb) {
+        // both no action — oldest registered first (longer waiting)
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      }
+      if (!la) return -1;
+      if (!lb) return 1;
+      // Both have action — oldest action first (haven't been touched in longest time)
+      return new Date(la).getTime() - new Date(lb).getTime();
+    });
+  }, [filteredProfiles, lastActionByUser, prioritySort]);
+
   const hasActiveFilters =
     !!dateFrom || !!dateTo ||
     (customerTypeFilter !== "all") || (accountTypeFilter !== "all") ||
