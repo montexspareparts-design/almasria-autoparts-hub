@@ -387,6 +387,11 @@ const StaffHome = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isAdmin, isModerator, range]);
 
+  // Sync the dialog's date filter with the KPI range toggle so users see what they expect.
+  useEffect(() => {
+    setVisitorDateFilter(range === "today" ? "today" : "all");
+  }, [range]);
+
   const rangeSuffix = range === "today" ? "اليوم" : "آخر 7 أيام";
 
   // Count how many of the displayed (non-staff) visitors the current staff has already opened
