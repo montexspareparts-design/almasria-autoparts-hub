@@ -2414,7 +2414,7 @@ const AdminCustomerIntelligence = () => {
       )}
 
       {/* Customer list with top-level tabs (All / Needs Follow-up Now) */}
-      {(() => {
+      {activeSection === "customers" && (() => {
         // Build "needs follow-up now" list with urgency scoring
         type FollowUpItem = {
           profile: typeof filteredProfiles extends (infer T)[] | undefined ? T : never;
