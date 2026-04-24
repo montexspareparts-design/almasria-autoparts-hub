@@ -1,4 +1,4 @@
-import { useState, useCallback, Fragment, useMemo, useRef } from "react";
+import { useState, useCallback, Fragment, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -278,6 +278,33 @@ const AdminCustomerIntelligence = () => {
   const sectionNavRef = useRef<HTMLDivElement | null>(null);
   const [isSwitchingSection, setIsSwitchingSection] = useState(false);
 
+  // Read the live nav height from CSS variable (kept in sync via ResizeObserver below)
+  const getNavOffset = (): number => {
+    if (typeof window === "undefined") return 64;
+    const raw = getComputedStyle(document.documentElement).getPropertyValue("--aci-nav-height").trim();
+    const n = parseInt(raw, 10);
+    return Number.isFinite(n) && n > 0 ? n : (sectionNavRef.current?.offsetHeight ?? 64);
+  };
+
+  // Keep --aci-nav-height in sync with the actual sticky nav height (responsive + dynamic)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const el = sectionNavRef.current;
+    if (!el) return;
+    const apply = () => {
+      const h = Math.round(el.getBoundingClientRect().height);
+      document.documentElement.style.setProperty("--aci-nav-height", `${h}px`);
+    };
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(el);
+    window.addEventListener("resize", apply);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", apply);
+    };
+  }, []);
+
   // Wait until smooth scroll settles (no Y-change for ~120ms) before resolving
   const waitForScrollEnd = (timeoutMs = 800): Promise<void> =>
     new Promise((resolve) => {
@@ -310,7 +337,7 @@ const AdminCustomerIntelligence = () => {
     // 3) Smooth-scroll to the sticky nav top first (before swapping content)
     if (typeof window !== "undefined") {
       const navEl = sectionNavRef.current;
-      const navHeight = 64;
+      const navHeight = getNavOffset();
       const targetTop = navEl
         ? navEl.getBoundingClientRect().top + window.scrollY - 8
         : Math.max(0, (sectionContentRef.current?.getBoundingClientRect().top ?? 0) + window.scrollY - navHeight);
@@ -1627,7 +1654,12 @@ const AdminCustomerIntelligence = () => {
       </div>
 
       {/* Anchor target for smooth-scroll on section change */}
-      <div ref={sectionContentRef} key={activeSection} className="animate-section-enter scroll-mt-24 will-change-transform">
+      <div
+        ref={sectionContentRef}
+        key={activeSection}
+        className="animate-section-enter will-change-transform"
+        style={{ scrollMarginTop: "calc(var(--aci-nav-height, 64px) + 8px)" }}
+      >
 
       {isSwitchingSection ? (
         <Card className="rounded-xl border-border/40 shadow-sm animate-fade-in">
@@ -2776,8 +2808,9 @@ const AdminCustomerIntelligence = () => {
               <div
                 key={profile.user_id}
                 id={`customer-card-${profile.user_id}`}
+                style={{ scrollMarginTop: "calc(var(--aci-nav-height, 64px) + 8px)" }}
                 className={cn(
-                  "rounded-2xl border bg-card overflow-hidden transition-all duration-300 scroll-mt-24",
+                  "rounded-2xl border bg-card overflow-hidden transition-all duration-300",
                   isExpanded ? "border-primary/30 shadow-lg ring-1 ring-primary/10" : "border-border/40 hover:border-border/70 hover:shadow-sm"
                 )}
               >
