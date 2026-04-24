@@ -3270,6 +3270,8 @@ const AdminCustomerIntelligence = () => {
       })()}
 
       {/* ===== Analytics & Insights Section ===== */}
+      {activeSection === "analytics" && (
+      <>
       <div className="relative pt-2">
         <div className="flex items-center gap-3 mb-3">
           <div className="h-px flex-1 bg-gradient-to-l from-border via-border to-transparent" />
