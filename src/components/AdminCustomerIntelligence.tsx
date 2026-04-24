@@ -1047,7 +1047,7 @@ const AdminCustomerIntelligence = () => {
       .filter(x => x.needReason && x.score >= 8)
       .sort((a, b) => b.score - a.score)
       .slice(0, 6);
-  }, [filteredProfiles, userSearchMap, userViewsMap, ordersMap, priceViews, productsMap]);
+  }, [filteredProfiles, userSearchMap, userViewsMap, ordersMap, priceViews, productsMap, hotLeadsCategory, hotLeadsPeriod]);
 
 
   return (
