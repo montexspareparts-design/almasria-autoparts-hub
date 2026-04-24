@@ -776,7 +776,7 @@ const StaffHome = () => {
                         {v.phone && <span className="font-mono">📱 {v.phone}</span>}
                         {v.email && <span className="truncate max-w-[200px]">✉️ {v.email}</span>}
                         <span>👁️ {v.pages} صفحة</span>
-                        <span>🕒 {last}</span>
+                        <span className="font-bold text-foreground">🕒 {last}</span>
                       </div>
                     </div>
                     <div className="flex gap-1.5 shrink-0">
