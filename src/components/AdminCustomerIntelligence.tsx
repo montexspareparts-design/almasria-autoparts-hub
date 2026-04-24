@@ -2522,6 +2522,88 @@ const AdminCustomerIntelligence = () => {
                                 ))}
                               </div>
                             )}
+                            {/* Activity Timeline — multiple sessions grouped by day */}
+                            {(() => {
+                              const visitDays = visitsByUser[task.userId] || [];
+                              const userSearches = userSearchMap[task.userId] || [];
+                              // Group searches by date
+                              const searchByDay: Record<string, { query: string; count: number; lastAt: string }[]> = {};
+                              userSearches.forEach(s => {
+                                const day = s.lastAt.slice(0, 10);
+                                if (!searchByDay[day]) searchByDay[day] = [];
+                                searchByDay[day].push(s);
+                              });
+                              // Merge all unique days
+                              const allDays = Array.from(new Set([
+                                ...visitDays.map(v => v.date),
+                                ...Object.keys(searchByDay),
+                              ])).sort((a, b) => b.localeCompare(a));
+                              if (allDays.length === 0) return null;
+                              const fmtDay = (iso: string) => {
+                                const d = new Date(iso + "T00:00:00");
+                                const today = new Date(); today.setHours(0,0,0,0);
+                                const diff = Math.floor((today.getTime() - d.getTime()) / 86400000);
+                                if (diff === 0) return "اليوم";
+                                if (diff === 1) return "أمس";
+                                if (diff < 7) return `منذ ${diff} أيام`;
+                                return d.toLocaleDateString("ar-EG", { day: "numeric", month: "short" });
+                              };
+                              const fmtTime = (iso: string) => new Date(iso).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
+                              return (
+                                <div className="rounded-lg border border-border/50 bg-background/70 overflow-hidden">
+                                  <div className="px-2 py-1.5 bg-muted/40 border-b border-border/40 flex items-center justify-between">
+                                    <span className="text-[10px] font-black text-foreground inline-flex items-center gap-1">
+                                      🕒 سجل الجلسات ({allDays.length} يوم)
+                                    </span>
+                                    <span className="text-[9px] text-muted-foreground">الأحدث أولاً</span>
+                                  </div>
+                                  <div className="max-h-44 overflow-y-auto divide-y divide-border/30">
+                                    {allDays.slice(0, 8).map(day => {
+                                      const v = visitDays.find(x => x.date === day);
+                                      const s = searchByDay[day] || [];
+                                      return (
+                                        <div key={day} className="px-2 py-1.5 space-y-1">
+                                          <div className="flex items-center justify-between">
+                                            <span className="text-[10px] font-black text-foreground">{fmtDay(day)}</span>
+                                            <span className="text-[9px] text-muted-foreground" dir="ltr">{day}</span>
+                                          </div>
+                                          {v && (
+                                            <div className="flex items-center gap-1 text-[9px] text-muted-foreground">
+                                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-700 dark:text-blue-400 font-bold">
+                                                👁️ {v.count} صفحة
+                                              </span>
+                                              <span className="opacity-70">آخر زيارة {fmtTime(v.lastAt)}</span>
+                                            </div>
+                                          )}
+                                          {s.length > 0 && (
+                                            <div className="flex flex-wrap gap-1">
+                                              {s.slice(0, 4).map((q, i) => (
+                                                <span
+                                                  key={i}
+                                                  className="text-[9px] px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-700 dark:text-orange-400 font-bold inline-flex items-center gap-1"
+                                                  title={`${q.query} — ${fmtTime(q.lastAt)}`}
+                                                >
+                                                  🔍 {q.query.length > 18 ? q.query.slice(0, 18) + "…" : q.query}
+                                                  {q.count > 1 && <span className="opacity-70">×{q.count}</span>}
+                                                </span>
+                                              ))}
+                                              {s.length > 4 && (
+                                                <span className="text-[9px] text-muted-foreground">+{s.length - 4}</span>
+                                              )}
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                    {allDays.length > 8 && (
+                                      <div className="px-2 py-1 text-[9px] text-center text-muted-foreground">
+                                        + {allDays.length - 8} أيام أقدم — افتح الملف الكامل
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })()}
                             <button
                               type="button"
                               onClick={(e) => {
