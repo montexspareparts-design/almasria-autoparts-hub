@@ -100,9 +100,16 @@ const MyProfilePage = () => {
       .eq("user_id", user.id);
 
     if (error) {
-      toast.error("حدث خطأ أثناء حفظ البيانات");
+      toast.error("حدث خطأ أثناء حفظ البيانات", {
+        description: error.message,
+      });
     } else {
-      toast.success("تم حفظ بياناتك بنجاح ✅");
+      toast.success("تم حفظ بياناتك بنجاح ✅", {
+        description: phone
+          ? `تم تحديث رقم الهاتف إلى ${phone} — هنقدر نتواصل معاك بخصوص طلباتك`
+          : "تم تحديث بياناتك الشخصية",
+        duration: 4000,
+      });
     }
     setSaving(false);
   };
