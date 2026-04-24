@@ -70,7 +70,7 @@ const StaffHome = () => {
   const [newSignups, setNewSignups] = useState<Array<{ user_id: string; full_name: string | null; phone: string | null; email: string | null; created_at: string; duplicates?: number; duplicateIds?: string[] }>>([]);
   const [signupsOpen, setSignupsOpen] = useState(false);
   const [visitorsOpen, setVisitorsOpen] = useState(false);
-  const [visitorsList, setVisitorsList] = useState<Array<{ user_id: string | null; session_key: string | null; full_name: string | null; phone: string | null; email: string | null; pages: number; last_visit: string }>>([]);
+  const [visitorsList, setVisitorsList] = useState<Array<{ user_id: string | null; session_key: string | null; full_name: string | null; phone: string | null; email: string | null; pages: number; last_visit: string; first_path?: string | null; referrer?: string | null; searches?: string[] }>>([]);
 
   // Guard
   useEffect(() => {
@@ -91,7 +91,7 @@ const StaffHome = () => {
       // 1) Visitors (distinct sessions/users from page_visits) — with details
       const { data: visits } = await supabase
         .from("page_visits")
-        .select("session_key, user_id, visited_at, path")
+        .select("session_key, user_id, visited_at, path, referrer")
         .gte("visited_at", start)
         .order("visited_at", { ascending: false });
       const visitorKeys = new Set(
@@ -99,8 +99,8 @@ const StaffHome = () => {
           .filter(Boolean)
       );
 
-      // Aggregate visitors: group by user_id (or session_key for anon) → page count + last visit
-      const visitorAgg = new Map<string, { user_id: string | null; session_key: string | null; pages: number; last_visit: string }>();
+      // Aggregate visitors: group by user_id (or session_key for anon) → page count + last visit + first entry
+      const visitorAgg = new Map<string, { user_id: string | null; session_key: string | null; pages: number; last_visit: string; first_visit: string; first_path: string | null; referrer: string | null }>();
       for (const v of visits || []) {
         const key = v.user_id || v.session_key || "";
         if (!key) continue;
@@ -108,15 +108,32 @@ const StaffHome = () => {
         if (cur) {
           cur.pages += 1;
           if (v.visited_at > cur.last_visit) cur.last_visit = v.visited_at;
+          if (v.visited_at < cur.first_visit) {
+            cur.first_visit = v.visited_at;
+            cur.first_path = v.path;
+            cur.referrer = v.referrer || cur.referrer;
+          }
         } else {
           visitorAgg.set(key, {
             user_id: v.user_id || null,
             session_key: v.user_id ? null : (v.session_key || null),
             pages: 1,
             last_visit: v.visited_at,
+            first_visit: v.visited_at,
+            first_path: v.path,
+            referrer: v.referrer || null,
           });
         }
       }
+
+      // 1b) Search queries per anonymous session (helps staff understand intent)
+      const anonSessionKeys = Array.from(visitorAgg.values())
+        .filter(v => !v.user_id && v.session_key)
+        .map(v => v.session_key as string);
+      const searchesBySession = new Map<string, string[]>();
+      // (search logs aren't tied to session_key directly; only by user_id — anon searches are not linkable)
+      // Future: add session_key to customer_search_logs if needed
+
 
       // 2) Signups within range — fetch full list (for the popup) + count
       const { data: signupRows, count: signupCount } = await supabase
@@ -280,6 +297,8 @@ const StaffHome = () => {
           email,
           pages: v.pages,
           last_visit: v.last_visit,
+          first_path: v.first_path,
+          referrer: v.referrer,
         };
       });
       // Sort strictly by last_visit desc — latest visitor first
@@ -796,10 +815,26 @@ const StaffHome = () => {
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-bold text-sm truncate">{name}</p>
                         {isAnon ? (
-                          <Badge variant="outline" className="text-[10px] h-5">غير مسجّل</Badge>
+                          <Badge variant="outline" className="text-[10px] h-5 bg-amber-50 text-amber-700 border-amber-200">
+                            👤 لم يسجّل بعد
+                          </Badge>
                         ) : (
                           <Badge className="bg-blue-500/15 text-blue-700 hover:bg-blue-500/20 text-[10px] h-5">مسجّل</Badge>
                         )}
+                        {isAnon && (() => {
+                          const fp = v.first_path || "";
+                          const ref = v.referrer || "";
+                          const hay = (fp + " " + ref).toLowerCase();
+                          let source = "";
+                          if (hay.includes("fbclid") || hay.includes("facebook") || hay.includes("utm_source=fb")) source = "📘 فيسبوك";
+                          else if (hay.includes("instagram") || hay.includes("ig_")) source = "📷 إنستجرام";
+                          else if (hay.includes("google") || hay.includes("gclid")) source = "🔍 جوجل";
+                          else if (hay.includes("tiktok") || hay.includes("ttclid")) source = "🎵 تيك توك";
+                          else if (hay.includes("whatsapp") || hay.includes("wa.me")) source = "💬 واتساب";
+                          else if (ref) source = "🔗 موقع آخر";
+                          else source = "🌐 مباشر";
+                          return <Badge variant="outline" className="text-[10px] h-5">{source}</Badge>;
+                        })()}
                       </div>
                       <div className="flex items-center gap-2 mt-1 flex-wrap text-[11px] text-muted-foreground">
                         {v.phone && <span className="font-mono">📱 {v.phone}</span>}
@@ -807,6 +842,11 @@ const StaffHome = () => {
                         <span>👁️ {v.pages} صفحة</span>
                         <span className="font-bold text-foreground">🕒 {last}</span>
                       </div>
+                      {isAnon && !v.phone && !v.email && (
+                        <p className="text-[10px] text-muted-foreground/80 mt-1 italic leading-relaxed">
+                          ⚠️ هذا زائر دخل الموقع من إعلان/رابط ولم يُنشئ حساباً بعد — لذا لا توجد بيانات تواصل. يمكنك مشاهدة الصفحات اللي تصفحها من زر "تفاصيل الجلسة".
+                        </p>
+                      )}
                     </div>
                     <div className="flex gap-1.5 shrink-0">
                       {v.phone && (
