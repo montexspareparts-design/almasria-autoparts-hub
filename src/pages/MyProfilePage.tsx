@@ -62,7 +62,7 @@ const MyProfilePage = () => {
   }, [user, navigate]);
 
   const validatePhone = (value: string): string => {
-    if (!value) return "";
+    if (!value) return "رقم الهاتف مطلوب — علشان نقدر نتواصل معاك بخصوص طلباتك";
     const digits = value.replace(/\D/g, "");
     if (!digits.startsWith("01")) return "الرقم لازم يبدأ بـ 01";
     if (digits.length !== 11) return "الرقم لازم يكون 11 رقم";
