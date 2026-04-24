@@ -83,6 +83,7 @@ export default function VisitorSessionSummary() {
   const [productMap, setProductMap] = useState<Map<string, ProductInfo>>(new Map());
   const [hasOrders, setHasOrders] = useState(false);
   const [hasCart, setHasCart] = useState(false);
+  const [orders, setOrders] = useState<Array<{ id: string; order_number: string; status: string; total_amount: number; created_at: string }>>([]);
 
   // Notes
   const [noteOpen, setNoteOpen] = useState(false);
