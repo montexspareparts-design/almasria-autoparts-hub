@@ -173,14 +173,26 @@ export default function CustomerCommunicationLog({ customerUserId, compact = fal
                   {record.note && (
                     <p className="text-foreground whitespace-pre-wrap mt-1">{record.note}</p>
                   )}
-                  <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
+                  <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-border/50 text-xs flex-wrap">
+                    <span className="flex items-center gap-1 text-muted-foreground font-medium">
                       <User className="w-3 h-3" />
                       {record.staff_name}
                     </span>
-                    <span>{new Date(record.created_at).toLocaleDateString("ar-EG", {
-                      day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"
-                    })}</span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="flex items-center gap-1 text-foreground/80 font-medium">
+                        <Calendar className="w-3 h-3 text-primary/70" />
+                        {fmtFullDate(record.created_at)}
+                      </span>
+                      <span className="flex items-center gap-1 text-foreground/80 font-mono">
+                        <Clock className="w-3 h-3 text-primary/70" />
+                        {fmtFullTime(record.created_at)}
+                      </span>
+                      {fmtRelative(record.created_at) && (
+                        <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-4">
+                          {fmtRelative(record.created_at)}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                   {record.staff_user_id === user?.id && (
                     <Button
