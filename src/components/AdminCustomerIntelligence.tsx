@@ -1846,6 +1846,53 @@ const AdminCustomerIntelligence = () => {
                           <Eye className="w-3.5 h-3.5" />
                         </button>
                       </div>
+                      {/* Score breakdown panel — visualizes how alerts/recency/buyability contribute */}
+                      <div
+                        className={cn(
+                          "rounded-lg border border-border/40 bg-background/60 px-2 py-1.5 space-y-1",
+                          isDone && "opacity-60"
+                        )}
+                        onClick={(e) => e.stopPropagation()}
+                        title="تفصيل درجة الأولوية الموحدة"
+                      >
+                        <div className="flex items-center justify-between text-[9px] font-bold text-muted-foreground">
+                          <span>تفصيل الأولوية</span>
+                          <span className="font-black text-foreground">{task.score}<span className="opacity-60">/100</span></span>
+                        </div>
+                        {/* Stacked bar */}
+                        <div className="flex h-1.5 w-full rounded-full overflow-hidden bg-muted/40">
+                          <div
+                            className="bg-red-500/80 transition-all"
+                            style={{ width: `${task.scoreBreakdown.alerts}%` }}
+                            title={`إنذارات: ${task.scoreBreakdown.alerts}/30`}
+                          />
+                          <div
+                            className="bg-amber-500/80 transition-all"
+                            style={{ width: `${task.scoreBreakdown.recency}%` }}
+                            title={`حداثة النشاط: ${task.scoreBreakdown.recency}/40`}
+                          />
+                          <div
+                            className="bg-emerald-500/80 transition-all"
+                            style={{ width: `${task.scoreBreakdown.buyability}%` }}
+                            title={`إمكانية الشراء: ${task.scoreBreakdown.buyability}/30`}
+                          />
+                        </div>
+                        {/* Legend with values */}
+                        <div className="flex items-center justify-between gap-1 text-[9px] font-bold">
+                          <span className="inline-flex items-center gap-1 text-red-700 dark:text-red-400" title="مساهمة الإنذارات (حد أقصى 30)">
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                            إنذارات {task.scoreBreakdown.alerts}
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-400" title="حداثة آخر نشاط (حد أقصى 40)">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            حداثة {task.scoreBreakdown.recency}
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400" title="إمكانية الشراء (حد أقصى 30)">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            شراء {task.scoreBreakdown.buyability}
+                          </span>
+                        </div>
+                      </div>
                       <div className="flex items-center gap-1.5 flex-wrap pt-1.5 border-t border-border/30" onClick={(e) => e.stopPropagation()}>
                         {task.phone && (
                           <>
