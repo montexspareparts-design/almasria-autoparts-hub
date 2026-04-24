@@ -2183,6 +2183,54 @@ export type Database = {
         }
         Relationships: []
       }
+      visitor_leads: {
+        Row: {
+          contacted_at: string | null
+          contacted_by: string | null
+          created_at: string
+          first_path: string | null
+          id: string
+          phone: string
+          referrer: string | null
+          session_key: string | null
+          source: string | null
+          staff_notes: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          contacted_at?: string | null
+          contacted_by?: string | null
+          created_at?: string
+          first_path?: string | null
+          id?: string
+          phone: string
+          referrer?: string | null
+          session_key?: string | null
+          source?: string | null
+          staff_notes?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          contacted_at?: string | null
+          contacted_by?: string | null
+          created_at?: string
+          first_path?: string | null
+          id?: string
+          phone?: string
+          referrer?: string | null
+          session_key?: string | null
+          source?: string | null
+          staff_notes?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       visitor_session_views: {
         Row: {
           created_at: string

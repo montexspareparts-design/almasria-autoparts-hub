@@ -3,6 +3,7 @@ const AIChatBot = lazy(() => import("@/components/AIChatBot"));
 const InstallBannerLazy = lazy(() => import("@/components/InstallBanner"));
 const WhatsAppFloat = lazy(() => import("@/components/WhatsAppFloat"));
 const AddPhonePrompt = lazy(() => import("@/components/AddPhonePrompt"));
+const VisitorLeadCapture = lazy(() => import("@/components/VisitorLeadCapture"));
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -48,6 +49,7 @@ const TrackOrderPage = lazy(() => import("./pages/TrackOrderPage"));
 const DevDealerPreview = lazy(() => import("./pages/DevDealerPreview"));
 const VisitorSessionSummary = lazy(() => import("./pages/VisitorSessionSummary"));
 const StaffHome = lazy(() => import("./pages/StaffHome"));
+const VisitorLeadsPage = lazy(() => import("./pages/VisitorLeadsPage"));
 import PageVisitTracker from "./components/PageVisitTracker";
 const DealerRtlAuditor = import.meta.env.DEV
   ? lazy(() => import("./components/dealer/DealerRtlAuditor"))
@@ -91,6 +93,7 @@ const App = () => (
               <DeferredComponent delay={4000}><AIChatBot /></DeferredComponent>
               <DeferredComponent delay={2500}><WhatsAppFloat /></DeferredComponent>
               <DeferredComponent delay={5000}><AddPhonePrompt /></DeferredComponent>
+              <DeferredComponent delay={6000}><VisitorLeadCapture /></DeferredComponent>
               {DealerRtlAuditor && (
                 <Suspense fallback={null}>
                   <DealerRtlAuditor />
@@ -137,6 +140,7 @@ const App = () => (
                     <Route path="/dev/dealer-preview" element={<DevDealerPreview />} />
                     <Route path="/admin/visitor/:userId" element={<VisitorSessionSummary />} />
                     <Route path="/admin/staff-home" element={<StaffHome />} />
+                    <Route path="/admin/visitor-leads" element={<VisitorLeadsPage />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                </Suspense>
