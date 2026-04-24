@@ -11,6 +11,7 @@ import {
   Activity, ArrowRight, Clock, Eye, FileText, Globe, Hash,
   Search, ShoppingBag, Phone, MessageCircle, Timer, User as UserIcon,
   Calendar, Sparkles, TrendingUp, MousePointerClick, History,
+  ExternalLink, Quote, Flame,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -167,6 +168,53 @@ export default function VisitorSessionSummary() {
   const avgPagesPerSession = sessions.length > 0 ? Math.round(visits.length / sessions.length) : 0;
   const initials = (profile?.full_name || "?").trim().split(" ").map(s => s[0]).slice(0, 2).join("").toUpperCase();
 
+  // Top viewed products (aggregated from price views)
+  const topProducts = useMemo(() => {
+    const counts = new Map<string, { count: number; lastAt: string }>();
+    for (const v of priceViews) {
+      const cur = counts.get(v.product_id);
+      if (cur) {
+        cur.count += 1;
+        if (v.viewed_at > cur.lastAt) cur.lastAt = v.viewed_at;
+      } else {
+        counts.set(v.product_id, { count: 1, lastAt: v.viewed_at });
+      }
+    }
+    return Array.from(counts.entries())
+      .map(([product_id, { count, lastAt }]) => ({
+        product_id,
+        count,
+        lastAt,
+        product: productMap.get(product_id),
+      }))
+      .sort((a, b) => b.count - a.count || (b.lastAt > a.lastAt ? 1 : -1))
+      .slice(0, 5);
+  }, [priceViews, productMap]);
+
+  // Top search queries (aggregated)
+  const topSearches = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const s of searches) {
+      const q = s.search_query.trim();
+      if (!q) continue;
+      counts.set(q, (counts.get(q) || 0) + 1);
+    }
+    return Array.from(counts.entries())
+      .map(([query, count]) => ({ query, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+  }, [searches]);
+
+  const buildQuoteWhatsApp = (productLabel: string) => {
+    const phone = "201027815696"; // WhatsMeta CRM number
+    const customer = profile?.full_name || "العميل";
+    const text = encodeURIComponent(
+      `طلب عرض سعر للعميل: ${customer}\nالمنتج: ${productLabel}\n${profile?.phone ? `هاتف العميل: ${profile.phone}` : ""}`
+    );
+    return `https://wa.me/${phone}?text=${text}`;
+  };
+
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-background to-slate-100 dark:from-slate-950 dark:via-background dark:to-slate-900 p-4" dir="rtl">
@@ -261,6 +309,122 @@ export default function VisitorSessionSummary() {
           <KpiCard icon={Search} label="عمليات البحث" value={searches.length} sub={searches.length > 0 ? "نشاط بحث" : "لم يبحث"} color="orange" />
           <KpiCard icon={Timer} label="إجمالي الوقت" valueText={fmtDuration(totalDurationMs)} sub={lastSession ? `آخر زيارة: ${fmtDate(lastSession.start)}` : "—"} color="emerald" />
         </div>
+
+        {/* Top Searched Products & Queries */}
+        {(topProducts.length > 0 || topSearches.length > 0) && (
+          <Card className="border-orange-200/60 dark:border-orange-900/40 shadow-md overflow-hidden">
+            <CardHeader className="pb-3 bg-gradient-to-l from-orange-500/10 via-orange-500/5 to-transparent border-b">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <div className="w-9 h-9 rounded-xl bg-orange-500/15 flex items-center justify-center">
+                  <Flame className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                </div>
+                المنتجات الأكثر اهتمامًا
+                <Badge variant="secondary" className="text-[10px]">{topProducts.length + topSearches.length}</Badge>
+              </CardTitle>
+              <p className="text-xs text-muted-foreground mt-1.5 mr-11">
+                ملخص لأكثر ما بحث وشاف سعره — اضغط لفتح المنتج أو إرسال عرض سعر فورًا.
+              </p>
+            </CardHeader>
+            <CardContent className="pt-4 space-y-4">
+              {topProducts.length > 0 && (
+                <div>
+                  <SectionTitle icon={ShoppingBag} title="منتجات شاف سعرها أكثر" count={topProducts.length} />
+                  <div className="space-y-2 mt-3">
+                    {topProducts.map((tp, idx) => {
+                      const label = tp.product?.name_ar || `منتج ${tp.product_id.slice(0, 8)}`;
+                      const sku = tp.product?.sku;
+                      return (
+                        <div
+                          key={tp.product_id}
+                          className="flex items-center justify-between gap-3 p-3 rounded-lg bg-muted/40 hover:bg-muted/70 transition flex-wrap"
+                        >
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <span className="w-7 h-7 rounded-lg bg-orange-100 dark:bg-orange-950/50 text-orange-700 dark:text-orange-400 flex items-center justify-center text-xs font-black shrink-0">
+                              {idx + 1}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-bold text-sm text-foreground truncate">{label}</p>
+                              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                                {sku && (
+                                  <span className="text-[10px] text-muted-foreground font-mono">SKU: {sku}</span>
+                                )}
+                                <span className="text-[10px] text-orange-700 dark:text-orange-400 font-bold">
+                                  شاف السعر {tp.count}× • آخر مرة {fmtTime(tp.lastAt)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex gap-1.5 shrink-0">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 gap-1 text-xs"
+                              onClick={() => window.open(`/dealer/product/${tp.product_id}`, "_blank")}
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                              فتح المنتج
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="h-8 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                              onClick={() => window.open(buildQuoteWhatsApp(`${label}${sku ? ` (${sku})` : ""}`), "_blank")}
+                            >
+                              <Quote className="w-3 h-3" />
+                              عرض سعر
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {topSearches.length > 0 && (
+                <div>
+                  <SectionTitle icon={Search} title="أكثر كلمات البحث تكرارًا" count={topSearches.length} />
+                  <div className="space-y-2 mt-3">
+                    {topSearches.map((ts, idx) => (
+                      <div
+                        key={ts.query}
+                        className="flex items-center justify-between gap-3 p-3 rounded-lg bg-muted/40 hover:bg-muted/70 transition flex-wrap"
+                      >
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <span className="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 flex items-center justify-center text-xs font-black shrink-0">
+                            {idx + 1}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold text-sm text-foreground truncate">"{ts.query}"</p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">بحث {ts.count}×</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-1.5 shrink-0">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 gap-1 text-xs"
+                            onClick={() => window.open(`/products?search=${encodeURIComponent(ts.query)}`, "_blank")}
+                          >
+                            <Search className="w-3 h-3" />
+                            عرض النتائج
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="h-8 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                            onClick={() => window.open(buildQuoteWhatsApp(ts.query), "_blank")}
+                          >
+                            <Quote className="w-3 h-3" />
+                            عرض سعر
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {visits.length === 0 ? (
           <Card className="border-dashed">
