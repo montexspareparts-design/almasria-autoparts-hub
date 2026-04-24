@@ -1763,6 +1763,21 @@ const AdminCustomerIntelligence = () => {
                 <span className="text-[10px] text-muted-foreground font-medium hidden md:inline">
                   {format(new Date(), "EEEE dd MMMM yyyy", { locale: ar })}
                 </span>
+                <Select value={String(taskWindowDays)} onValueChange={(v) => updateTaskWindow(parseInt(v, 10))}>
+                  <SelectTrigger
+                    className="h-7 text-[11px] gap-1 px-2 w-auto min-w-[110px] border-primary/30 bg-primary/5 font-bold"
+                    title="نافذة عرض المهام حسب آخر نشاط"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent align="end">
+                    <SelectItem value="1" className="text-xs">⚡ آخر 24 ساعة</SelectItem>
+                    <SelectItem value="3" className="text-xs">🔥 آخر 3 أيام</SelectItem>
+                    <SelectItem value="7" className="text-xs">📅 آخر 7 أيام</SelectItem>
+                    <SelectItem value="30" className="text-xs">🗓️ آخر 30 يوم</SelectItem>
+                    <SelectItem value="0" className="text-xs">♾️ كل المهام</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Button
                   variant="ghost"
                   size="sm"
