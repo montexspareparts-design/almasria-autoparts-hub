@@ -127,6 +127,18 @@ const DealerLogin = () => {
     if (result.error) toast({ title: "خطأ", description: String(result.error), variant: "destructive" });
   };
 
+  // ─── Block staff from seeing dealer portal ───
+  if (user && (isAdmin || isModerator)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-3" />
+          <p className="text-sm text-muted-foreground">جارٍ تحويلك للوحة الموظفين...</p>
+        </div>
+      </div>
+    );
+  }
+
   // ─── Application Status View ───
   if (user && (applicationStatus || checkingStatus)) {
     const status = applicationStatus?.status as keyof typeof statusConfig;
