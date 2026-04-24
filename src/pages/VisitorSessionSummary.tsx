@@ -125,6 +125,9 @@ export default function VisitorSessionSummary() {
   const [commNote, setCommNote] = useState("");
   const [savingComm, setSavingComm] = useState(false);
 
+  // Session viewers (other staff who opened this customer's session)
+  const [viewers, setViewers] = useState<Array<{ staff_user_id: string; staff_name: string | null; first_viewed_at: string; last_viewed_at: string; view_count: number }>>([]);
+
   const clearFocus = () => {
     document.querySelectorAll("[data-focus-target='true']").forEach((n) => {
       n.classList.remove("ring-4", "ring-primary", "ring-offset-2", "shadow-2xl", "scale-[1.01]");
@@ -221,6 +224,63 @@ export default function VisitorSessionSummary() {
     })();
     return () => { cancelled = true; };
   }, [userId]);
+
+  // Detect whether the param is a UUID (registered customer) or a session_key (anonymous)
+  const isAnonTarget = useMemo(() => {
+    return !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+  }, [userId]);
+
+  // Record this staff member's view + fetch full viewer list
+  useEffect(() => {
+    if (!userId || !user || (!isAdmin && !isModerator)) return;
+    let cancelled = false;
+    (async () => {
+      const target = isAnonTarget
+        ? { session_key: userId, customer_user_id: null }
+        : { customer_user_id: userId, session_key: null };
+
+      // Upsert: if record exists for this staff+target, bump view_count + last_viewed_at
+      const { data: existing } = await supabase
+        .from("visitor_session_views")
+        .select("id, view_count")
+        .eq("staff_user_id", user.id)
+        .eq(isAnonTarget ? "session_key" : "customer_user_id", userId)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase
+          .from("visitor_session_views")
+          .update({ last_viewed_at: new Date().toISOString(), view_count: (existing.view_count || 1) + 1 })
+          .eq("id", existing.id);
+      } else {
+        await supabase.from("visitor_session_views").insert({
+          staff_user_id: user.id,
+          ...target,
+        });
+      }
+
+      // Fetch all viewers for this target (newest first)
+      const { data: rows } = await supabase
+        .from("visitor_session_views")
+        .select("staff_user_id, first_viewed_at, last_viewed_at, view_count")
+        .eq(isAnonTarget ? "session_key" : "customer_user_id", userId)
+        .order("last_viewed_at", { ascending: false });
+
+      if (cancelled || !rows) return;
+
+      const ids = [...new Set(rows.map((r: any) => r.staff_user_id))];
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, email")
+        .in("user_id", ids);
+      const nameMap = new Map((profs || []).map((p: any) => [p.user_id, p.full_name || p.email]));
+
+      if (!cancelled) {
+        setViewers(rows.map((r: any) => ({ ...r, staff_name: nameMap.get(r.staff_user_id) || "موظف" })));
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [userId, user, isAdmin, isModerator, isAnonTarget]);
 
   // Group visits into sessions (gap > 30 min = new session)
   const sessions = useMemo(() => {
@@ -625,6 +685,60 @@ export default function VisitorSessionSummary() {
           <KpiCard icon={Search} label="عمليات البحث" value={searches.length} sub={searches.length > 0 ? "نشاط بحث" : "لم يبحث"} color="orange" onClick={() => scrollToSection(searches.length > 0 ? "section-searches" : "section-latest-session")} emptyHint={searches.length === 0 ? "لم يبحث عن أي منتج" : undefined} />
           <KpiCard icon={Timer} label="إجمالي الوقت" valueText={fmtDuration(totalDurationMs)} sub={lastSession ? `آخر زيارة: ${fmtDate(lastSession.start)}` : "—"} color="emerald" onClick={() => scrollToSection("section-latest-session")} emptyHint={!lastSession ? "لا يوجد نشاط بعد" : undefined} />
         </div>
+
+        {/* Session Viewers — who already opened this customer's session */}
+        {viewers.length > 0 && (
+          <Card className="border-emerald-200/60 dark:border-emerald-900/40 shadow-sm overflow-hidden">
+            <CardHeader className="pb-2 bg-gradient-to-l from-emerald-500/10 via-emerald-500/5 to-transparent border-b">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/15 flex items-center justify-center">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                تمت المشاهدة بواسطة
+                <Badge variant="secondary" className="text-[10px] bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-0">
+                  {viewers.length} موظف
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-3 pb-3">
+              <div className="flex flex-wrap gap-2">
+                {viewers.map((v) => {
+                  const isMe = v.staff_user_id === user?.id;
+                  const lastSeen = new Date(v.last_viewed_at);
+                  const diffMin = Math.floor((Date.now() - lastSeen.getTime()) / 60000);
+                  const relTime =
+                    diffMin < 1 ? "الآن" :
+                    diffMin < 60 ? `منذ ${diffMin} د` :
+                    diffMin < 1440 ? `منذ ${Math.floor(diffMin / 60)} س` :
+                    `منذ ${Math.floor(diffMin / 1440)} يوم`;
+                  return (
+                    <div
+                      key={v.staff_user_id}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs border ${
+                        isMe
+                          ? "bg-primary/10 border-primary/30 text-primary font-bold"
+                          : "bg-muted/60 border-border text-foreground"
+                      }`}
+                      title={`${v.view_count} مرة مشاهدة • أول مرة ${fmtDateTime(v.first_viewed_at)}`}
+                    >
+                      <UserIcon className="w-3 h-3" />
+                      <span>{isMe ? "أنت" : v.staff_name}</span>
+                      <span className="text-[10px] text-muted-foreground">• {relTime}</span>
+                      {v.view_count > 1 && (
+                        <Badge variant="outline" className="text-[9px] h-4 px-1 border-current">
+                          ×{v.view_count}
+                        </Badge>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed">
+                💡 كل موظف يفتح هذه الصفحة يُسجَّل تلقائيًا — لتجنّب تكرار الاتصال بنفس العميل من أكثر من موظف.
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Top Searched Products & Queries */}
         {(topProducts.length > 0 || topSearches.length > 0) && (

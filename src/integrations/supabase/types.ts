@@ -2183,6 +2183,39 @@ export type Database = {
         }
         Relationships: []
       }
+      visitor_session_views: {
+        Row: {
+          created_at: string
+          customer_user_id: string | null
+          first_viewed_at: string
+          id: string
+          last_viewed_at: string
+          session_key: string | null
+          staff_user_id: string
+          view_count: number
+        }
+        Insert: {
+          created_at?: string
+          customer_user_id?: string | null
+          first_viewed_at?: string
+          id?: string
+          last_viewed_at?: string
+          session_key?: string | null
+          staff_user_id: string
+          view_count?: number
+        }
+        Update: {
+          created_at?: string
+          customer_user_id?: string | null
+          first_viewed_at?: string
+          id?: string
+          last_viewed_at?: string
+          session_key?: string | null
+          staff_user_id?: string
+          view_count?: number
+        }
+        Relationships: []
+      }
       whatsapp_conversations: {
         Row: {
           assigned_to: string | null
