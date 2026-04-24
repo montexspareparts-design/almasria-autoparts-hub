@@ -782,7 +782,7 @@ const AdminCustomerIntelligence = () => {
     // Advanced: recent activity / need
     if (recentActivityFilter !== "any") {
       const orders = ordersMap?.[p.user_id];
-      const cartCount = cartByUser?.[p.user_id] || 0;
+      const cartCount = cartByUser?.[p.user_id]?.count || 0;
       const searches = userSearchMap[p.user_id] || [];
       const totalSearches = searches.reduce((s, q) => s + q.count, 0);
       if (recentActivityFilter === "has_cart" && cartCount <= 0) return false;
