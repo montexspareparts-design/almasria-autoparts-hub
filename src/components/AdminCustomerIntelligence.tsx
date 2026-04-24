@@ -2085,8 +2085,98 @@ const AdminCustomerIntelligence = () => {
                       const brandCounts: Record<string, number> = {};
                       if (productsMap) { viewedProducts.forEach(pid => { const b = productsMap[pid]?.brand; if (b) brandCounts[b] = (brandCounts[b] || 0) + 1; }); }
                       const topBrands = Object.entries(brandCounts).sort((a, b) => b[1] - a[1]).slice(0, 4);
+                      const phoneRaw = profile.phone || "";
+                      const phoneWA = phoneRaw ? formatPhoneForWhatsApp(phoneRaw) : "";
+                      const customerName = profile.full_name || "عميلنا الكريم";
+                      const topSearchQuery = searches[0]?.query || "";
+                      const waMessage = topSearchQuery
+                        ? `أهلاً ${customerName}، من المصرية جروب لقطع غيار تويوتا. لاحظنا اهتمامك بـ "${topSearchQuery}" — هل يمكنني مساعدتك؟`
+                        : `أهلاً ${customerName}، من المصرية جروب لقطع غيار تويوتا. كيف يمكنني خدمتك اليوم؟`;
+                      const emailSubject = `متابعة من المصرية جروب لقطع غيار تويوتا`;
+                      const emailBody = topSearchQuery
+                        ? `أهلاً ${customerName},\n\nلاحظنا اهتمامك بـ "${topSearchQuery}" على موقعنا. يسعدنا مساعدتك في إيجاد القطعة المناسبة.\n\nللتواصل: 01027815696\nمع تحيات،\nفريق المصرية جروب`
+                        : `أهلاً ${customerName},\n\nنود التواصل معك بخصوص خدمتك من المصرية جروب لقطع غيار تويوتا.\n\nللتواصل: 01027815696\nمع تحيات،\nفريق المصرية جروب`;
+                      const noteDraft = quickNoteDraft[profile.user_id] || "";
+                      const selectedType = quickNoteType[profile.user_id] || "phone";
+                      const isSavingNote = savingQuickNote === profile.user_id;
                       return (
-                        <Tabs defaultValue="basic" className="w-full">
+                        <>
+                          {/* ===== Quick Contact Panel — لوحة تواصل سريعة ===== */}
+                          <div className="mb-4 rounded-2xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-emerald-500/5 to-blue-500/5 dark:from-primary/10 dark:via-emerald-950/15 dark:to-blue-950/15 p-3.5 shadow-sm">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center"><MessageCircle className="w-4 h-4 text-primary" /></div>
+                                <div>
+                                  <p className="text-xs font-black text-foreground">لوحة تواصل سريعة</p>
+                                  <p className="text-[10px] text-muted-foreground">تواصل وسجّل المتابعة بضغطة واحدة</p>
+                                </div>
+                              </div>
+                              {!phoneRaw && !profile.email && (
+                                <span className="text-[10px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-400 px-2 py-1 rounded-md">⚠️ لا توجد بيانات تواصل</span>
+                              )}
+                            </div>
+
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+                              <a
+                                href={phoneRaw ? `tel:${phoneRaw}` : undefined}
+                                onClick={(e) => { e.stopPropagation(); if (!phoneRaw) { e.preventDefault(); toast({ title: "لا يوجد رقم هاتف", variant: "destructive" }); } }}
+                                className={cn("flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold transition-all", phoneRaw ? "bg-blue-500 hover:bg-blue-600 text-white shadow-sm hover:shadow active:scale-95" : "bg-muted/40 text-muted-foreground cursor-not-allowed")}
+                                title={phoneRaw ? `اتصل بـ ${phoneRaw}` : "لا يوجد رقم"}
+                              ><Phone className="w-3.5 h-3.5" />اتصال</a>
+                              <a
+                                href={phoneRaw ? `https://wa.me/${phoneWA}?text=${encodeURIComponent(waMessage)}` : undefined}
+                                target="_blank" rel="noopener noreferrer"
+                                onClick={(e) => { e.stopPropagation(); if (!phoneRaw) { e.preventDefault(); toast({ title: "لا يوجد رقم واتساب", variant: "destructive" }); } }}
+                                className={cn("flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold transition-all", phoneRaw ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm hover:shadow active:scale-95" : "bg-muted/40 text-muted-foreground cursor-not-allowed")}
+                                title={phoneRaw ? "إرسال رسالة واتساب جاهزة" : "لا يوجد رقم"}
+                              ><MessageCircle className="w-3.5 h-3.5" />واتساب</a>
+                              <a
+                                href={profile.email ? `mailto:${profile.email}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}` : undefined}
+                                onClick={(e) => { e.stopPropagation(); if (!profile.email) { e.preventDefault(); toast({ title: "لا يوجد بريد إلكتروني", variant: "destructive" }); } }}
+                                className={cn("flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold transition-all", profile.email ? "bg-purple-500 hover:bg-purple-600 text-white shadow-sm hover:shadow active:scale-95" : "bg-muted/40 text-muted-foreground cursor-not-allowed")}
+                                title={profile.email ? `إرسال بريد إلى ${profile.email}` : "لا يوجد بريد"}
+                              ><Mail className="w-3.5 h-3.5" />بريد</a>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); const text = [phoneRaw && `📞 ${phoneRaw}`, profile.email && `✉️ ${profile.email}`].filter(Boolean).join("\n"); if (!text) { toast({ title: "لا توجد بيانات للنسخ", variant: "destructive" }); return; } navigator.clipboard.writeText(text); toast({ title: "✅ تم نسخ بيانات التواصل" }); }}
+                                className="flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold bg-slate-700 hover:bg-slate-800 dark:bg-slate-600 dark:hover:bg-slate-700 text-white shadow-sm hover:shadow active:scale-95 transition-all"
+                                title="نسخ الهاتف والإيميل"
+                              ><Copy className="w-3.5 h-3.5" />نسخ</button>
+                            </div>
+
+                            <div className="rounded-xl bg-background/70 border border-border/50 p-2.5">
+                              <div className="flex items-center justify-between mb-2">
+                                <p className="text-[11px] font-bold text-foreground flex items-center gap-1.5"><FileText className="w-3.5 h-3.5 text-primary" />سجّل ملاحظة متابعة</p>
+                                <div className="flex items-center gap-1">
+                                  {(["phone", "whatsapp", "email", "meeting"] as const).map(t => {
+                                    const labels: Record<string, string> = { phone: "📞", whatsapp: "💬", email: "✉️", meeting: "🤝" };
+                                    return (
+                                      <button key={t} onClick={(e) => { e.stopPropagation(); setQuickNoteType(prev => ({ ...prev, [profile.user_id]: t })); }}
+                                        className={cn("text-[11px] px-2 py-0.5 rounded-md font-bold transition-all", selectedType === t ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted/50 hover:bg-muted text-muted-foreground")}
+                                        title={t}
+                                      >{labels[t]}</button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                              <div className="flex gap-1.5">
+                                <Textarea
+                                  value={noteDraft}
+                                  onChange={(e) => setQuickNoteDraft(prev => ({ ...prev, [profile.user_id]: e.target.value }))}
+                                  onClick={(e) => e.stopPropagation()}
+                                  placeholder="مثال: تم الاتصال — العميل مهتم بفلتر زيت كامري 2020 وسيرد خلال يومين..."
+                                  rows={2}
+                                  className="text-xs resize-none flex-1 bg-background"
+                                  onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); saveQuickNote(profile.user_id); } }}
+                                />
+                                <Button size="sm" onClick={(e) => { e.stopPropagation(); saveQuickNote(profile.user_id); }} disabled={isSavingNote || !noteDraft.trim()} className="self-end gap-1 h-9">
+                                  {isSavingNote ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}حفظ
+                                </Button>
+                              </div>
+                              <p className="text-[10px] text-muted-foreground mt-1.5">💡 تلميح: Ctrl+Enter للحفظ السريع</p>
+                            </div>
+                          </div>
+
+                          <Tabs defaultValue="basic" className="w-full">
                           <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto p-1 bg-muted/40 rounded-xl">
                             <TabsTrigger value="basic" className="text-[11px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2"><Users className="w-3.5 h-3.5" />بيانات أساسية</TabsTrigger>
                             <TabsTrigger value="needs" className="text-[11px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2"><AlertTriangle className="w-3.5 h-3.5" />احتياجات{alerts.length > 0 && (<span className="text-[9px] bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center font-black">{alerts.length}</span>)}</TabsTrigger>
@@ -2153,6 +2243,7 @@ const AdminCustomerIntelligence = () => {
                             {searches.length === 0 && viewedProducts.length === 0 && (<p className="text-sm text-muted-foreground text-center py-6">لا يوجد سجل تصفح لهذا العميل</p>)}
                           </TabsContent>
                         </Tabs>
+                        </>
                       );
                     })()}
                   </div>
