@@ -888,6 +888,8 @@ const StaffHome = () => {
             const yesterdayStart = new Date(todayStart); yesterdayStart.setDate(yesterdayStart.getDate() - 1);
             const weekStart = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
             const filtered = visitorsList.filter((v) => {
+              // staff exclusion (default). Toggle "All" lets admins review staff visits too.
+              if (!includeStaff && v.user_id && staffIdsSet.has(v.user_id)) return false;
               // type
               if (visitorTypeFilter === "registered" && !v.user_id) return false;
               if (visitorTypeFilter === "anon" && v.user_id) return false;
