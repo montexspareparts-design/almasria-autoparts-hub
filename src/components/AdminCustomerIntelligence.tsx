@@ -258,6 +258,14 @@ const AdminCustomerIntelligence = () => {
     } catch { return new Set(); }
   });
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
+  const [expandedScoreTasks, setExpandedScoreTasks] = useState<Set<string>>(new Set());
+  const toggleScoreExpanded = (taskId: string) => {
+    setExpandedScoreTasks(prev => {
+      const next = new Set(prev);
+      if (next.has(taskId)) next.delete(taskId); else next.add(taskId);
+      return next;
+    });
+  };
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [tasksOpen, setTasksOpen] = useState(true);
 
