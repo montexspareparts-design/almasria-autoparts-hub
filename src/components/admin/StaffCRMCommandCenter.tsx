@@ -557,28 +557,28 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
               <Flame className="w-4 h-4" />
               <span className="font-semibold">طلبات عاجلة</span>
             </div>
-            <Badge variant={counts.urgent > 0 ? "destructive" : "secondary"} className="text-[10px] h-4">{counts.urgent}</Badge>
+            <span className={counts.urgent > 0 ? "inline-flex h-4 items-center rounded-full border border-transparent bg-destructive px-2 text-[10px] font-semibold text-destructive-foreground" : "inline-flex h-4 items-center rounded-full border border-transparent bg-secondary px-2 text-[10px] font-semibold text-secondary-foreground"}>{counts.urgent}</span>
           </TabsTrigger>
           <TabsTrigger value="chatbot" className="flex flex-col gap-0.5 py-2.5 data-[state=active]:bg-purple-50 data-[state=active]:text-purple-700">
             <div className="flex items-center gap-1.5">
               <Bot className="w-4 h-4" />
               <span className="font-semibold">طلبات الشات بوت</span>
             </div>
-            <Badge variant={counts.chatbot > 0 ? "default" : "secondary"} className={`text-[10px] h-4 ${counts.chatbot > 0 ? "bg-purple-600 animate-pulse" : ""}`}>{counts.chatbot}</Badge>
+            <span className={counts.chatbot > 0 ? "inline-flex h-4 items-center rounded-full border border-transparent bg-primary px-2 text-[10px] font-semibold text-primary-foreground animate-pulse" : "inline-flex h-4 items-center rounded-full border border-transparent bg-secondary px-2 text-[10px] font-semibold text-secondary-foreground"}>{counts.chatbot}</span>
           </TabsTrigger>
           <TabsTrigger value="search" className="flex flex-col gap-0.5 py-2.5 data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700">
             <div className="flex items-center gap-1.5">
               <Search className="w-4 h-4" />
               <span className="font-semibold">بحث بدون شراء</span>
             </div>
-            <Badge variant="secondary" className="text-[10px] h-4 bg-orange-100 text-orange-700">{counts.search}</Badge>
+            <span className="inline-flex h-4 items-center rounded-full border border-transparent bg-secondary px-2 text-[10px] font-semibold text-secondary-foreground">{counts.search}</span>
           </TabsTrigger>
           <TabsTrigger value="yesterday" className="flex flex-col gap-0.5 py-2.5 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
             <div className="flex items-center gap-1.5">
               <UserCheck className="w-4 h-4" />
               <span className="font-semibold">دخلوا أمس</span>
             </div>
-            <Badge variant="secondary" className="text-[10px] h-4 bg-blue-100 text-blue-700">{counts.yesterday}</Badge>
+            <span className="inline-flex h-4 items-center rounded-full border border-transparent bg-secondary px-2 text-[10px] font-semibold text-secondary-foreground">{counts.yesterday}</span>
           </TabsTrigger>
           {isAdmin && (
             <TabsTrigger value="leaderboard" className="flex flex-col gap-0.5 py-2.5 data-[state=active]:bg-amber-50 data-[state=active]:text-amber-700">
@@ -586,7 +586,7 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                 <Trophy className="w-4 h-4" />
                 <span className="font-semibold">لوحة الأداء</span>
               </div>
-              <Badge variant="secondary" className="text-[10px] h-4 bg-amber-100 text-amber-700">{staffLeaderboard.length}</Badge>
+              <span className="inline-flex h-4 items-center rounded-full border border-transparent bg-secondary px-2 text-[10px] font-semibold text-secondary-foreground">{staffLeaderboard.length}</span>
             </TabsTrigger>
           )}
         </TabsList>
