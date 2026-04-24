@@ -1002,8 +1002,15 @@ const AdminCustomerIntelligence = () => {
         const daysSinceActivity = lastActivity ? Math.floor((now - new Date(lastActivity).getTime()) / 86400000) : 999;
         // Top searched query
         const topSearch = [...searches].sort((a, b) => b.count - a.count)[0];
-        // Top viewed products (names)
-        const topProducts = views.slice(0, 3).map(pid => productsMap?.[pid]?.name_ar).filter(Boolean) as string[];
+        // Top viewed products (with id+sku for smart routing)
+        const topProductsRich = views.slice(0, 3)
+          .map(pid => {
+            const prod = productsMap?.[pid];
+            if (!prod?.name_ar) return null;
+            return { id: pid, name: prod.name_ar as string, sku: (prod.sku as string) || null };
+          })
+          .filter(Boolean) as { id: string; name: string; sku: string | null }[];
+        const topProducts = topProductsRich.map(x => x.name);
         // Score: more search + recent activity + no orders = hotter
         const noOrders = ordersCount === 0;
         const score =
