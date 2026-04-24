@@ -2651,6 +2651,19 @@ const AdminCustomerIntelligence = () => {
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
+                                  // Track the open-file event (best-effort, non-blocking)
+                                  if (user?.id && task.userId) {
+                                    supabase
+                                      .from("staff_customer_file_opens")
+                                      .insert({
+                                        staff_user_id: user.id,
+                                        customer_user_id: task.userId,
+                                        source: "admin_customer_intelligence",
+                                      })
+                                      .then(({ error }) => {
+                                        if (error) console.warn("[file-open-track] failed:", error.message);
+                                      });
+                                  }
                                   navigate(`/admin/visitor/${task.userId}`);
                                 }}
                                 className="w-full text-[10px] font-bold px-2 py-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors inline-flex items-center justify-center gap-1"
