@@ -1770,16 +1770,262 @@ const AdminCustomerIntelligence = () => {
         </Card>
       )}
 
-      {/* Customer list */}
+      {/* Customer list with top-level tabs (All / Needs Follow-up Now) */}
+      {(() => {
+        // Build "needs follow-up now" list with urgency scoring
+        type FollowUpItem = {
+          profile: typeof filteredProfiles extends (infer T)[] | undefined ? T : never;
+          score: number;
+          reasons: { icon: string; label: string }[];
+        };
+        const followUpList: FollowUpItem[] = [];
+        filteredProfiles?.forEach((p) => {
+          const reasons: { icon: string; label: string }[] = [];
+          let score = 0;
+          const orders = ordersMap?.[p.user_id];
+          const cart = cartByUser?.[p.user_id];
+          const searches = userSearchMap[p.user_id] || [];
+          const totalSearches = searches.reduce((s, q) => s + q.count, 0);
+          const lifecycle = getLifecycleStage(p.user_id);
+          const lastVisit = lastVisitByUser?.[p.user_id];
 
-      {loadingProfiles ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="h-24 bg-muted animate-pulse rounded-2xl" />
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-3">
+          // 🛒 سلة متروكة منذ يوم+
+          if (cart && cart.count > 0) {
+            const days = differenceInDays(new Date(), new Date(cart.lastUpdated));
+            if (days >= 1) {
+              score += 50 + Math.min(cart.count * 2, 20);
+              reasons.push({ icon: "🛒", label: `سلة متروكة (${cart.count} صنف منذ ${days} يوم)` });
+            }
+          }
+          // 🔥 بحث كثيف بدون طلب
+          if (totalSearches >= 5 && !orders) {
+            score += 40 + Math.min(totalSearches, 20);
+            reasons.push({ icon: "🔥", label: `${totalSearches} بحث بدون طلب — عميل ساخن` });
+          } else if (totalSearches >= 3 && !orders) {
+            score += 20;
+            reasons.push({ icon: "🎯", label: `${totalSearches} بحث بدون طلب` });
+          }
+          // ⏰ عميل خامل
+          if (lifecycle === "idle") {
+            score += 25;
+            reasons.push({ icon: "⏰", label: "خامل (30-90 يوم) — يحتاج تنشيط" });
+          }
+          // 👋 عميل غايب 14+ يوم لكن سبق وطلب
+          if (lastVisit && orders) {
+            const daysSinceVisit = differenceInDays(new Date(), new Date(lastVisit));
+            if (daysSinceVisit >= 14) {
+              score += 20;
+              reasons.push({ icon: "👋", label: `غايب منذ ${daysSinceVisit} يوم` });
+            }
+          }
+          // ✨ عميل جديد نشط
+          const daysSinceJoin = differenceInDays(new Date(), new Date(p.created_at));
+          if (daysSinceJoin <= 3 && !orders && totalSearches > 0) {
+            score += 15;
+            reasons.push({ icon: "✨", label: "عميل جديد نشط — رحب به" });
+          }
+          // 📞 لم يتم التواصل + لديه أي إشارة
+          if (score > 0) {
+            followUpList.push({ profile: p, score, reasons });
+          }
+        });
+        followUpList.sort((a, b) => b.score - a.score);
+
+        const formatPhoneForWA = (phone: string) => {
+          let cleaned = phone.replace(/[\s\-()]/g, "");
+          cleaned = cleaned.replace(/^002/, "").replace(/^0020/, "");
+          if (cleaned.startsWith("0")) cleaned = "20" + cleaned.slice(1);
+          return cleaned;
+        };
+
+        const buildQuickMessage = (name: string | null, reasons: { label: string }[]) => {
+          const greeting = `مرحباً ${name || "عميلنا الكريم"} 👋`;
+          const body = reasons.length > 0
+            ? `\n\nنود متابعة طلبك معنا. لاحظنا: ${reasons[0].label}.\nفريق المصرية جروب يمكنه مساعدتك بأفضل العروض والأسعار.`
+            : `\n\nنود التواصل معك ومتابعة احتياجاتك من قطع غيار تويوتا.`;
+          return encodeURIComponent(greeting + body);
+        };
+
+        return (
+          <Tabs defaultValue="all" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 h-auto p-1 bg-muted/40 rounded-xl mb-3">
+              <TabsTrigger value="all" className="text-[12px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2.5">
+                <Users className="w-3.5 h-3.5" />
+                كل العملاء
+                <Badge variant="secondary" className="text-[10px] h-5 mr-1">{filteredProfiles?.length || 0}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="followup" className="text-[12px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2.5">
+                <Zap className="w-3.5 h-3.5 text-orange-500" />
+                يحتاجون متابعة الآن
+                {followUpList.length > 0 && (
+                  <Badge className="text-[10px] h-5 mr-1 bg-orange-500 hover:bg-orange-600 text-white">{followUpList.length}</Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
+
+            {/* ===== Tab: Needs Follow-up Now ===== */}
+            <TabsContent value="followup" className="space-y-2.5 mt-0 focus-visible:outline-none">
+              {loadingProfiles ? (
+                <div className="space-y-2">
+                  {[1, 2, 3].map(i => <div key={i} className="h-20 bg-muted animate-pulse rounded-xl" />)}
+                </div>
+              ) : followUpList.length === 0 ? (
+                <Card className="rounded-2xl border-dashed border-2 border-emerald-300/50 bg-emerald-50/30 dark:bg-emerald-950/10">
+                  <CardContent className="py-10 text-center">
+                    <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
+                    <h3 className="font-black text-base text-emerald-700 dark:text-emerald-400 mb-1">ممتاز! لا يوجد عملاء يحتاجون متابعة عاجلة</h3>
+                    <p className="text-xs text-muted-foreground">جميع العملاء في الفلتر الحالي تحت السيطرة 🎉</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <>
+                  {followUpList.slice(0, 50).map((item, idx) => {
+                    const p = item.profile;
+                    const isDealer = dealerUserIds?.has(p.user_id);
+                    const urgencyColor =
+                      item.score >= 70 ? "border-r-4 border-r-red-500 bg-red-50/40 dark:bg-red-950/10" :
+                      item.score >= 40 ? "border-r-4 border-r-orange-500 bg-orange-50/40 dark:bg-orange-950/10" :
+                      "border-r-4 border-r-amber-400 bg-amber-50/30 dark:bg-amber-950/10";
+                    const urgencyLabel =
+                      item.score >= 70 ? { label: "عاجل جداً", color: "bg-red-500 text-white" } :
+                      item.score >= 40 ? { label: "عاجل", color: "bg-orange-500 text-white" } :
+                      { label: "متوسط", color: "bg-amber-400 text-amber-950" };
+                    return (
+                      <Card
+                        key={p.user_id}
+                        className={cn("rounded-xl shadow-sm hover:shadow-md transition-all overflow-hidden", urgencyColor)}
+                      >
+                        <CardContent className="p-3">
+                          <div className="flex items-start gap-3 flex-wrap">
+                            {/* Rank + Avatar */}
+                            <div className="flex items-center gap-2 shrink-0">
+                              <div className="w-8 h-8 rounded-lg bg-background border border-border/50 flex items-center justify-center font-black text-xs text-muted-foreground">
+                                #{idx + 1}
+                              </div>
+                              <div className={cn(
+                                "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+                                isDealer ? "bg-blue-500/15" : "bg-primary/10"
+                              )}>
+                                <Users className={cn("w-5 h-5", isDealer ? "text-blue-600 dark:text-blue-400" : "text-primary")} />
+                              </div>
+                            </div>
+
+                            {/* Customer info */}
+                            <div className="flex-1 min-w-[180px]">
+                              <div className="flex items-center gap-2 flex-wrap mb-1">
+                                <button
+                                  type="button"
+                                  onClick={() => { setExpandedUser(p.user_id); }}
+                                  className="font-bold text-sm text-foreground hover:text-primary text-right"
+                                >
+                                  {p.full_name || "غير محدد"}
+                                </button>
+                                <Badge className={cn("text-[9px] h-5 font-black", urgencyLabel.color)}>
+                                  {urgencyLabel.label} · {item.score}
+                                </Badge>
+                                {isDealer ? (
+                                  <Badge variant="outline" className="text-[9px] h-5 border-blue-300 text-blue-700 dark:text-blue-400">تاجر</Badge>
+                                ) : (
+                                  <Badge variant="outline" className="text-[9px] h-5">قطاعي</Badge>
+                                )}
+                              </div>
+                              {/* Phone */}
+                              <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                                {p.phone ? (
+                                  <span className="font-mono font-medium text-foreground" dir="ltr">{p.phone}</span>
+                                ) : (
+                                  <span className="text-red-600 font-bold">⚠ لا يوجد رقم هاتف</span>
+                                )}
+                              </div>
+                              {/* Reasons */}
+                              <div className="flex flex-wrap gap-1.5 mt-1.5">
+                                {item.reasons.map((r, ri) => (
+                                  <span
+                                    key={ri}
+                                    className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-background border border-border/40 font-medium"
+                                  >
+                                    <span>{r.icon}</span>{r.label}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* One-click action buttons */}
+                            <div className="flex items-center gap-1.5 shrink-0 ms-auto">
+                              {p.phone ? (
+                                <>
+                                  <Button
+                                    asChild
+                                    size="sm"
+                                    className="h-9 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-sm"
+                                  >
+                                    <a
+                                      href={`https://wa.me/${formatPhoneForWA(p.phone)}?text=${buildQuickMessage(p.full_name, item.reasons)}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      title="فتح محادثة واتساب"
+                                    >
+                                      <MessageCircle className="w-3.5 h-3.5" />
+                                      واتساب
+                                    </a>
+                                  </Button>
+                                  <Button
+                                    asChild
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-9 gap-1.5 border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-950/30 font-bold"
+                                  >
+                                    <a href={`tel:${p.phone}`} title="بدء مكالمة">
+                                      <Phone className="w-3.5 h-3.5" />
+                                      اتصل
+                                    </a>
+                                  </Button>
+                                </>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-9 gap-1.5 text-[11px]"
+                                  onClick={() => setExpandedUser(p.user_id)}
+                                >
+                                  <AlertCircle className="w-3.5 h-3.5" />
+                                  أضف رقم
+                                </Button>
+                              )}
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-9 px-2 text-[11px]"
+                                onClick={() => setExpandedUser(p.user_id)}
+                                title="فتح ملف العميل"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                  {followUpList.length > 50 && (
+                    <p className="text-center text-[11px] text-muted-foreground mt-2">
+                      يتم عرض أعلى 50 من إجمالي {followUpList.length} عميل يحتاج متابعة
+                    </p>
+                  )}
+                </>
+              )}
+            </TabsContent>
+
+            {/* ===== Tab: All Customers (existing list) ===== */}
+            <TabsContent value="all" className="mt-0 focus-visible:outline-none">
+              {loadingProfiles ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="h-24 bg-muted animate-pulse rounded-2xl" />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-3">
           {filteredProfiles?.map((profile) => {
             const isExpanded = expandedUser === profile.user_id;
             const customerType = getCustomerType(profile.user_id);
@@ -2362,6 +2608,10 @@ const AdminCustomerIntelligence = () => {
           )}
         </div>
       )}
+            </TabsContent>
+          </Tabs>
+        );
+      })()}
 
       {/* ===== Analytics & Insights Section ===== */}
       <div className="relative pt-2">
