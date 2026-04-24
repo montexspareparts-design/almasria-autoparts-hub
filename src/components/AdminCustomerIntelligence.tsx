@@ -289,6 +289,46 @@ const AdminCustomerIntelligence = () => {
     },
   });
 
+  // Customer communications log (calls/messages by staff)
+  const { data: communicationsData } = useQuery({
+    queryKey: ["admin_customer_communications"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("customer_communications")
+        .select("id, customer_user_id, staff_user_id, comm_type, note, created_at")
+        .order("created_at", { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Cart items count per dealer (for "abandoned cart" alert)
+  const { data: cartItemsData } = useQuery({
+    queryKey: ["admin_dealer_carts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("dealer_cart_items")
+        .select("user_id, updated_at");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Page visits last seen per user
+  const { data: lastVisitData } = useQuery({
+    queryKey: ["admin_last_visits"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("page_visits")
+        .select("user_id, visited_at")
+        .order("visited_at", { ascending: false })
+        .limit(2000);
+      if (error) throw error;
+      return data;
+    },
+  });
+
   // Build orders map with last order date
   const ordersMap = useMemo(() => {
     if (!ordersData) return {} as Record<string, { count: number; total: number; lastOrderDate: string; lastOrderNumber: string }>;
@@ -343,6 +383,37 @@ const AdminCustomerIntelligence = () => {
     });
     return map;
   }, [orderItemsData, ordersData]);
+
+  // Communications grouped by customer
+  const communicationsByUser = useMemo(() => {
+    const map: Record<string, { id: string; comm_type: string; note: string | null; created_at: string; staff_user_id: string }[]> = {};
+    communicationsData?.forEach(c => {
+      if (!map[c.customer_user_id]) map[c.customer_user_id] = [];
+      map[c.customer_user_id].push(c);
+    });
+    return map;
+  }, [communicationsData]);
+
+  // Cart items grouped by user (last update)
+  const cartByUser = useMemo(() => {
+    const map: Record<string, { count: number; lastUpdated: string }> = {};
+    cartItemsData?.forEach(c => {
+      if (!map[c.user_id]) map[c.user_id] = { count: 0, lastUpdated: c.updated_at };
+      map[c.user_id].count++;
+      if (c.updated_at > map[c.user_id].lastUpdated) map[c.user_id].lastUpdated = c.updated_at;
+    });
+    return map;
+  }, [cartItemsData]);
+
+  // Last visit per user
+  const lastVisitByUser = useMemo(() => {
+    const map: Record<string, string> = {};
+    lastVisitData?.forEach(v => {
+      if (!v.user_id) return;
+      if (!map[v.user_id] || v.visited_at > map[v.user_id]) map[v.user_id] = v.visited_at;
+    });
+    return map;
+  }, [lastVisitData]);
 
   // Build user search logs map
   const userSearchMap: Record<string, { query: string; count: number; lastAt: string }[]> = {};
@@ -493,6 +564,121 @@ const AdminCustomerIntelligence = () => {
     if (cleaned.startsWith("2")) return cleaned;
     return "2" + cleaned;
   };
+
+  // Generate quick alerts for a customer (red/orange flags for staff attention)
+  const getCustomerAlerts = (userId: string): { icon: string; label: string; color: string; type: "danger" | "warning" | "info" }[] => {
+    const alerts: { icon: string; label: string; color: string; type: "danger" | "warning" | "info" }[] = [];
+    const orders = ordersMap?.[userId];
+    const searches = userSearchMap[userId] || [];
+    const cart = cartByUser[userId];
+    const lastVisit = lastVisitByUser[userId];
+    const purchasedSet = purchasedProductsByUser[userId];
+
+    // 1. Abandoned cart
+    if (cart && cart.count > 0) {
+      const daysSince = differenceInDays(new Date(), new Date(cart.lastUpdated));
+      if (daysSince >= 1) {
+        alerts.push({
+          icon: "🛒",
+          label: `سلة متروكة (${cart.count} صنف منذ ${daysSince} يوم)`,
+          color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-300/50",
+          type: "danger",
+        });
+      }
+    }
+
+    // 2. Heavy searcher with no orders
+    const totalSearchCount = searches.reduce((s, q) => s + q.count, 0);
+    if (totalSearchCount >= 5 && !orders) {
+      alerts.push({
+        icon: "🔥",
+        label: `بحث ${totalSearchCount} مرة بدون أي طلب`,
+        color: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400 border-orange-300/50",
+        type: "warning",
+      });
+    }
+
+    // 3. Customer has not visited in long time
+    if (lastVisit) {
+      const daysSinceVisit = differenceInDays(new Date(), new Date(lastVisit));
+      if (daysSinceVisit >= 14 && orders) {
+        alerts.push({
+          icon: "👋",
+          label: `عميل غايب منذ ${daysSinceVisit} يوم`,
+          color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-300/50",
+          type: "warning",
+        });
+      }
+    }
+
+    // 4. Searched many but didn't buy what they searched
+    if (searches.length >= 3 && purchasedSet) {
+      const unpurchasedSearches = searches.filter(s => {
+        const ql = s.query.toLowerCase();
+        return !Object.values(productsMap || {}).some((p: any) =>
+          purchasedSet.has(p.id) && (p.name_ar?.toLowerCase().includes(ql) || p.sku?.toLowerCase().includes(ql))
+        );
+      });
+      if (unpurchasedSearches.length >= searches.length * 0.7 && orders) {
+        alerts.push({
+          icon: "🎯",
+          label: `${unpurchasedSearches.length} بحث بدون شراء — فرصة بيع`,
+          color: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 border-purple-300/50",
+          type: "info",
+        });
+      }
+    }
+
+    // 5. New customer (registered < 3 days, no order)
+    const profile = profiles?.find(p => p.user_id === userId);
+    if (profile) {
+      const daysSinceJoin = differenceInDays(new Date(), new Date(profile.created_at));
+      if (daysSinceJoin <= 3 && !orders && totalSearchCount > 0) {
+        alerts.push({
+          icon: "✨",
+          label: "عميل جديد نشط — رحب به!",
+          color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-300/50",
+          type: "info",
+        });
+      }
+    }
+
+    return alerts;
+  };
+
+  // Build a ready-to-use call/whatsapp script based on customer behavior
+  const buildCallScript = (userId: string): string => {
+    const profile = profiles?.find(p => p.user_id === userId);
+    const name = profile?.full_name?.split(" ")[0] || "حضرتك";
+    const orders = ordersMap?.[userId];
+    const searches = userSearchMap[userId] || [];
+    const cart = cartByUser[userId];
+    const topSearches = [...searches].sort((a, b) => b.count - a.count).slice(0, 3).map(s => s.query);
+    const isDealer = dealerUserIds?.has(userId);
+
+    let opening = `السلام عليكم أستاذ/${name}، معاك ${isDealer ? "خدمة عملاء التجار" : "خدمة عملاء"} المصرية جروب.`;
+    let body = "";
+
+    if (cart && cart.count > 0) {
+      body = `\n\nلاحظت إن حضرتك مضيف ${cart.count} صنف في عربة التسوق ومش كملت الطلب. هل في حاجة محتاج توضيح فيها؟ أنا هنا أساعدك.`;
+    } else if (topSearches.length > 0 && !orders) {
+      body = `\n\nلاحظت إن حضرتك بتبحث عن: ${topSearches.join("، ")}. الأصناف دي متوفرة عندنا وممكن أساعدك بأفضل سعر وأسرع توصيل.`;
+    } else if (orders) {
+      const daysSinceLast = differenceInDays(new Date(), new Date(orders.lastOrderDate));
+      if (daysSinceLast >= 30) {
+        body = `\n\nمر فترة من آخر طلب لحضرتك (${daysSinceLast} يوم). عندنا عروض جديدة ووصول أصناف جديدة، تحب أبعتها لحضرتك؟`;
+      } else {
+        body = `\n\nأطمن على طلبك الأخير (${orders.lastOrderNumber})، كل حاجة تمام؟ وفي أي حاجة تانية أقدر أساعدك فيها؟`;
+      }
+    } else if (topSearches.length > 0) {
+      body = `\n\nشفت إن حضرتك بحثت عن: ${topSearches.join("، ")}. تحب أساعدك تلاقي أفضل بدائل وأسعار؟`;
+    } else {
+      body = `\n\nأهلاً بحضرتك في المصرية جروب! هل في صنف معين بتدور عليه أقدر أساعدك فيه؟`;
+    }
+
+    return opening + body + "\n\nشكراً لتعاملك معانا 🙏";
+  };
+
 
   const filteredWithPhone = filteredProfiles?.filter(p => p.phone) || [];
 
@@ -1535,6 +1721,25 @@ const AdminCustomerIntelligence = () => {
                           عميل قطاعي
                         </span>
                       )}
+                      {/* Quick alert badge — يلفت نظر الموظف من بره */}
+                      {(() => {
+                        const alerts = getCustomerAlerts(profile.user_id);
+                        if (alerts.length === 0) return null;
+                        const danger = alerts.find(a => a.type === "danger");
+                        const showAlert = danger || alerts[0];
+                        return (
+                          <span
+                            className={cn(
+                              "text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 animate-pulse",
+                              showAlert.color
+                            )}
+                            title={alerts.map(a => `${a.icon} ${a.label}`).join("\n")}
+                          >
+                            <AlertTriangle className="w-3 h-3" />
+                            {alerts.length} تنبيه
+                          </span>
+                        );
+                      })()}
                     </div>
                     <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-1 flex-wrap">
                       {profile.phone && (
@@ -1573,16 +1778,38 @@ const AdminCustomerIntelligence = () => {
                       <Activity className="w-4 h-4 text-primary" />
                     </a>
                     {profile.phone && (
-                      <a
-                        href={`https://wa.me/${formatPhoneForWhatsApp(profile.phone)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-9 h-9 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 flex items-center justify-center transition-colors"
-                        title="تواصل عبر واتساب"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <MessageCircle className="w-4 h-4 text-emerald-600" />
-                      </a>
+                      <>
+                        <a
+                          href={`tel:${profile.phone}`}
+                          className="w-9 h-9 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 flex items-center justify-center transition-colors"
+                          title="اتصال مباشر"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Phone className="w-4 h-4 text-blue-600" />
+                        </a>
+                        <a
+                          href={`https://wa.me/${formatPhoneForWhatsApp(profile.phone)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-9 h-9 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 flex items-center justify-center transition-colors"
+                          title="تواصل عبر واتساب"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <MessageCircle className="w-4 h-4 text-emerald-600" />
+                        </a>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigator.clipboard.writeText(profile.phone!);
+                            toast({ title: `✅ تم نسخ ${profile.phone}` });
+                          }}
+                          className="w-9 h-9 rounded-xl bg-muted/60 hover:bg-muted flex items-center justify-center transition-colors"
+                          title="نسخ رقم الهاتف"
+                        >
+                          <Copy className="w-4 h-4 text-muted-foreground" />
+                        </button>
+                      </>
                     )}
 
                     <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
@@ -1632,6 +1859,139 @@ const AdminCustomerIntelligence = () => {
                     className="overflow-hidden"
                   >
                   <div className="px-5 pb-5 space-y-4 border-t border-border/30 pt-4 bg-gradient-to-b from-muted/20 to-transparent">
+                    {/* === ALERTS BAR — يلفت نظر الموظف للحالات اللي محتاجة تحرك === */}
+                    {(() => {
+                      const alerts = getCustomerAlerts(profile.user_id);
+                      if (alerts.length === 0) return null;
+                      return (
+                        <div className="flex flex-wrap gap-2 p-3 rounded-xl bg-gradient-to-l from-red-50/50 via-orange-50/30 to-transparent dark:from-red-950/20 dark:via-orange-950/10 border border-red-200/40 dark:border-red-900/30">
+                          <div className="flex items-center gap-1.5 text-[11px] font-bold text-red-700 dark:text-red-400 shrink-0 ml-1">
+                            <AlertTriangle className="w-3.5 h-3.5" />
+                            تنبيهات:
+                          </div>
+                          {alerts.map((a, i) => (
+                            <span
+                              key={i}
+                              className={cn(
+                                "text-[11px] font-bold px-2.5 py-1 rounded-lg border flex items-center gap-1",
+                                a.color
+                              )}
+                            >
+                              <span>{a.icon}</span>
+                              {a.label}
+                            </span>
+                          ))}
+                        </div>
+                      );
+                    })()}
+
+                    {/* === سكريبت اتصال جاهز — يوفر وقت الموظف === */}
+                    {profile.phone && (
+                      <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-blue-500/5 p-4">
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
+                              <MessageCircle className="w-4 h-4 text-primary" />
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-foreground">سكريبت اتصال مقترح</p>
+                              <p className="text-[10px] text-muted-foreground">مبني تلقائياً على سلوك العميل</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigator.clipboard.writeText(buildCallScript(profile.user_id));
+                                toast({ title: "✅ تم نسخ السكريبت" });
+                              }}
+                              className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary flex items-center gap-1 transition-colors"
+                              title="نسخ السكريبت"
+                            >
+                              <Copy className="w-3 h-3" />
+                              نسخ
+                            </button>
+                            <a
+                              href={`https://wa.me/${formatPhoneForWhatsApp(profile.phone)}?text=${encodeURIComponent(buildCallScript(profile.user_id))}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 flex items-center gap-1 transition-colors"
+                              title="إرسال عبر واتساب"
+                            >
+                              <Send className="w-3 h-3" />
+                              إرسال
+                            </a>
+                          </div>
+                        </div>
+                        <p className="text-xs text-foreground/85 leading-relaxed whitespace-pre-line bg-background/60 rounded-lg p-3 border border-border/30">
+                          {buildCallScript(profile.user_id)}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* === سجل المكالمات السابقة === */}
+                    {(() => {
+                      const comms = communicationsByUser[profile.user_id] || [];
+                      if (comms.length === 0) {
+                        return (
+                          <div className="rounded-xl border border-dashed border-border/50 bg-muted/10 p-3 flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                              <FileText className="w-3.5 h-3.5" />
+                              لا يوجد سجل تواصل سابق مع هذا العميل
+                            </div>
+                            <span className="text-[10px] text-muted-foreground italic">
+                              سجّل مكالمتك من ملف العميل
+                            </span>
+                          </div>
+                        );
+                      }
+                      const lastComm = comms[0];
+                      const daysSince = differenceInDays(new Date(), new Date(lastComm.created_at));
+                      const commLabel: Record<string, { label: string; color: string }> = {
+                        phone: { label: "📞 مكالمة", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" },
+                        whatsapp: { label: "💬 واتساب", color: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" },
+                        email: { label: "✉️ إيميل", color: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400" },
+                        meeting: { label: "🤝 مقابلة", color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
+                      };
+                      return (
+                        <div className="rounded-xl border border-border/40 bg-card/50 overflow-hidden">
+                          <div className="px-3 py-2 bg-muted/30 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <FileText className="w-3.5 h-3.5 text-primary" />
+                              <span className="text-xs font-bold text-foreground">سجل التواصل</span>
+                              <span className="text-[10px] font-bold bg-primary/10 text-primary px-1.5 py-0.5 rounded-md">
+                                {comms.length}
+                              </span>
+                            </div>
+                            <span className="text-[10px] text-muted-foreground">
+                              آخر تواصل منذ <strong className="text-foreground">{daysSince === 0 ? "اليوم" : `${daysSince} يوم`}</strong>
+                            </span>
+                          </div>
+                          <div className="divide-y divide-border/30 max-h-48 overflow-y-auto">
+                            {comms.slice(0, 5).map(c => {
+                              const info = commLabel[c.comm_type] || { label: c.comm_type, color: "bg-muted text-foreground" };
+                              return (
+                                <div key={c.id} className="px-3 py-2 flex items-start gap-2">
+                                  <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0", info.color)}>
+                                    {info.label}
+                                  </span>
+                                  <div className="min-w-0 flex-1">
+                                    {c.note && (
+                                      <p className="text-[11px] text-foreground/85 line-clamp-2">{c.note}</p>
+                                    )}
+                                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                                      {format(new Date(c.created_at), "dd/MM/yyyy hh:mm a", { locale: ar })}
+                                    </p>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })()}
+
                     {/* Contact cards */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                       <div className="bg-muted/30 rounded-xl p-3 flex items-center gap-2.5">
