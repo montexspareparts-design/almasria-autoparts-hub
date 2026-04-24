@@ -1812,13 +1812,26 @@ const AdminCustomerIntelligence = () => {
             {visibleTasks.length === 0 ? (
               <div className="text-center py-6 text-muted-foreground text-xs flex flex-col items-center gap-2">
                 <CheckCircle2 className="w-8 h-8 text-emerald-500" />
-                <p className="font-bold">رائع! خلصت كل مهام اليوم 🎉</p>
-                <button
-                  className="text-[11px] text-primary hover:underline"
-                  onClick={() => setShowCompletedTasks(true)}
-                >
-                  إظهار {completedTasksCount} مهمة مكتملة
-                </button>
+                <p className="font-bold">
+                  {todayTasks.length === 0 && taskWindowDays !== 0
+                    ? `مفيش مهام ضمن ${taskWindowDays === 1 ? "آخر 24 ساعة" : `آخر ${taskWindowDays} يوم`} — جرّب توسيع النافذة`
+                    : "رائع! خلصت كل مهام اليوم 🎉"}
+                </p>
+                {todayTasks.length === 0 && taskWindowDays !== 0 ? (
+                  <button
+                    className="text-[11px] text-primary hover:underline"
+                    onClick={() => updateTaskWindow(0)}
+                  >
+                    عرض كل المهام
+                  </button>
+                ) : completedTasksCount > 0 && (
+                  <button
+                    className="text-[11px] text-primary hover:underline"
+                    onClick={() => setShowCompletedTasks(true)}
+                  >
+                    إظهار {completedTasksCount} مهمة مكتملة
+                  </button>
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
