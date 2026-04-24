@@ -273,7 +273,7 @@ const AdminCustomerIntelligence = () => {
     if (typeof window === "undefined") return "tasks";
     return (localStorage.getItem("aci_active_section_v1") as SectionKey) || "tasks";
   });
-  const sectionContentRef = React.useRef<HTMLDivElement | null>(null);
+  const sectionContentRef = useRef<HTMLDivElement | null>(null);
   const switchSection = (key: SectionKey) => {
     setActiveSection(key);
     try { localStorage.setItem("aci_active_section_v1", key); } catch {}
