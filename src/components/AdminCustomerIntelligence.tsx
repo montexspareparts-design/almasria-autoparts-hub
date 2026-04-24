@@ -384,6 +384,37 @@ const AdminCustomerIntelligence = () => {
     return map;
   }, [orderItemsData, ordersData]);
 
+  // Communications grouped by customer
+  const communicationsByUser = useMemo(() => {
+    const map: Record<string, { id: string; comm_type: string; note: string | null; created_at: string; staff_user_id: string }[]> = {};
+    communicationsData?.forEach(c => {
+      if (!map[c.customer_user_id]) map[c.customer_user_id] = [];
+      map[c.customer_user_id].push(c);
+    });
+    return map;
+  }, [communicationsData]);
+
+  // Cart items grouped by user (last update)
+  const cartByUser = useMemo(() => {
+    const map: Record<string, { count: number; lastUpdated: string }> = {};
+    cartItemsData?.forEach(c => {
+      if (!map[c.user_id]) map[c.user_id] = { count: 0, lastUpdated: c.updated_at };
+      map[c.user_id].count++;
+      if (c.updated_at > map[c.user_id].lastUpdated) map[c.user_id].lastUpdated = c.updated_at;
+    });
+    return map;
+  }, [cartItemsData]);
+
+  // Last visit per user
+  const lastVisitByUser = useMemo(() => {
+    const map: Record<string, string> = {};
+    lastVisitData?.forEach(v => {
+      if (!v.user_id) return;
+      if (!map[v.user_id] || v.visited_at > map[v.user_id]) map[v.user_id] = v.visited_at;
+    });
+    return map;
+  }, [lastVisitData]);
+
   // Build user search logs map
   const userSearchMap: Record<string, { query: string; count: number; lastAt: string }[]> = {};
   searchLogs?.forEach((log: any) => {
