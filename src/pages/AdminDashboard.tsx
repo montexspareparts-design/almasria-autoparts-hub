@@ -1,4 +1,4 @@
-import { useEffect, useState, lazy, Suspense } from "react";
+import { useEffect, useState, lazy, Suspense, forwardRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -154,11 +154,12 @@ const MODERATOR_SECTIONS = new Set([
 
 const sidebarSections = sidebarGroups.flatMap(g => g.items);
 
-const SectionLoader = () => (
-  <div className="flex items-center justify-center py-16">
+const SectionLoader = forwardRef<HTMLDivElement>((_props, ref) => (
+  <div ref={ref} className="flex items-center justify-center py-16">
     <Loader2 className="w-8 h-8 animate-spin text-primary" />
   </div>
-);
+));
+SectionLoader.displayName = "SectionLoader";
 
 const AdminDashboard = () => {
   const { user, isAdmin, isModerator, isDealer, loading: authLoading, signOut } = useAuth();
