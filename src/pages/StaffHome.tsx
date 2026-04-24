@@ -258,7 +258,7 @@ const StaffHome = () => {
         icon: UserPlus,
         color: "text-emerald-600",
         bg: "from-emerald-500/10 to-emerald-500/5",
-        onClick: () => navigate("/admin?section=customers"),
+        onClick: () => navigate(`/admin?section=customers&filter=new&range=${range}`),
       },
       {
         label: `أضافوا للسلة (${rangeSuffix})`,
@@ -266,7 +266,7 @@ const StaffHome = () => {
         icon: ShoppingCart,
         color: "text-amber-600",
         bg: "from-amber-500/10 to-amber-500/5",
-        onClick: () => navigate("/admin?section=customer-intelligence"),
+        onClick: () => navigate("/admin?section=customer-intel"),
       },
       {
         label: `اشتروا (${rangeSuffix})`,
@@ -282,7 +282,7 @@ const StaffHome = () => {
         icon: Flame,
         color: "text-red-600",
         bg: "from-red-500/15 to-orange-500/10",
-        onClick: () => navigate("/admin?section=customer-intelligence"),
+        onClick: () => navigate("/admin?section=customer-intel"),
       },
     ],
     [kpis, navigate, rangeSuffix]
