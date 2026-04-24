@@ -1785,6 +1785,20 @@ const AdminCustomerIntelligence = () => {
                             )}>
                               {task.isDealer ? "تاجر" : "قطاعي"}
                             </span>
+                            {/* Unified urgency score badge */}
+                            <span
+                              className={cn(
+                                "text-[9px] font-black px-1.5 py-0.5 rounded inline-flex items-center gap-0.5",
+                                task.score >= 70 ? "bg-red-500/20 text-red-700 dark:text-red-400"
+                                : task.score >= 50 ? "bg-orange-500/20 text-orange-700 dark:text-orange-400"
+                                : task.score >= 30 ? "bg-amber-500/20 text-amber-700 dark:text-amber-400"
+                                : "bg-muted text-muted-foreground",
+                                isDone && "opacity-60"
+                              )}
+                              title={`درجة الأولوية: ${task.score}/100\n• إنذارات: ${task.scoreBreakdown.alerts}/30\n• حداثة النشاط: ${task.scoreBreakdown.recency}/40\n• إمكانية الشراء: ${task.scoreBreakdown.buyability}/30`}
+                            >
+                              ⚡{task.score}
+                            </span>
                             {isDone && (
                               <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 inline-flex items-center gap-1">
                                 <CheckCircle2 className="w-2.5 h-2.5" /> مكتمل
