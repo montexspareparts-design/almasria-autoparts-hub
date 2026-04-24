@@ -1276,6 +1276,38 @@ const AdminCustomerIntelligence = () => {
                         )}
                       </div>
                       <div className="flex items-center gap-1">
+                        {!dealerUserIds?.has(p.user_id) && p.phone && (
+                          <button
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              const interests: string[] = [];
+                              if (lead.topSearch) interests.push(`بحث: ${lead.topSearch}`);
+                              if (lead.topProducts.length > 0) interests.push(`اهتم بـ: ${lead.topProducts.slice(0, 3).join("، ")}`);
+                              interests.push(`نشاط: ${lead.totalSearches} بحث، ${lead.viewsCount} كشف سعر، ${lead.ordersCount} طلب`);
+                              if (lead.daysSinceActivity < 999) interests.push(`آخر نشاط: ${lead.daysSinceActivity === 0 ? "اليوم" : `منذ ${lead.daysSinceActivity} يوم`}`);
+                              const notes = `[طلب حساب تاجر — مُنشأ من ملخص ذكاء العملاء]\n${interests.join("\n")}`;
+                              try {
+                                const { error } = await supabase.from("leads").insert({
+                                  name: p.full_name || "عميل بدون اسم",
+                                  phone: p.phone,
+                                  client_type: "wholesale",
+                                  status: "new",
+                                  notes,
+                                  created_by: (await supabase.auth.getUser()).data.user?.id,
+                                });
+                                if (error) throw error;
+                                toast({ title: "✅ تم إنشاء طلب حساب تاجر", description: "تجده في صفحة Leads مع كامل اهتمامات العميل." });
+                              } catch (err: any) {
+                                toast({ title: "تعذّر إنشاء الطلب", description: err.message || "حاول مرة أخرى", variant: "destructive" });
+                              }
+                            }}
+                            className="h-6 px-1.5 rounded-md bg-amber-500/15 hover:bg-amber-500/25 flex items-center gap-1 transition-colors"
+                            title="إنشاء طلب حساب تاجر مع تضمين آخر اهتمامات العميل"
+                          >
+                            <Briefcase className="w-3 h-3 text-amber-700 dark:text-amber-400" />
+                            <span className="text-[9px] font-bold text-amber-700 dark:text-amber-400">تاجر</span>
+                          </button>
+                        )}
                         {p.phone && (
                           <>
                             <a
