@@ -327,8 +327,22 @@ export default function VisitorSessionSummary() {
                 <div className="hidden md:block">
                   <h1 className="text-2xl md:text-3xl font-black leading-tight">{profile?.full_name || "زائر بدون اسم"}</h1>
                   <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    <Badge className={
+                      leadTier === "hot"
+                        ? "bg-red-500 text-white border-0 hover:bg-red-600"
+                        : leadTier === "warm"
+                        ? "bg-amber-500 text-white border-0 hover:bg-amber-600"
+                        : "bg-white/20 text-primary-foreground border-white/20 backdrop-blur"
+                    }>
+                      {leadTier === "hot" ? "🔥 جاهز يشتري" : leadTier === "warm" ? "🟡 مهتم" : "🔴 بارد"}
+                      <span className="opacity-80 mr-1">· {leadScore}</span>
+                    </Badge>
                     <Badge className="bg-white/20 hover:bg-white/30 text-primary-foreground border-white/20 backdrop-blur">
                       {isDealer ? "🏢 حساب تاجر" : "👤 عميل قطاعي"}
+                    </Badge>
+                    <Badge variant="outline" className="border-white/30 text-primary-foreground/90 bg-white/5 backdrop-blur gap-1">
+                      <Activity className="w-3 h-3" />
+                      {lastActivityLabel}
                     </Badge>
                     {profile?.created_at && (
                       <Badge variant="outline" className="border-white/30 text-primary-foreground/90 bg-white/5 backdrop-blur gap-1">
