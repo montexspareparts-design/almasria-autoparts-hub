@@ -11,8 +11,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import {
   Flame, Search, UserCheck, Users, Trophy, Phone, Eye,
-  CheckCircle2, Clock, Building2, ShoppingBag, Loader2, RefreshCw, Briefcase, Activity, Bot, MessageSquare
+  CheckCircle2, Clock, Building2, ShoppingBag, Loader2, RefreshCw, Briefcase, Activity, Bot, MessageSquare, ExternalLink
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import WhatsAppQuickChat from "./WhatsAppQuickChat";
 import CustomerActivitySummary from "./CustomerActivitySummary";
 import SupportRequestAISummary from "./SupportRequestAISummary";
@@ -647,6 +648,11 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                                 <Activity className="w-3 h-3" />
                                 ملخص
                               </Button>
+                              <Button asChild size="sm" variant="ghost" className="h-7 w-7 p-0" title="فتح صفحة الملخص الكاملة">
+                                <Link to={`/admin/visitor/${o.user_id}`} target="_blank" rel="noopener">
+                                  <ExternalLink className="w-3 h-3" />
+                                </Link>
+                              </Button>
                               <Button size="sm" className="h-7 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => markOrderContacted(o.id, o.user_id)}>
                                 <CheckCircle2 className="w-3 h-3" />
                                 تم
@@ -778,10 +784,17 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                                 </Button>
                               )}
                               {isMine && r.user_id && (
-                                <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => setSummaryUser({ id: r.user_id!, name: r.customer_name || "عميل", phone: r.customer_phone, isDealer: r.is_dealer })}>
-                                  <Activity className="w-3 h-3" />
-                                  نشاط العميل
-                                </Button>
+                                <>
+                                  <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => setSummaryUser({ id: r.user_id!, name: r.customer_name || "عميل", phone: r.customer_phone, isDealer: r.is_dealer })}>
+                                    <Activity className="w-3 h-3" />
+                                    نشاط العميل
+                                  </Button>
+                                  <Button asChild size="sm" variant="ghost" className="h-7 w-7 p-0" title="فتح صفحة الملخص الكاملة">
+                                    <Link to={`/admin/visitor/${r.user_id}`} target="_blank" rel="noopener">
+                                      <ExternalLink className="w-3 h-3" />
+                                    </Link>
+                                  </Button>
+                                </>
                               )}
                               {isMine && (
                                 <Button size="sm" className="h-7 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => resolveSupportRequest(r.id)}>
@@ -855,6 +868,11 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                               <Activity className="w-3 h-3" />
                               ملخص
                             </Button>
+                            <Button asChild size="sm" variant="ghost" className="h-7 w-7 p-0" title="فتح صفحة الملخص الكاملة">
+                              <Link to={`/admin/visitor/${s.user_id}`} target="_blank" rel="noopener">
+                                <ExternalLink className="w-3 h-3" />
+                              </Link>
+                            </Button>
                             <Button size="sm" className="h-7 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => markContacted(s.user_id, "search_lead")}>
                               <CheckCircle2 className="w-3 h-3" />
                               تم
@@ -919,6 +937,11 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                             <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => setSummaryUser({ id: y.user_id, name: y.name, phone: y.phone, isDealer: y.is_dealer })}>
                               <Activity className="w-3 h-3" />
                               ملخص
+                            </Button>
+                            <Button asChild size="sm" variant="ghost" className="h-7 w-7 p-0" title="فتح صفحة الملخص الكاملة">
+                              <Link to={`/admin/visitor/${y.user_id}`} target="_blank" rel="noopener">
+                                <ExternalLink className="w-3 h-3" />
+                              </Link>
                             </Button>
                             <Button size="sm" className="h-7 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => markContacted(y.user_id, "yesterday")}>
                               <CheckCircle2 className="w-3 h-3" />
