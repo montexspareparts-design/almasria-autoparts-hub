@@ -476,7 +476,7 @@ const AdminProductImages = () => {
         />
 
         {/* Search */}
-        <div className="relative mb-4">
+        <div className="relative mb-3">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="ابحث بالاسم أو Part Number..."
@@ -484,6 +484,42 @@ const AdminProductImages = () => {
             onChange={(e) => { setSearch(e.target.value); setPage(0); }}
             className="pr-10"
           />
+        </div>
+
+        {/* Filters */}
+        <div className="mb-4 flex flex-wrap gap-2">
+          <Button
+            variant={dealerOnly ? "default" : "outline"}
+            size="sm"
+            className="gap-1.5 text-xs"
+            onClick={() => { setDealerOnly((v) => !v); setPage(0); }}
+            title="عرض المنتجات التي لها أسعار جملة (متاحة للتجار)"
+          >
+            🏪 خاص بالتجار فقط
+          </Button>
+          <Button
+            variant={missingImageOnly ? "default" : "outline"}
+            size="sm"
+            className="gap-1.5 text-xs"
+            onClick={() => { setMissingImageOnly((v) => !v); setPage(0); }}
+            title="عرض المنتجات التي لا تحتوي على صورة"
+          >
+            🖼️ بدون صورة فقط
+          </Button>
+          {(dealerOnly || missingImageOnly) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-xs text-muted-foreground"
+              onClick={() => { setDealerOnly(false); setMissingImageOnly(false); setPage(0); }}
+            >
+              <X className="w-3 h-3" />
+              مسح الفلاتر
+            </Button>
+          )}
+          <span className="text-xs text-muted-foreground self-center mr-auto">
+            النتائج: {totalProducts}
+          </span>
         </div>
 
         {/* Bulk Search Button */}
