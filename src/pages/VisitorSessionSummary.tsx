@@ -29,6 +29,22 @@ interface ProductInfo { id: string; name_ar: string; sku: string; }
 const fmtTime = (iso: string) => new Date(iso).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
 const fmtDateTime = (iso: string) => new Date(iso).toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short" });
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("ar-EG", { dateStyle: "medium" });
+const fmtFullDate = (iso: string) =>
+  new Date(iso).toLocaleDateString("ar-EG", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+const fmtFullTime = (iso: string) =>
+  new Date(iso).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit", hour12: true });
+const fmtRelativeShort = (iso: string) => {
+  const diff = Date.now() - new Date(iso).getTime();
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return "الآن";
+  if (min < 60) return `منذ ${min} د`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `منذ ${h} س`;
+  const d = Math.floor(h / 24);
+  if (d < 30) return `منذ ${d} يوم`;
+  const mo = Math.floor(d / 30);
+  return `منذ ${mo} شهر`;
+};
 const fmtDuration = (ms: number) => {
   if (ms <= 0) return "أقل من ثانية";
   const min = Math.floor(ms / 60000);
@@ -774,12 +790,24 @@ export default function VisitorSessionSummary() {
                             <Icon className="w-4 h-4" />
                           </div>
                           <div className="mr-6 p-3 rounded-lg bg-muted/40 border border-border hover:bg-muted/60 transition">
-                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <div className="flex items-start justify-between gap-2 flex-wrap">
                               <span className="font-bold text-sm text-foreground">{evt.title}</span>
-                              <span className="text-[11px] text-muted-foreground font-mono">{fmtDateTime(evt.at)}</span>
+                              <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-5 shrink-0">
+                                {fmtRelativeShort(evt.at)}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-3 mt-1.5 text-[11px] text-muted-foreground flex-wrap">
+                              <span className="inline-flex items-center gap-1">
+                                <span className="opacity-70">📅</span>
+                                <span className="font-medium text-foreground/75">{fmtFullDate(evt.at)}</span>
+                              </span>
+                              <span className="inline-flex items-center gap-1 font-mono">
+                                <span className="opacity-70">🕐</span>
+                                <span className="font-medium text-foreground/75">{fmtFullTime(evt.at)}</span>
+                              </span>
                             </div>
                             {evt.detail && (
-                              <p className="text-xs text-muted-foreground mt-1.5 whitespace-pre-wrap leading-relaxed">{evt.detail}</p>
+                              <p className="text-xs text-muted-foreground mt-2 whitespace-pre-wrap leading-relaxed">{evt.detail}</p>
                             )}
                           </div>
                         </div>
