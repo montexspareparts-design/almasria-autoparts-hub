@@ -91,7 +91,7 @@ const StaffHome = () => {
       // 1) Visitors (distinct sessions/users from page_visits) — with details
       const { data: visits } = await supabase
         .from("page_visits")
-        .select("session_key, user_id, visited_at, path")
+        .select("session_key, user_id, visited_at, path, referrer")
         .gte("visited_at", start)
         .order("visited_at", { ascending: false });
       const visitorKeys = new Set(
@@ -99,8 +99,8 @@ const StaffHome = () => {
           .filter(Boolean)
       );
 
-      // Aggregate visitors: group by user_id (or session_key for anon) → page count + last visit
-      const visitorAgg = new Map<string, { user_id: string | null; session_key: string | null; pages: number; last_visit: string }>();
+      // Aggregate visitors: group by user_id (or session_key for anon) → page count + last visit + first entry
+      const visitorAgg = new Map<string, { user_id: string | null; session_key: string | null; pages: number; last_visit: string; first_visit: string; first_path: string | null; referrer: string | null }>();
       for (const v of visits || []) {
         const key = v.user_id || v.session_key || "";
         if (!key) continue;
@@ -108,15 +108,32 @@ const StaffHome = () => {
         if (cur) {
           cur.pages += 1;
           if (v.visited_at > cur.last_visit) cur.last_visit = v.visited_at;
+          if (v.visited_at < cur.first_visit) {
+            cur.first_visit = v.visited_at;
+            cur.first_path = v.path;
+            cur.referrer = v.referrer || cur.referrer;
+          }
         } else {
           visitorAgg.set(key, {
             user_id: v.user_id || null,
             session_key: v.user_id ? null : (v.session_key || null),
             pages: 1,
             last_visit: v.visited_at,
+            first_visit: v.visited_at,
+            first_path: v.path,
+            referrer: v.referrer || null,
           });
         }
       }
+
+      // 1b) Search queries per anonymous session (helps staff understand intent)
+      const anonSessionKeys = Array.from(visitorAgg.values())
+        .filter(v => !v.user_id && v.session_key)
+        .map(v => v.session_key as string);
+      const searchesBySession = new Map<string, string[]>();
+      // (search logs aren't tied to session_key directly; only by user_id — anon searches are not linkable)
+      // Future: add session_key to customer_search_logs if needed
+
 
       // 2) Signups within range — fetch full list (for the popup) + count
       const { data: signupRows, count: signupCount } = await supabase
