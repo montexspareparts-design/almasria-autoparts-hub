@@ -357,17 +357,49 @@ const AdminCustomerIntelligence = () => {
     }
   };
 
-  // Auto-align: whenever the active section changes, scroll its content into view
-  // just below the sticky header (uses scroll-margin-top from --aci-nav-height).
-  // Runs after the new section is rendered (and after the skeleton is hidden).
+  // Track whether the section change came from a user action (vs initial mount)
+  // so we only steal focus when the user actually switched sections.
+  const userSwitchedRef = useRef(false);
+
+  // Auto-align + a11y focus: whenever the active section changes, scroll its
+  // content into view just below the sticky header AND move keyboard focus to
+  // the first focusable element inside (falls back to the section wrapper).
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (isSwitchingSection) return; // wait until skeleton is gone
     const el = sectionContentRef.current;
     if (!el) return;
-    // Defer one frame so the new content is laid out before we measure
     const id = requestAnimationFrame(() => {
+      // 1) Smooth scroll to the start of the new section
       el.scrollIntoView({ behavior: "smooth", block: "start" });
+
+      // 2) Move keyboard focus only when the user actively switched sections
+      if (!userSwitchedRef.current) return;
+      userSwitchedRef.current = false;
+
+      // Find the first natively focusable, visible element inside the section
+      const focusableSelector = [
+        'a[href]',
+        'button:not([disabled])',
+        'input:not([disabled]):not([type="hidden"])',
+        'select:not([disabled])',
+        'textarea:not([disabled])',
+        '[tabindex]:not([tabindex="-1"])',
+      ].join(',');
+      const candidates = Array.from(
+        el.querySelectorAll<HTMLElement>(focusableSelector)
+      ).filter((node) => {
+        // Skip hidden / zero-size nodes
+        const rect = node.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+      });
+
+      const target = candidates[0] ?? el;
+      try {
+        target.focus({ preventScroll: true });
+      } catch {
+        target.focus();
+      }
     });
     return () => cancelAnimationFrame(id);
   }, [activeSection, isSwitchingSection]);
