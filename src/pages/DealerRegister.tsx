@@ -99,7 +99,7 @@ const DealerRegister = () => {
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: form.email,
           password: form.password,
-          options: { data: { full_name: form.fullName } },
+          options: { data: { full_name: form.fullName, phone: form.phone, email: form.email } },
         });
         if (authError) {
           if (authError.message.includes("already registered")) {

@@ -89,7 +89,7 @@ const ClientRegister = () => {
           email: form.email,
           password: form.phone.replace(/\D/g, "").slice(-8).padStart(8, "0"),
           options: {
-            data: { full_name: form.fullName },
+            data: { full_name: form.fullName, phone: form.phone, email: form.email },
           },
         });
         if (authError) {

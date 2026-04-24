@@ -101,10 +101,12 @@ const DealerAuthDialog = ({ open, onOpenChange, defaultTab = "login" }: DealerAu
       return;
     }
 
+    const phoneForProfile = regAuthMethod === "phone" ? regPhone.trim() : "";
+    const emailForProfile = regAuthMethod === "email" ? regEmail.trim() : "";
     const { data, error } = await supabase.auth.signUp({
       email: authEmail,
       password: regPassword,
-      options: { data: { full_name: regName } },
+      options: { data: { full_name: regName, phone: phoneForProfile, email: emailForProfile } },
     });
 
     if (error) {
