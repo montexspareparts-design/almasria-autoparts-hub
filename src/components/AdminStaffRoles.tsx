@@ -828,6 +828,79 @@ const AdminStaffRoles = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* View Password Dialog — Admin only */}
+      <Dialog open={!!viewPasswordTarget} onOpenChange={(o) => { if (!o) { setViewPasswordTarget(null); setViewedPassword(null); } }}>
+        <DialogContent dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="w-5 h-5 text-blue-600" />
+              بيانات دخول الموظف
+            </DialogTitle>
+            <DialogDescription>
+              عرض اسم المستخدم وكلمة المرور لـ <strong>{viewPasswordTarget?.full_name || viewPasswordTarget?.email}</strong>
+            </DialogDescription>
+          </DialogHeader>
+
+          {loadingPassword ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : !viewedPassword ? (
+            <div className="bg-amber-50 border border-amber-300 rounded-lg p-4 text-sm text-amber-800">
+              <p className="font-bold mb-1">⚠️ مفيش كلمة مرور محفوظة</p>
+              <p className="text-xs">الموظف ده اتعمل قبل تفعيل ميزة حفظ كلمات المرور، أو غيّر كلمة سره بنفسه. اضغط على 🔑 "إعادة تعيين كلمة المرور" لإنشاء كلمة جديدة وحفظها.</p>
+            </div>
+          ) : (
+            <div className="space-y-3 py-2">
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">📧 اسم المستخدم (البريد الإلكتروني)</label>
+                <div className="flex items-center gap-2 bg-muted/50 border rounded-lg p-3">
+                  <code dir="ltr" className="flex-1 text-sm font-mono text-foreground select-all">{viewPasswordTarget?.email}</code>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2"
+                    onClick={() => {
+                      navigator.clipboard.writeText(viewPasswordTarget?.email || "");
+                      toast({ title: "تم نسخ البريد" });
+                    }}
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">🔐 كلمة المرور</label>
+                <div className="flex items-center gap-2 bg-amber-50 border border-amber-300 rounded-lg p-3">
+                  <code dir="ltr" className="flex-1 text-sm font-mono font-bold text-foreground select-all">{viewedPassword.password}</code>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2"
+                    onClick={() => {
+                      navigator.clipboard.writeText(viewedPassword.password);
+                      toast({ title: "تم نسخ كلمة المرور" });
+                    }}
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-900 space-y-1">
+                <p>📅 آخر كلمة مرور حُفظت في: <strong>{new Date(viewedPassword.created_at).toLocaleString("ar-EG")}</strong></p>
+                <p>⚠️ ملاحظة: لو الموظف غيّر كلمة سره بنفسه بعد التاريخ ده، الكلمة الظاهرة هنا مش هتكون صحيحة. استخدم زر "إعادة تعيين" لإنشاء كلمة جديدة.</p>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewPasswordTarget(null)}>إغلاق</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Tabs>
   );
 };
