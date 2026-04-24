@@ -1759,16 +1759,38 @@ const AdminCustomerIntelligence = () => {
                       <Activity className="w-4 h-4 text-primary" />
                     </a>
                     {profile.phone && (
-                      <a
-                        href={`https://wa.me/${formatPhoneForWhatsApp(profile.phone)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-9 h-9 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 flex items-center justify-center transition-colors"
-                        title="تواصل عبر واتساب"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <MessageCircle className="w-4 h-4 text-emerald-600" />
-                      </a>
+                      <>
+                        <a
+                          href={`tel:${profile.phone}`}
+                          className="w-9 h-9 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 flex items-center justify-center transition-colors"
+                          title="اتصال مباشر"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Phone className="w-4 h-4 text-blue-600" />
+                        </a>
+                        <a
+                          href={`https://wa.me/${formatPhoneForWhatsApp(profile.phone)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-9 h-9 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 flex items-center justify-center transition-colors"
+                          title="تواصل عبر واتساب"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <MessageCircle className="w-4 h-4 text-emerald-600" />
+                        </a>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigator.clipboard.writeText(profile.phone!);
+                            toast({ title: `✅ تم نسخ ${profile.phone}` });
+                          }}
+                          className="w-9 h-9 rounded-xl bg-muted/60 hover:bg-muted flex items-center justify-center transition-colors"
+                          title="نسخ رقم الهاتف"
+                        >
+                          <Copy className="w-4 h-4 text-muted-foreground" />
+                        </button>
+                      </>
                     )}
 
                     <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
