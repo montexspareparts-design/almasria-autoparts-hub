@@ -1307,7 +1307,8 @@ const AdminCustomerIntelligence = () => {
             )}
           </CardContent>
         </Card>
-      )}
+        );
+      })()}
 
       {/* Charts Row: Heatmap + Customer Type */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
