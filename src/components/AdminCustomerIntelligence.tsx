@@ -257,6 +257,13 @@ const AdminCustomerIntelligence = () => {
   const [editingMissing, setEditingMissing] = useState<string | null>(null);
   const [missingDraft, setMissingDraft] = useState<{ phone?: string; email?: string; full_name?: string; car_model?: string; car_year?: string }>({});
   const [savingMissing, setSavingMissing] = useState(false);
+  // Quick action dialog: register call/whatsapp/visit/note in one click from the card
+  const [actionDialogUser, setActionDialogUser] = useState<string | null>(null);
+  const [actionDialogType, setActionDialogType] = useState<"phone" | "whatsapp" | "visit" | "other">("phone");
+  const [actionDialogNote, setActionDialogNote] = useState("");
+  const [savingAction, setSavingAction] = useState(false);
+  // Sort by priority (no action / oldest action first)
+  const [prioritySort, setPrioritySort] = useState(true);
 
   // Today's tasks: persistent completion state (resets daily via date-keyed localStorage)
   const todayKey = format(new Date(), "yyyy-MM-dd");
@@ -1125,6 +1132,37 @@ const AdminCustomerIntelligence = () => {
     }
     return true;
   });
+
+  // Last action per customer (latest communication timestamp)
+  const lastActionByUser = useMemo(() => {
+    const map: Record<string, string> = {};
+    (communicationsData || []).forEach((c: any) => {
+      const cur = map[c.customer_user_id];
+      if (!cur || new Date(c.created_at) > new Date(cur)) {
+        map[c.customer_user_id] = c.created_at;
+      }
+    });
+    return map;
+  }, [communicationsData]);
+
+  // Sort: customers with NO action first (oldest registered first), then by oldest last action
+  const sortedProfiles = useMemo(() => {
+    if (!filteredProfiles) return filteredProfiles;
+    if (!prioritySort) return filteredProfiles;
+    return [...filteredProfiles].sort((a, b) => {
+      const la = lastActionByUser[a.user_id];
+      const lb = lastActionByUser[b.user_id];
+      // No action: priority bucket 0; with action: bucket 1
+      if (!la && !lb) {
+        // both no action — oldest registered first (longer waiting)
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      }
+      if (!la) return -1;
+      if (!lb) return 1;
+      // Both have action — oldest action first (haven't been touched in longest time)
+      return new Date(la).getTime() - new Date(lb).getTime();
+    });
+  }, [filteredProfiles, lastActionByUser, prioritySort]);
 
   const hasActiveFilters =
     !!dateFrom || !!dateTo ||
@@ -3083,6 +3121,28 @@ const AdminCustomerIntelligence = () => {
 
             {/* ===== Tab: All Customers (existing list) ===== */}
             <TabsContent value="all" className="mt-0 focus-visible:outline-none">
+              {/* Priority sort toggle */}
+              <div className="flex items-center justify-between mb-2 px-1">
+                <p className="text-[11px] text-muted-foreground">
+                  {prioritySort
+                    ? "📌 الترتيب: العملاء بدون إجراء أولاً، ثم الأقدم متابعةً"
+                    : "الترتيب: حسب تاريخ التسجيل"}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setPrioritySort(!prioritySort)}
+                  className={cn(
+                    "text-[11px] font-bold px-3 py-1.5 rounded-lg border transition-colors flex items-center gap-1.5",
+                    prioritySort
+                      ? "bg-primary/10 border-primary/30 text-primary hover:bg-primary/15"
+                      : "bg-muted/40 border-border hover:bg-muted/60"
+                  )}
+                  title="تبديل ترتيب الأولوية"
+                >
+                  <Zap className="w-3 h-3" />
+                  {prioritySort ? "ترتيب الأولوية ✓" : "ترتيب الأولوية"}
+                </button>
+              </div>
               {loadingProfiles ? (
                 <div className="space-y-3">
                   {[1, 2, 3].map(i => (
@@ -3091,7 +3151,7 @@ const AdminCustomerIntelligence = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-          {filteredProfiles?.map((profile) => {
+          {sortedProfiles?.map((profile) => {
             const isExpanded = expandedUser === profile.user_id;
             const customerType = getCustomerType(profile.user_id);
             const searches = userSearchMap[profile.user_id] || [];
@@ -3174,6 +3234,28 @@ const AdminCustomerIntelligence = () => {
                           </span>
                         );
                       })()}
+                      {/* Last action badge — تنبيه للموظف بحالة المتابعة */}
+                      {(() => {
+                        const last = lastActionByUser[profile.user_id];
+                        if (!last) {
+                          return (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300 flex items-center gap-1">
+                              🔴 لم يُتخذ إجراء
+                            </span>
+                          );
+                        }
+                        const days = differenceInDays(new Date(), new Date(last));
+                        const color = days > 14
+                          ? "bg-orange-100 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300"
+                          : days > 7
+                          ? "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
+                          : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300";
+                        return (
+                          <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1", color)} title={`آخر إجراء: ${format(new Date(last), "dd/MM/yyyy HH:mm")}`}>
+                            ✓ آخر إجراء: {days === 0 ? "اليوم" : `قبل ${days} يوم`}
+                          </span>
+                        );
+                      })()}
                     </div>
                     <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-1 flex-wrap">
                       {profile.phone && (
@@ -3201,6 +3283,20 @@ const AdminCustomerIntelligence = () => {
                   </button>
 
                   <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActionDialogUser(profile.user_id);
+                        setActionDialogType(profile.phone ? "phone" : "other");
+                        setActionDialogNote("");
+                      }}
+                      className="h-9 px-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-400 font-bold text-[11px] flex items-center gap-1 transition-colors border border-amber-300/40"
+                      title="تسجيل إجراء (مكالمة/واتساب/زيارة/ملاحظة)"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      سجّل إجراء
+                    </button>
                     <a
                       href={`/admin/visitor/${profile.user_id}`}
                       target="_blank"
@@ -4697,6 +4793,90 @@ const AdminCustomerIntelligence = () => {
                 {sendingIndex + 1 >= filteredWithPhone.length ? "إنهاء ✅" : `التالي (${sendingIndex + 2}/${filteredWithPhone.length})`}
               </Button>
             )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Quick action dialog — تسجيل إجراء سريع على العميل */}
+      <Dialog open={!!actionDialogUser} onOpenChange={(open) => { if (!open) setActionDialogUser(null); }}>
+        <DialogContent className="max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <CheckCircle2 className="w-5 h-5 text-amber-600" />
+              تسجيل إجراء على العميل
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-bold text-muted-foreground mb-1.5 block">نوع الإجراء</label>
+              <div className="grid grid-cols-4 gap-1.5">
+                {[
+                  { v: "phone", l: "📞 اتصال", c: "bg-blue-500/15 text-blue-700 border-blue-300" },
+                  { v: "whatsapp", l: "💬 واتساب", c: "bg-emerald-500/15 text-emerald-700 border-emerald-300" },
+                  { v: "visit", l: "🏪 زيارة", c: "bg-purple-500/15 text-purple-700 border-purple-300" },
+                  { v: "other", l: "📝 ملاحظة", c: "bg-amber-500/15 text-amber-700 border-amber-300" },
+                ].map(opt => (
+                  <button
+                    key={opt.v}
+                    type="button"
+                    onClick={() => setActionDialogType(opt.v as any)}
+                    className={cn(
+                      "text-[11px] font-bold px-2 py-2 rounded-lg border transition-all",
+                      actionDialogType === opt.v ? opt.c + " ring-2 ring-offset-1 ring-current" : "bg-muted/30 border-border/40 text-muted-foreground hover:bg-muted/60"
+                    )}
+                  >
+                    {opt.l}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-muted-foreground mb-1.5 block">ملاحظة المتابعة *</label>
+              <Textarea
+                placeholder="مثال: تم الاتصال — العميل سيراجعنا الأسبوع القادم لشراء فلتر زيت..."
+                value={actionDialogNote}
+                onChange={(e) => setActionDialogNote(e.target.value)}
+                rows={4}
+                className="text-sm"
+                autoFocus
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">يحفظ الإجراء في سجل العميل ويظهر للموظفين الآخرين</p>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 flex-row-reverse sm:flex-row-reverse">
+            <Button
+              type="button"
+              disabled={savingAction || !actionDialogNote.trim() || !actionDialogUser}
+              onClick={async () => {
+                if (!actionDialogUser || !user) return;
+                setSavingAction(true);
+                const { error } = await supabase.from("customer_communications").insert({
+                  customer_user_id: actionDialogUser,
+                  staff_user_id: user.id,
+                  comm_type: actionDialogType,
+                  note: actionDialogNote.trim(),
+                });
+                setSavingAction(false);
+                if (error) {
+                  toast({ title: "فشل حفظ الإجراء", description: error.message, variant: "destructive" });
+                  return;
+                }
+                toast({ title: "✅ تم تسجيل الإجراء بنجاح" });
+                queryClient.invalidateQueries({ queryKey: ["admin_customer_communications"] });
+                setActionDialogUser(null);
+                setActionDialogNote("");
+              }}
+              className="gap-1.5 bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              {savingAction ? "جاري الحفظ..." : "حفظ الإجراء"}
+            </Button>
+            <Button type="button" variant="outline" onClick={() => setActionDialogUser(null)}>
+              إلغاء
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
