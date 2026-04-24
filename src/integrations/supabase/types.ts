@@ -1922,6 +1922,33 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_customer_file_opens: {
+        Row: {
+          customer_user_id: string | null
+          id: string
+          opened_at: string
+          source: string
+          staff_user_id: string
+          visitor_session_id: string | null
+        }
+        Insert: {
+          customer_user_id?: string | null
+          id?: string
+          opened_at?: string
+          source?: string
+          staff_user_id: string
+          visitor_session_id?: string | null
+        }
+        Update: {
+          customer_user_id?: string | null
+          id?: string
+          opened_at?: string
+          source?: string
+          staff_user_id?: string
+          visitor_session_id?: string | null
+        }
+        Relationships: []
+      }
       staff_passwords: {
         Row: {
           created_at: string
