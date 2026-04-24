@@ -708,10 +708,10 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                             <div className="flex-1 min-w-[200px]">
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="font-bold text-sm">{o.order_number}</span>
-                                <Badge variant={o.is_dealer ? "default" : "secondary"} className="text-[10px] h-5">
+                                <Badge variant={o.is_dealer ? "default" : "secondary"} className="tab-badge text-[10px] h-5">
                                   {o.is_dealer ? "تاجر" : "قطاعي"}
                                 </Badge>
-                                <Badge variant={isLate ? "destructive" : "outline"} className={`text-[10px] h-5 gap-1 ${isLate ? "animate-pulse" : ""}`}>
+                                <Badge variant={isLate ? "destructive" : "outline"} className={`tab-badge text-[10px] h-5 gap-1 ${isLate ? "animate-pulse" : ""}`}>
                                   <Clock className="w-3 h-3" />
                                   {fmtMinutes(o.minutes_ago)}
                                 </Badge>
@@ -801,22 +801,22 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                               <div className="flex items-center gap-2 mb-1 flex-wrap">
                                 <Bot className="w-3.5 h-3.5 text-purple-600" />
                                 <span className="font-bold text-sm">{r.customer_name || "عميل"}</span>
-                                <Badge variant={r.is_dealer ? "default" : "secondary"} className="text-[10px] h-5">
+                                <Badge variant={r.is_dealer ? "default" : "secondary"} className="tab-badge text-[10px] h-5">
                                   {r.is_dealer ? "تاجر" : "قطاعي"}
                                 </Badge>
-                                {!r.user_id && <Badge variant="outline" className="text-[10px] h-5">ضيف</Badge>}
-                                <Badge variant={isLate && !isClaimed ? "destructive" : "outline"} className={`text-[10px] h-5 gap-1 ${isLate && !isClaimed ? "animate-pulse" : ""}`}>
+                                {!r.user_id && <Badge variant="outline" className="tab-badge text-[10px] h-5">ضيف</Badge>}
+                                <Badge variant={isLate && !isClaimed ? "destructive" : "outline"} className={`tab-badge text-[10px] h-5 gap-1 ${isLate && !isClaimed ? "animate-pulse" : ""}`}>
                                   <Clock className="w-3 h-3" />
                                   {fmtMinutes(r.minutes_ago)}
                                 </Badge>
                                 {isMine && (
-                                  <Badge className="text-[10px] h-5 gap-1 bg-emerald-600 hover:bg-emerald-600">
+                                  <Badge className="tab-badge text-[10px] h-5 gap-1 bg-emerald-600 hover:bg-emerald-600">
                                     <UserCheck className="w-3 h-3" />
                                     أنت بترد
                                   </Badge>
                                 )}
                                 {claimedByOther && (
-                                  <Badge variant="secondary" className="text-[10px] h-5 gap-1">
+                                  <Badge variant="secondary" className="tab-badge text-[10px] h-5 gap-1">
                                     <UserCheck className="w-3 h-3" />
                                     {r.claimed_by_name} بيرد
                                   </Badge>
@@ -946,10 +946,10 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                           <div className="flex-1 min-w-[200px]">
                             <div className="flex items-center gap-2 mb-1">
                               <span className="font-bold text-sm">{s.name}</span>
-                              <Badge variant={s.is_dealer ? "default" : "secondary"} className="text-[10px] h-5">
+                              <Badge variant={s.is_dealer ? "default" : "secondary"} className="tab-badge text-[10px] h-5">
                                 {s.is_dealer ? "تاجر" : "قطاعي"}
                               </Badge>
-                              <Badge variant="outline" className="text-[10px] h-5 text-orange-600 border-orange-300">
+                              <Badge variant="outline" className="tab-badge text-[10px] h-5 text-orange-600 border-orange-300">
                                 <Search className="w-3 h-3 me-0.5" />
                                 {s.search_count} بحث
                               </Badge>
@@ -965,13 +965,13 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                                   <Mail className="w-3 h-3" />
                                   {s.email}
                                 </a>
-                                <Badge variant="outline" className="text-[10px] h-5 text-amber-700 border-amber-400 bg-amber-50 dark:bg-amber-950/30">
+                                <Badge variant="outline" className="tab-badge text-[10px] h-5 text-amber-700 border-amber-400 bg-amber-50 dark:bg-amber-950/30">
                                   <AlertTriangle className="w-3 h-3 me-0.5" />
                                   لا يوجد رقم تليفون
                                 </Badge>
                               </div>
                             ) : (
-                              <Badge variant="outline" className="text-[10px] h-5 text-red-700 border-red-400 bg-red-50 dark:bg-red-950/30">
+                              <Badge variant="outline" className="tab-badge text-[10px] h-5 text-red-700 border-red-400 bg-red-50 dark:bg-red-950/30">
                                 <AlertTriangle className="w-3 h-3 me-0.5" />
                                 لا توجد بيانات تواصل
                               </Badge>
@@ -1044,10 +1044,10 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                           <div className="flex-1 min-w-[200px]">
                             <div className="flex items-center gap-2 mb-1">
                               <span className="font-bold text-sm">{y.name}</span>
-                              <Badge variant={y.is_dealer ? "default" : "secondary"} className="text-[10px] h-5">
+                              <Badge variant={y.is_dealer ? "default" : "secondary"} className="tab-badge text-[10px] h-5">
                                 {y.is_dealer ? "تاجر" : "قطاعي"}
                               </Badge>
-                              <Badge variant="outline" className="text-[10px] h-5 text-blue-600 border-blue-300">
+                              <Badge variant="outline" className="tab-badge text-[10px] h-5 text-blue-600 border-blue-300">
                                 {y.page_views} مشاهدة
                               </Badge>
                             </div>
@@ -1128,7 +1128,7 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                           <span className="font-medium text-sm">{s.name}</span>
                         </div>
                         <div className="flex items-center gap-3 text-xs">
-                          <Badge variant="outline" className="gap-1">
+                          <Badge variant="outline" className="tab-badge gap-1">
                             <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                             {s.contacts_today} تواصل
                           </Badge>
