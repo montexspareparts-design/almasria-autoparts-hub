@@ -316,6 +316,22 @@ const StaffHome = () => {
       visitorsArr.sort((a, b) => b.last_visit.localeCompare(a.last_visit));
       setVisitorsList(visitorsArr);
 
+      // Fetch which visitors the current staff has already viewed
+      try {
+        const { data: views } = await supabase
+          .from("visitor_session_views")
+          .select("customer_user_id, session_key")
+          .eq("staff_user_id", user!.id);
+        const set = new Set<string>();
+        (views || []).forEach((v: any) => {
+          if (v.customer_user_id) set.add(`u:${v.customer_user_id}`);
+          if (v.session_key) set.add(`s:${v.session_key}`);
+        });
+        setViewedKeys(set);
+      } catch (e) {
+        console.warn("[StaffHome] viewed keys fetch failed", e);
+      }
+
       // Engaged visitors = sessions with dwell ≥ ENGAGED_DWELL_MS OR ≥ 2 distinct pages
       const engagedCount = Array.from(visitorAgg.values()).filter((v) => {
         const dwell = new Date(v.last_visit).getTime() - new Date(v.first_visit).getTime();
