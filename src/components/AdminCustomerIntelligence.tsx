@@ -1405,10 +1405,181 @@ const AdminCustomerIntelligence = () => {
                 <SelectItem value="retail">قطاعي</SelectItem>
               </SelectContent>
             </Select>
+            {/* Advanced filters: business type, tier, lifecycle, recent activity */}
+            <Popover open={advancedFiltersOpen} onOpenChange={setAdvancedFiltersOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "gap-1 text-[11px] h-8 font-bold",
+                    (businessTypeFilter !== "all" || tierFilter !== "all" || lifecycleFilter !== "all" || recentActivityFilter !== "any") &&
+                      "border-primary text-primary bg-primary/5"
+                  )}
+                >
+                  <Filter className="w-3 h-3" />
+                  فلاتر متقدمة
+                  {(() => {
+                    const count =
+                      (businessTypeFilter !== "all" ? 1 : 0) +
+                      (tierFilter !== "all" ? 1 : 0) +
+                      (lifecycleFilter !== "all" ? 1 : 0) +
+                      (recentActivityFilter !== "any" ? 1 : 0);
+                    return count > 0 ? (
+                      <Badge variant="secondary" className="text-[9px] h-4 px-1 mr-0.5">{count}</Badge>
+                    ) : null;
+                  })()}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[320px] p-3" align="end">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-bold flex items-center gap-1.5">
+                      <Filter className="w-3.5 h-3.5 text-primary" />
+                      فلاتر متقدمة
+                    </h4>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-[10px] h-6 text-muted-foreground hover:text-destructive"
+                      onClick={() => {
+                        setBusinessTypeFilter("all"); setTierFilter("all");
+                        setLifecycleFilter("all"); setRecentActivityFilter("any");
+                      }}
+                    >
+                      إعادة تعيين
+                    </Button>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-muted-foreground mb-1 block">نوع النشاط (تاجر/ورشة/أسطول)</label>
+                    <Select value={businessTypeFilter} onValueChange={setBusinessTypeFilter}>
+                      <SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">الكل</SelectItem>
+                        {BUSINESS_TYPE_OPTIONS.map(o => (
+                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-muted-foreground mb-1 block">درجة التاجر (Tier)</label>
+                    <Select value={tierFilter} onValueChange={setTierFilter}>
+                      <SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">الكل</SelectItem>
+                        {TIER_OPTIONS.map(o => (
+                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-muted-foreground mb-1 block">مرحلة دورة الحياة</label>
+                    <Select value={lifecycleFilter} onValueChange={setLifecycleFilter}>
+                      <SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">الكل</SelectItem>
+                        {LIFECYCLE_OPTIONS.map(o => (
+                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-muted-foreground mb-1 block">الاحتياج / النشاط الأخير</label>
+                    <Select value={recentActivityFilter} onValueChange={setRecentActivityFilter}>
+                      <SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {RECENT_ACTIVITY_OPTIONS.map(o => (
+                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Separator />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full gap-1.5 text-[11px] h-8 font-bold"
+                    onClick={() => { setSaveTemplateOpen(true); setAdvancedFiltersOpen(false); }}
+                  >
+                    <Star className="w-3 h-3" />
+                    حفظ هذه الفلاتر كقالب
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            {/* Filter Templates dropdown */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1 text-[11px] h-8 font-bold">
+                  <Star className="w-3 h-3 text-amber-500" />
+                  القوالب
+                  {filterTemplates.length > 0 && (
+                    <Badge variant="secondary" className="text-[9px] h-4 px-1 mr-0.5">{filterTemplates.length}</Badge>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[280px] p-2" align="end">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between px-2 py-1">
+                    <h4 className="text-xs font-bold">قوالب الفلاتر المحفوظة</h4>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-[10px] h-6 px-2"
+                      onClick={() => setSaveTemplateOpen(true)}
+                    >
+                      + جديد
+                    </Button>
+                  </div>
+                  <Separator />
+                  {filterTemplates.length === 0 ? (
+                    <p className="text-[11px] text-muted-foreground text-center py-3">
+                      لا توجد قوالب محفوظة بعد.<br />
+                      اضبط فلاتر ثم احفظها للوصول السريع.
+                    </p>
+                  ) : (
+                    <div className="max-h-[260px] overflow-y-auto space-y-1">
+                      {filterTemplates.map(tpl => (
+                        <div
+                          key={tpl.id}
+                          className="flex items-center gap-1 px-2 py-1.5 rounded-md hover:bg-accent/50 group"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => applyTemplate(tpl)}
+                            className="flex-1 text-right text-[11px] font-medium truncate"
+                          >
+                            {tpl.name}
+                          </button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 text-destructive hover:bg-destructive/10"
+                            onClick={() => deleteTemplate(tpl.id)}
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
+
             {hasActiveFilters && (
               <Button variant="ghost" size="sm" className="gap-1 text-[11px] h-8 text-destructive" onClick={clearFilters}>
                 <X className="w-3 h-3" />
-                مسح
+                مسح الكل
               </Button>
             )}
             <span className="text-[11px] text-muted-foreground mr-auto font-medium">
@@ -1417,6 +1588,49 @@ const AdminCustomerIntelligence = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Save filter template dialog */}
+      <Dialog open={saveTemplateOpen} onOpenChange={setSaveTemplateOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold flex items-center gap-2">
+              <Star className="w-4 h-4 text-amber-500" />
+              حفظ الفلاتر الحالية كقالب
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div>
+              <label className="text-xs font-bold text-muted-foreground mb-1 block">اسم القالب</label>
+              <Input
+                value={newTemplateName}
+                onChange={(e) => setNewTemplateName(e.target.value)}
+                placeholder="مثال: ورش نشطة بدون طلبات"
+                className="text-sm"
+                onKeyDown={(e) => { if (e.key === "Enter") saveCurrentAsTemplate(); }}
+                autoFocus
+              />
+            </div>
+            <div className="bg-muted/40 rounded-lg p-2.5 space-y-1 text-[11px]">
+              <p className="font-bold mb-1">الفلاتر المحفوظة:</p>
+              {searchTerm && <p>• بحث: <span className="text-foreground font-medium">{searchTerm}</span></p>}
+              {customerTypeFilter !== "all" && <p>• نوع العميل: <span className="text-foreground font-medium">{customerTypeFilter}</span></p>}
+              {accountTypeFilter !== "all" && <p>• نوع الحساب: <span className="text-foreground font-medium">{accountTypeFilter === "dealer" ? "تاجر" : "قطاعي"}</span></p>}
+              {businessTypeFilter !== "all" && <p>• النشاط: <span className="text-foreground font-medium">{BUSINESS_TYPE_OPTIONS.find(o => o.value === businessTypeFilter)?.label}</span></p>}
+              {tierFilter !== "all" && <p>• الدرجة: <span className="text-foreground font-medium">{TIER_OPTIONS.find(o => o.value === tierFilter)?.label}</span></p>}
+              {lifecycleFilter !== "all" && <p>• دورة الحياة: <span className="text-foreground font-medium">{LIFECYCLE_OPTIONS.find(o => o.value === lifecycleFilter)?.label}</span></p>}
+              {recentActivityFilter !== "any" && <p>• النشاط الأخير: <span className="text-foreground font-medium">{RECENT_ACTIVITY_OPTIONS.find(o => o.value === recentActivityFilter)?.label}</span></p>}
+              {!hasActiveFilters && <p className="text-muted-foreground">لا توجد فلاتر نشطة حالياً.</p>}
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" size="sm" onClick={() => setSaveTemplateOpen(false)}>إلغاء</Button>
+            <Button size="sm" onClick={saveCurrentAsTemplate} className="gap-1.5">
+              <Star className="w-3.5 h-3.5" />
+              حفظ القالب
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* ===== Today's Tasks for Staff ===== */}
       {todayTasks.length > 0 && (
