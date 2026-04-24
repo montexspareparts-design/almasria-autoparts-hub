@@ -68,7 +68,8 @@ const friendlyPath = (path: string): string => {
 export default function VisitorSessionSummary() {
   const { userId = "" } = useParams<{ userId: string }>();
   const navigate = useNavigate();
-  const { isAdmin, isModerator, loading: authLoading } = useAuth();
+  const { user, isAdmin, isModerator, loading: authLoading } = useAuth();
+  const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<{ full_name: string | null; email: string | null; phone: string | null; created_at: string | null } | null>(null);
@@ -77,6 +78,13 @@ export default function VisitorSessionSummary() {
   const [searches, setSearches] = useState<SearchEntry[]>([]);
   const [priceViews, setPriceViews] = useState<PriceView[]>([]);
   const [productMap, setProductMap] = useState<Map<string, ProductInfo>>(new Map());
+  const [hasOrders, setHasOrders] = useState(false);
+  const [hasCart, setHasCart] = useState(false);
+
+  // Note dialog
+  const [noteOpen, setNoteOpen] = useState(false);
+  const [noteText, setNoteText] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
