@@ -766,6 +766,79 @@ export default function VisitorSessionSummary() {
           </>
         )}
 
+        {/* Saved Notes */}
+        {notes.length > 0 && (
+          <Card id="section-notes" className="border-amber-200/60 dark:border-amber-900/40 shadow-md overflow-hidden scroll-mt-24 rounded-2xl">
+            <CardHeader className="pb-3 bg-gradient-to-l from-amber-500/10 via-amber-500/5 to-transparent border-b">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/15 flex items-center justify-center">
+                  <StickyNote className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                </div>
+                ملاحظات الفريق
+                <Badge variant="secondary" className="text-[10px]">{notes.length}</Badge>
+              </CardTitle>
+              <p className="text-xs text-muted-foreground mt-1.5 mr-11">
+                سجل المتابعات والمكالمات — يمكنك تعديل أو حذف ملاحظاتك التي أضفتها.
+              </p>
+            </CardHeader>
+            <CardContent className="pt-4 space-y-2">
+              {notes.map((n) => {
+                const isMine = n.staff_user_id === user?.id;
+                const canManage = isMine || isAdmin;
+                return (
+                  <div
+                    key={n.id}
+                    className={`group p-3 rounded-lg border transition ${
+                      isMine
+                        ? "bg-primary/5 border-primary/20 hover:bg-primary/10"
+                        : "bg-muted/40 border-border hover:bg-muted/60"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                        <UserIcon className="w-3 h-3" />
+                        <span className="font-bold">{n.staff_name}</span>
+                        {isMine && <Badge variant="outline" className="text-[9px] h-4 px-1 border-primary/40 text-primary">أنت</Badge>}
+                        <span>•</span>
+                        <span className="font-mono">{fmtDateTime(n.created_at)}</span>
+                      </div>
+                      {canManage && (
+                        <div className="flex gap-1 opacity-60 group-hover:opacity-100 transition">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0"
+                            onClick={() => openEditNote(n)}
+                            disabled={!isMine}
+                            title={isMine ? "تعديل" : "فقط صاحب الملاحظة يمكنه تعديلها"}
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => deleteNote(n.id)}
+                            disabled={deletingNoteId === n.id}
+                            title="حذف"
+                          >
+                            {deletingNoteId === n.id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-3.5 h-3.5" />
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-sm text-foreground mt-2 whitespace-pre-wrap leading-relaxed">{n.note}</p>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        )}
+
         <div className="text-center pt-4 pb-24">
           <Link to="/admin" className="text-xs text-muted-foreground hover:text-primary underline">
             ← الرجوع إلى لوحة الإدارة
