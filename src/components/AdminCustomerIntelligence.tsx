@@ -1093,400 +1093,6 @@ const AdminCustomerIntelligence = () => {
         </div>
       </div>
 
-      {/* KPIs Row */}
-      <div className="grid grid-cols-3 md:grid-cols-6 gap-2.5">
-        {[
-          { icon: Users, value: totalCustomers, label: "إجمالي العملاء", iconBg: "bg-primary/15", iconColor: "text-primary" },
-          { icon: Briefcase, value: dealerCount, label: "تاجر", iconBg: "bg-blue-500/15", iconColor: "text-blue-600 dark:text-blue-400" },
-          { icon: ShoppingCart, value: retailCount, label: "قطاعي", iconBg: "bg-orange-500/15", iconColor: "text-orange-600 dark:text-orange-400" },
-          { icon: Car, value: withCar, label: "حددوا سيارتهم", iconBg: "bg-violet-500/15", iconColor: "text-violet-600 dark:text-violet-400" },
-          { icon: Search, value: totalSearches, label: "عمليات بحث", iconBg: "bg-cyan-500/15", iconColor: "text-cyan-600 dark:text-cyan-400" },
-          { icon: TrendingUp, value: activeSearchers, label: "عملاء يبحثون", iconBg: "bg-emerald-500/15", iconColor: "text-emerald-600 dark:text-emerald-400" },
-        ].map((kpi, idx) => (
-          <div key={idx} className="rounded-xl border border-border/40 bg-card p-3 text-center transition-all hover:shadow-sm hover:border-border/60 duration-200">
-            <div className={cn("w-8 h-8 rounded-lg mx-auto mb-1.5 flex items-center justify-center", kpi.iconBg)}>
-              <kpi.icon className={cn("w-4 h-4", kpi.iconColor)} />
-            </div>
-            <p className="text-xl font-black text-foreground">{kpi.value}</p>
-            <p className="text-[10px] text-muted-foreground font-medium">{kpi.label}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* 🔥 Hot Leads — Smart Auto Summary */}
-      {(() => {
-        const hasProfiles = !!filteredProfiles && filteredProfiles.length > 0;
-        const hasProducts = !!productsMap && Object.keys(productsMap).length > 0;
-        const hasSearchLogs = !!searchLogs && searchLogs.length > 0;
-        const hasPriceViews = !!priceViews && priceViews.length > 0;
-        const hasActivity = hasSearchLogs || hasPriceViews;
-
-        // Show alert when missing data instead of the section
-        if (!hasProfiles || !hasProducts || !hasActivity) {
-          return (
-            <div className="rounded-2xl border-2 border-dashed border-amber-300/60 dark:border-amber-700/50 bg-amber-50/50 dark:bg-amber-950/15 p-5 flex items-start gap-3">
-              <div className="w-9 h-9 rounded-xl bg-amber-500/15 flex items-center justify-center shrink-0">
-                <AlertCircle className="w-4.5 h-4.5 text-amber-600 dark:text-amber-400" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-black text-foreground mb-1">
-                  بيانات غير كافية لعرض الملخص الذكي
-                </p>
-                <p className="text-xs text-muted-foreground leading-relaxed mb-2">
-                  نحتاج إلى عدد أكبر من العملاء وسجل بحث/تسعير حتى نستطيع اقتراح عملاء يحتاجون متابعة. الملخص يظهر تلقائياً بمجرد توفر بيانات كافية.
-                </p>
-                <div className="flex items-center gap-1.5 flex-wrap mt-2">
-                  <Badge variant="outline" className={cn("text-[10px] h-5 font-bold", hasProfiles ? "border-emerald-300 text-emerald-700 dark:text-emerald-400" : "border-red-300 text-red-700 dark:text-red-400")}>
-                    {hasProfiles ? "✓" : "✗"} عملاء ({filteredProfiles?.length || 0})
-                  </Badge>
-                  <Badge variant="outline" className={cn("text-[10px] h-5 font-bold", hasProducts ? "border-emerald-300 text-emerald-700 dark:text-emerald-400" : "border-red-300 text-red-700 dark:text-red-400")}>
-                    {hasProducts ? "✓" : "✗"} منتجات ({productsMap ? Object.keys(productsMap).length : 0})
-                  </Badge>
-                  <Badge variant="outline" className={cn("text-[10px] h-5 font-bold", hasSearchLogs ? "border-emerald-300 text-emerald-700 dark:text-emerald-400" : "border-red-300 text-red-700 dark:text-red-400")}>
-                    {hasSearchLogs ? "✓" : "✗"} سجل بحث ({searchLogs?.length || 0})
-                  </Badge>
-                  <Badge variant="outline" className={cn("text-[10px] h-5 font-bold", hasPriceViews ? "border-emerald-300 text-emerald-700 dark:text-emerald-400" : "border-red-300 text-red-700 dark:text-red-400")}>
-                    {hasPriceViews ? "✓" : "✗"} كشف أسعار ({priceViews?.length || 0})
-                  </Badge>
-                </div>
-              </div>
-            </div>
-          );
-        }
-
-        return (
-        <Card className="rounded-2xl border-2 border-primary/20 shadow-sm overflow-hidden bg-gradient-to-l from-primary/5 via-background to-background">
-          <CardHeader className="py-3 px-4 border-b border-border/40">
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <CardTitle className="text-sm font-black flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-md">
-                  <Zap className="w-3.5 h-3.5 text-white" />
-                </div>
-                ملخص ذكي — عملاء يحتاجون متابعة الآن
-                <Badge variant="secondary" className="text-[10px] h-5 mr-1">{hotLeads.length}</Badge>
-              </CardTitle>
-              <span className="text-[10px] text-muted-foreground font-medium hidden md:inline">
-                مرتب حسب الأولوية والاحتياج المحتمل
-              </span>
-            </div>
-            {/* Filters */}
-            <div className="flex items-center gap-2 flex-wrap mt-3">
-              <div className="inline-flex items-center rounded-lg border border-border/50 bg-muted/30 p-0.5 gap-0.5">
-                {[
-                  { key: "all", label: "الكل", icon: "🗂️" },
-                  { key: "parts", label: "قطع غيار", icon: "🔧" },
-                  { key: "oils", label: "زيوت", icon: "🛢️" },
-                ].map(opt => (
-                  <button
-                    key={opt.key}
-                    onClick={() => setHotLeadsCategory(opt.key as any)}
-                    className={cn(
-                      "text-[10px] font-bold px-2.5 py-1 rounded-md transition-all",
-                      hotLeadsCategory === opt.key
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                    )}
-                  >
-                    <span className="mr-0.5">{opt.icon}</span>
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-              <div className="inline-flex items-center rounded-lg border border-border/50 bg-muted/30 p-0.5 gap-0.5">
-                {[
-                  { key: "all", label: "كل الفترات" },
-                  { key: "90d", label: "آخر 90 يوم" },
-                  { key: "30d", label: "آخر 30 يوم" },
-                ].map(opt => (
-                  <button
-                    key={opt.key}
-                    onClick={() => setHotLeadsPeriod(opt.key as any)}
-                    className={cn(
-                      "text-[10px] font-bold px-2.5 py-1 rounded-md transition-all",
-                      hotLeadsPeriod === opt.key
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                    )}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-              {(hotLeadsCategory !== "all" || hotLeadsPeriod !== "all") && (
-                <button
-                  onClick={() => { setHotLeadsCategory("all"); setHotLeadsPeriod("all"); }}
-                  className="text-[10px] text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
-                >
-                  مسح الفلاتر
-                </button>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent className="p-3">
-            {hotLeads.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground text-xs">
-                لا يوجد عملاء يطابقون الفلاتر الحالية. جرّب تغيير الفترة أو النوع.
-              </div>
-            ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
-              {hotLeads.map((lead) => {
-                const p = lead.profile;
-                const phoneDigits = p.phone?.replace(/\D/g, "") || "";
-                const waNumber = phoneDigits.startsWith("0") ? "20" + phoneDigits.slice(1) : phoneDigits;
-                const waMsg = encodeURIComponent(
-                  `مرحباً ${p.full_name || "عميلنا الكريم"}، من المصرية جروب. لاحظنا اهتمامك بـ "${lead.topSearch || lead.topProducts[0] || "منتجاتنا"}" — هل يمكنني مساعدتك؟`
-                );
-                return (
-                  <div
-                    key={p.user_id}
-                    className="rounded-xl border border-border/50 bg-card p-3 hover:shadow-md hover:border-primary/30 transition-all cursor-pointer group"
-                    onClick={() => setExpandedUser(p.user_id)}
-                  >
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-bold text-foreground truncate">
-                          {p.full_name || "عميل بدون اسم"}
-                        </p>
-                        {p.phone && (
-                          <p className="text-[10px] text-muted-foreground font-mono mt-0.5" dir="ltr">{p.phone}</p>
-                        )}
-                      </div>
-                      <Badge variant="outline" className={cn("text-[9px] h-5 px-1.5 font-bold border whitespace-nowrap", lead.needBadge.color)}>
-                        {lead.needBadge.label}
-                      </Badge>
-                    </div>
-                    <p className="text-[11px] text-foreground/80 leading-relaxed mb-2 line-clamp-2">
-                      💡 {lead.needReason}
-                    </p>
-                    {lead.topProductsRich.length > 0 && (
-                      <div className="flex items-center gap-1 flex-wrap mb-2">
-                        <span className="text-[9px] text-muted-foreground font-bold">شاف سعر:</span>
-                        {lead.topProductsRich.slice(0, 2).map((prod, i) => {
-                          // Smart route: prefer SKU search → fallback to dealer product page
-                          const url = prod.sku
-                            ? `/products?search=${encodeURIComponent(prod.sku)}`
-                            : `/dealer/product/${prod.id}`;
-                          return (
-                            <a
-                              key={i}
-                              href={url}
-                              target="_blank"
-                              rel="noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              title={prod.sku ? `فتح بحث SKU: ${prod.sku}` : `فتح صفحة المنتج`}
-                              className="inline-block"
-                            >
-                              <Badge
-                                variant="secondary"
-                                className="text-[9px] h-4 px-1.5 max-w-[110px] truncate hover:bg-primary/15 hover:text-primary cursor-pointer transition-colors"
-                              >
-                                {prod.name}
-                              </Badge>
-                            </a>
-                          );
-                        })}
-                        {lead.viewsCount > 2 && (
-                          <span className="text-[9px] text-muted-foreground">+{lead.viewsCount - 2}</span>
-                        )}
-                      </div>
-                    )}
-                    <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/40">
-                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                        <span className="flex items-center gap-0.5"><Search className="w-2.5 h-2.5" />{lead.totalSearches}</span>
-                        <span className="flex items-center gap-0.5"><Eye className="w-2.5 h-2.5" />{lead.viewsCount}</span>
-                        <span className="flex items-center gap-0.5"><ShoppingCart className="w-2.5 h-2.5" />{lead.ordersCount}</span>
-                        {lead.daysSinceActivity < 999 && (
-                          <span className="flex items-center gap-0.5 font-bold text-foreground/70">
-                            <Clock className="w-2.5 h-2.5" />
-                            {lead.daysSinceActivity === 0 ? "اليوم" : `${lead.daysSinceActivity}ي`}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {!dealerUserIds?.has(p.user_id) && p.phone && (
-                          <button
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              const interests: string[] = [];
-                              if (lead.topSearch) interests.push(`بحث: ${lead.topSearch}`);
-                              if (lead.topProducts.length > 0) interests.push(`اهتم بـ: ${lead.topProducts.slice(0, 3).join("، ")}`);
-                              interests.push(`نشاط: ${lead.totalSearches} بحث، ${lead.viewsCount} كشف سعر، ${lead.ordersCount} طلب`);
-                              if (lead.daysSinceActivity < 999) interests.push(`آخر نشاط: ${lead.daysSinceActivity === 0 ? "اليوم" : `منذ ${lead.daysSinceActivity} يوم`}`);
-                              const notes = `[طلب حساب تاجر — مُنشأ من ملخص ذكاء العملاء]\n${interests.join("\n")}`;
-                              try {
-                                const { error } = await supabase.from("leads").insert({
-                                  name: p.full_name || "عميل بدون اسم",
-                                  phone: p.phone,
-                                  client_type: "wholesale",
-                                  status: "new",
-                                  notes,
-                                  created_by: (await supabase.auth.getUser()).data.user?.id,
-                                });
-                                if (error) throw error;
-                                toast({ title: "✅ تم إنشاء طلب حساب تاجر", description: "تجده في صفحة Leads مع كامل اهتمامات العميل." });
-                              } catch (err: any) {
-                                toast({ title: "تعذّر إنشاء الطلب", description: err.message || "حاول مرة أخرى", variant: "destructive" });
-                              }
-                            }}
-                            className="h-6 px-1.5 rounded-md bg-amber-500/15 hover:bg-amber-500/25 flex items-center gap-1 transition-colors"
-                            title="إنشاء طلب حساب تاجر مع تضمين آخر اهتمامات العميل"
-                          >
-                            <Briefcase className="w-3 h-3 text-amber-700 dark:text-amber-400" />
-                            <span className="text-[9px] font-bold text-amber-700 dark:text-amber-400">تاجر</span>
-                          </button>
-                        )}
-                        {p.phone && (
-                          <>
-                            <a
-                              href={`tel:${p.phone}`}
-                              onClick={(e) => e.stopPropagation()}
-                              className="w-6 h-6 rounded-md bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors"
-                              title="اتصال"
-                            >
-                              <Phone className="w-3 h-3 text-primary" />
-                            </a>
-                            <a
-                              href={`https://wa.me/${waNumber}?text=${waMsg}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="w-6 h-6 rounded-md bg-emerald-500/15 hover:bg-emerald-500/25 flex items-center justify-center transition-colors"
-                              title="واتساب"
-                            >
-                              <MessageCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                            </a>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            )}
-          </CardContent>
-        </Card>
-        );
-      })()}
-
-      {/* Charts Row: Heatmap + Customer Type */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Search Heatmap */}
-        {searchHeatmapData.length > 0 && (
-          <Card className="rounded-xl border-border/40 shadow-sm overflow-hidden">
-            <CardHeader className="py-3 px-4 bg-gradient-to-l from-cyan-500/5 to-transparent">
-              <CardTitle className="text-sm font-black flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-cyan-500/15 flex items-center justify-center">
-                  <Clock className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
-                </div>
-                خريطة أوقات البحث
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <div className="h-[220px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={searchHeatmapData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
-                    <XAxis dataKey="hour" tick={{ fontSize: 9 }} interval={2} />
-                    <YAxis tick={{ fontSize: 10 }} />
-                    <Tooltip
-                      contentStyle={{ direction: "rtl", borderRadius: 10, fontSize: 11, boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}
-                      formatter={(value: number) => [`${value} بحث`, ""]}
-                      labelFormatter={(label) => `الساعة ${label}`}
-                    />
-                    <Bar dataKey="بحث" radius={[3, 3, 0, 0]} barSize={14}>
-                      {searchHeatmapData.map((entry, index) => {
-                        const max = Math.max(...searchHeatmapData.map(d => d.بحث), 1);
-                        const intensity = entry.بحث / max;
-                        const hue = intensity > 0.7 ? 0 : intensity > 0.4 ? 25 : 200;
-                        const sat = 70 + intensity * 20;
-                        const light = 65 - intensity * 20;
-                        return <Cell key={index} fill={`hsl(${hue}, ${sat}%, ${light}%)`} />;
-                      })}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-              {(() => {
-                const sorted = [...searchHeatmapData].sort((a, b) => b.بحث - a.بحث);
-                const top3 = sorted.slice(0, 3).filter(d => d.بحث > 0);
-                if (top3.length === 0) return null;
-                return (
-                  <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                    <span className="text-[10px] font-bold text-muted-foreground">🔥 الأوقات الأنشط:</span>
-                    {top3.map((d, i) => (
-                      <Badge key={i} variant="secondary" className="text-[9px] h-5">
-                        {d.hour} ({d.بحث})
-                      </Badge>
-                    ))}
-                  </div>
-                );
-              })()}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Customer Type Distribution */}
-        {filteredProfiles && filteredProfiles.length > 0 && (() => {
-          const typeCounts: Record<string, number> = {};
-          filteredProfiles.forEach(p => {
-            const t = getCustomerType(p.user_id);
-            typeCounts[t] = (typeCounts[t] || 0) + 1;
-          });
-          const COLORS = [
-            "hsl(var(--chart-1, 142 71% 45%))",
-            "hsl(var(--chart-2, 217 91% 60%))",
-            "hsl(var(--chart-3, 48 96% 53%))",
-            "hsl(var(--chart-4, 280 65% 60%))",
-            "hsl(var(--chart-5, 25 95% 53%))",
-            "hsl(var(--muted-foreground, 215 16% 47%))",
-          ];
-          const typeColorMap: Record<string, string> = {};
-          CUSTOMER_TYPES.forEach((t, i) => { typeColorMap[t] = COLORS[i % COLORS.length]; });
-          const chartData = Object.entries(typeCounts).map(([name, value]) => ({ name, value }));
-
-          return (
-            <Card className="rounded-xl border-border/40 shadow-sm overflow-hidden">
-              <CardHeader className="py-3 px-4 bg-gradient-to-l from-violet-500/5 to-transparent">
-                <CardTitle className="text-sm font-black flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-violet-500/15 flex items-center justify-center">
-                    <BarChart3 className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />
-                  </div>
-                  توزيع أنواع العملاء
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 pt-0">
-                <div className="h-[220px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={chartData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={50}
-                        outerRadius={80}
-                        paddingAngle={3}
-                        dataKey="value"
-                        label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                      >
-                        {chartData.map((entry, index) => (
-                          <Cell key={entry.name} fill={typeColorMap[entry.name] || COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        formatter={(value: number) => [`${value} عميل`, ""]}
-                        contentStyle={{ direction: "rtl", borderRadius: 10, fontSize: 11, boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}
-                      />
-                      <Legend wrapperStyle={{ fontSize: 11 }} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })()}
-      </div>
-
       {/* Filters & Search - moved up for better UX */}
       <Card className="rounded-xl border-border/40 shadow-sm">
         <CardContent className="py-3 px-4">
@@ -1557,577 +1163,6 @@ const AdminCustomerIntelligence = () => {
           </div>
         </CardContent>
       </Card>
-
-      {/* Top Searchers vs Orders Report */}
-      {profiles && profiles.length > 0 && (() => {
-        const now = new Date();
-        const cutoff = reportTimeFilter === "7d" ? new Date(now.getTime() - 7 * 86400000)
-          : reportTimeFilter === "30d" ? new Date(now.getTime() - 30 * 86400000)
-          : reportTimeFilter === "90d" ? new Date(now.getTime() - 90 * 86400000)
-          : null;
-
-        const filteredSearchMap: Record<string, { query: string; count: number; lastAt: string }[]> = {};
-        searchLogs?.forEach((log: any) => {
-          if (cutoff && new Date(log.created_at) < cutoff) return;
-          const uid = log.user_id || "anonymous";
-          if (!filteredSearchMap[uid]) filteredSearchMap[uid] = [];
-          const existing = filteredSearchMap[uid].find(s => s.query === log.search_query);
-          if (existing) {
-            existing.count++;
-            if (log.created_at > existing.lastAt) existing.lastAt = log.created_at;
-          } else {
-            filteredSearchMap[uid].push({ query: log.search_query, count: 1, lastAt: log.created_at });
-          }
-        });
-
-        const searcherData: {
-          userId: string;
-          name: string;
-          phone: string | null;
-          searches: number;
-          uniqueQueries: number;
-          orders: number;
-          totalSpent: number;
-          priceViews: number;
-          converted: boolean;
-          conversionRate: string;
-          topQueries: string[];
-          searchDetails: { query: string; count: number; lastAt: string }[];
-          isDealer: boolean;
-        }[] = [];
-
-        profiles.forEach(p => {
-          const searches = filteredSearchMap[p.user_id] || [];
-          if (searches.length === 0) return;
-          const totalSearchCount = searches.reduce((sum, s) => sum + s.count, 0);
-          const userOrders = ordersMap?.[p.user_id];
-          const views = userViewsMap[p.user_id] || [];
-          const converted = !!(userOrders && userOrders.count > 0);
-
-          searcherData.push({
-            userId: p.user_id,
-            name: p.full_name || "بدون اسم",
-            phone: p.phone,
-            searches: totalSearchCount,
-            uniqueQueries: searches.length,
-            orders: userOrders?.count || 0,
-            totalSpent: userOrders?.total || 0,
-            priceViews: views.length,
-            converted,
-            conversionRate: totalSearchCount > 0 && userOrders
-              ? `${Math.round((userOrders.count / totalSearchCount) * 100)}%`
-              : "0%",
-            topQueries: searches
-              .sort((a, b) => b.count - a.count)
-              .slice(0, 3)
-              .map(s => s.query),
-            searchDetails: searches.sort((a, b) => b.count - a.count),
-            isDealer: dealerUserIds?.has(p.user_id) || false,
-          });
-        });
-
-        searcherData.sort((a, b) => b.searches - a.searches);
-        const top15 = searcherData.slice(0, 15);
-        const maxSearches = Math.max(...top15.map(d => d.searches), 1);
-        const maxOrders = Math.max(...top15.map(d => d.orders), 1);
-
-        const totalSearchers = searcherData.length;
-        const convertedCount = searcherData.filter(d => d.converted).length;
-        const overallConversion = totalSearchers > 0 ? Math.round((convertedCount / totalSearchers) * 100) : 0;
-        const avgSearchesPerUser = totalSearchers > 0
-          ? Math.round(searcherData.reduce((s, d) => s + d.searches, 0) / totalSearchers)
-          : 0;
-        const topNonConverted = searcherData.filter(d => !d.converted).slice(0, 5);
-
-        let prevSearchers = 0;
-        let prevConverted = 0;
-        let prevConversion = 0;
-        let prevAvgSearches = 0;
-        if (cutoff) {
-          const periodMs = now.getTime() - cutoff.getTime();
-          const prevCutoff = new Date(cutoff.getTime() - periodMs);
-          const prevSearchMap: Record<string, { query: string; count: number }[]> = {};
-          searchLogs?.forEach((log: any) => {
-            const logDate = new Date(log.created_at);
-            if (logDate >= cutoff || logDate < prevCutoff) return;
-            const uid = log.user_id || "anonymous";
-            if (!prevSearchMap[uid]) prevSearchMap[uid] = [];
-            const existing = prevSearchMap[uid].find(s => s.query === log.search_query);
-            if (existing) existing.count++;
-            else prevSearchMap[uid].push({ query: log.search_query, count: 1 });
-          });
-          const prevSearcherData: { userId: string; searches: number; converted: boolean }[] = [];
-          profiles.forEach(p => {
-            const searches = prevSearchMap[p.user_id] || [];
-            if (searches.length === 0) return;
-            const total = searches.reduce((s, q) => s + q.count, 0);
-            const userOrders = ordersMap?.[p.user_id];
-            prevSearcherData.push({ userId: p.user_id, searches: total, converted: !!(userOrders && userOrders.count > 0) });
-          });
-          prevSearchers = prevSearcherData.length;
-          prevConverted = prevSearcherData.filter(d => d.converted).length;
-          prevConversion = prevSearchers > 0 ? Math.round((prevConverted / prevSearchers) * 100) : 0;
-          prevAvgSearches = prevSearchers > 0
-            ? Math.round(prevSearcherData.reduce((s, d) => s + d.searches, 0) / prevSearchers)
-            : 0;
-        }
-
-        const calcChange = (current: number, prev: number) => {
-          if (!cutoff) return null;
-          if (prev === 0 && current === 0) return 0;
-          if (prev === 0) return 100;
-          return Math.round(((current - prev) / prev) * 100);
-        };
-
-        const searchersChange = calcChange(totalSearchers, prevSearchers);
-        const convertedChange = calcChange(convertedCount, prevConverted);
-        const conversionChange = calcChange(overallConversion, prevConversion);
-        const avgChange = calcChange(avgSearchesPerUser, prevAvgSearches);
-
-        const chartData = top15.slice(0, 10).map(d => ({
-          name: d.name.length > 12 ? d.name.slice(0, 12) + "…" : d.name,
-          بحث: d.searches,
-          طلبات: d.orders,
-        }));
-
-        const formatPhoneForWA = (phone: string) => {
-          let cleaned = phone.replace(/[\s\-()]/g, "");
-          cleaned = cleaned.replace(/^002/, "").replace(/^0020/, "");
-          if (cleaned.startsWith("0")) cleaned = "20" + cleaned.slice(1);
-          if (!cleaned.startsWith("+")) cleaned = "+" + cleaned;
-          return cleaned;
-        };
-
-        return (
-          <Card className="rounded-xl border-primary/15 shadow-sm overflow-hidden">
-            <CardHeader className="py-3 px-4 bg-gradient-to-l from-primary/8 via-primary/3 to-transparent">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div>
-                  <CardTitle className="text-sm font-black flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-primary/15 flex items-center justify-center shadow-sm">
-                      <TrendingUp className="w-3.5 h-3.5 text-primary" />
-                    </div>
-                    أكثر العملاء بحثاً مقابل الطلبات
-                  </CardTitle>
-                  <p className="text-[10px] text-muted-foreground mt-1 mr-[36px]">
-                    مقارنة نشاط البحث وتحويله لطلبات — أداة لاكتشاف الفرص
-                  </p>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="gap-1.5 text-xs font-bold rounded-xl"
-                  onClick={() => {
-                    const rows = searcherData.map((d, i) => ({
-                      "#": i + 1,
-                      "الاسم": d.name,
-                      "نوع الحساب": d.isDealer ? "جملة" : "قطاعي",
-                      "رقم الهاتف": d.phone || "—",
-                      "عمليات البحث": d.searches,
-                      "استفسارات فريدة": d.uniqueQueries,
-                      "أصناف مسعّرة": d.priceViews,
-                      "عدد الطلبات": d.orders,
-                      "إجمالي الإنفاق (ج.م)": d.totalSpent,
-                      "معدل التحويل": d.conversionRate,
-                      "الحالة": d.converted ? "محوّل" : "لم يشترِ",
-                      "أهم ما بحث عنه": d.topQueries.join(" | "),
-                    }));
-                    const wb = XLSX.utils.book_new();
-                    const ws = XLSX.utils.json_to_sheet(rows);
-                    ws["!dir"] = "rtl" as any;
-                    ws["!cols"] = [
-                      { wch: 5 }, { wch: 22 }, { wch: 16 }, { wch: 14 }, { wch: 16 },
-                      { wch: 14 }, { wch: 12 }, { wch: 18 }, { wch: 14 }, { wch: 12 }, { wch: 35 },
-                    ];
-                    applyExcelStyles(ws, 11, "تقرير أكثر الباحثين");
-                    XLSX.utils.book_append_sheet(wb, ws, "أكثر الباحثين");
-                    XLSX.writeFile(wb, `تقرير_أكثر_الباحثين_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
-                    toast({ title: "تم تصدير التقرير بنجاح ✅" });
-                  }}
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  تصدير Excel
-                </Button>
-              </div>
-              <div className="flex items-center gap-1.5 flex-wrap px-1 mt-1">
-                {[
-                  { value: "7d", label: "آخر 7 أيام" },
-                  { value: "30d", label: "آخر 30 يوم" },
-                  { value: "90d", label: "آخر 90 يوم" },
-                  { value: "all", label: "الكل" },
-                ].map(opt => (
-                  <Button
-                    key={opt.value}
-                    size="sm"
-                    variant={reportTimeFilter === opt.value ? "default" : "outline"}
-                    className={cn("text-[11px] h-7 px-3 font-bold rounded-lg", reportTimeFilter === opt.value && "shadow-sm")}
-                    onClick={() => setReportTimeFilter(opt.value)}
-                  >
-                    {opt.label}
-                  </Button>
-                ))}
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Summary KPIs */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
-                {[
-                  { icon: Search, value: totalSearchers, label: "عميل يبحث", change: searchersChange, bg: "bg-gradient-to-br from-primary/8 to-primary/3", iconBg: "bg-primary/15", iconColor: "text-primary", valueColor: "text-foreground" },
-                  { icon: ShoppingCart, value: convertedCount, label: "تحوّلوا لطلبات", change: convertedChange, bg: "bg-gradient-to-br from-emerald-500/8 to-emerald-500/3", iconBg: "bg-emerald-500/15", iconColor: "text-emerald-600 dark:text-emerald-400", valueColor: "text-emerald-700 dark:text-emerald-400" },
-                  { icon: TrendingUp, value: `${overallConversion}%`, label: "معدل التحويل", change: conversionChange, bg: "bg-gradient-to-br from-amber-500/8 to-amber-500/3", iconBg: "bg-amber-500/15", iconColor: "text-amber-600 dark:text-amber-400", valueColor: "text-amber-700 dark:text-amber-400" },
-                  { icon: BarChart3, value: avgSearchesPerUser, label: "متوسط بحث/عميل", change: avgChange, bg: "bg-gradient-to-br from-blue-500/8 to-blue-500/3", iconBg: "bg-blue-500/15", iconColor: "text-blue-600 dark:text-blue-400", valueColor: "text-blue-700 dark:text-blue-400" },
-                ].map((kpi, idx) => (
-                  <div key={idx} className={cn("rounded-xl p-3 text-center border border-border/30", kpi.bg)}>
-                    <div className={cn("w-7 h-7 rounded-lg mx-auto mb-1.5 flex items-center justify-center", kpi.iconBg)}>
-                      <kpi.icon className={cn("w-3.5 h-3.5", kpi.iconColor)} />
-                    </div>
-                    <p className={cn("text-xl font-black tracking-tight", kpi.valueColor)}>{kpi.value}</p>
-                    <p className="text-[10px] text-muted-foreground font-medium">{kpi.label}</p>
-                    {kpi.change !== null && (
-                      <div className={cn(
-                        "flex items-center justify-center gap-0.5 mt-2 text-[10px] font-bold rounded-full px-2.5 py-0.5 mx-auto w-fit",
-                        kpi.change > 0 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
-                          : kpi.change < 0 ? "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400"
-                          : "bg-muted text-muted-foreground"
-                      )}>
-                        {kpi.change > 0 ? <TrendingUp className="w-3 h-3" /> : kpi.change < 0 ? <TrendingDown className="w-3 h-3" /> : null}
-                        {kpi.change > 0 ? "+" : ""}{kpi.change}% عن الفترة السابقة
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              {/* Detailed Table */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-black text-foreground flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Search className="w-3.5 h-3.5 text-primary" />
-                    </div>
-                    تفاصيل أكثر 15 عميل بحثاً
-                  </h4>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="gap-1.5 text-[10px] h-7 font-bold rounded-xl"
-                    onClick={() => {
-                      const rows: any[] = [];
-                      top15.forEach((d, idx) => {
-                        const topSearches = d.searchDetails.slice(0, 10);
-                        if (topSearches.length === 0) {
-                          rows.push({
-                            "#": idx + 1,
-                            "اسم العميل": d.name,
-                            "نوع الحساب": d.isDealer ? "جملة" : "قطاعي",
-                            "رقم الهاتف": d.phone || "—",
-                            "الصنف المطلوب": "—",
-                            "عدد مرات البحث": 0,
-                            "إجمالي عمليات البحث": d.searches,
-                            "الحالة": d.converted ? "محوّل ✓" : "لم يشترِ ✗",
-                          });
-                        } else {
-                          topSearches.forEach((s, si) => {
-                            rows.push({
-                              "#": si === 0 ? idx + 1 : "",
-                              "اسم العميل": si === 0 ? d.name : "",
-                              "نوع الحساب": si === 0 ? (d.isDealer ? "جملة" : "قطاعي") : "",
-                              "رقم الهاتف": si === 0 ? (d.phone || "—") : "",
-                              "الصنف المطلوب": s.query,
-                              "عدد مرات البحث": s.count,
-                              "إجمالي عمليات البحث": si === 0 ? d.searches : "",
-                              "الحالة": si === 0 ? (d.converted ? "محوّل ✓" : "لم يشترِ ✗") : "",
-                            });
-                          });
-                        }
-                      });
-                      if (rows.length === 0) { toast({ title: "لا توجد بيانات", variant: "destructive" }); return; }
-                      const wb = XLSX.utils.book_new();
-                      const ws = XLSX.utils.json_to_sheet(rows);
-                      ws["!dir"] = "rtl" as any;
-                      ws["!cols"] = [{ wch: 5 }, { wch: 22 }, { wch: 12 }, { wch: 16 }, { wch: 30 }, { wch: 14 }, { wch: 16 }, { wch: 14 }];
-                      applyExcelStyles(ws, 8, "تقرير أكثر 15 عميل بحثاً - تفصيلي");
-                      XLSX.utils.book_append_sheet(wb, ws, "أكثر الباحثين تفصيلي");
-                      XLSX.writeFile(wb, `أكثر_15_عميل_بحثاً_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
-                      toast({ title: "تم تصدير التقرير بنجاح ✅" });
-                    }}
-                  >
-                    <Download className="w-3 h-3" />
-                    تصدير Excel
-                  </Button>
-                </div>
-                <div className="overflow-x-auto rounded-2xl border border-border/40 shadow-sm">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-gradient-to-l from-muted/80 to-muted/40 text-muted-foreground text-[11px]">
-                        <th className="px-3 py-3 text-right font-black">#</th>
-                        <th className="px-3 py-3 text-right font-black">العميل</th>
-                        <th className="px-3 py-3 text-center font-black">عمليات البحث</th>
-                        <th className="px-3 py-3 text-center font-black">استفسارات فريدة</th>
-                        <th className="px-3 py-3 text-center font-black">أصناف مسعّرة</th>
-                        <th className="px-3 py-3 text-center font-black">الطلبات</th>
-                        <th className="px-3 py-3 text-center font-black">إجمالي الإنفاق</th>
-                        <th className="px-3 py-3 text-center font-black">التحويل</th>
-                        <th className="px-3 py-3 text-right font-black">أهم ما بحث عنه</th>
-                        <th className="px-3 py-3 text-center font-black">تواصل</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {top15.map((d, i) => (
-                        <Fragment key={d.userId}>
-                        <tr
-                          className={cn(
-                            "border-t border-border/50 transition-colors cursor-pointer hover:bg-muted/40",
-                            i % 2 === 0 ? "bg-card" : "bg-muted/20",
-                            !d.converted && d.searches >= 5 && "bg-amber-50/50 dark:bg-amber-950/10",
-                            expandedSearcher === d.userId && "bg-primary/5"
-                          )}
-                          onClick={() => { setExpandedSearcher(expandedSearcher === d.userId ? null : d.userId); setSearchDetailFilter(""); setSearchDetailSort("count"); }}
-                        >
-                          <td className="px-3 py-2.5 text-xs text-muted-foreground font-bold">{i + 1}</td>
-                          <td className="px-3 py-2.5">
-                            <div className="flex items-center gap-1.5">
-                              <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform", expandedSearcher === d.userId && "rotate-180")} />
-                              <div>
-                                <div className="flex items-center gap-1.5">
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); navigate(`/admin?section=customers&search=${encodeURIComponent(d.phone || d.name)}`); }}
-                                    className="text-right hover:underline cursor-pointer group"
-                                  >
-                                    <p className="text-xs font-bold text-primary group-hover:text-primary/80 transition-colors">{d.name}</p>
-                                  </button>
-                                  <span className={cn(
-                                    "text-[9px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap",
-                                    d.isDealer
-                                      ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                                      : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                                  )}>
-                                    {d.isDealer ? "جملة" : "قطاعي"}
-                                  </span>
-                                </div>
-                                {d.phone && (
-                                  <p className="text-[10px] text-muted-foreground" dir="ltr">{d.phone}</p>
-                                )}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-3 py-2.5 text-center">
-                            <div className="flex items-center justify-center gap-1.5">
-                              <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-                                <div className="h-full bg-blue-500 rounded-full" style={{ width: `${(d.searches / maxSearches) * 100}%` }} />
-                              </div>
-                              <span className="text-xs font-bold text-foreground">{d.searches}</span>
-                            </div>
-                          </td>
-                          <td className="px-3 py-2.5 text-center text-xs text-foreground">{d.uniqueQueries}</td>
-                          <td className="px-3 py-2.5 text-center text-xs text-foreground">{d.priceViews}</td>
-                          <td className="px-3 py-2.5 text-center">
-                            <div className="flex items-center justify-center gap-1.5">
-                              <div className="w-10 h-1.5 bg-muted rounded-full overflow-hidden">
-                                <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${maxOrders > 0 ? (d.orders / maxOrders) * 100 : 0}%` }} />
-                              </div>
-                              <span className="text-xs font-bold text-foreground">{d.orders}</span>
-                            </div>
-                          </td>
-                          <td className="px-3 py-2.5 text-center text-xs font-bold text-foreground">
-                            {d.totalSpent > 0 ? `${d.totalSpent.toLocaleString("ar-EG")} ج.م` : "—"}
-                          </td>
-                          <td className="px-3 py-2.5 text-center">
-                            {d.converted ? (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                                ✓ محوّل
-                              </span>
-                            ) : (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                                ✗ لم يشترِ
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-3 py-2.5">
-                            <div className="flex flex-wrap gap-1">
-                              {d.topQueries.map((q, qi) => (
-                                <span key={qi} className="text-[10px] bg-muted/60 rounded px-1.5 py-0.5 text-foreground">
-                                  {q}
-                                </span>
-                              ))}
-                            </div>
-                          </td>
-                          <td className="px-3 py-2.5 text-center">
-                            {d.phone && (
-                              <a
-                                href={`https://wa.me/${formatPhoneForWA(d.phone)}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex w-7 h-7 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 items-center justify-center transition-colors"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
-                              </a>
-                            )}
-                          </td>
-                        </tr>
-                        <AnimatePresence>
-                        {expandedSearcher === d.userId && (
-                          <motion.tr
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="border-t border-border/30"
-                          >
-                            <td colSpan={10} className="p-0">
-                              <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: "auto", opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                transition={{ duration: 0.3, ease: "easeInOut" }}
-                                className="overflow-hidden"
-                              >
-                              <div className="bg-muted/30 px-6 py-4 space-y-3">
-                                <div className="flex items-center justify-between">
-                                  <h5 className="text-xs font-black text-foreground flex items-center gap-2">
-                                    <Search className="w-3.5 h-3.5 text-primary" />
-                                    سجل بحث {d.name} ({d.searchDetails.length} استفسار)
-                                  </h5>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="gap-1.5 text-[10px] h-7"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const ws = XLSX.utils.json_to_sheet(
-                                        d.searchDetails.map((s, si) => ({
-                                          "#": si + 1,
-                                          "اسم العميل": d.name,
-                                          "رقم الهاتف": d.phone || "—",
-                                          "كلمة البحث": s.query,
-                                          "عدد المرات": s.count,
-                                          "آخر بحث": format(new Date(s.lastAt), "dd/MM/yyyy hh:mm a", { locale: ar }),
-                                        }))
-                                      );
-                                      ws["!cols"] = [{ wch: 5 }, { wch: 22 }, { wch: 16 }, { wch: 35 }, { wch: 12 }, { wch: 22 }];
-                                       applyExcelStyles(ws, 6, `سجل بحث العميل: ${d.name}`);
-                                       const wb = XLSX.utils.book_new();
-                                       XLSX.utils.book_append_sheet(wb, ws, "سجل البحث");
-                                       const infoWs = XLSX.utils.json_to_sheet([{
-                                         "الاسم": d.name,
-                                         "الهاتف": d.phone || "—",
-                                         "إجمالي البحث": d.searches,
-                                         "استفسارات فريدة": d.uniqueQueries,
-                                         "الطلبات": d.orders,
-                                         "إجمالي الإنفاق": d.totalSpent,
-                                         "الحالة": d.converted ? "محوّل" : "لم يشترِ",
-                                       }]);
-                                       applyExcelStyles(infoWs, 7, `بيانات العميل: ${d.name}`);
-                                       XLSX.utils.book_append_sheet(wb, infoWs, "بيانات العميل");
-                                       XLSX.writeFile(wb, `سجل_بحث_${d.name.replace(/\s+/g, "_")}.xlsx`);
-                                      toast({ title: "تم تصدير سجل البحث بنجاح ✅" });
-                                    }}
-                                  >
-                                    <Download className="w-3 h-3" />
-                                    تصدير Excel
-                                  </Button>
-                                </div>
-                                <div className="relative" onClick={(e) => e.stopPropagation()}>
-                                  <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                                  <Input
-                                    placeholder="ابحث في كلمات البحث..."
-                                    value={searchDetailFilter}
-                                    onChange={(e) => setSearchDetailFilter(e.target.value)}
-                                    className="h-8 text-xs pr-8 bg-card"
-                                  />
-                                </div>
-                                <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                                  <span className="text-[10px] text-muted-foreground font-medium">ترتيب:</span>
-                                  <Button size="sm" variant={searchDetailSort === "count" ? "default" : "outline"} className="h-6 text-[10px] px-2" onClick={() => setSearchDetailSort("count")}>
-                                    الأكثر بحثاً
-                                  </Button>
-                                  <Button size="sm" variant={searchDetailSort === "date" ? "default" : "outline"} className="h-6 text-[10px] px-2" onClick={() => setSearchDetailSort("date")}>
-                                    الأحدث
-                                  </Button>
-                                </div>
-                                {(() => {
-                                  const filtered = (searchDetailFilter
-                                    ? d.searchDetails.filter(s => s.query.includes(searchDetailFilter))
-                                    : [...d.searchDetails]
-                                  ).sort((a, b) => searchDetailSort === "count" ? b.count - a.count : new Date(b.lastAt).getTime() - new Date(a.lastAt).getTime());
-                                  return (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[200px] overflow-y-auto">
-                                      {filtered.length === 0 ? (
-                                        <p className="text-xs text-muted-foreground col-span-full text-center py-3">لا توجد نتائج مطابقة</p>
-                                      ) : filtered.map((s, si) => (
-                                        <div key={si} className="flex items-center gap-2 bg-card rounded-lg px-3 py-2 border border-border/50">
-                                          <div className="flex-1 min-w-0">
-                                            <p className="text-xs font-bold text-foreground truncate">{s.query}</p>
-                                            <p className="text-[10px] text-muted-foreground">
-                                              {format(new Date(s.lastAt), "dd MMM yyyy — hh:mm a", { locale: ar })}
-                                            </p>
-                                          </div>
-                                          <Badge variant="secondary" className="text-[10px] shrink-0">
-                                            {s.count}×
-                                          </Badge>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  );
-                                })()}
-                              </div>
-                              </motion.div>
-                            </td>
-                          </motion.tr>
-                        )}
-                        </AnimatePresence>
-                        </Fragment>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Opportunity Alert */}
-              {topNonConverted.length > 0 && (
-                <div className="bg-gradient-to-l from-amber-500/10 via-amber-500/5 to-transparent border border-amber-200/60 dark:border-amber-800/30 rounded-2xl p-5">
-                  <h4 className="text-sm font-black text-amber-800 dark:text-amber-300 flex items-center gap-2.5 mb-4">
-                    <div className="w-8 h-8 rounded-xl bg-amber-500/15 flex items-center justify-center">
-                      <Eye className="w-4 h-4 text-amber-600" />
-                    </div>
-                    ⚡ فرص تحويل — عملاء يبحثون ولم يشتروا بعد
-                  </h4>
-                  <div className="space-y-2.5">
-                    {topNonConverted.map((d, i) => (
-                      <div key={d.userId} className="flex items-center gap-3 bg-white/70 dark:bg-black/20 rounded-xl p-3 border border-amber-100/50 dark:border-amber-900/20 transition-all hover:shadow-sm">
-                        <div className="w-7 h-7 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
-                          <span className="text-[11px] font-black text-amber-700 dark:text-amber-400">{i + 1}</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-bold text-foreground">{d.name}</p>
-                          <p className="text-[10px] text-muted-foreground mt-0.5">
-                            {d.searches} عملية بحث • {d.priceViews} صنف مسعّر • أكثر ما بحث عنه: {d.topQueries[0] || "—"}
-                          </p>
-                        </div>
-                        {d.phone && (
-                          <a
-                            href={`https://wa.me/${formatPhoneForWA(d.phone)}?text=${encodeURIComponent(
-                              `مرحباً ${d.name}، لاحظنا اهتمامك بمنتجاتنا. هل يمكننا مساعدتك في إتمام طلبك؟`
-                            )}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="shrink-0 flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-3 py-2 rounded-xl hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors shadow-sm"
-                          >
-                            <MessageCircle className="w-3.5 h-3.5" />
-                            تواصل
-                          </a>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        );
-      })()}
-
 
       {/* Customer list */}
       {loadingProfiles ? (
@@ -2720,6 +1755,984 @@ const AdminCustomerIntelligence = () => {
           )}
         </div>
       )}
+
+      {/* ===== Analytics & Insights Section ===== */}
+      <div className="relative pt-2">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="h-px flex-1 bg-gradient-to-l from-border via-border to-transparent" />
+          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-muted/40 border border-border/40">
+            <BarChart3 className="w-3.5 h-3.5 text-primary" />
+            <span className="text-[11px] font-black text-foreground">تحليلات وتقارير</span>
+          </div>
+          <div className="h-px flex-1 bg-gradient-to-r from-border via-border to-transparent" />
+        </div>
+      </div>
+      {/* KPIs Row */}
+      <div className="grid grid-cols-3 md:grid-cols-6 gap-2.5">
+        {[
+          { icon: Users, value: totalCustomers, label: "إجمالي العملاء", iconBg: "bg-primary/15", iconColor: "text-primary" },
+          { icon: Briefcase, value: dealerCount, label: "تاجر", iconBg: "bg-blue-500/15", iconColor: "text-blue-600 dark:text-blue-400" },
+          { icon: ShoppingCart, value: retailCount, label: "قطاعي", iconBg: "bg-orange-500/15", iconColor: "text-orange-600 dark:text-orange-400" },
+          { icon: Car, value: withCar, label: "حددوا سيارتهم", iconBg: "bg-violet-500/15", iconColor: "text-violet-600 dark:text-violet-400" },
+          { icon: Search, value: totalSearches, label: "عمليات بحث", iconBg: "bg-cyan-500/15", iconColor: "text-cyan-600 dark:text-cyan-400" },
+          { icon: TrendingUp, value: activeSearchers, label: "عملاء يبحثون", iconBg: "bg-emerald-500/15", iconColor: "text-emerald-600 dark:text-emerald-400" },
+        ].map((kpi, idx) => (
+          <div key={idx} className="rounded-xl border border-border/40 bg-card p-3 text-center transition-all hover:shadow-sm hover:border-border/60 duration-200">
+            <div className={cn("w-8 h-8 rounded-lg mx-auto mb-1.5 flex items-center justify-center", kpi.iconBg)}>
+              <kpi.icon className={cn("w-4 h-4", kpi.iconColor)} />
+            </div>
+            <p className="text-xl font-black text-foreground">{kpi.value}</p>
+            <p className="text-[10px] text-muted-foreground font-medium">{kpi.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* 🔥 Hot Leads — Smart Auto Summary */}
+      {(() => {
+        const hasProfiles = !!filteredProfiles && filteredProfiles.length > 0;
+        const hasProducts = !!productsMap && Object.keys(productsMap).length > 0;
+        const hasSearchLogs = !!searchLogs && searchLogs.length > 0;
+        const hasPriceViews = !!priceViews && priceViews.length > 0;
+        const hasActivity = hasSearchLogs || hasPriceViews;
+
+        // Show alert when missing data instead of the section
+        if (!hasProfiles || !hasProducts || !hasActivity) {
+          return (
+            <div className="rounded-2xl border-2 border-dashed border-amber-300/60 dark:border-amber-700/50 bg-amber-50/50 dark:bg-amber-950/15 p-5 flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-amber-500/15 flex items-center justify-center shrink-0">
+                <AlertCircle className="w-4.5 h-4.5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-black text-foreground mb-1">
+                  بيانات غير كافية لعرض الملخص الذكي
+                </p>
+                <p className="text-xs text-muted-foreground leading-relaxed mb-2">
+                  نحتاج إلى عدد أكبر من العملاء وسجل بحث/تسعير حتى نستطيع اقتراح عملاء يحتاجون متابعة. الملخص يظهر تلقائياً بمجرد توفر بيانات كافية.
+                </p>
+                <div className="flex items-center gap-1.5 flex-wrap mt-2">
+                  <Badge variant="outline" className={cn("text-[10px] h-5 font-bold", hasProfiles ? "border-emerald-300 text-emerald-700 dark:text-emerald-400" : "border-red-300 text-red-700 dark:text-red-400")}>
+                    {hasProfiles ? "✓" : "✗"} عملاء ({filteredProfiles?.length || 0})
+                  </Badge>
+                  <Badge variant="outline" className={cn("text-[10px] h-5 font-bold", hasProducts ? "border-emerald-300 text-emerald-700 dark:text-emerald-400" : "border-red-300 text-red-700 dark:text-red-400")}>
+                    {hasProducts ? "✓" : "✗"} منتجات ({productsMap ? Object.keys(productsMap).length : 0})
+                  </Badge>
+                  <Badge variant="outline" className={cn("text-[10px] h-5 font-bold", hasSearchLogs ? "border-emerald-300 text-emerald-700 dark:text-emerald-400" : "border-red-300 text-red-700 dark:text-red-400")}>
+                    {hasSearchLogs ? "✓" : "✗"} سجل بحث ({searchLogs?.length || 0})
+                  </Badge>
+                  <Badge variant="outline" className={cn("text-[10px] h-5 font-bold", hasPriceViews ? "border-emerald-300 text-emerald-700 dark:text-emerald-400" : "border-red-300 text-red-700 dark:text-red-400")}>
+                    {hasPriceViews ? "✓" : "✗"} كشف أسعار ({priceViews?.length || 0})
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        return (
+        <Card className="rounded-2xl border-2 border-primary/20 shadow-sm overflow-hidden bg-gradient-to-l from-primary/5 via-background to-background">
+          <CardHeader className="py-3 px-4 border-b border-border/40">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <CardTitle className="text-sm font-black flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-md">
+                  <Zap className="w-3.5 h-3.5 text-white" />
+                </div>
+                ملخص ذكي — عملاء يحتاجون متابعة الآن
+                <Badge variant="secondary" className="text-[10px] h-5 mr-1">{hotLeads.length}</Badge>
+              </CardTitle>
+              <span className="text-[10px] text-muted-foreground font-medium hidden md:inline">
+                مرتب حسب الأولوية والاحتياج المحتمل
+              </span>
+            </div>
+            {/* Filters */}
+            <div className="flex items-center gap-2 flex-wrap mt-3">
+              <div className="inline-flex items-center rounded-lg border border-border/50 bg-muted/30 p-0.5 gap-0.5">
+                {[
+                  { key: "all", label: "الكل", icon: "🗂️" },
+                  { key: "parts", label: "قطع غيار", icon: "🔧" },
+                  { key: "oils", label: "زيوت", icon: "🛢️" },
+                ].map(opt => (
+                  <button
+                    key={opt.key}
+                    onClick={() => setHotLeadsCategory(opt.key as any)}
+                    className={cn(
+                      "text-[10px] font-bold px-2.5 py-1 rounded-md transition-all",
+                      hotLeadsCategory === opt.key
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                    )}
+                  >
+                    <span className="mr-0.5">{opt.icon}</span>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              <div className="inline-flex items-center rounded-lg border border-border/50 bg-muted/30 p-0.5 gap-0.5">
+                {[
+                  { key: "all", label: "كل الفترات" },
+                  { key: "90d", label: "آخر 90 يوم" },
+                  { key: "30d", label: "آخر 30 يوم" },
+                ].map(opt => (
+                  <button
+                    key={opt.key}
+                    onClick={() => setHotLeadsPeriod(opt.key as any)}
+                    className={cn(
+                      "text-[10px] font-bold px-2.5 py-1 rounded-md transition-all",
+                      hotLeadsPeriod === opt.key
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              {(hotLeadsCategory !== "all" || hotLeadsPeriod !== "all") && (
+                <button
+                  onClick={() => { setHotLeadsCategory("all"); setHotLeadsPeriod("all"); }}
+                  className="text-[10px] text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
+                >
+                  مسح الفلاتر
+                </button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="p-3">
+            {hotLeads.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-xs">
+                لا يوجد عملاء يطابقون الفلاتر الحالية. جرّب تغيير الفترة أو النوع.
+              </div>
+            ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+              {hotLeads.map((lead) => {
+                const p = lead.profile;
+                const phoneDigits = p.phone?.replace(/\D/g, "") || "";
+                const waNumber = phoneDigits.startsWith("0") ? "20" + phoneDigits.slice(1) : phoneDigits;
+                const waMsg = encodeURIComponent(
+                  `مرحباً ${p.full_name || "عميلنا الكريم"}، من المصرية جروب. لاحظنا اهتمامك بـ "${lead.topSearch || lead.topProducts[0] || "منتجاتنا"}" — هل يمكنني مساعدتك؟`
+                );
+                return (
+                  <div
+                    key={p.user_id}
+                    className="rounded-xl border border-border/50 bg-card p-3 hover:shadow-md hover:border-primary/30 transition-all cursor-pointer group"
+                    onClick={() => setExpandedUser(p.user_id)}
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-bold text-foreground truncate">
+                          {p.full_name || "عميل بدون اسم"}
+                        </p>
+                        {p.phone && (
+                          <p className="text-[10px] text-muted-foreground font-mono mt-0.5" dir="ltr">{p.phone}</p>
+                        )}
+                      </div>
+                      <Badge variant="outline" className={cn("text-[9px] h-5 px-1.5 font-bold border whitespace-nowrap", lead.needBadge.color)}>
+                        {lead.needBadge.label}
+                      </Badge>
+                    </div>
+                    <p className="text-[11px] text-foreground/80 leading-relaxed mb-2 line-clamp-2">
+                      💡 {lead.needReason}
+                    </p>
+                    {lead.topProductsRich.length > 0 && (
+                      <div className="flex items-center gap-1 flex-wrap mb-2">
+                        <span className="text-[9px] text-muted-foreground font-bold">شاف سعر:</span>
+                        {lead.topProductsRich.slice(0, 2).map((prod, i) => {
+                          // Smart route: prefer SKU search → fallback to dealer product page
+                          const url = prod.sku
+                            ? `/products?search=${encodeURIComponent(prod.sku)}`
+                            : `/dealer/product/${prod.id}`;
+                          return (
+                            <a
+                              key={i}
+                              href={url}
+                              target="_blank"
+                              rel="noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              title={prod.sku ? `فتح بحث SKU: ${prod.sku}` : `فتح صفحة المنتج`}
+                              className="inline-block"
+                            >
+                              <Badge
+                                variant="secondary"
+                                className="text-[9px] h-4 px-1.5 max-w-[110px] truncate hover:bg-primary/15 hover:text-primary cursor-pointer transition-colors"
+                              >
+                                {prod.name}
+                              </Badge>
+                            </a>
+                          );
+                        })}
+                        {lead.viewsCount > 2 && (
+                          <span className="text-[9px] text-muted-foreground">+{lead.viewsCount - 2}</span>
+                        )}
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/40">
+                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                        <span className="flex items-center gap-0.5"><Search className="w-2.5 h-2.5" />{lead.totalSearches}</span>
+                        <span className="flex items-center gap-0.5"><Eye className="w-2.5 h-2.5" />{lead.viewsCount}</span>
+                        <span className="flex items-center gap-0.5"><ShoppingCart className="w-2.5 h-2.5" />{lead.ordersCount}</span>
+                        {lead.daysSinceActivity < 999 && (
+                          <span className="flex items-center gap-0.5 font-bold text-foreground/70">
+                            <Clock className="w-2.5 h-2.5" />
+                            {lead.daysSinceActivity === 0 ? "اليوم" : `${lead.daysSinceActivity}ي`}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {!dealerUserIds?.has(p.user_id) && p.phone && (
+                          <button
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              const interests: string[] = [];
+                              if (lead.topSearch) interests.push(`بحث: ${lead.topSearch}`);
+                              if (lead.topProducts.length > 0) interests.push(`اهتم بـ: ${lead.topProducts.slice(0, 3).join("، ")}`);
+                              interests.push(`نشاط: ${lead.totalSearches} بحث، ${lead.viewsCount} كشف سعر، ${lead.ordersCount} طلب`);
+                              if (lead.daysSinceActivity < 999) interests.push(`آخر نشاط: ${lead.daysSinceActivity === 0 ? "اليوم" : `منذ ${lead.daysSinceActivity} يوم`}`);
+                              const notes = `[طلب حساب تاجر — مُنشأ من ملخص ذكاء العملاء]\n${interests.join("\n")}`;
+                              try {
+                                const { error } = await supabase.from("leads").insert({
+                                  name: p.full_name || "عميل بدون اسم",
+                                  phone: p.phone,
+                                  client_type: "wholesale",
+                                  status: "new",
+                                  notes,
+                                  created_by: (await supabase.auth.getUser()).data.user?.id,
+                                });
+                                if (error) throw error;
+                                toast({ title: "✅ تم إنشاء طلب حساب تاجر", description: "تجده في صفحة Leads مع كامل اهتمامات العميل." });
+                              } catch (err: any) {
+                                toast({ title: "تعذّر إنشاء الطلب", description: err.message || "حاول مرة أخرى", variant: "destructive" });
+                              }
+                            }}
+                            className="h-6 px-1.5 rounded-md bg-amber-500/15 hover:bg-amber-500/25 flex items-center gap-1 transition-colors"
+                            title="إنشاء طلب حساب تاجر مع تضمين آخر اهتمامات العميل"
+                          >
+                            <Briefcase className="w-3 h-3 text-amber-700 dark:text-amber-400" />
+                            <span className="text-[9px] font-bold text-amber-700 dark:text-amber-400">تاجر</span>
+                          </button>
+                        )}
+                        {p.phone && (
+                          <>
+                            <a
+                              href={`tel:${p.phone}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="w-6 h-6 rounded-md bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors"
+                              title="اتصال"
+                            >
+                              <Phone className="w-3 h-3 text-primary" />
+                            </a>
+                            <a
+                              href={`https://wa.me/${waNumber}?text=${waMsg}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="w-6 h-6 rounded-md bg-emerald-500/15 hover:bg-emerald-500/25 flex items-center justify-center transition-colors"
+                              title="واتساب"
+                            >
+                              <MessageCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                            </a>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            )}
+          </CardContent>
+        </Card>
+        );
+      })()}
+
+      {/* Charts Row: Heatmap + Customer Type */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Search Heatmap */}
+        {searchHeatmapData.length > 0 && (
+          <Card className="rounded-xl border-border/40 shadow-sm overflow-hidden">
+            <CardHeader className="py-3 px-4 bg-gradient-to-l from-cyan-500/5 to-transparent">
+              <CardTitle className="text-sm font-black flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-cyan-500/15 flex items-center justify-center">
+                  <Clock className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+                </div>
+                خريطة أوقات البحث
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+              <div className="h-[220px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={searchHeatmapData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
+                    <XAxis dataKey="hour" tick={{ fontSize: 9 }} interval={2} />
+                    <YAxis tick={{ fontSize: 10 }} />
+                    <Tooltip
+                      contentStyle={{ direction: "rtl", borderRadius: 10, fontSize: 11, boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}
+                      formatter={(value: number) => [`${value} بحث`, ""]}
+                      labelFormatter={(label) => `الساعة ${label}`}
+                    />
+                    <Bar dataKey="بحث" radius={[3, 3, 0, 0]} barSize={14}>
+                      {searchHeatmapData.map((entry, index) => {
+                        const max = Math.max(...searchHeatmapData.map(d => d.بحث), 1);
+                        const intensity = entry.بحث / max;
+                        const hue = intensity > 0.7 ? 0 : intensity > 0.4 ? 25 : 200;
+                        const sat = 70 + intensity * 20;
+                        const light = 65 - intensity * 20;
+                        return <Cell key={index} fill={`hsl(${hue}, ${sat}%, ${light}%)`} />;
+                      })}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              {(() => {
+                const sorted = [...searchHeatmapData].sort((a, b) => b.بحث - a.بحث);
+                const top3 = sorted.slice(0, 3).filter(d => d.بحث > 0);
+                if (top3.length === 0) return null;
+                return (
+                  <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                    <span className="text-[10px] font-bold text-muted-foreground">🔥 الأوقات الأنشط:</span>
+                    {top3.map((d, i) => (
+                      <Badge key={i} variant="secondary" className="text-[9px] h-5">
+                        {d.hour} ({d.بحث})
+                      </Badge>
+                    ))}
+                  </div>
+                );
+              })()}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Customer Type Distribution */}
+        {filteredProfiles && filteredProfiles.length > 0 && (() => {
+          const typeCounts: Record<string, number> = {};
+          filteredProfiles.forEach(p => {
+            const t = getCustomerType(p.user_id);
+            typeCounts[t] = (typeCounts[t] || 0) + 1;
+          });
+          const COLORS = [
+            "hsl(var(--chart-1, 142 71% 45%))",
+            "hsl(var(--chart-2, 217 91% 60%))",
+            "hsl(var(--chart-3, 48 96% 53%))",
+            "hsl(var(--chart-4, 280 65% 60%))",
+            "hsl(var(--chart-5, 25 95% 53%))",
+            "hsl(var(--muted-foreground, 215 16% 47%))",
+          ];
+          const typeColorMap: Record<string, string> = {};
+          CUSTOMER_TYPES.forEach((t, i) => { typeColorMap[t] = COLORS[i % COLORS.length]; });
+          const chartData = Object.entries(typeCounts).map(([name, value]) => ({ name, value }));
+
+          return (
+            <Card className="rounded-xl border-border/40 shadow-sm overflow-hidden">
+              <CardHeader className="py-3 px-4 bg-gradient-to-l from-violet-500/5 to-transparent">
+                <CardTitle className="text-sm font-black flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-violet-500/15 flex items-center justify-center">
+                    <BarChart3 className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />
+                  </div>
+                  توزيع أنواع العملاء
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-0">
+                <div className="h-[220px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={chartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={50}
+                        outerRadius={80}
+                        paddingAngle={3}
+                        dataKey="value"
+                        label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                      >
+                        {chartData.map((entry, index) => (
+                          <Cell key={entry.name} fill={typeColorMap[entry.name] || COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(value: number) => [`${value} عميل`, ""]}
+                        contentStyle={{ direction: "rtl", borderRadius: 10, fontSize: 11, boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}
+                      />
+                      <Legend wrapperStyle={{ fontSize: 11 }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
+      </div>
+
+
+      {/* Top Searchers vs Orders Report */}
+      {profiles && profiles.length > 0 && (() => {
+        const now = new Date();
+        const cutoff = reportTimeFilter === "7d" ? new Date(now.getTime() - 7 * 86400000)
+          : reportTimeFilter === "30d" ? new Date(now.getTime() - 30 * 86400000)
+          : reportTimeFilter === "90d" ? new Date(now.getTime() - 90 * 86400000)
+          : null;
+
+        const filteredSearchMap: Record<string, { query: string; count: number; lastAt: string }[]> = {};
+        searchLogs?.forEach((log: any) => {
+          if (cutoff && new Date(log.created_at) < cutoff) return;
+          const uid = log.user_id || "anonymous";
+          if (!filteredSearchMap[uid]) filteredSearchMap[uid] = [];
+          const existing = filteredSearchMap[uid].find(s => s.query === log.search_query);
+          if (existing) {
+            existing.count++;
+            if (log.created_at > existing.lastAt) existing.lastAt = log.created_at;
+          } else {
+            filteredSearchMap[uid].push({ query: log.search_query, count: 1, lastAt: log.created_at });
+          }
+        });
+
+        const searcherData: {
+          userId: string;
+          name: string;
+          phone: string | null;
+          searches: number;
+          uniqueQueries: number;
+          orders: number;
+          totalSpent: number;
+          priceViews: number;
+          converted: boolean;
+          conversionRate: string;
+          topQueries: string[];
+          searchDetails: { query: string; count: number; lastAt: string }[];
+          isDealer: boolean;
+        }[] = [];
+
+        profiles.forEach(p => {
+          const searches = filteredSearchMap[p.user_id] || [];
+          if (searches.length === 0) return;
+          const totalSearchCount = searches.reduce((sum, s) => sum + s.count, 0);
+          const userOrders = ordersMap?.[p.user_id];
+          const views = userViewsMap[p.user_id] || [];
+          const converted = !!(userOrders && userOrders.count > 0);
+
+          searcherData.push({
+            userId: p.user_id,
+            name: p.full_name || "بدون اسم",
+            phone: p.phone,
+            searches: totalSearchCount,
+            uniqueQueries: searches.length,
+            orders: userOrders?.count || 0,
+            totalSpent: userOrders?.total || 0,
+            priceViews: views.length,
+            converted,
+            conversionRate: totalSearchCount > 0 && userOrders
+              ? `${Math.round((userOrders.count / totalSearchCount) * 100)}%`
+              : "0%",
+            topQueries: searches
+              .sort((a, b) => b.count - a.count)
+              .slice(0, 3)
+              .map(s => s.query),
+            searchDetails: searches.sort((a, b) => b.count - a.count),
+            isDealer: dealerUserIds?.has(p.user_id) || false,
+          });
+        });
+
+        searcherData.sort((a, b) => b.searches - a.searches);
+        const top15 = searcherData.slice(0, 15);
+        const maxSearches = Math.max(...top15.map(d => d.searches), 1);
+        const maxOrders = Math.max(...top15.map(d => d.orders), 1);
+
+        const totalSearchers = searcherData.length;
+        const convertedCount = searcherData.filter(d => d.converted).length;
+        const overallConversion = totalSearchers > 0 ? Math.round((convertedCount / totalSearchers) * 100) : 0;
+        const avgSearchesPerUser = totalSearchers > 0
+          ? Math.round(searcherData.reduce((s, d) => s + d.searches, 0) / totalSearchers)
+          : 0;
+        const topNonConverted = searcherData.filter(d => !d.converted).slice(0, 5);
+
+        let prevSearchers = 0;
+        let prevConverted = 0;
+        let prevConversion = 0;
+        let prevAvgSearches = 0;
+        if (cutoff) {
+          const periodMs = now.getTime() - cutoff.getTime();
+          const prevCutoff = new Date(cutoff.getTime() - periodMs);
+          const prevSearchMap: Record<string, { query: string; count: number }[]> = {};
+          searchLogs?.forEach((log: any) => {
+            const logDate = new Date(log.created_at);
+            if (logDate >= cutoff || logDate < prevCutoff) return;
+            const uid = log.user_id || "anonymous";
+            if (!prevSearchMap[uid]) prevSearchMap[uid] = [];
+            const existing = prevSearchMap[uid].find(s => s.query === log.search_query);
+            if (existing) existing.count++;
+            else prevSearchMap[uid].push({ query: log.search_query, count: 1 });
+          });
+          const prevSearcherData: { userId: string; searches: number; converted: boolean }[] = [];
+          profiles.forEach(p => {
+            const searches = prevSearchMap[p.user_id] || [];
+            if (searches.length === 0) return;
+            const total = searches.reduce((s, q) => s + q.count, 0);
+            const userOrders = ordersMap?.[p.user_id];
+            prevSearcherData.push({ userId: p.user_id, searches: total, converted: !!(userOrders && userOrders.count > 0) });
+          });
+          prevSearchers = prevSearcherData.length;
+          prevConverted = prevSearcherData.filter(d => d.converted).length;
+          prevConversion = prevSearchers > 0 ? Math.round((prevConverted / prevSearchers) * 100) : 0;
+          prevAvgSearches = prevSearchers > 0
+            ? Math.round(prevSearcherData.reduce((s, d) => s + d.searches, 0) / prevSearchers)
+            : 0;
+        }
+
+        const calcChange = (current: number, prev: number) => {
+          if (!cutoff) return null;
+          if (prev === 0 && current === 0) return 0;
+          if (prev === 0) return 100;
+          return Math.round(((current - prev) / prev) * 100);
+        };
+
+        const searchersChange = calcChange(totalSearchers, prevSearchers);
+        const convertedChange = calcChange(convertedCount, prevConverted);
+        const conversionChange = calcChange(overallConversion, prevConversion);
+        const avgChange = calcChange(avgSearchesPerUser, prevAvgSearches);
+
+        const chartData = top15.slice(0, 10).map(d => ({
+          name: d.name.length > 12 ? d.name.slice(0, 12) + "…" : d.name,
+          بحث: d.searches,
+          طلبات: d.orders,
+        }));
+
+        const formatPhoneForWA = (phone: string) => {
+          let cleaned = phone.replace(/[\s\-()]/g, "");
+          cleaned = cleaned.replace(/^002/, "").replace(/^0020/, "");
+          if (cleaned.startsWith("0")) cleaned = "20" + cleaned.slice(1);
+          if (!cleaned.startsWith("+")) cleaned = "+" + cleaned;
+          return cleaned;
+        };
+
+        return (
+          <Card className="rounded-xl border-primary/15 shadow-sm overflow-hidden">
+            <CardHeader className="py-3 px-4 bg-gradient-to-l from-primary/8 via-primary/3 to-transparent">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <CardTitle className="text-sm font-black flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-primary/15 flex items-center justify-center shadow-sm">
+                      <TrendingUp className="w-3.5 h-3.5 text-primary" />
+                    </div>
+                    أكثر العملاء بحثاً مقابل الطلبات
+                  </CardTitle>
+                  <p className="text-[10px] text-muted-foreground mt-1 mr-[36px]">
+                    مقارنة نشاط البحث وتحويله لطلبات — أداة لاكتشاف الفرص
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5 text-xs font-bold rounded-xl"
+                  onClick={() => {
+                    const rows = searcherData.map((d, i) => ({
+                      "#": i + 1,
+                      "الاسم": d.name,
+                      "نوع الحساب": d.isDealer ? "جملة" : "قطاعي",
+                      "رقم الهاتف": d.phone || "—",
+                      "عمليات البحث": d.searches,
+                      "استفسارات فريدة": d.uniqueQueries,
+                      "أصناف مسعّرة": d.priceViews,
+                      "عدد الطلبات": d.orders,
+                      "إجمالي الإنفاق (ج.م)": d.totalSpent,
+                      "معدل التحويل": d.conversionRate,
+                      "الحالة": d.converted ? "محوّل" : "لم يشترِ",
+                      "أهم ما بحث عنه": d.topQueries.join(" | "),
+                    }));
+                    const wb = XLSX.utils.book_new();
+                    const ws = XLSX.utils.json_to_sheet(rows);
+                    ws["!dir"] = "rtl" as any;
+                    ws["!cols"] = [
+                      { wch: 5 }, { wch: 22 }, { wch: 16 }, { wch: 14 }, { wch: 16 },
+                      { wch: 14 }, { wch: 12 }, { wch: 18 }, { wch: 14 }, { wch: 12 }, { wch: 35 },
+                    ];
+                    applyExcelStyles(ws, 11, "تقرير أكثر الباحثين");
+                    XLSX.utils.book_append_sheet(wb, ws, "أكثر الباحثين");
+                    XLSX.writeFile(wb, `تقرير_أكثر_الباحثين_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+                    toast({ title: "تم تصدير التقرير بنجاح ✅" });
+                  }}
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  تصدير Excel
+                </Button>
+              </div>
+              <div className="flex items-center gap-1.5 flex-wrap px-1 mt-1">
+                {[
+                  { value: "7d", label: "آخر 7 أيام" },
+                  { value: "30d", label: "آخر 30 يوم" },
+                  { value: "90d", label: "آخر 90 يوم" },
+                  { value: "all", label: "الكل" },
+                ].map(opt => (
+                  <Button
+                    key={opt.value}
+                    size="sm"
+                    variant={reportTimeFilter === opt.value ? "default" : "outline"}
+                    className={cn("text-[11px] h-7 px-3 font-bold rounded-lg", reportTimeFilter === opt.value && "shadow-sm")}
+                    onClick={() => setReportTimeFilter(opt.value)}
+                  >
+                    {opt.label}
+                  </Button>
+                ))}
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Summary KPIs */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+                {[
+                  { icon: Search, value: totalSearchers, label: "عميل يبحث", change: searchersChange, bg: "bg-gradient-to-br from-primary/8 to-primary/3", iconBg: "bg-primary/15", iconColor: "text-primary", valueColor: "text-foreground" },
+                  { icon: ShoppingCart, value: convertedCount, label: "تحوّلوا لطلبات", change: convertedChange, bg: "bg-gradient-to-br from-emerald-500/8 to-emerald-500/3", iconBg: "bg-emerald-500/15", iconColor: "text-emerald-600 dark:text-emerald-400", valueColor: "text-emerald-700 dark:text-emerald-400" },
+                  { icon: TrendingUp, value: `${overallConversion}%`, label: "معدل التحويل", change: conversionChange, bg: "bg-gradient-to-br from-amber-500/8 to-amber-500/3", iconBg: "bg-amber-500/15", iconColor: "text-amber-600 dark:text-amber-400", valueColor: "text-amber-700 dark:text-amber-400" },
+                  { icon: BarChart3, value: avgSearchesPerUser, label: "متوسط بحث/عميل", change: avgChange, bg: "bg-gradient-to-br from-blue-500/8 to-blue-500/3", iconBg: "bg-blue-500/15", iconColor: "text-blue-600 dark:text-blue-400", valueColor: "text-blue-700 dark:text-blue-400" },
+                ].map((kpi, idx) => (
+                  <div key={idx} className={cn("rounded-xl p-3 text-center border border-border/30", kpi.bg)}>
+                    <div className={cn("w-7 h-7 rounded-lg mx-auto mb-1.5 flex items-center justify-center", kpi.iconBg)}>
+                      <kpi.icon className={cn("w-3.5 h-3.5", kpi.iconColor)} />
+                    </div>
+                    <p className={cn("text-xl font-black tracking-tight", kpi.valueColor)}>{kpi.value}</p>
+                    <p className="text-[10px] text-muted-foreground font-medium">{kpi.label}</p>
+                    {kpi.change !== null && (
+                      <div className={cn(
+                        "flex items-center justify-center gap-0.5 mt-2 text-[10px] font-bold rounded-full px-2.5 py-0.5 mx-auto w-fit",
+                        kpi.change > 0 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                          : kpi.change < 0 ? "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400"
+                          : "bg-muted text-muted-foreground"
+                      )}>
+                        {kpi.change > 0 ? <TrendingUp className="w-3 h-3" /> : kpi.change < 0 ? <TrendingDown className="w-3 h-3" /> : null}
+                        {kpi.change > 0 ? "+" : ""}{kpi.change}% عن الفترة السابقة
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Detailed Table */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-black text-foreground flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Search className="w-3.5 h-3.5 text-primary" />
+                    </div>
+                    تفاصيل أكثر 15 عميل بحثاً
+                  </h4>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5 text-[10px] h-7 font-bold rounded-xl"
+                    onClick={() => {
+                      const rows: any[] = [];
+                      top15.forEach((d, idx) => {
+                        const topSearches = d.searchDetails.slice(0, 10);
+                        if (topSearches.length === 0) {
+                          rows.push({
+                            "#": idx + 1,
+                            "اسم العميل": d.name,
+                            "نوع الحساب": d.isDealer ? "جملة" : "قطاعي",
+                            "رقم الهاتف": d.phone || "—",
+                            "الصنف المطلوب": "—",
+                            "عدد مرات البحث": 0,
+                            "إجمالي عمليات البحث": d.searches,
+                            "الحالة": d.converted ? "محوّل ✓" : "لم يشترِ ✗",
+                          });
+                        } else {
+                          topSearches.forEach((s, si) => {
+                            rows.push({
+                              "#": si === 0 ? idx + 1 : "",
+                              "اسم العميل": si === 0 ? d.name : "",
+                              "نوع الحساب": si === 0 ? (d.isDealer ? "جملة" : "قطاعي") : "",
+                              "رقم الهاتف": si === 0 ? (d.phone || "—") : "",
+                              "الصنف المطلوب": s.query,
+                              "عدد مرات البحث": s.count,
+                              "إجمالي عمليات البحث": si === 0 ? d.searches : "",
+                              "الحالة": si === 0 ? (d.converted ? "محوّل ✓" : "لم يشترِ ✗") : "",
+                            });
+                          });
+                        }
+                      });
+                      if (rows.length === 0) { toast({ title: "لا توجد بيانات", variant: "destructive" }); return; }
+                      const wb = XLSX.utils.book_new();
+                      const ws = XLSX.utils.json_to_sheet(rows);
+                      ws["!dir"] = "rtl" as any;
+                      ws["!cols"] = [{ wch: 5 }, { wch: 22 }, { wch: 12 }, { wch: 16 }, { wch: 30 }, { wch: 14 }, { wch: 16 }, { wch: 14 }];
+                      applyExcelStyles(ws, 8, "تقرير أكثر 15 عميل بحثاً - تفصيلي");
+                      XLSX.utils.book_append_sheet(wb, ws, "أكثر الباحثين تفصيلي");
+                      XLSX.writeFile(wb, `أكثر_15_عميل_بحثاً_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+                      toast({ title: "تم تصدير التقرير بنجاح ✅" });
+                    }}
+                  >
+                    <Download className="w-3 h-3" />
+                    تصدير Excel
+                  </Button>
+                </div>
+                <div className="overflow-x-auto rounded-2xl border border-border/40 shadow-sm">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-gradient-to-l from-muted/80 to-muted/40 text-muted-foreground text-[11px]">
+                        <th className="px-3 py-3 text-right font-black">#</th>
+                        <th className="px-3 py-3 text-right font-black">العميل</th>
+                        <th className="px-3 py-3 text-center font-black">عمليات البحث</th>
+                        <th className="px-3 py-3 text-center font-black">استفسارات فريدة</th>
+                        <th className="px-3 py-3 text-center font-black">أصناف مسعّرة</th>
+                        <th className="px-3 py-3 text-center font-black">الطلبات</th>
+                        <th className="px-3 py-3 text-center font-black">إجمالي الإنفاق</th>
+                        <th className="px-3 py-3 text-center font-black">التحويل</th>
+                        <th className="px-3 py-3 text-right font-black">أهم ما بحث عنه</th>
+                        <th className="px-3 py-3 text-center font-black">تواصل</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {top15.map((d, i) => (
+                        <Fragment key={d.userId}>
+                        <tr
+                          className={cn(
+                            "border-t border-border/50 transition-colors cursor-pointer hover:bg-muted/40",
+                            i % 2 === 0 ? "bg-card" : "bg-muted/20",
+                            !d.converted && d.searches >= 5 && "bg-amber-50/50 dark:bg-amber-950/10",
+                            expandedSearcher === d.userId && "bg-primary/5"
+                          )}
+                          onClick={() => { setExpandedSearcher(expandedSearcher === d.userId ? null : d.userId); setSearchDetailFilter(""); setSearchDetailSort("count"); }}
+                        >
+                          <td className="px-3 py-2.5 text-xs text-muted-foreground font-bold">{i + 1}</td>
+                          <td className="px-3 py-2.5">
+                            <div className="flex items-center gap-1.5">
+                              <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform", expandedSearcher === d.userId && "rotate-180")} />
+                              <div>
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); navigate(`/admin?section=customers&search=${encodeURIComponent(d.phone || d.name)}`); }}
+                                    className="text-right hover:underline cursor-pointer group"
+                                  >
+                                    <p className="text-xs font-bold text-primary group-hover:text-primary/80 transition-colors">{d.name}</p>
+                                  </button>
+                                  <span className={cn(
+                                    "text-[9px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap",
+                                    d.isDealer
+                                      ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                                      : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                                  )}>
+                                    {d.isDealer ? "جملة" : "قطاعي"}
+                                  </span>
+                                </div>
+                                {d.phone && (
+                                  <p className="text-[10px] text-muted-foreground" dir="ltr">{d.phone}</p>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-3 py-2.5 text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                                <div className="h-full bg-blue-500 rounded-full" style={{ width: `${(d.searches / maxSearches) * 100}%` }} />
+                              </div>
+                              <span className="text-xs font-bold text-foreground">{d.searches}</span>
+                            </div>
+                          </td>
+                          <td className="px-3 py-2.5 text-center text-xs text-foreground">{d.uniqueQueries}</td>
+                          <td className="px-3 py-2.5 text-center text-xs text-foreground">{d.priceViews}</td>
+                          <td className="px-3 py-2.5 text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <div className="w-10 h-1.5 bg-muted rounded-full overflow-hidden">
+                                <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${maxOrders > 0 ? (d.orders / maxOrders) * 100 : 0}%` }} />
+                              </div>
+                              <span className="text-xs font-bold text-foreground">{d.orders}</span>
+                            </div>
+                          </td>
+                          <td className="px-3 py-2.5 text-center text-xs font-bold text-foreground">
+                            {d.totalSpent > 0 ? `${d.totalSpent.toLocaleString("ar-EG")} ج.م` : "—"}
+                          </td>
+                          <td className="px-3 py-2.5 text-center">
+                            {d.converted ? (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                ✓ محوّل
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                                ✗ لم يشترِ
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2.5">
+                            <div className="flex flex-wrap gap-1">
+                              {d.topQueries.map((q, qi) => (
+                                <span key={qi} className="text-[10px] bg-muted/60 rounded px-1.5 py-0.5 text-foreground">
+                                  {q}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="px-3 py-2.5 text-center">
+                            {d.phone && (
+                              <a
+                                href={`https://wa.me/${formatPhoneForWA(d.phone)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex w-7 h-7 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 items-center justify-center transition-colors"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+                              </a>
+                            )}
+                          </td>
+                        </tr>
+                        <AnimatePresence>
+                        {expandedSearcher === d.userId && (
+                          <motion.tr
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="border-t border-border/30"
+                          >
+                            <td colSpan={10} className="p-0">
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.3, ease: "easeInOut" }}
+                                className="overflow-hidden"
+                              >
+                              <div className="bg-muted/30 px-6 py-4 space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <h5 className="text-xs font-black text-foreground flex items-center gap-2">
+                                    <Search className="w-3.5 h-3.5 text-primary" />
+                                    سجل بحث {d.name} ({d.searchDetails.length} استفسار)
+                                  </h5>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="gap-1.5 text-[10px] h-7"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const ws = XLSX.utils.json_to_sheet(
+                                        d.searchDetails.map((s, si) => ({
+                                          "#": si + 1,
+                                          "اسم العميل": d.name,
+                                          "رقم الهاتف": d.phone || "—",
+                                          "كلمة البحث": s.query,
+                                          "عدد المرات": s.count,
+                                          "آخر بحث": format(new Date(s.lastAt), "dd/MM/yyyy hh:mm a", { locale: ar }),
+                                        }))
+                                      );
+                                      ws["!cols"] = [{ wch: 5 }, { wch: 22 }, { wch: 16 }, { wch: 35 }, { wch: 12 }, { wch: 22 }];
+                                       applyExcelStyles(ws, 6, `سجل بحث العميل: ${d.name}`);
+                                       const wb = XLSX.utils.book_new();
+                                       XLSX.utils.book_append_sheet(wb, ws, "سجل البحث");
+                                       const infoWs = XLSX.utils.json_to_sheet([{
+                                         "الاسم": d.name,
+                                         "الهاتف": d.phone || "—",
+                                         "إجمالي البحث": d.searches,
+                                         "استفسارات فريدة": d.uniqueQueries,
+                                         "الطلبات": d.orders,
+                                         "إجمالي الإنفاق": d.totalSpent,
+                                         "الحالة": d.converted ? "محوّل" : "لم يشترِ",
+                                       }]);
+                                       applyExcelStyles(infoWs, 7, `بيانات العميل: ${d.name}`);
+                                       XLSX.utils.book_append_sheet(wb, infoWs, "بيانات العميل");
+                                       XLSX.writeFile(wb, `سجل_بحث_${d.name.replace(/\s+/g, "_")}.xlsx`);
+                                      toast({ title: "تم تصدير سجل البحث بنجاح ✅" });
+                                    }}
+                                  >
+                                    <Download className="w-3 h-3" />
+                                    تصدير Excel
+                                  </Button>
+                                </div>
+                                <div className="relative" onClick={(e) => e.stopPropagation()}>
+                                  <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                                  <Input
+                                    placeholder="ابحث في كلمات البحث..."
+                                    value={searchDetailFilter}
+                                    onChange={(e) => setSearchDetailFilter(e.target.value)}
+                                    className="h-8 text-xs pr-8 bg-card"
+                                  />
+                                </div>
+                                <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                  <span className="text-[10px] text-muted-foreground font-medium">ترتيب:</span>
+                                  <Button size="sm" variant={searchDetailSort === "count" ? "default" : "outline"} className="h-6 text-[10px] px-2" onClick={() => setSearchDetailSort("count")}>
+                                    الأكثر بحثاً
+                                  </Button>
+                                  <Button size="sm" variant={searchDetailSort === "date" ? "default" : "outline"} className="h-6 text-[10px] px-2" onClick={() => setSearchDetailSort("date")}>
+                                    الأحدث
+                                  </Button>
+                                </div>
+                                {(() => {
+                                  const filtered = (searchDetailFilter
+                                    ? d.searchDetails.filter(s => s.query.includes(searchDetailFilter))
+                                    : [...d.searchDetails]
+                                  ).sort((a, b) => searchDetailSort === "count" ? b.count - a.count : new Date(b.lastAt).getTime() - new Date(a.lastAt).getTime());
+                                  return (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[200px] overflow-y-auto">
+                                      {filtered.length === 0 ? (
+                                        <p className="text-xs text-muted-foreground col-span-full text-center py-3">لا توجد نتائج مطابقة</p>
+                                      ) : filtered.map((s, si) => (
+                                        <div key={si} className="flex items-center gap-2 bg-card rounded-lg px-3 py-2 border border-border/50">
+                                          <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-bold text-foreground truncate">{s.query}</p>
+                                            <p className="text-[10px] text-muted-foreground">
+                                              {format(new Date(s.lastAt), "dd MMM yyyy — hh:mm a", { locale: ar })}
+                                            </p>
+                                          </div>
+                                          <Badge variant="secondary" className="text-[10px] shrink-0">
+                                            {s.count}×
+                                          </Badge>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+                              </motion.div>
+                            </td>
+                          </motion.tr>
+                        )}
+                        </AnimatePresence>
+                        </Fragment>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Opportunity Alert */}
+              {topNonConverted.length > 0 && (
+                <div className="bg-gradient-to-l from-amber-500/10 via-amber-500/5 to-transparent border border-amber-200/60 dark:border-amber-800/30 rounded-2xl p-5">
+                  <h4 className="text-sm font-black text-amber-800 dark:text-amber-300 flex items-center gap-2.5 mb-4">
+                    <div className="w-8 h-8 rounded-xl bg-amber-500/15 flex items-center justify-center">
+                      <Eye className="w-4 h-4 text-amber-600" />
+                    </div>
+                    ⚡ فرص تحويل — عملاء يبحثون ولم يشتروا بعد
+                  </h4>
+                  <div className="space-y-2.5">
+                    {topNonConverted.map((d, i) => (
+                      <div key={d.userId} className="flex items-center gap-3 bg-white/70 dark:bg-black/20 rounded-xl p-3 border border-amber-100/50 dark:border-amber-900/20 transition-all hover:shadow-sm">
+                        <div className="w-7 h-7 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
+                          <span className="text-[11px] font-black text-amber-700 dark:text-amber-400">{i + 1}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-foreground">{d.name}</p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            {d.searches} عملية بحث • {d.priceViews} صنف مسعّر • أكثر ما بحث عنه: {d.topQueries[0] || "—"}
+                          </p>
+                        </div>
+                        {d.phone && (
+                          <a
+                            href={`https://wa.me/${formatPhoneForWA(d.phone)}?text=${encodeURIComponent(
+                              `مرحباً ${d.name}، لاحظنا اهتمامك بمنتجاتنا. هل يمكننا مساعدتك في إتمام طلبك؟`
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="shrink-0 flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-3 py-2 rounded-xl hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors shadow-sm"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" />
+                            تواصل
+                          </a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })()}
+
+      
 
       {/* Bulk WhatsApp Dialog */}
       <Dialog open={bulkWhatsAppOpen} onOpenChange={(open) => { setBulkWhatsAppOpen(open); if (!open) setSendingIndex(-1); }}>
