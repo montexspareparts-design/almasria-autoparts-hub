@@ -790,12 +790,24 @@ export default function VisitorSessionSummary() {
                             <Icon className="w-4 h-4" />
                           </div>
                           <div className="mr-6 p-3 rounded-lg bg-muted/40 border border-border hover:bg-muted/60 transition">
-                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <div className="flex items-start justify-between gap-2 flex-wrap">
                               <span className="font-bold text-sm text-foreground">{evt.title}</span>
-                              <span className="text-[11px] text-muted-foreground font-mono">{fmtDateTime(evt.at)}</span>
+                              <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-5 shrink-0">
+                                {fmtRelativeShort(evt.at)}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-3 mt-1.5 text-[11px] text-muted-foreground flex-wrap">
+                              <span className="inline-flex items-center gap-1">
+                                <span className="opacity-70">📅</span>
+                                <span className="font-medium text-foreground/75">{fmtFullDate(evt.at)}</span>
+                              </span>
+                              <span className="inline-flex items-center gap-1 font-mono">
+                                <span className="opacity-70">🕐</span>
+                                <span className="font-medium text-foreground/75">{fmtFullTime(evt.at)}</span>
+                              </span>
                             </div>
                             {evt.detail && (
-                              <p className="text-xs text-muted-foreground mt-1.5 whitespace-pre-wrap leading-relaxed">{evt.detail}</p>
+                              <p className="text-xs text-muted-foreground mt-2 whitespace-pre-wrap leading-relaxed">{evt.detail}</p>
                             )}
                           </div>
                         </div>
