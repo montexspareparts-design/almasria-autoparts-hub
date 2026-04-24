@@ -19,6 +19,7 @@ import {
   CheckCircle2, Headphones, MapPin, AlertTriangle,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { checkDuplicateCommunication } from "@/lib/duplicateCommCheck";
 
 interface PageVisit { id: string; path: string; page_title: string | null; visited_at: string; referrer: string | null; }
 interface SearchEntry { id: string; search_query: string; created_at: string; results_count: number | null; }
@@ -370,6 +371,8 @@ export default function VisitorSessionSummary() {
 
   const saveCommunication = async () => {
     if (!user?.id) return;
+    const dup = await checkDuplicateCommunication({ customerUserId: userId!, commType });
+    if (dup.isDuplicate && !dup.shouldProceed) return;
     setSavingComm(true);
     try {
       const { data, error } = await supabase

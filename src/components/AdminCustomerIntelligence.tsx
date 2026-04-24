@@ -139,6 +139,7 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+import { checkDuplicateCommunication } from "@/lib/duplicateCommCheck";
 
 interface CustomerProfile {
   user_id: string;
@@ -641,6 +642,10 @@ const AdminCustomerIntelligence = () => {
     }
     if (!user) {
       toast({ title: "يجب تسجيل الدخول", variant: "destructive" });
+      return;
+    }
+    const dup = await checkDuplicateCommunication({ customerUserId, commType });
+    if (dup.isDuplicate && !dup.shouldProceed) {
       return;
     }
     setSavingQuickNote(customerUserId);

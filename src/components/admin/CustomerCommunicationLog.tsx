@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, Send, Trash2, MessageCircle, Phone, Mail, MapPin, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { checkDuplicateCommunication } from "@/lib/duplicateCommCheck";
 
 const COMM_TYPES = [
   { value: "phone", label: "📞 مكالمة هاتفية", icon: Phone, color: "bg-blue-100 text-blue-800" },
@@ -67,6 +68,8 @@ export default function CustomerCommunicationLog({ customerUserId, compact = fal
 
   const handleAdd = async () => {
     if (!user) return;
+    const dup = await checkDuplicateCommunication({ customerUserId, commType });
+    if (dup.isDuplicate && !dup.shouldProceed) return;
     setSaving(true);
     const { error } = await supabase.from("customer_communications").insert({
       customer_user_id: customerUserId,
