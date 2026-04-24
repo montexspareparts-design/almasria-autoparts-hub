@@ -789,7 +789,7 @@ const AdminCustomerIntelligence = () => {
       if (recentActivityFilter === "searched_no_order" && !(totalSearches >= 3 && !orders)) return false;
       if (recentActivityFilter === "ordered_recently") {
         if (!orders) return false;
-        const lastOrderAt = (orders as any).lastOrderAt ? new Date((orders as any).lastOrderAt) : null;
+        const lastOrderAt = orders.lastOrderDate ? new Date(orders.lastOrderDate) : null;
         if (!lastOrderAt || differenceInDays(new Date(), lastOrderAt) > 7) return false;
       }
       if (recentActivityFilter === "no_orders" && !!orders) return false;
