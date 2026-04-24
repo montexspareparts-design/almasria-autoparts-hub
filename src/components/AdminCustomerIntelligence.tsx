@@ -2455,6 +2455,98 @@ const AdminCustomerIntelligence = () => {
                             <TabsTrigger value="prefs" className="text-[11px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2"><Car className="w-3.5 h-3.5" />تفضيلات</TabsTrigger>
                             <TabsTrigger value="activity" className="text-[11px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2"><Search className="w-3.5 h-3.5" />سجل التصفح</TabsTrigger>
                           </TabsList>
+
+                          {/* === تبويب التواصل السريع === */}
+                          <TabsContent value="contact" className="space-y-3 mt-4 focus-visible:outline-none">
+                            <div className="rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/[0.08] via-primary/[0.04] to-emerald-500/[0.04] p-4 sm:p-5 shadow-sm">
+                              <div className="flex items-start justify-between gap-3 mb-3">
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wide">العميل</p>
+                                  <p className="text-base sm:text-lg font-black text-foreground truncate">
+                                    {profile.full_name || <span className="text-muted-foreground italic">بدون اسم</span>}
+                                  </p>
+                                  {dealerUserIds?.has(profile.user_id) ? (
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold mt-1 bg-blue-500/15 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded-md">
+                                      <Briefcase className="w-3 h-3" />تاجر
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold mt-1 bg-muted text-muted-foreground px-2 py-0.5 rounded-md">
+                                      عميل قطاعي
+                                    </span>
+                                  )}
+                                </div>
+                                {alerts.length > 0 && (
+                                  <span className="text-[10px] font-bold bg-red-500/15 text-red-700 dark:text-red-400 px-2 py-1 rounded-lg flex items-center gap-1 shrink-0">
+                                    <AlertTriangle className="w-3 h-3" />{alerts.length} تنبيه
+                                  </span>
+                                )}
+                              </div>
+
+                              {profile.phone ? (
+                                <>
+                                  <div className="bg-background/80 rounded-xl border border-border/40 p-3 mb-3">
+                                    <p className="text-[10px] text-muted-foreground font-bold mb-1">📱 رقم الموبايل</p>
+                                    <p className="text-2xl sm:text-3xl font-black text-foreground tracking-wider font-mono" dir="ltr">
+                                      {profile.phone}
+                                    </p>
+                                  </div>
+                                  <div className="grid grid-cols-3 gap-2">
+                                    <a href={`tel:${profile.phone}`} onClick={(e) => e.stopPropagation()} className="flex flex-col items-center justify-center gap-1 h-16 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-400 border border-blue-500/30 font-bold text-[11px] transition-colors">
+                                      <Phone className="w-5 h-5" />اتصال
+                                    </a>
+                                    <a href={`https://wa.me/${formatPhoneForWhatsApp(profile.phone)}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="flex flex-col items-center justify-center gap-1 h-16 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 font-bold text-[11px] transition-colors">
+                                      <MessageCircle className="w-5 h-5" />واتساب
+                                    </a>
+                                    <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(profile.phone || ""); toast({ title: "✅ تم نسخ الرقم" }); }} className="flex flex-col items-center justify-center gap-1 h-16 rounded-xl bg-muted hover:bg-muted/70 text-foreground border border-border/50 font-bold text-[11px] transition-colors">
+                                      <Copy className="w-5 h-5" />نسخ
+                                    </button>
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="rounded-xl border-2 border-dashed border-amber-300/60 bg-amber-50/40 dark:bg-amber-950/15 p-4 text-center">
+                                  <Phone className="w-8 h-8 text-amber-500 mx-auto mb-2 opacity-70" />
+                                  <p className="text-sm font-bold text-amber-800 dark:text-amber-300">لا يوجد رقم موبايل لهذا العميل</p>
+                                  <p className="text-[11px] text-muted-foreground mt-1">انتقل لتبويب "الملف" لإدخال الرقم يدوياً</p>
+                                </div>
+                              )}
+
+                              {profile.email && !profile.email.endsWith("@phone.almasria.local") && (
+                                <a href={`mailto:${profile.email}`} onClick={(e) => e.stopPropagation()} className="mt-2 flex items-center gap-2 rounded-lg bg-background/60 border border-border/40 px-3 py-2 text-xs text-foreground hover:bg-background transition-colors">
+                                  <Mail className="w-3.5 h-3.5 text-primary shrink-0" />
+                                  <span className="truncate" dir="ltr">{profile.email}</span>
+                                </a>
+                              )}
+                            </div>
+
+                            {profile.phone && (
+                              <div className="rounded-xl border border-primary/20 bg-card/60 p-3.5">
+                                <div className="flex items-start justify-between gap-3 mb-2">
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center shrink-0"><MessageCircle className="w-4 h-4 text-primary" /></div>
+                                    <div className="min-w-0">
+                                      <p className="text-xs font-bold text-foreground">سكريبت اتصال جاهز</p>
+                                      <p className="text-[10px] text-muted-foreground">مبني تلقائياً على سلوك العميل</p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-1.5 shrink-0">
+                                    <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(buildCallScript(profile.user_id)); toast({ title: "✅ تم نسخ السكريبت" }); }} className="text-[10px] font-bold px-2 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary flex items-center gap-1 transition-colors"><Copy className="w-3 h-3" />نسخ</button>
+                                    <a href={`https://wa.me/${formatPhoneForWhatsApp(profile.phone)}?text=${encodeURIComponent(buildCallScript(profile.user_id))}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-[10px] font-bold px-2 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 flex items-center gap-1 transition-colors"><Send className="w-3 h-3" />إرسال</a>
+                                  </div>
+                                </div>
+                                <p className="text-xs text-foreground/85 leading-relaxed whitespace-pre-line bg-background/60 rounded-lg p-3 border border-border/30">{buildCallScript(profile.user_id)}</p>
+                              </div>
+                            )}
+
+                            {comms.length === 0 ? (
+                              <div className="rounded-xl border border-dashed border-border/50 bg-muted/10 p-3 flex items-center justify-between"><div className="flex items-center gap-2 text-[11px] text-muted-foreground"><FileText className="w-3.5 h-3.5" />لا يوجد سجل تواصل سابق</div><span className="text-[10px] text-muted-foreground italic">سجّل مكالمتك من ملف العميل</span></div>
+                            ) : (
+                              <div className="rounded-xl border border-border/40 bg-card/50 overflow-hidden">
+                                <div className="px-3 py-2 bg-muted/30 flex items-center justify-between"><div className="flex items-center gap-2"><FileText className="w-3.5 h-3.5 text-primary" /><span className="text-xs font-bold text-foreground">آخر تواصل</span><span className="text-[10px] font-bold bg-primary/10 text-primary px-1.5 py-0.5 rounded-md">{comms.length}</span></div><span className="text-[10px] text-muted-foreground">منذ <strong className="text-foreground">{daysSince === 0 ? "اليوم" : `${daysSince} يوم`}</strong></span></div>
+                                <div className="divide-y divide-border/30 max-h-48 overflow-y-auto">{comms.slice(0, 5).map(c => { const info = commLabel[c.comm_type] || { label: c.comm_type, color: "bg-muted text-foreground" }; return (<div key={c.id} className="px-3 py-2 flex items-start gap-2"><span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0", info.color)}>{info.label}</span><div className="min-w-0 flex-1">{c.note && (<p className="text-[11px] text-foreground/85 line-clamp-2">{c.note}</p>)}<p className="text-[10px] text-muted-foreground mt-0.5">{format(new Date(c.created_at), "dd/MM/yyyy hh:mm a", { locale: ar })}</p></div></div>); })}</div>
+                              </div>
+                            )}
+                          </TabsContent>
+
                           <TabsContent value="basic" className="space-y-3 mt-4 focus-visible:outline-none">
                             {(() => {
                               const missing = detectMissingFields(profile);
