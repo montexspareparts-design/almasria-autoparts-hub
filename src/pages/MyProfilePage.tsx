@@ -11,7 +11,8 @@ import { Separator } from "@/components/ui/separator";
 import CarModelSelector from "@/components/CarModelSelector";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { User, Phone, Mail, Car, Save, Loader2, ArrowRight, Lock, Eye, EyeOff } from "lucide-react";
+import { User, Phone, Mail, Car, Save, Loader2, ArrowRight, Lock, Eye, EyeOff, Sparkles, X } from "lucide-react";
+import { recoverPhoneFromChannels, type RecoveredPhone } from "@/lib/recoverPhone";
 
 const egyptianPhoneRegex = /^01[0-25]\d{8}$/;
 
@@ -33,6 +34,8 @@ const MyProfilePage = () => {
   const [showCurrentPw, setShowCurrentPw] = useState(false);
   const [showNewPw, setShowNewPw] = useState(false);
   const [isGoogleUser, setIsGoogleUser] = useState(false);
+  const [recoveredPhone, setRecoveredPhone] = useState<RecoveredPhone | null>(null);
+  const [recoveryDismissed, setRecoveryDismissed] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -49,14 +52,23 @@ const MyProfilePage = () => {
         .select("*")
         .eq("user_id", user.id)
         .maybeSingle();
+      const currentPhone = data?.phone || "";
       if (data) {
         setFullName(data.full_name || "");
-        setPhone(data.phone || "");
+        setPhone(currentPhone);
         setEmail(data.email || "");
         setCarModel(data.car_model || "");
         setCarYear(data.car_year ? String(data.car_year) : "");
       }
       setLoading(false);
+
+      // If profile has no phone, try to recover one from contact channels (WhatsApp / support / leads)
+      if (!currentPhone) {
+        try {
+          const recovered = await recoverPhoneFromChannels(user.id, data?.email || user.email);
+          if (recovered) setRecoveredPhone(recovered);
+        } catch { /* silently ignore */ }
+      }
     };
     fetchProfile();
   }, [user, navigate]);
@@ -200,6 +212,46 @@ const MyProfilePage = () => {
                         <span className="text-[10px] font-normal text-emerald-600 mr-auto">✓ رقم صحيح</span>
                       )}
                     </Label>
+
+                    {/* Auto-recovered phone suggestion from contact channels */}
+                    {recoveredPhone && !recoveryDismissed && !phone && (
+                      <div className="flex items-start gap-2 rounded-lg border border-primary/30 bg-primary/[0.06] p-2.5">
+                        <Sparkles className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[11px] leading-relaxed text-foreground/80">
+                            لقينا رقم موبايل مرتبط بحسابك من <strong className="text-foreground">{recoveredPhone.sourceLabel}</strong>:
+                          </p>
+                          <p className="font-mono text-sm font-bold text-foreground mt-1" dir="ltr">
+                            {recoveredPhone.phone}
+                          </p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="default"
+                              className="h-7 text-[11px] px-3"
+                              onClick={() => {
+                                setPhone(recoveredPhone.phone);
+                                setPhoneError("");
+                                setRecoveryDismissed(true);
+                              }}
+                            >
+                              استخدم هذا الرقم
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 text-[11px] px-2"
+                              onClick={() => setRecoveryDismissed(true)}
+                            >
+                              <X className="w-3 h-3 ml-1" />
+                              تجاهل
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     <div className="relative">
                       <Input
                         value={phone}
