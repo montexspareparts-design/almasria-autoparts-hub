@@ -92,6 +92,13 @@ export default function VisitorSessionSummary() {
   const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
   const [focusedSection, setFocusedSection] = useState<string | null>(null);
 
+  // Communications log (تسجيل تواصل لمنع التكرار)
+  const [comms, setComms] = useState<Array<{ id: string; comm_type: string; note: string | null; created_at: string; staff_user_id: string; staff_name?: string | null }>>([]);
+  const [commOpen, setCommOpen] = useState(false);
+  const [commType, setCommType] = useState<string>("phone");
+  const [commNote, setCommNote] = useState("");
+  const [savingComm, setSavingComm] = useState(false);
+
   const clearFocus = () => {
     document.querySelectorAll("[data-focus-target='true']").forEach((n) => {
       n.classList.remove("ring-4", "ring-primary", "ring-offset-2", "shadow-2xl", "scale-[1.01]");
