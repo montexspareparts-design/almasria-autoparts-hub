@@ -184,6 +184,25 @@ const AdminCustomerIntelligence = () => {
   const [missingDraft, setMissingDraft] = useState<{ phone?: string; email?: string; full_name?: string; car_model?: string; car_year?: string }>({});
   const [savingMissing, setSavingMissing] = useState(false);
 
+  // Today's tasks: persistent completion state (resets daily via date-keyed localStorage)
+  const todayKey = format(new Date(), "yyyy-MM-dd");
+  const tasksStorageKey = `aci_completed_tasks_${todayKey}`;
+  const [completedTasks, setCompletedTasks] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem(tasksStorageKey);
+      return new Set(raw ? (JSON.parse(raw) as string[]) : []);
+    } catch { return new Set(); }
+  });
+  const [showCompletedTasks, setShowCompletedTasks] = useState(false);
+  const toggleTaskComplete = (taskId: string) => {
+    setCompletedTasks(prev => {
+      const next = new Set(prev);
+      if (next.has(taskId)) next.delete(taskId); else next.add(taskId);
+      try { localStorage.setItem(tasksStorageKey, JSON.stringify(Array.from(next))); } catch {}
+      return next;
+    });
+  };
+
   const detectMissingFields = (p: { phone: string | null; email: string | null; full_name: string | null; car_model?: string | null; car_year?: number | null }) => {
     const missing: { key: string; label: string; icon: string }[] = [];
     if (!p.phone || p.phone.trim() === "") missing.push({ key: "phone", label: "رقم الموبايل", icon: "📱" });
