@@ -1268,6 +1268,36 @@ export type Database = {
         }
         Relationships: []
       }
+      page_visits: {
+        Row: {
+          id: string
+          page_title: string | null
+          path: string
+          referrer: string | null
+          session_key: string | null
+          user_id: string | null
+          visited_at: string
+        }
+        Insert: {
+          id?: string
+          page_title?: string | null
+          path: string
+          referrer?: string | null
+          session_key?: string | null
+          user_id?: string | null
+          visited_at?: string
+        }
+        Update: {
+          id?: string
+          page_title?: string | null
+          path?: string
+          referrer?: string | null
+          session_key?: string | null
+          user_id?: string | null
+          visited_at?: string
+        }
+        Relationships: []
+      }
       part_requests: {
         Row: {
           created_at: string
