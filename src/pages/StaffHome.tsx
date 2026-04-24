@@ -821,11 +821,78 @@ const StaffHome = () => {
             </DialogDescription>
           </DialogHeader>
 
-          {visitorsList.length === 0 ? (
-            <div className="text-center py-10 text-sm text-muted-foreground">
-              مفيش زوار في الفترة دي
+          {/* Filters */}
+          <div className="flex flex-wrap items-center gap-2 pt-2 pb-1 border-b">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Filter className="w-3.5 h-3.5" />
+              فلترة:
             </div>
-          ) : (
+            <Select value={visitorTypeFilter} onValueChange={(v) => setVisitorTypeFilter(v as any)}>
+              <SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل الزوار</SelectItem>
+                <SelectItem value="registered">مسجّل (له بيانات)</SelectItem>
+                <SelectItem value="anon">زائر مجهول</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={visitorDateFilter} onValueChange={(v) => setVisitorDateFilter(v as any)}>
+              <SelectTrigger className="h-8 w-[130px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل التواريخ</SelectItem>
+                <SelectItem value="today">اليوم</SelectItem>
+                <SelectItem value="yesterday">أمس</SelectItem>
+                <SelectItem value="week">آخر 7 أيام</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={visitorViewedFilter} onValueChange={(v) => setVisitorViewedFilter(v as any)}>
+              <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">معاين/غير معاين</SelectItem>
+                <SelectItem value="not_viewed">لم تتم معاينته</SelectItem>
+                <SelectItem value="viewed">تمت المعاينة</SelectItem>
+              </SelectContent>
+            </Select>
+            {(visitorTypeFilter !== "all" || visitorDateFilter !== "all" || visitorViewedFilter !== "all") && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 text-xs"
+                onClick={() => { setVisitorTypeFilter("all"); setVisitorDateFilter("all"); setVisitorViewedFilter("all"); }}
+              >
+                مسح الفلاتر
+              </Button>
+            )}
+          </div>
+
+          {(() => {
+            // Apply filters
+            const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+            const yesterdayStart = new Date(todayStart); yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+            const weekStart = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+            const filtered = visitorsList.filter((v) => {
+              // type
+              if (visitorTypeFilter === "registered" && !v.user_id) return false;
+              if (visitorTypeFilter === "anon" && v.user_id) return false;
+              // date
+              const t = new Date(v.last_visit).getTime();
+              if (visitorDateFilter === "today" && t < todayStart.getTime()) return false;
+              if (visitorDateFilter === "yesterday" && (t < yesterdayStart.getTime() || t >= todayStart.getTime())) return false;
+              if (visitorDateFilter === "week" && t < weekStart.getTime()) return false;
+              // viewed
+              const isViewed = (v.user_id && viewedKeys.has(`u:${v.user_id}`)) || (v.session_key && viewedKeys.has(`s:${v.session_key}`));
+              if (visitorViewedFilter === "viewed" && !isViewed) return false;
+              if (visitorViewedFilter === "not_viewed" && isViewed) return false;
+              return true;
+            });
+
+            if (filtered.length === 0) {
+              return (
+                <div className="text-center py-10 text-sm text-muted-foreground">
+                  مفيش زوار مطابقين للفلاتر
+                </div>
+              );
+            }
+            return (
             <div className="space-y-2 mt-2">
               {(() => {
                 let lastDayLabel = "";
