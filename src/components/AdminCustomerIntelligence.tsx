@@ -284,6 +284,22 @@ const AdminCustomerIntelligence = () => {
     try { localStorage.setItem(WEIGHTS_STORAGE_KEY, JSON.stringify(next)); } catch {}
   };
   const weightsTotal = priorityWeights.alerts + priorityWeights.recency + priorityWeights.buyability;
+
+  // === Task time window filter (persisted) ===
+  // Options: 1 = آخر 24 ساعة، 3 = آخر 3 أيام، 7 = آخر 7 أيام، 30 = آخر 30 يوم، 0 = الكل
+  const TASK_WINDOW_STORAGE_KEY = "aci_task_window_days_v1";
+  const [taskWindowDays, setTaskWindowDays] = useState<number>(() => {
+    try {
+      const raw = localStorage.getItem(TASK_WINDOW_STORAGE_KEY);
+      const n = raw ? parseInt(raw, 10) : 7;
+      return [0, 1, 3, 7, 30].includes(n) ? n : 7;
+    } catch { return 7; }
+  });
+  const updateTaskWindow = (days: number) => {
+    setTaskWindowDays(days);
+    try { localStorage.setItem(TASK_WINDOW_STORAGE_KEY, String(days)); } catch {}
+  };
+
   const toggleTaskComplete = (taskId: string) => {
     setCompletedTasks(prev => {
       const next = new Set(prev);
@@ -981,6 +997,7 @@ const AdminCustomerIntelligence = () => {
       lifecycle: string; isDealer: boolean;
       score: number; // 0-100 unified urgency score
       scoreBreakdown: { alerts: number; recency: number; buyability: number };
+      freshestDays: number | null;
     };
     if (!profiles) return [] as Task[];
 
@@ -1049,6 +1066,7 @@ const AdminCustomerIntelligence = () => {
         isDealer,
         score: totalScore,
         scoreBreakdown: breakdown,
+        freshestDays,
       };
 
       // Priority bucket from unified score
@@ -1083,10 +1101,14 @@ const AdminCustomerIntelligence = () => {
         tasks.push({ ...baseUser, id: `${p.user_id}:absent`, title: "تواصل مع عميل غايب", reason: absentAlert.label, priority: bucket(totalScore), icon: "👋" });
       }
     }
+    // Apply time-window filter (0 = all). Tasks without freshness signal are kept only when window is "all".
+    const filtered = taskWindowDays === 0
+      ? tasks
+      : tasks.filter(t => t.freshestDays !== null && t.freshestDays <= taskWindowDays);
     // Sort by unified score desc, then by priority bucket
-    return tasks.sort((a, b) => b.score - a.score || a.priority - b.priority);
+    return filtered.sort((a, b) => b.score - a.score || a.priority - b.priority);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profiles, ordersMap, cartByUser, userSearchMap, dealerUserIds, lastVisitByUser, priorityWeights]);
+  }, [profiles, ordersMap, cartByUser, userSearchMap, dealerUserIds, lastVisitByUser, priorityWeights, taskWindowDays]);
 
   const visibleTasks = todayTasks.filter(t => showCompletedTasks || !completedTasks.has(t.id));
   const pendingTasksCount = todayTasks.filter(t => !completedTasks.has(t.id)).length;
@@ -1718,7 +1740,7 @@ const AdminCustomerIntelligence = () => {
       </Dialog>
 
       {/* ===== Today's Tasks for Staff ===== */}
-      {todayTasks.length > 0 && (
+      {(profiles && profiles.length > 0) && (
         <Card className="rounded-2xl border-2 border-primary/25 shadow-sm overflow-hidden bg-gradient-to-l from-primary/5 via-background to-background">
           <CardHeader className="py-3 px-4 border-b border-border/40">
             <div className="flex items-center justify-between flex-wrap gap-2">
@@ -1741,6 +1763,21 @@ const AdminCustomerIntelligence = () => {
                 <span className="text-[10px] text-muted-foreground font-medium hidden md:inline">
                   {format(new Date(), "EEEE dd MMMM yyyy", { locale: ar })}
                 </span>
+                <Select value={String(taskWindowDays)} onValueChange={(v) => updateTaskWindow(parseInt(v, 10))}>
+                  <SelectTrigger
+                    className="h-7 text-[11px] gap-1 px-2 w-auto min-w-[110px] border-primary/30 bg-primary/5 font-bold"
+                    title="نافذة عرض المهام حسب آخر نشاط"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent align="end">
+                    <SelectItem value="1" className="text-xs">⚡ آخر 24 ساعة</SelectItem>
+                    <SelectItem value="3" className="text-xs">🔥 آخر 3 أيام</SelectItem>
+                    <SelectItem value="7" className="text-xs">📅 آخر 7 أيام</SelectItem>
+                    <SelectItem value="30" className="text-xs">🗓️ آخر 30 يوم</SelectItem>
+                    <SelectItem value="0" className="text-xs">♾️ كل المهام</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -1775,13 +1812,26 @@ const AdminCustomerIntelligence = () => {
             {visibleTasks.length === 0 ? (
               <div className="text-center py-6 text-muted-foreground text-xs flex flex-col items-center gap-2">
                 <CheckCircle2 className="w-8 h-8 text-emerald-500" />
-                <p className="font-bold">رائع! خلصت كل مهام اليوم 🎉</p>
-                <button
-                  className="text-[11px] text-primary hover:underline"
-                  onClick={() => setShowCompletedTasks(true)}
-                >
-                  إظهار {completedTasksCount} مهمة مكتملة
-                </button>
+                <p className="font-bold">
+                  {todayTasks.length === 0 && taskWindowDays !== 0
+                    ? `مفيش مهام ضمن ${taskWindowDays === 1 ? "آخر 24 ساعة" : `آخر ${taskWindowDays} يوم`} — جرّب توسيع النافذة`
+                    : "رائع! خلصت كل مهام اليوم 🎉"}
+                </p>
+                {todayTasks.length === 0 && taskWindowDays !== 0 ? (
+                  <button
+                    className="text-[11px] text-primary hover:underline"
+                    onClick={() => updateTaskWindow(0)}
+                  >
+                    عرض كل المهام
+                  </button>
+                ) : completedTasksCount > 0 && (
+                  <button
+                    className="text-[11px] text-primary hover:underline"
+                    onClick={() => setShowCompletedTasks(true)}
+                  >
+                    إظهار {completedTasksCount} مهمة مكتملة
+                  </button>
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
