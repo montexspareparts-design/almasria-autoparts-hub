@@ -67,6 +67,8 @@ const StaffHome = () => {
   });
   const [hotLeads, setHotLeads] = useState<HotLead[]>([]);
   const [range, setRange] = useState<RangeKey>("today");
+  const [newSignups, setNewSignups] = useState<Array<{ user_id: string; full_name: string | null; phone: string | null; email: string | null; created_at: string }>>([]);
+  const [signupsOpen, setSignupsOpen] = useState(false);
 
   // Guard
   useEffect(() => {
