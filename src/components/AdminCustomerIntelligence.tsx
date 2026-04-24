@@ -1720,7 +1720,27 @@ const AdminCustomerIntelligence = () => {
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400">
                           عميل قطاعي
                         </span>
+                        </span>
                       )}
+                      {/* Quick alert badge — يلفت نظر الموظف من بره */}
+                      {(() => {
+                        const alerts = getCustomerAlerts(profile.user_id);
+                        if (alerts.length === 0) return null;
+                        const danger = alerts.find(a => a.type === "danger");
+                        const showAlert = danger || alerts[0];
+                        return (
+                          <span
+                            className={cn(
+                              "text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 animate-pulse",
+                              showAlert.color
+                            )}
+                            title={alerts.map(a => `${a.icon} ${a.label}`).join("\n")}
+                          >
+                            <AlertTriangle className="w-3 h-3" />
+                            {alerts.length} تنبيه
+                          </span>
+                        );
+                      })()}
                     </div>
                     <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-1 flex-wrap">
                       {profile.phone && (
