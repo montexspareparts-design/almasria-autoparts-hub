@@ -307,7 +307,7 @@ Deno.serve(async (req) => {
         const erpRes = await erpFetch(baseUrl, "/Ecommerce/CreateOrder", {
           method: "POST",
           body: JSON.stringify(payload),
-        });
+        }, reqId);
         // Al Faisal returns 200 OK even on failure; message=0 means success, message=1 means error
         if (erpRes.message === 1) {
           // Log the failure but don't crash — let the order proceed
@@ -370,7 +370,7 @@ Deno.serve(async (req) => {
         const erpRes = await erpFetch(baseUrl, "/Ecommerce/CreateOrder", {
           method: "POST",
           body: JSON.stringify(payload),
-        });
+        }, reqId);
         if (erpRes.message === 1) {
           await supabase.from("erp_sync_logs").insert({
             sync_type: syncType,
@@ -456,7 +456,7 @@ Deno.serve(async (req) => {
 
           if (action === "sync_stock") {
             // ── Stock: /products now returns id + qty directly (per updated API docs) ──
-            const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
+            const productsRes = await erpFetch(baseUrl, "/Ecommerce/products", {}, reqId);
             const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
 
             // Build ID → quantity map directly from products endpoint
@@ -544,7 +544,7 @@ Deno.serve(async (req) => {
             }
           } else {
             // ── Prices: /products now returns id + retailPrice + wholesaleprice directly ──
-            const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
+            const productsRes = await erpFetch(baseUrl, "/Ecommerce/products", {}, reqId);
             const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
 
             const retailItems: { id: string; price: number }[] = [];
@@ -694,7 +694,7 @@ Deno.serve(async (req) => {
     // ─── DEBUG: Show raw ERP response structure ───
     else if (action === "debug_sample") {
       if (!baseUrl) throw new Error("ERP base URL is not configured");
-      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
+      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products", {}, reqId);
       const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
       // Find specific items by ID for comparison
       const targetIds = ["13621", "12967", "22236", "22774"];
@@ -738,7 +738,7 @@ Deno.serve(async (req) => {
       } else {
         if (!baseUrl) throw new Error("ERP base URL is not configured");
         // /products endpoint now returns id, name, price, qty, wholesaleprice, retailPrice directly
-        const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
+        const productsRes = await erpFetch(baseUrl, "/Ecommerce/products", {}, reqId);
         const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
 
         items = productsList.map((prod: any) => ({
@@ -858,7 +858,7 @@ Deno.serve(async (req) => {
       } else {
         if (!baseUrl) throw new Error("ERP base URL is not configured");
         // /products now returns id, name, price, qty directly
-        const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
+        const productsRes = await erpFetch(baseUrl, "/Ecommerce/products", {}, reqId);
         const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
 
         const merged = productsList.map((prod: any) => ({
@@ -880,7 +880,7 @@ Deno.serve(async (req) => {
     else if (action === "deep_stock_check") {
       if (!baseUrl) throw new Error("ERP base URL is not configured");
       // /products now returns all fields directly
-      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
+      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products", {}, reqId);
       const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
 
       // Show raw schema
@@ -957,7 +957,7 @@ Deno.serve(async (req) => {
         result = { success: true, message: "Debug not available in mock mode" };
       } else {
         if (!baseUrl) throw new Error("ERP base URL is not configured");
-        const erpResponse = await erpFetch(baseUrl, "/Ecommerce/products");
+        const erpResponse = await erpFetch(baseUrl, "/Ecommerce/products", {}, reqId);
         const items = Array.isArray(erpResponse)
           ? erpResponse
           : (erpResponse.data || erpResponse.items || []);
@@ -1038,7 +1038,7 @@ Deno.serve(async (req) => {
       const keywords: string[] = data?.keywords || [];
       if (!keywords.length) throw new Error("No keywords provided");
 
-      const erpResponse = await erpFetch(baseUrl, "/Ecommerce/products");
+      const erpResponse = await erpFetch(baseUrl, "/Ecommerce/products", {}, reqId);
       const items = Array.isArray(erpResponse) ? erpResponse : (erpResponse.data || erpResponse.items || []);
 
       const matched = items.filter((i: any) => {
@@ -1066,7 +1066,7 @@ Deno.serve(async (req) => {
     // ─── FETCH ERP CUSTOMERS ───
     else if (action === "fetch_erp_customers") {
       if (!baseUrl) throw new Error("ERP base URL is not configured");
-      const erpResponse = await erpFetch(baseUrl, "/Ecommerce/GetCustomers");
+      const erpResponse = await erpFetch(baseUrl, "/Ecommerce/GetCustomers", {}, reqId);
       const customers = erpResponse?.data || [];
       
       // If a specific code is requested, find it
@@ -1093,7 +1093,7 @@ Deno.serve(async (req) => {
     // ─── FETCH PRICE LIST (wholesale, half-wholesale, consumer) ───
     else if (action === "fetch_price_list") {
       if (!baseUrl) throw new Error("ERP base URL is not configured");
-      const erpResponse = await erpFetch(baseUrl, "/Ecommerce/GetPriceList");
+      const erpResponse = await erpFetch(baseUrl, "/Ecommerce/GetPriceList", {}, reqId);
       const priceItems = erpResponse?.data || [];
 
       // If specific erp_item_codes requested, filter
@@ -1154,7 +1154,7 @@ Deno.serve(async (req) => {
     else if (action === "debug_erp_api") {
       if (!baseUrl) throw new Error("ERP base URL is not configured");
 
-      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
+      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products", {}, reqId);
       const products = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
 
       // Search for our erp_item_codes in the ERP data
@@ -1182,7 +1182,7 @@ Deno.serve(async (req) => {
     // ─── TEST: GetPriceList endpoint ───
     else if (action === "test_pricelist") {
       if (!baseUrl) throw new Error("ERP base URL is not configured");
-      const priceList = await erpFetch(baseUrl, "/Ecommerce/GetPriceList");
+      const priceList = await erpFetch(baseUrl, "/Ecommerce/GetPriceList", {}, reqId);
       const arr = Array.isArray(priceList) ? priceList : (priceList?.data || priceList?.items || [priceList]);
       result = {
         success: true,
@@ -1210,7 +1210,7 @@ Deno.serve(async (req) => {
       if (isMock || !baseUrl) {
         result = { success: false, message: "ERP not configured or in mock mode" };
       } else {
-        const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
+        const productsRes = await erpFetch(baseUrl, "/Ecommerce/products", {}, reqId);
         const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
 
         const merged = productsList.map((prod: any) => ({
@@ -1230,7 +1230,7 @@ Deno.serve(async (req) => {
       if (!baseUrl) throw new Error("ERP base URL is not configured");
 
       // Fetch ERP products with category fields
-      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
+      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products", {}, reqId);
       const erpProducts = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
 
       // Build ERP lookup by id
@@ -1350,7 +1350,7 @@ Deno.serve(async (req) => {
       const dryRun = data?.dry_run !== false; // Default to dry run for safety
 
       // Fetch ERP products
-      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
+      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products", {}, reqId);
       const erpProducts = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
       const erpMap = new Map<string, any>();
       for (const p of erpProducts) {
@@ -1547,7 +1547,7 @@ Deno.serve(async (req) => {
       const startedAt = new Date().toISOString();
 
       // 1) Fetch ERP products once
-      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
+      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products", {}, reqId);
       const erpProducts = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
 
       // 2) Fetch our active products
