@@ -341,14 +341,20 @@ const StaffHome = () => {
         console.warn("[StaffHome] viewed keys fetch failed", e);
       }
 
-      // Engaged visitors = sessions with dwell ≥ ENGAGED_DWELL_MS OR ≥ 2 distinct pages
-      const engagedCount = Array.from(visitorAgg.values()).filter((v) => {
-        const dwell = new Date(v.last_visit).getTime() - new Date(v.first_visit).getTime();
-        return dwell >= ENGAGED_DWELL_MS || v.pages >= 2;
-      }).length;
+      // Engaged visitors = sessions with dwell ≥ ENGAGED_DWELL_MS OR ≥ 2 distinct pages — exclude staff
+      const engagedCount = Array.from(visitorAgg.values())
+        .filter((v) => !v.user_id || !staffIds.has(v.user_id))
+        .filter((v) => {
+          const dwell = new Date(v.last_visit).getTime() - new Date(v.first_visit).getTime();
+          return dwell >= ENGAGED_DWELL_MS || v.pages >= 2;
+        }).length;
+
+      // Recompute visitor count excluding staff
+      const visitorCountNoStaff = Array.from(visitorAgg.values())
+        .filter((v) => !v.user_id || !staffIds.has(v.user_id)).length;
 
       setKpis({
-        visitors: visitorKeys.size,
+        visitors: visitorCountNoStaff,
         engagedVisitors: engagedCount,
         signups: signupCount || 0,
         addedToCart: cartUsers.size,
