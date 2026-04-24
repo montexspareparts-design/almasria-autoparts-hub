@@ -3586,6 +3586,126 @@ const AdminCustomerIntelligence = () => {
       </Collapsible>
 
 
+      {/* Priority Weights Settings Dialog */}
+      <Dialog open={weightsDialogOpen} onOpenChange={setWeightsDialogOpen}>
+        <DialogContent className="sm:max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base font-black">
+              <Settings2 className="w-5 h-5 text-primary" />
+              إعدادات أوزان الأولوية
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="text-[11px] text-muted-foreground bg-muted/40 rounded-lg p-2.5 leading-relaxed">
+              تتحكم هذه الأوزان في كيفية ترتيب مهام اليوم. التغييرات <strong className="text-foreground">تُطبَّق فوراً</strong> وتُحفظ على هذا الجهاز.
+              <br />
+              المجموع المثالي = <strong className="text-foreground">100</strong> (المجموع الحالي: <strong className={cn(weightsTotal === 100 ? "text-emerald-600" : "text-amber-600")}>{weightsTotal}</strong>).
+            </div>
+
+            {/* Alerts weight */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-red-500" />
+                  الإنذارات (سلة، بحث ساخن، حرج…)
+                </label>
+                <span className="text-xs font-black text-foreground tabular-nums">{priorityWeights.alerts}</span>
+              </div>
+              <Slider
+                value={[priorityWeights.alerts]}
+                onValueChange={([v]) => updatePriorityWeights({ ...priorityWeights, alerts: v })}
+                min={0} max={100} step={5}
+                className="w-full"
+              />
+            </div>
+
+            {/* Recency weight */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                  حداثة آخر نشاط (سلة/طلب/زيارة)
+                </label>
+                <span className="text-xs font-black text-foreground tabular-nums">{priorityWeights.recency}</span>
+              </div>
+              <Slider
+                value={[priorityWeights.recency]}
+                onValueChange={([v]) => updatePriorityWeights({ ...priorityWeights, recency: v })}
+                min={0} max={100} step={5}
+                className="w-full"
+              />
+            </div>
+
+            {/* Buyability weight */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  إمكانية الشراء (سلة، بحث، تاجر، تاريخ…)
+                </label>
+                <span className="text-xs font-black text-foreground tabular-nums">{priorityWeights.buyability}</span>
+              </div>
+              <Slider
+                value={[priorityWeights.buyability]}
+                onValueChange={([v]) => updatePriorityWeights({ ...priorityWeights, buyability: v })}
+                min={0} max={100} step={5}
+                className="w-full"
+              />
+            </div>
+
+            {/* Live preview bar */}
+            <div className="rounded-lg border border-border/40 bg-background/60 p-2.5 space-y-1.5">
+              <p className="text-[10px] font-bold text-muted-foreground">معاينة التوزيع النسبي</p>
+              <div className="flex h-2 w-full rounded-full overflow-hidden bg-muted/40">
+                {weightsTotal > 0 && (
+                  <>
+                    <div className="bg-red-500/80" style={{ width: `${(priorityWeights.alerts / weightsTotal) * 100}%` }} />
+                    <div className="bg-amber-500/80" style={{ width: `${(priorityWeights.recency / weightsTotal) * 100}%` }} />
+                    <div className="bg-emerald-500/80" style={{ width: `${(priorityWeights.buyability / weightsTotal) * 100}%` }} />
+                  </>
+                )}
+              </div>
+              <div className="flex items-center justify-between text-[9px] font-bold text-muted-foreground">
+                <span>إنذارات {weightsTotal > 0 ? Math.round((priorityWeights.alerts / weightsTotal) * 100) : 0}%</span>
+                <span>حداثة {weightsTotal > 0 ? Math.round((priorityWeights.recency / weightsTotal) * 100) : 0}%</span>
+                <span>شراء {weightsTotal > 0 ? Math.round((priorityWeights.buyability / weightsTotal) * 100) : 0}%</span>
+              </div>
+            </div>
+
+            {/* Quick presets */}
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-bold text-muted-foreground">قوالب سريعة</p>
+              <div className="grid grid-cols-3 gap-1.5">
+                <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold" onClick={() => updatePriorityWeights({ alerts: 50, recency: 30, buyability: 20 })}>
+                  🚨 إنذارات أولاً
+                </Button>
+                <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold" onClick={() => updatePriorityWeights({ alerts: 20, recency: 50, buyability: 30 })}>
+                  ⏰ النشاط أولاً
+                </Button>
+                <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold" onClick={() => updatePriorityWeights({ alerts: 25, recency: 25, buyability: 50 })}>
+                  💰 شراء أولاً
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => updatePriorityWeights(DEFAULT_WEIGHTS)}
+              className="gap-1.5"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              استعادة الافتراضي (30/40/30)
+            </Button>
+            <Button size="sm" onClick={() => setWeightsDialogOpen(false)}>
+              تم
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Bulk WhatsApp Dialog */}
       <Dialog open={bulkWhatsAppOpen} onOpenChange={(open) => { setBulkWhatsAppOpen(open); if (!open) setSendingIndex(-1); }}>
         <DialogContent className="sm:max-w-lg" dir="rtl">
