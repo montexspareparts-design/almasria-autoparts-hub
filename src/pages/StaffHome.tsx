@@ -88,15 +88,35 @@ const StaffHome = () => {
     try {
       const start = range === "today" ? todayISO() : sevenDaysISO();
 
-      // 1) Visitors (distinct sessions/users from page_visits)
+      // 1) Visitors (distinct sessions/users from page_visits) — with details
       const { data: visits } = await supabase
         .from("page_visits")
-        .select("session_key, user_id")
-        .gte("visited_at", start);
+        .select("session_key, user_id, visited_at, path")
+        .gte("visited_at", start)
+        .order("visited_at", { ascending: false });
       const visitorKeys = new Set(
         (visits || []).map((v) => v.session_key || v.user_id || "")
           .filter(Boolean)
       );
+
+      // Aggregate visitors: group by user_id (or session_key for anon) → page count + last visit
+      const visitorAgg = new Map<string, { user_id: string | null; session_key: string | null; pages: number; last_visit: string }>();
+      for (const v of visits || []) {
+        const key = v.user_id || v.session_key || "";
+        if (!key) continue;
+        const cur = visitorAgg.get(key);
+        if (cur) {
+          cur.pages += 1;
+          if (v.visited_at > cur.last_visit) cur.last_visit = v.visited_at;
+        } else {
+          visitorAgg.set(key, {
+            user_id: v.user_id || null,
+            session_key: v.user_id ? null : (v.session_key || null),
+            pages: 1,
+            last_visit: v.visited_at,
+          });
+        }
+      }
 
       // 2) Signups within range — fetch full list (for the popup) + count
       const { data: signupRows, count: signupCount } = await supabase
