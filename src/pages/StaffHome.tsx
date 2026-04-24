@@ -593,6 +593,80 @@ const StaffHome = () => {
           </div>
         </section>
       </main>
+
+      {/* New Signups Dialog */}
+      <Dialog open={signupsOpen} onOpenChange={setSignupsOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <UserPlus className="w-5 h-5 text-emerald-600" />
+              التسجيلات الجديدة ({rangeSuffix})
+              <Badge variant="secondary" className="text-xs">{newSignups.length}</Badge>
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              قائمة بأحدث الحسابات اللي اتفتحت — اضغط على أي عميل لعرض تفاصيله الكاملة، أو تواصل معاه مباشرة.
+            </DialogDescription>
+          </DialogHeader>
+
+          {newSignups.length === 0 ? (
+            <div className="text-center py-10 text-sm text-muted-foreground">
+              مفيش تسجيلات جديدة في الفترة دي 👌
+            </div>
+          ) : (
+            <div className="space-y-2 mt-2">
+              {newSignups.map((s) => {
+                const name = s.full_name || (s.email && !s.email.includes("@phone.almasria.local") ? s.email : null) || "بدون اسم";
+                const created = new Date(s.created_at).toLocaleString("ar-EG", { dateStyle: "short", timeStyle: "short" });
+                return (
+                  <div key={s.user_id} className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-muted/30 hover:bg-muted/60 transition flex-wrap">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-sm truncate">{name}</p>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap text-[11px] text-muted-foreground">
+                        {s.phone && <span className="font-mono">📱 {s.phone}</span>}
+                        <span>🕒 {created}</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-1.5 shrink-0">
+                      {s.phone && (
+                        <>
+                          <Button asChild size="sm" variant="outline" className="h-8 gap-1 text-xs">
+                            <a href={`tel:${s.phone}`}>
+                              <Phone className="w-3 h-3" />
+                              اتصال
+                            </a>
+                          </Button>
+                          <Button asChild size="sm" className="h-8 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
+                            <a
+                              href={`https://wa.me/${s.phone.replace(/^0/, "20").replace(/[^\d]/g, "")}?text=${encodeURIComponent(`أهلاً ${s.full_name || ""}، معاك المصرية جروب — شكرًا لتسجيلك معانا، حابب أساعدك في طلبك؟`)}`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              <MessageCircle className="w-3 h-3" />
+                              واتساب
+                            </a>
+                          </Button>
+                        </>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 gap-1 text-xs"
+                        onClick={() => {
+                          setSignupsOpen(false);
+                          navigate(`/admin/visitor/${s.user_id}`);
+                        }}
+                      >
+                        <Eye className="w-3 h-3" />
+                        تفاصيل
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
