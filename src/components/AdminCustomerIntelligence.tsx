@@ -1598,7 +1598,7 @@ const AdminCustomerIntelligence = () => {
       </div>
 
       {/* Anchor target for smooth-scroll on section change */}
-      <div ref={sectionContentRef} key={activeSection} className="animate-fade-in scroll-mt-24">
+      <div ref={sectionContentRef} key={activeSection} className="animate-section-enter scroll-mt-24 will-change-transform">
 
       {isSwitchingSection ? (
         <Card className="rounded-xl border-border/40 shadow-sm">
