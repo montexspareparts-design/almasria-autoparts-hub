@@ -2301,8 +2301,13 @@ const AdminCustomerIntelligence = () => {
                       </div>
                     </div>
                   );
-                })}
-              </div>
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()
             )}
             {visibleTasks.length > 30 && (
               <p className="text-center text-[10px] text-muted-foreground mt-3">
