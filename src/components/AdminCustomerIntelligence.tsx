@@ -772,6 +772,69 @@ const AdminCustomerIntelligence = () => {
     return alerts;
   };
 
+  // ============ Today's Tasks for Staff ============
+  const todayTasks = useMemo(() => {
+    type Task = {
+      id: string; userId: string; userName: string; phone: string | null;
+      title: string; reason: string; priority: 1 | 2 | 3; icon: string;
+      lifecycle: string; isDealer: boolean;
+    };
+    if (!profiles) return [] as Task[];
+    const tasks: Task[] = [];
+    for (const p of profiles) {
+      const lifecycle = getLifecycleStage(p.user_id);
+      const isDealer = !!dealerUserIds?.has(p.user_id);
+      const orders = ordersMap?.[p.user_id];
+      const cart = cartByUser[p.user_id];
+      const alerts = getCustomerAlerts(p.user_id);
+      const baseUser = {
+        userId: p.user_id,
+        userName: p.full_name || "بدون اسم",
+        phone: p.phone,
+        lifecycle,
+        isDealer,
+      };
+
+      if (cart && cart.count > 0) {
+        const days = differenceInDays(new Date(), new Date(cart.lastUpdated));
+        if (days >= 1) {
+          tasks.push({ ...baseUser, id: `${p.user_id}:cart`, title: "متابعة سلة متروكة", reason: `${cart.count} صنف بالعربة منذ ${days} يوم`, priority: 1, icon: "🛒" });
+        }
+      }
+
+      const searches = userSearchMap[p.user_id] || [];
+      const totalSearch = searches.reduce((s, q) => s + q.count, 0);
+      if (totalSearch >= 5 && !orders) {
+        tasks.push({ ...baseUser, id: `${p.user_id}:hot-search`, title: "اتصل بعميل يبحث كثيراً", reason: `${totalSearch} عملية بحث بدون طلب`, priority: 1, icon: "🔥" });
+      }
+
+      if (lifecycle === "idle" && orders) {
+        const days = differenceInDays(new Date(), new Date(orders.lastOrderDate));
+        tasks.push({ ...baseUser, id: `${p.user_id}:idle`, title: "عميل خامل — أعد تنشيطه", reason: `آخر طلب منذ ${days} يوم`, priority: 2, icon: "⏰" });
+      }
+
+      if (lifecycle === "lost" && orders) {
+        tasks.push({ ...baseUser, id: `${p.user_id}:lost`, title: "عميل مفقود — حاول استرجاعه", reason: "لم يطلب منذ أكثر من 90 يوم", priority: 3, icon: "📞" });
+      }
+
+      const daysSinceJoin = differenceInDays(new Date(), new Date(p.created_at));
+      if (daysSinceJoin <= 3 && !orders && totalSearch > 0) {
+        tasks.push({ ...baseUser, id: `${p.user_id}:welcome`, title: "رحّب بعميل جديد نشط", reason: `سجّل منذ ${daysSinceJoin} يوم وبدأ يبحث`, priority: 2, icon: "✨" });
+      }
+
+      const absentAlert = alerts.find(a => a.icon === "👋");
+      if (absentAlert) {
+        tasks.push({ ...baseUser, id: `${p.user_id}:absent`, title: "تواصل مع عميل غايب", reason: absentAlert.label, priority: 2, icon: "👋" });
+      }
+    }
+    return tasks.sort((a, b) => a.priority - b.priority);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profiles, ordersMap, cartByUser, userSearchMap, dealerUserIds, lastVisitByUser]);
+
+  const visibleTasks = todayTasks.filter(t => showCompletedTasks || !completedTasks.has(t.id));
+  const pendingTasksCount = todayTasks.filter(t => !completedTasks.has(t.id)).length;
+  const completedTasksCount = todayTasks.length - pendingTasksCount;
+
   // Build a ready-to-use call/whatsapp script based on customer behavior
   const buildCallScript = (userId: string): string => {
     const profile = profiles?.find(p => p.user_id === userId);
