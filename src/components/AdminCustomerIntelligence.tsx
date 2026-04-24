@@ -2272,29 +2272,12 @@ const AdminCustomerIntelligence = () => {
                   return (
                     <div
                       key={task.id}
-                      onClick={() => {
-                        setExpandedUser(task.userId);
-                        // smooth scroll to the customer card after a tiny delay to allow expand
-                        setTimeout(() => {
-                          const el = document.getElementById(`customer-card-${task.userId}`);
-                          if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-                        }, 100);
-                      }}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          setExpandedUser(task.userId);
-                        }
-                      }}
                       className={cn(
-                        "rounded-xl border p-3 transition-all flex flex-col gap-2 cursor-pointer hover:shadow-md hover:scale-[1.01]",
+                        "rounded-xl border p-3 transition-all flex flex-col gap-2 hover:shadow-md",
                         isDone
                           ? "border-emerald-200/40 bg-emerald-50/20 dark:bg-emerald-950/5 opacity-40 hover:opacity-60 grayscale-[0.5]"
                           : priorityColor
                       )}
-                      title="اضغط لفتح تفاصيل العميل"
                     >
                       <div className="flex items-start gap-2">
                         <span className={cn("text-lg leading-none", isDone && "grayscale opacity-50")}>{task.icon}</span>
