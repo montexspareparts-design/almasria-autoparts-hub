@@ -125,7 +125,26 @@ const StaffHome = () => {
         .gte("created_at", start)
         .order("created_at", { ascending: false })
         .limit(100);
-      setNewSignups(signupRows || []);
+
+      // Deduplicate by normalized phone (or email fallback) — keep latest, count duplicates
+      const normalizePhone = (p: string | null) => (p || "").replace(/[^\d]/g, "").replace(/^20/, "0");
+      const dedupMap = new Map<string, typeof signupRows[number] & { duplicates: number; duplicateIds: string[] }>();
+      for (const s of signupRows || []) {
+        const phoneKey = normalizePhone(s.phone);
+        const emailKey = (s.email || "").toLowerCase().trim();
+        const key = phoneKey || emailKey || s.user_id;
+        const existing = dedupMap.get(key);
+        if (existing) {
+          existing.duplicates += 1;
+          existing.duplicateIds.push(s.user_id);
+        } else {
+          dedupMap.set(key, { ...s, duplicates: 1, duplicateIds: [s.user_id] });
+        }
+      }
+      const dedupedSignups = Array.from(dedupMap.values()).sort((a, b) =>
+        b.created_at.localeCompare(a.created_at)
+      );
+      setNewSignups(dedupedSignups);
 
       // 3) Users who added to cart today (distinct)
       const { data: cartItems } = await supabase
