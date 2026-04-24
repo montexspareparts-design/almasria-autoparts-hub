@@ -1745,12 +1745,27 @@ Deno.serve(async (req) => {
       throw new Error(`Unknown action: ${action}`);
     }
 
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    const responseBody = (result && typeof result === "object")
+      ? { ...result, request_id: reqId }
+      : { result, request_id: reqId };
+    const responseJson = JSON.stringify(responseBody);
+    logErpEvent(reqId, "handler_end", {
+      total_duration_ms: Date.now() - handlerStart,
+      status: "ok",
+      response_bytes: byteSize(responseJson),
+    });
+    return new Response(responseJson, {
+      headers: { ...corsHeaders, "Content-Type": "application/json", "x-request-id": reqId },
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    console.error("ERP sync error:", message);
+    const stack = error instanceof Error ? error.stack : undefined;
+    logErpEvent(reqId, "handler_error", {
+      total_duration_ms: Date.now() - handlerStart,
+      error: message,
+      stack: stack ? String(stack).split("\n").slice(0, 6).join(" | ") : undefined,
+    });
+    console.error(`[ERP][${reqId}] sync error:`, message);
 
     try {
       const supabase = createClient(
@@ -1761,13 +1776,13 @@ Deno.serve(async (req) => {
         sync_type: "error",
         direction: "outbound",
         status: "failed",
-        error_message: message,
+        error_message: `[${reqId}] ${message}`,
       });
     } catch (_) {}
 
-    return new Response(JSON.stringify({ success: false, error: message }), {
+    return new Response(JSON.stringify({ success: false, error: message, request_id: reqId }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders, "Content-Type": "application/json", "x-request-id": reqId },
     });
   }
 });
