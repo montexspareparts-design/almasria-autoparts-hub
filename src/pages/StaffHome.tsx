@@ -22,6 +22,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { isNoiseVisit } from "@/lib/visitorAnalytics";
 
 interface KPI {
   label: string;
@@ -94,19 +95,21 @@ const StaffHome = () => {
         .select("session_key, user_id, visited_at, path, referrer")
         .gte("visited_at", start)
         .order("visited_at", { ascending: false });
+      const cleanVisits = (visits || []).filter((v) => !isNoiseVisit(v));
       const visitorKeys = new Set(
-        (visits || []).map((v) => v.session_key || v.user_id || "")
+        cleanVisits.map((v) => v.session_key || v.user_id || "")
           .filter(Boolean)
       );
 
       // Aggregate visitors: group by user_id (or session_key for anon) → page count + last visit + first entry
       const visitorAgg = new Map<string, { user_id: string | null; session_key: string | null; pages: number; last_visit: string; first_visit: string; first_path: string | null; referrer: string | null }>();
-      for (const v of visits || []) {
-        const key = v.user_id || v.session_key || "";
+      for (const v of cleanVisits) {
+        const key = v.session_key || v.user_id || "";
         if (!key) continue;
         const cur = visitorAgg.get(key);
         if (cur) {
           cur.pages += 1;
+          if (!cur.user_id && v.user_id) cur.user_id = v.user_id;
           if (v.visited_at > cur.last_visit) cur.last_visit = v.visited_at;
           if (v.visited_at < cur.first_visit) {
             cur.first_visit = v.visited_at;
@@ -116,7 +119,7 @@ const StaffHome = () => {
         } else {
           visitorAgg.set(key, {
             user_id: v.user_id || null,
-            session_key: v.user_id ? null : (v.session_key || null),
+            session_key: v.session_key || null,
             pages: 1,
             last_visit: v.visited_at,
             first_visit: v.visited_at,
@@ -812,13 +815,13 @@ const StaffHome = () => {
                           <div className="h-px flex-1 bg-border" />
                         </div>
                       )}
-                  <div
-                    key={detailKey}
-                    className={cn(
-                      "flex items-center justify-between gap-3 p-3 rounded-lg border transition flex-wrap",
-                      isAnon ? "bg-muted/20 hover:bg-muted/40" : "bg-muted/30 hover:bg-muted/60"
-                    )}
-                  >
+                      <div
+                        key={detailKey}
+                        className={cn(
+                          "flex items-center justify-between gap-3 p-3 rounded-lg border transition flex-wrap",
+                          isAnon ? "bg-muted/20 hover:bg-muted/40" : "bg-muted/30 hover:bg-muted/60"
+                        )}
+                      >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-bold text-sm truncate">{name}</p>
@@ -905,7 +908,7 @@ const StaffHome = () => {
                         </Button>
                       ) : null}
                     </div>
-                  </div>
+                      </div>
                   </div>
                 );
                 });

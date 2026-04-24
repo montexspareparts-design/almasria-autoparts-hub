@@ -1,10 +1,11 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /** Records that the current user visited the site today (upsert per day). */
-export async function trackCustomerSession() {
+export async function trackCustomerSession(options?: { countPageView?: boolean }) {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
+    const shouldCountPageView = options?.countPageView ?? true;
     const today = new Date().toISOString().slice(0, 10);
     // Try update first
     const { data: existing } = await supabase
@@ -16,7 +17,10 @@ export async function trackCustomerSession() {
     if (existing) {
       await supabase
         .from("customer_sessions")
-        .update({ last_seen_at: new Date().toISOString(), page_views: (existing.page_views || 0) + 1 })
+        .update({
+          last_seen_at: new Date().toISOString(),
+          page_views: shouldCountPageView ? (existing.page_views || 0) + 1 : existing.page_views || 0,
+        })
         .eq("id", existing.id);
     } else {
       await supabase

@@ -1,14 +1,19 @@
 import { supabase } from "@/integrations/supabase/client";
+import { markHeartbeatTitle, shouldTrackBrowserVisit } from "@/lib/visitorAnalytics";
 
 const SESSION_KEY_STORAGE = "visitor_session_key";
 const PENDING_KEY = "visitor_pending_visits";
 
 function getSessionKey(): string {
   try {
-    let key = sessionStorage.getItem(SESSION_KEY_STORAGE);
+    let key = sessionStorage.getItem(SESSION_KEY_STORAGE) || localStorage.getItem(SESSION_KEY_STORAGE);
     if (!key) {
       key = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
       sessionStorage.setItem(SESSION_KEY_STORAGE, key);
+      localStorage.setItem(SESSION_KEY_STORAGE, key);
+    } else {
+      sessionStorage.setItem(SESSION_KEY_STORAGE, key);
+      localStorage.setItem(SESSION_KEY_STORAGE, key);
     }
     return key;
   } catch {
@@ -71,6 +76,7 @@ let lastTrackedAt = 0;
 
 /** Records a page visit for both authenticated and anonymous visitors. */
 export async function trackPageVisit(path: string, title?: string) {
+  if (typeof window !== "undefined" && !shouldTrackBrowserVisit(path, window.location.hostname)) return;
   // de-dupe rapid identical calls (StrictMode / double effects)
   const now = Date.now();
   if (path === lastTrackedPath && now - lastTrackedAt < 2000) return;
@@ -113,4 +119,8 @@ export async function trackPageVisit(path: string, title?: string) {
   } catch {
     /* will be retried via flushPendingVisits */
   }
+}
+
+export async function trackHeartbeatVisit(path: string, title?: string) {
+  return trackPageVisit(path, markHeartbeatTitle(title ?? document.title ?? null));
 }
