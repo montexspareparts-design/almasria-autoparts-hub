@@ -80,6 +80,9 @@ const StaffHome = () => {
   const [visitorTypeFilter, setVisitorTypeFilter] = useState<"all" | "registered" | "anon">("all");
   const [visitorDateFilter, setVisitorDateFilter] = useState<"all" | "today" | "yesterday" | "week">("all");
   const [visitorViewedFilter, setVisitorViewedFilter] = useState<"all" | "viewed" | "not_viewed">("all");
+  // Toggle: false = "Only Customers" (default, excludes staff). true = "All" (review only — shows staff too).
+  const [includeStaff, setIncludeStaff] = useState<boolean>(false);
+  const [staffIdsSet, setStaffIdsSet] = useState<Set<string>>(new Set());
 
   // Guard
   useEffect(() => {
