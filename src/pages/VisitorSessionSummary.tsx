@@ -382,10 +382,10 @@ export default function VisitorSessionSummary() {
 
         {/* KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <KpiCard icon={Eye} label="إجمالي الصفحات المشاهدة" value={visits.length} sub={`${avgPagesPerSession || 0} صفحة/جلسة`} color="blue" />
-          <KpiCard icon={Hash} label="عدد الجلسات" value={sessions.length} sub={sessions.length > 1 ? "زائر عائد" : "زيارة واحدة"} color="purple" />
-          <KpiCard icon={Search} label="عمليات البحث" value={searches.length} sub={searches.length > 0 ? "نشاط بحث" : "لم يبحث"} color="orange" />
-          <KpiCard icon={Timer} label="إجمالي الوقت" valueText={fmtDuration(totalDurationMs)} sub={lastSession ? `آخر زيارة: ${fmtDate(lastSession.start)}` : "—"} color="emerald" />
+          <KpiCard icon={Eye} label="إجمالي الصفحات المشاهدة" value={visits.length} sub={`${avgPagesPerSession || 0} صفحة/جلسة`} color="blue" onClick={() => scrollToSection("section-pages")} />
+          <KpiCard icon={Hash} label="عدد الجلسات" value={sessions.length} sub={sessions.length > 1 ? "زائر عائد" : "زيارة واحدة"} color="purple" onClick={() => scrollToSection("section-sessions")} />
+          <KpiCard icon={Search} label="عمليات البحث" value={searches.length} sub={searches.length > 0 ? "نشاط بحث" : "لم يبحث"} color="orange" onClick={() => scrollToSection("section-searches")} />
+          <KpiCard icon={Timer} label="إجمالي الوقت" valueText={fmtDuration(totalDurationMs)} sub={lastSession ? `آخر زيارة: ${fmtDate(lastSession.start)}` : "—"} color="emerald" onClick={() => scrollToSection("section-latest-session")} />
         </div>
 
         {/* Top Searched Products & Queries */}
