@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { trackPageVisit, flushPendingVisits } from "@/lib/pageVisitTracker";
+import { trackPageVisit, trackHeartbeatVisit, flushPendingVisits } from "@/lib/pageVisitTracker";
 import { trackCustomerSession } from "@/lib/sessionTracker";
 
 /**
@@ -49,7 +49,18 @@ export default function PageVisitTracker() {
       trackPageVisit(fullPath, document.title);
       trackCustomerSession();
     }, 150);
-    return () => clearTimeout(t);
+
+    const heartbeat = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        trackHeartbeatVisit(fullPath, document.title);
+        trackCustomerSession();
+      }
+    }, 20000);
+
+    return () => {
+      clearTimeout(t);
+      clearInterval(heartbeat);
+    };
   }, [location.pathname, location.search]);
 
   return null;
