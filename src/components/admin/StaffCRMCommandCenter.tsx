@@ -551,6 +551,7 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
     toast({ title: "تم التصدير", description: `تم تنزيل ${rows.length} عميل في ملف CSV/Excel` });
   };
 
+  if (loading) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-12 w-full" />
@@ -559,6 +560,7 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
       </div>
     );
   }
+
 
   return (
     <div className="space-y-5">
