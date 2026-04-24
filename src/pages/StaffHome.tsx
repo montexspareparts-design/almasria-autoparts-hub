@@ -102,11 +102,13 @@ const StaffHome = () => {
     try {
       const start = range === "today" ? todayISO() : sevenDaysISO();
 
-      // 1) Visitors (distinct sessions/users from page_visits) — with details
+      // 1) Visitors — always fetch last 7 days so the dialog's date filter (today/yesterday/week) is meaningful.
+      // KPI counts are computed against `start` below.
+      const visitsStart = sevenDaysISO();
       const { data: visits } = await supabase
         .from("page_visits")
         .select("session_key, user_id, visited_at, path, referrer")
-        .gte("visited_at", start)
+        .gte("visited_at", visitsStart)
         .order("visited_at", { ascending: false });
       const cleanVisits = (visits || []).filter((v) => !isNoiseVisit(v));
       const visitorKeys = new Set(
