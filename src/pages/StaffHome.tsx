@@ -47,6 +47,12 @@ const todayISO = () => {
   return d.toISOString();
 };
 
+const sevenDaysISO = () => {
+  return new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+};
+
+type RangeKey = "today" | "7d";
+
 const StaffHome = () => {
   const { user, isAdmin, isModerator, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -59,6 +65,7 @@ const StaffHome = () => {
     hotLeads: 0,
   });
   const [hotLeads, setHotLeads] = useState<HotLead[]>([]);
+  const [range, setRange] = useState<RangeKey>("today");
 
   // Guard
   useEffect(() => {
@@ -74,9 +81,9 @@ const StaffHome = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const start = todayISO();
+      const start = range === "today" ? todayISO() : sevenDaysISO();
 
-      // 1) Visitors today (distinct sessions/users from page_visits)
+      // 1) Visitors (distinct sessions/users from page_visits)
       const { data: visits } = await supabase
         .from("page_visits")
         .select("session_key, user_id")
@@ -230,12 +237,15 @@ const StaffHome = () => {
 
   useEffect(() => {
     if (user && (isAdmin || isModerator)) fetchData();
-  }, [user, isAdmin, isModerator]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, isAdmin, isModerator, range]);
+
+  const rangeSuffix = range === "today" ? "اليوم" : "آخر 7 أيام";
 
   const kpiCards: KPI[] = useMemo(
     () => [
       {
-        label: "زوار اليوم",
+        label: `زوار ${rangeSuffix}`,
         value: kpis.visitors,
         icon: Users,
         color: "text-blue-600",
@@ -243,7 +253,7 @@ const StaffHome = () => {
         onClick: () => navigate("/admin?section=analytics"),
       },
       {
-        label: "تسجيلات جديدة",
+        label: `تسجيلات جديدة (${rangeSuffix})`,
         value: kpis.signups,
         icon: UserPlus,
         color: "text-emerald-600",
@@ -251,7 +261,7 @@ const StaffHome = () => {
         onClick: () => navigate("/admin?section=customers"),
       },
       {
-        label: "أضافوا للسلة",
+        label: `أضافوا للسلة (${rangeSuffix})`,
         value: kpis.addedToCart,
         icon: ShoppingCart,
         color: "text-amber-600",
@@ -259,7 +269,7 @@ const StaffHome = () => {
         onClick: () => navigate("/admin?section=customer-intelligence"),
       },
       {
-        label: "اشتروا اليوم",
+        label: `اشتروا (${rangeSuffix})`,
         value: kpis.purchased,
         icon: CheckCircle2,
         color: "text-green-600",
@@ -275,7 +285,7 @@ const StaffHome = () => {
         onClick: () => navigate("/admin?section=customer-intelligence"),
       },
     ],
-    [kpis, navigate]
+    [kpis, navigate, rangeSuffix]
   );
 
   const tierBadge = (tier: HotLead["tier"]) => {
@@ -359,10 +369,44 @@ const StaffHome = () => {
       <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
         {/* KPI Cards */}
         <section>
-          <h2 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4" />
-            مؤشرات اليوم
-          </h2>
+          <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+            <h2 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" />
+              {range === "today" ? "مؤشرات اليوم" : "مؤشرات آخر 7 أيام"}
+            </h2>
+            <div
+              role="tablist"
+              aria-label="فلتر النطاق الزمني"
+              className="inline-flex items-center bg-muted/60 rounded-lg p-0.5 border border-border/50"
+            >
+              <button
+                role="tab"
+                aria-selected={range === "today"}
+                onClick={() => setRange("today")}
+                className={cn(
+                  "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                  range === "today"
+                    ? "bg-background shadow-sm text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                اليوم
+              </button>
+              <button
+                role="tab"
+                aria-selected={range === "7d"}
+                onClick={() => setRange("7d")}
+                className={cn(
+                  "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                  range === "7d"
+                    ? "bg-background shadow-sm text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                آخر 7 أيام
+              </button>
+            </div>
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             {kpiCards.map((kpi, i) => (
               <button
