@@ -1849,7 +1849,7 @@ const AdminCustomerIntelligence = () => {
                                 : "bg-muted text-muted-foreground",
                                 isDone && "opacity-60"
                               )}
-                              title={`درجة الأولوية: ${task.score}/100\n• إنذارات: ${task.scoreBreakdown.alerts}/30\n• حداثة النشاط: ${task.scoreBreakdown.recency}/40\n• إمكانية الشراء: ${task.scoreBreakdown.buyability}/30`}
+                              title={`درجة الأولوية: ${task.score}/${weightsTotal}\n• إنذارات: ${task.scoreBreakdown.alerts}/${priorityWeights.alerts}\n• حداثة النشاط: ${task.scoreBreakdown.recency}/${priorityWeights.recency}\n• إمكانية الشراء: ${task.scoreBreakdown.buyability}/${priorityWeights.buyability}`}
                             >
                               ⚡{task.score}
                             </span>
