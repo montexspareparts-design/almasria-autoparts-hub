@@ -133,6 +133,17 @@ function diagnoseMissingContent(): string[] {
   return reasons;
 }
 
+export type Severity = "critical" | "high" | "medium" | "low";
+
+export interface TopIssue {
+  severity: Severity;
+  category: "render" | "content" | "console" | "network" | "layout";
+  title: string;
+  detail: string;
+  suggestedFix: string;
+  occurrences: number;
+}
+
 export interface MobileErrorReport {
   generatedAt: string;
   viewport: { width: number; height: number; isMobile: boolean };
@@ -141,8 +152,214 @@ export interface MobileErrorReport {
   warnings: LogEntry[];
   errors: LogEntry[];
   contentIssues: string[];
+  /** الخطأ الأهم الواحد فقط — null لو الجلسة سليمة */
+  topIssue: TopIssue | null;
+  /** عدد إجمالي للسجلات الخام (قبل التجميع) */
+  totalLogCount: number;
   summary: string;
 }
+
+const SEVERITY_RANK: Record<Severity, number> = { critical: 4, high: 3, medium: 2, low: 1 };
+
+/** يصنّف رسالة console واحدة إلى عنوان موحّد + شدة + خطوة إصلاح. */
+function classifyLogMessage(msg: string): Omit<TopIssue, "occurrences"> | null {
+  if (/chunkloaderror|loading chunk \d+ failed|failed to fetch dynamically imported/i.test(msg)) {
+    return {
+      severity: "critical", category: "network",
+      title: "فشل تحميل ملف JavaScript مؤجل (Chunk)",
+      detail: msg.slice(0, 200),
+      suggestedFix: "اطلب من المستخدم إعادة تحميل الصفحة (Ctrl+Shift+R). لو تكرر: تحقق من النشر الأخير وامسح كاش الـ CDN.",
+    };
+  }
+  if (/network ?error|err_internet_disconnected|failed to fetch/i.test(msg)) {
+    return {
+      severity: "high", category: "network",
+      title: "فشل في طلب شبكة",
+      detail: msg.slice(0, 200),
+      suggestedFix: "افحص اتصال الإنترنت وحالة الـ Edge Functions في لوحة Lovable Cloud.",
+    };
+  }
+  if (/cannot read propert(y|ies) of (undefined|null)|undefined is not an object/i.test(msg)) {
+    return {
+      severity: "high", category: "console",
+      title: "Null/Undefined Reference",
+      detail: msg.slice(0, 200),
+      suggestedFix: "أضف optional chaining (`?.`) أو شرط حماية قبل قراءة الخاصية في المكوّن المسؤول.",
+    };
+  }
+  if (/hydrat|did not match|text content does not match/i.test(msg)) {
+    return {
+      severity: "high", category: "render",
+      title: "عدم تطابق Hydration",
+      detail: msg.slice(0, 200),
+      suggestedFix: "تأكد من أن نفس المحتوى يُرسم على السيرفر والعميل (تجنّب `window`/`Date.now()` في الـ render الأول).",
+    };
+  }
+  if (/maximum update depth|too many re-?renders/i.test(msg)) {
+    return {
+      severity: "critical", category: "render",
+      title: "حلقة Re-render لا نهائية",
+      detail: msg.slice(0, 200),
+      suggestedFix: "افحص `useEffect` بدون dependency array صحيح، وضع callbacks داخل `useCallback`.",
+    };
+  }
+  if (/cors|cross-origin|blocked by cors/i.test(msg)) {
+    return {
+      severity: "high", category: "network",
+      title: "CORS Blocked",
+      detail: msg.slice(0, 200),
+      suggestedFix: "أضف الـ headers الصحيحة في الـ Edge Function، أو استخدم Lovable Cloud client بدل fetch مباشر.",
+    };
+  }
+  if (/401|unauthorized|jwt expired|invalid token/i.test(msg)) {
+    return {
+      severity: "high", category: "network",
+      title: "جلسة تسجيل دخول منتهية",
+      detail: msg.slice(0, 200),
+      suggestedFix: "نفّذ refresh للجلسة عبر `supabase.auth.refreshSession()` أو وجّه المستخدم لإعادة تسجيل الدخول.",
+    };
+  }
+  if (/each child in a list should have a unique \"key\"/i.test(msg)) {
+    return {
+      severity: "low", category: "console",
+      title: "React Key مفقود",
+      detail: msg.slice(0, 200),
+      suggestedFix: "أضف `key={item.id}` فريداً على عناصر `.map()`.",
+    };
+  }
+  if (/violation|long task|forced reflow/i.test(msg)) {
+    return {
+      severity: "medium", category: "render",
+      title: "بطء في الأداء (Long Task)",
+      detail: msg.slice(0, 200),
+      suggestedFix: "استخدم `React.lazy` للأقسام الثقيلة أو `useMemo` للحسابات المتكررة.",
+    };
+  }
+  // fallback عام لأي خطأ غير مصنّف
+  return {
+    severity: "medium", category: "console",
+    title: "خطأ JavaScript غير محدّد",
+    detail: msg.slice(0, 200),
+    suggestedFix: "افتح stack trace في DevTools واتبع الملف/السطر المذكور في الرسالة.",
+  };
+}
+
+function classifyContentIssue(issue: string): Omit<TopIssue, "occurrences"> {
+  if (/جذر التطبيق.*فارغ|#root.*فارغ/.test(issue)) {
+    return {
+      severity: "critical", category: "render",
+      title: "التطبيق لم يتم تركيبه (Mount)",
+      detail: issue,
+      suggestedFix: "افحص أخطاء JavaScript في bootstrap (`main.tsx` / `App.tsx`). على الأرجح خطأ في الـ render الأول يمنع React من العمل.",
+    };
+  }
+  if (/Overlay.*يغطي|نافذة.*يغطي/.test(issue)) {
+    return {
+      severity: "high", category: "layout",
+      title: "Modal/Overlay عالق فوق الشاشة",
+      detail: issue,
+      suggestedFix: "تحقق من إغلاق الـ Dialogs بعد كل route change، وأن `data-state` يتغير من `open` إلى `closed`.",
+    };
+  }
+  if (/Horizontal overflow|scrollWidth/.test(issue)) {
+    return {
+      severity: "medium", category: "layout",
+      title: "تجاوز أفقي يكسر التصميم على الموبايل",
+      detail: issue,
+      suggestedFix: "ابحث عن عنصر بعرض ثابت كبير. أضف `overflow-x-hidden` على الـ body أو استخدم `max-w-full`.",
+    };
+  }
+  if (/سبينر تحميل ظاهر/.test(issue)) {
+    return {
+      severity: "medium", category: "render",
+      title: "أقسام lazy لم تنتهِ من التحميل",
+      detail: issue,
+      suggestedFix: "ابحث عن chunk بطيء في Network tab — قد يحتاج preload أو دمج مع الـ main bundle.",
+    };
+  }
+  if (/شبه فارغ|ارتفاعه/.test(issue)) {
+    return {
+      severity: "high", category: "content",
+      title: "المحتوى الأساسي فارغ",
+      detail: issue,
+      suggestedFix: "افحص query للبيانات (loading state عالق؟) وتحقق من أن الـ route الحالي يُرجع محتوى.",
+    };
+  }
+  if (/Hero\/Header/.test(issue)) {
+    return {
+      severity: "medium", category: "content",
+      title: "Hero/Header غير ظاهر",
+      detail: issue,
+      suggestedFix: "تأكد من أن المكوّن لم يُحجب بـ `hidden` أو `display: none` على الموبايل.",
+    };
+  }
+  return {
+    severity: "low", category: "content",
+    title: "ملاحظة عرض",
+    detail: issue,
+    suggestedFix: "افحص الـ DOM يدوياً في DevTools → Elements.",
+  };
+}
+
+/** يُجمّع كل المشاكل المتشابهة ويختار الأخطر — يُرجع خطأ واحد فقط أو null. */
+function pickTopIssue(
+  errors: LogEntry[],
+  warnings: LogEntry[],
+  contentIssues: string[]
+): TopIssue | null {
+  const grouped = new Map<string, TopIssue>();
+
+  for (const issue of contentIssues) {
+    const c = classifyContentIssue(issue);
+    const existing = grouped.get(c.title);
+    if (existing) existing.occurrences++;
+    else grouped.set(c.title, { ...c, occurrences: 1 });
+  }
+
+  for (const e of errors) {
+    const c = classifyLogMessage(e.message);
+    if (!c) continue;
+    const existing = grouped.get(c.title);
+    if (existing) existing.occurrences++;
+    else grouped.set(c.title, { ...c, occurrences: 1 });
+  }
+
+  for (const w of warnings) {
+    const c = classifyLogMessage(w.message);
+    if (!c) continue;
+    // التحذيرات شدتها أقل من الخطأ بدرجة
+    const downgraded: Severity =
+      c.severity === "critical" ? "high" : c.severity === "high" ? "medium" : "low";
+    const existing = grouped.get(c.title);
+    if (existing) existing.occurrences++;
+    else grouped.set(c.title, { ...c, severity: downgraded, occurrences: 1 });
+  }
+
+  const candidates = [...grouped.values()];
+  if (!candidates.length) return null;
+
+  candidates.sort((a, b) => {
+    const r = SEVERITY_RANK[b.severity] - SEVERITY_RANK[a.severity];
+    return r !== 0 ? r : b.occurrences - a.occurrences;
+  });
+
+  return candidates[0];
+}
+
+const SEVERITY_LABEL: Record<Severity, string> = {
+  critical: "🔴 حرج",
+  high: "🟠 عالي",
+  medium: "🟡 متوسط",
+  low: "🟢 منخفض",
+};
+
+const CATEGORY_LABEL: Record<TopIssue["category"], string> = {
+  render: "Render",
+  content: "محتوى",
+  console: "Console",
+  network: "شبكة",
+  layout: "تخطيط",
+};
 
 export function getMobileErrorReport(): MobileErrorReport {
   const warnings = buffer.filter((l) => l.level === "warn");
@@ -151,13 +368,17 @@ export function getMobileErrorReport(): MobileErrorReport {
   const w = typeof window !== "undefined" ? window.innerWidth : 0;
   const h = typeof window !== "undefined" ? window.innerHeight : 0;
 
-  const summaryParts: string[] = [];
-  if (errors.length) summaryParts.push(`${errors.length} خطأ`);
-  if (warnings.length) summaryParts.push(`${warnings.length} تحذير`);
-  if (contentIssues.length) summaryParts.push(`${contentIssues.length} مشكلة عرض`);
-  const summary = summaryParts.length
-    ? `تم رصد: ${summaryParts.join("، ")}.`
-    : "لا توجد مشاكل مرصودة على هذه الشاشة.";
+  const topIssue = pickTopIssue(errors, warnings, contentIssues);
+  const totalLogCount = errors.length + warnings.length + contentIssues.length;
+
+  let summary: string;
+  if (!topIssue) {
+    summary = "✅ الجلسة سليمة — لا توجد مشاكل مرصودة على هذه الشاشة.";
+  } else {
+    const noiseCount = totalLogCount - topIssue.occurrences;
+    const noiseNote = noiseCount > 0 ? ` — تم تجميع ${noiseCount} رسالة إضافية` : "";
+    summary = `${SEVERITY_LABEL[topIssue.severity]} — ${topIssue.title}${noiseNote}`;
+  }
 
   return {
     generatedAt: new Date().toISOString(),
@@ -167,6 +388,8 @@ export function getMobileErrorReport(): MobileErrorReport {
     warnings: warnings.slice(-10),
     errors: errors.slice(-10),
     contentIssues,
+    topIssue,
+    totalLogCount,
     summary,
   };
 }
@@ -180,19 +403,27 @@ export function formatReportText(r: MobileErrorReport): string {
     `الخلاصة: ${r.summary}`,
     "",
   ];
-  if (r.contentIssues.length) {
-    lines.push("— مشاكل عرض المحتوى:");
-    r.contentIssues.forEach((m, i) => lines.push(`  ${i + 1}. ${m}`));
+
+  if (r.topIssue) {
+    lines.push("═══ أهم مشكلة في هذه الجلسة ═══");
+    lines.push(`الشدة:    ${SEVERITY_LABEL[r.topIssue.severity]}`);
+    lines.push(`النوع:    ${CATEGORY_LABEL[r.topIssue.category]}`);
+    lines.push(`العنوان:  ${r.topIssue.title}`);
+    lines.push(`التكرار:  ${r.topIssue.occurrences}× في هذه الجلسة`);
+    lines.push(`التفاصيل: ${r.topIssue.detail}`);
     lines.push("");
-  }
-  if (r.errors.length) {
-    lines.push("— أخطاء الـ Console:");
-    r.errors.forEach((e) => lines.push(`  • ${e.message}`));
+    lines.push("🛠 خطوة الإصلاح المقترحة:");
+    lines.push(`   ${r.topIssue.suggestedFix}`);
     lines.push("");
+    if (r.totalLogCount > r.topIssue.occurrences) {
+      lines.push(
+        `ℹ️ تم حجب ${r.totalLogCount - r.topIssue.occurrences} رسالة إضافية (مكررة أو أقل أهمية).`
+      );
+    }
+  } else {
+    lines.push("✅ لا توجد مشاكل مرصودة على هذه الشاشة.");
   }
-  if (r.warnings.length) {
-    lines.push("— تحذيرات الـ Console:");
-    r.warnings.forEach((w) => lines.push(`  • ${w.message}`));
-  }
+
   return lines.join("\n");
 }
+
