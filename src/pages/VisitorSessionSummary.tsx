@@ -14,7 +14,7 @@ import {
   Activity, ArrowRight, Clock, Eye, FileText, Globe, Hash,
   Search, ShoppingBag, Phone, MessageCircle, Timer, User as UserIcon,
   Calendar, Sparkles, TrendingUp, MousePointerClick, History,
-  ExternalLink, Quote, Flame, StickyNote, Loader2,
+  ExternalLink, Quote, Flame, StickyNote, Loader2, Pencil, Trash2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -81,10 +81,13 @@ export default function VisitorSessionSummary() {
   const [hasOrders, setHasOrders] = useState(false);
   const [hasCart, setHasCart] = useState(false);
 
-  // Note dialog
+  // Notes
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [savingNote, setSavingNote] = useState(false);
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [notes, setNotes] = useState<Array<{ id: string; note: string; created_at: string; staff_user_id: string; staff_name?: string | null }>>([]);
+  const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
 
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
@@ -115,7 +118,7 @@ export default function VisitorSessionSummary() {
         // Flush any visits that were queued in this admin's own browser before fetching
         await flushPendingVisits().catch(() => 0);
 
-        const [profRes, dealerRes, visitsRes, searchesRes, viewsRes, ordersRes, cartRes] = await Promise.all([
+        const [profRes, dealerRes, visitsRes, searchesRes, viewsRes, ordersRes, cartRes, notesRes] = await Promise.all([
           supabase.from("profiles").select("full_name, email, phone, created_at").eq("user_id", userId).maybeSingle(),
           supabase.from("dealer_accounts").select("id").eq("user_id", userId).maybeSingle(),
           supabase.from("page_visits").select("id, path, page_title, visited_at, referrer").eq("user_id", userId).order("visited_at", { ascending: true }).limit(500),
@@ -123,6 +126,7 @@ export default function VisitorSessionSummary() {
           supabase.from("dealer_price_views").select("id, product_id, viewed_at").eq("user_id", userId).order("viewed_at", { ascending: false }).limit(50),
           supabase.from("orders").select("id", { count: "exact", head: true }).eq("user_id", userId),
           supabase.from("dealer_cart_items").select("id", { count: "exact", head: true }).eq("user_id", userId),
+          supabase.from("customer_notes").select("id, note, created_at, staff_user_id").eq("customer_user_id", userId).order("created_at", { ascending: false }).limit(50),
         ]);
 
         if (cancelled) return;
@@ -134,6 +138,20 @@ export default function VisitorSessionSummary() {
         setPriceViews(viewsRes.data || []);
         setHasOrders((ordersRes.count || 0) > 0);
         setHasCart((cartRes.count || 0) > 0);
+
+        // Resolve staff display names
+        const staffIds = [...new Set((notesRes.data || []).map((n: any) => n.staff_user_id))];
+        let staffMap = new Map<string, string | null>();
+        if (staffIds.length > 0) {
+          const { data: staffProfiles } = await supabase
+            .from("profiles")
+            .select("user_id, full_name, email")
+            .in("user_id", staffIds);
+          staffMap = new Map((staffProfiles || []).map((p: any) => [p.user_id, p.full_name || p.email]));
+        }
+        if (!cancelled) {
+          setNotes((notesRes.data || []).map((n: any) => ({ ...n, staff_name: staffMap.get(n.staff_user_id) || "موظف" })));
+        }
 
         const productIds = [...new Set((viewsRes.data || []).map((v: any) => v.product_id))];
         if (productIds.length > 0) {
@@ -268,19 +286,61 @@ export default function VisitorSessionSummary() {
     if (!noteText.trim() || !user?.id) return;
     setSavingNote(true);
     try {
-      const { error } = await supabase.from("customer_notes").insert({
-        customer_user_id: userId,
-        staff_user_id: user.id,
-        note: noteText.trim(),
-      });
-      if (error) throw error;
-      toast({ title: "✅ تم حفظ الملاحظة" });
+      if (editingNoteId) {
+        const { error } = await supabase
+          .from("customer_notes")
+          .update({ note: noteText.trim() })
+          .eq("id", editingNoteId);
+        if (error) throw error;
+        setNotes((prev) => prev.map((n) => (n.id === editingNoteId ? { ...n, note: noteText.trim() } : n)));
+        toast({ title: "✅ تم تحديث الملاحظة" });
+      } else {
+        const { data, error } = await supabase
+          .from("customer_notes")
+          .insert({
+            customer_user_id: userId,
+            staff_user_id: user.id,
+            note: noteText.trim(),
+          })
+          .select("id, note, created_at, staff_user_id")
+          .single();
+        if (error) throw error;
+        if (data) {
+          setNotes((prev) => [
+            { ...data, staff_name: user?.user_metadata?.full_name || user?.email || "أنا" },
+            ...prev,
+          ]);
+        }
+        toast({ title: "✅ تم حفظ الملاحظة" });
+      }
       setNoteText("");
+      setEditingNoteId(null);
       setNoteOpen(false);
     } catch (e: any) {
       toast({ title: "فشل الحفظ", description: e.message, variant: "destructive" });
     } finally {
       setSavingNote(false);
+    }
+  };
+
+  const openEditNote = (n: { id: string; note: string }) => {
+    setEditingNoteId(n.id);
+    setNoteText(n.note);
+    setNoteOpen(true);
+  };
+
+  const deleteNote = async (id: string) => {
+    if (!confirm("هل أنت متأكد من حذف هذه الملاحظة؟ لا يمكن التراجع.")) return;
+    setDeletingNoteId(id);
+    try {
+      const { error } = await supabase.from("customer_notes").delete().eq("id", id);
+      if (error) throw error;
+      setNotes((prev) => prev.filter((n) => n.id !== id));
+      toast({ title: "🗑️ تم حذف الملاحظة" });
+    } catch (e: any) {
+      toast({ title: "فشل الحذف", description: e.message, variant: "destructive" });
+    } finally {
+      setDeletingNoteId(null);
     }
   };
 
@@ -706,6 +766,79 @@ export default function VisitorSessionSummary() {
           </>
         )}
 
+        {/* Saved Notes */}
+        {notes.length > 0 && (
+          <Card id="section-notes" className="border-amber-200/60 dark:border-amber-900/40 shadow-md overflow-hidden scroll-mt-24 rounded-2xl">
+            <CardHeader className="pb-3 bg-gradient-to-l from-amber-500/10 via-amber-500/5 to-transparent border-b">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/15 flex items-center justify-center">
+                  <StickyNote className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                </div>
+                ملاحظات الفريق
+                <Badge variant="secondary" className="text-[10px]">{notes.length}</Badge>
+              </CardTitle>
+              <p className="text-xs text-muted-foreground mt-1.5 mr-11">
+                سجل المتابعات والمكالمات — يمكنك تعديل أو حذف ملاحظاتك التي أضفتها.
+              </p>
+            </CardHeader>
+            <CardContent className="pt-4 space-y-2">
+              {notes.map((n) => {
+                const isMine = n.staff_user_id === user?.id;
+                const canManage = isMine || isAdmin;
+                return (
+                  <div
+                    key={n.id}
+                    className={`group p-3 rounded-lg border transition ${
+                      isMine
+                        ? "bg-primary/5 border-primary/20 hover:bg-primary/10"
+                        : "bg-muted/40 border-border hover:bg-muted/60"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                        <UserIcon className="w-3 h-3" />
+                        <span className="font-bold">{n.staff_name}</span>
+                        {isMine && <Badge variant="outline" className="text-[9px] h-4 px-1 border-primary/40 text-primary">أنت</Badge>}
+                        <span>•</span>
+                        <span className="font-mono">{fmtDateTime(n.created_at)}</span>
+                      </div>
+                      {canManage && (
+                        <div className="flex gap-1 opacity-60 group-hover:opacity-100 transition">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0"
+                            onClick={() => openEditNote(n)}
+                            disabled={!isMine}
+                            title={isMine ? "تعديل" : "فقط صاحب الملاحظة يمكنه تعديلها"}
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => deleteNote(n.id)}
+                            disabled={deletingNoteId === n.id}
+                            title="حذف"
+                          >
+                            {deletingNoteId === n.id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-3.5 h-3.5" />
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-sm text-foreground mt-2 whitespace-pre-wrap leading-relaxed">{n.note}</p>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        )}
+
         <div className="text-center pt-4 pb-24">
           <Link to="/admin" className="text-xs text-muted-foreground hover:text-primary underline">
             ← الرجوع إلى لوحة الإدارة
@@ -745,12 +878,23 @@ export default function VisitorSessionSummary() {
       </div>
 
       {/* Quick Note Dialog */}
-      <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
+      <Dialog
+        open={noteOpen}
+        onOpenChange={(open) => {
+          setNoteOpen(open);
+          if (!open) {
+            setEditingNoteId(null);
+            setNoteText("");
+          }
+        }}
+      >
         <DialogContent dir="rtl" className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <StickyNote className="w-5 h-5 text-primary" />
-              تسجيل ملاحظة عن {profile?.full_name || "العميل"}
+              {editingNoteId ? <Pencil className="w-5 h-5 text-primary" /> : <StickyNote className="w-5 h-5 text-primary" />}
+              {editingNoteId
+                ? "تعديل الملاحظة"
+                : `تسجيل ملاحظة عن ${profile?.full_name || "العميل"}`}
             </DialogTitle>
           </DialogHeader>
           <Textarea
@@ -762,12 +906,12 @@ export default function VisitorSessionSummary() {
             autoFocus
           />
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setNoteOpen(false)} disabled={savingNote}>
+            <Button variant="outline" onClick={() => { setNoteOpen(false); setEditingNoteId(null); setNoteText(""); }} disabled={savingNote}>
               إلغاء
             </Button>
             <Button onClick={saveNote} disabled={!noteText.trim() || savingNote} className="gap-2">
-              {savingNote ? <Loader2 className="w-4 h-4 animate-spin" /> : <StickyNote className="w-4 h-4" />}
-              حفظ الملاحظة
+              {savingNote ? <Loader2 className="w-4 h-4 animate-spin" /> : (editingNoteId ? <Pencil className="w-4 h-4" /> : <StickyNote className="w-4 h-4" />)}
+              {editingNoteId ? "حفظ التعديلات" : "حفظ الملاحظة"}
             </Button>
           </DialogFooter>
         </DialogContent>
