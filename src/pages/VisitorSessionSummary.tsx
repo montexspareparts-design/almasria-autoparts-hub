@@ -14,7 +14,7 @@ import {
   Activity, ArrowRight, Clock, Eye, FileText, Globe, Hash,
   Search, ShoppingBag, Phone, MessageCircle, Timer, User as UserIcon,
   Calendar, Sparkles, TrendingUp, MousePointerClick, History,
-  ExternalLink, Quote, Flame, StickyNote, Loader2,
+  ExternalLink, Quote, Flame, StickyNote, Loader2, Pencil, Trash2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
