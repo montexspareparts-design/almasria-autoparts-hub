@@ -1898,24 +1898,24 @@ const AdminCustomerIntelligence = () => {
                       >
                         <div className="flex items-center justify-between text-[9px] font-bold text-muted-foreground">
                           <span>تفصيل الأولوية</span>
-                          <span className="font-black text-foreground">{task.score}<span className="opacity-60">/100</span></span>
+                          <span className="font-black text-foreground">{task.score}<span className="opacity-60">/{weightsTotal}</span></span>
                         </div>
-                        {/* Stacked bar */}
+                        {/* Stacked bar — width relative to current configured weight totals */}
                         <div className="flex h-1.5 w-full rounded-full overflow-hidden bg-muted/40">
                           <div
                             className="bg-red-500/80 transition-all"
-                            style={{ width: `${task.scoreBreakdown.alerts}%` }}
-                            title={`إنذارات: ${task.scoreBreakdown.alerts}/30`}
+                            style={{ width: `${weightsTotal > 0 ? (task.scoreBreakdown.alerts / weightsTotal) * 100 : 0}%` }}
+                            title={`إنذارات: ${task.scoreBreakdown.alerts}/${priorityWeights.alerts}`}
                           />
                           <div
                             className="bg-amber-500/80 transition-all"
-                            style={{ width: `${task.scoreBreakdown.recency}%` }}
-                            title={`حداثة النشاط: ${task.scoreBreakdown.recency}/40`}
+                            style={{ width: `${weightsTotal > 0 ? (task.scoreBreakdown.recency / weightsTotal) * 100 : 0}%` }}
+                            title={`حداثة النشاط: ${task.scoreBreakdown.recency}/${priorityWeights.recency}`}
                           />
                           <div
                             className="bg-emerald-500/80 transition-all"
-                            style={{ width: `${task.scoreBreakdown.buyability}%` }}
-                            title={`إمكانية الشراء: ${task.scoreBreakdown.buyability}/30`}
+                            style={{ width: `${weightsTotal > 0 ? (task.scoreBreakdown.buyability / weightsTotal) * 100 : 0}%` }}
+                            title={`إمكانية الشراء: ${task.scoreBreakdown.buyability}/${priorityWeights.buyability}`}
                           />
                         </div>
                         {/* Legend with values */}
