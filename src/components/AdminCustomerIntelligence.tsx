@@ -3121,6 +3121,28 @@ const AdminCustomerIntelligence = () => {
 
             {/* ===== Tab: All Customers (existing list) ===== */}
             <TabsContent value="all" className="mt-0 focus-visible:outline-none">
+              {/* Priority sort toggle */}
+              <div className="flex items-center justify-between mb-2 px-1">
+                <p className="text-[11px] text-muted-foreground">
+                  {prioritySort
+                    ? "📌 الترتيب: العملاء بدون إجراء أولاً، ثم الأقدم متابعةً"
+                    : "الترتيب: حسب تاريخ التسجيل"}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setPrioritySort(!prioritySort)}
+                  className={cn(
+                    "text-[11px] font-bold px-3 py-1.5 rounded-lg border transition-colors flex items-center gap-1.5",
+                    prioritySort
+                      ? "bg-primary/10 border-primary/30 text-primary hover:bg-primary/15"
+                      : "bg-muted/40 border-border hover:bg-muted/60"
+                  )}
+                  title="تبديل ترتيب الأولوية"
+                >
+                  <Zap className="w-3 h-3" />
+                  {prioritySort ? "ترتيب الأولوية ✓" : "ترتيب الأولوية"}
+                </button>
+              </div>
               {loadingProfiles ? (
                 <div className="space-y-3">
                   {[1, 2, 3].map(i => (
