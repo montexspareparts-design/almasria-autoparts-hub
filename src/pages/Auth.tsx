@@ -146,7 +146,7 @@ const Auth = () => {
           setLoginAttempts(0);
           toast({ title: "تم قفل تسجيل الدخول مؤقتاً", variant: "destructive" });
         } else {
-          toast({ title: "بيانات غير صحيحة", description: "تحقق من البيانات وحاول مرة أخرى", variant: "destructive" });
+          toast({ title: "بيانات الدخول غير صحيحة", description: "تأكد من رقم الهاتف/البريد وكلمة المرور. لو نسيت كلمة المرور اضغط على \"نسيت كلمة المرور\".", variant: "destructive" });
         }
       } else {
         setLoginAttempts(0); setLockedUntil(null);
