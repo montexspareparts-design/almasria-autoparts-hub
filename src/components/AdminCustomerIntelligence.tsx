@@ -2337,10 +2337,22 @@ const AdminCustomerIntelligence = () => {
                     </div>
 
                     <button
-                      onClick={() => setExpandedUser(isExpanded ? null : profile.user_id)}
-                      className="w-8 h-8 rounded-lg hover:bg-muted/50 flex items-center justify-center transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setExpandedUser(isExpanded ? null : profile.user_id);
+                      }}
+                      title={isExpanded ? "إخفاء التفاصيل" : "عرض تفاصيل العميل"}
+                      aria-label={isExpanded ? "إخفاء التفاصيل" : "عرض تفاصيل العميل"}
+                      className={cn(
+                        "shrink-0 inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-xl font-bold text-[11px] transition-all border",
+                        isExpanded
+                          ? "bg-primary text-primary-foreground border-primary shadow-md hover:bg-primary/90"
+                          : "bg-primary/10 text-primary border-primary/30 hover:bg-primary/20 hover:border-primary/50 hover:shadow-sm"
+                      )}
                     >
-                      {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                      <Eye className="w-4 h-4" />
+                      <span className="hidden sm:inline">{isExpanded ? "إخفاء" : "تفاصيل"}</span>
+                      {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                     </button>
                   </div>
                 </div>
