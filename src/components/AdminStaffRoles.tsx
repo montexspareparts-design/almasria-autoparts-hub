@@ -541,6 +541,16 @@ const AdminStaffRoles = () => {
                           <Button
                             variant="ghost"
                             size="icon"
+                            className="text-blue-600 hover:bg-blue-500/10 h-8 w-8"
+                            onClick={() => handleViewPassword(member)}
+                            title="عرض اسم المستخدم وكلمة المرور"
+                            disabled={isProtected}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="text-amber-600 hover:bg-amber-500/10 h-8 w-8"
                             onClick={() => { setResetTarget(member); setResetPassword(""); }}
                             title="إعادة تعيين كلمة المرور"
