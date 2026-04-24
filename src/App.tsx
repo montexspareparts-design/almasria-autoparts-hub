@@ -84,6 +84,7 @@ const App = () => (
           <AuthProvider>
             <CartProvider>
               <SEOHead />
+              <PageVisitTracker />
               <DeferredComponent delay={2000}><InstallBannerLazy /></DeferredComponent>
               <DeferredComponent delay={4000}><AIChatBot /></DeferredComponent>
               <DeferredComponent delay={2500}><WhatsAppFloat /></DeferredComponent>
