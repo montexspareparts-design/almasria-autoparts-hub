@@ -189,21 +189,39 @@ const MyProfilePage = () => {
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-bold">رقم الهاتف</Label>
+                    <Label className="text-xs font-bold flex items-center gap-1">
+                      رقم الهاتف <span className="text-destructive">*</span>
+                      {phone && !phoneError && validatePhone(phone) === "" && (
+                        <span className="text-[10px] font-normal text-emerald-600 mr-auto">✓ رقم صحيح</span>
+                      )}
+                    </Label>
                     <div className="relative">
                       <Input
                         value={phone}
                         onChange={(e) => handlePhoneChange(e.target.value)}
+                        onBlur={() => setPhoneError(validatePhone(phone))}
                         placeholder="01xxxxxxxxx"
                         dir="ltr"
                         maxLength={11}
                         type="tel"
                         inputMode="numeric"
-                        className={`h-11 pl-9 ${phoneError ? "border-destructive" : ""}`}
+                        className={`h-11 pl-9 ${
+                          phoneError
+                            ? "border-destructive focus-visible:ring-destructive"
+                            : phone && validatePhone(phone) === ""
+                            ? "border-emerald-500/60"
+                            : ""
+                        }`}
                       />
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
                     </div>
-                    {phoneError && <p className="text-xs text-destructive">{phoneError}</p>}
+                    {phoneError ? (
+                      <p className="text-xs text-destructive">{phoneError}</p>
+                    ) : (
+                      <p className="text-[11px] text-muted-foreground">
+                        رقم مصري مكون من 11 رقم يبدأ بـ 010 / 011 / 012 / 015 — يستخدم للتواصل بخصوص طلباتك
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
