@@ -1066,6 +1066,7 @@ const AdminCustomerIntelligence = () => {
         isDealer,
         score: totalScore,
         scoreBreakdown: breakdown,
+        freshestDays,
       };
 
       // Priority bucket from unified score
