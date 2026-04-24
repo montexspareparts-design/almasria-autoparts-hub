@@ -348,16 +348,22 @@ const StaffHome = () => {
         console.warn("[StaffHome] viewed keys fetch failed", e);
       }
 
+      // KPI counts respect the selected range (today vs 7d) even though we fetched 7d for the dialog.
+      const startMs = new Date(start).getTime();
+      const inRange = (v: { last_visit: string }) => new Date(v.last_visit).getTime() >= startMs;
+
       // Engaged visitors = sessions with dwell ≥ ENGAGED_DWELL_MS OR ≥ 2 distinct pages — exclude staff
       const engagedCount = Array.from(visitorAgg.values())
+        .filter(inRange)
         .filter((v) => !v.user_id || !staffIds.has(v.user_id))
         .filter((v) => {
           const dwell = new Date(v.last_visit).getTime() - new Date(v.first_visit).getTime();
           return dwell >= ENGAGED_DWELL_MS || v.pages >= 2;
         }).length;
 
-      // Recompute visitor count excluding staff
+      // Recompute visitor count excluding staff (within selected range)
       const visitorCountNoStaff = Array.from(visitorAgg.values())
+        .filter(inRange)
         .filter((v) => !v.user_id || !staffIds.has(v.user_id)).length;
 
       setKpis({
