@@ -1697,42 +1697,88 @@ const AdminCustomerIntelligence = () => {
                   return (
                     <div
                       key={task.id}
+                      onClick={() => {
+                        setExpandedUser(task.userId);
+                        // smooth scroll to the customer card after a tiny delay to allow expand
+                        setTimeout(() => {
+                          const el = document.getElementById(`customer-card-${task.userId}`);
+                          if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                        }, 100);
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setExpandedUser(task.userId);
+                        }
+                      }}
                       className={cn(
-                        "rounded-xl border p-3 transition-all flex flex-col gap-2",
-                        isDone ? "border-emerald-300/50 bg-emerald-50/40 dark:bg-emerald-950/10 opacity-60" : priorityColor
+                        "rounded-xl border p-3 transition-all flex flex-col gap-2 cursor-pointer hover:shadow-md hover:scale-[1.01]",
+                        isDone
+                          ? "border-emerald-200/40 bg-emerald-50/20 dark:bg-emerald-950/5 opacity-40 hover:opacity-60 grayscale-[0.5]"
+                          : priorityColor
                       )}
+                      title="اضغط لفتح تفاصيل العميل"
                     >
                       <div className="flex items-start gap-2">
-                        <span className="text-lg leading-none">{task.icon}</span>
+                        <span className={cn("text-lg leading-none", isDone && "grayscale opacity-50")}>{task.icon}</span>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap mb-1">
-                            <span className={cn("text-[9px] font-black px-1.5 py-0.5 rounded", priorityBadge)}>
+                            <span className={cn("text-[9px] font-black px-1.5 py-0.5 rounded", priorityBadge, isDone && "opacity-60")}>
                               {priorityLabel}
                             </span>
                             <span className={cn(
                               "text-[9px] font-bold px-1.5 py-0.5 rounded",
-                              task.isDealer ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" : "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400"
+                              task.isDealer ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" : "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
+                              isDone && "opacity-60"
                             )}>
                               {task.isDealer ? "تاجر" : "قطاعي"}
                             </span>
+                            {isDone && (
+                              <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 inline-flex items-center gap-1">
+                                <CheckCircle2 className="w-2.5 h-2.5" /> مكتمل
+                              </span>
+                            )}
                           </div>
-                          <p className={cn("text-xs font-black text-foreground", isDone && "line-through")}>{task.title}</p>
-                          <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">{task.reason}</p>
-                          <button
-                            onClick={() => setExpandedUser(task.userId)}
-                            className="text-[11px] font-bold text-primary hover:underline mt-1 truncate block max-w-full text-right"
+                          <p className={cn("text-xs font-black text-foreground", isDone && "line-through text-muted-foreground")}>{task.title}</p>
+                          <p className={cn("text-[10px] text-muted-foreground mt-0.5 line-clamp-2", isDone && "opacity-70")}>{task.reason}</p>
+                          <p
+                            className={cn("text-[11px] font-bold text-primary mt-1 truncate max-w-full text-right", isDone && "opacity-70")}
                             title={task.userName}
                           >
                             {task.userName}
-                          </button>
+                          </p>
                         </div>
+                        {/* Eye icon — opens customer details */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpandedUser(task.userId);
+                            setTimeout(() => {
+                              const el = document.getElementById(`customer-card-${task.userId}`);
+                              if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                            }, 100);
+                          }}
+                          title="عرض تفاصيل العميل"
+                          className={cn(
+                            "shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors",
+                            isDone && "opacity-60"
+                          )}
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
                       </div>
-                      <div className="flex items-center gap-1.5 flex-wrap pt-1.5 border-t border-border/30">
+                      <div className="flex items-center gap-1.5 flex-wrap pt-1.5 border-t border-border/30" onClick={(e) => e.stopPropagation()}>
                         {task.phone && (
                           <>
                             <a
                               href={`tel:${task.phone}`}
-                              className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                              onClick={(e) => e.stopPropagation()}
+                              className={cn(
+                                "inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors",
+                                isDone && "opacity-60"
+                              )}
                             >
                               <Phone className="w-3 h-3" /> اتصال
                             </a>
@@ -1740,7 +1786,11 @@ const AdminCustomerIntelligence = () => {
                               href={`https://wa.me/${waNumber}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md bg-green-500/15 text-green-700 dark:text-green-400 hover:bg-green-500/25 transition-colors"
+                              onClick={(e) => e.stopPropagation()}
+                              className={cn(
+                                "inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md bg-green-500/15 text-green-700 dark:text-green-400 hover:bg-green-500/25 transition-colors",
+                                isDone && "opacity-60"
+                              )}
                             >
                               <MessageCircle className="w-3 h-3" /> واتساب
                             </a>
@@ -1749,7 +1799,7 @@ const AdminCustomerIntelligence = () => {
                         <Button
                           variant={isDone ? "outline" : "default"}
                           size="sm"
-                          onClick={() => toggleTaskComplete(task.id)}
+                          onClick={(e) => { e.stopPropagation(); toggleTaskComplete(task.id); }}
                           className="h-7 text-[10px] gap-1 mr-auto"
                         >
                           <CheckCircle2 className="w-3 h-3" />
@@ -2050,8 +2100,9 @@ const AdminCustomerIntelligence = () => {
             return (
               <div
                 key={profile.user_id}
+                id={`customer-card-${profile.user_id}`}
                 className={cn(
-                  "rounded-2xl border bg-card overflow-hidden transition-all duration-300",
+                  "rounded-2xl border bg-card overflow-hidden transition-all duration-300 scroll-mt-24",
                   isExpanded ? "border-primary/30 shadow-lg ring-1 ring-primary/10" : "border-border/40 hover:border-border/70 hover:shadow-sm"
                 )}
               >
