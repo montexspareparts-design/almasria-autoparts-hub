@@ -29,6 +29,22 @@ interface ProductInfo { id: string; name_ar: string; sku: string; }
 const fmtTime = (iso: string) => new Date(iso).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
 const fmtDateTime = (iso: string) => new Date(iso).toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short" });
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("ar-EG", { dateStyle: "medium" });
+const fmtFullDate = (iso: string) =>
+  new Date(iso).toLocaleDateString("ar-EG", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+const fmtFullTime = (iso: string) =>
+  new Date(iso).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit", hour12: true });
+const fmtRelativeShort = (iso: string) => {
+  const diff = Date.now() - new Date(iso).getTime();
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return "الآن";
+  if (min < 60) return `منذ ${min} د`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `منذ ${h} س`;
+  const d = Math.floor(h / 24);
+  if (d < 30) return `منذ ${d} يوم`;
+  const mo = Math.floor(d / 30);
+  return `منذ ${mo} شهر`;
+};
 const fmtDuration = (ms: number) => {
   if (ms <= 0) return "أقل من ثانية";
   const min = Math.floor(ms / 60000);
