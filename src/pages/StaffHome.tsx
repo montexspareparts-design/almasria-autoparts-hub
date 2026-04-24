@@ -22,7 +22,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { isNoiseVisit } from "@/lib/visitorAnalytics";
+import { isNoiseVisit, ENGAGED_DWELL_MS } from "@/lib/visitorAnalytics";
 
 interface KPI {
   label: string;
@@ -61,6 +61,7 @@ const StaffHome = () => {
   const [loading, setLoading] = useState(true);
   const [kpis, setKpis] = useState({
     visitors: 0,
+    engagedVisitors: 0,
     signups: 0,
     addedToCart: 0,
     purchased: 0,
@@ -308,8 +309,15 @@ const StaffHome = () => {
       visitorsArr.sort((a, b) => b.last_visit.localeCompare(a.last_visit));
       setVisitorsList(visitorsArr);
 
+      // Engaged visitors = sessions with dwell ≥ ENGAGED_DWELL_MS OR ≥ 2 distinct pages
+      const engagedCount = Array.from(visitorAgg.values()).filter((v) => {
+        const dwell = new Date(v.last_visit).getTime() - new Date(v.first_visit).getTime();
+        return dwell >= ENGAGED_DWELL_MS || v.pages >= 2;
+      }).length;
+
       setKpis({
         visitors: visitorKeys.size,
+        engagedVisitors: engagedCount,
         signups: signupCount || 0,
         addedToCart: cartUsers.size,
         purchased: buyers.size,
@@ -338,6 +346,14 @@ const StaffHome = () => {
         icon: Users,
         color: "text-blue-600",
         bg: "from-blue-500/10 to-blue-500/5",
+        onClick: () => setVisitorsOpen(true),
+      },
+      {
+        label: `زوار متفاعلين (${rangeSuffix})`,
+        value: kpis.engagedVisitors,
+        icon: Activity,
+        color: "text-cyan-600",
+        bg: "from-cyan-500/10 to-cyan-500/5",
         onClick: () => setVisitorsOpen(true),
       },
       {
