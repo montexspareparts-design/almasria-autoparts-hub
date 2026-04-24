@@ -3129,7 +3129,7 @@ const AdminCustomerIntelligence = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-          {filteredProfiles?.map((profile) => {
+          {sortedProfiles?.map((profile) => {
             const isExpanded = expandedUser === profile.user_id;
             const customerType = getCustomerType(profile.user_id);
             const searches = userSearchMap[profile.user_id] || [];
