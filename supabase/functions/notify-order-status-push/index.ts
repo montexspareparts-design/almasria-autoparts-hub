@@ -86,7 +86,7 @@ async function createVapidJwt(audience: string, publicKey: string, privateKey: s
     // Import key and sign
     const key = await crypto.subtle.importKey(
       "raw",
-      privateKeyData,
+      privateKeyData.buffer.slice(privateKeyData.byteOffset, privateKeyData.byteOffset + privateKeyData.byteLength) as ArrayBuffer,
       { name: "ECDSA", namedCurve: "P-256" },
       false,
       ["sign"]
@@ -238,7 +238,8 @@ Deno.serve(async (req) => {
 
           return { status: "sent", endpoint: sub.endpoint };
         } catch (err) {
-          return { status: "error", endpoint: sub.endpoint, error: err.message };
+          const errMsg = err instanceof Error ? err.message : String(err);
+          return { status: "error", endpoint: sub.endpoint, error: errMsg };
         }
       })
     );
@@ -251,8 +252,9 @@ Deno.serve(async (req) => {
     );
   } catch (err) {
     console.error("Push notification error:", err);
+    const errMsg = err instanceof Error ? err.message : String(err);
     return new Response(
-      JSON.stringify({ error: err.message }),
+      JSON.stringify({ error: errMsg }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

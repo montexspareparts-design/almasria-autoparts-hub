@@ -33,7 +33,7 @@ async function createVapidJwt(audience: string, _publicKey: string, privateKey: 
 
   const key = await crypto.subtle.importKey(
     "raw",
-    privateKeyData,
+    privateKeyData.buffer.slice(privateKeyData.byteOffset, privateKeyData.byteOffset + privateKeyData.byteLength) as ArrayBuffer,
     { name: "ECDSA", namedCurve: "P-256" },
     false,
     ["sign"],
