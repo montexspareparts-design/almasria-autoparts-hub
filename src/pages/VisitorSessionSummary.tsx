@@ -229,6 +229,55 @@ export default function VisitorSessionSummary() {
     return `https://wa.me/${phone}?text=${text}`;
   };
 
+  // Lead scoring (visit=5, search=10, repeat product view=20, cart=40)
+  const leadScore = useMemo(() => {
+    let score = 0;
+    if (visits.length > 0) score += 5;
+    score += Math.min(searches.length, 5) * 10;
+    const dupViews = topProducts.filter(p => p.count > 1).length;
+    score += dupViews * 20;
+    if (hasCart) score += 40;
+    return score;
+  }, [visits.length, searches.length, topProducts, hasCart]);
+
+  const leadTier: "hot" | "warm" | "cold" = hasOrders
+    ? "warm"
+    : leadScore >= 70 ? "hot" : leadScore >= 30 ? "warm" : "cold";
+
+  const lastActivityLabel = useMemo(() => {
+    if (lastSessionPriceViews.length > 0) return `شاف سعر منتج (${lastSessionPriceViews.length})`;
+    if (lastSessionSearches.length > 0) return `بحث: "${lastSessionSearches[0].search_query}"`;
+    if (lastSession?.pages?.length) return `زار: ${friendlyPath(lastSession.pages[lastSession.pages.length - 1].path)}`;
+    return "لا يوجد نشاط حديث";
+  }, [lastSession, lastSessionPriceViews, lastSessionSearches]);
+
+  const saveNote = async () => {
+    if (!noteText.trim() || !user?.id) return;
+    setSavingNote(true);
+    try {
+      const { error } = await supabase.from("customer_notes").insert({
+        customer_user_id: userId,
+        staff_user_id: user.id,
+        note: noteText.trim(),
+      });
+      if (error) throw error;
+      toast({ title: "✅ تم حفظ الملاحظة" });
+      setNoteText("");
+      setNoteOpen(false);
+    } catch (e: any) {
+      toast({ title: "فشل الحفظ", description: e.message, variant: "destructive" });
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
+  const callPhone = () => { if (profile?.phone) window.location.href = `tel:${profile.phone}`; };
+  const openWhatsApp = () => {
+    if (!profile?.phone) return;
+    const cleaned = profile.phone.replace(/\D/g, "").replace(/^0/, "20");
+    const msg = encodeURIComponent(`أهلاً ${profile.full_name || ""}، معاك المصرية جروب 🚗 — حابب أساعدك في طلبك؟`);
+    window.open(`https://wa.me/${cleaned}?text=${msg}`, "_blank");
+  };
 
   if (authLoading || loading) {
     return (
