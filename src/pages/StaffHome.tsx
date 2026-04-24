@@ -69,6 +69,8 @@ const StaffHome = () => {
   const [range, setRange] = useState<RangeKey>("today");
   const [newSignups, setNewSignups] = useState<Array<{ user_id: string; full_name: string | null; phone: string | null; email: string | null; created_at: string }>>([]);
   const [signupsOpen, setSignupsOpen] = useState(false);
+  const [visitorsOpen, setVisitorsOpen] = useState(false);
+  const [visitorsList, setVisitorsList] = useState<Array<{ user_id: string | null; session_key: string | null; full_name: string | null; phone: string | null; email: string | null; pages: number; last_visit: string }>>([]);
 
   // Guard
   useEffect(() => {
