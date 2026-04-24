@@ -240,10 +240,12 @@ const StaffHome = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isAdmin, isModerator, range]);
 
+  const rangeSuffix = range === "today" ? "اليوم" : "آخر 7 أيام";
+
   const kpiCards: KPI[] = useMemo(
     () => [
       {
-        label: "زوار اليوم",
+        label: `زوار ${rangeSuffix}`,
         value: kpis.visitors,
         icon: Users,
         color: "text-blue-600",
@@ -251,7 +253,7 @@ const StaffHome = () => {
         onClick: () => navigate("/admin?section=analytics"),
       },
       {
-        label: "تسجيلات جديدة",
+        label: `تسجيلات جديدة (${rangeSuffix})`,
         value: kpis.signups,
         icon: UserPlus,
         color: "text-emerald-600",
@@ -259,7 +261,7 @@ const StaffHome = () => {
         onClick: () => navigate("/admin?section=customers"),
       },
       {
-        label: "أضافوا للسلة",
+        label: `أضافوا للسلة (${rangeSuffix})`,
         value: kpis.addedToCart,
         icon: ShoppingCart,
         color: "text-amber-600",
@@ -267,7 +269,7 @@ const StaffHome = () => {
         onClick: () => navigate("/admin?section=customer-intelligence"),
       },
       {
-        label: "اشتروا اليوم",
+        label: `اشتروا (${rangeSuffix})`,
         value: kpis.purchased,
         icon: CheckCircle2,
         color: "text-green-600",
@@ -283,7 +285,7 @@ const StaffHome = () => {
         onClick: () => navigate("/admin?section=customer-intelligence"),
       },
     ],
-    [kpis, navigate]
+    [kpis, navigate, rangeSuffix]
   );
 
   const tierBadge = (tier: HotLead["tier"]) => {
