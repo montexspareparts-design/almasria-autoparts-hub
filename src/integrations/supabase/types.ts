@@ -1745,6 +1745,7 @@ export type Database = {
           phone: string | null
           updated_at: string
           user_id: string
+          whatsapp_opt_in: boolean
         }
         Insert: {
           avatar_url?: string | null
@@ -1757,6 +1758,7 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           user_id: string
+          whatsapp_opt_in?: boolean
         }
         Update: {
           avatar_url?: string | null
@@ -1769,6 +1771,7 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           user_id?: string
+          whatsapp_opt_in?: boolean
         }
         Relationships: []
       }
