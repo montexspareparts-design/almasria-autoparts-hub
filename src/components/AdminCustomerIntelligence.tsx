@@ -2603,7 +2603,7 @@ const AdminCustomerIntelligence = () => {
                           <>
                             <a
                               href={`tel:${task.phone}`}
-                              onClick={(e) => e.stopPropagation()}
+                              onClick={(e) => { e.stopPropagation(); markHandled(task.id, "call"); }}
                               className={cn(
                                 "inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors",
                                 isDone && "opacity-60"
@@ -2615,7 +2615,7 @@ const AdminCustomerIntelligence = () => {
                               href={`https://wa.me/${waNumber}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
+                              onClick={(e) => { e.stopPropagation(); markHandled(task.id, "whatsapp"); }}
                               className={cn(
                                 "inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md bg-green-500/15 text-green-700 dark:text-green-400 hover:bg-green-500/25 transition-colors",
                                 isDone && "opacity-60"
