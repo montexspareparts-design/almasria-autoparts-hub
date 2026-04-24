@@ -843,7 +843,8 @@ const AdminCustomerIntelligence = () => {
       .map(p => {
         const searches = userSearchMap[p.user_id] || [];
         const views = userViewsMap[p.user_id] || [];
-        const orders = ordersMap?.[p.user_id] || [];
+        const orderInfo = ordersMap?.[p.user_id];
+        const ordersCount = orderInfo?.count || 0;
         const totalSearches = searches.reduce((s, x) => s + x.count, 0);
         const lastSearchAt = searches.reduce((max, s) => s.lastAt > max ? s.lastAt : max, "");
         const lastViewAt = (priceViews || []).find(v => v.user_id === p.user_id)?.viewed_at || "";
@@ -854,7 +855,7 @@ const AdminCustomerIntelligence = () => {
         // Top viewed products (names)
         const topProducts = views.slice(0, 3).map(pid => productsMap?.[pid]?.name_ar).filter(Boolean) as string[];
         // Score: more search + recent activity + no orders = hotter
-        const noOrders = orders.length === 0;
+        const noOrders = ordersCount === 0;
         const score =
           (totalSearches * 3) +
           (views.length * 2) +
@@ -872,7 +873,7 @@ const AdminCustomerIntelligence = () => {
         } else if (daysSinceActivity <= 1 && totalSearches >= 2) {
           needReason = `نشط الآن — يبحث عن ${topSearch?.query || "منتجات"}`;
           needBadge = { label: "⚡ نشط الآن", color: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800" };
-        } else if (orders.length >= 2 && daysSinceActivity > 30) {
+        } else if (ordersCount >= 2 && daysSinceActivity > 30) {
           needReason = `عميل سابق غايب من ${daysSinceActivity} يوم — يحتاج تنشيط`;
           needBadge = { label: "🔄 إعادة تنشيط", color: "bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-800" };
         } else if (totalSearches >= 3) {
@@ -884,7 +885,7 @@ const AdminCustomerIntelligence = () => {
           score,
           totalSearches,
           viewsCount: views.length,
-          ordersCount: orders.length,
+          ordersCount,
           daysSinceActivity,
           lastActivity,
           topSearch: topSearch?.query || null,
