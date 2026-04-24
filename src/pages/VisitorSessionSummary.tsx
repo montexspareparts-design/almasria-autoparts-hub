@@ -455,10 +455,10 @@ export default function VisitorSessionSummary() {
 
         {/* KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <KpiCard icon={Eye} label="إجمالي الصفحات المشاهدة" value={visits.length} sub={`${avgPagesPerSession || 0} صفحة/جلسة`} color="blue" onClick={() => scrollToSection(visits.length > 0 ? "section-pages" : "section-latest-session")} />
-          <KpiCard icon={Hash} label="عدد الجلسات" value={sessions.length} sub={sessions.length > 1 ? "زائر عائد" : "زيارة واحدة"} color="purple" onClick={() => scrollToSection(sessions.length > 1 ? "section-sessions" : "section-latest-session")} />
-          <KpiCard icon={Search} label="عمليات البحث" value={searches.length} sub={searches.length > 0 ? "نشاط بحث" : "لم يبحث"} color="orange" onClick={() => scrollToSection(searches.length > 0 ? "section-searches" : "section-latest-session")} />
-          <KpiCard icon={Timer} label="إجمالي الوقت" valueText={fmtDuration(totalDurationMs)} sub={lastSession ? `آخر زيارة: ${fmtDate(lastSession.start)}` : "—"} color="emerald" onClick={() => scrollToSection("section-latest-session")} />
+          <KpiCard icon={Eye} label="إجمالي الصفحات المشاهدة" value={visits.length} sub={`${avgPagesPerSession || 0} صفحة/جلسة`} color="blue" onClick={() => scrollToSection(visits.length > 0 ? "section-pages" : "section-latest-session")} emptyHint={visits.length === 0 ? "لم يتصفح أي صفحة بعد" : undefined} />
+          <KpiCard icon={Hash} label="عدد الجلسات" value={sessions.length} sub={sessions.length > 1 ? "زائر عائد" : "زيارة واحدة"} color="purple" onClick={() => scrollToSection(sessions.length > 1 ? "section-sessions" : "section-latest-session")} emptyHint={sessions.length === 0 ? "لا توجد جلسات مسجّلة" : undefined} />
+          <KpiCard icon={Search} label="عمليات البحث" value={searches.length} sub={searches.length > 0 ? "نشاط بحث" : "لم يبحث"} color="orange" onClick={() => scrollToSection(searches.length > 0 ? "section-searches" : "section-latest-session")} emptyHint={searches.length === 0 ? "لم يبحث عن أي منتج" : undefined} />
+          <KpiCard icon={Timer} label="إجمالي الوقت" valueText={fmtDuration(totalDurationMs)} sub={lastSession ? `آخر زيارة: ${fmtDate(lastSession.start)}` : "—"} color="emerald" onClick={() => scrollToSection("section-latest-session")} emptyHint={!lastSession ? "لا يوجد نشاط بعد" : undefined} />
         </div>
 
         {/* Top Searched Products & Queries */}
