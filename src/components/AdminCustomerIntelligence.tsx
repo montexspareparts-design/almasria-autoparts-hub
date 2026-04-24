@@ -1753,6 +1753,15 @@ const AdminCustomerIntelligence = () => {
                   variant="ghost"
                   size="sm"
                   className="h-7 w-7 p-0"
+                  onClick={() => setWeightsDialogOpen(true)}
+                  title="إعدادات أوزان الأولوية"
+                >
+                  <Settings2 className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0"
                   onClick={() => setTasksOpen(v => !v)}
                   title={tasksOpen ? "طي المهام" : "إظهار المهام"}
                 >
