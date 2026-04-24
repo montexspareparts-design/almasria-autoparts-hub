@@ -3261,6 +3261,20 @@ const AdminCustomerIntelligence = () => {
                   </button>
 
                   <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActionDialogUser(profile.user_id);
+                        setActionDialogType(profile.phone ? "phone" : "other");
+                        setActionDialogNote("");
+                      }}
+                      className="h-9 px-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-400 font-bold text-[11px] flex items-center gap-1 transition-colors border border-amber-300/40"
+                      title="تسجيل إجراء (مكالمة/واتساب/زيارة/ملاحظة)"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      سجّل إجراء
+                    </button>
                     <a
                       href={`/admin/visitor/${profile.user_id}`}
                       target="_blank"
