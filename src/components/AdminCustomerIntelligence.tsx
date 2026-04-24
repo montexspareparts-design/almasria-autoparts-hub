@@ -179,6 +179,76 @@ const AdminCustomerIntelligence = () => {
   const [quickNoteDraft, setQuickNoteDraft] = useState<Record<string, string>>({});
   const [quickNoteType, setQuickNoteType] = useState<Record<string, string>>({});
   const [savingQuickNote, setSavingQuickNote] = useState<string | null>(null);
+  // Missing-fields editor: which user is editing + draft values + saving state
+  const [editingMissing, setEditingMissing] = useState<string | null>(null);
+  const [missingDraft, setMissingDraft] = useState<{ phone?: string; email?: string; full_name?: string; car_model?: string; car_year?: string }>({});
+  const [savingMissing, setSavingMissing] = useState(false);
+
+  const detectMissingFields = (p: { phone: string | null; email: string | null; full_name: string | null; car_model?: string | null; car_year?: number | null }) => {
+    const missing: { key: string; label: string; icon: string }[] = [];
+    if (!p.phone || p.phone.trim() === "") missing.push({ key: "phone", label: "رقم الموبايل", icon: "📱" });
+    if (!p.email || p.email.trim() === "" || p.email.endsWith("@phone.almasria.local")) missing.push({ key: "email", label: "البريد الإلكتروني", icon: "✉️" });
+    if (!p.full_name || p.full_name.trim() === "") missing.push({ key: "full_name", label: "الاسم الكامل", icon: "👤" });
+    if (!p.car_model) missing.push({ key: "car_model", label: "موديل السيارة", icon: "🚗" });
+    return missing;
+  };
+
+  const buildMissingFieldsRequest = (name: string, missing: { label: string }[]) => {
+    const fields = missing.map((m) => `• ${m.label}`).join("\n");
+    return `مرحباً ${name || "عميلنا الكريم"} 👋\n\nمن المصرية جروب — لاستكمال خدمتك بشكل أسرع وإرسال عروض الأسعار والطلبات في وقتها، نحتاج منك تحديث البيانات التالية:\n\n${fields}\n\nيمكنك تحديثها مباشرة من صفحة "حسابي" على الموقع، أو ترد علينا هنا بالبيانات وسنحدّثها لك.\n\nشكراً لثقتك 🌟`;
+  };
+
+  const openMissingEditor = (p: any) => {
+    setMissingDraft({
+      phone: p.phone || "",
+      email: p.email && !p.email.endsWith("@phone.almasria.local") ? p.email : "",
+      full_name: p.full_name || "",
+      car_model: p.car_model || "",
+      car_year: p.car_year ? String(p.car_year) : "",
+    });
+    setEditingMissing(p.user_id);
+  };
+
+  const saveMissingFields = async (userId: string) => {
+    // Light validation
+    if (missingDraft.phone && !/^01[0-9]{9}$/.test(missingDraft.phone.trim())) {
+      toast({ title: "رقم موبايل غير صحيح", description: "يجب أن يبدأ بـ 01 ومكون من 11 رقم", variant: "destructive" });
+      return;
+    }
+    if (missingDraft.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(missingDraft.email.trim())) {
+      toast({ title: "بريد إلكتروني غير صحيح", variant: "destructive" });
+      return;
+    }
+    if (missingDraft.car_year && (isNaN(Number(missingDraft.car_year)) || Number(missingDraft.car_year) < 1980 || Number(missingDraft.car_year) > 2100)) {
+      toast({ title: "سنة الصنع غير صحيحة", variant: "destructive" });
+      return;
+    }
+
+    setSavingMissing(true);
+    const updates: any = {};
+    if (missingDraft.phone?.trim()) updates.phone = missingDraft.phone.trim();
+    if (missingDraft.email?.trim()) updates.email = missingDraft.email.trim();
+    if (missingDraft.full_name?.trim()) updates.full_name = missingDraft.full_name.trim();
+    if (missingDraft.car_model?.trim()) updates.car_model = missingDraft.car_model.trim();
+    if (missingDraft.car_year?.trim()) updates.car_year = Number(missingDraft.car_year);
+
+    if (Object.keys(updates).length === 0) {
+      toast({ title: "لا يوجد ما يتم حفظه" });
+      setSavingMissing(false);
+      return;
+    }
+
+    const { error } = await supabase.from("profiles").update(updates).eq("user_id", userId);
+    setSavingMissing(false);
+    if (error) {
+      toast({ title: "خطأ في الحفظ", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "✅ تم تحديث البيانات" });
+    setEditingMissing(null);
+    queryClient.invalidateQueries({ queryKey: ["admin-profiles-intel"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-profiles"] });
+  };
 
   const saveQuickNote = async (customerUserId: string) => {
     const note = (quickNoteDraft[customerUserId] || "").trim();
