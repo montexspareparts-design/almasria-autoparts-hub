@@ -1547,7 +1547,39 @@ const AdminCustomerIntelligence = () => {
         </div>
       </div>
 
+      {/* ===== Sticky Section Navigation — يجمع كل أقسام الصفحة في الهيد ===== */}
+      <div className="sticky top-0 z-30 -mx-1 px-1 py-2 bg-background/85 backdrop-blur-md border-b border-border/40 rounded-b-xl">
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-thin">
+          {([
+            { key: "filters", label: "البحث والفلاتر", icon: Search },
+            { key: "tasks", label: "مهام اليوم", icon: Clock },
+            { key: "customers", label: "قائمة العملاء", icon: Users },
+            { key: "analytics", label: "التحليلات والتقارير", icon: BarChart3 },
+          ] as { key: SectionKey; label: string; icon: typeof Search }[]).map((s) => {
+            const isActive = activeSection === s.key;
+            return (
+              <button
+                key={s.key}
+                type="button"
+                onClick={() => switchSection(s.key)}
+                aria-pressed={isActive}
+                className={cn(
+                  "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all border",
+                  isActive
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                    : "bg-background text-muted-foreground border-border/50 hover:bg-muted/60 hover:text-foreground"
+                )}
+              >
+                <s.icon className="w-3.5 h-3.5" />
+                {s.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Filters & Search - moved up for better UX */}
+      {activeSection === "filters" && (
       <Card className="rounded-xl border-border/40 shadow-sm">
         <CardContent className="py-3 px-4">
           <div className="flex items-center gap-2.5 flex-wrap">
