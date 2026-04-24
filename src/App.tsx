@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 const AIChatBot = lazy(() => import("@/components/AIChatBot"));
 const InstallBannerLazy = lazy(() => import("@/components/InstallBanner"));
 const WhatsAppFloat = lazy(() => import("@/components/WhatsAppFloat"));
+const AddPhonePrompt = lazy(() => import("@/components/AddPhonePrompt"));
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -88,6 +89,7 @@ const App = () => (
               <DeferredComponent delay={2000}><InstallBannerLazy /></DeferredComponent>
               <DeferredComponent delay={4000}><AIChatBot /></DeferredComponent>
               <DeferredComponent delay={2500}><WhatsAppFloat /></DeferredComponent>
+              <DeferredComponent delay={5000}><AddPhonePrompt /></DeferredComponent>
               {DealerRtlAuditor && (
                 <Suspense fallback={null}>
                   <DealerRtlAuditor />

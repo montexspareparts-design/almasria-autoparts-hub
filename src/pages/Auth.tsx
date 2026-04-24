@@ -156,18 +156,19 @@ const Auth = () => {
         // Redirect is handled by the useEffect auth listener
       }
     } else {
-      // Validate optional phone if provided (only relevant when registering with email)
+      // Phone is now REQUIRED when registering with email (to enable contact/WhatsApp follow-up)
       const trimmedOptionalPhone = optionalPhone.trim();
-      if (!credIsPhone && trimmedOptionalPhone && !/^01[0-9]{9}$/.test(trimmedOptionalPhone)) {
-        toast({ title: "رقم موبايل غير صحيح", description: "أدخل رقم مصري يبدأ بـ 01 ومكون من 11 رقم", variant: "destructive" });
-        setLoading(false);
-        return;
-      }
-      // If user opted into WhatsApp, phone is required
-      if (!credIsPhone && whatsappOptIn && !trimmedOptionalPhone) {
-        toast({ title: "رقم الموبايل مطلوب لتفعيل واتساب", description: "أدخل رقم الموبايل أو أوقف خيار التواصل عبر واتساب", variant: "destructive" });
-        setLoading(false);
-        return;
+      if (!credIsPhone) {
+        if (!trimmedOptionalPhone) {
+          toast({ title: "رقم الموبايل مطلوب", description: "أدخل رقم موبايلك علشان نقدر نتواصل معاك ونرسل عروض الأسعار", variant: "destructive" });
+          setLoading(false);
+          return;
+        }
+        if (!/^01[0-9]{9}$/.test(trimmedOptionalPhone)) {
+          toast({ title: "رقم موبايل غير صحيح", description: "أدخل رقم مصري يبدأ بـ 01 ومكون من 11 رقم", variant: "destructive" });
+          setLoading(false);
+          return;
+        }
       }
 
       const finalPhone = credIsPhone ? credential : trimmedOptionalPhone;
@@ -356,19 +357,19 @@ const Auth = () => {
                 </div>
               )}
 
-              {/* Optional phone + WhatsApp opt-in (only when registering with email) */}
+              {/* Required phone + WhatsApp opt-in (only when registering with email) */}
               {!isLogin && !credIsPhone && (
-                <div className="space-y-2 rounded-xl border border-primary/20 bg-primary/[0.04] p-3 sm:p-3.5">
+                <div className="space-y-2 rounded-xl border border-primary/30 bg-primary/[0.06] p-3 sm:p-3.5">
                   <div className="flex items-start gap-2">
                     <Sparkles className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
                     <p className="text-[11px] sm:text-[12px] leading-relaxed text-foreground/70">
-                      <strong className="text-foreground">إضافة رقم الموبايل تخلي طلب عرض السعر أسرع</strong> — هنقدر نتواصل معاك مباشرة بدل البريد.
+                      <strong className="text-foreground">رقم الموبايل ضروري</strong> — علشان نقدر نتواصل معاك مباشرة ونرسل لك عروض الأسعار وتأكيدات الطلبات.
                     </p>
                   </div>
 
                   <div className="space-y-1.5">
                     <Label className="text-[11px] sm:text-xs font-semibold text-foreground/80 text-right block">
-                      رقم الموبايل <span className="text-muted-foreground/50 text-[10px]">(اختياري)</span>
+                      رقم الموبايل <span className="text-primary">*</span>
                     </Label>
                     <div className="relative">
                       <Input
@@ -379,6 +380,7 @@ const Auth = () => {
                         inputMode="tel"
                         autoComplete="tel"
                         maxLength={11}
+                        required
                         style={{ fontSize: '16px' }}
                         className="bg-card/60 border-border/40 h-11 pl-10 text-base focus:border-primary/50 focus:ring-primary/20 transition-all touch-manipulation"
                       />
