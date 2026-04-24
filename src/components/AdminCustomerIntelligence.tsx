@@ -950,8 +950,18 @@ const AdminCustomerIntelligence = () => {
       id: string; userId: string; userName: string; phone: string | null;
       title: string; reason: string; priority: 1 | 2 | 3; icon: string;
       lifecycle: string; isDealer: boolean;
+      score: number; // 0-100 unified urgency score
+      scoreBreakdown: { alerts: number; recency: number; buyability: number };
     };
     if (!profiles) return [] as Task[];
+
+    // Recency score from days (0d => 40, 7d => ~34, 30d => ~21, 90d+ => ~5)
+    const recencyScore = (days: number | null) => {
+      if (days === null || days === undefined) return 5;
+      if (days < 0) return 0;
+      return Math.round(40 * Math.exp(-days / 45));
+    };
+
     const tasks: Task[] = [];
     for (const p of profiles) {
       const lifecycle = getLifecycleStage(p.user_id);
@@ -959,47 +969,87 @@ const AdminCustomerIntelligence = () => {
       const orders = ordersMap?.[p.user_id];
       const cart = cartByUser[p.user_id];
       const alerts = getCustomerAlerts(p.user_id);
+      const searches = userSearchMap[p.user_id] || [];
+      const totalSearch = searches.reduce((s, q) => s + q.count, 0);
+      const lastVisitRaw = lastVisitByUser?.[p.user_id];
+      const daysSinceJoin = differenceInDays(new Date(), new Date(p.created_at));
+
+      // Freshest activity day across cart/order/visit/signup
+      const candidateDays: number[] = [];
+      if (cart?.lastUpdated) candidateDays.push(differenceInDays(new Date(), new Date(cart.lastUpdated)));
+      if (orders?.lastOrderDate) candidateDays.push(differenceInDays(new Date(), new Date(orders.lastOrderDate)));
+      if (lastVisitRaw) candidateDays.push(differenceInDays(new Date(), new Date(lastVisitRaw)));
+      candidateDays.push(daysSinceJoin);
+      const freshestDays = candidateDays.length ? Math.min(...candidateDays) : null;
+
+      // === Unified scoring components (max 100) ===
+      // 1) Alerts (0-30): weighted by emoji severity
+      const alertWeights: Record<string, number> = {
+        "🛒": 18, "🔥": 16, "⚠️": 14, "👋": 10, "✨": 6, "💰": 8,
+      };
+      const alertsScore = Math.min(30, alerts.reduce((s, a) => s + (alertWeights[a.icon] ?? 4), 0));
+
+      // 2) Recency (0-40)
+      const recScore = recencyScore(freshestDays);
+
+      // 3) Buyability (0-30): conversion likelihood
+      let buyScore = 0;
+      if (cart && cart.count > 0) buyScore += 12;
+      if (totalSearch >= 10) buyScore += 10; else if (totalSearch >= 3) buyScore += 6;
+      if (orders && orders.totalOrders > 0) buyScore += 6;
+      if (orders && orders.totalOrders >= 3) buyScore += 2;
+      if (isDealer) buyScore += 4;
+      if (p.phone) buyScore += 2;
+      if (lifecycle === "vip" || lifecycle === "active") buyScore += 2;
+      buyScore = Math.min(30, buyScore);
+
+      const totalScore = alertsScore + recScore + buyScore;
+      const breakdown = { alerts: alertsScore, recency: recScore, buyability: buyScore };
+
       const baseUser = {
         userId: p.user_id,
         userName: p.full_name || "بدون اسم",
         phone: p.phone,
         lifecycle,
         isDealer,
+        score: totalScore,
+        scoreBreakdown: breakdown,
       };
+
+      // Priority bucket from unified score
+      const bucket = (s: number): 1 | 2 | 3 => (s >= 55 ? 1 : s >= 30 ? 2 : 3);
 
       if (cart && cart.count > 0) {
         const days = differenceInDays(new Date(), new Date(cart.lastUpdated));
         if (days >= 1) {
-          tasks.push({ ...baseUser, id: `${p.user_id}:cart`, title: "متابعة سلة متروكة", reason: `${cart.count} صنف بالعربة منذ ${days} يوم`, priority: 1, icon: "🛒" });
+          tasks.push({ ...baseUser, id: `${p.user_id}:cart`, title: "متابعة سلة متروكة", reason: `${cart.count} صنف بالعربة منذ ${days} يوم`, priority: bucket(totalScore), icon: "🛒" });
         }
       }
 
-      const searches = userSearchMap[p.user_id] || [];
-      const totalSearch = searches.reduce((s, q) => s + q.count, 0);
       if (totalSearch >= 5 && !orders) {
-        tasks.push({ ...baseUser, id: `${p.user_id}:hot-search`, title: "اتصل بعميل يبحث كثيراً", reason: `${totalSearch} عملية بحث بدون طلب`, priority: 1, icon: "🔥" });
+        tasks.push({ ...baseUser, id: `${p.user_id}:hot-search`, title: "اتصل بعميل يبحث كثيراً", reason: `${totalSearch} عملية بحث بدون طلب`, priority: bucket(totalScore), icon: "🔥" });
       }
 
       if (lifecycle === "idle" && orders) {
         const days = differenceInDays(new Date(), new Date(orders.lastOrderDate));
-        tasks.push({ ...baseUser, id: `${p.user_id}:idle`, title: "عميل خامل — أعد تنشيطه", reason: `آخر طلب منذ ${days} يوم`, priority: 2, icon: "⏰" });
+        tasks.push({ ...baseUser, id: `${p.user_id}:idle`, title: "عميل خامل — أعد تنشيطه", reason: `آخر طلب منذ ${days} يوم`, priority: bucket(totalScore), icon: "⏰" });
       }
 
       if (lifecycle === "lost" && orders) {
-        tasks.push({ ...baseUser, id: `${p.user_id}:lost`, title: "عميل مفقود — حاول استرجاعه", reason: "لم يطلب منذ أكثر من 90 يوم", priority: 3, icon: "📞" });
+        tasks.push({ ...baseUser, id: `${p.user_id}:lost`, title: "عميل مفقود — حاول استرجاعه", reason: "لم يطلب منذ أكثر من 90 يوم", priority: bucket(totalScore), icon: "📞" });
       }
 
-      const daysSinceJoin = differenceInDays(new Date(), new Date(p.created_at));
       if (daysSinceJoin <= 3 && !orders && totalSearch > 0) {
-        tasks.push({ ...baseUser, id: `${p.user_id}:welcome`, title: "رحّب بعميل جديد نشط", reason: `سجّل منذ ${daysSinceJoin} يوم وبدأ يبحث`, priority: 2, icon: "✨" });
+        tasks.push({ ...baseUser, id: `${p.user_id}:welcome`, title: "رحّب بعميل جديد نشط", reason: `سجّل منذ ${daysSinceJoin} يوم وبدأ يبحث`, priority: bucket(totalScore), icon: "✨" });
       }
 
       const absentAlert = alerts.find(a => a.icon === "👋");
       if (absentAlert) {
-        tasks.push({ ...baseUser, id: `${p.user_id}:absent`, title: "تواصل مع عميل غايب", reason: absentAlert.label, priority: 2, icon: "👋" });
+        tasks.push({ ...baseUser, id: `${p.user_id}:absent`, title: "تواصل مع عميل غايب", reason: absentAlert.label, priority: bucket(totalScore), icon: "👋" });
       }
     }
-    return tasks.sort((a, b) => a.priority - b.priority);
+    // Sort by unified score desc, then by priority bucket
+    return tasks.sort((a, b) => b.score - a.score || a.priority - b.priority);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profiles, ordersMap, cartByUser, userSearchMap, dealerUserIds, lastVisitByUser]);
 
