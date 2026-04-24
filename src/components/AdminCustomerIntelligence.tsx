@@ -2000,8 +2000,39 @@ const AdminCustomerIntelligence = () => {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                {visibleTasks.slice(0, 30).map((task) => {
+              (() => {
+                // Group tasks by day bucket based on freshestDays
+                const limited = visibleTasks.slice(0, 30);
+                const groups: { key: string; label: string; icon: string; items: typeof limited }[] = [
+                  { key: "today", label: "اليوم", icon: "📅", items: [] },
+                  { key: "yesterday", label: "أمس", icon: "🕐", items: [] },
+                  { key: "week", label: "آخر 7 أيام", icon: "🗓️", items: [] },
+                  { key: "older", label: "أقدم", icon: "📦", items: [] },
+                  { key: "unknown", label: "بدون نشاط مسجّل", icon: "❔", items: [] },
+                ];
+                limited.forEach((t) => {
+                  const d = t.freshestDays;
+                  if (d === null || d === undefined) groups[4].items.push(t);
+                  else if (d <= 1) groups[0].items.push(t);
+                  else if (d <= 2) groups[1].items.push(t);
+                  else if (d <= 7) groups[2].items.push(t);
+                  else groups[3].items.push(t);
+                });
+                const visibleGroups = groups.filter(g => g.items.length > 0);
+                return (
+                  <div className="space-y-4">
+                    {visibleGroups.map((group) => (
+                      <div key={group.key} className="space-y-2">
+                        <div className="flex items-center gap-2 sticky top-0 z-10 bg-background/80 backdrop-blur-sm py-1.5 px-1 -mx-1 border-b border-border/40">
+                          <span className="text-base leading-none">{group.icon}</span>
+                          <h4 className="text-xs font-bold text-foreground">{group.label}</h4>
+                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+                            {group.items.length}
+                          </span>
+                          <div className="flex-1 h-px bg-border/40" />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                          {group.items.map((task) => {
                   const isDone = completedTasks.has(task.id);
                   const phoneDigits = task.phone?.replace(/\D/g, "") || "";
                   const waNumber = phoneDigits.startsWith("0") ? "20" + phoneDigits.slice(1) : phoneDigits;
@@ -2270,8 +2301,13 @@ const AdminCustomerIntelligence = () => {
                       </div>
                     </div>
                   );
-                })}
-              </div>
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()
             )}
             {visibleTasks.length > 30 && (
               <p className="text-center text-[10px] text-muted-foreground mt-3">
