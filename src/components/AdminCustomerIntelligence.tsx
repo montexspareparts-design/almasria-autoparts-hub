@@ -2608,6 +2608,10 @@ const AdminCustomerIntelligence = () => {
           )}
         </div>
       )}
+            </TabsContent>
+          </Tabs>
+        );
+      })()}
 
       {/* ===== Analytics & Insights Section ===== */}
       <div className="relative pt-2">
