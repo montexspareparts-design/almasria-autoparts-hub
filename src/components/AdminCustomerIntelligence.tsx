@@ -2351,8 +2351,9 @@ const AdminCustomerIntelligence = () => {
                             {task.userName}
                           </p>
                         </div>
-                        {/* Eye icon — opens customer details */}
+                        {/* Eye icon — opens customer details (active, prominent) */}
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             setExpandedUser(task.userId);
@@ -2362,12 +2363,16 @@ const AdminCustomerIntelligence = () => {
                             }, 100);
                           }}
                           title="عرض تفاصيل العميل"
+                          aria-label="عرض تفاصيل العميل"
                           className={cn(
-                            "shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors",
+                            "shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-lg",
+                            "bg-primary text-primary-foreground shadow-sm ring-1 ring-primary/30",
+                            "hover:bg-primary/90 hover:scale-110 active:scale-95",
+                            "transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                             isDone && "opacity-60"
                           )}
                         >
-                          <Eye className="w-3.5 h-3.5" />
+                          <Eye className="w-4 h-4" />
                         </button>
                       </div>
                       {/* Toggle button for score breakdown panel */}
