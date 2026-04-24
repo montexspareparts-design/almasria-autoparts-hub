@@ -1843,9 +1843,9 @@ const AdminCustomerIntelligence = () => {
                             <span
                               className={cn(
                                 "text-[9px] font-black px-1.5 py-0.5 rounded inline-flex items-center gap-0.5",
-                                task.score >= 70 ? "bg-red-500/20 text-red-700 dark:text-red-400"
-                                : task.score >= 50 ? "bg-orange-500/20 text-orange-700 dark:text-orange-400"
-                                : task.score >= 30 ? "bg-amber-500/20 text-amber-700 dark:text-amber-400"
+                                task.score >= weightsTotal * 0.70 ? "bg-red-500/20 text-red-700 dark:text-red-400"
+                                : task.score >= weightsTotal * 0.50 ? "bg-orange-500/20 text-orange-700 dark:text-orange-400"
+                                : task.score >= weightsTotal * 0.30 ? "bg-amber-500/20 text-amber-700 dark:text-amber-400"
                                 : "bg-muted text-muted-foreground",
                                 isDone && "opacity-60"
                               )}
