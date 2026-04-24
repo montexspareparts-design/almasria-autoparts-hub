@@ -42,7 +42,7 @@ const statusConfig = {
 
 const DealerLogin = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isAdmin, isModerator, dealerAccount, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const [identifier, setIdentifier] = useState(""); // single field for phone or email
   const [password, setPassword] = useState("");
