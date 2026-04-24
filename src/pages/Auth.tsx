@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff, Phone, Mail, User, MapPin, ArrowLeft, ArrowRight, Home, Car } from "lucide-react";
+import { Eye, EyeOff, Phone, Mail, User, MapPin, ArrowLeft, ArrowRight, Home, Car, MessageCircle, Sparkles } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion } from "framer-motion";
 import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
