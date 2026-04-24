@@ -1894,6 +1894,7 @@ const AdminCustomerIntelligence = () => {
               </p>
             )}
           </CardContent>
+          )}
         </Card>
       )}
 
