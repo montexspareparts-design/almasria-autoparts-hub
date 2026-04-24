@@ -295,23 +295,32 @@ const StaffHome = () => {
 
       const hotCount = leads.filter((l) => l.tier === "hot").length;
 
-      // Build visitors list with profile details
-      const visitorsArr = Array.from(visitorAgg.values()).map((v) => {
-        const profile = v.user_id ? profileMap.get(v.user_id) : null;
-        const emailRaw = (profile as any)?.email as string | undefined;
-        const email = emailRaw && !emailRaw.includes("@phone.almasria.local") ? emailRaw : null;
-        return {
-          user_id: v.user_id,
-          session_key: v.session_key,
-          full_name: profile?.full_name || null,
-          phone: profile?.phone || null,
-          email,
-          pages: v.pages,
-          last_visit: v.last_visit,
-          first_path: v.first_path,
-          referrer: v.referrer,
-        };
-      });
+      // Fetch staff (admins + moderators) to exclude from visitors
+      const { data: staffRoles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .in("role", ["admin", "moderator"]);
+      const staffIds = new Set((staffRoles || []).map((r: any) => r.user_id));
+
+      // Build visitors list with profile details — EXCLUDE staff
+      const visitorsArr = Array.from(visitorAgg.values())
+        .filter((v) => !v.user_id || !staffIds.has(v.user_id))
+        .map((v) => {
+          const profile = v.user_id ? profileMap.get(v.user_id) : null;
+          const emailRaw = (profile as any)?.email as string | undefined;
+          const email = emailRaw && !emailRaw.includes("@phone.almasria.local") ? emailRaw : null;
+          return {
+            user_id: v.user_id,
+            session_key: v.session_key,
+            full_name: profile?.full_name || null,
+            phone: profile?.phone || null,
+            email,
+            pages: v.pages,
+            last_visit: v.last_visit,
+            first_path: v.first_path,
+            referrer: v.referrer,
+          };
+        });
       // Sort strictly by last_visit desc — latest visitor first
       visitorsArr.sort((a, b) => b.last_visit.localeCompare(a.last_visit));
       setVisitorsList(visitorsArr);
@@ -332,14 +341,20 @@ const StaffHome = () => {
         console.warn("[StaffHome] viewed keys fetch failed", e);
       }
 
-      // Engaged visitors = sessions with dwell ≥ ENGAGED_DWELL_MS OR ≥ 2 distinct pages
-      const engagedCount = Array.from(visitorAgg.values()).filter((v) => {
-        const dwell = new Date(v.last_visit).getTime() - new Date(v.first_visit).getTime();
-        return dwell >= ENGAGED_DWELL_MS || v.pages >= 2;
-      }).length;
+      // Engaged visitors = sessions with dwell ≥ ENGAGED_DWELL_MS OR ≥ 2 distinct pages — exclude staff
+      const engagedCount = Array.from(visitorAgg.values())
+        .filter((v) => !v.user_id || !staffIds.has(v.user_id))
+        .filter((v) => {
+          const dwell = new Date(v.last_visit).getTime() - new Date(v.first_visit).getTime();
+          return dwell >= ENGAGED_DWELL_MS || v.pages >= 2;
+        }).length;
+
+      // Recompute visitor count excluding staff
+      const visitorCountNoStaff = Array.from(visitorAgg.values())
+        .filter((v) => !v.user_id || !staffIds.has(v.user_id)).length;
 
       setKpis({
-        visitors: visitorKeys.size,
+        visitors: visitorCountNoStaff,
         engagedVisitors: engagedCount,
         signups: signupCount || 0,
         addedToCart: cartUsers.size,
