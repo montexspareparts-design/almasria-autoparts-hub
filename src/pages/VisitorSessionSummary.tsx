@@ -86,6 +86,19 @@ export default function VisitorSessionSummary() {
   const [noteText, setNoteText] = useState("");
   const [savingNote, setSavingNote] = useState(false);
 
+  const scrollToSection = (id: string) => {
+    const el = document.getElementById(id);
+    if (!el) {
+      toast({ title: "لا توجد بيانات في هذا القسم", description: "هذا الزائر لم يسجّل نشاطًا هنا بعد." });
+      return;
+    }
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    el.classList.add("ring-4", "ring-primary/40", "ring-offset-2", "transition-all");
+    setTimeout(() => {
+      el.classList.remove("ring-4", "ring-primary/40", "ring-offset-2");
+    }, 1800);
+  };
+
   useEffect(() => {
     if (authLoading) return;
     if (!isAdmin && !isModerator) {
@@ -382,10 +395,10 @@ export default function VisitorSessionSummary() {
 
         {/* KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <KpiCard icon={Eye} label="إجمالي الصفحات المشاهدة" value={visits.length} sub={`${avgPagesPerSession || 0} صفحة/جلسة`} color="blue" />
-          <KpiCard icon={Hash} label="عدد الجلسات" value={sessions.length} sub={sessions.length > 1 ? "زائر عائد" : "زيارة واحدة"} color="purple" />
-          <KpiCard icon={Search} label="عمليات البحث" value={searches.length} sub={searches.length > 0 ? "نشاط بحث" : "لم يبحث"} color="orange" />
-          <KpiCard icon={Timer} label="إجمالي الوقت" valueText={fmtDuration(totalDurationMs)} sub={lastSession ? `آخر زيارة: ${fmtDate(lastSession.start)}` : "—"} color="emerald" />
+          <KpiCard icon={Eye} label="إجمالي الصفحات المشاهدة" value={visits.length} sub={`${avgPagesPerSession || 0} صفحة/جلسة`} color="blue" onClick={() => scrollToSection(visits.length > 0 ? "section-pages" : "section-latest-session")} />
+          <KpiCard icon={Hash} label="عدد الجلسات" value={sessions.length} sub={sessions.length > 1 ? "زائر عائد" : "زيارة واحدة"} color="purple" onClick={() => scrollToSection(sessions.length > 1 ? "section-sessions" : "section-latest-session")} />
+          <KpiCard icon={Search} label="عمليات البحث" value={searches.length} sub={searches.length > 0 ? "نشاط بحث" : "لم يبحث"} color="orange" onClick={() => scrollToSection(searches.length > 0 ? "section-searches" : "section-latest-session")} />
+          <KpiCard icon={Timer} label="إجمالي الوقت" valueText={fmtDuration(totalDurationMs)} sub={lastSession ? `آخر زيارة: ${fmtDate(lastSession.start)}` : "—"} color="emerald" onClick={() => scrollToSection("section-latest-session")} />
         </div>
 
         {/* Top Searched Products & Queries */}
@@ -520,7 +533,7 @@ export default function VisitorSessionSummary() {
           <>
             {/* Latest Session — main highlight */}
             {lastSession && (
-              <Card className="border-primary/20 shadow-lg overflow-hidden">
+              <Card id="section-latest-session" className="border-primary/20 shadow-lg overflow-hidden scroll-mt-24 rounded-2xl">
                 <CardHeader className="pb-4 bg-gradient-to-l from-primary/8 via-primary/4 to-transparent border-b">
                   <div className="flex items-start justify-between flex-wrap gap-3">
                     <div>
@@ -571,7 +584,7 @@ export default function VisitorSessionSummary() {
                   </div>
 
                   {/* Pages timeline */}
-                  <div>
+                  <div id="section-pages" className="scroll-mt-24 rounded-xl">
                     <SectionTitle icon={FileText} title="رحلة الصفحات" count={lastSession.pages.length} />
                     <ol className="relative border-r-2 border-primary/15 pr-5 mt-3 space-y-2">
                       {lastSession.pages.map((p, idx) => (
@@ -596,7 +609,7 @@ export default function VisitorSessionSummary() {
                   {lastSessionSearches.length > 0 && (
                     <>
                       <Separator />
-                      <div>
+                      <div id="section-searches" className="scroll-mt-24 rounded-xl">
                         <SectionTitle icon={Search} title="عمليات البحث" count={lastSessionSearches.length} />
                         <div className="flex flex-wrap gap-1.5 mt-3">
                           {lastSessionSearches.map((s) => (
@@ -650,7 +663,7 @@ export default function VisitorSessionSummary() {
 
             {/* Previous sessions */}
             {sessions.length > 1 && (
-              <Card>
+              <Card id="section-sessions" className="scroll-mt-24 rounded-2xl">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-base">
                     <History className="w-5 h-5 text-muted-foreground" />
@@ -763,17 +776,25 @@ export default function VisitorSessionSummary() {
   );
 }
 
-function KpiCard({ icon: Icon, label, value, valueText, sub, color }: { icon: any; label: string; value?: number; valueText?: string; sub?: string; color: string }) {
+function KpiCard({ icon: Icon, label, value, valueText, sub, color, onClick }: { icon: any; label: string; value?: number; valueText?: string; sub?: string; color: string; onClick?: () => void }) {
   const map: Record<string, string> = {
     blue: "from-blue-500/15 to-blue-500/5 text-blue-700 dark:text-blue-400 border-blue-200/60 dark:border-blue-900/40",
     purple: "from-purple-500/15 to-purple-500/5 text-purple-700 dark:text-purple-400 border-purple-200/60 dark:border-purple-900/40",
     orange: "from-orange-500/15 to-orange-500/5 text-orange-700 dark:text-orange-400 border-orange-200/60 dark:border-orange-900/40",
     emerald: "from-emerald-500/15 to-emerald-500/5 text-emerald-700 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-900/40",
   };
+  const interactive = !!onClick;
   return (
-    <div className={`rounded-2xl p-4 border bg-gradient-to-br ${map[color]} shadow-sm hover:shadow-md transition`}>
+    <div
+      onClick={onClick}
+      role={interactive ? "button" : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      onKeyDown={interactive ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick?.(); } } : undefined}
+      className={`rounded-2xl p-4 border bg-gradient-to-br ${map[color]} shadow-sm transition ${interactive ? "cursor-pointer hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-current/40" : "hover:shadow-md"}`}
+    >
       <div className="flex items-center justify-between mb-2">
         <Icon className="w-5 h-5" />
+        {interactive && <span className="text-[9px] opacity-60 font-bold">اضغط للتفاصيل ↓</span>}
       </div>
       <p className="text-2xl md:text-3xl font-black leading-none">{valueText ?? value ?? 0}</p>
       <p className="text-[11px] mt-2 font-bold opacity-90">{label}</p>
