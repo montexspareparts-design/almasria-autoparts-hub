@@ -62,30 +62,110 @@ async function getErpToken(baseUrl: string): Promise<string> {
   return cachedToken!;
 }
 
-// ─── Helper: Authenticated fetch to ERP ─────────────────────────
-async function erpFetch(baseUrl: string, path: string, options: RequestInit = {}): Promise<any> {
-  const token = await getErpToken(baseUrl);
+// ─── Structured Logger ─────────────────────────────────────────
+// Generates a unique request id per edge invocation; correlates all ERP API
+// calls within the same request so you can grep one id across all stages.
+function makeRequestId(): string {
+  return `erp_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+}
 
-  const res = await fetch(`${baseUrl}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-      ...(options.headers || {}),
-    },
+function logErpEvent(reqId: string, stage: string, payload: Record<string, unknown>) {
+  // Single-line JSON for easy log search/filter
+  try {
+    console.log(JSON.stringify({ ts: new Date().toISOString(), reqId, stage, ...payload }));
+  } catch {
+    console.log(`[ERP][${reqId}][${stage}]`, payload);
+  }
+}
+
+function byteSize(input: unknown): number {
+  if (input == null) return 0;
+  try {
+    const str = typeof input === "string" ? input : JSON.stringify(input);
+    return new TextEncoder().encode(str).length;
+  } catch {
+    return 0;
+  }
+}
+
+// ─── Helper: Authenticated fetch to ERP ─────────────────────────
+async function erpFetch(
+  baseUrl: string,
+  path: string,
+  options: RequestInit = {},
+  reqId: string = "no-req-id",
+): Promise<any> {
+  const token = await getErpToken(baseUrl);
+  const method = (options.method || "GET").toUpperCase();
+  const reqBody = options.body as string | undefined;
+  const reqBytes = byteSize(reqBody);
+  const callId = `${reqId}_${Math.random().toString(36).slice(2, 6)}`;
+  const startedAt = Date.now();
+
+  logErpEvent(reqId, "erp_call_start", {
+    callId,
+    method,
+    endpoint: path,
+    request_bytes: reqBytes,
   });
 
+  let res: Response;
+  try {
+    res = await fetch(`${baseUrl}${path}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        ...(options.headers || {}),
+      },
+    });
+  } catch (networkErr: any) {
+    const durationMs = Date.now() - startedAt;
+    logErpEvent(reqId, "erp_call_network_error", {
+      callId, method, endpoint: path,
+      duration_ms: durationMs,
+      error: String(networkErr?.message || networkErr),
+    });
+    throw networkErr;
+  }
+
   const text = await res.text();
+  const respBytes = new TextEncoder().encode(text).length;
+  const durationMs = Date.now() - startedAt;
+
   let result: any;
   try {
     result = JSON.parse(text);
   } catch {
+    logErpEvent(reqId, "erp_call_non_json", {
+      callId, method, endpoint: path,
+      status: res.status, duration_ms: durationMs,
+      response_bytes: respBytes,
+      preview: text.substring(0, 200),
+    });
     throw new Error(`ERP returned non-JSON (status ${res.status}): ${text.substring(0, 200)}`);
   }
 
   if (!res.ok) {
+    logErpEvent(reqId, "erp_call_http_error", {
+      callId, method, endpoint: path,
+      status: res.status, duration_ms: durationMs,
+      response_bytes: respBytes,
+      response_preview: JSON.stringify(result).substring(0, 300),
+    });
     throw new Error(`ERP API error [${res.status}]: ${JSON.stringify(result)}`);
   }
+
+  // Soft-failure detection (Al Faisal returns 200 with message=1 on error)
+  const softFail = result && typeof result === "object" && (result.message === 1 || result.message === "1");
+
+  logErpEvent(reqId, softFail ? "erp_call_soft_fail" : "erp_call_success", {
+    callId, method, endpoint: path,
+    status: res.status, duration_ms: durationMs,
+    request_bytes: reqBytes,
+    response_bytes: respBytes,
+    ...(softFail ? { erp_message: result.extramessage || result.message } : {}),
+  });
 
   return result;
 }
@@ -94,6 +174,14 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const reqId = makeRequestId();
+  const handlerStart = Date.now();
+  logErpEvent(reqId, "handler_start", {
+    method: req.method,
+    url: req.url,
+    user_agent: req.headers.get("user-agent") || "",
+  });
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -145,6 +233,14 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const { action, data } = body;
+
+    logErpEvent(reqId, "action_received", {
+      action,
+      auth_mode: isServiceRole ? "service_role" : "user_jwt",
+      user_id: userId,
+      payload_bytes: byteSize(body),
+      data_keys: data && typeof data === "object" ? Object.keys(data) : [],
+    });
 
     // Admin-only actions (service role bypasses)
     if (!isServiceRole && (action === "sync_stock" || action === "sync_prices")) {
@@ -219,7 +315,7 @@ Deno.serve(async (req) => {
         const erpRes = await erpFetch(baseUrl, "/Ecommerce/CreateOrder", {
           method: "POST",
           body: JSON.stringify(payload),
-        });
+        }, reqId);
         // Al Faisal returns 200 OK even on failure; message=0 means success, message=1 means error
         if (erpRes.message === 1) {
           // Log the failure but don't crash — let the order proceed
@@ -282,7 +378,7 @@ Deno.serve(async (req) => {
         const erpRes = await erpFetch(baseUrl, "/Ecommerce/CreateOrder", {
           method: "POST",
           body: JSON.stringify(payload),
-        });
+        }, reqId);
         if (erpRes.message === 1) {
           await supabase.from("erp_sync_logs").insert({
             sync_type: syncType,
@@ -368,7 +464,7 @@ Deno.serve(async (req) => {
 
           if (action === "sync_stock") {
             // ── Stock: /products now returns id + qty directly (per updated API docs) ──
-            const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
+            const productsRes = await erpFetch(baseUrl, "/Ecommerce/products", {}, reqId);
             const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
 
             // Build ID → quantity map directly from products endpoint
@@ -456,7 +552,7 @@ Deno.serve(async (req) => {
             }
           } else {
             // ── Prices: /products now returns id + retailPrice + wholesaleprice directly ──
-            const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
+            const productsRes = await erpFetch(baseUrl, "/Ecommerce/products", {}, reqId);
             const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
 
             const retailItems: { id: string; price: number }[] = [];
@@ -606,7 +702,7 @@ Deno.serve(async (req) => {
     // ─── DEBUG: Show raw ERP response structure ───
     else if (action === "debug_sample") {
       if (!baseUrl) throw new Error("ERP base URL is not configured");
-      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
+      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products", {}, reqId);
       const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
       // Find specific items by ID for comparison
       const targetIds = ["13621", "12967", "22236", "22774"];
@@ -650,7 +746,7 @@ Deno.serve(async (req) => {
       } else {
         if (!baseUrl) throw new Error("ERP base URL is not configured");
         // /products endpoint now returns id, name, price, qty, wholesaleprice, retailPrice directly
-        const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
+        const productsRes = await erpFetch(baseUrl, "/Ecommerce/products", {}, reqId);
         const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
 
         items = productsList.map((prod: any) => ({
@@ -770,7 +866,7 @@ Deno.serve(async (req) => {
       } else {
         if (!baseUrl) throw new Error("ERP base URL is not configured");
         // /products now returns id, name, price, qty directly
-        const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
+        const productsRes = await erpFetch(baseUrl, "/Ecommerce/products", {}, reqId);
         const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
 
         const merged = productsList.map((prod: any) => ({
@@ -792,7 +888,7 @@ Deno.serve(async (req) => {
     else if (action === "deep_stock_check") {
       if (!baseUrl) throw new Error("ERP base URL is not configured");
       // /products now returns all fields directly
-      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
+      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products", {}, reqId);
       const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
 
       // Show raw schema
@@ -869,7 +965,7 @@ Deno.serve(async (req) => {
         result = { success: true, message: "Debug not available in mock mode" };
       } else {
         if (!baseUrl) throw new Error("ERP base URL is not configured");
-        const erpResponse = await erpFetch(baseUrl, "/Ecommerce/products");
+        const erpResponse = await erpFetch(baseUrl, "/Ecommerce/products", {}, reqId);
         const items = Array.isArray(erpResponse)
           ? erpResponse
           : (erpResponse.data || erpResponse.items || []);
@@ -950,7 +1046,7 @@ Deno.serve(async (req) => {
       const keywords: string[] = data?.keywords || [];
       if (!keywords.length) throw new Error("No keywords provided");
 
-      const erpResponse = await erpFetch(baseUrl, "/Ecommerce/products");
+      const erpResponse = await erpFetch(baseUrl, "/Ecommerce/products", {}, reqId);
       const items = Array.isArray(erpResponse) ? erpResponse : (erpResponse.data || erpResponse.items || []);
 
       const matched = items.filter((i: any) => {
@@ -978,7 +1074,7 @@ Deno.serve(async (req) => {
     // ─── FETCH ERP CUSTOMERS ───
     else if (action === "fetch_erp_customers") {
       if (!baseUrl) throw new Error("ERP base URL is not configured");
-      const erpResponse = await erpFetch(baseUrl, "/Ecommerce/GetCustomers");
+      const erpResponse = await erpFetch(baseUrl, "/Ecommerce/GetCustomers", {}, reqId);
       const customers = erpResponse?.data || [];
       
       // If a specific code is requested, find it
@@ -1005,7 +1101,7 @@ Deno.serve(async (req) => {
     // ─── FETCH PRICE LIST (wholesale, half-wholesale, consumer) ───
     else if (action === "fetch_price_list") {
       if (!baseUrl) throw new Error("ERP base URL is not configured");
-      const erpResponse = await erpFetch(baseUrl, "/Ecommerce/GetPriceList");
+      const erpResponse = await erpFetch(baseUrl, "/Ecommerce/GetPriceList", {}, reqId);
       const priceItems = erpResponse?.data || [];
 
       // If specific erp_item_codes requested, filter
@@ -1066,7 +1162,7 @@ Deno.serve(async (req) => {
     else if (action === "debug_erp_api") {
       if (!baseUrl) throw new Error("ERP base URL is not configured");
 
-      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
+      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products", {}, reqId);
       const products = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
 
       // Search for our erp_item_codes in the ERP data
@@ -1094,7 +1190,7 @@ Deno.serve(async (req) => {
     // ─── TEST: GetPriceList endpoint ───
     else if (action === "test_pricelist") {
       if (!baseUrl) throw new Error("ERP base URL is not configured");
-      const priceList = await erpFetch(baseUrl, "/Ecommerce/GetPriceList");
+      const priceList = await erpFetch(baseUrl, "/Ecommerce/GetPriceList", {}, reqId);
       const arr = Array.isArray(priceList) ? priceList : (priceList?.data || priceList?.items || [priceList]);
       result = {
         success: true,
@@ -1122,7 +1218,7 @@ Deno.serve(async (req) => {
       if (isMock || !baseUrl) {
         result = { success: false, message: "ERP not configured or in mock mode" };
       } else {
-        const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
+        const productsRes = await erpFetch(baseUrl, "/Ecommerce/products", {}, reqId);
         const productsList = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
 
         const merged = productsList.map((prod: any) => ({
@@ -1142,7 +1238,7 @@ Deno.serve(async (req) => {
       if (!baseUrl) throw new Error("ERP base URL is not configured");
 
       // Fetch ERP products with category fields
-      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
+      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products", {}, reqId);
       const erpProducts = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
 
       // Build ERP lookup by id
@@ -1262,7 +1358,7 @@ Deno.serve(async (req) => {
       const dryRun = data?.dry_run !== false; // Default to dry run for safety
 
       // Fetch ERP products
-      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
+      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products", {}, reqId);
       const erpProducts = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
       const erpMap = new Map<string, any>();
       for (const p of erpProducts) {
@@ -1459,7 +1555,7 @@ Deno.serve(async (req) => {
       const startedAt = new Date().toISOString();
 
       // 1) Fetch ERP products once
-      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products");
+      const productsRes = await erpFetch(baseUrl, "/Ecommerce/products", {}, reqId);
       const erpProducts = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
 
       // 2) Fetch our active products
@@ -1649,12 +1745,27 @@ Deno.serve(async (req) => {
       throw new Error(`Unknown action: ${action}`);
     }
 
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    const responseBody = (result && typeof result === "object")
+      ? { ...result, request_id: reqId }
+      : { result, request_id: reqId };
+    const responseJson = JSON.stringify(responseBody);
+    logErpEvent(reqId, "handler_end", {
+      total_duration_ms: Date.now() - handlerStart,
+      status: "ok",
+      response_bytes: byteSize(responseJson),
+    });
+    return new Response(responseJson, {
+      headers: { ...corsHeaders, "Content-Type": "application/json", "x-request-id": reqId },
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    console.error("ERP sync error:", message);
+    const stack = error instanceof Error ? error.stack : undefined;
+    logErpEvent(reqId, "handler_error", {
+      total_duration_ms: Date.now() - handlerStart,
+      error: message,
+      stack: stack ? String(stack).split("\n").slice(0, 6).join(" | ") : undefined,
+    });
+    console.error(`[ERP][${reqId}] sync error:`, message);
 
     try {
       const supabase = createClient(
@@ -1665,13 +1776,13 @@ Deno.serve(async (req) => {
         sync_type: "error",
         direction: "outbound",
         status: "failed",
-        error_message: message,
+        error_message: `[${reqId}] ${message}`,
       });
     } catch (_) {}
 
-    return new Response(JSON.stringify({ success: false, error: message }), {
+    return new Response(JSON.stringify({ success: false, error: message, request_id: reqId }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders, "Content-Type": "application/json", "x-request-id": reqId },
     });
   }
 });
