@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Send, Trash2, MessageCircle, Phone, Mail, MapPin, User } from "lucide-react";
+import { Loader2, Send, Trash2, MessageCircle, Phone, Mail, MapPin, User, Calendar, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { checkDuplicateCommunication } from "@/lib/duplicateCommCheck";
