@@ -62,30 +62,110 @@ async function getErpToken(baseUrl: string): Promise<string> {
   return cachedToken!;
 }
 
-// ─── Helper: Authenticated fetch to ERP ─────────────────────────
-async function erpFetch(baseUrl: string, path: string, options: RequestInit = {}): Promise<any> {
-  const token = await getErpToken(baseUrl);
+// ─── Structured Logger ─────────────────────────────────────────
+// Generates a unique request id per edge invocation; correlates all ERP API
+// calls within the same request so you can grep one id across all stages.
+function makeRequestId(): string {
+  return `erp_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+}
 
-  const res = await fetch(`${baseUrl}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-      ...(options.headers || {}),
-    },
+function logErpEvent(reqId: string, stage: string, payload: Record<string, unknown>) {
+  // Single-line JSON for easy log search/filter
+  try {
+    console.log(JSON.stringify({ ts: new Date().toISOString(), reqId, stage, ...payload }));
+  } catch {
+    console.log(`[ERP][${reqId}][${stage}]`, payload);
+  }
+}
+
+function byteSize(input: unknown): number {
+  if (input == null) return 0;
+  try {
+    const str = typeof input === "string" ? input : JSON.stringify(input);
+    return new TextEncoder().encode(str).length;
+  } catch {
+    return 0;
+  }
+}
+
+// ─── Helper: Authenticated fetch to ERP ─────────────────────────
+async function erpFetch(
+  baseUrl: string,
+  path: string,
+  options: RequestInit = {},
+  reqId: string = "no-req-id",
+): Promise<any> {
+  const token = await getErpToken(baseUrl);
+  const method = (options.method || "GET").toUpperCase();
+  const reqBody = options.body as string | undefined;
+  const reqBytes = byteSize(reqBody);
+  const callId = `${reqId}_${Math.random().toString(36).slice(2, 6)}`;
+  const startedAt = Date.now();
+
+  logErpEvent(reqId, "erp_call_start", {
+    callId,
+    method,
+    endpoint: path,
+    request_bytes: reqBytes,
   });
 
+  let res: Response;
+  try {
+    res = await fetch(`${baseUrl}${path}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        ...(options.headers || {}),
+      },
+    });
+  } catch (networkErr: any) {
+    const durationMs = Date.now() - startedAt;
+    logErpEvent(reqId, "erp_call_network_error", {
+      callId, method, endpoint: path,
+      duration_ms: durationMs,
+      error: String(networkErr?.message || networkErr),
+    });
+    throw networkErr;
+  }
+
   const text = await res.text();
+  const respBytes = new TextEncoder().encode(text).length;
+  const durationMs = Date.now() - startedAt;
+
   let result: any;
   try {
     result = JSON.parse(text);
   } catch {
+    logErpEvent(reqId, "erp_call_non_json", {
+      callId, method, endpoint: path,
+      status: res.status, duration_ms: durationMs,
+      response_bytes: respBytes,
+      preview: text.substring(0, 200),
+    });
     throw new Error(`ERP returned non-JSON (status ${res.status}): ${text.substring(0, 200)}`);
   }
 
   if (!res.ok) {
+    logErpEvent(reqId, "erp_call_http_error", {
+      callId, method, endpoint: path,
+      status: res.status, duration_ms: durationMs,
+      response_bytes: respBytes,
+      response_preview: JSON.stringify(result).substring(0, 300),
+    });
     throw new Error(`ERP API error [${res.status}]: ${JSON.stringify(result)}`);
   }
+
+  // Soft-failure detection (Al Faisal returns 200 with message=1 on error)
+  const softFail = result && typeof result === "object" && (result.message === 1 || result.message === "1");
+
+  logErpEvent(reqId, softFail ? "erp_call_soft_fail" : "erp_call_success", {
+    callId, method, endpoint: path,
+    status: res.status, duration_ms: durationMs,
+    request_bytes: reqBytes,
+    response_bytes: respBytes,
+    ...(softFail ? { erp_message: result.extramessage || result.message } : {}),
+  });
 
   return result;
 }
