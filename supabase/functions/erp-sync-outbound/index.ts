@@ -234,6 +234,14 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { action, data } = body;
 
+    logErpEvent(reqId, "action_received", {
+      action,
+      auth_mode: isServiceRole ? "service_role" : "user_jwt",
+      user_id: userId,
+      payload_bytes: byteSize(body),
+      data_keys: data && typeof data === "object" ? Object.keys(data) : [],
+    });
+
     // Admin-only actions (service role bypasses)
     if (!isServiceRole && (action === "sync_stock" || action === "sync_prices")) {
       const { data: isAdmin } = await supabase.rpc("has_role", {
