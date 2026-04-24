@@ -45,6 +45,8 @@ const PoliciesPage = lazy(() => import("./pages/PoliciesPage"));
 const MyProfilePage = lazy(() => import("./pages/MyProfilePage"));
 const TrackOrderPage = lazy(() => import("./pages/TrackOrderPage"));
 const DevDealerPreview = lazy(() => import("./pages/DevDealerPreview"));
+const VisitorSessionSummary = lazy(() => import("./pages/VisitorSessionSummary"));
+import PageVisitTracker from "./components/PageVisitTracker";
 const DealerRtlAuditor = import.meta.env.DEV
   ? lazy(() => import("./components/dealer/DealerRtlAuditor"))
   : null;
@@ -82,6 +84,7 @@ const App = () => (
           <AuthProvider>
             <CartProvider>
               <SEOHead />
+              <PageVisitTracker />
               <DeferredComponent delay={2000}><InstallBannerLazy /></DeferredComponent>
               <DeferredComponent delay={4000}><AIChatBot /></DeferredComponent>
               <DeferredComponent delay={2500}><WhatsAppFloat /></DeferredComponent>
@@ -129,6 +132,7 @@ const App = () => (
                     <Route path="/my-profile" element={<MyProfilePage />} />
                     <Route path="/track-order" element={<TrackOrderPage />} />
                     <Route path="/dev/dealer-preview" element={<DevDealerPreview />} />
+                    <Route path="/admin/visitor/:userId" element={<VisitorSessionSummary />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                </Suspense>

@@ -1562,6 +1562,16 @@ const AdminCustomerIntelligence = () => {
                   </button>
 
                   <div className="flex items-center gap-1.5 shrink-0">
+                    <a
+                      href={`/admin/visitor/${profile.user_id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-9 h-9 rounded-xl bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors"
+                      title="ملخص جلسة الزائر"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Activity className="w-4 h-4 text-primary" />
+                    </a>
                     {profile.phone && (
                       <a
                         href={`https://wa.me/${formatPhoneForWhatsApp(profile.phone)}`}
