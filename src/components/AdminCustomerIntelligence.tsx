@@ -1866,7 +1866,7 @@ const AdminCustomerIntelligence = () => {
       </Dialog>
 
       {/* ===== Today's Tasks for Staff ===== */}
-      {(profiles && profiles.length > 0) && (
+      {activeSection === "tasks" && (profiles && profiles.length > 0) && (
         <Card className="rounded-2xl border-2 border-primary/25 shadow-sm overflow-hidden bg-gradient-to-l from-primary/5 via-background to-background">
           <CardHeader className="py-3 px-4 border-b border-border/40">
             <div className="flex items-center justify-between flex-wrap gap-2">
