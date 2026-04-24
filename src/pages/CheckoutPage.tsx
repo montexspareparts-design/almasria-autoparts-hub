@@ -26,6 +26,7 @@ import {
 } from "@/lib/paymob";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import AuthorizedDistributorBadges from "@/components/AuthorizedDistributorBadges";
 
 const governorates = [
   "القاهرة", "الجيزة", "الإسكندرية", "القليوبية", "الشرقية", "الدقهلية",
@@ -584,18 +585,9 @@ const CheckoutPage = () => {
                       </Button>
                     </motion.div>
 
-                    {/* Trust Icons */}
-                    <div className="mt-6 grid grid-cols-3 gap-3">
-                      {[
-                        { icon: ShieldCheck, label: "دفع آمن" },
-                        { icon: Truck, label: "شحن سريع" },
-                        { icon: BadgeCheck, label: "أصلي 100%" },
-                      ].map(({ icon: Icon, label }) => (
-                        <div key={label} className="flex flex-col items-center gap-1.5 py-2.5 rounded-xl bg-muted/20 border border-border/40">
-                          <Icon className="w-4 h-4 text-primary/60" />
-                          <span className="text-[10px] font-bold text-muted-foreground">{label}</span>
-                        </div>
-                      ))}
+                    {/* Authorized Distributor Trust Badges */}
+                    <div className="mt-6">
+                      <AuthorizedDistributorBadges variant="full" />
                     </div>
                   </div>
                 </div>

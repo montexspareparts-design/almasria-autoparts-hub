@@ -5,6 +5,7 @@ import { Check, XCircle, Loader2, ArrowRight, ShoppingBag, CreditCard, Package }
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import AuthorizedDistributorBadges from "@/components/AuthorizedDistributorBadges";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { normalizePaymobOrderReference } from "@/lib/paymob";
@@ -245,6 +246,16 @@ const PaymentCallback = () => {
                   <ArrowRight className="w-4 h-4" />
                   العودة للرئيسية
                 </Button>
+              </motion.div>
+
+              {/* Authorized Distributor Trust Badges */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.4 }}
+                className="pt-2"
+              >
+                <AuthorizedDistributorBadges variant="strip" />
               </motion.div>
             </motion.div>
           )}
