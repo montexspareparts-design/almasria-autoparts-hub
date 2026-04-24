@@ -923,6 +923,27 @@ const AdminCustomerIntelligence = () => {
     return map;
   }, [lastVisitData]);
 
+  // Visits grouped by user → grouped by calendar day for the activity timeline
+  const visitsByUser = useMemo(() => {
+    const map: Record<string, { date: string; count: number; lastAt: string }[]> = {};
+    lastVisitData?.forEach(v => {
+      if (!v.user_id) return;
+      const day = v.visited_at.slice(0, 10); // YYYY-MM-DD
+      if (!map[v.user_id]) map[v.user_id] = [];
+      const bucket = map[v.user_id].find(b => b.date === day);
+      if (bucket) {
+        bucket.count++;
+        if (v.visited_at > bucket.lastAt) bucket.lastAt = v.visited_at;
+      } else {
+        map[v.user_id].push({ date: day, count: 1, lastAt: v.visited_at });
+      }
+    });
+    // Sort each user's days descending (newest first)
+    Object.values(map).forEach(arr => arr.sort((a, b) => b.date.localeCompare(a.date)));
+    return map;
+  }, [lastVisitData]);
+
+
   // Build user search logs map
   const userSearchMap: Record<string, { query: string; count: number; lastAt: string }[]> = {};
   searchLogs?.forEach((log: any) => {
