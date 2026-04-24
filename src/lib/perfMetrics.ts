@@ -62,9 +62,9 @@ export const clearSamples = () => {
 };
 
 /** متوسط حقل رقمي عبر مجموعة عينات */
-export const avgField = <K extends keyof PerfSample>(
+export const avgField = (
   samples: PerfSample[],
-  field: K
+  field: "mountMs" | "renderCount" | "badgeCount" | "avgTabSwitchMs"
 ): number => {
   const nums = samples
     .map((s) => s[field])
