@@ -68,6 +68,8 @@ export default function CustomerCommunicationLog({ customerUserId, compact = fal
 
   const handleAdd = async () => {
     if (!user) return;
+    const dup = await checkDuplicateCommunication({ customerUserId, commType });
+    if (dup.isDuplicate && !dup.shouldProceed) return;
     setSaving(true);
     const { error } = await supabase.from("customer_communications").insert({
       customer_user_id: customerUserId,
