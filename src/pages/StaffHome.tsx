@@ -729,12 +729,33 @@ const StaffHome = () => {
             </div>
           ) : (
             <div className="space-y-2 mt-2">
-              {visitorsList.map((v, idx) => {
-                const isAnon = !v.user_id;
-                const name = v.full_name || (isAnon ? "زائر مجهول" : "بدون اسم");
-                const last = new Date(v.last_visit).toLocaleString("ar-EG", { dateStyle: "short", timeStyle: "short" });
-                const detailKey = v.user_id || v.session_key || `anon-${idx}`;
-                return (
+              {(() => {
+                let lastDayLabel = "";
+                const today = new Date(); today.setHours(0,0,0,0);
+                const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+                const fmtDay = (iso: string) => {
+                  const d = new Date(iso); d.setHours(0,0,0,0);
+                  if (d.getTime() === today.getTime()) return "اليوم";
+                  if (d.getTime() === yesterday.getTime()) return "أمس";
+                  return new Date(iso).toLocaleDateString("ar-EG", { weekday: "long", day: "numeric", month: "long" });
+                };
+                return visitorsList.map((v, idx) => {
+                  const isAnon = !v.user_id;
+                  const name = v.full_name || (isAnon ? "زائر مجهول" : "بدون اسم");
+                  const last = new Date(v.last_visit).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
+                  const dayLabel = fmtDay(v.last_visit);
+                  const showHeader = dayLabel !== lastDayLabel;
+                  lastDayLabel = dayLabel;
+                  const detailKey = v.user_id || v.session_key || `anon-${idx}`;
+                  return (
+                    <div key={detailKey + "-wrap"}>
+                      {showHeader && (
+                        <div className="flex items-center gap-2 pt-3 pb-1 sticky top-0 bg-background z-10">
+                          <div className="h-px flex-1 bg-border" />
+                          <span className="text-[11px] font-bold text-muted-foreground px-2">{dayLabel}</span>
+                          <div className="h-px flex-1 bg-border" />
+                        </div>
+                      )}
                   <div
                     key={detailKey}
                     className={cn(
