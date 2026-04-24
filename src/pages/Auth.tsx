@@ -156,18 +156,19 @@ const Auth = () => {
         // Redirect is handled by the useEffect auth listener
       }
     } else {
-      // Validate optional phone if provided (only relevant when registering with email)
+      // Phone is now REQUIRED when registering with email (to enable contact/WhatsApp follow-up)
       const trimmedOptionalPhone = optionalPhone.trim();
-      if (!credIsPhone && trimmedOptionalPhone && !/^01[0-9]{9}$/.test(trimmedOptionalPhone)) {
-        toast({ title: "رقم موبايل غير صحيح", description: "أدخل رقم مصري يبدأ بـ 01 ومكون من 11 رقم", variant: "destructive" });
-        setLoading(false);
-        return;
-      }
-      // If user opted into WhatsApp, phone is required
-      if (!credIsPhone && whatsappOptIn && !trimmedOptionalPhone) {
-        toast({ title: "رقم الموبايل مطلوب لتفعيل واتساب", description: "أدخل رقم الموبايل أو أوقف خيار التواصل عبر واتساب", variant: "destructive" });
-        setLoading(false);
-        return;
+      if (!credIsPhone) {
+        if (!trimmedOptionalPhone) {
+          toast({ title: "رقم الموبايل مطلوب", description: "أدخل رقم موبايلك علشان نقدر نتواصل معاك ونرسل عروض الأسعار", variant: "destructive" });
+          setLoading(false);
+          return;
+        }
+        if (!/^01[0-9]{9}$/.test(trimmedOptionalPhone)) {
+          toast({ title: "رقم موبايل غير صحيح", description: "أدخل رقم مصري يبدأ بـ 01 ومكون من 11 رقم", variant: "destructive" });
+          setLoading(false);
+          return;
+        }
       }
 
       const finalPhone = credIsPhone ? credential : trimmedOptionalPhone;
