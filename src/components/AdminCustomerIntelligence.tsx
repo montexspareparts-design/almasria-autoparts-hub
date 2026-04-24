@@ -276,6 +276,7 @@ const AdminCustomerIntelligence = () => {
   });
   const sectionContentRef = useRef<HTMLDivElement | null>(null);
   const sectionNavRef = useRef<HTMLDivElement | null>(null);
+  const userSwitchedRef = useRef(false);
   const [isSwitchingSection, setIsSwitchingSection] = useState(false);
 
   // Read the live nav height from CSS variable (kept in sync via ResizeObserver below)
