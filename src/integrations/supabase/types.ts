@@ -2518,6 +2518,7 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      normalize_eg_phone: { Args: { raw: string }; Returns: string }
       phone_already_registered: { Args: { _phone: string }; Returns: boolean }
       validate_coupon: {
         Args: { _code: string }
