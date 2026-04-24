@@ -81,9 +81,9 @@ const StaffHome = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const start = todayISO();
+      const start = range === "today" ? todayISO() : sevenDaysISO();
 
-      // 1) Visitors today (distinct sessions/users from page_visits)
+      // 1) Visitors (distinct sessions/users from page_visits)
       const { data: visits } = await supabase
         .from("page_visits")
         .select("session_key, user_id")
