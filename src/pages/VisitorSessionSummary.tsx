@@ -449,6 +449,72 @@ export default function VisitorSessionSummary() {
     return `https://wa.me/${phone}?text=${text}`;
   };
 
+  // Normalize Egyptian phone to international format (E.164 without +) for wa.me
+  const normalizePhoneForWa = (raw: string) => {
+    const digits = (raw || "").replace(/\D/g, "");
+    if (!digits) return "";
+    if (digits.startsWith("20")) return digits;
+    if (digits.startsWith("0")) return "20" + digits.slice(1);
+    if (digits.length === 10) return "20" + digits; // 10xxxxxxxx
+    return digits;
+  };
+
+  // Build a personalized quote-request message addressed TO the customer (sent from staff via WA Business)
+  const buildCustomerQuoteMessage = () => {
+    const name = profile?.full_name?.split(" ")[0] || "حضرتك";
+    const topProductName = topProducts[0]?.product?.name_ar || topProducts[0]?.product?.name_en;
+    const lastSearch = searches[0]?.search_query;
+    const interestLine = topProductName
+      ? `لاحظنا اهتمامك بـ: ${topProductName}`
+      : lastSearch
+      ? `لاحظنا بحثك عن: ${lastSearch}`
+      : "";
+    const lines = [
+      `أهلاً ${name} 👋`,
+      "معاك فريق المصرية جروب لقطع غيار تويوتا الأصلية.",
+      interestLine,
+      "حابين نقدّملك *عرض سعر مخصص* وكل التفاصيل اللي محتاجها.",
+      "ابعتلنا موديل وسنة سيارتك ورقم القطعة لو متاح، ونرجعلك فوراً بأفضل سعر متاح.",
+      "— almasriaautoparts.com",
+    ].filter(Boolean);
+    return lines.join("\n\n");
+  };
+
+  // Build mailto link with prefilled subject + body for quote request
+  const buildQuoteEmailHref = () => {
+    if (!profile?.email) return "#";
+    const topProductName = topProducts[0]?.product?.name_ar || topProducts[0]?.product?.name_en;
+    const lastSearch = searches[0]?.search_query;
+    const subject = `عرض سعر مخصص — المصرية جروب لقطع غيار تويوتا`;
+    const interestLine = topProductName
+      ? `لاحظنا اهتمامك بـ: ${topProductName}`
+      : lastSearch
+      ? `لاحظنا بحثك عن: ${lastSearch}`
+      : "";
+    const body = [
+      `أهلاً ${profile?.full_name || "حضرتك"},`,
+      `معاك فريق المصرية جروب لقطع غيار تويوتا الأصلية.`,
+      interestLine,
+      `يسعدنا تجهيز عرض سعر مخصص ليك بناءً على احتياجاتك.`,
+      `لو تقدر تبعتلنا موديل وسنة السيارة ورقم القطعة (لو متاح)، نرجعلك بأفضل سعر فوراً.`,
+      ``,
+      `للتواصل المباشر عبر واتساب: https://wa.me/201027815696`,
+      `الموقع: https://almasriaautoparts.com`,
+      ``,
+      `تحياتنا،`,
+      `فريق المصرية جروب`,
+    ].filter(Boolean).join("\n");
+    return `mailto:${profile.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  };
+
+  // Direct WhatsApp Business link to the customer with prefilled quote message
+  const customerWhatsAppHref = profile?.phone
+    ? `https://wa.me/${normalizePhoneForWa(profile.phone)}?text=${encodeURIComponent(buildCustomerQuoteMessage())}`
+    : "";
+
+  const hasUsableEmail = !!(profile?.email && !profile.email.includes("@phone.almasria.local"));
+
+
   // Lead scoring (visit=5, search=10, repeat product view=20, cart=40)
   const leadScore = useMemo(() => {
     let score = 0;
