@@ -1,9 +1,29 @@
 export const HEARTBEAT_TITLE_PREFIX = "__heartbeat__:";
 export const VISITOR_SESSION_GAP_MS = 30 * 60 * 1000;
+/** Minimum dwell time (ms) before a visitor counts as "engaged" — drops accidental opens. */
+export const ENGAGED_DWELL_MS = 15 * 1000;
 
-const PREVIEW_HOST_MARKERS = ["id-preview--", "lovableproject.com"];
-const PREVIEW_QUERY_MARKERS = ["forcehidebadge=true"];
-const INTERNAL_REFERRER_MARKERS = ["lovable.dev", "lovableproject.com"];
+const PREVIEW_HOST_MARKERS = [
+  "id-preview--",
+  "lovableproject.com",
+  "lovable.dev",
+  "lovable.app",
+  "localhost",
+  "127.0.0.1",
+];
+const PREVIEW_QUERY_MARKERS = ["forcehidebadge=true", "lovable_preview"];
+const INTERNAL_REFERRER_MARKERS = [
+  "lovable.dev",
+  "lovableproject.com",
+  "lovable.app",
+  "id-preview--",
+];
+const NOISE_PATH_PREFIXES = ["/admin", "/dev/", "/__"];
+const BOT_UA_PATTERNS = [
+  "bot", "crawler", "spider", "slurp", "facebookexternalhit", "headless",
+  "preview", "monitor", "check", "uptime", "wget", "curl", "python-requests",
+  "axios", "node-fetch", "lighthouse", "pingdom", "scrapy", "linkchecker",
+];
 
 export interface VisitLike {
   path: string;
@@ -13,17 +33,24 @@ export interface VisitLike {
 }
 
 export const isPreviewHost = (hostname: string) => {
-  const lower = hostname.toLowerCase();
+  const lower = (hostname || "").toLowerCase();
   return PREVIEW_HOST_MARKERS.some((marker) => lower.includes(marker));
 };
 
+export const isBotUserAgent = (ua?: string | null) => {
+  const lower = (ua || (typeof navigator !== "undefined" ? navigator.userAgent : "")).toLowerCase();
+  if (!lower) return false;
+  return BOT_UA_PATTERNS.some((p) => lower.includes(p));
+};
+
 export const shouldTrackBrowserVisit = (fullPath: string, hostname: string) => {
-  const normalized = fullPath.toLowerCase();
+  const normalized = (fullPath || "").toLowerCase();
   const pathname = normalized.split("?")[0] || normalized;
 
   if (isPreviewHost(hostname)) return false;
-  if (pathname.startsWith("/admin")) return false;
+  if (NOISE_PATH_PREFIXES.some((p) => pathname.startsWith(p))) return false;
   if (PREVIEW_QUERY_MARKERS.some((marker) => normalized.includes(marker))) return false;
+  if (isBotUserAgent()) return false;
 
   return true;
 };
@@ -32,7 +59,7 @@ export const isNoiseVisit = (visit: Pick<VisitLike, "path" | "referrer">) => {
   const path = (visit.path || "").toLowerCase();
   const referrer = (visit.referrer || "").toLowerCase();
 
-  if (path.startsWith("/admin")) return true;
+  if (NOISE_PATH_PREFIXES.some((p) => path.startsWith(p))) return true;
   if (PREVIEW_QUERY_MARKERS.some((marker) => path.includes(marker))) return true;
   if (INTERNAL_REFERRER_MARKERS.some((marker) => referrer.includes(marker))) return true;
 
