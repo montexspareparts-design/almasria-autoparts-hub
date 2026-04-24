@@ -34,6 +34,8 @@ interface KPI {
   color: string;
   bg: string;
   onClick?: () => void;
+  /** Optional smaller stat shown under the main value (e.g. "تمت معاينة 3") */
+  subText?: string;
 }
 
 interface HotLead {
