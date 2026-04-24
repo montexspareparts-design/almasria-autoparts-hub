@@ -829,8 +829,10 @@ const StaffHome = () => {
                       ) : null}
                     </div>
                   </div>
+                  </div>
                 );
-              })}
+                });
+              })()}
             </div>
           )}
         </DialogContent>
