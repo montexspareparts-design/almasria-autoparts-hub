@@ -34,6 +34,8 @@ const MyProfilePage = () => {
   const [showCurrentPw, setShowCurrentPw] = useState(false);
   const [showNewPw, setShowNewPw] = useState(false);
   const [isGoogleUser, setIsGoogleUser] = useState(false);
+  const [recoveredPhone, setRecoveredPhone] = useState<RecoveredPhone | null>(null);
+  const [recoveryDismissed, setRecoveryDismissed] = useState(false);
 
   useEffect(() => {
     if (!user) {
