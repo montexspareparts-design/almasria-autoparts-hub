@@ -1047,6 +1047,7 @@ const AdminCustomerIntelligence = () => {
           lastActivity,
           topSearch: topSearch?.query || null,
           topProducts,
+          topProductsRich,
           needReason,
           needBadge,
         };
