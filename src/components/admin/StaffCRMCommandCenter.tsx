@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import {
   Flame, Search, UserCheck, Users, Trophy, Phone, Eye,
-  CheckCircle2, Clock, Building2, ShoppingBag, Loader2, RefreshCw, Briefcase, Activity, Bot, MessageSquare, ExternalLink, Mail, AlertTriangle
+  CheckCircle2, Clock, Building2, ShoppingBag, Loader2, RefreshCw, Briefcase, Activity, Bot, MessageSquare, ExternalLink, Mail, AlertTriangle, Download
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import WhatsAppQuickChat from "./WhatsAppQuickChat";
@@ -495,6 +495,62 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
     yesterday: filteredYesterday.length,
   };
 
+  // =================== CSV Export (top customers / search leads) ===================
+  const exportTopCustomersCSV = () => {
+    const rows = filteredSearch;
+    if (!rows || rows.length === 0) {
+      toast({ title: "لا يوجد بيانات للتصدير", description: "جرّب تغيير الفلاتر أو حدّث القائمة", variant: "destructive" });
+      return;
+    }
+    const headers = [
+      "الاسم",
+      "النوع",
+      "رقم التليفون",
+      "البريد الإلكتروني",
+      "عدد عمليات البحث",
+      "آخر كلمة بحث",
+      "آخر نشاط",
+      "سبب المتابعة",
+      "رابط الملخص",
+    ];
+    const escape = (val: any) => {
+      const s = String(val ?? "");
+      if (/[",\n\r;]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+      return s;
+    };
+    const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+    const lines = rows.map((s: any) => {
+      const reason = s.search_count >= 10
+        ? `بحث مكثّف (${s.search_count}×) بدون أي طلب — فرصة تحويل عالية`
+        : `بحث ${s.search_count}× بدون شراء — يحتاج متابعة`;
+      const lastActivity = new Date(s.last_search).toLocaleString("ar-EG", { dateStyle: "short", timeStyle: "short" });
+      return [
+        s.name || "",
+        s.is_dealer ? "تاجر" : "قطاعي",
+        s.phone || "",
+        s.email || "",
+        s.search_count,
+        s.last_query || "",
+        lastActivity,
+        reason,
+        `${baseUrl}/admin/visitor/${s.user_id}`,
+      ].map(escape).join(",");
+    });
+    // UTF-8 BOM so Excel renders Arabic correctly
+    const csv = "\uFEFF" + headers.map(escape).join(",") + "\n" + lines.join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const stamp = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `top-customers-followup-${stamp}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast({ title: "تم التصدير", description: `تم تنزيل ${rows.length} عميل في ملف CSV/Excel` });
+  };
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -504,6 +560,7 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
       </div>
     );
   }
+
 
   return (
     <div className="space-y-5">
@@ -817,6 +874,23 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
         {/* === Search leads === */}
         <TabsContent value="search" className="mt-4">
           <Card>
+            <div className="flex items-center justify-between gap-2 p-3 border-b bg-muted/20">
+              <div className="text-xs text-muted-foreground">
+                {filteredSearch.length > 0
+                  ? `${filteredSearch.length} عميل مرشح للمتابعة`
+                  : "لا يوجد عملاء حالياً"}
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={exportTopCustomersCSV}
+                disabled={filteredSearch.length === 0}
+                className="h-8 gap-1.5 text-xs border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-400"
+              >
+                <Download className="w-3.5 h-3.5" />
+                تصدير CSV / Excel
+              </Button>
+            </div>
             <CardContent className="p-0">
               <ScrollArea className="h-[60vh]">
                 {filteredSearch.length === 0 ? (
