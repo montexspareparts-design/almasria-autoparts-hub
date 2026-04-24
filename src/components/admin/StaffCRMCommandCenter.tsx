@@ -574,7 +574,10 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
 
 
   return (
-    <div className="space-y-5">
+    <div
+      className="space-y-5 [&[data-badges-off='true']_.tab-badge]:hidden"
+      data-badges-off={!badgesEnabled}
+    >
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
@@ -584,11 +587,40 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
           </h2>
           <p className="text-sm text-muted-foreground">كل ما يحتاج متابعتك في مكان واحد</p>
         </div>
-        <Button size="sm" variant="outline" onClick={fetchAll} disabled={refreshing} className="gap-1.5">
-          {refreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-          تحديث
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant={perfPanelOpen ? "default" : "outline"}
+            onClick={() => setPerfPanelOpen((s) => !s)}
+            className="gap-1.5"
+          >
+            <Activity className="w-4 h-4" />
+            الأداء
+            <span className="text-[10px] font-mono opacity-80">
+              {perf.mountMs}ms
+            </span>
+          </Button>
+          <Button size="sm" variant="outline" onClick={fetchAll} disabled={refreshing} className="gap-1.5">
+            {refreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+            تحديث
+          </Button>
+        </div>
       </div>
+
+      {/* Performance dashboard — قابل للطي */}
+      {perfPanelOpen && (
+        <PerfDashboard
+          live={{
+            mountMs: perf.mountMs,
+            renderCount: perf.renderCount,
+            badgeCount: perf.badgeCount,
+            avgTabSwitchMs: perf.avgTabSwitchMs,
+          }}
+          badgesEnabled={badgesEnabled}
+          onToggleBadges={setBadgesEnabled}
+          onSnapshot={perf.takeSnapshot}
+        />
+      )}
 
       {/* Filters bar */}
       <div className="flex flex-wrap items-center gap-2">
