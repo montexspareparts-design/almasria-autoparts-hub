@@ -870,6 +870,14 @@ const StaffHome = () => {
                 <SelectItem value="viewed">تمت المعاينة</SelectItem>
               </SelectContent>
             </Select>
+            {/* All / Only Customers toggle — default hides staff; "All" is for admin review */}
+            <Select value={includeStaff ? "all" : "customers"} onValueChange={(v) => setIncludeStaff(v === "all")}>
+              <SelectTrigger className="h-8 w-[170px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="customers">العملاء فقط (افتراضي)</SelectItem>
+                <SelectItem value="all">الكل (يشمل الموظفين)</SelectItem>
+              </SelectContent>
+            </Select>
             {(visitorTypeFilter !== "all" || visitorDateFilter !== "all" || visitorViewedFilter !== "all") && (
               <Button
                 size="sm"
