@@ -237,7 +237,8 @@ const StaffHome = () => {
 
   useEffect(() => {
     if (user && (isAdmin || isModerator)) fetchData();
-  }, [user, isAdmin, isModerator]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, isAdmin, isModerator, range]);
 
   const kpiCards: KPI[] = useMemo(
     () => [
