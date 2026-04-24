@@ -164,23 +164,46 @@ ${JSON.stringify(candidatePool, null, 2)}
       }),
     });
 
+    // Helper: build fallback recs from top candidate pool (no AI needed)
+    const buildFallbackRecs = () => {
+      const reasons = ["reorder", "complementary", "seasonal", "opportunity"];
+      const purchasedSet = new Set(purchasedIds);
+      const sorted = [...candidatePool].sort((a: any, b: any) => {
+        // Prefer on-sale + in-stock
+        if (a.on_sale !== b.on_sale) return a.on_sale ? -1 : 1;
+        return (b.in_stock || 0) - (a.in_stock || 0);
+      });
+      return sorted.slice(0, 4).map((p: any, i: number) => ({
+        ...p,
+        reason_type: purchasedSet.has(p.id) ? "reorder" : reasons[i] || "opportunity",
+      }));
+    };
+
+    let aiPicks: { product_id: string; reason_type: string }[] = [];
+    let usedFallback = false;
+
     if (!aiResp.ok) {
       const errText = await aiResp.text();
       console.error("AI gateway error:", aiResp.status, errText);
-      if (aiResp.status === 429 || aiResp.status === 402) {
-        return new Response(JSON.stringify({ error: aiResp.status === 429 ? "Rate limited" : "Credits exhausted" }), {
-          status: aiResp.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      // For 402 (credits), 429 (rate limit), or any AI failure: fall back to candidate pool
+      // so the dealer always sees recommendations instead of a blank screen.
+      usedFallback = true;
+    } else {
+      const aiData = await aiResp.json();
+      const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+      if (toolCall) {
+        try {
+          const parsed = JSON.parse(toolCall.function.arguments);
+          aiPicks = parsed.recommendations || [];
+        } catch (parseErr) {
+          console.error("Failed to parse AI tool call:", parseErr);
+          usedFallback = true;
+        }
+      } else {
+        console.error("No tool call in AI response");
+        usedFallback = true;
       }
-      throw new Error(`AI gateway: ${aiResp.status}`);
     }
-
-    const aiData = await aiResp.json();
-    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall) throw new Error("No tool call in AI response");
-
-    const parsed = JSON.parse(toolCall.function.arguments);
-    const aiPicks: { product_id: string; reason_type: string }[] = parsed.recommendations || [];
 
     // 6. Hydrate full product info from candidates
     const candidateMap = new Map(candidatePool.map((p: any) => [p.id, p]));
