@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { flushPendingVisits } from "@/lib/pageVisitTracker";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -86,6 +87,9 @@ export default function VisitorSessionSummary() {
     (async () => {
       setLoading(true);
       try {
+        // Flush any visits that were queued in this admin's own browser before fetching
+        await flushPendingVisits().catch(() => 0);
+
         const [profRes, dealerRes, visitsRes, searchesRes, viewsRes] = await Promise.all([
           supabase.from("profiles").select("full_name, email, phone, created_at").eq("user_id", userId).maybeSingle(),
           supabase.from("dealer_accounts").select("id").eq("user_id", userId).maybeSingle(),

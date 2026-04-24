@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 const SESSION_KEY_STORAGE = "visitor_session_key";
+const PENDING_KEY = "visitor_pending_visits";
 
 function getSessionKey(): string {
   try {
@@ -15,29 +16,101 @@ function getSessionKey(): string {
   }
 }
 
+interface PendingVisit {
+  path: string;
+  page_title: string | null;
+  referrer: string | null;
+  session_key: string;
+  visited_at: string;
+}
+
+function readPending(): PendingVisit[] {
+  try {
+    const raw = localStorage.getItem(PENDING_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function writePending(items: PendingVisit[]) {
+  try {
+    localStorage.setItem(PENDING_KEY, JSON.stringify(items.slice(-50)));
+  } catch {
+    /* quota */
+  }
+}
+
+/** Flush any pending visits that failed to insert previously (e.g. user closed tab). */
+export async function flushPendingVisits(): Promise<number> {
+  const pending = readPending();
+  if (pending.length === 0) return 0;
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    const rows = pending.map((p) => ({
+      user_id: user?.id ?? null,
+      session_key: p.session_key,
+      path: p.path,
+      page_title: p.page_title,
+      referrer: p.referrer,
+      visited_at: p.visited_at,
+    }));
+    const { error } = await supabase.from("page_visits").insert(rows);
+    if (!error) {
+      writePending([]);
+      return rows.length;
+    }
+  } catch {
+    /* keep pending for next try */
+  }
+  return 0;
+}
+
 let lastTrackedPath: string | null = null;
 let lastTrackedAt = 0;
 
 /** Records a page visit for both authenticated and anonymous visitors. */
 export async function trackPageVisit(path: string, title?: string) {
+  // de-dupe rapid identical calls (StrictMode / double effects)
+  const now = Date.now();
+  if (path === lastTrackedPath && now - lastTrackedAt < 2000) return;
+  lastTrackedPath = path;
+  lastTrackedAt = now;
+
+  const sessionKey = getSessionKey();
+  const visit: PendingVisit = {
+    path,
+    page_title: title ?? document.title ?? null,
+    referrer: document.referrer || null,
+    session_key: sessionKey,
+    visited_at: new Date().toISOString(),
+  };
+
+  // Optimistically queue so we never lose a visit if the request is interrupted
+  const pending = readPending();
+  pending.push(visit);
+  writePending(pending);
+
   try {
-    // de-dupe rapid identical calls (StrictMode / double effects)
-    const now = Date.now();
-    if (path === lastTrackedPath && now - lastTrackedAt < 2000) return;
-    lastTrackedPath = path;
-    lastTrackedAt = now;
-
     const { data: { user } } = await supabase.auth.getUser();
-    const sessionKey = getSessionKey();
-
-    await supabase.from("page_visits").insert({
+    const { error } = await supabase.from("page_visits").insert({
       user_id: user?.id ?? null,
-      session_key: sessionKey,
-      path,
-      page_title: title ?? document.title ?? null,
-      referrer: document.referrer || null,
+      session_key: visit.session_key,
+      path: visit.path,
+      page_title: visit.page_title,
+      referrer: visit.referrer,
+      visited_at: visit.visited_at,
     });
+    if (!error) {
+      // Drop this visit from the pending queue
+      const remaining = readPending().filter(
+        (p) => !(p.path === visit.path && p.visited_at === visit.visited_at)
+      );
+      writePending(remaining);
+      // Opportunistically flush anything else that was stuck
+      if (remaining.length > 0) flushPendingVisits();
+    }
   } catch {
-    /* silent */
+    /* will be retried via flushPendingVisits */
   }
 }
