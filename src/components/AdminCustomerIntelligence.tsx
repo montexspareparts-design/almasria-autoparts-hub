@@ -132,7 +132,7 @@ import {
   TrendingUp, TrendingDown, Clock, ChevronDown, ChevronUp, BarChart3,
   Package, Calendar as CalendarIcon, Filter, X, Download,
   MessageCircle, Send, Copy, ExternalLink, Briefcase,
-  Star, Activity, AlertTriangle, CheckCircle2, ListOrdered, FileText, RefreshCw, Zap,
+  Star, Activity, AlertTriangle, AlertCircle, CheckCircle2, ListOrdered, FileText, RefreshCw, Zap,
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 
@@ -1106,7 +1106,47 @@ const AdminCustomerIntelligence = () => {
       </div>
 
       {/* 🔥 Hot Leads — Smart Auto Summary */}
-      {filteredProfiles && filteredProfiles.length > 0 && (
+      {(() => {
+        const hasProfiles = !!filteredProfiles && filteredProfiles.length > 0;
+        const hasProducts = !!productsMap && Object.keys(productsMap).length > 0;
+        const hasSearchLogs = !!searchLogs && searchLogs.length > 0;
+        const hasPriceViews = !!priceViews && priceViews.length > 0;
+        const hasActivity = hasSearchLogs || hasPriceViews;
+
+        // Show alert when missing data instead of the section
+        if (!hasProfiles || !hasProducts || !hasActivity) {
+          return (
+            <div className="rounded-2xl border-2 border-dashed border-amber-300/60 dark:border-amber-700/50 bg-amber-50/50 dark:bg-amber-950/15 p-5 flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-amber-500/15 flex items-center justify-center shrink-0">
+                <AlertCircle className="w-4.5 h-4.5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-black text-foreground mb-1">
+                  بيانات غير كافية لعرض الملخص الذكي
+                </p>
+                <p className="text-xs text-muted-foreground leading-relaxed mb-2">
+                  نحتاج إلى عدد أكبر من العملاء وسجل بحث/تسعير حتى نستطيع اقتراح عملاء يحتاجون متابعة. الملخص يظهر تلقائياً بمجرد توفر بيانات كافية.
+                </p>
+                <div className="flex items-center gap-1.5 flex-wrap mt-2">
+                  <Badge variant="outline" className={cn("text-[10px] h-5 font-bold", hasProfiles ? "border-emerald-300 text-emerald-700 dark:text-emerald-400" : "border-red-300 text-red-700 dark:text-red-400")}>
+                    {hasProfiles ? "✓" : "✗"} عملاء ({filteredProfiles?.length || 0})
+                  </Badge>
+                  <Badge variant="outline" className={cn("text-[10px] h-5 font-bold", hasProducts ? "border-emerald-300 text-emerald-700 dark:text-emerald-400" : "border-red-300 text-red-700 dark:text-red-400")}>
+                    {hasProducts ? "✓" : "✗"} منتجات ({productsMap ? Object.keys(productsMap).length : 0})
+                  </Badge>
+                  <Badge variant="outline" className={cn("text-[10px] h-5 font-bold", hasSearchLogs ? "border-emerald-300 text-emerald-700 dark:text-emerald-400" : "border-red-300 text-red-700 dark:text-red-400")}>
+                    {hasSearchLogs ? "✓" : "✗"} سجل بحث ({searchLogs?.length || 0})
+                  </Badge>
+                  <Badge variant="outline" className={cn("text-[10px] h-5 font-bold", hasPriceViews ? "border-emerald-300 text-emerald-700 dark:text-emerald-400" : "border-red-300 text-red-700 dark:text-red-400")}>
+                    {hasPriceViews ? "✓" : "✗"} كشف أسعار ({priceViews?.length || 0})
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        return (
         <Card className="rounded-2xl border-2 border-primary/20 shadow-sm overflow-hidden bg-gradient-to-l from-primary/5 via-background to-background">
           <CardHeader className="py-3 px-4 border-b border-border/40">
             <div className="flex items-center justify-between flex-wrap gap-2">
@@ -1267,7 +1307,8 @@ const AdminCustomerIntelligence = () => {
             )}
           </CardContent>
         </Card>
-      )}
+        );
+      })()}
 
       {/* Charts Row: Heatmap + Customer Type */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
