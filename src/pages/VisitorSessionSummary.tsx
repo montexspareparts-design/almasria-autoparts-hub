@@ -88,6 +88,15 @@ export default function VisitorSessionSummary() {
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [notes, setNotes] = useState<Array<{ id: string; note: string; created_at: string; staff_user_id: string; staff_name?: string | null }>>([]);
   const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
+  const [focusedSection, setFocusedSection] = useState<string | null>(null);
+
+  const clearFocus = () => {
+    document.querySelectorAll("[data-focus-target='true']").forEach((n) => {
+      n.classList.remove("ring-4", "ring-primary", "ring-offset-2", "shadow-2xl", "scale-[1.01]");
+      (n as HTMLElement).removeAttribute("data-focus-target");
+    });
+    setFocusedSection(null);
+  };
 
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
@@ -95,11 +104,12 @@ export default function VisitorSessionSummary() {
       toast({ title: "لا توجد بيانات في هذا القسم", description: "هذا الزائر لم يسجّل نشاطًا هنا بعد." });
       return;
     }
+    // Clear any previous focus highlight
+    clearFocus();
     el.scrollIntoView({ behavior: "smooth", block: "start" });
-    el.classList.add("ring-4", "ring-primary/40", "ring-offset-2", "transition-all");
-    setTimeout(() => {
-      el.classList.remove("ring-4", "ring-primary/40", "ring-offset-2");
-    }, 1800);
+    el.classList.add("ring-4", "ring-primary", "ring-offset-2", "shadow-2xl", "scale-[1.01]", "transition-all");
+    el.setAttribute("data-focus-target", "true");
+    setFocusedSection(id);
   };
 
   useEffect(() => {
@@ -916,6 +926,22 @@ export default function VisitorSessionSummary() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Floating focus indicator — stays until user dismisses */}
+      {focusedSection && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4">
+          <div className="flex items-center gap-2 rounded-full bg-primary text-primary-foreground shadow-2xl border border-primary-foreground/20 px-4 py-2">
+            <span className="w-2 h-2 rounded-full bg-primary-foreground animate-pulse" />
+            <span className="text-xs font-bold">وضع التركيز مُفعّل</span>
+            <button
+              onClick={clearFocus}
+              className="ml-1 rounded-full bg-primary-foreground/15 hover:bg-primary-foreground/25 px-3 py-1 text-[11px] font-bold transition"
+            >
+              ✕ إنهاء التركيز
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
