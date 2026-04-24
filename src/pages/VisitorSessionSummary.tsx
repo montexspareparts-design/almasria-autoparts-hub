@@ -926,6 +926,22 @@ export default function VisitorSessionSummary() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Floating focus indicator — stays until user dismisses */}
+      {focusedSection && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4">
+          <div className="flex items-center gap-2 rounded-full bg-primary text-primary-foreground shadow-2xl border border-primary-foreground/20 px-4 py-2">
+            <span className="w-2 h-2 rounded-full bg-primary-foreground animate-pulse" />
+            <span className="text-xs font-bold">وضع التركيز مُفعّل</span>
+            <button
+              onClick={clearFocus}
+              className="ml-1 rounded-full bg-primary-foreground/15 hover:bg-primary-foreground/25 px-3 py-1 text-[11px] font-bold transition"
+            >
+              ✕ إنهاء التركيز
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
