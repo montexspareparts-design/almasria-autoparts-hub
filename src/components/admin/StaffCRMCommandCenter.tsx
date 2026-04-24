@@ -784,10 +784,17 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                                 </Button>
                               )}
                               {isMine && r.user_id && (
-                                <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => setSummaryUser({ id: r.user_id!, name: r.customer_name || "عميل", phone: r.customer_phone, isDealer: r.is_dealer })}>
-                                  <Activity className="w-3 h-3" />
-                                  نشاط العميل
-                                </Button>
+                                <>
+                                  <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => setSummaryUser({ id: r.user_id!, name: r.customer_name || "عميل", phone: r.customer_phone, isDealer: r.is_dealer })}>
+                                    <Activity className="w-3 h-3" />
+                                    نشاط العميل
+                                  </Button>
+                                  <Button asChild size="sm" variant="ghost" className="h-7 w-7 p-0" title="فتح صفحة الملخص الكاملة">
+                                    <Link to={`/admin/visitor/${r.user_id}`} target="_blank" rel="noopener">
+                                      <ExternalLink className="w-3 h-3" />
+                                    </Link>
+                                  </Button>
+                                </>
                               )}
                               {isMine && (
                                 <Button size="sm" className="h-7 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => resolveSupportRequest(r.id)}>
