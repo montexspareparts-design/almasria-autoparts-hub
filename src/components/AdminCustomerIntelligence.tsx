@@ -200,6 +200,14 @@ const AdminCustomerIntelligence = () => {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
+  const [expandedTaskDetails, setExpandedTaskDetails] = useState<Set<string>>(new Set());
+  const toggleTaskDetails = (id: string) => {
+    setExpandedTaskDetails(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [customerTypeFilter, setCustomerTypeFilter] = useState<string>("all");
@@ -2334,30 +2342,112 @@ const AdminCustomerIntelligence = () => {
                             {task.userName}
                           </p>
                         </div>
-                        {/* Eye icon — opens customer details (active, prominent) */}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setExpandedUser(task.userId);
-                            setTimeout(() => {
-                              const el = document.getElementById(`customer-card-${task.userId}`);
-                              if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-                            }, 100);
-                          }}
-                          title="عرض تفاصيل العميل"
-                          aria-label="عرض تفاصيل العميل"
-                          className={cn(
-                            "shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-lg",
-                            "bg-primary text-primary-foreground shadow-sm ring-1 ring-primary/30",
-                            "hover:bg-primary/90 hover:scale-110 active:scale-95",
-                            "transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                            isDone && "opacity-60"
-                          )}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
+                        {/* Eye icon — toggles inline customer details right inside the card */}
+                        {(() => {
+                          const isOpen = expandedTaskDetails.has(task.id);
+                          return (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleTaskDetails(task.id);
+                              }}
+                              title={isOpen ? "إخفاء التفاصيل" : "عرض التفاصيل هنا"}
+                              aria-label={isOpen ? "إخفاء التفاصيل" : "عرض التفاصيل هنا"}
+                              aria-expanded={isOpen}
+                              aria-controls={`task-details-${task.id}`}
+                              className={cn(
+                                "shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-lg",
+                                "bg-primary text-primary-foreground shadow-sm ring-1 ring-primary/30",
+                                "hover:bg-primary/90 hover:scale-110 active:scale-95",
+                                "transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                                isOpen && "ring-2 ring-primary-foreground/40",
+                                isDone && "opacity-60"
+                              )}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          );
+                        })()}
                       </div>
+                      {/* Inline expanded customer details — appears immediately under the title */}
+                      {(() => {
+                        const isOpen = expandedTaskDetails.has(task.id);
+                        if (!isOpen) return null;
+                        const alerts = getCustomerAlerts(task.userId);
+                        const lifecycleLabel = task.lifecycle || "—";
+                        return (
+                          <div
+                            id={`task-details-${task.id}`}
+                            className="rounded-lg border border-primary/30 bg-primary/5 p-2.5 space-y-2 animate-in fade-in slide-in-from-top-1 duration-200"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-black text-primary inline-flex items-center gap-1">
+                                <Eye className="w-3 h-3" /> تفاصيل العميل
+                              </span>
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); toggleTaskDetails(task.id); }}
+                                className="text-[10px] font-bold text-muted-foreground hover:text-foreground"
+                              >
+                                ✕ إخفاء
+                              </button>
+                            </div>
+                            <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+                              <div className="rounded-md bg-background/60 border border-border/40 px-2 py-1">
+                                <p className="text-muted-foreground font-bold">المرحلة</p>
+                                <p className="font-black text-foreground truncate">{lifecycleLabel}</p>
+                              </div>
+                              <div className="rounded-md bg-background/60 border border-border/40 px-2 py-1">
+                                <p className="text-muted-foreground font-bold">آخر نشاط</p>
+                                <p className="font-black text-foreground">
+                                  {task.freshestDays === null ? "—" : task.freshestDays === 0 ? "اليوم" : `منذ ${task.freshestDays} يوم`}
+                                </p>
+                              </div>
+                              <div className="rounded-md bg-background/60 border border-border/40 px-2 py-1">
+                                <p className="text-muted-foreground font-bold">النوع</p>
+                                <p className="font-black text-foreground">{task.isDealer ? "تاجر جملة" : "قطاعي"}</p>
+                              </div>
+                              <div className="rounded-md bg-background/60 border border-border/40 px-2 py-1">
+                                <p className="text-muted-foreground font-bold">الموبايل</p>
+                                <p className="font-black text-foreground truncate" dir="ltr">{task.phone || "—"}</p>
+                              </div>
+                            </div>
+                            {alerts.length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                {alerts.slice(0, 4).map((a, i) => (
+                                  <span
+                                    key={i}
+                                    className={cn(
+                                      "inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded border",
+                                      a.type === "danger" ? "bg-red-500/10 text-red-700 dark:text-red-400 border-red-300/40"
+                                      : a.type === "warning" ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-300/40"
+                                      : "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-300/40"
+                                    )}
+                                  >
+                                    <span>{a.icon}</span> {a.label}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setExpandedUser(task.userId);
+                                setTimeout(() => {
+                                  const el = document.getElementById(`customer-card-${task.userId}`);
+                                  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                                }, 100);
+                              }}
+                              className="w-full text-[10px] font-bold px-2 py-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors inline-flex items-center justify-center gap-1"
+                            >
+                              فتح الملف الكامل ↓
+                            </button>
+                          </div>
+                        );
+                      })()}
                       {/* Toggle button for score breakdown panel */}
                       {(() => {
                         const isScoreOpen = expandedScoreTasks.has(task.id);
