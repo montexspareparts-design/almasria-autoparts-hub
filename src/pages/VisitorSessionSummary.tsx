@@ -81,10 +81,13 @@ export default function VisitorSessionSummary() {
   const [hasOrders, setHasOrders] = useState(false);
   const [hasCart, setHasCart] = useState(false);
 
-  // Note dialog
+  // Notes
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [savingNote, setSavingNote] = useState(false);
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [notes, setNotes] = useState<Array<{ id: string; note: string; created_at: string; staff_user_id: string; staff_name?: string | null }>>([]);
+  const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
 
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
