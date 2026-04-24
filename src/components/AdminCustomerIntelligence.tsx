@@ -4013,6 +4013,8 @@ const AdminCustomerIntelligence = () => {
 
         </CollapsibleContent>
       </Collapsible>
+      </>
+      )}
 
 
       {/* Priority Weights Settings Dialog */}
