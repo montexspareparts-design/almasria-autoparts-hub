@@ -132,6 +132,7 @@ const App = () => (
                     <Route path="/my-profile" element={<MyProfilePage />} />
                     <Route path="/track-order" element={<TrackOrderPage />} />
                     <Route path="/dev/dealer-preview" element={<DevDealerPreview />} />
+                    <Route path="/admin/visitor/:userId" element={<VisitorSessionSummary />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                </Suspense>
