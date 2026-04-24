@@ -3212,6 +3212,28 @@ const AdminCustomerIntelligence = () => {
                           </span>
                         );
                       })()}
+                      {/* Last action badge — تنبيه للموظف بحالة المتابعة */}
+                      {(() => {
+                        const last = lastActionByUser[profile.user_id];
+                        if (!last) {
+                          return (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300 flex items-center gap-1">
+                              🔴 لم يُتخذ إجراء
+                            </span>
+                          );
+                        }
+                        const days = differenceInDays(new Date(), new Date(last));
+                        const color = days > 14
+                          ? "bg-orange-100 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300"
+                          : days > 7
+                          ? "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
+                          : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300";
+                        return (
+                          <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1", color)} title={`آخر إجراء: ${format(new Date(last), "dd/MM/yyyy HH:mm")}`}>
+                            ✓ آخر إجراء: {days === 0 ? "اليوم" : `قبل ${days} يوم`}
+                          </span>
+                        );
+                      })()}
                     </div>
                     <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-1 flex-wrap">
                       {profile.phone && (
