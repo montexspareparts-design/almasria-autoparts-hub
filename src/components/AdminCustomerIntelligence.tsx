@@ -261,6 +261,54 @@ const AdminCustomerIntelligence = () => {
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [tasksOpen, setTasksOpen] = useState(true);
 
+  // === Call outcomes (per-day, per-task) — drives auto score/priority adjustments ===
+  type CallOutcome = "answered" | "no_answer" | "agreed" | "not_suitable";
+  const outcomesStorageKey = `aci_call_outcomes_${todayKey}`;
+  const [callOutcomes, setCallOutcomes] = useState<Record<string, CallOutcome>>(() => {
+    try {
+      const raw = localStorage.getItem(outcomesStorageKey);
+      return raw ? (JSON.parse(raw) as Record<string, CallOutcome>) : {};
+    } catch { return {}; }
+  });
+  const setCallOutcome = (taskId: string, outcome: CallOutcome | null) => {
+    setCallOutcomes(prev => {
+      const next = { ...prev };
+      if (outcome === null) delete next[taskId]; else next[taskId] = outcome;
+      try { localStorage.setItem(outcomesStorageKey, JSON.stringify(next)); } catch {}
+      return next;
+    });
+    // Auto-complete outcomes that close the loop
+    if (outcome === "agreed" || outcome === "not_suitable") {
+      setCompletedTasks(prev => {
+        const next = new Set(prev);
+        next.add(taskId);
+        try { localStorage.setItem(tasksStorageKey, JSON.stringify(Array.from(next))); } catch {}
+        return next;
+      });
+    } else if (outcome === "no_answer" || outcome === "answered") {
+      // Make sure these are NOT marked completed (re-open if previously done)
+      setCompletedTasks(prev => {
+        if (!prev.has(taskId)) return prev;
+        const next = new Set(prev);
+        next.delete(taskId);
+        try { localStorage.setItem(tasksStorageKey, JSON.stringify(Array.from(next))); } catch {}
+        return next;
+      });
+    }
+  };
+
+  // Outcome → score delta. Applied on top of the unified score, then re-bucketed.
+  // agreed: success → score collapses (handled also by completion)
+  // not_suitable: dead lead → score collapses
+  // no_answer: bump urgency so it resurfaces near the top
+  // answered (no commitment): mild damp — already contacted today
+  const outcomeMeta: Record<CallOutcome, { label: string; icon: string; delta: number; badge: string }> = {
+    agreed:        { label: "تم الاتفاق",  icon: "✅", delta: -100, badge: "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-400/40" },
+    no_answer:     { label: "لم يرد",       icon: "📵", delta: +8,   badge: "bg-orange-500/20 text-orange-700 dark:text-orange-400 border-orange-400/40" },
+    answered:      { label: "تم الرد",      icon: "📞", delta: -10,  badge: "bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-400/40" },
+    not_suitable:  { label: "لا يناسب",     icon: "🚫", delta: -100, badge: "bg-muted text-muted-foreground border-border" },
+  };
+
   // === Priority weights (configurable, persisted in localStorage) ===
   type PriorityWeights = { alerts: number; recency: number; buyability: number };
   const DEFAULT_WEIGHTS: PriorityWeights = { alerts: 30, recency: 40, buyability: 30 };
@@ -1120,10 +1168,19 @@ const AdminCustomerIntelligence = () => {
     const filtered = taskWindowDays === 0
       ? tasks
       : tasks.filter(t => t.freshestDays !== null && t.freshestDays <= taskWindowDays);
-    // Sort by unified score desc, then by priority bucket
-    return filtered.sort((a, b) => b.score - a.score || a.priority - b.priority);
+    // Apply call-outcome score deltas → re-bucket priority automatically.
+    const bucketize = (s: number): 1 | 2 | 3 => (s >= 55 ? 1 : s >= 30 ? 2 : 3);
+    const adjusted = filtered.map(t => {
+      const outcome = callOutcomes[t.id];
+      if (!outcome) return t;
+      const delta = outcomeMeta[outcome].delta;
+      const newScore = Math.max(0, t.score + delta);
+      return { ...t, score: newScore, priority: bucketize(newScore) };
+    });
+    // Sort by unified (post-outcome) score desc, then by priority bucket
+    return adjusted.sort((a, b) => b.score - a.score || a.priority - b.priority);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profiles, ordersMap, cartByUser, userSearchMap, dealerUserIds, lastVisitByUser, priorityWeights, taskWindowDays]);
+  }, [profiles, ordersMap, cartByUser, userSearchMap, dealerUserIds, lastVisitByUser, priorityWeights, taskWindowDays, callOutcomes]);
 
   const visibleTasks = todayTasks.filter(t => showCompletedTasks || !completedTasks.has(t.id));
   const pendingTasksCount = todayTasks.filter(t => !completedTasks.has(t.id)).length;
@@ -2017,6 +2074,18 @@ const AdminCustomerIntelligence = () => {
                                 <CheckCircle2 className="w-2.5 h-2.5" /> مكتمل
                               </span>
                             )}
+                            {callOutcomes[task.id] && (
+                              <span
+                                className={cn(
+                                  "text-[9px] font-black px-1.5 py-0.5 rounded border inline-flex items-center gap-1",
+                                  outcomeMeta[callOutcomes[task.id]].badge
+                                )}
+                                title={`نتيجة المكالمة: ${outcomeMeta[callOutcomes[task.id]].label}`}
+                              >
+                                <span>{outcomeMeta[callOutcomes[task.id]].icon}</span>
+                                {outcomeMeta[callOutcomes[task.id]].label}
+                              </span>
+                            )}
                           </div>
                           <p className={cn("text-xs font-black text-foreground", isDone && "line-through text-muted-foreground")}>{task.title}</p>
                           <p className={cn("text-[10px] text-muted-foreground mt-0.5 line-clamp-2", isDone && "opacity-70")}>{task.reason}</p>
@@ -2120,11 +2189,80 @@ const AdminCustomerIntelligence = () => {
                             </a>
                           </>
                         )}
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => e.stopPropagation()}
+                              className={cn(
+                                "h-7 text-[10px] gap-1 mr-auto border-primary/30",
+                                callOutcomes[task.id] && "bg-primary/5"
+                              )}
+                              title="تسجيل نتيجة المكالمة"
+                            >
+                              {callOutcomes[task.id] ? (
+                                <span>{outcomeMeta[callOutcomes[task.id]].icon}</span>
+                              ) : (
+                                <Phone className="w-3 h-3" />
+                              )}
+                              نتيجة
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent
+                            align="end"
+                            className="w-56 p-2"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <p className="text-[10px] font-bold text-muted-foreground px-1.5 pb-1.5 border-b border-border/40 mb-1.5">
+                              نتيجة المكالمة
+                            </p>
+                            <div className="grid grid-cols-1 gap-1">
+                              {(Object.keys(outcomeMeta) as CallOutcome[]).map((key) => {
+                                const meta = outcomeMeta[key];
+                                const active = callOutcomes[task.id] === key;
+                                const deltaLabel =
+                                  meta.delta <= -100 ? "إغلاق المهمة"
+                                  : meta.delta > 0 ? `+${meta.delta} للأولوية`
+                                  : meta.delta < 0 ? `${meta.delta} للأولوية`
+                                  : "بدون تغيير";
+                                return (
+                                  <button
+                                    key={key}
+                                    onClick={() => setCallOutcome(task.id, active ? null : key)}
+                                    className={cn(
+                                      "flex items-center justify-between gap-2 px-2 py-1.5 rounded-md text-[11px] font-bold transition-colors text-right border",
+                                      active
+                                        ? meta.badge
+                                        : "border-transparent hover:bg-muted/60 text-foreground"
+                                    )}
+                                  >
+                                    <span className="flex items-center gap-1.5">
+                                      <span>{meta.icon}</span>
+                                      {meta.label}
+                                    </span>
+                                    <span className="text-[9px] opacity-70 font-medium">
+                                      {deltaLabel}
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                              {callOutcomes[task.id] && (
+                                <button
+                                  onClick={() => setCallOutcome(task.id, null)}
+                                  className="text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted/40 px-2 py-1 rounded-md mt-1 border-t border-border/30 pt-1.5"
+                                >
+                                  ↺ إعادة تعيين
+                                </button>
+                              )}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                         <Button
                           variant={isDone ? "outline" : "default"}
                           size="sm"
                           onClick={(e) => { e.stopPropagation(); toggleTaskComplete(task.id); }}
-                          className="h-7 text-[10px] gap-1 mr-auto"
+                          className="h-7 text-[10px] gap-1"
                         >
                           <CheckCircle2 className="w-3 h-3" />
                           {isDone ? "إلغاء" : "تم"}
