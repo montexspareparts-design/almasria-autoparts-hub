@@ -371,6 +371,8 @@ export default function VisitorSessionSummary() {
 
   const saveCommunication = async () => {
     if (!user?.id) return;
+    const dup = await checkDuplicateCommunication({ customerUserId: userId!, commType });
+    if (dup.isDuplicate && !dup.shouldProceed) return;
     setSavingComm(true);
     try {
       const { data, error } = await supabase
