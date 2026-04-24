@@ -268,6 +268,19 @@ const AdminCustomerIntelligence = () => {
   };
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [tasksOpen, setTasksOpen] = useState(true);
+  type SectionKey = "filters" | "tasks" | "customers" | "analytics";
+  const [activeSection, setActiveSection] = useState<SectionKey>(() => {
+    if (typeof window === "undefined") return "tasks";
+    return (localStorage.getItem("aci_active_section_v1") as SectionKey) || "tasks";
+  });
+  const switchSection = (key: SectionKey) => {
+    setActiveSection(key);
+    try { localStorage.setItem("aci_active_section_v1", key); } catch {}
+    // smooth scroll to top of content area
+    if (typeof window !== "undefined") {
+      setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50);
+    }
+  };
 
   // === Call outcomes (per-day, per-task) — drives auto score/priority adjustments ===
   type CallOutcome = "answered" | "no_answer" | "agreed" | "not_suitable";
@@ -1534,7 +1547,39 @@ const AdminCustomerIntelligence = () => {
         </div>
       </div>
 
+      {/* ===== Sticky Section Navigation — يجمع كل أقسام الصفحة في الهيد ===== */}
+      <div className="sticky top-0 z-30 -mx-1 px-1 py-2 bg-background/85 backdrop-blur-md border-b border-border/40 rounded-b-xl">
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-thin">
+          {([
+            { key: "filters", label: "البحث والفلاتر", icon: Search },
+            { key: "tasks", label: "مهام اليوم", icon: Clock },
+            { key: "customers", label: "قائمة العملاء", icon: Users },
+            { key: "analytics", label: "التحليلات والتقارير", icon: BarChart3 },
+          ] as { key: SectionKey; label: string; icon: typeof Search }[]).map((s) => {
+            const isActive = activeSection === s.key;
+            return (
+              <button
+                key={s.key}
+                type="button"
+                onClick={() => switchSection(s.key)}
+                aria-pressed={isActive}
+                className={cn(
+                  "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all border",
+                  isActive
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                    : "bg-background text-muted-foreground border-border/50 hover:bg-muted/60 hover:text-foreground"
+                )}
+              >
+                <s.icon className="w-3.5 h-3.5" />
+                {s.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Filters & Search - moved up for better UX */}
+      {activeSection === "filters" && (
       <Card className="rounded-xl border-border/40 shadow-sm">
         <CardContent className="py-3 px-4">
           <div className="flex items-center gap-2.5 flex-wrap">
@@ -1775,6 +1820,7 @@ const AdminCustomerIntelligence = () => {
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* Save filter template dialog */}
       <Dialog open={saveTemplateOpen} onOpenChange={setSaveTemplateOpen}>
@@ -1820,7 +1866,7 @@ const AdminCustomerIntelligence = () => {
       </Dialog>
 
       {/* ===== Today's Tasks for Staff ===== */}
-      {(profiles && profiles.length > 0) && (
+      {activeSection === "tasks" && (profiles && profiles.length > 0) && (
         <Card className="rounded-2xl border-2 border-primary/25 shadow-sm overflow-hidden bg-gradient-to-l from-primary/5 via-background to-background">
           <CardHeader className="py-3 px-4 border-b border-border/40">
             <div className="flex items-center justify-between flex-wrap gap-2">
@@ -2368,7 +2414,7 @@ const AdminCustomerIntelligence = () => {
       )}
 
       {/* Customer list with top-level tabs (All / Needs Follow-up Now) */}
-      {(() => {
+      {activeSection === "customers" && (() => {
         // Build "needs follow-up now" list with urgency scoring
         type FollowUpItem = {
           profile: typeof filteredProfiles extends (infer T)[] | undefined ? T : never;
@@ -3224,6 +3270,8 @@ const AdminCustomerIntelligence = () => {
       })()}
 
       {/* ===== Analytics & Insights Section ===== */}
+      {activeSection === "analytics" && (
+      <>
       <div className="relative pt-2">
         <div className="flex items-center gap-3 mb-3">
           <div className="h-px flex-1 bg-gradient-to-l from-border via-border to-transparent" />
@@ -3965,6 +4013,8 @@ const AdminCustomerIntelligence = () => {
 
         </CollapsibleContent>
       </Collapsible>
+      </>
+      )}
 
 
       {/* Priority Weights Settings Dialog */}
