@@ -258,6 +258,14 @@ const AdminCustomerIntelligence = () => {
     } catch { return new Set(); }
   });
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
+  const [expandedScoreTasks, setExpandedScoreTasks] = useState<Set<string>>(new Set());
+  const toggleScoreExpanded = (taskId: string) => {
+    setExpandedScoreTasks(prev => {
+      const next = new Set(prev);
+      if (next.has(taskId)) next.delete(taskId); else next.add(taskId);
+      return next;
+    });
+  };
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [tasksOpen, setTasksOpen] = useState(true);
 
@@ -2146,53 +2154,93 @@ const AdminCustomerIntelligence = () => {
                           <Eye className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                      {/* Score breakdown panel — visualizes how alerts/recency/buyability contribute */}
-                      <div
-                        className={cn(
-                          "rounded-lg border border-border/40 bg-background/60 px-2 py-1.5 space-y-1",
-                          isDone && "opacity-60"
-                        )}
-                        onClick={(e) => e.stopPropagation()}
-                        title="تفصيل درجة الأولوية الموحدة"
-                      >
-                        <div className="flex items-center justify-between text-[9px] font-bold text-muted-foreground">
-                          <span>تفصيل الأولوية</span>
-                          <span className="font-black text-foreground">{task.score}<span className="opacity-60">/{weightsTotal}</span></span>
-                        </div>
-                        {/* Stacked bar — width relative to current configured weight totals */}
-                        <div className="flex h-1.5 w-full rounded-full overflow-hidden bg-muted/40">
-                          <div
-                            className="bg-red-500/80 transition-all"
-                            style={{ width: `${weightsTotal > 0 ? (task.scoreBreakdown.alerts / weightsTotal) * 100 : 0}%` }}
-                            title={`إنذارات: ${task.scoreBreakdown.alerts}/${priorityWeights.alerts}`}
-                          />
-                          <div
-                            className="bg-amber-500/80 transition-all"
-                            style={{ width: `${weightsTotal > 0 ? (task.scoreBreakdown.recency / weightsTotal) * 100 : 0}%` }}
-                            title={`حداثة النشاط: ${task.scoreBreakdown.recency}/${priorityWeights.recency}`}
-                          />
-                          <div
-                            className="bg-emerald-500/80 transition-all"
-                            style={{ width: `${weightsTotal > 0 ? (task.scoreBreakdown.buyability / weightsTotal) * 100 : 0}%` }}
-                            title={`إمكانية الشراء: ${task.scoreBreakdown.buyability}/${priorityWeights.buyability}`}
-                          />
-                        </div>
-                        {/* Legend with values */}
-                        <div className="flex items-center justify-between gap-1 text-[9px] font-bold">
-                          <span className="inline-flex items-center gap-1 text-red-700 dark:text-red-400" title="مساهمة الإنذارات (حد أقصى 30)">
-                            <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                            إنذارات {task.scoreBreakdown.alerts}
-                          </span>
-                          <span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-400" title="حداثة آخر نشاط (حد أقصى 40)">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                            حداثة {task.scoreBreakdown.recency}
-                          </span>
-                          <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400" title="إمكانية الشراء (حد أقصى 30)">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                            شراء {task.scoreBreakdown.buyability}
-                          </span>
-                        </div>
-                      </div>
+                      {/* Toggle button for score breakdown panel */}
+                      {(() => {
+                        const isScoreOpen = expandedScoreTasks.has(task.id);
+                        return (
+                          <>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); toggleScoreExpanded(task.id); }}
+                              aria-expanded={isScoreOpen}
+                              aria-controls={`score-panel-${task.id}`}
+                              className={cn(
+                                "inline-flex items-center justify-between gap-1.5 w-full text-[10px] font-bold px-2 py-1 rounded-md border border-border/50 bg-muted/30 hover:bg-muted/60 transition-colors",
+                                isDone && "opacity-60"
+                              )}
+                              title={isScoreOpen ? "إخفاء تفاصيل الدرجة" : "عرض تفاصيل الدرجة"}
+                            >
+                              <span className="inline-flex items-center gap-1">
+                                <BarChart3 className="w-3 h-3" />
+                                تفاصيل الدرجة
+                              </span>
+                              <span className="inline-flex items-center gap-1 text-muted-foreground">
+                                <span className="font-black text-foreground">{task.score}</span>
+                                <span className="opacity-60">/{weightsTotal}</span>
+                                <ChevronDown className={cn("w-3 h-3 transition-transform duration-300", isScoreOpen && "rotate-180")} />
+                              </span>
+                            </button>
+                            {/* Score breakdown panel — animated open/close */}
+                            <div
+                              id={`score-panel-${task.id}`}
+                              className={cn(
+                                "grid transition-all duration-300 ease-in-out",
+                                isScoreOpen ? "grid-rows-[1fr] opacity-100 mt-0" : "grid-rows-[0fr] opacity-0 -mt-1"
+                              )}
+                              aria-hidden={!isScoreOpen}
+                            >
+                              <div className="overflow-hidden">
+                                <div
+                                  className={cn(
+                                    "rounded-lg border border-border/40 bg-background/60 px-2 py-1.5 space-y-1",
+                                    isDone && "opacity-60"
+                                  )}
+                                  onClick={(e) => e.stopPropagation()}
+                                  title="تفصيل درجة الأولوية الموحدة"
+                                >
+                                  <div className="flex items-center justify-between text-[9px] font-bold text-muted-foreground">
+                                    <span>تفصيل الأولوية</span>
+                                    <span className="font-black text-foreground">{task.score}<span className="opacity-60">/{weightsTotal}</span></span>
+                                  </div>
+                                  {/* Stacked bar — width relative to current configured weight totals */}
+                                  <div className="flex h-1.5 w-full rounded-full overflow-hidden bg-muted/40">
+                                    <div
+                                      className="bg-red-500/80 transition-all"
+                                      style={{ width: `${weightsTotal > 0 ? (task.scoreBreakdown.alerts / weightsTotal) * 100 : 0}%` }}
+                                      title={`إنذارات: ${task.scoreBreakdown.alerts}/${priorityWeights.alerts}`}
+                                    />
+                                    <div
+                                      className="bg-amber-500/80 transition-all"
+                                      style={{ width: `${weightsTotal > 0 ? (task.scoreBreakdown.recency / weightsTotal) * 100 : 0}%` }}
+                                      title={`حداثة النشاط: ${task.scoreBreakdown.recency}/${priorityWeights.recency}`}
+                                    />
+                                    <div
+                                      className="bg-emerald-500/80 transition-all"
+                                      style={{ width: `${weightsTotal > 0 ? (task.scoreBreakdown.buyability / weightsTotal) * 100 : 0}%` }}
+                                      title={`إمكانية الشراء: ${task.scoreBreakdown.buyability}/${priorityWeights.buyability}`}
+                                    />
+                                  </div>
+                                  {/* Legend with values */}
+                                  <div className="flex items-center justify-between gap-1 text-[9px] font-bold">
+                                    <span className="inline-flex items-center gap-1 text-red-700 dark:text-red-400" title={`مساهمة الإنذارات (حد أقصى ${priorityWeights.alerts})`}>
+                                      <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                                      إنذارات {task.scoreBreakdown.alerts}
+                                    </span>
+                                    <span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-400" title={`حداثة آخر نشاط (حد أقصى ${priorityWeights.recency})`}>
+                                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                      حداثة {task.scoreBreakdown.recency}
+                                    </span>
+                                    <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400" title={`إمكانية الشراء (حد أقصى ${priorityWeights.buyability})`}>
+                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                      شراء {task.scoreBreakdown.buyability}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </>
+                        );
+                      })()}
                       <div className="flex items-center gap-1.5 flex-wrap pt-1.5 border-t border-border/30" onClick={(e) => e.stopPropagation()}>
                         {task.phone && (
                           <>
