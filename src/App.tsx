@@ -140,6 +140,7 @@ const App = () => (
                     <Route path="/dev/dealer-preview" element={<DevDealerPreview />} />
                     <Route path="/admin/visitor/:userId" element={<VisitorSessionSummary />} />
                     <Route path="/admin/staff-home" element={<StaffHome />} />
+                    <Route path="/admin/visitor-leads" element={<VisitorLeadsPage />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                </Suspense>
