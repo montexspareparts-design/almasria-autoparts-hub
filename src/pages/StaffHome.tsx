@@ -47,6 +47,12 @@ const todayISO = () => {
   return d.toISOString();
 };
 
+const sevenDaysISO = () => {
+  return new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+};
+
+type RangeKey = "today" | "7d";
+
 const StaffHome = () => {
   const { user, isAdmin, isModerator, loading: authLoading } = useAuth();
   const navigate = useNavigate();
