@@ -16,7 +16,7 @@ import {
   Search, ShoppingBag, Phone, MessageCircle, Timer, User as UserIcon,
   Calendar, Sparkles, TrendingUp, MousePointerClick, History,
   ExternalLink, Quote, Flame, StickyNote, Loader2, Pencil, Trash2,
-  CheckCircle2, Headphones, MapPin, AlertTriangle, ShoppingCart, Layers,
+  CheckCircle2, Headphones, MapPin, AlertTriangle, ShoppingCart, Layers, Mail, Send, Zap,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { checkDuplicateCommunication } from "@/lib/duplicateCommCheck";
