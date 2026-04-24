@@ -102,7 +102,8 @@ Deno.serve(async (req) => {
 
           return { status: "sent", endpoint: sub.endpoint };
         } catch (err) {
-          return { status: "failed", endpoint: sub.endpoint, error: err.message };
+          const errMsg = err instanceof Error ? err.message : String(err);
+          return { status: "failed", endpoint: sub.endpoint, error: errMsg };
         }
       })
     );
@@ -116,8 +117,9 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
     return new Response(
-      JSON.stringify({ error: err.message }),
+      JSON.stringify({ error: errMsg }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
