@@ -996,8 +996,8 @@ const AdminCustomerIntelligence = () => {
       let buyScore = 0;
       if (cart && cart.count > 0) buyScore += 12;
       if (totalSearch >= 10) buyScore += 10; else if (totalSearch >= 3) buyScore += 6;
-      if (orders && orders.totalOrders > 0) buyScore += 6;
-      if (orders && orders.totalOrders >= 3) buyScore += 2;
+      if (orders && orders.count > 0) buyScore += 6;
+      if (orders && orders.count >= 3) buyScore += 2;
       if (isDealer) buyScore += 4;
       if (p.phone) buyScore += 2;
       if (lifecycle === "vip" || lifecycle === "active") buyScore += 2;
