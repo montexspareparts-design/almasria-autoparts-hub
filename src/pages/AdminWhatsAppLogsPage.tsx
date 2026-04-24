@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -224,8 +224,8 @@ export default function AdminWhatsAppLogsPage() {
                       const sLabel = STATUS_LABEL[r.status] || { ar: r.status, variant: "outline" as const };
                       const isOpen = expanded === r.id;
                       return (
-                        <>
-                          <tr key={r.id} className="border-t hover:bg-muted/30">
+                        <Fragment key={r.id}>
+                          <tr className="border-t hover:bg-muted/30">
                             <td className="p-3 font-mono" dir="ltr">{r.phone}</td>
                             <td className="p-3">{r.recipient_name || "—"}</td>
                             <td className="p-3 text-xs text-muted-foreground">{r.template || "—"}</td>
@@ -271,7 +271,7 @@ export default function AdminWhatsAppLogsPage() {
                               </td>
                             </tr>
                           )}
-                        </>
+                        </Fragment>
                       );
                     })}
                   </tbody>
