@@ -65,6 +65,7 @@ const StaffHome = () => {
     hotLeads: 0,
   });
   const [hotLeads, setHotLeads] = useState<HotLead[]>([]);
+  const [range, setRange] = useState<RangeKey>("today");
 
   // Guard
   useEffect(() => {
