@@ -286,19 +286,61 @@ export default function VisitorSessionSummary() {
     if (!noteText.trim() || !user?.id) return;
     setSavingNote(true);
     try {
-      const { error } = await supabase.from("customer_notes").insert({
-        customer_user_id: userId,
-        staff_user_id: user.id,
-        note: noteText.trim(),
-      });
-      if (error) throw error;
-      toast({ title: "✅ تم حفظ الملاحظة" });
+      if (editingNoteId) {
+        const { error } = await supabase
+          .from("customer_notes")
+          .update({ note: noteText.trim() })
+          .eq("id", editingNoteId);
+        if (error) throw error;
+        setNotes((prev) => prev.map((n) => (n.id === editingNoteId ? { ...n, note: noteText.trim() } : n)));
+        toast({ title: "✅ تم تحديث الملاحظة" });
+      } else {
+        const { data, error } = await supabase
+          .from("customer_notes")
+          .insert({
+            customer_user_id: userId,
+            staff_user_id: user.id,
+            note: noteText.trim(),
+          })
+          .select("id, note, created_at, staff_user_id")
+          .single();
+        if (error) throw error;
+        if (data) {
+          setNotes((prev) => [
+            { ...data, staff_name: user?.user_metadata?.full_name || user?.email || "أنا" },
+            ...prev,
+          ]);
+        }
+        toast({ title: "✅ تم حفظ الملاحظة" });
+      }
       setNoteText("");
+      setEditingNoteId(null);
       setNoteOpen(false);
     } catch (e: any) {
       toast({ title: "فشل الحفظ", description: e.message, variant: "destructive" });
     } finally {
       setSavingNote(false);
+    }
+  };
+
+  const openEditNote = (n: { id: string; note: string }) => {
+    setEditingNoteId(n.id);
+    setNoteText(n.note);
+    setNoteOpen(true);
+  };
+
+  const deleteNote = async (id: string) => {
+    if (!confirm("هل أنت متأكد من حذف هذه الملاحظة؟ لا يمكن التراجع.")) return;
+    setDeletingNoteId(id);
+    try {
+      const { error } = await supabase.from("customer_notes").delete().eq("id", id);
+      if (error) throw error;
+      setNotes((prev) => prev.filter((n) => n.id !== id));
+      toast({ title: "🗑️ تم حذف الملاحظة" });
+    } catch (e: any) {
+      toast({ title: "فشل الحذف", description: e.message, variant: "destructive" });
+    } finally {
+      setDeletingNoteId(null);
     }
   };
 
