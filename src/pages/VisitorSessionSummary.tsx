@@ -912,9 +912,21 @@ export default function VisitorSessionSummary() {
         </div>
       </div>
 
-      {/* Sticky Action Bar — اتصال / واتساب / ملاحظة */}
+      {/* Sticky Action Bar — اتصال / واتساب / تواصل / ملاحظة */}
       <div className="fixed bottom-0 inset-x-0 z-50 bg-background/95 backdrop-blur-xl border-t border-border shadow-2xl">
-        <div className="max-w-6xl mx-auto px-3 py-2.5 grid grid-cols-3 gap-2">
+        {lastComm && (
+          <div className="max-w-6xl mx-auto px-3 pt-2">
+            <div className="flex items-center gap-2 text-[11px] bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 text-emerald-800 dark:text-emerald-300 rounded-lg px-3 py-1.5 flex-wrap">
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+              <span className="font-bold">
+                آخر تواصل: {COMM_TYPES[lastComm.comm_type]?.label || lastComm.comm_type}
+              </span>
+              <span className="opacity-80">• {lastComm.staff_name}</span>
+              <span className="opacity-70 ms-auto font-mono">{fmtDateTime(lastComm.created_at)}</span>
+            </div>
+          </div>
+        )}
+        <div className="max-w-6xl mx-auto px-3 py-2.5 grid grid-cols-2 md:grid-cols-4 gap-2">
           <Button
             onClick={callPhone}
             disabled={!profile?.phone}
@@ -930,6 +942,13 @@ export default function VisitorSessionSummary() {
           >
             <MessageCircle className="w-5 h-5" />
             واتساب
+          </Button>
+          <Button
+            onClick={() => setCommOpen(true)}
+            className="h-12 gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md"
+          >
+            <CheckCircle2 className="w-5 h-5" />
+            تسجيل تواصل
           </Button>
           <Button
             onClick={() => setNoteOpen(true)}
