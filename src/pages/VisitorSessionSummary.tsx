@@ -663,7 +663,7 @@ export default function VisitorSessionSummary() {
 
             {/* Previous sessions */}
             {sessions.length > 1 && (
-              <Card>
+              <Card id="section-sessions" className="scroll-mt-24 rounded-2xl">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-base">
                     <History className="w-5 h-5 text-muted-foreground" />
