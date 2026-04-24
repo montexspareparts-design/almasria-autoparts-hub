@@ -289,6 +289,46 @@ const AdminCustomerIntelligence = () => {
     },
   });
 
+  // Customer communications log (calls/messages by staff)
+  const { data: communicationsData } = useQuery({
+    queryKey: ["admin_customer_communications"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("customer_communications")
+        .select("id, customer_user_id, staff_user_id, comm_type, note, created_at")
+        .order("created_at", { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Cart items count per dealer (for "abandoned cart" alert)
+  const { data: cartItemsData } = useQuery({
+    queryKey: ["admin_dealer_carts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("dealer_cart_items")
+        .select("user_id, updated_at");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Page visits last seen per user
+  const { data: lastVisitData } = useQuery({
+    queryKey: ["admin_last_visits"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("page_visits")
+        .select("user_id, visited_at")
+        .order("visited_at", { ascending: false })
+        .limit(2000);
+      if (error) throw error;
+      return data;
+    },
+  });
+
   // Build orders map with last order date
   const ordersMap = useMemo(() => {
     if (!ordersData) return {} as Record<string, { count: number; total: number; lastOrderDate: string; lastOrderNumber: string }>;
