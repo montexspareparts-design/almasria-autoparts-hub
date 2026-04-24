@@ -79,12 +79,19 @@ const StaffHome = () => {
   const [visitorsOpen, setVisitorsOpen] = useState(false);
   const [visitorsList, setVisitorsList] = useState<Array<{ user_id: string | null; session_key: string | null; full_name: string | null; phone: string | null; email: string | null; pages: number; last_visit: string; first_path?: string | null; referrer?: string | null; searches?: string[] }>>([]);
   const [viewedKeys, setViewedKeys] = useState<Set<string>>(new Set());
+  // Per-key earliest view timestamp — used to compute "viewed" under different time-basis modes.
+  const [viewedAtMap, setViewedAtMap] = useState<Map<string, string>>(new Map());
   const [visitorTypeFilter, setVisitorTypeFilter] = useState<"all" | "registered" | "anon">("all");
   const [visitorDateFilter, setVisitorDateFilter] = useState<"all" | "today" | "yesterday" | "week">("today");
   const [visitorViewedFilter, setVisitorViewedFilter] = useState<"all" | "viewed" | "not_viewed">("all");
   // Toggle: false = "Only Customers" (default, excludes staff). true = "All" (review only — shows staff too).
   const [includeStaff, setIncludeStaff] = useState<boolean>(false);
   const [staffIdsSet, setStaffIdsSet] = useState<Set<string>>(new Set());
+  // "Viewed" KPI time basis:
+  //   - "range": viewed within the selected KPI range (today / 7d) — rolling window
+  //   - "event_day": viewed on the same calendar day as the visitor's last_visit
+  //   - "all_time": any past view counts (legacy behavior)
+  const [viewedBasis, setViewedBasis] = useState<"range" | "event_day" | "all_time">("range");
 
   // Guard
   useEffect(() => {
