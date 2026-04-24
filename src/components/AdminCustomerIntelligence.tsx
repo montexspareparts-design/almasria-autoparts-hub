@@ -416,6 +416,45 @@ const AdminCustomerIntelligence = () => {
   // === Call outcomes (per-day, per-task) — drives auto score/priority adjustments ===
   type CallOutcome = "answered" | "no_answer" | "agreed" | "not_suitable";
   const outcomesStorageKey = `aci_call_outcomes_${todayKey}`;
+
+  // === Handled meta — who/when/how the staff worked on a task (prevents duplicate work) ===
+  type HandledAction = "call" | "whatsapp" | "note" | "outcome" | "manual";
+  type HandledRecord = { at: string; by: string; byName?: string | null; action: HandledAction };
+  const handledStorageKey = `aci_handled_meta_${todayKey}`;
+  const [handledMeta, setHandledMeta] = useState<Record<string, HandledRecord>>(() => {
+    try {
+      const raw = localStorage.getItem(handledStorageKey);
+      return raw ? (JSON.parse(raw) as Record<string, HandledRecord>) : {};
+    } catch { return {}; }
+  });
+  const markHandled = (taskId: string, action: HandledAction) => {
+    if (!user?.id) return;
+    setHandledMeta(prev => {
+      // First action wins for the day — preserve original timestamp/owner
+      if (prev[taskId]) return prev;
+      const next = {
+        ...prev,
+        [taskId]: {
+          at: new Date().toISOString(),
+          by: user.id,
+          byName: (user as any).user_metadata?.full_name || user.email || "موظف",
+          action,
+        } as HandledRecord,
+      };
+      try { localStorage.setItem(handledStorageKey, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+  const unmarkHandled = (taskId: string) => {
+    setHandledMeta(prev => {
+      if (!prev[taskId]) return prev;
+      const next = { ...prev };
+      delete next[taskId];
+      try { localStorage.setItem(handledStorageKey, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+
   const [callOutcomes, setCallOutcomes] = useState<Record<string, CallOutcome>>(() => {
     try {
       const raw = localStorage.getItem(outcomesStorageKey);
