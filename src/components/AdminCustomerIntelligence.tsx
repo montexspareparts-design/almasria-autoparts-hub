@@ -200,6 +200,35 @@ const AdminCustomerIntelligence = () => {
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [customerTypeFilter, setCustomerTypeFilter] = useState<string>("all");
   const [accountTypeFilter, setAccountTypeFilter] = useState<string>("all");
+  // Advanced filters
+  const [businessTypeFilter, setBusinessTypeFilter] = useState<string>("all");
+  const [tierFilter, setTierFilter] = useState<string>("all");
+  const [lifecycleFilter, setLifecycleFilter] = useState<string>("all");
+  const [recentActivityFilter, setRecentActivityFilter] = useState<string>("any");
+  const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
+  // Saved filter templates (persisted to localStorage)
+  type FilterTemplate = {
+    id: string;
+    name: string;
+    filters: {
+      searchTerm: string;
+      customerTypeFilter: string;
+      accountTypeFilter: string;
+      businessTypeFilter: string;
+      tierFilter: string;
+      lifecycleFilter: string;
+      recentActivityFilter: string;
+    };
+  };
+  const TEMPLATES_KEY = "aci_filter_templates_v1";
+  const [filterTemplates, setFilterTemplates] = useState<FilterTemplate[]>(() => {
+    try {
+      const raw = localStorage.getItem(TEMPLATES_KEY);
+      return raw ? (JSON.parse(raw) as FilterTemplate[]) : [];
+    } catch { return []; }
+  });
+  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
+  const [newTemplateName, setNewTemplateName] = useState("");
   const [bulkWhatsAppOpen, setBulkWhatsAppOpen] = useState(false);
   const [bulkMessage, setBulkMessage] = useState("مرحباً {{name}}، نود إبلاغكم بأحدث العروض والخصومات الحصرية من المصرية جروب. تواصلوا معنا لمزيد من التفاصيل!");
   const [sendingIndex, setSendingIndex] = useState(-1);
