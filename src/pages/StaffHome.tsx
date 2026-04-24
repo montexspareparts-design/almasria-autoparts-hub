@@ -168,7 +168,7 @@ const StaffHome = () => {
             .gte("created_at", sevenDaysAgo),
           supabase
             .from("profiles")
-            .select("user_id, full_name, phone"),
+            .select("user_id, full_name, phone, email"),
         ]);
 
       const orderedUserIds = new Set(
