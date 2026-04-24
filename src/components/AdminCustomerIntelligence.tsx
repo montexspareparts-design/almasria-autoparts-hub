@@ -1820,6 +1820,7 @@ const AdminCustomerIntelligence = () => {
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* Save filter template dialog */}
       <Dialog open={saveTemplateOpen} onOpenChange={setSaveTemplateOpen}>
