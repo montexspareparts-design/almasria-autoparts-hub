@@ -815,13 +815,13 @@ const StaffHome = () => {
                           <div className="h-px flex-1 bg-border" />
                         </div>
                       )}
-                  <div
-                    key={detailKey}
-                    className={cn(
-                      "flex items-center justify-between gap-3 p-3 rounded-lg border transition flex-wrap",
-                      isAnon ? "bg-muted/20 hover:bg-muted/40" : "bg-muted/30 hover:bg-muted/60"
-                    )}
-                  >
+                      <div
+                        key={detailKey}
+                        className={cn(
+                          "flex items-center justify-between gap-3 p-3 rounded-lg border transition flex-wrap",
+                          isAnon ? "bg-muted/20 hover:bg-muted/40" : "bg-muted/30 hover:bg-muted/60"
+                        )}
+                      >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-bold text-sm truncate">{name}</p>
@@ -908,7 +908,7 @@ const StaffHome = () => {
                         </Button>
                       ) : null}
                     </div>
-                  </div>
+                      </div>
                   </div>
                 );
                 });
