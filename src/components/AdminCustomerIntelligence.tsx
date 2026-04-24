@@ -3458,23 +3458,79 @@ const AdminCustomerIntelligence = () => {
           <div className="h-px flex-1 bg-gradient-to-r from-border via-border to-transparent" />
         </div>
       </div>
-      {/* KPIs Row */}
+      {/* KPIs Row — clickable: each card filters & jumps to the relevant section */}
       <div className="grid grid-cols-3 md:grid-cols-6 gap-2.5">
-        {[
-          { icon: Users, value: totalCustomers, label: "إجمالي العملاء", iconBg: "bg-primary/15", iconColor: "text-primary" },
-          { icon: Briefcase, value: dealerCount, label: "تاجر", iconBg: "bg-blue-500/15", iconColor: "text-blue-600 dark:text-blue-400" },
-          { icon: ShoppingCart, value: retailCount, label: "قطاعي", iconBg: "bg-orange-500/15", iconColor: "text-orange-600 dark:text-orange-400" },
-          { icon: Car, value: withCar, label: "حددوا سيارتهم", iconBg: "bg-violet-500/15", iconColor: "text-violet-600 dark:text-violet-400" },
-          { icon: Search, value: totalSearches, label: "عمليات بحث", iconBg: "bg-cyan-500/15", iconColor: "text-cyan-600 dark:text-cyan-400" },
-          { icon: TrendingUp, value: activeSearchers, label: "عملاء يبحثون", iconBg: "bg-emerald-500/15", iconColor: "text-emerald-600 dark:text-emerald-400" },
-        ].map((kpi, idx) => (
-          <div key={idx} className="rounded-xl border border-border/40 bg-card p-3 text-center transition-all hover:shadow-sm hover:border-border/60 duration-200">
-            <div className={cn("w-8 h-8 rounded-lg mx-auto mb-1.5 flex items-center justify-center", kpi.iconBg)}>
+        {([
+          {
+            icon: Users, value: totalCustomers, label: "إجمالي العملاء",
+            iconBg: "bg-primary/15", iconColor: "text-primary",
+            hint: "عرض كل العملاء",
+            onClick: () => {
+              setAccountTypeFilter("all");
+              setCustomerTypeFilter("all");
+              switchSection("customers");
+            },
+          },
+          {
+            icon: Briefcase, value: dealerCount, label: "تاجر",
+            iconBg: "bg-blue-500/15", iconColor: "text-blue-600 dark:text-blue-400",
+            hint: "عرض التجار فقط",
+            onClick: () => {
+              setAccountTypeFilter("dealer");
+              switchSection("customers");
+            },
+          },
+          {
+            icon: ShoppingCart, value: retailCount, label: "قطاعي",
+            iconBg: "bg-orange-500/15", iconColor: "text-orange-600 dark:text-orange-400",
+            hint: "عرض عملاء القطاعي فقط",
+            onClick: () => {
+              setAccountTypeFilter("retail");
+              switchSection("customers");
+            },
+          },
+          {
+            icon: Car, value: withCar, label: "حددوا سيارتهم",
+            iconBg: "bg-violet-500/15", iconColor: "text-violet-600 dark:text-violet-400",
+            hint: "عرض من حددوا سيارتهم",
+            onClick: () => {
+              setAccountTypeFilter("all");
+              switchSection("customers");
+            },
+          },
+          {
+            icon: Search, value: totalSearches, label: "عمليات بحث",
+            iconBg: "bg-cyan-500/15", iconColor: "text-cyan-600 dark:text-cyan-400",
+            hint: "الانتقال لتحليلات البحث",
+            onClick: () => {
+              setAnalyticsOpen(true);
+              switchSection("analytics");
+            },
+          },
+          {
+            icon: TrendingUp, value: activeSearchers, label: "عملاء يبحثون",
+            iconBg: "bg-emerald-500/15", iconColor: "text-emerald-600 dark:text-emerald-400",
+            hint: "عرض أعلى الباحثين",
+            onClick: () => {
+              setAnalyticsOpen(true);
+              switchSection("analytics");
+            },
+          },
+        ] as const).map((kpi, idx) => (
+          <button
+            key={idx}
+            type="button"
+            onClick={kpi.onClick}
+            title={kpi.hint}
+            aria-label={`${kpi.label}: ${kpi.value} — ${kpi.hint}`}
+            className="group rounded-xl border border-border/40 bg-card p-3 text-center transition-all duration-200 hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+            <div className={cn("w-8 h-8 rounded-lg mx-auto mb-1.5 flex items-center justify-center transition-transform group-hover:scale-110", kpi.iconBg)}>
               <kpi.icon className={cn("w-4 h-4", kpi.iconColor)} />
             </div>
             <p className="text-xl font-black text-foreground">{kpi.value}</p>
-            <p className="text-[10px] text-muted-foreground font-medium">{kpi.label}</p>
-          </div>
+            <p className="text-[10px] text-muted-foreground font-medium group-hover:text-foreground transition-colors">{kpi.label}</p>
+          </button>
         ))}
       </div>
 
