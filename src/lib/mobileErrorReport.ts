@@ -16,6 +16,30 @@ const MAX_LOGS = 50;
 const buffer: LogEntry[] = [];
 let installed = false;
 
+/**
+ * أنماط تحذيرات/أخطاء معروفة وغير مؤثرة — يتم تجاهلها تماماً
+ * (لا تُسجَّل في buffer التقرير ولا تُطبع في console).
+ * تشمل: externalize warnings من Vite، رسائل HMR/preview الداخلية،
+ * وتحذيرات React DevTools/source-map الشائعة.
+ */
+const NOISE_PATTERNS: RegExp[] = [
+  /Module ".+" has been externalized for browser compatibility/i,
+  /Unknown message type:\s*RESET_BLANK_CHECK/i,
+  /Unknown message type:\s*[A-Z_]+_CHECK/i,
+  /\[vite\] connecting/i,
+  /\[vite\] connected/i,
+  /Download the React DevTools/i,
+  /\[HMR\]/i,
+  /sourcemap/i,
+];
+
+const isNoise = (args: unknown[]): boolean => {
+  const text = args
+    .map((a) => (typeof a === "string" ? a : a instanceof Error ? a.message : ""))
+    .join(" ");
+  return NOISE_PATTERNS.some((re) => re.test(text));
+};
+
 const push = (level: LogEntry["level"], args: unknown[]) => {
   const message = args
     .map((a) => {
@@ -38,14 +62,25 @@ export function installMobileErrorReporter() {
   const origWarn = console.warn.bind(console);
   const origError = console.error.bind(console);
 
-  console.warn = (...args: unknown[]) => { push("warn", args); origWarn(...args); };
-  console.error = (...args: unknown[]) => { push("error", args); origError(...args); };
+  console.warn = (...args: unknown[]) => {
+    if (isNoise(args)) return; // تجاهل تام: لا buffer ولا طباعة
+    push("warn", args);
+    origWarn(...args);
+  };
+  console.error = (...args: unknown[]) => {
+    if (isNoise(args)) return;
+    push("error", args);
+    origError(...args);
+  };
 
   window.addEventListener("error", (e) => {
+    if (isNoise([e.message])) return;
     push("error", [`[window.error] ${e.message} @ ${e.filename}:${e.lineno}`]);
   });
   window.addEventListener("unhandledrejection", (e) => {
-    push("error", [`[unhandledrejection] ${(e.reason && (e.reason.message || e.reason)) ?? "unknown"}`]);
+    const msg = (e.reason && (e.reason.message || e.reason)) ?? "unknown";
+    if (isNoise([String(msg)])) return;
+    push("error", [`[unhandledrejection] ${msg}`]);
   });
 }
 
