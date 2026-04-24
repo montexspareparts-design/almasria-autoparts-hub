@@ -947,6 +947,36 @@ export type Database = {
         }
         Relationships: []
       }
+      erp_sync_alerts: {
+        Row: {
+          alert_key: string
+          alert_type: string
+          created_at: string
+          details: Json | null
+          id: string
+          notified_admins: number | null
+          sync_type: string | null
+        }
+        Insert: {
+          alert_key: string
+          alert_type: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          notified_admins?: number | null
+          sync_type?: string | null
+        }
+        Update: {
+          alert_key?: string
+          alert_type?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          notified_admins?: number | null
+          sync_type?: string | null
+        }
+        Relationships: []
+      }
       erp_sync_logs: {
         Row: {
           created_at: string
