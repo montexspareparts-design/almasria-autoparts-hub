@@ -1596,7 +1596,7 @@ const AdminCustomerIntelligence = () => {
       </div>
 
       {/* ===== Sticky Section Navigation — يجمع كل أقسام الصفحة في الهيد ===== */}
-      <div className="sticky top-0 z-30 -mx-1 px-1 py-2 bg-background/85 backdrop-blur-md border-b border-border/40 rounded-b-xl">
+      <div ref={sectionNavRef} className="sticky top-0 z-30 -mx-1 px-1 py-2 bg-background/85 backdrop-blur-md border-b border-border/40 rounded-b-xl">
         <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-thin">
           {([
             { key: "filters", label: "البحث والفلاتر", icon: Search },
