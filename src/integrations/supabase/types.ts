@@ -1922,6 +1922,36 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_passwords: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          initial_password: string
+          staff_user_id: string
+          viewed_at: string | null
+          viewed_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          initial_password: string
+          staff_user_id: string
+          viewed_at?: string | null
+          viewed_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          initial_password?: string
+          staff_user_id?: string
+          viewed_at?: string | null
+          viewed_by?: string | null
+        }
+        Relationships: []
+      }
       stock_alerts: {
         Row: {
           alert_type: string
