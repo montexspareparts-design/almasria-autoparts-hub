@@ -643,6 +643,10 @@ const AdminCustomerIntelligence = () => {
       toast({ title: "يجب تسجيل الدخول", variant: "destructive" });
       return;
     }
+    const dup = await checkDuplicateCommunication({ customerUserId, commType });
+    if (dup.isDuplicate && !dup.shouldProceed) {
+      return;
+    }
     setSavingQuickNote(customerUserId);
     const { error } = await supabase.from("customer_communications").insert({
       customer_user_id: customerUserId,
