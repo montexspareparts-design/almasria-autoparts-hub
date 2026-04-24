@@ -284,6 +284,22 @@ const AdminCustomerIntelligence = () => {
     try { localStorage.setItem(WEIGHTS_STORAGE_KEY, JSON.stringify(next)); } catch {}
   };
   const weightsTotal = priorityWeights.alerts + priorityWeights.recency + priorityWeights.buyability;
+
+  // === Task time window filter (persisted) ===
+  // Options: 1 = آخر 24 ساعة، 3 = آخر 3 أيام، 7 = آخر 7 أيام، 30 = آخر 30 يوم، 0 = الكل
+  const TASK_WINDOW_STORAGE_KEY = "aci_task_window_days_v1";
+  const [taskWindowDays, setTaskWindowDays] = useState<number>(() => {
+    try {
+      const raw = localStorage.getItem(TASK_WINDOW_STORAGE_KEY);
+      const n = raw ? parseInt(raw, 10) : 7;
+      return [0, 1, 3, 7, 30].includes(n) ? n : 7;
+    } catch { return 7; }
+  });
+  const updateTaskWindow = (days: number) => {
+    setTaskWindowDays(days);
+    try { localStorage.setItem(TASK_WINDOW_STORAGE_KEY, String(days)); } catch {}
+  };
+
   const toggleTaskComplete = (taskId: string) => {
     setCompletedTasks(prev => {
       const next = new Set(prev);
