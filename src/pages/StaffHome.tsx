@@ -904,7 +904,7 @@ const StaffHome = () => {
                   if (d.getTime() === yesterday.getTime()) return "أمس";
                   return new Date(iso).toLocaleDateString("ar-EG", { weekday: "long", day: "numeric", month: "long" });
                 };
-                return visitorsList.map((v, idx) => {
+                return filtered.map((v, idx) => {
                   const isAnon = !v.user_id;
                   const name = v.full_name || (isAnon ? "زائر مجهول" : "بدون اسم");
                   const last = new Date(v.last_visit).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
@@ -912,6 +912,7 @@ const StaffHome = () => {
                   const showHeader = dayLabel !== lastDayLabel;
                   lastDayLabel = dayLabel;
                   const detailKey = v.user_id || v.session_key || `anon-${idx}`;
+                  const isViewed = (v.user_id && viewedKeys.has(`u:${v.user_id}`)) || (v.session_key && viewedKeys.has(`s:${v.session_key}`));
                   return (
                     <div key={detailKey + "-wrap"}>
                       {showHeader && (
