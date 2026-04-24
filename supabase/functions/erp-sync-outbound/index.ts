@@ -88,86 +88,196 @@ function byteSize(input: unknown): number {
   }
 }
 
-// ─── Helper: Authenticated fetch to ERP ─────────────────────────
+// ─── Retry tracker (per request) ──────────────────────────────
+// Aggregates retry stats per reqId so the handler can include them in the
+// response payload returned to the caller.
+type RetryStats = {
+  total_attempts: number;       // sum of attempts across all calls
+  total_retries: number;        // attempts beyond the first (i.e. retries)
+  retried_calls: number;        // number of distinct calls that needed >0 retries
+  retried_endpoints: string[];  // endpoints that needed at least one retry
+  last_retry_reason?: string;
+};
+const retryStatsByReq = new Map<string, RetryStats>();
+function getRetryStats(reqId: string): RetryStats {
+  let s = retryStatsByReq.get(reqId);
+  if (!s) {
+    s = { total_attempts: 0, total_retries: 0, retried_calls: 0, retried_endpoints: [] };
+    retryStatsByReq.set(reqId, s);
+  }
+  return s;
+}
+
+// Decide whether an error/HTTP status is worth retrying.
+// Retry on: network failures, 408 (timeout), 425 (early), 429 (rate limit),
+// and 5xx server errors. Auth (401/403) and validation (4xx) errors are not retried.
+const RETRIABLE_STATUS = new Set([408, 425, 429, 500, 502, 503, 504]);
+function isRetriableHttpStatus(status: number): boolean {
+  return RETRIABLE_STATUS.has(status);
+}
+function isRetriableNetworkError(err: any): boolean {
+  // Any thrown fetch/network error is retriable; non-JSON responses too.
+  const msg = String(err?.message || err || "").toLowerCase();
+  return (
+    msg.includes("network") ||
+    msg.includes("timeout") ||
+    msg.includes("timed out") ||
+    msg.includes("connection") ||
+    msg.includes("econn") ||
+    msg.includes("fetch failed") ||
+    msg.includes("non-json") ||
+    msg.includes("unexpected eof")
+  );
+}
+
+function sleep(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+// ─── Helper: Authenticated fetch to ERP (with retry + backoff) ──
 async function erpFetch(
   baseUrl: string,
   path: string,
   options: RequestInit = {},
   reqId: string = "no-req-id",
 ): Promise<any> {
-  const token = await getErpToken(baseUrl);
   const method = (options.method || "GET").toUpperCase();
   const reqBody = options.body as string | undefined;
   const reqBytes = byteSize(reqBody);
   const callId = `${reqId}_${Math.random().toString(36).slice(2, 6)}`;
-  const startedAt = Date.now();
 
-  logErpEvent(reqId, "erp_call_start", {
-    callId,
-    method,
-    endpoint: path,
-    request_bytes: reqBytes,
-  });
+  // Retry config — 3 attempts total (1 initial + 2 retries) with exponential
+  // backoff + jitter. Mutating writes (push_order/push_quote) are sensitive but
+  // the underlying error happens BEFORE the ERP commits the doc when network
+  // fails or it returns 5xx, so retrying is safe in practice.
+  const MAX_ATTEMPTS = 3;
+  const BASE_DELAY_MS = 500;
 
-  let res: Response;
-  try {
-    res = await fetch(`${baseUrl}${path}`, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        ...(options.headers || {}),
-      },
+  const stats = getRetryStats(reqId);
+  let attempt = 0;
+  let lastErr: any = null;
+
+  while (attempt < MAX_ATTEMPTS) {
+    attempt += 1;
+    stats.total_attempts += 1;
+    const startedAt = Date.now();
+
+    logErpEvent(reqId, "erp_call_start", {
+      callId, attempt, max_attempts: MAX_ATTEMPTS,
+      method, endpoint: path, request_bytes: reqBytes,
     });
-  } catch (networkErr: any) {
+
+    let res: Response | null = null;
+    try {
+      // Re-fetch token each attempt — covers the case where the cached token
+      // expired between retries.
+      const token = await getErpToken(baseUrl);
+      res = await fetch(`${baseUrl}${path}`, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          ...(options.headers || {}),
+        },
+      });
+    } catch (networkErr: any) {
+      const durationMs = Date.now() - startedAt;
+      lastErr = networkErr;
+      logErpEvent(reqId, "erp_call_network_error", {
+        callId, attempt, method, endpoint: path,
+        duration_ms: durationMs,
+        error: String(networkErr?.message || networkErr),
+        will_retry: attempt < MAX_ATTEMPTS && isRetriableNetworkError(networkErr),
+      });
+      if (attempt < MAX_ATTEMPTS && isRetriableNetworkError(networkErr)) {
+        stats.last_retry_reason = "network_error";
+        const delay = BASE_DELAY_MS * Math.pow(2, attempt - 1) + Math.floor(Math.random() * 250);
+        await sleep(delay);
+        continue;
+      }
+      _trackRetryWrap(stats, attempt, path);
+      throw networkErr;
+    }
+
+    const text = await res.text();
+    const respBytes = new TextEncoder().encode(text).length;
     const durationMs = Date.now() - startedAt;
-    logErpEvent(reqId, "erp_call_network_error", {
-      callId, method, endpoint: path,
-      duration_ms: durationMs,
-      error: String(networkErr?.message || networkErr),
-    });
-    throw networkErr;
-  }
 
-  const text = await res.text();
-  const respBytes = new TextEncoder().encode(text).length;
-  const durationMs = Date.now() - startedAt;
+    // Non-JSON response — treat as transient (proxy/HTML error pages, partial
+    // bodies during ERP restarts, etc).
+    let result: any;
+    try {
+      result = JSON.parse(text);
+    } catch {
+      logErpEvent(reqId, "erp_call_non_json", {
+        callId, attempt, method, endpoint: path,
+        status: res.status, duration_ms: durationMs,
+        response_bytes: respBytes, preview: text.substring(0, 200),
+        will_retry: attempt < MAX_ATTEMPTS,
+      });
+      lastErr = new Error(`ERP returned non-JSON (status ${res.status}): ${text.substring(0, 200)}`);
+      if (attempt < MAX_ATTEMPTS) {
+        stats.last_retry_reason = `non_json_status_${res.status}`;
+        const delay = BASE_DELAY_MS * Math.pow(2, attempt - 1) + Math.floor(Math.random() * 250);
+        await sleep(delay);
+        continue;
+      }
+      _trackRetryWrap(stats, attempt, path);
+      throw lastErr;
+    }
 
-  let result: any;
-  try {
-    result = JSON.parse(text);
-  } catch {
-    logErpEvent(reqId, "erp_call_non_json", {
-      callId, method, endpoint: path,
+    if (!res.ok) {
+      const retriable = isRetriableHttpStatus(res.status);
+      logErpEvent(reqId, "erp_call_http_error", {
+        callId, attempt, method, endpoint: path,
+        status: res.status, duration_ms: durationMs,
+        response_bytes: respBytes,
+        response_preview: JSON.stringify(result).substring(0, 300),
+        will_retry: retriable && attempt < MAX_ATTEMPTS,
+      });
+      lastErr = new Error(`ERP API error [${res.status}]: ${JSON.stringify(result)}`);
+      if (retriable && attempt < MAX_ATTEMPTS) {
+        stats.last_retry_reason = `http_${res.status}`;
+        // Honor Retry-After header if present, else exponential backoff
+        const retryAfter = Number(res.headers.get("retry-after") || 0);
+        const delay = retryAfter > 0
+          ? Math.min(retryAfter * 1000, 5000)
+          : BASE_DELAY_MS * Math.pow(2, attempt - 1) + Math.floor(Math.random() * 250);
+        await sleep(delay);
+        continue;
+      }
+      _trackRetryWrap(stats, attempt, path);
+      throw lastErr;
+    }
+
+    // Soft-failure detection (Al Faisal returns 200 with message=1 on error).
+    // These are NOT retried — they are business validation failures.
+    const softFail = result && typeof result === "object" && (result.message === 1 || result.message === "1");
+
+    logErpEvent(reqId, softFail ? "erp_call_soft_fail" : "erp_call_success", {
+      callId, attempt, method, endpoint: path,
       status: res.status, duration_ms: durationMs,
-      response_bytes: respBytes,
-      preview: text.substring(0, 200),
+      request_bytes: reqBytes, response_bytes: respBytes,
+      retried: attempt > 1,
+      ...(softFail ? { erp_message: result.extramessage || result.message } : {}),
     });
-    throw new Error(`ERP returned non-JSON (status ${res.status}): ${text.substring(0, 200)}`);
+
+    _trackRetryWrap(stats, attempt, path);
+    return result;
   }
 
-  if (!res.ok) {
-    logErpEvent(reqId, "erp_call_http_error", {
-      callId, method, endpoint: path,
-      status: res.status, duration_ms: durationMs,
-      response_bytes: respBytes,
-      response_preview: JSON.stringify(result).substring(0, 300),
-    });
-    throw new Error(`ERP API error [${res.status}]: ${JSON.stringify(result)}`);
+  // Should never reach here, but TS needs a return path
+  _trackRetryWrap(stats, attempt, path);
+  throw lastErr || new Error("ERP call failed after retries");
+}
+
+function _trackRetryWrap(stats: RetryStats, finalAttempt: number, endpoint: string) {
+  const retries = Math.max(0, finalAttempt - 1);
+  if (retries > 0) {
+    stats.total_retries += retries;
+    stats.retried_calls += 1;
+    if (!stats.retried_endpoints.includes(endpoint)) stats.retried_endpoints.push(endpoint);
   }
-
-  // Soft-failure detection (Al Faisal returns 200 with message=1 on error)
-  const softFail = result && typeof result === "object" && (result.message === 1 || result.message === "1");
-
-  logErpEvent(reqId, softFail ? "erp_call_soft_fail" : "erp_call_success", {
-    callId, method, endpoint: path,
-    status: res.status, duration_ms: durationMs,
-    request_bytes: reqBytes,
-    response_bytes: respBytes,
-    ...(softFail ? { erp_message: result.extramessage || result.message } : {}),
-  });
-
-  return result;
 }
 
 Deno.serve(async (req) => {
@@ -1745,25 +1855,50 @@ Deno.serve(async (req) => {
       throw new Error(`Unknown action: ${action}`);
     }
 
+    const stats = retryStatsByReq.get(reqId);
+    const retryInfo = stats ? {
+      total_attempts: stats.total_attempts,
+      total_retries: stats.total_retries,
+      retried_calls: stats.retried_calls,
+      retried_endpoints: stats.retried_endpoints,
+      ...(stats.last_retry_reason ? { last_retry_reason: stats.last_retry_reason } : {}),
+    } : { total_attempts: 0, total_retries: 0, retried_calls: 0, retried_endpoints: [] };
+
     const responseBody = (result && typeof result === "object")
-      ? { ...result, request_id: reqId }
-      : { result, request_id: reqId };
+      ? { ...result, request_id: reqId, retry_info: retryInfo }
+      : { result, request_id: reqId, retry_info: retryInfo };
     const responseJson = JSON.stringify(responseBody);
     logErpEvent(reqId, "handler_end", {
       total_duration_ms: Date.now() - handlerStart,
       status: "ok",
       response_bytes: byteSize(responseJson),
+      ...retryInfo,
     });
+    retryStatsByReq.delete(reqId);
     return new Response(responseJson, {
-      headers: { ...corsHeaders, "Content-Type": "application/json", "x-request-id": reqId },
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/json",
+        "x-request-id": reqId,
+        "x-erp-retries": String(retryInfo.total_retries),
+      },
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     const stack = error instanceof Error ? error.stack : undefined;
+    const stats = retryStatsByReq.get(reqId);
+    const retryInfo = stats ? {
+      total_attempts: stats.total_attempts,
+      total_retries: stats.total_retries,
+      retried_calls: stats.retried_calls,
+      retried_endpoints: stats.retried_endpoints,
+      ...(stats.last_retry_reason ? { last_retry_reason: stats.last_retry_reason } : {}),
+    } : { total_attempts: 0, total_retries: 0, retried_calls: 0, retried_endpoints: [] };
     logErpEvent(reqId, "handler_error", {
       total_duration_ms: Date.now() - handlerStart,
       error: message,
       stack: stack ? String(stack).split("\n").slice(0, 6).join(" | ") : undefined,
+      ...retryInfo,
     });
     console.error(`[ERP][${reqId}] sync error:`, message);
 
@@ -1776,13 +1911,19 @@ Deno.serve(async (req) => {
         sync_type: "error",
         direction: "outbound",
         status: "failed",
-        error_message: `[${reqId}] ${message}`,
+        error_message: `[${reqId}] [retries=${retryInfo.total_retries}] ${message}`,
       });
     } catch (_) {}
 
-    return new Response(JSON.stringify({ success: false, error: message, request_id: reqId }), {
+    retryStatsByReq.delete(reqId);
+    return new Response(JSON.stringify({ success: false, error: message, request_id: reqId, retry_info: retryInfo }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json", "x-request-id": reqId },
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/json",
+        "x-request-id": reqId,
+        "x-erp-retries": String(retryInfo.total_retries),
+      },
     });
   }
 });
