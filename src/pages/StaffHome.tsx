@@ -434,6 +434,14 @@ const StaffHome = () => {
             <Button
               size="sm"
               variant="outline"
+              onClick={() => navigate("/admin/visitor-leads")}
+              className="border-primary/40 text-primary hover:bg-primary/10"
+            >
+              📞 Leads واتساب
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
               onClick={() => fetchData()}
               disabled={loading}
             >
