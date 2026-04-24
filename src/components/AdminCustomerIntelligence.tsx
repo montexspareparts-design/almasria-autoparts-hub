@@ -300,6 +300,21 @@ const AdminCustomerIntelligence = () => {
     try { localStorage.setItem(TASK_WINDOW_STORAGE_KEY, String(days)); } catch {}
   };
 
+  // === Active staff count for workload distribution (persisted) ===
+  const STAFF_COUNT_STORAGE_KEY = "aci_active_staff_count_v1";
+  const [activeStaffCount, setActiveStaffCount] = useState<number>(() => {
+    try {
+      const raw = localStorage.getItem(STAFF_COUNT_STORAGE_KEY);
+      const n = raw ? parseInt(raw, 10) : 3;
+      return n > 0 && n <= 50 ? n : 3;
+    } catch { return 3; }
+  });
+  const updateActiveStaffCount = (n: number) => {
+    const safe = Math.max(1, Math.min(50, Math.floor(n) || 1));
+    setActiveStaffCount(safe);
+    try { localStorage.setItem(STAFF_COUNT_STORAGE_KEY, String(safe)); } catch {}
+  };
+
   const toggleTaskComplete = (taskId: string) => {
     setCompletedTasks(prev => {
       const next = new Set(prev);
@@ -1808,7 +1823,101 @@ const AdminCustomerIntelligence = () => {
             </div>
           </CardHeader>
           {tasksOpen && (
-          <CardContent className="p-3">
+          <CardContent className="p-3 space-y-3">
+            {/* === Workload distribution suggestion === */}
+            {(() => {
+              const pending = todayTasks.filter(t => !completedTasks.has(t.id));
+              if (pending.length === 0) return null;
+              const p1 = pending.filter(t => t.priority === 1).length;
+              const p2 = pending.filter(t => t.priority === 2).length;
+              const p3 = pending.filter(t => t.priority === 3).length;
+              const staff = Math.max(1, activeStaffCount);
+              const rows = [
+                { label: "🔴 عاجل", total: p1, badge: "bg-red-500/15 text-red-700 dark:text-red-400 border-red-300/40", callRatio: 0.8, waRatio: 0.2 },
+                { label: "🟡 متوسط", total: p2, badge: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-300/40", callRatio: 0.5, waRatio: 0.5 },
+                { label: "🟢 عادي", total: p3, badge: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-300/40", callRatio: 0.2, waRatio: 0.8 },
+              ];
+              const totalCalls = rows.reduce((s, r) => s + Math.round(r.total * r.callRatio), 0);
+              const totalWa = rows.reduce((s, r) => s + Math.round(r.total * r.waRatio), 0);
+              return (
+                <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 via-background to-background p-3">
+                  <div className="flex items-center justify-between flex-wrap gap-2 mb-2.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-md bg-primary/15 flex items-center justify-center">
+                        <Users className="w-3.5 h-3.5 text-primary" />
+                      </div>
+                      <span className="text-xs font-black">توزيع العمل المقترح اليوم</span>
+                      <Badge variant="secondary" className="text-[10px] h-5">{pending.length} مهمة</Badge>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-[11px] text-muted-foreground font-bold">عدد الموظفين النشطين:</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={50}
+                        value={activeStaffCount}
+                        onChange={(e) => updateActiveStaffCount(parseInt(e.target.value, 10) || 1)}
+                        className="h-7 w-14 text-center text-xs font-black rounded-md border border-primary/30 bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      />
+                    </div>
+                  </div>
+                  <div className="overflow-x-auto -mx-1 px-1">
+                    <table className="w-full text-[11px]">
+                      <thead>
+                        <tr className="text-muted-foreground border-b border-border/40">
+                          <th className="text-right font-bold py-1.5 px-2">الأولوية</th>
+                          <th className="text-center font-bold py-1.5 px-2">المهام</th>
+                          <th className="text-center font-bold py-1.5 px-2">
+                            <span className="inline-flex items-center gap-1"><Phone className="w-3 h-3" /> اتصالات/موظف</span>
+                          </th>
+                          <th className="text-center font-bold py-1.5 px-2">
+                            <span className="inline-flex items-center gap-1"><MessageCircle className="w-3 h-3" /> واتساب/موظف</span>
+                          </th>
+                          <th className="text-center font-bold py-1.5 px-2 hidden sm:table-cell">إجمالي/موظف</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rows.map((r) => {
+                          const calls = Math.round(r.total * r.callRatio);
+                          const wa = Math.round(r.total * r.waRatio);
+                          const callsPer = Math.ceil(calls / staff);
+                          const waPer = Math.ceil(wa / staff);
+                          return (
+                            <tr key={r.label} className="border-b border-border/20 last:border-0">
+                              <td className="py-1.5 px-2">
+                                <span className={cn("inline-flex items-center px-2 py-0.5 rounded-md border text-[10px] font-black", r.badge)}>
+                                  {r.label}
+                                </span>
+                              </td>
+                              <td className="text-center font-bold py-1.5 px-2">{r.total}</td>
+                              <td className="text-center font-black py-1.5 px-2">
+                                {r.total > 0 ? <span className="text-foreground">{callsPer}</span> : <span className="text-muted-foreground">—</span>}
+                              </td>
+                              <td className="text-center font-black py-1.5 px-2">
+                                {r.total > 0 ? <span className="text-foreground">{waPer}</span> : <span className="text-muted-foreground">—</span>}
+                              </td>
+                              <td className="text-center text-muted-foreground font-bold py-1.5 px-2 hidden sm:table-cell">
+                                {r.total > 0 ? callsPer + waPer : "—"}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                        <tr className="bg-muted/30 font-black">
+                          <td className="py-1.5 px-2">الإجمالي</td>
+                          <td className="text-center py-1.5 px-2">{pending.length}</td>
+                          <td className="text-center py-1.5 px-2 text-primary">{Math.ceil(totalCalls / staff)}</td>
+                          <td className="text-center py-1.5 px-2 text-primary">{Math.ceil(totalWa / staff)}</td>
+                          <td className="text-center py-1.5 px-2 text-primary hidden sm:table-cell">{Math.ceil((totalCalls + totalWa) / staff)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed">
+                    💡 المقترح: <strong className="text-red-600">العاجل 80% اتصال</strong> · <strong className="text-amber-600">المتوسط 50/50</strong> · <strong className="text-emerald-600">العادي 80% واتساب</strong>. الأرقام مقسومة على {staff} موظف.
+                  </p>
+                </div>
+              );
+            })()}
             {visibleTasks.length === 0 ? (
               <div className="text-center py-6 text-muted-foreground text-xs flex flex-col items-center gap-2">
                 <CheckCircle2 className="w-8 h-8 text-emerald-500" />
