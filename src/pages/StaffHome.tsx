@@ -453,7 +453,7 @@ const StaffHome = () => {
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => navigate("/admin?section=customer-intelligence")}
+              onClick={() => navigate("/admin?section=customer-intel")}
             >
               عرض الكل
               <ArrowLeft className="w-3 h-3 mr-1" />
@@ -563,7 +563,7 @@ const StaffHome = () => {
             <Button
               variant="outline"
               className="h-auto py-3 justify-start"
-              onClick={() => navigate("/admin?section=customer-intelligence")}
+              onClick={() => navigate("/admin?section=customer-intel")}
             >
               <Users className="w-4 h-4 ml-2" />
               ذكاء العملاء
