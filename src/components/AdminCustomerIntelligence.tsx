@@ -2128,7 +2128,7 @@ const AdminCustomerIntelligence = () => {
         );
       })()}
 
-      {/* __CUSTOMER_LIST_PLACEHOLDER__ */}
+      
 
       {/* Bulk WhatsApp Dialog */}
       <Dialog open={bulkWhatsAppOpen} onOpenChange={(open) => { setBulkWhatsAppOpen(open); if (!open) setSendingIndex(-1); }}>
