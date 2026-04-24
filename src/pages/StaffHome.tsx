@@ -263,11 +263,8 @@ const StaffHome = () => {
           last_visit: v.last_visit,
         };
       });
-      // Logged-in users first, then by last_visit desc
-      visitorsArr.sort((a, b) => {
-        if (!!a.user_id !== !!b.user_id) return a.user_id ? -1 : 1;
-        return b.last_visit.localeCompare(a.last_visit);
-      });
+      // Sort strictly by last_visit desc — latest visitor first
+      visitorsArr.sort((a, b) => b.last_visit.localeCompare(a.last_visit));
       setVisitorsList(visitorsArr);
 
       setKpis({
