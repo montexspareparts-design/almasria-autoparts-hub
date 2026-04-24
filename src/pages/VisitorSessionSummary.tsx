@@ -118,7 +118,7 @@ export default function VisitorSessionSummary() {
         // Flush any visits that were queued in this admin's own browser before fetching
         await flushPendingVisits().catch(() => 0);
 
-        const [profRes, dealerRes, visitsRes, searchesRes, viewsRes, ordersRes, cartRes] = await Promise.all([
+        const [profRes, dealerRes, visitsRes, searchesRes, viewsRes, ordersRes, cartRes, notesRes] = await Promise.all([
           supabase.from("profiles").select("full_name, email, phone, created_at").eq("user_id", userId).maybeSingle(),
           supabase.from("dealer_accounts").select("id").eq("user_id", userId).maybeSingle(),
           supabase.from("page_visits").select("id, path, page_title, visited_at, referrer").eq("user_id", userId).order("visited_at", { ascending: true }).limit(500),
@@ -126,6 +126,7 @@ export default function VisitorSessionSummary() {
           supabase.from("dealer_price_views").select("id, product_id, viewed_at").eq("user_id", userId).order("viewed_at", { ascending: false }).limit(50),
           supabase.from("orders").select("id", { count: "exact", head: true }).eq("user_id", userId),
           supabase.from("dealer_cart_items").select("id", { count: "exact", head: true }).eq("user_id", userId),
+          supabase.from("customer_notes").select("id, note, created_at, staff_user_id").eq("customer_user_id", userId).order("created_at", { ascending: false }).limit(50),
         ]);
 
         if (cancelled) return;
@@ -137,6 +138,20 @@ export default function VisitorSessionSummary() {
         setPriceViews(viewsRes.data || []);
         setHasOrders((ordersRes.count || 0) > 0);
         setHasCart((cartRes.count || 0) > 0);
+
+        // Resolve staff display names
+        const staffIds = [...new Set((notesRes.data || []).map((n: any) => n.staff_user_id))];
+        let staffMap = new Map<string, string | null>();
+        if (staffIds.length > 0) {
+          const { data: staffProfiles } = await supabase
+            .from("profiles")
+            .select("user_id, full_name, email")
+            .in("user_id", staffIds);
+          staffMap = new Map((staffProfiles || []).map((p: any) => [p.user_id, p.full_name || p.email]));
+        }
+        if (!cancelled) {
+          setNotes((notesRes.data || []).map((n: any) => ({ ...n, staff_name: staffMap.get(n.staff_user_id) || "موظف" })));
+        }
 
         const productIds = [...new Set((viewsRes.data || []).map((v: any) => v.product_id))];
         if (productIds.length > 0) {
