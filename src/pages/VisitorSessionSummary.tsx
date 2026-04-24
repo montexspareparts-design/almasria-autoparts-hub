@@ -618,7 +618,6 @@ export default function VisitorSessionSummary() {
             { id: "section-timeline", label: "الطلبات", icon: ShoppingCart, count: orders.length },
             { id: "section-comms", label: "تواصل", icon: Phone, count: comms.length },
             { id: "section-notes", label: "ملاحظات", icon: StickyNote, count: notes.length },
-            { id: "section-timeline", label: "Timeline", icon: History, count: 0 },
           ].map((link) => {
             const disabled = link.count === 0 && link.id !== "section-timeline";
             return (
