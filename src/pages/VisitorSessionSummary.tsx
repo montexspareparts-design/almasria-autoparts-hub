@@ -9,12 +9,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import {
   Activity, ArrowRight, Clock, Eye, FileText, Globe, Hash,
   Search, ShoppingBag, Phone, MessageCircle, Timer, User as UserIcon,
   Calendar, Sparkles, TrendingUp, MousePointerClick, History,
   ExternalLink, Quote, Flame, StickyNote, Loader2, Pencil, Trash2,
+  CheckCircle2, Headphones, MapPin, AlertTriangle,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -90,6 +92,13 @@ export default function VisitorSessionSummary() {
   const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
   const [focusedSection, setFocusedSection] = useState<string | null>(null);
 
+  // Communications log (تسجيل تواصل لمنع التكرار)
+  const [comms, setComms] = useState<Array<{ id: string; comm_type: string; note: string | null; created_at: string; staff_user_id: string; staff_name?: string | null }>>([]);
+  const [commOpen, setCommOpen] = useState(false);
+  const [commType, setCommType] = useState<string>("phone");
+  const [commNote, setCommNote] = useState("");
+  const [savingComm, setSavingComm] = useState(false);
+
   const clearFocus = () => {
     document.querySelectorAll("[data-focus-target='true']").forEach((n) => {
       n.classList.remove("ring-4", "ring-primary", "ring-offset-2", "shadow-2xl", "scale-[1.01]");
@@ -128,7 +137,7 @@ export default function VisitorSessionSummary() {
         // Flush any visits that were queued in this admin's own browser before fetching
         await flushPendingVisits().catch(() => 0);
 
-        const [profRes, dealerRes, visitsRes, searchesRes, viewsRes, ordersRes, cartRes, notesRes] = await Promise.all([
+        const [profRes, dealerRes, visitsRes, searchesRes, viewsRes, ordersRes, cartRes, notesRes, commsRes] = await Promise.all([
           supabase.from("profiles").select("full_name, email, phone, created_at").eq("user_id", userId).maybeSingle(),
           supabase.from("dealer_accounts").select("id").eq("user_id", userId).maybeSingle(),
           supabase.from("page_visits").select("id, path, page_title, visited_at, referrer").eq("user_id", userId).order("visited_at", { ascending: true }).limit(500),
@@ -137,6 +146,7 @@ export default function VisitorSessionSummary() {
           supabase.from("orders").select("id", { count: "exact", head: true }).eq("user_id", userId),
           supabase.from("dealer_cart_items").select("id", { count: "exact", head: true }).eq("user_id", userId),
           supabase.from("customer_notes").select("id, note, created_at, staff_user_id").eq("customer_user_id", userId).order("created_at", { ascending: false }).limit(50),
+          supabase.from("customer_communications").select("id, comm_type, note, created_at, staff_user_id").eq("customer_user_id", userId).order("created_at", { ascending: false }).limit(50),
         ]);
 
         if (cancelled) return;
@@ -149,8 +159,11 @@ export default function VisitorSessionSummary() {
         setHasOrders((ordersRes.count || 0) > 0);
         setHasCart((cartRes.count || 0) > 0);
 
-        // Resolve staff display names
-        const staffIds = [...new Set((notesRes.data || []).map((n: any) => n.staff_user_id))];
+        // Resolve staff display names (notes + comms)
+        const staffIds = [...new Set([
+          ...((notesRes.data || []).map((n: any) => n.staff_user_id)),
+          ...((commsRes.data || []).map((c: any) => c.staff_user_id)),
+        ])];
         let staffMap = new Map<string, string | null>();
         if (staffIds.length > 0) {
           const { data: staffProfiles } = await supabase
@@ -161,6 +174,7 @@ export default function VisitorSessionSummary() {
         }
         if (!cancelled) {
           setNotes((notesRes.data || []).map((n: any) => ({ ...n, staff_name: staffMap.get(n.staff_user_id) || "موظف" })));
+          setComms((commsRes.data || []).map((c: any) => ({ ...c, staff_name: staffMap.get(c.staff_user_id) || "موظف" })));
         }
 
         const productIds = [...new Set((viewsRes.data || []).map((v: any) => v.product_id))];
@@ -353,6 +367,47 @@ export default function VisitorSessionSummary() {
       setDeletingNoteId(null);
     }
   };
+
+  const saveCommunication = async () => {
+    if (!user?.id) return;
+    setSavingComm(true);
+    try {
+      const { data, error } = await supabase
+        .from("customer_communications")
+        .insert({
+          customer_user_id: userId,
+          staff_user_id: user.id,
+          comm_type: commType,
+          note: commNote.trim() || null,
+        })
+        .select("id, comm_type, note, created_at, staff_user_id")
+        .single();
+      if (error) throw error;
+      if (data) {
+        setComms((prev) => [
+          { ...data, staff_name: user?.user_metadata?.full_name || user?.email || "أنا" },
+          ...prev,
+        ]);
+      }
+      toast({ title: "✅ تم تسجيل التواصل", description: "تم تسجيل تعاملك مع العميل لمنع التكرار." });
+      setCommNote("");
+      setCommType("phone");
+      setCommOpen(false);
+    } catch (e: any) {
+      toast({ title: "فشل الحفظ", description: e.message, variant: "destructive" });
+    } finally {
+      setSavingComm(false);
+    }
+  };
+
+  const COMM_TYPES: Record<string, { label: string; icon: any; color: string }> = {
+    phone: { label: "📞 مكالمة هاتفية", icon: Phone, color: "text-emerald-600" },
+    whatsapp: { label: "💬 واتساب", icon: MessageCircle, color: "text-green-600" },
+    visit: { label: "🤝 زيارة شخصية", icon: MapPin, color: "text-blue-600" },
+    no_answer: { label: "📵 لم يرد", icon: AlertTriangle, color: "text-amber-600" },
+    other: { label: "📌 وسيلة أخرى", icon: Headphones, color: "text-purple-600" },
+  };
+  const lastComm = comms[0];
 
   const callPhone = () => { if (profile?.phone) window.location.href = `tel:${profile.phone}`; };
   const openWhatsApp = () => {
@@ -776,6 +831,56 @@ export default function VisitorSessionSummary() {
           </>
         )}
 
+        {/* Communications Log — سجل التواصل لمنع التكرار */}
+        {comms.length > 0 && (
+          <Card id="section-comms" className="border-blue-200/60 dark:border-blue-900/40 shadow-md overflow-hidden scroll-mt-24 rounded-2xl">
+            <CardHeader className="pb-3 bg-gradient-to-l from-blue-500/10 via-blue-500/5 to-transparent border-b">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <div className="w-9 h-9 rounded-xl bg-blue-500/15 flex items-center justify-center">
+                  <CheckCircle2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                سجل التواصل مع العميل
+                <Badge variant="secondary" className="text-[10px]">{comms.length}</Badge>
+              </CardTitle>
+              <p className="text-xs text-muted-foreground mt-1.5 mr-11">
+                كل تعامل سابق مع العميل مسجّل هنا — لمنع تكرار نفس الخطوة من موظف آخر.
+              </p>
+            </CardHeader>
+            <CardContent className="pt-4 space-y-2">
+              {comms.map((c) => {
+                const meta = COMM_TYPES[c.comm_type] || COMM_TYPES.other;
+                const Icon = meta.icon;
+                const isMine = c.staff_user_id === user?.id;
+                return (
+                  <div
+                    key={c.id}
+                    className={`p-3 rounded-lg border transition ${
+                      isMine
+                        ? "bg-blue-500/5 border-blue-500/20 hover:bg-blue-500/10"
+                        : "bg-muted/40 border-border hover:bg-muted/60"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2 text-[11px] flex-wrap">
+                        <Icon className={`w-3.5 h-3.5 ${meta.color}`} />
+                        <span className="font-bold text-foreground">{meta.label}</span>
+                        <span className="text-muted-foreground">•</span>
+                        <UserIcon className="w-3 h-3 text-muted-foreground" />
+                        <span className="font-bold text-muted-foreground">{c.staff_name}</span>
+                        {isMine && <Badge variant="outline" className="text-[9px] h-4 px-1 border-blue-500/40 text-blue-600">أنت</Badge>}
+                      </div>
+                      <span className="text-[11px] text-muted-foreground font-mono">{fmtDateTime(c.created_at)}</span>
+                    </div>
+                    {c.note && (
+                      <p className="text-sm text-foreground mt-2 whitespace-pre-wrap leading-relaxed">{c.note}</p>
+                    )}
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Saved Notes */}
         {notes.length > 0 && (
           <Card id="section-notes" className="border-amber-200/60 dark:border-amber-900/40 shadow-md overflow-hidden scroll-mt-24 rounded-2xl">
@@ -857,9 +962,21 @@ export default function VisitorSessionSummary() {
         </div>
       </div>
 
-      {/* Sticky Action Bar — اتصال / واتساب / ملاحظة */}
+      {/* Sticky Action Bar — اتصال / واتساب / تواصل / ملاحظة */}
       <div className="fixed bottom-0 inset-x-0 z-50 bg-background/95 backdrop-blur-xl border-t border-border shadow-2xl">
-        <div className="max-w-6xl mx-auto px-3 py-2.5 grid grid-cols-3 gap-2">
+        {lastComm && (
+          <div className="max-w-6xl mx-auto px-3 pt-2">
+            <div className="flex items-center gap-2 text-[11px] bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 text-emerald-800 dark:text-emerald-300 rounded-lg px-3 py-1.5 flex-wrap">
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+              <span className="font-bold">
+                آخر تواصل: {COMM_TYPES[lastComm.comm_type]?.label || lastComm.comm_type}
+              </span>
+              <span className="opacity-80">• {lastComm.staff_name}</span>
+              <span className="opacity-70 ms-auto font-mono">{fmtDateTime(lastComm.created_at)}</span>
+            </div>
+          </div>
+        )}
+        <div className="max-w-6xl mx-auto px-3 py-2.5 grid grid-cols-2 md:grid-cols-4 gap-2">
           <Button
             onClick={callPhone}
             disabled={!profile?.phone}
@@ -875,6 +992,13 @@ export default function VisitorSessionSummary() {
           >
             <MessageCircle className="w-5 h-5" />
             واتساب
+          </Button>
+          <Button
+            onClick={() => setCommOpen(true)}
+            className="h-12 gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md"
+          >
+            <CheckCircle2 className="w-5 h-5" />
+            تسجيل تواصل
           </Button>
           <Button
             onClick={() => setNoteOpen(true)}
@@ -927,7 +1051,77 @@ export default function VisitorSessionSummary() {
         </DialogContent>
       </Dialog>
 
-      {/* Floating focus indicator — stays until user dismisses */}
+      {/* Communication Log Dialog */}
+      <Dialog
+        open={commOpen}
+        onOpenChange={(open) => {
+          setCommOpen(open);
+          if (!open) {
+            setCommNote("");
+            setCommType("phone");
+          }
+        }}
+      >
+        <DialogContent dir="rtl" className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-blue-600" />
+              تسجيل تواصل مع {profile?.full_name || "العميل"}
+            </DialogTitle>
+            <p className="text-xs text-muted-foreground mt-1">
+              سجّل تعاملك مع العميل عشان باقي الفريق يعرف وما يكررش نفس الخطوة.
+            </p>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-bold text-muted-foreground mb-1.5 block">نوع التواصل</label>
+              <Select value={commType} onValueChange={setCommType}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(COMM_TYPES).map(([k, v]) => (
+                    <SelectItem key={k} value={k}>{v.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-muted-foreground mb-1.5 block">ملاحظة (اختياري)</label>
+              <Textarea
+                value={commNote}
+                onChange={(e) => setCommNote(e.target.value)}
+                placeholder="نتيجة التواصل، اهتمام العميل، أو خطوة المتابعة..."
+                rows={4}
+                maxLength={500}
+                className="resize-none"
+              />
+              <p className="text-[10px] text-muted-foreground mt-1 text-left">{commNote.length}/500</p>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => { setCommOpen(false); setCommNote(""); setCommType("phone"); }}
+              disabled={savingComm}
+            >
+              إلغاء
+            </Button>
+            <Button
+              onClick={saveCommunication}
+              disabled={savingComm}
+              className="gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              {savingComm ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+              تسجيل التواصل
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {focusedSection && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4">
           <div className="flex items-center gap-2 rounded-full bg-primary text-primary-foreground shadow-2xl border border-primary-foreground/20 px-4 py-2">
