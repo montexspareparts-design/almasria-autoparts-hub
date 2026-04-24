@@ -2121,7 +2121,6 @@ const AdminCustomerIntelligence = () => {
                       );
                     })()}
                   </div>
-                  </div>
                   </motion.div>
                 )}
                 </AnimatePresence>
