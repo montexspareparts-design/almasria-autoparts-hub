@@ -462,7 +462,7 @@ export default function VisitorSessionSummary() {
   // Build a personalized quote-request message addressed TO the customer (sent from staff via WA Business)
   const buildCustomerQuoteMessage = () => {
     const name = profile?.full_name?.split(" ")[0] || "حضرتك";
-    const topProductName = topProducts[0]?.product?.name_ar || topProducts[0]?.product?.name_en;
+    const topProductName = topProducts[0]?.product?.name_ar;
     const lastSearch = searches[0]?.search_query;
     const interestLine = topProductName
       ? `لاحظنا اهتمامك بـ: ${topProductName}`
