@@ -758,11 +758,103 @@ const AdminCustomerIntelligence = () => {
       if (accountTypeFilter === "dealer" && !isDealer) return false;
       if (accountTypeFilter === "retail" && isDealer) return false;
     }
+    // Advanced: business type (تاجر/ورشة/أسطول/قطاعي/أخرى)
+    if (businessTypeFilter !== "all") {
+      const info = dealerInfoByUser[p.user_id];
+      const bt = info?.business_type || (dealerUserIds?.has(p.user_id) ? "trader" : "retail");
+      if (businessTypeFilter === "other") {
+        const known = ["trader", "workshop", "fleet", "retail"];
+        if (known.includes(bt)) return false;
+      } else if (bt !== businessTypeFilter) {
+        return false;
+      }
+    }
+    // Advanced: tier (wholesale_tier1 / wholesale_tier2 / retail)
+    if (tierFilter !== "all") {
+      const info = dealerInfoByUser[p.user_id];
+      const tier = info?.tier || "retail";
+      if (tier !== tierFilter) return false;
+    }
+    // Advanced: lifecycle stage
+    if (lifecycleFilter !== "all") {
+      if (getLifecycleStage(p.user_id) !== lifecycleFilter) return false;
+    }
+    // Advanced: recent activity / need
+    if (recentActivityFilter !== "any") {
+      const orders = ordersMap?.[p.user_id];
+      const cartCount = cartByUser?.[p.user_id] || 0;
+      const searches = userSearchMap[p.user_id] || [];
+      const totalSearches = searches.reduce((s, q) => s + q.count, 0);
+      if (recentActivityFilter === "has_cart" && cartCount <= 0) return false;
+      if (recentActivityFilter === "searched_no_order" && !(totalSearches >= 3 && !orders)) return false;
+      if (recentActivityFilter === "ordered_recently") {
+        if (!orders) return false;
+        const lastOrderAt = (orders as any).lastOrderAt ? new Date((orders as any).lastOrderAt) : null;
+        if (!lastOrderAt || differenceInDays(new Date(), lastOrderAt) > 7) return false;
+      }
+      if (recentActivityFilter === "no_orders" && !!orders) return false;
+      if (recentActivityFilter === "missing_phone" && !!p.phone) return false;
+    }
     return true;
   });
 
-  const hasActiveFilters = !!dateFrom || !!dateTo || (customerTypeFilter !== "all") || (accountTypeFilter !== "all");
-  const clearFilters = () => { setDateFrom(undefined); setDateTo(undefined); setCustomerTypeFilter("all"); setAccountTypeFilter("all"); };
+  const hasActiveFilters =
+    !!dateFrom || !!dateTo ||
+    (customerTypeFilter !== "all") || (accountTypeFilter !== "all") ||
+    (businessTypeFilter !== "all") || (tierFilter !== "all") ||
+    (lifecycleFilter !== "all") || (recentActivityFilter !== "any") ||
+    !!searchTerm;
+  const clearFilters = () => {
+    setDateFrom(undefined); setDateTo(undefined);
+    setCustomerTypeFilter("all"); setAccountTypeFilter("all");
+    setBusinessTypeFilter("all"); setTierFilter("all");
+    setLifecycleFilter("all"); setRecentActivityFilter("any");
+    setSearchTerm("");
+  };
+
+  // Filter templates: save / apply / delete (persisted to localStorage)
+  const persistTemplates = (templates: FilterTemplate[]) => {
+    setFilterTemplates(templates);
+    try { localStorage.setItem(TEMPLATES_KEY, JSON.stringify(templates)); } catch {}
+  };
+  const saveCurrentAsTemplate = () => {
+    const name = newTemplateName.trim();
+    if (!name) {
+      toast({ title: "اسم القالب مطلوب", variant: "destructive" });
+      return;
+    }
+    const tpl: FilterTemplate = {
+      id: `tpl_${Date.now()}`,
+      name,
+      filters: {
+        searchTerm,
+        customerTypeFilter,
+        accountTypeFilter,
+        businessTypeFilter,
+        tierFilter,
+        lifecycleFilter,
+        recentActivityFilter,
+      },
+    };
+    persistTemplates([tpl, ...filterTemplates]);
+    setNewTemplateName("");
+    setSaveTemplateOpen(false);
+    toast({ title: "تم حفظ القالب", description: `"${name}" متاح الآن للتطبيق السريع.` });
+  };
+  const applyTemplate = (tpl: FilterTemplate) => {
+    setSearchTerm(tpl.filters.searchTerm || "");
+    setCustomerTypeFilter(tpl.filters.customerTypeFilter || "all");
+    setAccountTypeFilter(tpl.filters.accountTypeFilter || "all");
+    setBusinessTypeFilter(tpl.filters.businessTypeFilter || "all");
+    setTierFilter(tpl.filters.tierFilter || "all");
+    setLifecycleFilter(tpl.filters.lifecycleFilter || "all");
+    setRecentActivityFilter(tpl.filters.recentActivityFilter || "any");
+    toast({ title: "تم تطبيق القالب", description: tpl.name });
+  };
+  const deleteTemplate = (id: string) => {
+    persistTemplates(filterTemplates.filter(t => t.id !== id));
+    toast({ title: "تم حذف القالب" });
+  };
 
   const formatPhone = (phone: string) => {
     const cleaned = phone.replace(/\D/g, "");
