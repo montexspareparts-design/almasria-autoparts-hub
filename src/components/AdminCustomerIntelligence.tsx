@@ -360,9 +360,7 @@ const AdminCustomerIntelligence = () => {
     }
   };
 
-  // Track whether the section change came from a user action (vs initial mount)
-  // so we only steal focus when the user actually switched sections.
-  const userSwitchedRef = useRef(false);
+  // (userSwitchedRef declared above with the other refs)
 
   // Auto-align + a11y focus: whenever the active section changes, scroll its
   // content into view just below the sticky header AND move keyboard focus to
