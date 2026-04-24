@@ -76,6 +76,10 @@ const StaffHome = () => {
   const [signupsOpen, setSignupsOpen] = useState(false);
   const [visitorsOpen, setVisitorsOpen] = useState(false);
   const [visitorsList, setVisitorsList] = useState<Array<{ user_id: string | null; session_key: string | null; full_name: string | null; phone: string | null; email: string | null; pages: number; last_visit: string; first_path?: string | null; referrer?: string | null; searches?: string[] }>>([]);
+  const [viewedKeys, setViewedKeys] = useState<Set<string>>(new Set());
+  const [visitorTypeFilter, setVisitorTypeFilter] = useState<"all" | "registered" | "anon">("all");
+  const [visitorDateFilter, setVisitorDateFilter] = useState<"all" | "today" | "yesterday" | "week">("all");
+  const [visitorViewedFilter, setVisitorViewedFilter] = useState<"all" | "viewed" | "not_viewed">("all");
 
   // Guard
   useEffect(() => {
