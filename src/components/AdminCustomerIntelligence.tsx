@@ -2189,11 +2189,80 @@ const AdminCustomerIntelligence = () => {
                             </a>
                           </>
                         )}
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => e.stopPropagation()}
+                              className={cn(
+                                "h-7 text-[10px] gap-1 mr-auto border-primary/30",
+                                callOutcomes[task.id] && "bg-primary/5"
+                              )}
+                              title="تسجيل نتيجة المكالمة"
+                            >
+                              {callOutcomes[task.id] ? (
+                                <span>{outcomeMeta[callOutcomes[task.id]].icon}</span>
+                              ) : (
+                                <Phone className="w-3 h-3" />
+                              )}
+                              نتيجة
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent
+                            align="end"
+                            className="w-56 p-2"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <p className="text-[10px] font-bold text-muted-foreground px-1.5 pb-1.5 border-b border-border/40 mb-1.5">
+                              نتيجة المكالمة
+                            </p>
+                            <div className="grid grid-cols-1 gap-1">
+                              {(Object.keys(outcomeMeta) as CallOutcome[]).map((key) => {
+                                const meta = outcomeMeta[key];
+                                const active = callOutcomes[task.id] === key;
+                                const deltaLabel =
+                                  meta.delta <= -100 ? "إغلاق المهمة"
+                                  : meta.delta > 0 ? `+${meta.delta} للأولوية`
+                                  : meta.delta < 0 ? `${meta.delta} للأولوية`
+                                  : "بدون تغيير";
+                                return (
+                                  <button
+                                    key={key}
+                                    onClick={() => setCallOutcome(task.id, active ? null : key)}
+                                    className={cn(
+                                      "flex items-center justify-between gap-2 px-2 py-1.5 rounded-md text-[11px] font-bold transition-colors text-right border",
+                                      active
+                                        ? meta.badge
+                                        : "border-transparent hover:bg-muted/60 text-foreground"
+                                    )}
+                                  >
+                                    <span className="flex items-center gap-1.5">
+                                      <span>{meta.icon}</span>
+                                      {meta.label}
+                                    </span>
+                                    <span className="text-[9px] opacity-70 font-medium">
+                                      {deltaLabel}
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                              {callOutcomes[task.id] && (
+                                <button
+                                  onClick={() => setCallOutcome(task.id, null)}
+                                  className="text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted/40 px-2 py-1 rounded-md mt-1 border-t border-border/30 pt-1.5"
+                                >
+                                  ↺ إعادة تعيين
+                                </button>
+                              )}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                         <Button
                           variant={isDone ? "outline" : "default"}
                           size="sm"
                           onClick={(e) => { e.stopPropagation(); toggleTaskComplete(task.id); }}
-                          className="h-7 text-[10px] gap-1 mr-auto"
+                          className="h-7 text-[10px] gap-1"
                         >
                           <CheckCircle2 className="w-3 h-3" />
                           {isDone ? "إلغاء" : "تم"}
