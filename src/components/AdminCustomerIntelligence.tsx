@@ -1590,6 +1590,9 @@ const AdminCustomerIntelligence = () => {
         </div>
       </div>
 
+      {/* Anchor target for smooth-scroll on section change */}
+      <div ref={sectionContentRef} key={activeSection} className="animate-fade-in scroll-mt-24">
+
       {/* Filters & Search - moved up for better UX */}
       {activeSection === "filters" && (
       <Card className="rounded-xl border-border/40 shadow-sm">
