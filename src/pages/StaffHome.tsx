@@ -80,7 +80,7 @@ const StaffHome = () => {
   const [visitorsList, setVisitorsList] = useState<Array<{ user_id: string | null; session_key: string | null; full_name: string | null; phone: string | null; email: string | null; pages: number; last_visit: string; first_path?: string | null; referrer?: string | null; searches?: string[] }>>([]);
   const [viewedKeys, setViewedKeys] = useState<Set<string>>(new Set());
   const [visitorTypeFilter, setVisitorTypeFilter] = useState<"all" | "registered" | "anon">("all");
-  const [visitorDateFilter, setVisitorDateFilter] = useState<"all" | "today" | "yesterday" | "week">("all");
+  const [visitorDateFilter, setVisitorDateFilter] = useState<"all" | "today" | "yesterday" | "week">("today");
   const [visitorViewedFilter, setVisitorViewedFilter] = useState<"all" | "viewed" | "not_viewed">("all");
   // Toggle: false = "Only Customers" (default, excludes staff). true = "All" (review only — shows staff too).
   const [includeStaff, setIncludeStaff] = useState<boolean>(false);
@@ -102,11 +102,13 @@ const StaffHome = () => {
     try {
       const start = range === "today" ? todayISO() : sevenDaysISO();
 
-      // 1) Visitors (distinct sessions/users from page_visits) — with details
+      // 1) Visitors — always fetch last 7 days so the dialog's date filter (today/yesterday/week) is meaningful.
+      // KPI counts are computed against `start` below.
+      const visitsStart = sevenDaysISO();
       const { data: visits } = await supabase
         .from("page_visits")
         .select("session_key, user_id, visited_at, path, referrer")
-        .gte("visited_at", start)
+        .gte("visited_at", visitsStart)
         .order("visited_at", { ascending: false });
       const cleanVisits = (visits || []).filter((v) => !isNoiseVisit(v));
       const visitorKeys = new Set(
@@ -346,16 +348,22 @@ const StaffHome = () => {
         console.warn("[StaffHome] viewed keys fetch failed", e);
       }
 
+      // KPI counts respect the selected range (today vs 7d) even though we fetched 7d for the dialog.
+      const startMs = new Date(start).getTime();
+      const inRange = (v: { last_visit: string }) => new Date(v.last_visit).getTime() >= startMs;
+
       // Engaged visitors = sessions with dwell ≥ ENGAGED_DWELL_MS OR ≥ 2 distinct pages — exclude staff
       const engagedCount = Array.from(visitorAgg.values())
+        .filter(inRange)
         .filter((v) => !v.user_id || !staffIds.has(v.user_id))
         .filter((v) => {
           const dwell = new Date(v.last_visit).getTime() - new Date(v.first_visit).getTime();
           return dwell >= ENGAGED_DWELL_MS || v.pages >= 2;
         }).length;
 
-      // Recompute visitor count excluding staff
+      // Recompute visitor count excluding staff (within selected range)
       const visitorCountNoStaff = Array.from(visitorAgg.values())
+        .filter(inRange)
         .filter((v) => !v.user_id || !staffIds.has(v.user_id)).length;
 
       setKpis({
@@ -378,6 +386,11 @@ const StaffHome = () => {
     if (user && (isAdmin || isModerator)) fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isAdmin, isModerator, range]);
+
+  // Sync the dialog's date filter with the KPI range toggle so users see what they expect.
+  useEffect(() => {
+    setVisitorDateFilter(range === "today" ? "today" : "all");
+  }, [range]);
 
   const rangeSuffix = range === "today" ? "اليوم" : "آخر 7 أيام";
 
