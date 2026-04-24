@@ -20,9 +20,12 @@ import {
   Activity,
   ClipboardList,
   TrendingUp,
+  CheckCheck,
+  Filter,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isNoiseVisit, ENGAGED_DWELL_MS } from "@/lib/visitorAnalytics";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface KPI {
   label: string;
@@ -73,6 +76,10 @@ const StaffHome = () => {
   const [signupsOpen, setSignupsOpen] = useState(false);
   const [visitorsOpen, setVisitorsOpen] = useState(false);
   const [visitorsList, setVisitorsList] = useState<Array<{ user_id: string | null; session_key: string | null; full_name: string | null; phone: string | null; email: string | null; pages: number; last_visit: string; first_path?: string | null; referrer?: string | null; searches?: string[] }>>([]);
+  const [viewedKeys, setViewedKeys] = useState<Set<string>>(new Set());
+  const [visitorTypeFilter, setVisitorTypeFilter] = useState<"all" | "registered" | "anon">("all");
+  const [visitorDateFilter, setVisitorDateFilter] = useState<"all" | "today" | "yesterday" | "week">("all");
+  const [visitorViewedFilter, setVisitorViewedFilter] = useState<"all" | "viewed" | "not_viewed">("all");
 
   // Guard
   useEffect(() => {
@@ -308,6 +315,22 @@ const StaffHome = () => {
       // Sort strictly by last_visit desc — latest visitor first
       visitorsArr.sort((a, b) => b.last_visit.localeCompare(a.last_visit));
       setVisitorsList(visitorsArr);
+
+      // Fetch which visitors the current staff has already viewed
+      try {
+        const { data: views } = await supabase
+          .from("visitor_session_views")
+          .select("customer_user_id, session_key")
+          .eq("staff_user_id", user!.id);
+        const set = new Set<string>();
+        (views || []).forEach((v: any) => {
+          if (v.customer_user_id) set.add(`u:${v.customer_user_id}`);
+          if (v.session_key) set.add(`s:${v.session_key}`);
+        });
+        setViewedKeys(set);
+      } catch (e) {
+        console.warn("[StaffHome] viewed keys fetch failed", e);
+      }
 
       // Engaged visitors = sessions with dwell ≥ ENGAGED_DWELL_MS OR ≥ 2 distinct pages
       const engagedCount = Array.from(visitorAgg.values()).filter((v) => {
@@ -798,11 +821,78 @@ const StaffHome = () => {
             </DialogDescription>
           </DialogHeader>
 
-          {visitorsList.length === 0 ? (
-            <div className="text-center py-10 text-sm text-muted-foreground">
-              مفيش زوار في الفترة دي
+          {/* Filters */}
+          <div className="flex flex-wrap items-center gap-2 pt-2 pb-1 border-b">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Filter className="w-3.5 h-3.5" />
+              فلترة:
             </div>
-          ) : (
+            <Select value={visitorTypeFilter} onValueChange={(v) => setVisitorTypeFilter(v as any)}>
+              <SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل الزوار</SelectItem>
+                <SelectItem value="registered">مسجّل (له بيانات)</SelectItem>
+                <SelectItem value="anon">زائر مجهول</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={visitorDateFilter} onValueChange={(v) => setVisitorDateFilter(v as any)}>
+              <SelectTrigger className="h-8 w-[130px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل التواريخ</SelectItem>
+                <SelectItem value="today">اليوم</SelectItem>
+                <SelectItem value="yesterday">أمس</SelectItem>
+                <SelectItem value="week">آخر 7 أيام</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={visitorViewedFilter} onValueChange={(v) => setVisitorViewedFilter(v as any)}>
+              <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">معاين/غير معاين</SelectItem>
+                <SelectItem value="not_viewed">لم تتم معاينته</SelectItem>
+                <SelectItem value="viewed">تمت المعاينة</SelectItem>
+              </SelectContent>
+            </Select>
+            {(visitorTypeFilter !== "all" || visitorDateFilter !== "all" || visitorViewedFilter !== "all") && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 text-xs"
+                onClick={() => { setVisitorTypeFilter("all"); setVisitorDateFilter("all"); setVisitorViewedFilter("all"); }}
+              >
+                مسح الفلاتر
+              </Button>
+            )}
+          </div>
+
+          {(() => {
+            // Apply filters
+            const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+            const yesterdayStart = new Date(todayStart); yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+            const weekStart = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+            const filtered = visitorsList.filter((v) => {
+              // type
+              if (visitorTypeFilter === "registered" && !v.user_id) return false;
+              if (visitorTypeFilter === "anon" && v.user_id) return false;
+              // date
+              const t = new Date(v.last_visit).getTime();
+              if (visitorDateFilter === "today" && t < todayStart.getTime()) return false;
+              if (visitorDateFilter === "yesterday" && (t < yesterdayStart.getTime() || t >= todayStart.getTime())) return false;
+              if (visitorDateFilter === "week" && t < weekStart.getTime()) return false;
+              // viewed
+              const isViewed = (v.user_id && viewedKeys.has(`u:${v.user_id}`)) || (v.session_key && viewedKeys.has(`s:${v.session_key}`));
+              if (visitorViewedFilter === "viewed" && !isViewed) return false;
+              if (visitorViewedFilter === "not_viewed" && isViewed) return false;
+              return true;
+            });
+
+            if (filtered.length === 0) {
+              return (
+                <div className="text-center py-10 text-sm text-muted-foreground">
+                  مفيش زوار مطابقين للفلاتر
+                </div>
+              );
+            }
+            return (
             <div className="space-y-2 mt-2">
               {(() => {
                 let lastDayLabel = "";
@@ -814,7 +904,7 @@ const StaffHome = () => {
                   if (d.getTime() === yesterday.getTime()) return "أمس";
                   return new Date(iso).toLocaleDateString("ar-EG", { weekday: "long", day: "numeric", month: "long" });
                 };
-                return visitorsList.map((v, idx) => {
+                return filtered.map((v, idx) => {
                   const isAnon = !v.user_id;
                   const name = v.full_name || (isAnon ? "زائر مجهول" : "بدون اسم");
                   const last = new Date(v.last_visit).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
@@ -822,6 +912,7 @@ const StaffHome = () => {
                   const showHeader = dayLabel !== lastDayLabel;
                   lastDayLabel = dayLabel;
                   const detailKey = v.user_id || v.session_key || `anon-${idx}`;
+                  const isViewed = (v.user_id && viewedKeys.has(`u:${v.user_id}`)) || (v.session_key && viewedKeys.has(`s:${v.session_key}`));
                   return (
                     <div key={detailKey + "-wrap"}>
                       {showHeader && (
@@ -835,7 +926,8 @@ const StaffHome = () => {
                         key={detailKey}
                         className={cn(
                           "flex items-center justify-between gap-3 p-3 rounded-lg border transition flex-wrap",
-                          isAnon ? "bg-muted/20 hover:bg-muted/40" : "bg-muted/30 hover:bg-muted/60"
+                          isAnon ? "bg-muted/20 hover:bg-muted/40" : "bg-muted/30 hover:bg-muted/60",
+                          isViewed && "opacity-60 saturate-50"
                         )}
                       >
                     <div className="flex-1 min-w-0">
@@ -847,6 +939,12 @@ const StaffHome = () => {
                           </Badge>
                         ) : (
                           <Badge className="bg-blue-500/15 text-blue-700 hover:bg-blue-500/20 text-[10px] h-5">مسجّل</Badge>
+                        )}
+                        {isViewed && (
+                          <Badge variant="outline" className="text-[10px] h-5 bg-emerald-50 text-emerald-700 border-emerald-200 gap-1">
+                            <CheckCheck className="w-3 h-3" />
+                            تمت المعاينة
+                          </Badge>
                         )}
                         {isAnon && (() => {
                           const fp = v.first_path || "";
@@ -930,7 +1028,8 @@ const StaffHome = () => {
                 });
               })()}
             </div>
-          )}
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </div>
