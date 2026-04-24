@@ -62,7 +62,7 @@ const MyProfilePage = () => {
   }, [user, navigate]);
 
   const validatePhone = (value: string): string => {
-    if (!value) return "";
+    if (!value) return "رقم الهاتف مطلوب — علشان نقدر نتواصل معاك بخصوص طلباتك";
     const digits = value.replace(/\D/g, "");
     if (!digits.startsWith("01")) return "الرقم لازم يبدأ بـ 01";
     if (digits.length !== 11) return "الرقم لازم يكون 11 رقم";
@@ -79,13 +79,11 @@ const MyProfilePage = () => {
   const handleSave = async () => {
     if (!user) return;
 
-    if (phone) {
-      const err = validatePhone(phone);
-      if (err) {
-        setPhoneError(err);
-        toast.error(err);
-        return;
-      }
+    const err = validatePhone(phone);
+    if (err) {
+      setPhoneError(err);
+      toast.error(err);
+      return;
     }
 
     setSaving(true);
@@ -93,7 +91,7 @@ const MyProfilePage = () => {
       .from("profiles")
       .update({
         full_name: fullName || null,
-        phone: phone || null,
+        phone: phone,
         car_model: carModel || null,
         car_year: carYear ? parseInt(carYear) : null,
       })
