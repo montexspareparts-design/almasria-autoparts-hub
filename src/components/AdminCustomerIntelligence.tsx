@@ -2100,8 +2100,9 @@ const AdminCustomerIntelligence = () => {
             return (
               <div
                 key={profile.user_id}
+                id={`customer-card-${profile.user_id}`}
                 className={cn(
-                  "rounded-2xl border bg-card overflow-hidden transition-all duration-300",
+                  "rounded-2xl border bg-card overflow-hidden transition-all duration-300 scroll-mt-24",
                   isExpanded ? "border-primary/30 shadow-lg ring-1 ring-primary/10" : "border-border/40 hover:border-border/70 hover:shadow-sm"
                 )}
               >
