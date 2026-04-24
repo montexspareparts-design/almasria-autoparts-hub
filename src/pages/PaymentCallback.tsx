@@ -247,6 +247,16 @@ const PaymentCallback = () => {
                   العودة للرئيسية
                 </Button>
               </motion.div>
+
+              {/* Authorized Distributor Trust Badges */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.4 }}
+                className="pt-2"
+              >
+                <AuthorizedDistributorBadges variant="strip" />
+              </motion.div>
             </motion.div>
           )}
 
