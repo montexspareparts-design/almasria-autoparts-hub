@@ -172,6 +172,24 @@ const Auth = () => {
       }
 
       const finalPhone = credIsPhone ? credential : trimmedOptionalPhone;
+
+      // ✋ Strict duplicate phone check before signup
+      if (finalPhone) {
+        const { data: phoneTaken, error: checkErr } = await supabase.rpc("phone_already_registered", { _phone: finalPhone });
+        if (checkErr) {
+          console.error("phone check error:", checkErr);
+        }
+        if (phoneTaken === true) {
+          toast({
+            title: "رقم الموبايل مسجل من قبل",
+            description: "الرقم ده مستخدم في حساب تاني. سجّل دخول أو اضغط \"نسيت كلمة المرور\" لاسترجاع حسابك.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+      }
+
       const { error } = await supabase.auth.signUp({
         email: authEmail, password,
         options: {
@@ -189,7 +207,13 @@ const Auth = () => {
       if (error) {
         toast({ title: error.message.includes("already registered") ? "الحساب مسجل بالفعل" : "خطأ", description: error.message.includes("already registered") ? "سجّل دخول بدلاً من ذلك" : error.message, variant: "destructive" });
       } else {
-        toast({ title: "تم إنشاء الحساب ✅", description: "يمكنك تسجيل الدخول الآن" });
+        // 🎉 Fire welcome WhatsApp (non-blocking)
+        if (finalPhone) {
+          supabase.functions.invoke("notify-retail-welcome", {
+            body: { phone: finalPhone, name: fullName },
+          }).catch((e) => console.error("welcome wa failed:", e));
+        }
+        toast({ title: "تم إنشاء الحساب ✅", description: "بعتنالك رسالة ترحيب على واتساب. سجّل دخول دلوقتي." });
         setMode("login");
       }
     }
