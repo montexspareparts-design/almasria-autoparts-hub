@@ -131,67 +131,74 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const isFreshSignIn = event === "SIGNED_IN" || event === "INITIAL_SESSION";
 
           setTimeout(async () => {
-            const { data: dealer } = await supabase
-              .from("dealer_accounts")
-              .select("id, tier, is_active, custom_discount, min_order_amount, vehicle_types, business_type")
-              .eq("user_id", session.user.id)
-              .eq("is_active", true)
-              .maybeSingle();
-            setDealerAccount(dealer as any);
+            try {
+              const [{ data: dealer }, { data: roles }] = await Promise.all([
+                supabase
+                  .from("dealer_accounts")
+                  .select("id, tier, is_active, custom_discount, min_order_amount, vehicle_types, business_type")
+                  .eq("user_id", session.user.id)
+                  .eq("is_active", true)
+                  .maybeSingle(),
+                supabase
+                  .from("user_roles")
+                  .select("role")
+                  .eq("user_id", session.user.id),
+              ]);
 
-            // If dealer, register session (only on fresh sign-in) and start monitoring
-            if (dealer) {
-              if (isFreshSignIn) {
-                // Reuse existing session ID from localStorage if present (page reload), otherwise create new
-                const existingSessionId = localStorage.getItem(SESSION_KEY);
-                if (!existingSessionId) {
-                  await registerDealerSession(dealer.id);
+              setDealerAccount(dealer as any);
+
+              const hasAdmin = roles?.some((r) => r.role === "admin") ?? false;
+              const hasModerator = roles?.some((r) => r.role === "moderator") ?? false;
+              setIsAdmin(hasAdmin);
+              setIsModerator(hasModerator);
+
+              // If dealer (and not staff), register session and start monitoring
+              if (dealer && !hasModerator && !hasAdmin) {
+                if (isFreshSignIn) {
+                  const existingSessionId = localStorage.getItem(SESSION_KEY);
+                  if (!existingSessionId) {
+                    await registerDealerSession(dealer.id);
+                  }
+                }
+                startSessionMonitor(dealer.id);
+              }
+
+              // Track customer session for CRM (non-staff users only)
+              if (!hasAdmin && !hasModerator) {
+                import("@/lib/sessionTracker").then(m => m.trackCustomerSession()).catch(() => {});
+              }
+
+              // Moderator-only: always go to admin, no role selection
+              if (hasModerator && !hasAdmin && dealer) {
+                // Moderators don't get dealer access even if they have an account
+              } else if (dealer && hasAdmin) {
+                const savedRole = localStorage.getItem("almasria_last_role");
+                const dismissed = localStorage.getItem("almasria_role_dismissed");
+                if (savedRole === "dealer" || savedRole === "admin" || dismissed === "1") {
+                  // Auto-redirect to saved role or dismissed — no dialog
+                } else {
+                  setShowRoleSelection(true);
                 }
               }
-              startSessionMonitor(dealer.id);
-            }
 
-            // Check admin role
-            const { data: roles } = await supabase
-              .from("user_roles")
-              .select("role")
-              .eq("user_id", session.user.id);
-            const hasAdmin = roles?.some((r) => r.role === "admin") ?? false;
-            const hasModerator = roles?.some((r) => r.role === "moderator") ?? false;
-            setIsAdmin(hasAdmin);
-            setIsModerator(hasModerator);
-
-            // Track customer session for CRM (non-staff users only)
-            if (!hasAdmin && !hasModerator) {
-              import("@/lib/sessionTracker").then(m => m.trackCustomerSession()).catch(() => {});
-            }
-
-            // Moderator-only: always go to admin, no role selection
-            if (hasModerator && !hasAdmin && dealer) {
-              // Moderators don't get dealer access even if they have an account
-            } else if (dealer && hasAdmin) {
-              const savedRole = localStorage.getItem("almasria_last_role");
-              const dismissed = localStorage.getItem("almasria_role_dismissed");
-              if (savedRole === "dealer" || savedRole === "admin" || dismissed === "1") {
-                // Auto-redirect to saved role or dismissed — no dialog
-              } else {
-                setShowRoleSelection(true);
+              // Check if Google user needs to complete phone (only once)
+              const COMPLETE_PROFILE_KEY = "complete-profile-shown";
+              const provider = session.user.app_metadata?.provider;
+              if (provider === "google" && !hasAdmin && !hasModerator && !localStorage.getItem(COMPLETE_PROFILE_KEY)) {
+                const { data: profile } = await supabase
+                  .from("profiles")
+                  .select("phone")
+                  .eq("user_id", session.user.id)
+                  .maybeSingle();
+                if (!profile?.phone) {
+                  setShowCompleteProfile(true);
+                  localStorage.setItem(COMPLETE_PROFILE_KEY, "1");
+                }
               }
-            }
-
-            // Check if Google user needs to complete phone (only once)
-            const COMPLETE_PROFILE_KEY = "complete-profile-shown";
-            const provider = session.user.app_metadata?.provider;
-            if (provider === "google" && !localStorage.getItem(COMPLETE_PROFILE_KEY)) {
-              const { data: profile } = await supabase
-                .from("profiles")
-                .select("phone")
-                .eq("user_id", session.user.id)
-                .maybeSingle();
-              if (!profile?.phone) {
-                setShowCompleteProfile(true);
-                localStorage.setItem(COMPLETE_PROFILE_KEY, "1");
-              }
+            } finally {
+              // CRITICAL: only mark loading=false AFTER roles are resolved,
+              // otherwise gated routes (e.g. /admin) see isModerator=false and bounce to /dealer.
+              setLoading(false);
             }
           }, 0);
         } else {
@@ -200,9 +207,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setIsModerator(false);
           clearSessionCheck();
           clearAllAuthStorage();
+          setLoading(false);
         }
-
-        setLoading(false);
       }
     );
 
