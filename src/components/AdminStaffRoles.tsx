@@ -127,6 +127,9 @@ const AdminStaffRoles = () => {
   const [deleteTarget, setDeleteTarget] = useState<StaffMember | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deletingFully, setDeletingFully] = useState(false);
+  const [viewPasswordTarget, setViewPasswordTarget] = useState<StaffMember | null>(null);
+  const [viewedPassword, setViewedPassword] = useState<{ password: string; created_at: string } | null>(null);
+  const [loadingPassword, setLoadingPassword] = useState(false);
 
   // Activity state
   const [activityLoading, setActivityLoading] = useState(false);
