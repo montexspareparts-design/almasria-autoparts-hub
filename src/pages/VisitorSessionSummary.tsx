@@ -740,6 +740,56 @@ export default function VisitorSessionSummary() {
           </Card>
         ) : (
           <>
+            {/* Unified Activity Timeline — combines ALL events */}
+            {unifiedTimeline.length > 0 && (
+              <Card id="section-timeline" className="border-primary/30 shadow-xl overflow-hidden scroll-mt-24 rounded-2xl">
+                <CardHeader className="pb-4 bg-gradient-to-l from-primary/10 via-primary/5 to-transparent border-b">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center">
+                        <Layers className="w-5 h-5 text-primary" />
+                      </div>
+                      السجل الموحَّد لكل النشاط
+                      <Badge variant="secondary" className="text-[10px]">{unifiedTimeline.length}</Badge>
+                    </CardTitle>
+                    <div className="flex flex-wrap gap-1.5 text-[10px]">
+                      <Badge variant="outline" className="gap-1"><Globe className="w-2.5 h-2.5" />{sessions.length} جلسة</Badge>
+                      <Badge variant="outline" className="gap-1"><Search className="w-2.5 h-2.5" />{searches.length} بحث</Badge>
+                      <Badge variant="outline" className="gap-1"><CheckCircle2 className="w-2.5 h-2.5" />{comms.length} تواصل</Badge>
+                      <Badge variant="outline" className="gap-1"><StickyNote className="w-2.5 h-2.5" />{notes.length} ملاحظة</Badge>
+                      <Badge variant="outline" className="gap-1"><ShoppingCart className="w-2.5 h-2.5" />{orders.length} طلب</Badge>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2 mr-11">
+                    كل زيارة وكل بحث وكل اتصال وكل ملاحظة وكل طلب — مرتّبين زمنياً في خط واحد.
+                  </p>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <div className="relative pr-4 border-r-2 border-dashed border-border space-y-3 max-h-[600px] overflow-y-auto">
+                    {unifiedTimeline.map((evt) => {
+                      const Icon = evt.icon;
+                      return (
+                        <div key={evt.id} className="relative">
+                          <div className={`absolute -right-[26px] top-2 w-9 h-9 rounded-full border-2 flex items-center justify-center ${evt.color}`}>
+                            <Icon className="w-4 h-4" />
+                          </div>
+                          <div className="mr-6 p-3 rounded-lg bg-muted/40 border border-border hover:bg-muted/60 transition">
+                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                              <span className="font-bold text-sm text-foreground">{evt.title}</span>
+                              <span className="text-[11px] text-muted-foreground font-mono">{fmtDateTime(evt.at)}</span>
+                            </div>
+                            {evt.detail && (
+                              <p className="text-xs text-muted-foreground mt-1.5 whitespace-pre-wrap leading-relaxed">{evt.detail}</p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Latest Session — main highlight */}
             {lastSession && (
               <Card id="section-latest-session" className="border-primary/20 shadow-lg overflow-hidden scroll-mt-24 rounded-2xl">
