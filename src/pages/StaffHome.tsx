@@ -1028,7 +1028,8 @@ const StaffHome = () => {
                 });
               })()}
             </div>
-          )}
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </div>
