@@ -298,16 +298,16 @@ const StaffHome = () => {
 
       const hotCount = leads.filter((l) => l.tier === "hot").length;
 
-      // Fetch staff (admins + moderators) to exclude from visitors
+      // Fetch staff (admins + moderators) — used to optionally exclude from visitors
       const { data: staffRoles } = await supabase
         .from("user_roles")
         .select("user_id")
         .in("role", ["admin", "moderator"]);
-      const staffIds = new Set((staffRoles || []).map((r: any) => r.user_id));
+      const staffIds = new Set<string>((staffRoles || []).map((r: any) => r.user_id));
+      setStaffIdsSet(staffIds);
 
-      // Build visitors list with profile details — EXCLUDE staff
+      // Build full visitors list — keep staff in the raw list; UI toggle decides whether to show them
       const visitorsArr = Array.from(visitorAgg.values())
-        .filter((v) => !v.user_id || !staffIds.has(v.user_id))
         .map((v) => {
           const profile = v.user_id ? profileMap.get(v.user_id) : null;
           const emailRaw = (profile as any)?.email as string | undefined;
