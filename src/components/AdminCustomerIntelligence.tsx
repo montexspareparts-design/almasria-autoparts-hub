@@ -268,6 +268,19 @@ const AdminCustomerIntelligence = () => {
   };
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [tasksOpen, setTasksOpen] = useState(true);
+  type SectionKey = "filters" | "tasks" | "customers" | "analytics";
+  const [activeSection, setActiveSection] = useState<SectionKey>(() => {
+    if (typeof window === "undefined") return "tasks";
+    return (localStorage.getItem("aci_active_section_v1") as SectionKey) || "tasks";
+  });
+  const switchSection = (key: SectionKey) => {
+    setActiveSection(key);
+    try { localStorage.setItem("aci_active_section_v1", key); } catch {}
+    // smooth scroll to top of content area
+    if (typeof window !== "undefined") {
+      setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50);
+    }
+  };
 
   // === Call outcomes (per-day, per-task) — drives auto score/priority adjustments ===
   type CallOutcome = "answered" | "no_answer" | "agreed" | "not_suitable";
