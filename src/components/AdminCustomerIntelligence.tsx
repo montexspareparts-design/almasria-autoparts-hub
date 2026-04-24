@@ -150,6 +150,38 @@ const CUSTOMER_TYPES = [
   "عميل دائم", "عميل نشط", "مستكشف أسعار", "باحث متكرر", "زائر مهتم", "زائر جديد",
 ] as const;
 
+// Business type taxonomy used for advanced filtering (mapped from dealer_accounts.business_type)
+const BUSINESS_TYPE_OPTIONS: { value: string; label: string }[] = [
+  { value: "trader", label: "تاجر" },
+  { value: "workshop", label: "ورشة" },
+  { value: "fleet", label: "أسطول" },
+  { value: "retail", label: "قطاعي" },
+  { value: "other", label: "أخرى" },
+];
+
+const TIER_OPTIONS: { value: string; label: string }[] = [
+  { value: "wholesale_tier1", label: "جملة درجة أولى" },
+  { value: "wholesale_tier2", label: "جملة درجة ثانية" },
+  { value: "retail", label: "قطاعي" },
+];
+
+const LIFECYCLE_OPTIONS: { value: string; label: string }[] = [
+  { value: "vip", label: "VIP" },
+  { value: "active", label: "نشط" },
+  { value: "idle", label: "خامل (30-90 يوم)" },
+  { value: "lost", label: "مفقود (+90 يوم)" },
+  { value: "new", label: "جديد" },
+];
+
+const RECENT_ACTIVITY_OPTIONS: { value: string; label: string }[] = [
+  { value: "any", label: "أي نشاط" },
+  { value: "has_cart", label: "عنده سلة نشطة" },
+  { value: "searched_no_order", label: "بحث ولم يطلب" },
+  { value: "ordered_recently", label: "طلب خلال 7 أيام" },
+  { value: "no_orders", label: "لم يطلب أبداً" },
+  { value: "missing_phone", label: "بدون رقم هاتف" },
+];
+
 const LIFECYCLE_LABELS: Record<string, { label: string; color: string; icon: typeof Star }> = {
   vip: { label: "VIP", color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400", icon: Star },
   active: { label: "نشط", color: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400", icon: Activity },
@@ -168,6 +200,35 @@ const AdminCustomerIntelligence = () => {
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [customerTypeFilter, setCustomerTypeFilter] = useState<string>("all");
   const [accountTypeFilter, setAccountTypeFilter] = useState<string>("all");
+  // Advanced filters
+  const [businessTypeFilter, setBusinessTypeFilter] = useState<string>("all");
+  const [tierFilter, setTierFilter] = useState<string>("all");
+  const [lifecycleFilter, setLifecycleFilter] = useState<string>("all");
+  const [recentActivityFilter, setRecentActivityFilter] = useState<string>("any");
+  const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
+  // Saved filter templates (persisted to localStorage)
+  type FilterTemplate = {
+    id: string;
+    name: string;
+    filters: {
+      searchTerm: string;
+      customerTypeFilter: string;
+      accountTypeFilter: string;
+      businessTypeFilter: string;
+      tierFilter: string;
+      lifecycleFilter: string;
+      recentActivityFilter: string;
+    };
+  };
+  const TEMPLATES_KEY = "aci_filter_templates_v1";
+  const [filterTemplates, setFilterTemplates] = useState<FilterTemplate[]>(() => {
+    try {
+      const raw = localStorage.getItem(TEMPLATES_KEY);
+      return raw ? (JSON.parse(raw) as FilterTemplate[]) : [];
+    } catch { return []; }
+  });
+  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
+  const [newTemplateName, setNewTemplateName] = useState("");
   const [bulkWhatsAppOpen, setBulkWhatsAppOpen] = useState(false);
   const [bulkMessage, setBulkMessage] = useState("مرحباً {{name}}، نود إبلاغكم بأحدث العروض والخصومات الحصرية من المصرية جروب. تواصلوا معنا لمزيد من التفاصيل!");
   const [sendingIndex, setSendingIndex] = useState(-1);
@@ -353,18 +414,37 @@ const AdminCustomerIntelligence = () => {
     },
   });
 
-  // Dealer user IDs
-  const { data: dealerUserIds } = useQuery({
-    queryKey: ["admin_dealer_user_ids"],
+  // Dealer accounts (with business_type, tier, vehicle_types) for advanced filtering
+  const { data: dealerAccountsData } = useQuery({
+    queryKey: ["admin_dealer_accounts_full"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("dealer_accounts")
-        .select("user_id")
+        .select("user_id, business_type, tier, vehicle_types")
         .eq("is_active", true);
       if (error) throw error;
-      return new Set(data?.map(d => d.user_id) || []);
+      return data || [];
     },
   });
+
+  // Derived: Set of dealer user IDs (for backward-compatible has() checks)
+  const dealerUserIds = useMemo(
+    () => new Set(dealerAccountsData?.map(d => d.user_id) || []),
+    [dealerAccountsData]
+  );
+
+  // Derived: Map of dealer info by user_id for advanced filtering
+  const dealerInfoByUser = useMemo(() => {
+    const map: Record<string, { business_type: string | null; tier: string | null; vehicle_types: string[] | null }> = {};
+    dealerAccountsData?.forEach(d => {
+      map[d.user_id] = {
+        business_type: d.business_type ?? null,
+        tier: d.tier ?? null,
+        vehicle_types: (d.vehicle_types as string[] | null) ?? null,
+      };
+    });
+    return map;
+  }, [dealerAccountsData]);
 
   // Orders with dates per user
   const { data: ordersData } = useQuery({
@@ -678,11 +758,103 @@ const AdminCustomerIntelligence = () => {
       if (accountTypeFilter === "dealer" && !isDealer) return false;
       if (accountTypeFilter === "retail" && isDealer) return false;
     }
+    // Advanced: business type (تاجر/ورشة/أسطول/قطاعي/أخرى)
+    if (businessTypeFilter !== "all") {
+      const info = dealerInfoByUser[p.user_id];
+      const bt = info?.business_type || (dealerUserIds?.has(p.user_id) ? "trader" : "retail");
+      if (businessTypeFilter === "other") {
+        const known = ["trader", "workshop", "fleet", "retail"];
+        if (known.includes(bt)) return false;
+      } else if (bt !== businessTypeFilter) {
+        return false;
+      }
+    }
+    // Advanced: tier (wholesale_tier1 / wholesale_tier2 / retail)
+    if (tierFilter !== "all") {
+      const info = dealerInfoByUser[p.user_id];
+      const tier = info?.tier || "retail";
+      if (tier !== tierFilter) return false;
+    }
+    // Advanced: lifecycle stage
+    if (lifecycleFilter !== "all") {
+      if (getLifecycleStage(p.user_id) !== lifecycleFilter) return false;
+    }
+    // Advanced: recent activity / need
+    if (recentActivityFilter !== "any") {
+      const orders = ordersMap?.[p.user_id];
+      const cartCount = cartByUser?.[p.user_id]?.count || 0;
+      const searches = userSearchMap[p.user_id] || [];
+      const totalSearches = searches.reduce((s, q) => s + q.count, 0);
+      if (recentActivityFilter === "has_cart" && cartCount <= 0) return false;
+      if (recentActivityFilter === "searched_no_order" && !(totalSearches >= 3 && !orders)) return false;
+      if (recentActivityFilter === "ordered_recently") {
+        if (!orders) return false;
+        const lastOrderAt = orders.lastOrderDate ? new Date(orders.lastOrderDate) : null;
+        if (!lastOrderAt || differenceInDays(new Date(), lastOrderAt) > 7) return false;
+      }
+      if (recentActivityFilter === "no_orders" && !!orders) return false;
+      if (recentActivityFilter === "missing_phone" && !!p.phone) return false;
+    }
     return true;
   });
 
-  const hasActiveFilters = !!dateFrom || !!dateTo || (customerTypeFilter !== "all") || (accountTypeFilter !== "all");
-  const clearFilters = () => { setDateFrom(undefined); setDateTo(undefined); setCustomerTypeFilter("all"); setAccountTypeFilter("all"); };
+  const hasActiveFilters =
+    !!dateFrom || !!dateTo ||
+    (customerTypeFilter !== "all") || (accountTypeFilter !== "all") ||
+    (businessTypeFilter !== "all") || (tierFilter !== "all") ||
+    (lifecycleFilter !== "all") || (recentActivityFilter !== "any") ||
+    !!searchTerm;
+  const clearFilters = () => {
+    setDateFrom(undefined); setDateTo(undefined);
+    setCustomerTypeFilter("all"); setAccountTypeFilter("all");
+    setBusinessTypeFilter("all"); setTierFilter("all");
+    setLifecycleFilter("all"); setRecentActivityFilter("any");
+    setSearchTerm("");
+  };
+
+  // Filter templates: save / apply / delete (persisted to localStorage)
+  const persistTemplates = (templates: FilterTemplate[]) => {
+    setFilterTemplates(templates);
+    try { localStorage.setItem(TEMPLATES_KEY, JSON.stringify(templates)); } catch {}
+  };
+  const saveCurrentAsTemplate = () => {
+    const name = newTemplateName.trim();
+    if (!name) {
+      toast({ title: "اسم القالب مطلوب", variant: "destructive" });
+      return;
+    }
+    const tpl: FilterTemplate = {
+      id: `tpl_${Date.now()}`,
+      name,
+      filters: {
+        searchTerm,
+        customerTypeFilter,
+        accountTypeFilter,
+        businessTypeFilter,
+        tierFilter,
+        lifecycleFilter,
+        recentActivityFilter,
+      },
+    };
+    persistTemplates([tpl, ...filterTemplates]);
+    setNewTemplateName("");
+    setSaveTemplateOpen(false);
+    toast({ title: "تم حفظ القالب", description: `"${name}" متاح الآن للتطبيق السريع.` });
+  };
+  const applyTemplate = (tpl: FilterTemplate) => {
+    setSearchTerm(tpl.filters.searchTerm || "");
+    setCustomerTypeFilter(tpl.filters.customerTypeFilter || "all");
+    setAccountTypeFilter(tpl.filters.accountTypeFilter || "all");
+    setBusinessTypeFilter(tpl.filters.businessTypeFilter || "all");
+    setTierFilter(tpl.filters.tierFilter || "all");
+    setLifecycleFilter(tpl.filters.lifecycleFilter || "all");
+    setRecentActivityFilter(tpl.filters.recentActivityFilter || "any");
+    toast({ title: "تم تطبيق القالب", description: tpl.name });
+  };
+  const deleteTemplate = (id: string) => {
+    persistTemplates(filterTemplates.filter(t => t.id !== id));
+    toast({ title: "تم حذف القالب" });
+  };
 
   const formatPhone = (phone: string) => {
     const cleaned = phone.replace(/\D/g, "");
@@ -1233,10 +1405,181 @@ const AdminCustomerIntelligence = () => {
                 <SelectItem value="retail">قطاعي</SelectItem>
               </SelectContent>
             </Select>
+            {/* Advanced filters: business type, tier, lifecycle, recent activity */}
+            <Popover open={advancedFiltersOpen} onOpenChange={setAdvancedFiltersOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "gap-1 text-[11px] h-8 font-bold",
+                    (businessTypeFilter !== "all" || tierFilter !== "all" || lifecycleFilter !== "all" || recentActivityFilter !== "any") &&
+                      "border-primary text-primary bg-primary/5"
+                  )}
+                >
+                  <Filter className="w-3 h-3" />
+                  فلاتر متقدمة
+                  {(() => {
+                    const count =
+                      (businessTypeFilter !== "all" ? 1 : 0) +
+                      (tierFilter !== "all" ? 1 : 0) +
+                      (lifecycleFilter !== "all" ? 1 : 0) +
+                      (recentActivityFilter !== "any" ? 1 : 0);
+                    return count > 0 ? (
+                      <Badge variant="secondary" className="text-[9px] h-4 px-1 mr-0.5">{count}</Badge>
+                    ) : null;
+                  })()}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[320px] p-3" align="end">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-bold flex items-center gap-1.5">
+                      <Filter className="w-3.5 h-3.5 text-primary" />
+                      فلاتر متقدمة
+                    </h4>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-[10px] h-6 text-muted-foreground hover:text-destructive"
+                      onClick={() => {
+                        setBusinessTypeFilter("all"); setTierFilter("all");
+                        setLifecycleFilter("all"); setRecentActivityFilter("any");
+                      }}
+                    >
+                      إعادة تعيين
+                    </Button>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-muted-foreground mb-1 block">نوع النشاط (تاجر/ورشة/أسطول)</label>
+                    <Select value={businessTypeFilter} onValueChange={setBusinessTypeFilter}>
+                      <SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">الكل</SelectItem>
+                        {BUSINESS_TYPE_OPTIONS.map(o => (
+                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-muted-foreground mb-1 block">درجة التاجر (Tier)</label>
+                    <Select value={tierFilter} onValueChange={setTierFilter}>
+                      <SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">الكل</SelectItem>
+                        {TIER_OPTIONS.map(o => (
+                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-muted-foreground mb-1 block">مرحلة دورة الحياة</label>
+                    <Select value={lifecycleFilter} onValueChange={setLifecycleFilter}>
+                      <SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">الكل</SelectItem>
+                        {LIFECYCLE_OPTIONS.map(o => (
+                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-muted-foreground mb-1 block">الاحتياج / النشاط الأخير</label>
+                    <Select value={recentActivityFilter} onValueChange={setRecentActivityFilter}>
+                      <SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {RECENT_ACTIVITY_OPTIONS.map(o => (
+                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Separator />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full gap-1.5 text-[11px] h-8 font-bold"
+                    onClick={() => { setSaveTemplateOpen(true); setAdvancedFiltersOpen(false); }}
+                  >
+                    <Star className="w-3 h-3" />
+                    حفظ هذه الفلاتر كقالب
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            {/* Filter Templates dropdown */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1 text-[11px] h-8 font-bold">
+                  <Star className="w-3 h-3 text-amber-500" />
+                  القوالب
+                  {filterTemplates.length > 0 && (
+                    <Badge variant="secondary" className="text-[9px] h-4 px-1 mr-0.5">{filterTemplates.length}</Badge>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[280px] p-2" align="end">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between px-2 py-1">
+                    <h4 className="text-xs font-bold">قوالب الفلاتر المحفوظة</h4>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-[10px] h-6 px-2"
+                      onClick={() => setSaveTemplateOpen(true)}
+                    >
+                      + جديد
+                    </Button>
+                  </div>
+                  <Separator />
+                  {filterTemplates.length === 0 ? (
+                    <p className="text-[11px] text-muted-foreground text-center py-3">
+                      لا توجد قوالب محفوظة بعد.<br />
+                      اضبط فلاتر ثم احفظها للوصول السريع.
+                    </p>
+                  ) : (
+                    <div className="max-h-[260px] overflow-y-auto space-y-1">
+                      {filterTemplates.map(tpl => (
+                        <div
+                          key={tpl.id}
+                          className="flex items-center gap-1 px-2 py-1.5 rounded-md hover:bg-accent/50 group"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => applyTemplate(tpl)}
+                            className="flex-1 text-right text-[11px] font-medium truncate"
+                          >
+                            {tpl.name}
+                          </button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 text-destructive hover:bg-destructive/10"
+                            onClick={() => deleteTemplate(tpl.id)}
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
+
             {hasActiveFilters && (
               <Button variant="ghost" size="sm" className="gap-1 text-[11px] h-8 text-destructive" onClick={clearFilters}>
                 <X className="w-3 h-3" />
-                مسح
+                مسح الكل
               </Button>
             )}
             <span className="text-[11px] text-muted-foreground mr-auto font-medium">
@@ -1245,6 +1588,49 @@ const AdminCustomerIntelligence = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Save filter template dialog */}
+      <Dialog open={saveTemplateOpen} onOpenChange={setSaveTemplateOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold flex items-center gap-2">
+              <Star className="w-4 h-4 text-amber-500" />
+              حفظ الفلاتر الحالية كقالب
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div>
+              <label className="text-xs font-bold text-muted-foreground mb-1 block">اسم القالب</label>
+              <Input
+                value={newTemplateName}
+                onChange={(e) => setNewTemplateName(e.target.value)}
+                placeholder="مثال: ورش نشطة بدون طلبات"
+                className="text-sm"
+                onKeyDown={(e) => { if (e.key === "Enter") saveCurrentAsTemplate(); }}
+                autoFocus
+              />
+            </div>
+            <div className="bg-muted/40 rounded-lg p-2.5 space-y-1 text-[11px]">
+              <p className="font-bold mb-1">الفلاتر المحفوظة:</p>
+              {searchTerm && <p>• بحث: <span className="text-foreground font-medium">{searchTerm}</span></p>}
+              {customerTypeFilter !== "all" && <p>• نوع العميل: <span className="text-foreground font-medium">{customerTypeFilter}</span></p>}
+              {accountTypeFilter !== "all" && <p>• نوع الحساب: <span className="text-foreground font-medium">{accountTypeFilter === "dealer" ? "تاجر" : "قطاعي"}</span></p>}
+              {businessTypeFilter !== "all" && <p>• النشاط: <span className="text-foreground font-medium">{BUSINESS_TYPE_OPTIONS.find(o => o.value === businessTypeFilter)?.label}</span></p>}
+              {tierFilter !== "all" && <p>• الدرجة: <span className="text-foreground font-medium">{TIER_OPTIONS.find(o => o.value === tierFilter)?.label}</span></p>}
+              {lifecycleFilter !== "all" && <p>• دورة الحياة: <span className="text-foreground font-medium">{LIFECYCLE_OPTIONS.find(o => o.value === lifecycleFilter)?.label}</span></p>}
+              {recentActivityFilter !== "any" && <p>• النشاط الأخير: <span className="text-foreground font-medium">{RECENT_ACTIVITY_OPTIONS.find(o => o.value === recentActivityFilter)?.label}</span></p>}
+              {!hasActiveFilters && <p className="text-muted-foreground">لا توجد فلاتر نشطة حالياً.</p>}
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" size="sm" onClick={() => setSaveTemplateOpen(false)}>إلغاء</Button>
+            <Button size="sm" onClick={saveCurrentAsTemplate} className="gap-1.5">
+              <Star className="w-3.5 h-3.5" />
+              حفظ القالب
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* ===== Today's Tasks for Staff ===== */}
       {todayTasks.length > 0 && (
