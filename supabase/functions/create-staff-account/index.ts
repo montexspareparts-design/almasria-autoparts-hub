@@ -187,6 +187,15 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Save password to staff_passwords for admin retrieval (only for new users)
+    if (isNewUser) {
+      await adminClient.from("staff_passwords").insert({
+        staff_user_id: userId,
+        initial_password: tempPassword,
+        created_by: userData.user.id,
+      });
+    }
+
     // Send notifications (only for new users with a fresh password)
     const loginUrl = "https://www.almasriaautoparts.com/dealer-login";
     let whatsappSent = false;

@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Loader2, UserPlus, Trash2, Shield, Search, Users, Activity, ShoppingBag, UserCheck, FileText, Package, Clock, KeyRound, UserX, Crown } from "lucide-react";
+import { Loader2, UserPlus, Trash2, Shield, Search, Users, Activity, ShoppingBag, UserCheck, FileText, Package, Clock, KeyRound, UserX, Crown, Eye, EyeOff, Copy } from "lucide-react";
 
 const PROTECTED_ADMIN_EMAIL = "monmohanad9@gmail.com";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -127,6 +127,9 @@ const AdminStaffRoles = () => {
   const [deleteTarget, setDeleteTarget] = useState<StaffMember | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deletingFully, setDeletingFully] = useState(false);
+  const [viewPasswordTarget, setViewPasswordTarget] = useState<StaffMember | null>(null);
+  const [viewedPassword, setViewedPassword] = useState<{ password: string; created_at: string } | null>(null);
+  const [loadingPassword, setLoadingPassword] = useState(false);
 
   // Activity state
   const [activityLoading, setActivityLoading] = useState(false);
@@ -312,6 +315,40 @@ const AdminStaffRoles = () => {
       toast({ title: "خطأ", description: err.message, variant: "destructive" });
     }
     setResetting(false);
+  };
+
+  const handleViewPassword = async (member: StaffMember) => {
+    setViewPasswordTarget(member);
+    setViewedPassword(null);
+    setLoadingPassword(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      // Get the latest stored password for this staff member
+      const { data, error } = await supabase
+        .from("staff_passwords")
+        .select("id, initial_password, created_at")
+        .eq("staff_user_id", member.user_id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) {
+        setViewedPassword(null);
+      } else {
+        setViewedPassword({ password: data.initial_password, created_at: data.created_at });
+        // Audit: mark as viewed
+        if (user) {
+          await supabase.from("staff_passwords").update({
+            viewed_by: user.id,
+            viewed_at: new Date().toISOString(),
+          }).eq("id", data.id);
+        }
+      }
+    } catch (err: any) {
+      toast({ title: "خطأ في جلب كلمة المرور", description: err.message, variant: "destructive" });
+    }
+    setLoadingPassword(false);
   };
 
   const handleFullDelete = async () => {
@@ -501,6 +538,16 @@ const AdminStaffRoles = () => {
                       <TableCell className="text-muted-foreground text-sm">{new Date(member.created_at).toLocaleDateString("ar-EG")}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-blue-600 hover:bg-blue-500/10 h-8 w-8"
+                            onClick={() => handleViewPassword(member)}
+                            title="عرض اسم المستخدم وكلمة المرور"
+                            disabled={isProtected}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="icon"
@@ -778,6 +825,79 @@ const AdminStaffRoles = () => {
               {deletingFully ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserX className="w-4 h-4" />}
               حذف نهائي
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Password Dialog — Admin only */}
+      <Dialog open={!!viewPasswordTarget} onOpenChange={(o) => { if (!o) { setViewPasswordTarget(null); setViewedPassword(null); } }}>
+        <DialogContent dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="w-5 h-5 text-blue-600" />
+              بيانات دخول الموظف
+            </DialogTitle>
+            <DialogDescription>
+              عرض اسم المستخدم وكلمة المرور لـ <strong>{viewPasswordTarget?.full_name || viewPasswordTarget?.email}</strong>
+            </DialogDescription>
+          </DialogHeader>
+
+          {loadingPassword ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : !viewedPassword ? (
+            <div className="bg-amber-50 border border-amber-300 rounded-lg p-4 text-sm text-amber-800">
+              <p className="font-bold mb-1">⚠️ مفيش كلمة مرور محفوظة</p>
+              <p className="text-xs">الموظف ده اتعمل قبل تفعيل ميزة حفظ كلمات المرور، أو غيّر كلمة سره بنفسه. اضغط على 🔑 "إعادة تعيين كلمة المرور" لإنشاء كلمة جديدة وحفظها.</p>
+            </div>
+          ) : (
+            <div className="space-y-3 py-2">
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">📧 اسم المستخدم (البريد الإلكتروني)</label>
+                <div className="flex items-center gap-2 bg-muted/50 border rounded-lg p-3">
+                  <code dir="ltr" className="flex-1 text-sm font-mono text-foreground select-all">{viewPasswordTarget?.email}</code>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2"
+                    onClick={() => {
+                      navigator.clipboard.writeText(viewPasswordTarget?.email || "");
+                      toast({ title: "تم نسخ البريد" });
+                    }}
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">🔐 كلمة المرور</label>
+                <div className="flex items-center gap-2 bg-amber-50 border border-amber-300 rounded-lg p-3">
+                  <code dir="ltr" className="flex-1 text-sm font-mono font-bold text-foreground select-all">{viewedPassword.password}</code>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2"
+                    onClick={() => {
+                      navigator.clipboard.writeText(viewedPassword.password);
+                      toast({ title: "تم نسخ كلمة المرور" });
+                    }}
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-900 space-y-1">
+                <p>📅 آخر كلمة مرور حُفظت في: <strong>{new Date(viewedPassword.created_at).toLocaleString("ar-EG")}</strong></p>
+                <p>⚠️ ملاحظة: لو الموظف غيّر كلمة سره بنفسه بعد التاريخ ده، الكلمة الظاهرة هنا مش هتكون صحيحة. استخدم زر "إعادة تعيين" لإنشاء كلمة جديدة.</p>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewPasswordTarget(null)}>إغلاق</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

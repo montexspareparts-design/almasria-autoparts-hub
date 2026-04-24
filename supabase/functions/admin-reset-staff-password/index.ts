@@ -72,6 +72,13 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Save new password to staff_passwords for admin retrieval
+    await adminClient.from("staff_passwords").insert({
+      staff_user_id: targetUser.id,
+      initial_password: String(newPassword),
+      created_by: userData.user.id,
+    });
+
     return new Response(JSON.stringify({ success: true, email: cleanEmail }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
