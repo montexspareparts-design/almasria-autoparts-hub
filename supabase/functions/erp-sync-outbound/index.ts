@@ -1855,25 +1855,50 @@ Deno.serve(async (req) => {
       throw new Error(`Unknown action: ${action}`);
     }
 
+    const stats = retryStatsByReq.get(reqId);
+    const retryInfo = stats ? {
+      total_attempts: stats.total_attempts,
+      total_retries: stats.total_retries,
+      retried_calls: stats.retried_calls,
+      retried_endpoints: stats.retried_endpoints,
+      ...(stats.last_retry_reason ? { last_retry_reason: stats.last_retry_reason } : {}),
+    } : { total_attempts: 0, total_retries: 0, retried_calls: 0, retried_endpoints: [] };
+
     const responseBody = (result && typeof result === "object")
-      ? { ...result, request_id: reqId }
-      : { result, request_id: reqId };
+      ? { ...result, request_id: reqId, retry_info: retryInfo }
+      : { result, request_id: reqId, retry_info: retryInfo };
     const responseJson = JSON.stringify(responseBody);
     logErpEvent(reqId, "handler_end", {
       total_duration_ms: Date.now() - handlerStart,
       status: "ok",
       response_bytes: byteSize(responseJson),
+      ...retryInfo,
     });
+    retryStatsByReq.delete(reqId);
     return new Response(responseJson, {
-      headers: { ...corsHeaders, "Content-Type": "application/json", "x-request-id": reqId },
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/json",
+        "x-request-id": reqId,
+        "x-erp-retries": String(retryInfo.total_retries),
+      },
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     const stack = error instanceof Error ? error.stack : undefined;
+    const stats = retryStatsByReq.get(reqId);
+    const retryInfo = stats ? {
+      total_attempts: stats.total_attempts,
+      total_retries: stats.total_retries,
+      retried_calls: stats.retried_calls,
+      retried_endpoints: stats.retried_endpoints,
+      ...(stats.last_retry_reason ? { last_retry_reason: stats.last_retry_reason } : {}),
+    } : { total_attempts: 0, total_retries: 0, retried_calls: 0, retried_endpoints: [] };
     logErpEvent(reqId, "handler_error", {
       total_duration_ms: Date.now() - handlerStart,
       error: message,
       stack: stack ? String(stack).split("\n").slice(0, 6).join(" | ") : undefined,
+      ...retryInfo,
     });
     console.error(`[ERP][${reqId}] sync error:`, message);
 
@@ -1886,13 +1911,19 @@ Deno.serve(async (req) => {
         sync_type: "error",
         direction: "outbound",
         status: "failed",
-        error_message: `[${reqId}] ${message}`,
+        error_message: `[${reqId}] [retries=${retryInfo.total_retries}] ${message}`,
       });
     } catch (_) {}
 
-    return new Response(JSON.stringify({ success: false, error: message, request_id: reqId }), {
+    retryStatsByReq.delete(reqId);
+    return new Response(JSON.stringify({ success: false, error: message, request_id: reqId, retry_info: retryInfo }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json", "x-request-id": reqId },
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/json",
+        "x-request-id": reqId,
+        "x-erp-retries": String(retryInfo.total_retries),
+      },
     });
   }
 });
