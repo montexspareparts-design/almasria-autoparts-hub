@@ -87,6 +87,9 @@ export default function VisitorSessionSummary() {
     (async () => {
       setLoading(true);
       try {
+        // Flush any visits that were queued in this admin's own browser before fetching
+        await flushPendingVisits().catch(() => 0);
+
         const [profRes, dealerRes, visitsRes, searchesRes, viewsRes] = await Promise.all([
           supabase.from("profiles").select("full_name, email, phone, created_at").eq("user_id", userId).maybeSingle(),
           supabase.from("dealer_accounts").select("id").eq("user_id", userId).maybeSingle(),
