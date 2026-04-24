@@ -495,7 +495,62 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
     yesterday: filteredYesterday.length,
   };
 
-  if (loading) {
+  // =================== CSV Export (top customers / search leads) ===================
+  const exportTopCustomersCSV = () => {
+    const rows = filteredSearch;
+    if (!rows || rows.length === 0) {
+      toast({ title: "لا يوجد بيانات للتصدير", description: "جرّب تغيير الفلاتر أو حدّث القائمة", variant: "destructive" });
+      return;
+    }
+    const headers = [
+      "الاسم",
+      "النوع",
+      "رقم التليفون",
+      "البريد الإلكتروني",
+      "عدد عمليات البحث",
+      "آخر كلمة بحث",
+      "آخر نشاط",
+      "سبب المتابعة",
+      "رابط الملخص",
+    ];
+    const escape = (val: any) => {
+      const s = String(val ?? "");
+      if (/[",\n\r;]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+      return s;
+    };
+    const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+    const lines = rows.map((s: any) => {
+      const reason = s.search_count >= 10
+        ? `بحث مكثّف (${s.search_count}×) بدون أي طلب — فرصة تحويل عالية`
+        : `بحث ${s.search_count}× بدون شراء — يحتاج متابعة`;
+      const lastActivity = new Date(s.last_search).toLocaleString("ar-EG", { dateStyle: "short", timeStyle: "short" });
+      return [
+        s.name || "",
+        s.is_dealer ? "تاجر" : "قطاعي",
+        s.phone || "",
+        s.email || "",
+        s.search_count,
+        s.last_query || "",
+        lastActivity,
+        reason,
+        `${baseUrl}/admin/visitor/${s.user_id}`,
+      ].map(escape).join(",");
+    });
+    // UTF-8 BOM so Excel renders Arabic correctly
+    const csv = "\uFEFF" + headers.map(escape).join(",") + "\n" + lines.join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const stamp = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `top-customers-followup-${stamp}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast({ title: "تم التصدير", description: `تم تنزيل ${rows.length} عميل في ملف CSV/Excel` });
+  };
+
     return (
       <div className="space-y-4">
         <Skeleton className="h-12 w-full" />
