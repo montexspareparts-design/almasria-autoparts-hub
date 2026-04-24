@@ -938,6 +938,11 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
                               <Activity className="w-3 h-3" />
                               ملخص
                             </Button>
+                            <Button asChild size="sm" variant="ghost" className="h-7 w-7 p-0" title="فتح صفحة الملخص الكاملة">
+                              <Link to={`/admin/visitor/${y.user_id}`} target="_blank" rel="noopener">
+                                <ExternalLink className="w-3 h-3" />
+                              </Link>
+                            </Button>
                             <Button size="sm" className="h-7 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => markContacted(y.user_id, "yesterday")}>
                               <CheckCircle2 className="w-3 h-3" />
                               تم
