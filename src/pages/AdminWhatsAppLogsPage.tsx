@@ -64,8 +64,24 @@ export default function AdminWhatsAppLogsPage() {
     if (template !== "all") q = q.eq("template", template);
     if (status !== "all") q = q.eq("status", status);
     if (phoneSearch.trim()) {
-      const cleaned = phoneSearch.trim().replace(/\D/g, "");
-      if (cleaned) q = q.ilike("phone", `%${cleaned}%`);
+      // Normalize: strip non-digits, then derive both local (01xxxxxxxxx)
+      // and international (20xxxxxxxxxx) variants so search matches regardless
+      // of how the number was stored or how the user typed it (+20 / 0020 / 01).
+      const digits = phoneSearch.trim().replace(/\D/g, "");
+      if (digits) {
+        let core = digits;
+        // Strip leading country code variants
+        if (core.startsWith("0020")) core = core.slice(4);
+        else if (core.startsWith("20") && core.length >= 11) core = core.slice(2);
+        else if (core.startsWith("0") && core.length >= 10) core = core.slice(1);
+        // Now `core` should be the national subscriber digits (e.g. 1027815696)
+        const variants = new Set<string>([digits, core, `0${core}`, `20${core}`, `+20${core}`]);
+        const orFilter = Array.from(variants)
+          .filter((v) => v.length >= 4)
+          .map((v) => `phone.ilike.%${v}%`)
+          .join(",");
+        if (orFilter) q = q.or(orFilter);
+      }
     }
 
     const { data, error } = await q;
