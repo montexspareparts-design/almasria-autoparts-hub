@@ -125,6 +125,9 @@ export default function VisitorSessionSummary() {
   const [commNote, setCommNote] = useState("");
   const [savingComm, setSavingComm] = useState(false);
 
+  // Session viewers (other staff who opened this customer's session)
+  const [viewers, setViewers] = useState<Array<{ staff_user_id: string; staff_name: string | null; first_viewed_at: string; last_viewed_at: string; view_count: number }>>([]);
+
   const clearFocus = () => {
     document.querySelectorAll("[data-focus-target='true']").forEach((n) => {
       n.classList.remove("ring-4", "ring-primary", "ring-offset-2", "shadow-2xl", "scale-[1.01]");
