@@ -2074,6 +2074,18 @@ const AdminCustomerIntelligence = () => {
                                 <CheckCircle2 className="w-2.5 h-2.5" /> مكتمل
                               </span>
                             )}
+                            {callOutcomes[task.id] && (
+                              <span
+                                className={cn(
+                                  "text-[9px] font-black px-1.5 py-0.5 rounded border inline-flex items-center gap-1",
+                                  outcomeMeta[callOutcomes[task.id]].badge
+                                )}
+                                title={`نتيجة المكالمة: ${outcomeMeta[callOutcomes[task.id]].label}`}
+                              >
+                                <span>{outcomeMeta[callOutcomes[task.id]].icon}</span>
+                                {outcomeMeta[callOutcomes[task.id]].label}
+                              </span>
+                            )}
                           </div>
                           <p className={cn("text-xs font-black text-foreground", isDone && "line-through text-muted-foreground")}>{task.title}</p>
                           <p className={cn("text-[10px] text-muted-foreground mt-0.5 line-clamp-2", isDone && "opacity-70")}>{task.reason}</p>
