@@ -1583,10 +1583,10 @@ const AdminCustomerIntelligence = () => {
                 onClick={() => switchSection(s.key)}
                 aria-pressed={isActive}
                 className={cn(
-                  "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all border",
+                  "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap border transition-all duration-300 ease-out hover:-translate-y-0.5",
                   isActive
-                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                    : "bg-background text-muted-foreground border-border/50 hover:bg-muted/60 hover:text-foreground"
+                    ? "bg-primary text-primary-foreground border-primary shadow-md scale-[1.03]"
+                    : "bg-background text-muted-foreground border-border/50 hover:bg-muted/60 hover:text-foreground hover:border-primary/30"
                 )}
               >
                 <s.icon className="w-3.5 h-3.5" />
@@ -1598,10 +1598,10 @@ const AdminCustomerIntelligence = () => {
       </div>
 
       {/* Anchor target for smooth-scroll on section change */}
-      <div ref={sectionContentRef} key={activeSection} className="animate-fade-in scroll-mt-24">
+      <div ref={sectionContentRef} key={activeSection} className="animate-section-enter scroll-mt-24 will-change-transform">
 
       {isSwitchingSection ? (
-        <Card className="rounded-xl border-border/40 shadow-sm">
+        <Card className="rounded-xl border-border/40 shadow-sm animate-fade-in">
           <CardContent className="py-4 px-4 space-y-3">
             <div className="flex items-center gap-2">
               <Skeleton className="h-6 w-6 rounded-md" />
