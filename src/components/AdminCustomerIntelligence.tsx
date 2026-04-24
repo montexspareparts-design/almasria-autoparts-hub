@@ -137,6 +137,7 @@ import {
   Settings2, RotateCcw,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
+import { Skeleton } from "@/components/ui/skeleton";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 
 interface CustomerProfile {
@@ -274,7 +275,11 @@ const AdminCustomerIntelligence = () => {
     return (localStorage.getItem("aci_active_section_v1") as SectionKey) || "tasks";
   });
   const sectionContentRef = useRef<HTMLDivElement | null>(null);
+  const [isSwitchingSection, setIsSwitchingSection] = useState(false);
   const switchSection = (key: SectionKey) => {
+    if (key === activeSection) return;
+    // Show light skeleton briefly to signal content refresh
+    setIsSwitchingSection(true);
     setActiveSection(key);
     try { localStorage.setItem("aci_active_section_v1", key); } catch {}
     // Smooth scroll directly to the start of the section content (just below the sticky nav)
@@ -292,6 +297,8 @@ const AdminCustomerIntelligence = () => {
         }, 80); // wait for section render
       });
     }
+    // Hide skeleton after a short delay for smooth perceived transition
+    window.setTimeout(() => setIsSwitchingSection(false), 280);
   };
 
   // === Call outcomes (per-day, per-task) — drives auto score/priority adjustments ===
@@ -1593,6 +1600,37 @@ const AdminCustomerIntelligence = () => {
       {/* Anchor target for smooth-scroll on section change */}
       <div ref={sectionContentRef} key={activeSection} className="animate-fade-in scroll-mt-24">
 
+      {isSwitchingSection ? (
+        <Card className="rounded-xl border-border/40 shadow-sm">
+          <CardContent className="py-4 px-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-6 w-6 rounded-md" />
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-5 w-16 ml-auto" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="rounded-lg border border-border/40 p-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-12 rounded" />
+                    <Skeleton className="h-4 w-10 rounded" />
+                    <Skeleton className="h-4 w-8 rounded ml-auto" />
+                  </div>
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-full" />
+                  <Skeleton className="h-3 w-2/3" />
+                  <div className="flex gap-1.5 pt-1">
+                    <Skeleton className="h-6 w-16 rounded-md" />
+                    <Skeleton className="h-6 w-16 rounded-md" />
+                    <Skeleton className="h-6 w-12 rounded-md ml-auto" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+      <>
       {/* Filters & Search - moved up for better UX */}
       {activeSection === "filters" && (
       <Card className="rounded-xl border-border/40 shadow-sm">
@@ -4030,6 +4068,9 @@ const AdminCustomerIntelligence = () => {
       </Collapsible>
       </>
       )}
+      </>
+      )}
+      </div>
 
 
       {/* Priority Weights Settings Dialog */}
@@ -4233,7 +4274,6 @@ const AdminCustomerIntelligence = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      </div>
     </div>
   );
 };
