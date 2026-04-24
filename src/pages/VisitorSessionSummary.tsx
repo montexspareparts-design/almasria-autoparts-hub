@@ -878,12 +878,23 @@ export default function VisitorSessionSummary() {
       </div>
 
       {/* Quick Note Dialog */}
-      <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
+      <Dialog
+        open={noteOpen}
+        onOpenChange={(open) => {
+          setNoteOpen(open);
+          if (!open) {
+            setEditingNoteId(null);
+            setNoteText("");
+          }
+        }}
+      >
         <DialogContent dir="rtl" className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <StickyNote className="w-5 h-5 text-primary" />
-              تسجيل ملاحظة عن {profile?.full_name || "العميل"}
+              {editingNoteId ? <Pencil className="w-5 h-5 text-primary" /> : <StickyNote className="w-5 h-5 text-primary" />}
+              {editingNoteId
+                ? "تعديل الملاحظة"
+                : `تسجيل ملاحظة عن ${profile?.full_name || "العميل"}`}
             </DialogTitle>
           </DialogHeader>
           <Textarea
@@ -895,12 +906,12 @@ export default function VisitorSessionSummary() {
             autoFocus
           />
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setNoteOpen(false)} disabled={savingNote}>
+            <Button variant="outline" onClick={() => { setNoteOpen(false); setEditingNoteId(null); setNoteText(""); }} disabled={savingNote}>
               إلغاء
             </Button>
             <Button onClick={saveNote} disabled={!noteText.trim() || savingNote} className="gap-2">
-              {savingNote ? <Loader2 className="w-4 h-4 animate-spin" /> : <StickyNote className="w-4 h-4" />}
-              حفظ الملاحظة
+              {savingNote ? <Loader2 className="w-4 h-4 animate-spin" /> : (editingNoteId ? <Pencil className="w-4 h-4" /> : <StickyNote className="w-4 h-4" />)}
+              {editingNoteId ? "حفظ التعديلات" : "حفظ الملاحظة"}
             </Button>
           </DialogFooter>
         </DialogContent>
