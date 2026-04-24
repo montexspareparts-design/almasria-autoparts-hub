@@ -20,9 +20,12 @@ import {
   Activity,
   ClipboardList,
   TrendingUp,
+  CheckCheck,
+  Filter,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isNoiseVisit, ENGAGED_DWELL_MS } from "@/lib/visitorAnalytics";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface KPI {
   label: string;
