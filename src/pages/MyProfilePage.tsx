@@ -52,14 +52,23 @@ const MyProfilePage = () => {
         .select("*")
         .eq("user_id", user.id)
         .maybeSingle();
+      const currentPhone = data?.phone || "";
       if (data) {
         setFullName(data.full_name || "");
-        setPhone(data.phone || "");
+        setPhone(currentPhone);
         setEmail(data.email || "");
         setCarModel(data.car_model || "");
         setCarYear(data.car_year ? String(data.car_year) : "");
       }
       setLoading(false);
+
+      // If profile has no phone, try to recover one from contact channels (WhatsApp / support / leads)
+      if (!currentPhone) {
+        try {
+          const recovered = await recoverPhoneFromChannels(user.id, data?.email || user.email);
+          if (recovered) setRecoveredPhone(recovered);
+        } catch { /* silently ignore */ }
+      }
     };
     fetchProfile();
   }, [user, navigate]);
