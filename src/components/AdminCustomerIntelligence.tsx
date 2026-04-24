@@ -1002,8 +1002,15 @@ const AdminCustomerIntelligence = () => {
         const daysSinceActivity = lastActivity ? Math.floor((now - new Date(lastActivity).getTime()) / 86400000) : 999;
         // Top searched query
         const topSearch = [...searches].sort((a, b) => b.count - a.count)[0];
-        // Top viewed products (names)
-        const topProducts = views.slice(0, 3).map(pid => productsMap?.[pid]?.name_ar).filter(Boolean) as string[];
+        // Top viewed products (with id+sku for smart routing)
+        const topProductsRich = views.slice(0, 3)
+          .map(pid => {
+            const prod = productsMap?.[pid];
+            if (!prod?.name_ar) return null;
+            return { id: pid, name: prod.name_ar as string, sku: (prod.sku as string) || null };
+          })
+          .filter(Boolean) as { id: string; name: string; sku: string | null }[];
+        const topProducts = topProductsRich.map(x => x.name);
         // Score: more search + recent activity + no orders = hotter
         const noOrders = ordersCount === 0;
         const score =
@@ -1040,6 +1047,7 @@ const AdminCustomerIntelligence = () => {
           lastActivity,
           topSearch: topSearch?.query || null,
           topProducts,
+          topProductsRich,
           needReason,
           needBadge,
         };
@@ -1250,14 +1258,33 @@ const AdminCustomerIntelligence = () => {
                     <p className="text-[11px] text-foreground/80 leading-relaxed mb-2 line-clamp-2">
                       💡 {lead.needReason}
                     </p>
-                    {lead.topProducts.length > 0 && (
+                    {lead.topProductsRich.length > 0 && (
                       <div className="flex items-center gap-1 flex-wrap mb-2">
                         <span className="text-[9px] text-muted-foreground font-bold">شاف سعر:</span>
-                        {lead.topProducts.slice(0, 2).map((name, i) => (
-                          <Badge key={i} variant="secondary" className="text-[9px] h-4 px-1.5 max-w-[110px] truncate">
-                            {name}
-                          </Badge>
-                        ))}
+                        {lead.topProductsRich.slice(0, 2).map((prod, i) => {
+                          // Smart route: prefer SKU search → fallback to dealer product page
+                          const url = prod.sku
+                            ? `/products?search=${encodeURIComponent(prod.sku)}`
+                            : `/dealer/product/${prod.id}`;
+                          return (
+                            <a
+                              key={i}
+                              href={url}
+                              target="_blank"
+                              rel="noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              title={prod.sku ? `فتح بحث SKU: ${prod.sku}` : `فتح صفحة المنتج`}
+                              className="inline-block"
+                            >
+                              <Badge
+                                variant="secondary"
+                                className="text-[9px] h-4 px-1.5 max-w-[110px] truncate hover:bg-primary/15 hover:text-primary cursor-pointer transition-colors"
+                              >
+                                {prod.name}
+                              </Badge>
+                            </a>
+                          );
+                        })}
                         {lead.viewsCount > 2 && (
                           <span className="text-[9px] text-muted-foreground">+{lead.viewsCount - 2}</span>
                         )}
