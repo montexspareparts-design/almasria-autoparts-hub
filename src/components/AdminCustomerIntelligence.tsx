@@ -287,8 +287,8 @@ const AdminCustomerIntelligence = () => {
   const [tasksOpen, setTasksOpen] = useState(true);
   type SectionKey = "filters" | "tasks" | "customers" | "analytics";
   const [activeSection, setActiveSection] = useState<SectionKey>(() => {
-    if (typeof window === "undefined") return "tasks";
-    return (localStorage.getItem("aci_active_section_v1") as SectionKey) || "tasks";
+    if (typeof window === "undefined") return "customers";
+    return (localStorage.getItem("aci_active_section_v1") as SectionKey) || "customers";
   });
   const sectionContentRef = useRef<HTMLDivElement | null>(null);
   const sectionNavRef = useRef<HTMLDivElement | null>(null);
@@ -2887,7 +2887,7 @@ const AdminCustomerIntelligence = () => {
       )}
 
       {/* Customer list with top-level tabs (All / Needs Follow-up Now) */}
-      {activeSection === "customers" && (() => {
+      {(activeSection === "customers" || activeSection === "filters") && (() => {
         // Build "needs follow-up now" list with urgency scoring
         type FollowUpItem = {
           profile: typeof filteredProfiles extends (infer T)[] | undefined ? T : never;
