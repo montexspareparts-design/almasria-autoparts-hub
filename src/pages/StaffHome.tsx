@@ -89,11 +89,19 @@ const StaffHome = () => {
   // Cart users dialog
   const [cartOpen, setCartOpen] = useState(false);
   const [cartList, setCartList] = useState<Array<{ user_id: string; full_name: string | null; phone: string | null; email: string | null; items: number; last_added: string }>>([]);
+  const [cartSort, setCartSort] = useState<"recent" | "items">("recent");
+  const [cartContactFilter, setCartContactFilter] = useState<"all" | "with_phone" | "no_phone">("all");
   // Buyers dialog
   const [buyersOpen, setBuyersOpen] = useState(false);
   const [buyersList, setBuyersList] = useState<Array<{ user_id: string; full_name: string | null; phone: string | null; email: string | null; order_number: string | null; total_amount: number; status: string; created_at: string }>>([]);
+  const [buyersSort, setBuyersSort] = useState<"recent" | "amount">("recent");
+  const [buyersStatusFilter, setBuyersStatusFilter] = useState<"all" | "pending" | "confirmed" | "shipped" | "delivered" | "cancelled" | "other">("all");
+  const [buyersContactFilter, setBuyersContactFilter] = useState<"all" | "with_phone" | "no_phone">("all");
   // Hot Leads dialog
   const [hotLeadsOpen, setHotLeadsOpen] = useState(false);
+  const [leadsSort, setLeadsSort] = useState<"score" | "recent">("score");
+  const [leadsTierFilter, setLeadsTierFilter] = useState<"all" | "hot" | "warm" | "cold">("all");
+  const [leadsContactFilter, setLeadsContactFilter] = useState<"all" | "with_phone" | "no_phone">("all");
   // Visitors dialog "engaged only" filter (driven by KPI card click)
   const [visitorEngagedOnly, setVisitorEngagedOnly] = useState(false);
   const [visitorTypeFilter, setVisitorTypeFilter] = useState<"all" | "registered" | "anon">("all");
@@ -756,6 +764,55 @@ const StaffHome = () => {
     ],
     [kpis, navigate, rangeSuffix, viewedVisitorsCount, viewedBasis, viewedTodayVisitors, cartList, buyersList, hotLeads]
   );
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Filtered + sorted lists for the Cart / Buyers / Leads dialogs.
+  // Each memo applies the dialog-local filters then sorts — keeping the badge
+  // count and rendered list in lockstep just like the visitors dialog.
+  // ──────────────────────────────────────────────────────────────────────────
+
+  const visibleCart = useMemo(() => {
+    const filtered = cartList.filter((c) => {
+      if (cartContactFilter === "with_phone" && !c.phone) return false;
+      if (cartContactFilter === "no_phone" && c.phone) return false;
+      return true;
+    });
+    return [...filtered].sort((a, b) => {
+      if (cartSort === "items") return (b.items || 0) - (a.items || 0);
+      return (b.last_added || "").localeCompare(a.last_added || "");
+    });
+  }, [cartList, cartContactFilter, cartSort]);
+
+  const visibleBuyers = useMemo(() => {
+    const known = new Set(["pending", "confirmed", "shipped", "delivered", "cancelled"]);
+    const filtered = buyersList.filter((b) => {
+      if (buyersContactFilter === "with_phone" && !b.phone) return false;
+      if (buyersContactFilter === "no_phone" && b.phone) return false;
+      if (buyersStatusFilter !== "all") {
+        if (buyersStatusFilter === "other") {
+          if (known.has(b.status)) return false;
+        } else if (b.status !== buyersStatusFilter) return false;
+      }
+      return true;
+    });
+    return [...filtered].sort((a, b) => {
+      if (buyersSort === "amount") return (b.total_amount || 0) - (a.total_amount || 0);
+      return (b.created_at || "").localeCompare(a.created_at || "");
+    });
+  }, [buyersList, buyersContactFilter, buyersStatusFilter, buyersSort]);
+
+  const visibleLeads = useMemo(() => {
+    const filtered = hotLeads.filter((l) => {
+      if (leadsContactFilter === "with_phone" && !l.phone) return false;
+      if (leadsContactFilter === "no_phone" && l.phone) return false;
+      if (leadsTierFilter !== "all" && l.tier !== leadsTierFilter) return false;
+      return true;
+    });
+    return [...filtered].sort((a, b) => {
+      if (leadsSort === "recent") return (b.last_activity || "").localeCompare(a.last_activity || "");
+      return (b.score || 0) - (a.score || 0);
+    });
+  }, [hotLeads, leadsContactFilter, leadsTierFilter, leadsSort]);
 
   const tierBadge = (tier: HotLead["tier"]) => {
     if (tier === "hot")
@@ -1661,17 +1718,54 @@ const StaffHome = () => {
             <DialogTitle className="flex items-center gap-2 text-base">
               <ShoppingCart className="w-5 h-5 text-amber-600" />
               أضافوا للسلة ({rangeSuffix})
-              <Badge variant="secondary" className="text-xs">{cartList.length}</Badge>
+              <Badge variant="secondary" className="text-xs">{visibleCart.length}</Badge>
+              {visibleCart.length !== cartList.length && (
+                <span className="text-[10px] text-muted-foreground font-normal" title="العدد بعد تطبيق الفلاتر من إجمالي العملاء">
+                  من أصل {cartList.length}
+                </span>
+              )}
             </DialogTitle>
             <DialogDescription className="text-xs">
               عملاء أضافوا منتجات للسلة لكن لسه ما أتموا الطلب — فرصة متابعة قوية.
             </DialogDescription>
           </DialogHeader>
-          {cartList.length === 0 ? (
-            <div className="text-center py-10 text-sm text-muted-foreground">مفيش عملاء أضافوا للسلة في هذا النطاق</div>
+
+          {/* Sort + filter bar */}
+          <div className="flex flex-wrap items-center gap-2 pt-2 pb-1 border-b">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Filter className="w-3.5 h-3.5" />
+              فرز/فلترة:
+            </div>
+            <Select value={cartSort} onValueChange={(v) => setCartSort(v as any)}>
+              <SelectTrigger className="h-8 w-[160px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recent">الأحدث إضافة أولاً</SelectItem>
+                <SelectItem value="items">الأكثر منتجات أولاً</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={cartContactFilter} onValueChange={(v) => setCartContactFilter(v as any)}>
+              <SelectTrigger className="h-8 w-[160px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل العملاء</SelectItem>
+                <SelectItem value="with_phone">عنده هاتف</SelectItem>
+                <SelectItem value="no_phone">بدون هاتف</SelectItem>
+              </SelectContent>
+            </Select>
+            {(cartSort !== "recent" || cartContactFilter !== "all") && (
+              <Button size="sm" variant="ghost" className="h-8 text-xs"
+                onClick={() => { setCartSort("recent"); setCartContactFilter("all"); }}>
+                مسح
+              </Button>
+            )}
+          </div>
+
+          {visibleCart.length === 0 ? (
+            <div className="text-center py-10 text-sm text-muted-foreground">
+              {cartList.length === 0 ? "مفيش عملاء أضافوا للسلة في هذا النطاق" : "مفيش عملاء مطابقين للفلاتر"}
+            </div>
           ) : (
             <div className="space-y-2 mt-2">
-              {cartList.map((c) => {
+              {visibleCart.map((c) => {
                 const last = new Date(c.last_added).toLocaleString("ar-EG", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
                 return (
                   <div key={c.user_id} className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-amber-500/5 hover:bg-amber-500/10 transition flex-wrap">
@@ -1727,10 +1821,15 @@ const StaffHome = () => {
             <DialogTitle className="flex items-center gap-2 text-base">
               <CheckCircle2 className="w-5 h-5 text-green-600" />
               طلبات {rangeSuffix}
-              <Badge variant="secondary" className="text-xs">{buyersList.length}</Badge>
-              {buyersList.length > 0 && (
+              <Badge variant="secondary" className="text-xs">{visibleBuyers.length}</Badge>
+              {visibleBuyers.length !== buyersList.length && (
+                <span className="text-[10px] text-muted-foreground font-normal" title="العدد بعد الفلاتر من إجمالي الطلبات">
+                  من أصل {buyersList.length}
+                </span>
+              )}
+              {visibleBuyers.length > 0 && (
                 <span className="text-[11px] text-muted-foreground font-normal">
-                  · إجمالي {buyersList.reduce((s, b) => s + b.total_amount, 0).toLocaleString("ar-EG")} ج
+                  · إجمالي {visibleBuyers.reduce((s, b) => s + b.total_amount, 0).toLocaleString("ar-EG")} ج
                 </span>
               )}
             </DialogTitle>
@@ -1738,11 +1837,55 @@ const StaffHome = () => {
               قائمة الطلبات اللي وصلت في النطاق المختار — مع حالتها والمبلغ والعميل.
             </DialogDescription>
           </DialogHeader>
-          {buyersList.length === 0 ? (
-            <div className="text-center py-10 text-sm text-muted-foreground">مفيش طلبات في هذا النطاق</div>
+
+          {/* Sort + filter bar */}
+          <div className="flex flex-wrap items-center gap-2 pt-2 pb-1 border-b">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Filter className="w-3.5 h-3.5" />
+              فرز/فلترة:
+            </div>
+            <Select value={buyersSort} onValueChange={(v) => setBuyersSort(v as any)}>
+              <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recent">الأحدث أولاً</SelectItem>
+                <SelectItem value="amount">الأعلى مبلغاً</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={buyersStatusFilter} onValueChange={(v) => setBuyersStatusFilter(v as any)}>
+              <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل الحالات</SelectItem>
+                <SelectItem value="pending">قيد الانتظار</SelectItem>
+                <SelectItem value="confirmed">مؤكد</SelectItem>
+                <SelectItem value="shipped">تم الشحن</SelectItem>
+                <SelectItem value="delivered">تم التسليم</SelectItem>
+                <SelectItem value="cancelled">ملغي</SelectItem>
+                <SelectItem value="other">حالات أخرى</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={buyersContactFilter} onValueChange={(v) => setBuyersContactFilter(v as any)}>
+              <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل العملاء</SelectItem>
+                <SelectItem value="with_phone">عنده هاتف</SelectItem>
+                <SelectItem value="no_phone">بدون هاتف</SelectItem>
+              </SelectContent>
+            </Select>
+            {(buyersSort !== "recent" || buyersStatusFilter !== "all" || buyersContactFilter !== "all") && (
+              <Button size="sm" variant="ghost" className="h-8 text-xs"
+                onClick={() => { setBuyersSort("recent"); setBuyersStatusFilter("all"); setBuyersContactFilter("all"); }}>
+                مسح
+              </Button>
+            )}
+          </div>
+
+          {visibleBuyers.length === 0 ? (
+            <div className="text-center py-10 text-sm text-muted-foreground">
+              {buyersList.length === 0 ? "مفيش طلبات في هذا النطاق" : "مفيش طلبات مطابقة للفلاتر"}
+            </div>
           ) : (
             <div className="space-y-2 mt-2">
-              {buyersList.map((b, i) => {
+              {visibleBuyers.map((b, i) => {
                 const at = new Date(b.created_at).toLocaleString("ar-EG", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
                 const statusColor =
                   b.status === "delivered" ? "bg-green-500/15 text-green-700"
@@ -1800,17 +1943,63 @@ const StaffHome = () => {
             <DialogTitle className="flex items-center gap-2 text-base">
               <Flame className="w-5 h-5 text-red-600" />
               Leads ساخنة
-              <Badge variant="secondary" className="text-xs">{hotLeads.length}</Badge>
+              <Badge variant="secondary" className="text-xs">{visibleLeads.length}</Badge>
+              {visibleLeads.length !== hotLeads.length && (
+                <span className="text-[10px] text-muted-foreground font-normal" title="العدد بعد الفلاتر من إجمالي الـLeads">
+                  من أصل {hotLeads.length}
+                </span>
+              )}
             </DialogTitle>
             <DialogDescription className="text-xs">
               العملاء اللي ظهر منهم نية شراء قوية (بحث + معاينة + إضافة للسلة) ولسه ما اشتروش — رتبهم بالأولوية وكلّمهم.
             </DialogDescription>
           </DialogHeader>
-          {hotLeads.length === 0 ? (
-            <div className="text-center py-10 text-sm text-muted-foreground">مفيش Leads ساخنة حالياً</div>
+
+          {/* Sort + filter bar */}
+          <div className="flex flex-wrap items-center gap-2 pt-2 pb-1 border-b">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Filter className="w-3.5 h-3.5" />
+              فرز/فلترة:
+            </div>
+            <Select value={leadsSort} onValueChange={(v) => setLeadsSort(v as any)}>
+              <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="score">الأعلى نقاطاً</SelectItem>
+                <SelectItem value="recent">الأحدث نشاطاً</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={leadsTierFilter} onValueChange={(v) => setLeadsTierFilter(v as any)}>
+              <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل التصنيفات</SelectItem>
+                <SelectItem value="hot">🟢 جاهز يشتري</SelectItem>
+                <SelectItem value="warm">🟡 مهتم</SelectItem>
+                <SelectItem value="cold">🔴 بارد</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={leadsContactFilter} onValueChange={(v) => setLeadsContactFilter(v as any)}>
+              <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل العملاء</SelectItem>
+                <SelectItem value="with_phone">عنده هاتف</SelectItem>
+                <SelectItem value="no_phone">بدون هاتف</SelectItem>
+              </SelectContent>
+            </Select>
+            {(leadsSort !== "score" || leadsTierFilter !== "all" || leadsContactFilter !== "all") && (
+              <Button size="sm" variant="ghost" className="h-8 text-xs"
+                onClick={() => { setLeadsSort("score"); setLeadsTierFilter("all"); setLeadsContactFilter("all"); }}>
+                مسح
+              </Button>
+            )}
+          </div>
+
+          {visibleLeads.length === 0 ? (
+            <div className="text-center py-10 text-sm text-muted-foreground">
+              {hotLeads.length === 0 ? "مفيش Leads ساخنة حالياً" : "مفيش Leads مطابقة للفلاتر"}
+            </div>
           ) : (
             <div className="space-y-2 mt-2">
-              {hotLeads.map((l) => {
+              {visibleLeads.map((l) => {
                 const at = new Date(l.last_activity).toLocaleString("ar-EG", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
                 return (
                   <div key={l.user_id} className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-red-500/5 hover:bg-red-500/10 transition flex-wrap">
