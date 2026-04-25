@@ -11,9 +11,10 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ClipboardList, CheckCircle2, AlertCircle, Save, Sparkles, Clock, HelpCircle } from "lucide-react";
+import { ClipboardList, CheckCircle2, AlertCircle, Save, Sparkles, Clock, HelpCircle, Users2 } from "lucide-react";
 
 type QType = "text" | "textarea" | "number" | "choice" | "boolean";
+type QScope = "all" | "role" | "team" | "users";
 interface DynQuestion {
   id: string;
   question_text: string;
@@ -21,6 +22,14 @@ interface DynQuestion {
   options: string[];
   placeholder: string | null;
   is_required: boolean;
+  sort_order: number;
+  target_scope: QScope;
+  target_team_ids: string[];
+}
+interface TeamInfo {
+  id: string;
+  name: string;
+  color: string | null;
 }
 interface DynAnswer {
   text?: string;
@@ -70,12 +79,14 @@ const StaffDailyReport = () => {
   const [dynQuestions, setDynQuestions] = useState<DynQuestion[]>([]);
   const [dynAnswers, setDynAnswers] = useState<Record<string, DynAnswer>>({});
 
+  const [teams, setTeams] = useState<TeamInfo[]>([]);
+
   const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const [reportRes, qRes, aRes] = await Promise.all([
+      const [reportRes, qRes, aRes, tmRes] = await Promise.all([
         supabase
           .from("staff_daily_reports")
           .select("*")
@@ -84,7 +95,7 @@ const StaffDailyReport = () => {
           .maybeSingle(),
         supabase
           .from("daily_report_questions")
-          .select("id, question_text, question_type, options, placeholder, is_required, sort_order")
+          .select("id, question_text, question_type, options, placeholder, is_required, sort_order, target_scope, target_team_ids")
           .eq("is_active", true)
           .order("sort_order", { ascending: true }),
         supabase
@@ -92,6 +103,10 @@ const StaffDailyReport = () => {
           .select("question_id, answer_text, answer_number, answer_boolean, answer_choice")
           .eq("user_id", user.id)
           .eq("report_date", today),
+        supabase
+          .from("team_members")
+          .select("team_id, teams:team_id(id, name, color)")
+          .eq("user_id", user.id),
       ]);
 
       const data = reportRes.data;
@@ -122,8 +137,20 @@ const StaffDailyReport = () => {
             options: Array.isArray(q.options) ? q.options : [],
             placeholder: q.placeholder,
             is_required: q.is_required,
+            sort_order: q.sort_order ?? 0,
+            target_scope: (q.target_scope ?? "all") as QScope,
+            target_team_ids: Array.isArray(q.target_team_ids) ? q.target_team_ids : [],
           }))
         );
+      }
+
+      if (tmRes.data) {
+        const ts: TeamInfo[] = [];
+        tmRes.data.forEach((row: any) => {
+          const t = row.teams;
+          if (t) ts.push({ id: t.id, name: t.name, color: t.color ?? null });
+        });
+        setTeams(ts);
       }
 
       if (aRes.data) {
@@ -378,71 +405,113 @@ const StaffDailyReport = () => {
         </div>
 
         {/* Dynamic admin-defined questions */}
-        {dynQuestions.length > 0 && (
-          <div className="mt-5 pt-5 border-t border-dashed border-primary/30">
-            <div className="flex items-center gap-2 mb-3">
-              <HelpCircle className="w-4 h-4 text-primary" />
-              <h3 className="text-sm font-bold">أسئلة إضافية من الإدارة</h3>
-              <Badge variant="outline" className="text-[10px]">{dynQuestions.length}</Badge>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {dynQuestions.map((q) => {
-                const a = dynAnswers[q.id] || {};
-                const setA = (patch: DynAnswer) =>
-                  setDynAnswers((prev) => ({ ...prev, [q.id]: { ...prev[q.id], ...patch } }));
-                return (
-                  <div key={q.id} className="space-y-1.5">
-                    <Label className="text-xs font-semibold flex items-center gap-1.5">
-                      {q.question_text}
-                      {q.is_required && <span className="text-destructive">*</span>}
-                    </Label>
-                    {q.question_type === "text" && (
-                      <Input
-                        value={a.text ?? ""}
-                        onChange={(e) => setA({ text: e.target.value })}
-                        placeholder={q.placeholder ?? ""}
-                      />
+        {dynQuestions.length > 0 && (() => {
+          const myTeamIds = new Set(teams.map((t) => t.id));
+          const teamQs = dynQuestions
+            .filter((q) => q.target_scope === "team" && q.target_team_ids.some((id) => myTeamIds.has(id)))
+            .sort((a, b) => a.sort_order - b.sort_order);
+          const generalQs = dynQuestions
+            .filter((q) => !(q.target_scope === "team" && q.target_team_ids.some((id) => myTeamIds.has(id))))
+            .sort((a, b) => a.sort_order - b.sort_order);
+
+          const renderQ = (q: DynQuestion) => {
+            const a = dynAnswers[q.id] || {};
+            const setA = (patch: DynAnswer) =>
+              setDynAnswers((prev) => ({ ...prev, [q.id]: { ...prev[q.id], ...patch } }));
+            return (
+              <div key={q.id} className="space-y-1.5">
+                <Label className="text-xs font-semibold flex items-center gap-1.5">
+                  {q.question_text}
+                  {q.is_required && <span className="text-destructive">*</span>}
+                </Label>
+                {q.question_type === "text" && (
+                  <Input value={a.text ?? ""} onChange={(e) => setA({ text: e.target.value })} placeholder={q.placeholder ?? ""} />
+                )}
+                {q.question_type === "textarea" && (
+                  <Textarea value={a.text ?? ""} onChange={(e) => setA({ text: e.target.value })} placeholder={q.placeholder ?? ""} rows={2} className="resize-none text-sm" />
+                )}
+                {q.question_type === "number" && (
+                  <Input type="number" value={a.number ?? ""} onChange={(e) => setA({ number: e.target.value === "" ? undefined : Number(e.target.value) })} placeholder={q.placeholder ?? ""} className="font-bold tabular-nums" />
+                )}
+                {q.question_type === "boolean" && (
+                  <div className="flex items-center gap-2 h-10">
+                    <Switch checked={!!a.boolean} onCheckedChange={(v) => setA({ boolean: v })} />
+                    <span className="text-sm">{a.boolean ? "نعم" : "لا"}</span>
+                  </div>
+                )}
+                {q.question_type === "choice" && (
+                  <Select value={a.choice ?? ""} onValueChange={(v) => setA({ choice: v })}>
+                    <SelectTrigger><SelectValue placeholder="اختر..." /></SelectTrigger>
+                    <SelectContent>
+                      {q.options.map((opt) => (
+                        <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            );
+          };
+
+          const teamRequired = teamQs.filter((q) => q.is_required).length;
+          const generalRequired = generalQs.filter((q) => q.is_required).length;
+          const myTeams = teams.filter((t) => teamQs.some((q) => q.target_team_ids.includes(t.id)));
+
+          return (
+            <>
+              {teamQs.length > 0 && (
+                <div className="mt-5 pt-5 border-t-2 border-primary/30">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <Users2 className="w-4 h-4 text-primary" />
+                    <h3 className="text-sm font-bold">أسئلة فريقك</h3>
+                    <Badge variant="secondary" className="text-[10px]">{teamQs.length} سؤال</Badge>
+                    {teamRequired > 0 && (
+                      <Badge variant="destructive" className="text-[10px] gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        {teamRequired} إجباري
+                      </Badge>
                     )}
-                    {q.question_type === "textarea" && (
-                      <Textarea
-                        value={a.text ?? ""}
-                        onChange={(e) => setA({ text: e.target.value })}
-                        placeholder={q.placeholder ?? ""}
-                        rows={2}
-                        className="resize-none text-sm"
-                      />
-                    )}
-                    {q.question_type === "number" && (
-                      <Input
-                        type="number"
-                        value={a.number ?? ""}
-                        onChange={(e) => setA({ number: e.target.value === "" ? undefined : Number(e.target.value) })}
-                        placeholder={q.placeholder ?? ""}
-                        className="font-bold tabular-nums"
-                      />
-                    )}
-                    {q.question_type === "boolean" && (
-                      <div className="flex items-center gap-2 h-10">
-                        <Switch checked={!!a.boolean} onCheckedChange={(v) => setA({ boolean: v })} />
-                        <span className="text-sm">{a.boolean ? "نعم" : "لا"}</span>
-                      </div>
-                    )}
-                    {q.question_type === "choice" && (
-                      <Select value={a.choice ?? ""} onValueChange={(v) => setA({ choice: v })}>
-                        <SelectTrigger><SelectValue placeholder="اختر..." /></SelectTrigger>
-                        <SelectContent>
-                          {q.options.map((opt) => (
-                            <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    {myTeams.map((t) => (
+                      <Badge
+                        key={t.id}
+                        variant="outline"
+                        className="text-[10px]"
+                        style={t.color ? { borderColor: t.color, color: t.color } : undefined}
+                      >
+                        {t.name}
+                      </Badge>
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mb-3">
+                    أسئلة موجّهة خصيصاً لفريقك من الإدارة — مرتّبة حسب الأولوية
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {teamQs.map(renderQ)}
+                  </div>
+                </div>
+              )}
+
+              {generalQs.length > 0 && (
+                <div className="mt-5 pt-5 border-t border-dashed border-primary/30">
+                  <div className="flex items-center gap-2 mb-3 flex-wrap">
+                    <HelpCircle className="w-4 h-4 text-primary" />
+                    <h3 className="text-sm font-bold">أسئلة إضافية من الإدارة</h3>
+                    <Badge variant="outline" className="text-[10px]">{generalQs.length} سؤال</Badge>
+                    {generalRequired > 0 && (
+                      <Badge variant="destructive" className="text-[10px] gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        {generalRequired} إجباري
+                      </Badge>
                     )}
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {generalQs.map(renderQ)}
+                  </div>
+                </div>
+              )}
+            </>
+          );
+        })()}
 
         {/* Submit */}
         <div className="mt-5 flex items-center justify-between gap-3 pt-4 border-t border-border/50">
