@@ -311,11 +311,9 @@ const StaffHome = () => {
         .order("created_at", { ascending: false });
       const buyers = new Set((orders || []).map((o) => o.user_id));
 
-      // 5) Hot leads — compute scoring
-      // Pull last 7 days of activity
-      const sevenDaysAgo = new Date(
-        Date.now() - 7 * 24 * 60 * 60 * 1000
-      ).toISOString();
+      // Hot leads: pull activity over the widest window so the leads dialog can
+      // also offer a month range. Tier classification is unchanged.
+      const sevenDaysAgo = widestStart;
 
       const [searchesRes, viewsRes, cartRes, ordersRes, profilesRes] =
         await Promise.all([
