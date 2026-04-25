@@ -1561,6 +1561,225 @@ const StaffHome = () => {
           })()}
         </DialogContent>
       </Dialog>
+
+      {/* Cart Users Dialog — اللي أضافوا للسلة */}
+      <Dialog open={cartOpen} onOpenChange={setCartOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <ShoppingCart className="w-5 h-5 text-amber-600" />
+              أضافوا للسلة ({rangeSuffix})
+              <Badge variant="secondary" className="text-xs">{cartList.length}</Badge>
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              عملاء أضافوا منتجات للسلة لكن لسه ما أتموا الطلب — فرصة متابعة قوية.
+            </DialogDescription>
+          </DialogHeader>
+          {cartList.length === 0 ? (
+            <div className="text-center py-10 text-sm text-muted-foreground">مفيش عملاء أضافوا للسلة في هذا النطاق</div>
+          ) : (
+            <div className="space-y-2 mt-2">
+              {cartList.map((c) => {
+                const last = new Date(c.last_added).toLocaleString("ar-EG", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
+                return (
+                  <div key={c.user_id} className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-amber-500/5 hover:bg-amber-500/10 transition flex-wrap">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-bold text-sm truncate">{c.full_name || "بدون اسم"}</p>
+                        <Badge className="bg-amber-500/15 text-amber-700 hover:bg-amber-500/20 text-[10px] h-5 gap-1">
+                          <ShoppingCart className="w-3 h-3" />
+                          {c.items} منتج
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap text-[11px] text-muted-foreground">
+                        {c.phone && <span className="font-mono">📱 {c.phone}</span>}
+                        {c.email && <span className="truncate max-w-[200px]">✉️ {c.email}</span>}
+                        <span className="font-bold text-foreground">🕒 آخر إضافة {last}</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-1.5 shrink-0">
+                      {c.phone && (
+                        <Button asChild size="sm" className="h-8 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
+                          <a
+                            href={`https://wa.me/${c.phone.replace(/^0/, "20").replace(/[^\d]/g, "")}?text=${encodeURIComponent(`أهلاً ${c.full_name || ""}، شفت إنك أضفت منتجات للسلة — محتاج مساعدة في إتمام الطلب؟`)}`}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            <MessageCircle className="w-3 h-3" />
+                            واتساب
+                          </a>
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 gap-1 text-xs"
+                        onClick={() => { setCartOpen(false); navigate(`/admin/visitor/${c.user_id}`); }}
+                      >
+                        <Eye className="w-3 h-3" />
+                        تفاصيل
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Buyers Dialog — اللي اشتروا */}
+      <Dialog open={buyersOpen} onOpenChange={setBuyersOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <CheckCircle2 className="w-5 h-5 text-green-600" />
+              طلبات {rangeSuffix}
+              <Badge variant="secondary" className="text-xs">{buyersList.length}</Badge>
+              {buyersList.length > 0 && (
+                <span className="text-[11px] text-muted-foreground font-normal">
+                  · إجمالي {buyersList.reduce((s, b) => s + b.total_amount, 0).toLocaleString("ar-EG")} ج
+                </span>
+              )}
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              قائمة الطلبات اللي وصلت في النطاق المختار — مع حالتها والمبلغ والعميل.
+            </DialogDescription>
+          </DialogHeader>
+          {buyersList.length === 0 ? (
+            <div className="text-center py-10 text-sm text-muted-foreground">مفيش طلبات في هذا النطاق</div>
+          ) : (
+            <div className="space-y-2 mt-2">
+              {buyersList.map((b, i) => {
+                const at = new Date(b.created_at).toLocaleString("ar-EG", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
+                const statusColor =
+                  b.status === "delivered" ? "bg-green-500/15 text-green-700"
+                  : b.status === "cancelled" ? "bg-red-500/15 text-red-700"
+                  : b.status === "shipped" ? "bg-blue-500/15 text-blue-700"
+                  : "bg-amber-500/15 text-amber-700";
+                return (
+                  <div key={`${b.order_number || b.user_id}-${i}`} className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-green-500/5 hover:bg-green-500/10 transition flex-wrap">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-bold text-sm truncate">{b.full_name || "بدون اسم"}</p>
+                        {b.order_number && <Badge variant="outline" className="text-[10px] h-5 font-mono">#{b.order_number}</Badge>}
+                        <Badge className={cn("text-[10px] h-5", statusColor)}>{b.status}</Badge>
+                        <Badge variant="outline" className="text-[10px] h-5 font-bold">
+                          {b.total_amount.toLocaleString("ar-EG")} ج
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap text-[11px] text-muted-foreground">
+                        {b.phone && <span className="font-mono">📱 {b.phone}</span>}
+                        {b.email && <span className="truncate max-w-[200px]">✉️ {b.email}</span>}
+                        <span className="font-bold text-foreground">🕒 {at}</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-1.5 shrink-0">
+                      {b.phone && (
+                        <Button asChild size="sm" className="h-8 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
+                          <a href={`https://wa.me/${b.phone.replace(/^0/, "20").replace(/[^\d]/g, "")}`} target="_blank" rel="noreferrer">
+                            <MessageCircle className="w-3 h-3" />
+                            واتساب
+                          </a>
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 gap-1 text-xs"
+                        onClick={() => { setBuyersOpen(false); navigate("/admin?section=orders"); }}
+                      >
+                        <ClipboardList className="w-3 h-3" />
+                        إدارة الطلبات
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Hot Leads Dialog */}
+      <Dialog open={hotLeadsOpen} onOpenChange={setHotLeadsOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <Flame className="w-5 h-5 text-red-600" />
+              Leads ساخنة
+              <Badge variant="secondary" className="text-xs">{hotLeads.length}</Badge>
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              العملاء اللي ظهر منهم نية شراء قوية (بحث + معاينة + إضافة للسلة) ولسه ما اشتروش — رتبهم بالأولوية وكلّمهم.
+            </DialogDescription>
+          </DialogHeader>
+          {hotLeads.length === 0 ? (
+            <div className="text-center py-10 text-sm text-muted-foreground">مفيش Leads ساخنة حالياً</div>
+          ) : (
+            <div className="space-y-2 mt-2">
+              {hotLeads.map((l) => {
+                const at = new Date(l.last_activity).toLocaleString("ar-EG", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
+                return (
+                  <div key={l.user_id} className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-red-500/5 hover:bg-red-500/10 transition flex-wrap">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-bold text-sm truncate">{l.full_name || "بدون اسم"}</p>
+                        {tierBadge(l.tier)}
+                        <Badge variant="outline" className="text-[10px] h-5 font-bold">{l.score} نقطة</Badge>
+                      </div>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap text-[11px] text-muted-foreground">
+                        {l.phone && <span className="font-mono">📱 {l.phone}</span>}
+                        <span className="font-bold text-foreground">🕒 {at}</span>
+                      </div>
+                      {l.reasons.length > 0 && (
+                        <div className="flex gap-1 mt-1 flex-wrap">
+                          {l.reasons.slice(0, 3).map((r, i) => (
+                            <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                              {r}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex gap-1.5 shrink-0">
+                      {l.phone && (
+                        <>
+                          <Button asChild size="sm" variant="outline" className="h-8 gap-1 text-xs">
+                            <a href={`tel:${l.phone}`}>
+                              <Phone className="w-3 h-3" />
+                              اتصال
+                            </a>
+                          </Button>
+                          <Button asChild size="sm" className="h-8 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
+                            <a
+                              href={`https://wa.me/${l.phone.replace(/^0/, "20").replace(/[^\d]/g, "")}?text=${encodeURIComponent(`أهلاً ${l.full_name || ""}، معاك المصرية جروب — حابب أساعدك في طلبك؟`)}`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              <MessageCircle className="w-3 h-3" />
+                              واتساب
+                            </a>
+                          </Button>
+                        </>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 gap-1 text-xs"
+                        onClick={() => { setHotLeadsOpen(false); navigate(`/admin/visitor/${l.user_id}`); }}
+                      >
+                        <Eye className="w-3 h-3" />
+                        تفاصيل
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
