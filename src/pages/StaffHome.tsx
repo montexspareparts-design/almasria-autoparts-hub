@@ -432,32 +432,11 @@ const StaffHome = () => {
         console.warn("[StaffHome] today views fetch failed", e);
       }
 
-      // KPI counts respect the selected range (today vs 7d) even though we fetched 7d for the dialog.
-      const startMs = new Date(start).getTime();
-      const inRange = (v: { last_visit: string }) => new Date(v.last_visit).getTime() >= startMs;
-
-      // Engaged visitors = sessions with dwell ≥ ENGAGED_DWELL_MS OR ≥ 2 distinct pages — exclude staff
-      const engagedCount = Array.from(visitorAgg.values())
-        .filter(inRange)
-        .filter((v) => !v.user_id || !staffIds.has(v.user_id))
-        .filter((v) => {
-          const dwell = new Date(v.last_visit).getTime() - new Date(v.first_visit).getTime();
-          return dwell >= ENGAGED_DWELL_MS || v.pages >= 2;
-        }).length;
-
-      // Recompute visitor count excluding staff (within selected range)
-      const visitorCountNoStaff = Array.from(visitorAgg.values())
-        .filter(inRange)
-        .filter((v) => !v.user_id || !staffIds.has(v.user_id)).length;
-
-      setKpis({
-        visitors: visitorCountNoStaff,
-        engagedVisitors: engagedCount,
-        signups: signupCount || 0,
-        addedToCart: cartUsers.size,
-        purchased: buyers.size,
-        hotLeads: hotCount,
-      });
+      // Note: KPI counts (visitors / engaged / cart / purchased) are derived via
+      // useMemos below from visitorsList / cartList / buyersList so they react live
+      // to the All/Only-Customers toggle exactly like visibleVisitorsCount.
+      // We only persist the raw "hot leads" count here since hotLeads list is already stored.
+      setHotLeadsCount(hotCount);
       setHotLeads(leads.slice(0, 12));
 
       // Build cart users list (with profiles) — sorted by latest add
