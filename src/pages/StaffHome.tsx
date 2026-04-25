@@ -575,6 +575,17 @@ const StaffHome = () => {
           : undefined,
       },
       {
+        label: "تمت معاينتهم اليوم",
+        value: viewedTodayVisitors.length,
+        icon: CheckCheck,
+        color: "text-violet-600",
+        bg: "from-violet-500/10 to-violet-500/5",
+        onClick: () => setViewedTodayOpen(true),
+        subText: viewedTodayVisitors.length > 0
+          ? `إجمالي ${viewedTodayVisitors.reduce((s, x) => s + x.viewInfo.viewCount, 0)} معاينة`
+          : undefined,
+      },
+      {
         label: `زوار متفاعلين (${rangeSuffix})`,
         value: kpis.engagedVisitors,
         icon: Activity,
