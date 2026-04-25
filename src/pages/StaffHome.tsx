@@ -518,14 +518,9 @@ const StaffHome = () => {
       return viewedAt >= start;
     }
     if (viewedBasis === "event_day") {
-      // Same calendar day (local) as the visitor's last visit
-      const sameDay = (a: string, b: string) => {
-        const da = new Date(a); const db = new Date(b);
-        return da.getFullYear() === db.getFullYear()
-          && da.getMonth() === db.getMonth()
-          && da.getDate() === db.getDate();
-      };
-      return sameDay(viewedAt, v.last_visit);
+      // Same calendar day (local TZ) as the visitor's last_visit.
+      // Centralized in src/lib/visitDayMatch.ts (covered by visitDayMatch.test.ts).
+      return viewedOnVisitDay(viewedAt, v.last_visit);
     }
     return baseHit;
   };
