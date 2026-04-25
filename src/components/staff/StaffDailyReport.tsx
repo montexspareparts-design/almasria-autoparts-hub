@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ClipboardList, CheckCircle2, AlertCircle, Save, Sparkles, Clock, HelpCircle, Users2 } from "lucide-react";
+import { ClipboardList, CheckCircle2, AlertCircle, Save, Sparkles, Clock, HelpCircle, Users2, History as HistoryIcon } from "lucide-react";
 
 type QType = "text" | "textarea" | "number" | "choice" | "boolean";
 type QScope = "all" | "role" | "team" | "users";
@@ -179,6 +179,75 @@ const StaffDailyReport = () => {
     const interval = setInterval(checkReminder, 60000);
     return () => clearInterval(interval);
   }, [user, today]);
+
+  const restoreYesterday = async () => {
+    if (!user) return;
+    const yest = new Date();
+    yest.setDate(yest.getDate() - 1);
+    const yDate = yest.toISOString().split("T")[0];
+
+    const [yReport, yAnswers] = await Promise.all([
+      supabase
+        .from("staff_daily_reports")
+        .select("*")
+        .eq("staff_user_id", user.id)
+        .eq("report_date", yDate)
+        .maybeSingle(),
+      supabase
+        .from("daily_report_answers")
+        .select("question_id, answer_text, answer_number, answer_boolean, answer_choice")
+        .eq("user_id", user.id)
+        .eq("report_date", yDate),
+    ]);
+
+    if (!yReport.data && !(yAnswers.data && yAnswers.data.length)) {
+      toast({
+        title: "ولا تقرير امبارح",
+        description: "مفيش بيانات محفوظة من أمس عشان نسترجعها",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (yReport.data) {
+      const d = yReport.data;
+      setReport((r) => ({
+        ...r,
+        customers_contacted: d.customers_contacted ?? 0,
+        customers_registered: d.customers_registered ?? 0,
+        customers_with_invoices: d.customers_with_invoices ?? 0,
+        total_invoices_amount: Number(d.total_invoices_amount ?? 0),
+        hot_leads_count: d.hot_leads_count ?? 0,
+        follow_ups_done: d.follow_ups_done ?? 0,
+        problems_faced: d.problems_faced ?? "",
+        best_deal_today: d.best_deal_today ?? "",
+        tomorrow_plan: d.tomorrow_plan ?? "",
+        general_notes: d.general_notes ?? "",
+      }));
+    }
+
+    let restoredDyn = 0;
+    if (yAnswers.data && yAnswers.data.length) {
+      const activeQIds = new Set(dynQuestions.map((q) => q.id));
+      const map: Record<string, DynAnswer> = { ...dynAnswers };
+      yAnswers.data.forEach((a: any) => {
+        if (!activeQIds.has(a.question_id)) return;
+        map[a.question_id] = {
+          text: a.answer_text ?? undefined,
+          number: a.answer_number != null ? Number(a.answer_number) : undefined,
+          boolean: a.answer_boolean ?? undefined,
+          choice: a.answer_choice ?? undefined,
+        };
+        restoredDyn++;
+      });
+      setDynAnswers(map);
+    }
+
+    toast({
+      title: "✅ تم استرجاع تقرير أمس",
+      description: `تقدر تعدّل أي قيمة قبل الحفظ${restoredDyn > 0 ? ` — تم استرجاع ${restoredDyn} من الأسئلة الإضافية` : ""}`,
+    });
+  };
 
   const handleSubmit = async () => {
     if (!user) return;
@@ -366,7 +435,18 @@ const StaffDailyReport = () => {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={restoreYesterday}
+              className="gap-1.5 h-8 text-xs"
+              disabled={!!submittedAt}
+              title="استرجاع إجابات أمس كقيم افتراضية — تقدر تعدّلها قبل الحفظ"
+            >
+              <HistoryIcon className="w-3.5 h-3.5" />
+              استرجع تقرير أمس
+            </Button>
             {submittedAt ? (
               <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 gap-1">
                 <CheckCircle2 className="w-3 h-3" />
@@ -385,6 +465,13 @@ const StaffDailyReport = () => {
             )}
           </div>
         </div>
+
+        {!submittedAt && (
+          <div className="mb-4 p-2.5 rounded-lg bg-amber-500/5 border border-amber-500/20 text-[11px] text-amber-700 dark:text-amber-400 flex items-center gap-2">
+            <HistoryIcon className="w-3.5 h-3.5 shrink-0" />
+            <span>تقدر تضغط <strong>"استرجع تقرير أمس"</strong> فوق لتعبئة الحقول بإجابات يوم أمس — كلها قابلة للتعديل قبل الحفظ.</span>
+          </div>
+        )}
 
         {/* Numeric KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-5">
