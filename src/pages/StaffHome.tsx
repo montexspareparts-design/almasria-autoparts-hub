@@ -565,6 +565,37 @@ const StaffHome = () => {
     }, 0);
   }, [visitorsList, includeStaff, staffIdsSet, startMs]);
 
+  // Single source of truth for the visitors Dialog list + badge:
+  // applies ALL active filters (staff toggle, type, date, viewed, engaged).
+  // Both the title badge and the rendered list use this exact array
+  // so the count always matches what's visible after any filter change.
+  const dialogFilteredVisitors = useMemo(() => {
+    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+    const yesterdayStart = new Date(todayStart); yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+    const weekStart = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    return visitorsList.filter((v) => {
+      if (!includeStaff && v.user_id && staffIdsSet.has(v.user_id)) return false;
+      if (visitorTypeFilter === "registered" && !v.user_id) return false;
+      if (visitorTypeFilter === "anon" && v.user_id) return false;
+      const t = visitTs(v);
+      if (visitorDateFilter === "today" && t < todayStart.getTime()) return false;
+      if (visitorDateFilter === "yesterday" && (t < yesterdayStart.getTime() || t >= todayStart.getTime())) return false;
+      if (visitorDateFilter === "week" && t < weekStart.getTime()) return false;
+      const isViewed =
+        (v.user_id && viewedKeys.has(`u:${v.user_id}`)) ||
+        (v.session_key && viewedKeys.has(`s:${v.session_key}`));
+      if (visitorViewedFilter === "viewed" && !isViewed) return false;
+      if (visitorViewedFilter === "not_viewed" && isViewed) return false;
+      if (visitorEngagedOnly) {
+        const firstT = v.first_visit ? new Date(v.first_visit).getTime() : NaN;
+        const dwell = Number.isFinite(firstT) && Number.isFinite(t) ? t - (firstT as number) : 0;
+        if (!(dwell >= ENGAGED_DWELL_MS || (v.pages ?? 0) >= 2)) return false;
+      }
+      return true;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visitorsList, includeStaff, staffIdsSet, visitorTypeFilter, visitorDateFilter, visitorViewedFilter, visitorEngagedOnly, viewedKeys]);
+
 
   // Unified KPI numbers — computed from raw lists with the SAME staff-exclusion
   // logic as visibleVisitorsCount, so all cards stay consistent with the toggle.
@@ -1178,11 +1209,11 @@ const StaffHome = () => {
             <DialogTitle className="flex items-center gap-2 text-base">
               <Users className="w-5 h-5 text-blue-600" />
               زوار {rangeSuffix}
-              <Badge variant="secondary" className="text-xs">{visibleVisitorsCount}</Badge>
-              {!includeStaff && visibleVisitorsCount !== visitorsList.length && (
+              <Badge variant="secondary" className="text-xs">{dialogFilteredVisitors.length}</Badge>
+              {dialogFilteredVisitors.length !== visitorsList.length && (
                 <span
                   className="text-[10px] text-muted-foreground font-normal"
-                  title="إجمالي الزوار قبل استبعاد الموظفين"
+                  title="العدد بعد تطبيق الفلاتر النشطة من إجمالي الزوار"
                 >
                   من أصل {visitorsList.length}
                 </span>
@@ -1255,28 +1286,9 @@ const StaffHome = () => {
           </div>
 
           {(() => {
-            // Apply filters
-            const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
-            const yesterdayStart = new Date(todayStart); yesterdayStart.setDate(yesterdayStart.getDate() - 1);
-            const weekStart = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-            const filtered = visitorsList.filter((v) => {
-              if (!includeStaff && v.user_id && staffIdsSet.has(v.user_id)) return false;
-              if (visitorTypeFilter === "registered" && !v.user_id) return false;
-              if (visitorTypeFilter === "anon" && v.user_id) return false;
-              const t = visitTs(v);
-              if (visitorDateFilter === "today" && t < todayStart.getTime()) return false;
-              if (visitorDateFilter === "yesterday" && (t < yesterdayStart.getTime() || t >= todayStart.getTime())) return false;
-              if (visitorDateFilter === "week" && t < weekStart.getTime()) return false;
-              const isViewed = (v.user_id && viewedKeys.has(`u:${v.user_id}`)) || (v.session_key && viewedKeys.has(`s:${v.session_key}`));
-              if (visitorViewedFilter === "viewed" && !isViewed) return false;
-              if (visitorViewedFilter === "not_viewed" && isViewed) return false;
-              if (visitorEngagedOnly) {
-                const firstT = v.first_visit ? new Date(v.first_visit).getTime() : NaN;
-                const dwell = Number.isFinite(firstT) && Number.isFinite(t) ? t - (firstT as number) : 0;
-                if (!(dwell >= ENGAGED_DWELL_MS || (v.pages ?? 0) >= 2)) return false;
-              }
-              return true;
-            });
+            // Use the shared dialogFilteredVisitors memo so the title badge ("X من أصل Y")
+            // and this list are guaranteed to stay in sync as filters change.
+            const filtered = dialogFilteredVisitors;
 
             if (filtered.length === 0) {
               return (
