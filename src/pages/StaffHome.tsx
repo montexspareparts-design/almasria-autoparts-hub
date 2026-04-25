@@ -77,7 +77,7 @@ const StaffHome = () => {
   const [newSignups, setNewSignups] = useState<Array<{ user_id: string; full_name: string | null; phone: string | null; email: string | null; created_at: string; duplicates?: number; duplicateIds?: string[] }>>([]);
   const [signupsOpen, setSignupsOpen] = useState(false);
   const [visitorsOpen, setVisitorsOpen] = useState(false);
-  const [visitorsList, setVisitorsList] = useState<Array<{ user_id: string | null; session_key: string | null; full_name: string | null; phone: string | null; email: string | null; pages: number; last_visit: string; first_path?: string | null; referrer?: string | null; searches?: string[] }>>([]);
+  const [visitorsList, setVisitorsList] = useState<Array<{ user_id: string | null; session_key: string | null; full_name: string | null; phone: string | null; email: string | null; pages: number; last_visit: string; first_visit?: string; first_path?: string | null; referrer?: string | null; searches?: string[] }>>([]);
   const [viewedKeys, setViewedKeys] = useState<Set<string>>(new Set());
   // Per-key earliest view timestamp — used to compute "viewed" under different time-basis modes.
   const [viewedAtMap, setViewedAtMap] = useState<Map<string, string>>(new Map());
@@ -88,6 +88,16 @@ const StaffHome = () => {
   const [viewedTodayOpen, setViewedTodayOpen] = useState(false);
   const [viewedTodayMethodFilter, setViewedTodayMethodFilter] = useState<"all" | "by_me" | "by_others" | "multiple">("all");
   const [viewedTodaySourceFilter, setViewedTodaySourceFilter] = useState<"all" | "facebook" | "google" | "instagram" | "tiktok" | "whatsapp" | "direct" | "other">("all");
+  // Cart users dialog
+  const [cartOpen, setCartOpen] = useState(false);
+  const [cartList, setCartList] = useState<Array<{ user_id: string; full_name: string | null; phone: string | null; email: string | null; items: number; last_added: string }>>([]);
+  // Buyers dialog
+  const [buyersOpen, setBuyersOpen] = useState(false);
+  const [buyersList, setBuyersList] = useState<Array<{ user_id: string; full_name: string | null; phone: string | null; email: string | null; order_number: string | null; total_amount: number; status: string; created_at: string }>>([]);
+  // Hot Leads dialog
+  const [hotLeadsOpen, setHotLeadsOpen] = useState(false);
+  // Visitors dialog "engaged only" filter (driven by KPI card click)
+  const [visitorEngagedOnly, setVisitorEngagedOnly] = useState(false);
   const [visitorTypeFilter, setVisitorTypeFilter] = useState<"all" | "registered" | "anon">("all");
   const [visitorDateFilter, setVisitorDateFilter] = useState<"all" | "today" | "yesterday" | "week">("today");
   const [visitorViewedFilter, setVisitorViewedFilter] = useState<"all" | "viewed" | "not_viewed">("all");
@@ -195,18 +205,30 @@ const StaffHome = () => {
       );
       setNewSignups(dedupedSignups);
 
-      // 3) Users who added to cart today (distinct)
+      // 3) Users who added to cart today (distinct) — keep latest add time per user
       const { data: cartItems } = await supabase
         .from("dealer_cart_items")
-        .select("user_id")
-        .gte("created_at", start);
+        .select("user_id, created_at, quantity")
+        .gte("created_at", start)
+        .order("created_at", { ascending: false });
       const cartUsers = new Set((cartItems || []).map((c) => c.user_id));
+      const cartAggMap = new Map<string, { user_id: string; last_added: string; items: number }>();
+      (cartItems || []).forEach((c: any) => {
+        const cur = cartAggMap.get(c.user_id);
+        if (cur) {
+          cur.items += 1;
+          if (c.created_at > cur.last_added) cur.last_added = c.created_at;
+        } else {
+          cartAggMap.set(c.user_id, { user_id: c.user_id, last_added: c.created_at, items: 1 });
+        }
+      });
 
-      // 4) Users who purchased today (distinct)
+      // 4) Users who purchased today (distinct) — keep order info
       const { data: orders } = await supabase
         .from("orders")
-        .select("user_id")
-        .gte("created_at", start);
+        .select("user_id, order_number, total_amount, status, created_at")
+        .gte("created_at", start)
+        .order("created_at", { ascending: false });
       const buyers = new Set((orders || []).map((o) => o.user_id));
 
       // 5) Hot leads — compute scoring
@@ -338,6 +360,7 @@ const StaffHome = () => {
             email,
             pages: v.pages,
             last_visit: v.last_visit,
+            first_visit: v.first_visit,
             first_path: v.first_path,
             referrer: v.referrer,
           };
@@ -441,6 +464,42 @@ const StaffHome = () => {
         hotLeads: hotCount,
       });
       setHotLeads(leads.slice(0, 12));
+
+      // Build cart users list (with profiles) — sorted by latest add
+      const cartArr = Array.from(cartAggMap.values())
+        .map((c) => {
+          const p = profileMap.get(c.user_id);
+          const emailRaw = (p as any)?.email as string | undefined;
+          const email = emailRaw && !emailRaw.includes("@phone.almasria.local") ? emailRaw : null;
+          return {
+            user_id: c.user_id,
+            full_name: p?.full_name || null,
+            phone: p?.phone || null,
+            email,
+            items: c.items,
+            last_added: c.last_added,
+          };
+        })
+        .sort((a, b) => b.last_added.localeCompare(a.last_added));
+      setCartList(cartArr);
+
+      // Build buyers list — one row per order (recent orders today)
+      const buyersArr = (orders || []).map((o: any) => {
+        const p = profileMap.get(o.user_id);
+        const emailRaw = (p as any)?.email as string | undefined;
+        const email = emailRaw && !emailRaw.includes("@phone.almasria.local") ? emailRaw : null;
+        return {
+          user_id: o.user_id,
+          full_name: p?.full_name || null,
+          phone: p?.phone || null,
+          email,
+          order_number: o.order_number || null,
+          total_amount: Number(o.total_amount) || 0,
+          status: o.status || "pending",
+          created_at: o.created_at,
+        };
+      });
+      setBuyersList(buyersArr);
     } catch (e) {
       console.error("[StaffHome] fetch error", e);
     } finally {
@@ -591,7 +650,8 @@ const StaffHome = () => {
         icon: Activity,
         color: "text-cyan-600",
         bg: "from-cyan-500/10 to-cyan-500/5",
-        onClick: () => setVisitorsOpen(true),
+        onClick: () => { setVisitorEngagedOnly(true); setVisitorsOpen(true); },
+        subText: kpis.engagedVisitors > 0 ? "اضغط لرؤية القائمة (مدة ≥15ث أو ≥2 صفحة)" : undefined,
       },
       {
         label: `تسجيلات جديدة (${rangeSuffix})`,
@@ -607,7 +667,8 @@ const StaffHome = () => {
         icon: ShoppingCart,
         color: "text-amber-600",
         bg: "from-amber-500/10 to-amber-500/5",
-        onClick: () => navigate("/admin?section=customer-intel"),
+        onClick: () => setCartOpen(true),
+        subText: cartList.length > 0 ? `${cartList.reduce((s, c) => s + c.items, 0)} منتج بالسلال` : undefined,
       },
       {
         label: `اشتروا (${rangeSuffix})`,
@@ -615,7 +676,10 @@ const StaffHome = () => {
         icon: CheckCircle2,
         color: "text-green-600",
         bg: "from-green-500/10 to-green-500/5",
-        onClick: () => navigate("/admin?section=orders"),
+        onClick: () => setBuyersOpen(true),
+        subText: buyersList.length > 0
+          ? `إجمالي ${buyersList.reduce((s, b) => s + b.total_amount, 0).toLocaleString("ar-EG")} ج`
+          : undefined,
       },
       {
         label: "Leads ساخنة 🔥",
@@ -623,10 +687,11 @@ const StaffHome = () => {
         icon: Flame,
         color: "text-red-600",
         bg: "from-red-500/15 to-orange-500/10",
-        onClick: () => navigate("/admin?section=customer-intel"),
+        onClick: () => setHotLeadsOpen(true),
+        subText: hotLeads.length > 0 ? `${hotLeads.filter(l => l.tier === "hot").length} hot · ${hotLeads.filter(l => l.tier === "warm").length} warm` : undefined,
       },
     ],
-    [kpis, navigate, rangeSuffix, viewedVisitorsCount, viewedBasis, viewedTodayVisitors]
+    [kpis, navigate, rangeSuffix, viewedVisitorsCount, viewedBasis, viewedTodayVisitors, cartList, buyersList, hotLeads]
   );
 
   const tierBadge = (tier: HotLead["tier"]) => {
@@ -1144,12 +1209,22 @@ const StaffHome = () => {
                 <SelectItem value="all">الكل (يشمل الموظفين)</SelectItem>
               </SelectContent>
             </Select>
-            {(visitorTypeFilter !== "all" || visitorDateFilter !== "all" || visitorViewedFilter !== "all") && (
+            <Button
+              size="sm"
+              variant={visitorEngagedOnly ? "default" : "outline"}
+              className="h-8 text-xs gap-1"
+              onClick={() => setVisitorEngagedOnly((p) => !p)}
+              title="إظهار الزوار المتفاعلين فقط (مدة ≥15ث أو ≥2 صفحة)"
+            >
+              <Activity className="w-3.5 h-3.5" />
+              متفاعلين فقط
+            </Button>
+            {(visitorTypeFilter !== "all" || visitorDateFilter !== "all" || visitorViewedFilter !== "all" || visitorEngagedOnly) && (
               <Button
                 size="sm"
                 variant="ghost"
                 className="h-8 text-xs"
-                onClick={() => { setVisitorTypeFilter("all"); setVisitorDateFilter("all"); setVisitorViewedFilter("all"); }}
+                onClick={() => { setVisitorTypeFilter("all"); setVisitorDateFilter("all"); setVisitorViewedFilter("all"); setVisitorEngagedOnly(false); }}
               >
                 مسح الفلاتر
               </Button>
@@ -1162,20 +1237,20 @@ const StaffHome = () => {
             const yesterdayStart = new Date(todayStart); yesterdayStart.setDate(yesterdayStart.getDate() - 1);
             const weekStart = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
             const filtered = visitorsList.filter((v) => {
-              // staff exclusion (default). Toggle "All" lets admins review staff visits too.
               if (!includeStaff && v.user_id && staffIdsSet.has(v.user_id)) return false;
-              // type
               if (visitorTypeFilter === "registered" && !v.user_id) return false;
               if (visitorTypeFilter === "anon" && v.user_id) return false;
-              // date
               const t = new Date(v.last_visit).getTime();
               if (visitorDateFilter === "today" && t < todayStart.getTime()) return false;
               if (visitorDateFilter === "yesterday" && (t < yesterdayStart.getTime() || t >= todayStart.getTime())) return false;
               if (visitorDateFilter === "week" && t < weekStart.getTime()) return false;
-              // viewed
               const isViewed = (v.user_id && viewedKeys.has(`u:${v.user_id}`)) || (v.session_key && viewedKeys.has(`s:${v.session_key}`));
               if (visitorViewedFilter === "viewed" && !isViewed) return false;
               if (visitorViewedFilter === "not_viewed" && isViewed) return false;
+              if (visitorEngagedOnly) {
+                const dwell = v.first_visit ? (new Date(v.last_visit).getTime() - new Date(v.first_visit).getTime()) : 0;
+                if (!(dwell >= ENGAGED_DWELL_MS || v.pages >= 2)) return false;
+              }
               return true;
             });
 
@@ -1484,6 +1559,225 @@ const StaffHome = () => {
               </div>
             );
           })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* Cart Users Dialog — اللي أضافوا للسلة */}
+      <Dialog open={cartOpen} onOpenChange={setCartOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <ShoppingCart className="w-5 h-5 text-amber-600" />
+              أضافوا للسلة ({rangeSuffix})
+              <Badge variant="secondary" className="text-xs">{cartList.length}</Badge>
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              عملاء أضافوا منتجات للسلة لكن لسه ما أتموا الطلب — فرصة متابعة قوية.
+            </DialogDescription>
+          </DialogHeader>
+          {cartList.length === 0 ? (
+            <div className="text-center py-10 text-sm text-muted-foreground">مفيش عملاء أضافوا للسلة في هذا النطاق</div>
+          ) : (
+            <div className="space-y-2 mt-2">
+              {cartList.map((c) => {
+                const last = new Date(c.last_added).toLocaleString("ar-EG", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
+                return (
+                  <div key={c.user_id} className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-amber-500/5 hover:bg-amber-500/10 transition flex-wrap">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-bold text-sm truncate">{c.full_name || "بدون اسم"}</p>
+                        <Badge className="bg-amber-500/15 text-amber-700 hover:bg-amber-500/20 text-[10px] h-5 gap-1">
+                          <ShoppingCart className="w-3 h-3" />
+                          {c.items} منتج
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap text-[11px] text-muted-foreground">
+                        {c.phone && <span className="font-mono">📱 {c.phone}</span>}
+                        {c.email && <span className="truncate max-w-[200px]">✉️ {c.email}</span>}
+                        <span className="font-bold text-foreground">🕒 آخر إضافة {last}</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-1.5 shrink-0">
+                      {c.phone && (
+                        <Button asChild size="sm" className="h-8 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
+                          <a
+                            href={`https://wa.me/${c.phone.replace(/^0/, "20").replace(/[^\d]/g, "")}?text=${encodeURIComponent(`أهلاً ${c.full_name || ""}، شفت إنك أضفت منتجات للسلة — محتاج مساعدة في إتمام الطلب؟`)}`}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            <MessageCircle className="w-3 h-3" />
+                            واتساب
+                          </a>
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 gap-1 text-xs"
+                        onClick={() => { setCartOpen(false); navigate(`/admin/visitor/${c.user_id}`); }}
+                      >
+                        <Eye className="w-3 h-3" />
+                        تفاصيل
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Buyers Dialog — اللي اشتروا */}
+      <Dialog open={buyersOpen} onOpenChange={setBuyersOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <CheckCircle2 className="w-5 h-5 text-green-600" />
+              طلبات {rangeSuffix}
+              <Badge variant="secondary" className="text-xs">{buyersList.length}</Badge>
+              {buyersList.length > 0 && (
+                <span className="text-[11px] text-muted-foreground font-normal">
+                  · إجمالي {buyersList.reduce((s, b) => s + b.total_amount, 0).toLocaleString("ar-EG")} ج
+                </span>
+              )}
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              قائمة الطلبات اللي وصلت في النطاق المختار — مع حالتها والمبلغ والعميل.
+            </DialogDescription>
+          </DialogHeader>
+          {buyersList.length === 0 ? (
+            <div className="text-center py-10 text-sm text-muted-foreground">مفيش طلبات في هذا النطاق</div>
+          ) : (
+            <div className="space-y-2 mt-2">
+              {buyersList.map((b, i) => {
+                const at = new Date(b.created_at).toLocaleString("ar-EG", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
+                const statusColor =
+                  b.status === "delivered" ? "bg-green-500/15 text-green-700"
+                  : b.status === "cancelled" ? "bg-red-500/15 text-red-700"
+                  : b.status === "shipped" ? "bg-blue-500/15 text-blue-700"
+                  : "bg-amber-500/15 text-amber-700";
+                return (
+                  <div key={`${b.order_number || b.user_id}-${i}`} className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-green-500/5 hover:bg-green-500/10 transition flex-wrap">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-bold text-sm truncate">{b.full_name || "بدون اسم"}</p>
+                        {b.order_number && <Badge variant="outline" className="text-[10px] h-5 font-mono">#{b.order_number}</Badge>}
+                        <Badge className={cn("text-[10px] h-5", statusColor)}>{b.status}</Badge>
+                        <Badge variant="outline" className="text-[10px] h-5 font-bold">
+                          {b.total_amount.toLocaleString("ar-EG")} ج
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap text-[11px] text-muted-foreground">
+                        {b.phone && <span className="font-mono">📱 {b.phone}</span>}
+                        {b.email && <span className="truncate max-w-[200px]">✉️ {b.email}</span>}
+                        <span className="font-bold text-foreground">🕒 {at}</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-1.5 shrink-0">
+                      {b.phone && (
+                        <Button asChild size="sm" className="h-8 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
+                          <a href={`https://wa.me/${b.phone.replace(/^0/, "20").replace(/[^\d]/g, "")}`} target="_blank" rel="noreferrer">
+                            <MessageCircle className="w-3 h-3" />
+                            واتساب
+                          </a>
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 gap-1 text-xs"
+                        onClick={() => { setBuyersOpen(false); navigate("/admin?section=orders"); }}
+                      >
+                        <ClipboardList className="w-3 h-3" />
+                        إدارة الطلبات
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Hot Leads Dialog */}
+      <Dialog open={hotLeadsOpen} onOpenChange={setHotLeadsOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <Flame className="w-5 h-5 text-red-600" />
+              Leads ساخنة
+              <Badge variant="secondary" className="text-xs">{hotLeads.length}</Badge>
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              العملاء اللي ظهر منهم نية شراء قوية (بحث + معاينة + إضافة للسلة) ولسه ما اشتروش — رتبهم بالأولوية وكلّمهم.
+            </DialogDescription>
+          </DialogHeader>
+          {hotLeads.length === 0 ? (
+            <div className="text-center py-10 text-sm text-muted-foreground">مفيش Leads ساخنة حالياً</div>
+          ) : (
+            <div className="space-y-2 mt-2">
+              {hotLeads.map((l) => {
+                const at = new Date(l.last_activity).toLocaleString("ar-EG", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
+                return (
+                  <div key={l.user_id} className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-red-500/5 hover:bg-red-500/10 transition flex-wrap">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-bold text-sm truncate">{l.full_name || "بدون اسم"}</p>
+                        {tierBadge(l.tier)}
+                        <Badge variant="outline" className="text-[10px] h-5 font-bold">{l.score} نقطة</Badge>
+                      </div>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap text-[11px] text-muted-foreground">
+                        {l.phone && <span className="font-mono">📱 {l.phone}</span>}
+                        <span className="font-bold text-foreground">🕒 {at}</span>
+                      </div>
+                      {l.reasons.length > 0 && (
+                        <div className="flex gap-1 mt-1 flex-wrap">
+                          {l.reasons.slice(0, 3).map((r, i) => (
+                            <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                              {r}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex gap-1.5 shrink-0">
+                      {l.phone && (
+                        <>
+                          <Button asChild size="sm" variant="outline" className="h-8 gap-1 text-xs">
+                            <a href={`tel:${l.phone}`}>
+                              <Phone className="w-3 h-3" />
+                              اتصال
+                            </a>
+                          </Button>
+                          <Button asChild size="sm" className="h-8 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
+                            <a
+                              href={`https://wa.me/${l.phone.replace(/^0/, "20").replace(/[^\d]/g, "")}?text=${encodeURIComponent(`أهلاً ${l.full_name || ""}، معاك المصرية جروب — حابب أساعدك في طلبك؟`)}`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              <MessageCircle className="w-3 h-3" />
+                              واتساب
+                            </a>
+                          </Button>
+                        </>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 gap-1 text-xs"
+                        onClick={() => { setHotLeadsOpen(false); navigate(`/admin/visitor/${l.user_id}`); }}
+                      >
+                        <Eye className="w-3 h-3" />
+                        تفاصيل
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
