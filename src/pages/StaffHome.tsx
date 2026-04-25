@@ -195,18 +195,30 @@ const StaffHome = () => {
       );
       setNewSignups(dedupedSignups);
 
-      // 3) Users who added to cart today (distinct)
+      // 3) Users who added to cart today (distinct) — keep latest add time per user
       const { data: cartItems } = await supabase
         .from("dealer_cart_items")
-        .select("user_id")
-        .gte("created_at", start);
+        .select("user_id, created_at, quantity")
+        .gte("created_at", start)
+        .order("created_at", { ascending: false });
       const cartUsers = new Set((cartItems || []).map((c) => c.user_id));
+      const cartAggMap = new Map<string, { user_id: string; last_added: string; items: number }>();
+      (cartItems || []).forEach((c: any) => {
+        const cur = cartAggMap.get(c.user_id);
+        if (cur) {
+          cur.items += 1;
+          if (c.created_at > cur.last_added) cur.last_added = c.created_at;
+        } else {
+          cartAggMap.set(c.user_id, { user_id: c.user_id, last_added: c.created_at, items: 1 });
+        }
+      });
 
-      // 4) Users who purchased today (distinct)
+      // 4) Users who purchased today (distinct) — keep order info
       const { data: orders } = await supabase
         .from("orders")
-        .select("user_id")
-        .gte("created_at", start);
+        .select("user_id, order_number, total_amount, status, created_at")
+        .gte("created_at", start)
+        .order("created_at", { ascending: false });
       const buyers = new Set((orders || []).map((o) => o.user_id));
 
       // 5) Hot leads — compute scoring
