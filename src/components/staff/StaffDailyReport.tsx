@@ -444,7 +444,7 @@ const StaffDailyReport = () => {
               disabled={!!submittedAt}
               title="استرجاع إجابات أمس كقيم افتراضية — تقدر تعدّلها قبل الحفظ"
             >
-              <History className="w-3.5 h-3.5" />
+              <HistoryIcon className="w-3.5 h-3.5" />
               استرجع تقرير أمس
             </Button>
             {submittedAt ? (
@@ -468,7 +468,7 @@ const StaffDailyReport = () => {
 
         {!submittedAt && (
           <div className="mb-4 p-2.5 rounded-lg bg-amber-500/5 border border-amber-500/20 text-[11px] text-amber-700 dark:text-amber-400 flex items-center gap-2">
-            <History className="w-3.5 h-3.5 shrink-0" />
+            <HistoryIcon className="w-3.5 h-3.5 shrink-0" />
             <span>تقدر تضغط <strong>"استرجع تقرير أمس"</strong> فوق لتعبئة الحقول بإجابات يوم أمس — كلها قابلة للتعديل قبل الحفظ.</span>
           </div>
         )}
