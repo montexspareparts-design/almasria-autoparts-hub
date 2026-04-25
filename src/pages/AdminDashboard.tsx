@@ -59,6 +59,7 @@ const AdminSEOPreview = lazy(() => import("@/components/admin/AdminSEOPreview"))
 const AdminResponsivePreview = lazy(() => import("@/components/admin/AdminResponsivePreview"));
 const AdminMobileErrorReport = lazy(() => import("@/components/admin/AdminMobileErrorReport"));
 const AdminPermissionRequests = lazy(() => import("@/components/admin/AdminPermissionRequests"));
+const AdminDailyReports = lazy(() => import("@/components/admin/AdminDailyReports"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];
@@ -133,6 +134,7 @@ const sidebarGroups: SidebarGroup[] = [
         { id: "audit-log", label: "سجل المراجعة", icon: Shield },
         { id: "account-attempts", label: "محاولات إنشاء/إعادة تعيين الحسابات", icon: KeyRound },
         { id: "permission-requests", label: "طلبات الصلاحيات", icon: ShieldCheck },
+        { id: "daily-reports", label: "التقارير اليومية للموظفين", icon: FileText },
         { id: "translations", label: "إدارة الترجمات (AR/EN)", icon: FileText },
         { id: "seo-preview", label: "معاينة SEO قبل النشر", icon: Eye },
         { id: "responsive-preview", label: "معاينة الأجهزة (موبايل/تابلت)", icon: Smartphone },
@@ -702,6 +704,8 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminClientAccountAttempts /></Suspense>;
       case "permission-requests":
         return <Suspense fallback={<SectionLoader />}><AdminPermissionRequests /></Suspense>;
+      case "daily-reports":
+        return <Suspense fallback={<SectionLoader />}><AdminDailyReports /></Suspense>;
       case "whatsapp-inbox":
         return <Suspense fallback={<SectionLoader />}><AdminWhatsAppInbox /></Suspense>;
       case "whatsapp-delivery":
