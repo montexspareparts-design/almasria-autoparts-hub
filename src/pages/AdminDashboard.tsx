@@ -723,10 +723,8 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Real-time new order alert popup */}
-      <Suspense fallback={null}>
-        <AdminNewOrderAlert />
-      </Suspense>
+      {/* AdminNewOrderAlert is mounted globally in App.tsx so it fires on
+          every staff page (incl. /admin/staff-home), not only inside /admin. */}
       {/* Real-time chatbot support request alert popup */}
       <Suspense fallback={null}>
         <AdminSupportRequestAlert />
