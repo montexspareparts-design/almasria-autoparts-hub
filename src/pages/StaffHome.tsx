@@ -81,6 +81,13 @@ const StaffHome = () => {
   const [viewedKeys, setViewedKeys] = useState<Set<string>>(new Set());
   // Per-key earliest view timestamp — used to compute "viewed" under different time-basis modes.
   const [viewedAtMap, setViewedAtMap] = useState<Map<string, string>>(new Map());
+  // All session views performed TODAY by ANY staff member — for the "viewed today" dialog
+  // Map key = "u:<user_id>" or "s:<session_key>", value = aggregated view info
+  const [todayViewsMap, setTodayViewsMap] = useState<Map<string, { staffIds: Set<string>; viewCount: number; lastViewedAt: string }>>(new Map());
+  const [staffNamesMap, setStaffNamesMap] = useState<Map<string, string>>(new Map());
+  const [viewedTodayOpen, setViewedTodayOpen] = useState(false);
+  const [viewedTodayMethodFilter, setViewedTodayMethodFilter] = useState<"all" | "by_me" | "by_others" | "multiple">("all");
+  const [viewedTodaySourceFilter, setViewedTodaySourceFilter] = useState<"all" | "facebook" | "google" | "instagram" | "tiktok" | "whatsapp" | "direct" | "other">("all");
   const [visitorTypeFilter, setVisitorTypeFilter] = useState<"all" | "registered" | "anon">("all");
   const [visitorDateFilter, setVisitorDateFilter] = useState<"all" | "today" | "yesterday" | "week">("today");
   const [visitorViewedFilter, setVisitorViewedFilter] = useState<"all" | "viewed" | "not_viewed">("all");
@@ -366,6 +373,47 @@ const StaffHome = () => {
         console.warn("[StaffHome] viewed keys fetch failed", e);
       }
 
+      // Fetch ALL staff views performed TODAY (any staff) — powers the "Viewed Today" dialog
+      try {
+        const todayStartIso = todayISO();
+        const { data: allViews } = await supabase
+          .from("visitor_session_views")
+          .select("staff_user_id, customer_user_id, session_key, last_viewed_at, view_count")
+          .gte("last_viewed_at", todayStartIso);
+        const map = new Map<string, { staffIds: Set<string>; viewCount: number; lastViewedAt: string }>();
+        const staffIdsToFetch = new Set<string>();
+        (allViews || []).forEach((v: any) => {
+          const k = v.customer_user_id ? `u:${v.customer_user_id}` : (v.session_key ? `s:${v.session_key}` : null);
+          if (!k) return;
+          staffIdsToFetch.add(v.staff_user_id);
+          const cur = map.get(k);
+          const at = v.last_viewed_at as string;
+          const vc = (v.view_count as number) || 1;
+          if (cur) {
+            cur.staffIds.add(v.staff_user_id);
+            cur.viewCount += vc;
+            if (at > cur.lastViewedAt) cur.lastViewedAt = at;
+          } else {
+            map.set(k, { staffIds: new Set([v.staff_user_id]), viewCount: vc, lastViewedAt: at });
+          }
+        });
+        setTodayViewsMap(map);
+        // Resolve staff names
+        if (staffIdsToFetch.size > 0) {
+          const { data: staffProfiles } = await supabase
+            .from("profiles")
+            .select("user_id, full_name")
+            .in("user_id", Array.from(staffIdsToFetch));
+          const nMap = new Map<string, string>();
+          (staffProfiles || []).forEach((p: any) => nMap.set(p.user_id, p.full_name || "موظف"));
+          setStaffNamesMap(nMap);
+        } else {
+          setStaffNamesMap(new Map());
+        }
+      } catch (e) {
+        console.warn("[StaffHome] today views fetch failed", e);
+      }
+
       // KPI counts respect the selected range (today vs 7d) even though we fetched 7d for the dialog.
       const startMs = new Date(start).getTime();
       const inRange = (v: { last_visit: string }) => new Date(v.last_visit).getTime() >= startMs;
@@ -467,6 +515,46 @@ const StaffHome = () => {
     );
   }, [visitorsList, includeStaff, staffIdsSet]);
 
+  // Detect traffic source for a visitor (used as the "reason" filter in Viewed Today dialog)
+  const detectSource = (firstPath: string | null, referrer: string | null) => {
+    const hay = ((firstPath || "") + " " + (referrer || "")).toLowerCase();
+    if (hay.includes("fbclid") || hay.includes("facebook") || hay.includes("utm_source=fb")) return "facebook";
+    if (hay.includes("instagram") || hay.includes("ig_")) return "instagram";
+    if (hay.includes("google") || hay.includes("gclid")) return "google";
+    if (hay.includes("tiktok") || hay.includes("ttclid")) return "tiktok";
+    if (hay.includes("whatsapp") || hay.includes("wa.me")) return "whatsapp";
+    if (!referrer) return "direct";
+    return "other";
+  };
+
+  const sourceLabel: Record<string, string> = {
+    facebook: "📘 فيسبوك",
+    instagram: "📷 إنستجرام",
+    google: "🔍 جوجل",
+    tiktok: "🎵 تيك توك",
+    whatsapp: "💬 واتساب",
+    direct: "🌐 مباشر",
+    other: "🔗 موقع آخر",
+  };
+
+  // Visitors viewed TODAY by any staff — joined with visitor data + view metadata
+  const viewedTodayVisitors = useMemo(() => {
+    const items: Array<{
+      v: typeof visitorsList[number];
+      viewInfo: { staffIds: Set<string>; viewCount: number; lastViewedAt: string };
+      key: string;
+    }> = [];
+    visitorsList.forEach((v) => {
+      const k = v.user_id ? `u:${v.user_id}` : (v.session_key ? `s:${v.session_key}` : null);
+      if (!k) return;
+      const info = todayViewsMap.get(k);
+      if (!info) return;
+      items.push({ v, viewInfo: info, key: k });
+    });
+    items.sort((a, b) => b.viewInfo.lastViewedAt.localeCompare(a.viewInfo.lastViewedAt));
+    return items;
+  }, [visitorsList, todayViewsMap]);
+
   const kpiCards: KPI[] = useMemo(
     () => [
       {
@@ -484,6 +572,17 @@ const StaffHome = () => {
                 ? " · أي وقت"
                 : ""
             }`
+          : undefined,
+      },
+      {
+        label: "تمت معاينتهم اليوم",
+        value: viewedTodayVisitors.length,
+        icon: CheckCheck,
+        color: "text-violet-600",
+        bg: "from-violet-500/10 to-violet-500/5",
+        onClick: () => setViewedTodayOpen(true),
+        subText: viewedTodayVisitors.length > 0
+          ? `إجمالي ${viewedTodayVisitors.reduce((s, x) => s + x.viewInfo.viewCount, 0)} معاينة`
           : undefined,
       },
       {
@@ -527,7 +626,7 @@ const StaffHome = () => {
         onClick: () => navigate("/admin?section=customer-intel"),
       },
     ],
-    [kpis, navigate, rangeSuffix, viewedVisitorsCount, viewedBasis]
+    [kpis, navigate, rangeSuffix, viewedVisitorsCount, viewedBasis, viewedTodayVisitors]
   );
 
   const tierBadge = (tier: HotLead["tier"]) => {
@@ -1223,6 +1322,166 @@ const StaffHome = () => {
                 });
               })()}
             </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* Viewed Today Dialog */}
+      <Dialog open={viewedTodayOpen} onOpenChange={setViewedTodayOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <CheckCheck className="w-5 h-5 text-violet-600" />
+              تمت معاينتهم اليوم
+              <Badge variant="secondary" className="text-xs">{viewedTodayVisitors.length}</Badge>
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              قائمة بكل الزوار اللي فتح ملفهم أي موظف اليوم — مع تفاصيل مين عاين وكام مرة، وفلترة سريعة حسب طريقة المعاينة أو مصدر الزائر.
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Filters */}
+          <div className="flex flex-wrap items-center gap-2 pt-2 pb-1 border-b">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Filter className="w-3.5 h-3.5" />
+              فلترة:
+            </div>
+            <Select value={viewedTodayMethodFilter} onValueChange={(v) => setViewedTodayMethodFilter(v as any)}>
+              <SelectTrigger className="h-8 w-[160px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل طرق المعاينة</SelectItem>
+                <SelectItem value="by_me">عاينتهم أنا</SelectItem>
+                <SelectItem value="by_others">عاينهم موظف آخر فقط</SelectItem>
+                <SelectItem value="multiple">مُعاين أكثر من مرة</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={viewedTodaySourceFilter} onValueChange={(v) => setViewedTodaySourceFilter(v as any)}>
+              <SelectTrigger className="h-8 w-[160px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل المصادر (السبب)</SelectItem>
+                <SelectItem value="facebook">📘 فيسبوك</SelectItem>
+                <SelectItem value="google">🔍 جوجل</SelectItem>
+                <SelectItem value="instagram">📷 إنستجرام</SelectItem>
+                <SelectItem value="tiktok">🎵 تيك توك</SelectItem>
+                <SelectItem value="whatsapp">💬 واتساب</SelectItem>
+                <SelectItem value="direct">🌐 مباشر</SelectItem>
+                <SelectItem value="other">🔗 موقع آخر</SelectItem>
+              </SelectContent>
+            </Select>
+            {(viewedTodayMethodFilter !== "all" || viewedTodaySourceFilter !== "all") && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 text-xs"
+                onClick={() => { setViewedTodayMethodFilter("all"); setViewedTodaySourceFilter("all"); }}
+              >
+                مسح الفلاتر
+              </Button>
+            )}
+          </div>
+
+          {(() => {
+            const meId = user?.id;
+            const filtered = viewedTodayVisitors.filter(({ v, viewInfo }) => {
+              // method filter
+              if (viewedTodayMethodFilter === "by_me" && (!meId || !viewInfo.staffIds.has(meId))) return false;
+              if (viewedTodayMethodFilter === "by_others" && (!meId || viewInfo.staffIds.has(meId))) return false;
+              if (viewedTodayMethodFilter === "multiple" && viewInfo.viewCount < 2) return false;
+              // source filter
+              if (viewedTodaySourceFilter !== "all") {
+                const src = detectSource(v.first_path || null, v.referrer || null);
+                if (src !== viewedTodaySourceFilter) return false;
+              }
+              return true;
+            });
+
+            if (filtered.length === 0) {
+              return (
+                <div className="text-center py-10 text-sm text-muted-foreground">
+                  مفيش زوار مطابقين للفلاتر المختارة
+                </div>
+              );
+            }
+
+            return (
+              <div className="space-y-2 mt-2">
+                {filtered.map(({ v, viewInfo, key }) => {
+                  const isAnon = !v.user_id;
+                  const name = v.full_name || (isAnon ? "زائر مجهول" : "بدون اسم");
+                  const lastView = new Date(viewInfo.lastViewedAt).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
+                  const src = detectSource(v.first_path || null, v.referrer || null);
+                  const viewedByMe = meId ? viewInfo.staffIds.has(meId) : false;
+                  const otherStaffNames = Array.from(viewInfo.staffIds)
+                    .filter((id) => id !== meId)
+                    .map((id) => staffNamesMap.get(id) || "موظف")
+                    .slice(0, 3);
+                  return (
+                    <div
+                      key={key}
+                      className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-muted/30 hover:bg-muted/60 transition flex-wrap"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-bold text-sm truncate">{name}</p>
+                          {isAnon ? (
+                            <Badge variant="outline" className="text-[10px] h-5 bg-amber-50 text-amber-700 border-amber-200">👤 لم يسجّل</Badge>
+                          ) : (
+                            <Badge className="bg-blue-500/15 text-blue-700 hover:bg-blue-500/20 text-[10px] h-5">مسجّل</Badge>
+                          )}
+                          <Badge variant="outline" className="text-[10px] h-5">{sourceLabel[src]}</Badge>
+                          <Badge variant="outline" className="text-[10px] h-5 bg-violet-50 text-violet-700 border-violet-200 gap-1">
+                            <Eye className="w-3 h-3" />
+                            {viewInfo.viewCount} معاينة
+                          </Badge>
+                          {viewedByMe && (
+                            <Badge variant="outline" className="text-[10px] h-5 bg-emerald-50 text-emerald-700 border-emerald-200">عاينتها أنا</Badge>
+                          )}
+                          {otherStaffNames.length > 0 && (
+                            <Badge variant="outline" className="text-[10px] h-5 bg-slate-50 text-slate-700 border-slate-200">
+                              + {otherStaffNames.join("، ")}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap text-[11px] text-muted-foreground">
+                          {v.phone && <span className="font-mono">📱 {v.phone}</span>}
+                          {v.email && <span className="truncate max-w-[200px]">✉️ {v.email}</span>}
+                          <span>👁️ {v.pages} صفحة</span>
+                          <span className="font-bold text-foreground">🕒 آخر معاينة {lastView}</span>
+                        </div>
+                      </div>
+                      <div className="flex gap-1.5 shrink-0">
+                        {v.phone && (
+                          <Button asChild size="sm" className="h-8 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
+                            <a
+                              href={`https://wa.me/${v.phone.replace(/^0/, "20").replace(/[^\d]/g, "")}`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              <MessageCircle className="w-3 h-3" />
+                              واتساب
+                            </a>
+                          </Button>
+                        )}
+                        {(v.user_id || v.session_key) && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 gap-1 text-xs"
+                            onClick={() => {
+                              setViewedTodayOpen(false);
+                              navigate(`/admin/visitor/${v.user_id || v.session_key}`);
+                            }}
+                          >
+                            <Eye className="w-3 h-3" />
+                            تفاصيل
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             );
           })()}
         </DialogContent>
