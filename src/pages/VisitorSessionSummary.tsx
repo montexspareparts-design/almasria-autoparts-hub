@@ -117,6 +117,17 @@ export default function VisitorSessionSummary() {
   const [notes, setNotes] = useState<Array<{ id: string; note: string; created_at: string; staff_user_id: string; staff_name?: string | null }>>([]);
   const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
   const [focusedSection, setFocusedSection] = useState<string | null>(null);
+  // Sections start collapsed; clicking a KPI or a section header expands them.
+  const [openSections, setOpenSections] = useState<Set<string>>(new Set());
+  const isSectionOpen = (id: string) => openSections.has(id);
+  const toggleSection = (id: string) => {
+    setOpenSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   // Communications log (تسجيل تواصل لمنع التكرار)
   const [comms, setComms] = useState<Array<{ id: string; comm_type: string; note: string | null; created_at: string; staff_user_id: string; staff_name?: string | null }>>([]);
@@ -137,17 +148,26 @@ export default function VisitorSessionSummary() {
   };
 
   const scrollToSection = (id: string) => {
-    const el = document.getElementById(id);
-    if (!el) {
-      toast({ title: "لا توجد بيانات في هذا القسم", description: "هذا الزائر لم يسجّل نشاطًا هنا بعد." });
-      return;
-    }
-    // Clear any previous focus highlight
-    clearFocus();
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
-    el.classList.add("ring-4", "ring-primary", "ring-offset-2", "shadow-2xl", "scale-[1.01]", "transition-all");
-    el.setAttribute("data-focus-target", "true");
-    setFocusedSection(id);
+    // Always make sure the target section is open before scrolling.
+    setOpenSections((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+    // Wait for the section to render before scrolling/highlighting.
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if (!el) {
+        toast({ title: "لا توجد بيانات في هذا القسم", description: "هذا الزائر لم يسجّل نشاطًا هنا بعد." });
+        return;
+      }
+      clearFocus();
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      el.classList.add("ring-4", "ring-primary", "ring-offset-2", "shadow-2xl", "scale-[1.01]", "transition-all");
+      el.setAttribute("data-focus-target", "true");
+      setFocusedSection(id);
+    }, 60);
   };
 
   useEffect(() => {
