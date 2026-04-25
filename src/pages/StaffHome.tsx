@@ -1718,17 +1718,54 @@ const StaffHome = () => {
             <DialogTitle className="flex items-center gap-2 text-base">
               <ShoppingCart className="w-5 h-5 text-amber-600" />
               أضافوا للسلة ({rangeSuffix})
-              <Badge variant="secondary" className="text-xs">{cartList.length}</Badge>
+              <Badge variant="secondary" className="text-xs">{visibleCart.length}</Badge>
+              {visibleCart.length !== cartList.length && (
+                <span className="text-[10px] text-muted-foreground font-normal" title="العدد بعد تطبيق الفلاتر من إجمالي العملاء">
+                  من أصل {cartList.length}
+                </span>
+              )}
             </DialogTitle>
             <DialogDescription className="text-xs">
               عملاء أضافوا منتجات للسلة لكن لسه ما أتموا الطلب — فرصة متابعة قوية.
             </DialogDescription>
           </DialogHeader>
-          {cartList.length === 0 ? (
-            <div className="text-center py-10 text-sm text-muted-foreground">مفيش عملاء أضافوا للسلة في هذا النطاق</div>
+
+          {/* Sort + filter bar */}
+          <div className="flex flex-wrap items-center gap-2 pt-2 pb-1 border-b">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Filter className="w-3.5 h-3.5" />
+              فرز/فلترة:
+            </div>
+            <Select value={cartSort} onValueChange={(v) => setCartSort(v as any)}>
+              <SelectTrigger className="h-8 w-[160px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recent">الأحدث إضافة أولاً</SelectItem>
+                <SelectItem value="items">الأكثر منتجات أولاً</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={cartContactFilter} onValueChange={(v) => setCartContactFilter(v as any)}>
+              <SelectTrigger className="h-8 w-[160px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل العملاء</SelectItem>
+                <SelectItem value="with_phone">عنده هاتف</SelectItem>
+                <SelectItem value="no_phone">بدون هاتف</SelectItem>
+              </SelectContent>
+            </Select>
+            {(cartSort !== "recent" || cartContactFilter !== "all") && (
+              <Button size="sm" variant="ghost" className="h-8 text-xs"
+                onClick={() => { setCartSort("recent"); setCartContactFilter("all"); }}>
+                مسح
+              </Button>
+            )}
+          </div>
+
+          {visibleCart.length === 0 ? (
+            <div className="text-center py-10 text-sm text-muted-foreground">
+              {cartList.length === 0 ? "مفيش عملاء أضافوا للسلة في هذا النطاق" : "مفيش عملاء مطابقين للفلاتر"}
+            </div>
           ) : (
             <div className="space-y-2 mt-2">
-              {cartList.map((c) => {
+              {visibleCart.map((c) => {
                 const last = new Date(c.last_added).toLocaleString("ar-EG", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
                 return (
                   <div key={c.user_id} className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-amber-500/5 hover:bg-amber-500/10 transition flex-wrap">
