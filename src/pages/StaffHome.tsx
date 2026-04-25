@@ -22,11 +22,46 @@ import {
   TrendingUp,
   CheckCheck,
   Filter,
+  Search,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isNoiseVisit, ENGAGED_DWELL_MS } from "@/lib/visitorAnalytics";
 import { viewedOnVisitDay } from "@/lib/visitDayMatch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+
+// Normalize a string for case-insensitive substring matching.
+// Strips Arabic diacritics + tatweel and lowercases the rest so "محمد" matches
+// "مُحَمَّد" and "ahmed" matches "Ahmed".
+const normalizeSearch = (s: string | null | undefined) =>
+  (s || "")
+    .toLowerCase()
+    .replace(/[\u064B-\u0652\u0670\u0640]/g, "")
+    .trim();
+
+// Strip everything except digits — used to compare phone numbers regardless of
+// formatting (spaces, dashes, +20 prefix, etc.).
+const digitsOnly = (s: string | null | undefined) => (s || "").replace(/\D/g, "");
+
+// Returns true if the contact (name/phone/email) matches the free-text query.
+// Empty/whitespace-only queries always match (search is treated as inactive).
+const matchesContactQuery = (
+  q: string,
+  contact: { full_name?: string | null; phone?: string | null; email?: string | null },
+) => {
+  const norm = normalizeSearch(q);
+  if (!norm) return true;
+  const name = normalizeSearch(contact.full_name);
+  const email = normalizeSearch(contact.email);
+  if (name.includes(norm) || email.includes(norm)) return true;
+  const qDigits = digitsOnly(q);
+  if (qDigits.length >= 3) {
+    const phoneDigits = digitsOnly(contact.phone);
+    if (phoneDigits.includes(qDigits)) return true;
+  }
+  return false;
+};
 
 interface KPI {
   label: string;
