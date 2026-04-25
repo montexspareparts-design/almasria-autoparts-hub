@@ -94,7 +94,29 @@ const sevenDaysISO = () => {
   return new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 };
 
+// First day of the current local month at 00:00.
+// Used as the widest "this month" window for per-dialog range overrides.
+const monthStartISO = () => {
+  const d = new Date();
+  d.setDate(1);
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
+};
+
 type RangeKey = "today" | "7d";
+// Per-dialog range: each Dialog can override the global KPI range with its own
+// time window without re-fetching (we fetch the widest range up-front).
+type DialogRangeKey = "today" | "7d" | "month";
+
+// Returns the earliest local timestamp (ms since epoch) for the given dialog range.
+const dialogRangeStartMs = (r: DialogRangeKey): number => {
+  if (r === "today") return new Date(todayISO()).getTime();
+  if (r === "7d") return new Date(sevenDaysISO()).getTime();
+  return new Date(monthStartISO()).getTime();
+};
+
+const dialogRangeLabel = (r: DialogRangeKey): string =>
+  r === "today" ? "اليوم" : r === "7d" ? "آخر 7 أيام" : "هذا الشهر";
 
 const StaffHome = () => {
   const { user, isAdmin, isModerator, loading: authLoading } = useAuth();
@@ -140,7 +162,7 @@ const StaffHome = () => {
   // Visitors dialog "engaged only" filter (driven by KPI card click)
   const [visitorEngagedOnly, setVisitorEngagedOnly] = useState(false);
   const [visitorTypeFilter, setVisitorTypeFilter] = useState<"all" | "registered" | "anon">("all");
-  const [visitorDateFilter, setVisitorDateFilter] = useState<"all" | "today" | "yesterday" | "week">("today");
+  const [visitorDateFilter, setVisitorDateFilter] = useState<"all" | "today" | "yesterday" | "week" | "month">("today");
   const [visitorViewedFilter, setVisitorViewedFilter] = useState<"all" | "viewed" | "not_viewed">("all");
   // Free-text search inside each dialog (matches name / phone / email).
   // Phone matching ignores formatting (spaces, dashes, +20…), name matching
@@ -149,6 +171,13 @@ const StaffHome = () => {
   const [cartSearch, setCartSearch] = useState("");
   const [buyersSearch, setBuyersSearch] = useState("");
   const [leadsSearch, setLeadsSearch] = useState("");
+  // Per-dialog time range (today / 7d / month). Each Dialog can override the
+  // global KPI range without forcing a refetch — lists are pre-fetched at the
+  // widest window (this month) and filtered client-side.
+  const [visitorsRange, setVisitorsRange] = useState<DialogRangeKey>("today");
+  const [cartRange, setCartRange] = useState<DialogRangeKey>("today");
+  const [buyersRange, setBuyersRange] = useState<DialogRangeKey>("today");
+  const [leadsRange, setLeadsRange] = useState<DialogRangeKey>("7d");
   // Toggle: false = "Only Customers" (default, excludes staff). true = "All" (review only — shows staff too).
   const [includeStaff, setIncludeStaff] = useState<boolean>(false);
   const [staffIdsSet, setStaffIdsSet] = useState<Set<string>>(new Set());
@@ -178,10 +207,15 @@ const StaffHome = () => {
     setLoading(true);
     try {
       const start = range === "today" ? todayISO() : sevenDaysISO();
+      // Widest window we ever need client-side. We fetch lists at this depth
+      // so each Dialog can apply its own range (today / 7d / month) without
+      // a refetch round-trip. KPI cards still use `start` (the global range).
+      const widestStart = monthStartISO();
 
-      // 1) Visitors — always fetch last 7 days so the dialog's date filter (today/yesterday/week) is meaningful.
-      // KPI counts are computed against `start` below.
-      const visitsStart = sevenDaysISO();
+      // 1) Visitors — always fetch the widest window (this month) so each dialog's
+      // own range filter (today / 7d / month) works without a round-trip.
+      // KPI counts are still computed against `start` below.
+      const visitsStart = widestStart;
       const { data: visits } = await supabase
         .from("page_visits")
         .select("session_key, user_id, visited_at, path, referrer")
@@ -234,7 +268,7 @@ const StaffHome = () => {
       const { data: signupRows, count: signupCount } = await supabase
         .from("profiles")
         .select("user_id, full_name, phone, email, created_at", { count: "exact" })
-        .gte("created_at", start)
+        .gte("created_at", widestStart)
         .order("created_at", { ascending: false })
         .limit(100);
 
@@ -262,7 +296,7 @@ const StaffHome = () => {
       const { data: cartItems } = await supabase
         .from("dealer_cart_items")
         .select("user_id, created_at, quantity")
-        .gte("created_at", start)
+        .gte("created_at", widestStart)
         .order("created_at", { ascending: false });
       const cartUsers = new Set((cartItems || []).map((c) => c.user_id));
       const cartAggMap = new Map<string, { user_id: string; last_added: string; items: number }>();
@@ -280,15 +314,13 @@ const StaffHome = () => {
       const { data: orders } = await supabase
         .from("orders")
         .select("user_id, order_number, total_amount, status, created_at")
-        .gte("created_at", start)
+        .gte("created_at", widestStart)
         .order("created_at", { ascending: false });
       const buyers = new Set((orders || []).map((o) => o.user_id));
 
-      // 5) Hot leads — compute scoring
-      // Pull last 7 days of activity
-      const sevenDaysAgo = new Date(
-        Date.now() - 7 * 24 * 60 * 60 * 1000
-      ).toISOString();
+      // Hot leads: pull activity over the widest window so the leads dialog can
+      // also offer a month range. Tier classification is unchanged.
+      const sevenDaysAgo = widestStart;
 
       const [searchesRes, viewsRes, cartRes, ordersRes, profilesRes] =
         await Promise.all([
@@ -545,9 +577,16 @@ const StaffHome = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isAdmin, isModerator, range]);
 
-  // Sync the dialog's date filter with the KPI range toggle so users see what they expect.
+  // Sync each Dialog's range default with the global KPI range so a user that
+  // flips the global toggle sees Dialogs follow — but they can still override
+  // each Dialog independently after that.
   useEffect(() => {
     setVisitorDateFilter(range === "today" ? "today" : "all");
+    const mapped: DialogRangeKey = range === "today" ? "today" : "7d";
+    setVisitorsRange(mapped);
+    setCartRange(mapped);
+    setBuyersRange(mapped);
+    // leadsRange stays at its default ("7d") since "today" leads is rarely useful
   }, [range]);
 
   const rangeSuffix = range === "today" ? "اليوم" : "آخر 7 أيام";
@@ -632,6 +671,7 @@ const StaffHome = () => {
     const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
     const yesterdayStart = new Date(todayStart); yesterdayStart.setDate(yesterdayStart.getDate() - 1);
     const weekStart = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
     return visitorsList.filter((v) => {
       if (!includeStaff && v.user_id && staffIdsSet.has(v.user_id)) return false;
       if (visitorTypeFilter === "registered" && !v.user_id) return false;
@@ -640,6 +680,7 @@ const StaffHome = () => {
       if (visitorDateFilter === "today" && t < todayStart.getTime()) return false;
       if (visitorDateFilter === "yesterday" && (t < yesterdayStart.getTime() || t >= todayStart.getTime())) return false;
       if (visitorDateFilter === "week" && t < weekStart.getTime()) return false;
+      if (visitorDateFilter === "month" && t < monthStart.getTime()) return false;
       const isViewed =
         (v.user_id && viewedKeys.has(`u:${v.user_id}`)) ||
         (v.session_key && viewedKeys.has(`s:${v.session_key}`));
@@ -663,6 +704,9 @@ const StaffHome = () => {
   // Unified KPI numbers — computed from raw lists with the SAME staff-exclusion
   // logic as visibleVisitorsCount, so all cards stay consistent with the toggle.
   const kpis = useMemo(() => {
+    // Lists are now fetched at the widest window (this month) to power per-dialog
+    // ranges. KPI cards still reflect the GLOBAL range toggle, so we filter every
+    // list by `startMs` here.
     const visibleVisitors = visitorsList.filter(
       (v) => (includeStaff || !isStaffVisitor(v.user_id)) && visitTs(v) >= startMs
     );
@@ -672,14 +716,22 @@ const StaffHome = () => {
       const dwell = Number.isFinite(firstT) && Number.isFinite(lastT) ? lastT - (firstT as number) : 0;
       return dwell >= ENGAGED_DWELL_MS || (v.pages ?? 0) >= 2;
     }).length;
-    const signups = newSignups.filter((s) => includeStaff || !isStaffVisitor(s.user_id)).length;
+    const signups = newSignups.filter(
+      (s) => (includeStaff || !isStaffVisitor(s.user_id)) && new Date(s.created_at).getTime() >= startMs
+    ).length;
     const cartUsers = new Set(
-      cartList.filter((c) => includeStaff || !isStaffVisitor(c.user_id)).map((c) => c.user_id)
+      cartList
+        .filter((c) => (includeStaff || !isStaffVisitor(c.user_id)) && new Date(c.last_added).getTime() >= startMs)
+        .map((c) => c.user_id)
     ).size;
     const buyerUsers = new Set(
-      buyersList.filter((b) => includeStaff || !isStaffVisitor(b.user_id)).map((b) => b.user_id)
+      buyersList
+        .filter((b) => (includeStaff || !isStaffVisitor(b.user_id)) && new Date(b.created_at).getTime() >= startMs)
+        .map((b) => b.user_id)
     ).size;
-    const hot = hotLeads.filter((l) => includeStaff || !isStaffVisitor(l.user_id)).length || hotLeadsCount;
+    const hot = hotLeads.filter(
+      (l) => (includeStaff || !isStaffVisitor(l.user_id)) && new Date(l.last_activity).getTime() >= startMs
+    ).length;
     return {
       visitors: visibleVisitors.length,
       engagedVisitors: engaged,
@@ -689,7 +741,7 @@ const StaffHome = () => {
       hotLeads: hot,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visitorsList, newSignups, cartList, buyersList, hotLeads, hotLeadsCount, includeStaff, staffIdsSet, startMs]);
+  }, [visitorsList, newSignups, cartList, buyersList, hotLeads, includeStaff, staffIdsSet, startMs]);
 
   // Detect traffic source for a visitor (used as the "reason" filter in Viewed Today dialog)
   const detectSource = (firstPath: string | null, referrer: string | null) => {
@@ -818,7 +870,11 @@ const StaffHome = () => {
   // ──────────────────────────────────────────────────────────────────────────
 
   const visibleCart = useMemo(() => {
+    const startMsCart = dialogRangeStartMs(cartRange);
     const filtered = cartList.filter((c) => {
+      // Per-dialog time window — clipped against the in-memory list which is
+      // already pre-fetched at the widest range (this month).
+      if (new Date(c.last_added).getTime() < startMsCart) return false;
       if (cartContactFilter === "with_phone" && !c.phone) return false;
       if (cartContactFilter === "no_phone" && c.phone) return false;
       if (!matchesContactQuery(cartSearch, c)) return false;
@@ -828,11 +884,13 @@ const StaffHome = () => {
       if (cartSort === "items") return (b.items || 0) - (a.items || 0);
       return (b.last_added || "").localeCompare(a.last_added || "");
     });
-  }, [cartList, cartContactFilter, cartSort, cartSearch]);
+  }, [cartList, cartContactFilter, cartSort, cartSearch, cartRange]);
 
   const visibleBuyers = useMemo(() => {
     const known = new Set(["pending", "confirmed", "shipped", "delivered", "cancelled"]);
+    const startMsBuyers = dialogRangeStartMs(buyersRange);
     const filtered = buyersList.filter((b) => {
+      if (new Date(b.created_at).getTime() < startMsBuyers) return false;
       if (buyersContactFilter === "with_phone" && !b.phone) return false;
       if (buyersContactFilter === "no_phone" && b.phone) return false;
       if (buyersStatusFilter !== "all") {
@@ -853,10 +911,12 @@ const StaffHome = () => {
       if (buyersSort === "amount") return (b.total_amount || 0) - (a.total_amount || 0);
       return (b.created_at || "").localeCompare(a.created_at || "");
     });
-  }, [buyersList, buyersContactFilter, buyersStatusFilter, buyersSort, buyersSearch]);
+  }, [buyersList, buyersContactFilter, buyersStatusFilter, buyersSort, buyersSearch, buyersRange]);
 
   const visibleLeads = useMemo(() => {
+    const startMsLeads = dialogRangeStartMs(leadsRange);
     const filtered = hotLeads.filter((l) => {
+      if (new Date(l.last_activity).getTime() < startMsLeads) return false;
       if (leadsContactFilter === "with_phone" && !l.phone) return false;
       if (leadsContactFilter === "no_phone" && l.phone) return false;
       if (leadsTierFilter !== "all" && l.tier !== leadsTierFilter) return false;
@@ -867,7 +927,7 @@ const StaffHome = () => {
       if (leadsSort === "recent") return (b.last_activity || "").localeCompare(a.last_activity || "");
       return (b.score || 0) - (a.score || 0);
     });
-  }, [hotLeads, leadsContactFilter, leadsTierFilter, leadsSort, leadsSearch]);
+  }, [hotLeads, leadsContactFilter, leadsTierFilter, leadsSort, leadsSearch, leadsRange]);
 
   const tierBadge = (tier: HotLead["tier"]) => {
     if (tier === "hot")
@@ -1376,7 +1436,7 @@ const StaffHome = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
               <Users className="w-5 h-5 text-blue-600" />
-              زوار {rangeSuffix}
+              زوار {visitorDateFilter === "today" ? "اليوم" : visitorDateFilter === "yesterday" ? "أمس" : visitorDateFilter === "week" ? "آخر 7 أيام" : visitorDateFilter === "month" ? "هذا الشهر" : "كل التواريخ"}
               <Badge variant="secondary" className="text-xs">{dialogFilteredVisitors.length}</Badge>
               {dialogFilteredVisitors.length !== visitorsList.length && (
                 <span
@@ -1435,6 +1495,7 @@ const StaffHome = () => {
                 <SelectItem value="today">اليوم</SelectItem>
                 <SelectItem value="yesterday">أمس</SelectItem>
                 <SelectItem value="week">آخر 7 أيام</SelectItem>
+                <SelectItem value="month">هذا الشهر</SelectItem>
               </SelectContent>
             </Select>
             <Select value={visitorViewedFilter} onValueChange={(v) => setVisitorViewedFilter(v as any)}>
@@ -1794,7 +1855,7 @@ const StaffHome = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
               <ShoppingCart className="w-5 h-5 text-amber-600" />
-              أضافوا للسلة ({rangeSuffix})
+              أضافوا للسلة ({dialogRangeLabel(cartRange)})
               <Badge variant="secondary" className="text-xs">{visibleCart.length}</Badge>
               {visibleCart.length !== cartList.length && (
                 <span className="text-[10px] text-muted-foreground font-normal" title="العدد بعد تطبيق الفلاتر من إجمالي العملاء">
@@ -1835,6 +1896,14 @@ const StaffHome = () => {
               <Filter className="w-3.5 h-3.5" />
               فرز/فلترة:
             </div>
+            <Select value={cartRange} onValueChange={(v) => setCartRange(v as DialogRangeKey)}>
+              <SelectTrigger className="h-8 w-[140px] text-xs" title="نطاق الوقت لهذا الـDialog فقط — مستقل عن مؤشرات الـKPI"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="today">اليوم</SelectItem>
+                <SelectItem value="7d">آخر 7 أيام</SelectItem>
+                <SelectItem value="month">هذا الشهر</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={cartSort} onValueChange={(v) => setCartSort(v as any)}>
               <SelectTrigger className="h-8 w-[160px] text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -1919,7 +1988,7 @@ const StaffHome = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
               <CheckCircle2 className="w-5 h-5 text-green-600" />
-              طلبات {rangeSuffix}
+              طلبات {dialogRangeLabel(buyersRange)}
               <Badge variant="secondary" className="text-xs">{visibleBuyers.length}</Badge>
               {visibleBuyers.length !== buyersList.length && (
                 <span className="text-[10px] text-muted-foreground font-normal" title="العدد بعد الفلاتر من إجمالي الطلبات">
@@ -1965,6 +2034,14 @@ const StaffHome = () => {
               <Filter className="w-3.5 h-3.5" />
               فرز/فلترة:
             </div>
+            <Select value={buyersRange} onValueChange={(v) => setBuyersRange(v as DialogRangeKey)}>
+              <SelectTrigger className="h-8 w-[140px] text-xs" title="نطاق الوقت لهذا الـDialog فقط — مستقل عن مؤشرات الـKPI"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="today">اليوم</SelectItem>
+                <SelectItem value="7d">آخر 7 أيام</SelectItem>
+                <SelectItem value="month">هذا الشهر</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={buyersSort} onValueChange={(v) => setBuyersSort(v as any)}>
               <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -2063,7 +2140,7 @@ const StaffHome = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
               <Flame className="w-5 h-5 text-red-600" />
-              Leads ساخنة
+              Leads ساخنة ({dialogRangeLabel(leadsRange)})
               <Badge variant="secondary" className="text-xs">{visibleLeads.length}</Badge>
               {visibleLeads.length !== hotLeads.length && (
                 <span className="text-[10px] text-muted-foreground font-normal" title="العدد بعد الفلاتر من إجمالي الـLeads">
@@ -2104,6 +2181,14 @@ const StaffHome = () => {
               <Filter className="w-3.5 h-3.5" />
               فرز/فلترة:
             </div>
+            <Select value={leadsRange} onValueChange={(v) => setLeadsRange(v as DialogRangeKey)}>
+              <SelectTrigger className="h-8 w-[140px] text-xs" title="نطاق الوقت لهذا الـDialog فقط — مستقل عن مؤشرات الـKPI"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="today">اليوم</SelectItem>
+                <SelectItem value="7d">آخر 7 أيام</SelectItem>
+                <SelectItem value="month">هذا الشهر</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={leadsSort} onValueChange={(v) => setLeadsSort(v as any)}>
               <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>
