@@ -45,11 +45,12 @@ export function isAnswerFilled(q: DynQuestion, a: DynAnswer | undefined): boolea
 /**
  * Returns the list of required questions that have not been answered yet.
  * Non-required questions are always excluded.
+ * Generic so callers can pass their richer question shape and get it back unchanged.
  */
-export function computeMissingRequired(
-  questions: DynQuestion[],
+export function computeMissingRequired<Q extends DynQuestion>(
+  questions: Q[],
   answers: DynAnswersMap
-): DynQuestion[] {
+): Q[] {
   return questions.filter((q) => {
     if (!q.is_required) return false;
     return !isAnswerFilled(q, answers[q.id]);
