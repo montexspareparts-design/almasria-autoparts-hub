@@ -30,6 +30,7 @@ import {
 import { cn } from "@/lib/utils";
 import { isNoiseVisit, ENGAGED_DWELL_MS } from "@/lib/visitorAnalytics";
 import { viewedOnVisitDay } from "@/lib/visitDayMatch";
+import { isViewedUnderBasis as isViewedUnderBasisPure } from "@/lib/viewedUnderBasis";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 
