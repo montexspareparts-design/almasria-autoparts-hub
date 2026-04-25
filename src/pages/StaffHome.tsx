@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isNoiseVisit, ENGAGED_DWELL_MS } from "@/lib/visitorAnalytics";
+import { viewedOnVisitDay } from "@/lib/visitDayMatch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface KPI {
