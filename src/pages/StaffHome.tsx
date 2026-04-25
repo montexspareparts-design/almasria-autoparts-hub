@@ -77,7 +77,7 @@ const StaffHome = () => {
   const [newSignups, setNewSignups] = useState<Array<{ user_id: string; full_name: string | null; phone: string | null; email: string | null; created_at: string; duplicates?: number; duplicateIds?: string[] }>>([]);
   const [signupsOpen, setSignupsOpen] = useState(false);
   const [visitorsOpen, setVisitorsOpen] = useState(false);
-  const [visitorsList, setVisitorsList] = useState<Array<{ user_id: string | null; session_key: string | null; full_name: string | null; phone: string | null; email: string | null; pages: number; last_visit: string; first_path?: string | null; referrer?: string | null; searches?: string[] }>>([]);
+  const [visitorsList, setVisitorsList] = useState<Array<{ user_id: string | null; session_key: string | null; full_name: string | null; phone: string | null; email: string | null; pages: number; last_visit: string; first_visit?: string; first_path?: string | null; referrer?: string | null; searches?: string[] }>>([]);
   const [viewedKeys, setViewedKeys] = useState<Set<string>>(new Set());
   // Per-key earliest view timestamp — used to compute "viewed" under different time-basis modes.
   const [viewedAtMap, setViewedAtMap] = useState<Map<string, string>>(new Map());
