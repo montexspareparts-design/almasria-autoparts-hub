@@ -688,6 +688,9 @@ const StaffHome = () => {
   // Unified KPI numbers — computed from raw lists with the SAME staff-exclusion
   // logic as visibleVisitorsCount, so all cards stay consistent with the toggle.
   const kpis = useMemo(() => {
+    // Lists are now fetched at the widest window (this month) to power per-dialog
+    // ranges. KPI cards still reflect the GLOBAL range toggle, so we filter every
+    // list by `startMs` here.
     const visibleVisitors = visitorsList.filter(
       (v) => (includeStaff || !isStaffVisitor(v.user_id)) && visitTs(v) >= startMs
     );
@@ -697,14 +700,22 @@ const StaffHome = () => {
       const dwell = Number.isFinite(firstT) && Number.isFinite(lastT) ? lastT - (firstT as number) : 0;
       return dwell >= ENGAGED_DWELL_MS || (v.pages ?? 0) >= 2;
     }).length;
-    const signups = newSignups.filter((s) => includeStaff || !isStaffVisitor(s.user_id)).length;
+    const signups = newSignups.filter(
+      (s) => (includeStaff || !isStaffVisitor(s.user_id)) && new Date(s.created_at).getTime() >= startMs
+    ).length;
     const cartUsers = new Set(
-      cartList.filter((c) => includeStaff || !isStaffVisitor(c.user_id)).map((c) => c.user_id)
+      cartList
+        .filter((c) => (includeStaff || !isStaffVisitor(c.user_id)) && new Date(c.last_added).getTime() >= startMs)
+        .map((c) => c.user_id)
     ).size;
     const buyerUsers = new Set(
-      buyersList.filter((b) => includeStaff || !isStaffVisitor(b.user_id)).map((b) => b.user_id)
+      buyersList
+        .filter((b) => (includeStaff || !isStaffVisitor(b.user_id)) && new Date(b.created_at).getTime() >= startMs)
+        .map((b) => b.user_id)
     ).size;
-    const hot = hotLeads.filter((l) => includeStaff || !isStaffVisitor(l.user_id)).length || hotLeadsCount;
+    const hot = hotLeads.filter(
+      (l) => (includeStaff || !isStaffVisitor(l.user_id)) && new Date(l.last_activity).getTime() >= startMs
+    ).length;
     return {
       visitors: visibleVisitors.length,
       engagedVisitors: engaged,
@@ -714,7 +725,7 @@ const StaffHome = () => {
       hotLeads: hot,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visitorsList, newSignups, cartList, buyersList, hotLeads, hotLeadsCount, includeStaff, staffIdsSet, startMs]);
+  }, [visitorsList, newSignups, cartList, buyersList, hotLeads, includeStaff, staffIdsSet, startMs]);
 
   // Detect traffic source for a visitor (used as the "reason" filter in Viewed Today dialog)
   const detectSource = (firstPath: string | null, referrer: string | null) => {
