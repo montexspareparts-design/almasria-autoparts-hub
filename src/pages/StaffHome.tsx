@@ -545,12 +545,22 @@ const StaffHome = () => {
     [range]
   );
 
+  // Safe timestamp extractor — falls back to first_visit if last_visit missing,
+  // and returns -Infinity for completely missing data so it gets excluded from range filters
+  // instead of accidentally being counted (NaN comparisons return false → previously dropped silently).
+  const visitTs = (v: { last_visit?: string | null; first_visit?: string | null }) => {
+    const last = v.last_visit ? new Date(v.last_visit).getTime() : NaN;
+    if (Number.isFinite(last)) return last;
+    const first = v.first_visit ? new Date(v.first_visit).getTime() : NaN;
+    return Number.isFinite(first) ? first : -Infinity;
+  };
+
   // Visitor count shown in the dialog title badge — uses the SAME staff exclusion
   // AND the same KPI range as the visitors KPI card, so badge ≡ kpis.visitors.
   const visibleVisitorsCount = useMemo(() => {
     return visitorsList.reduce((acc, v) => {
       if (!includeStaff && v.user_id && staffIdsSet.has(v.user_id)) return acc;
-      if (new Date(v.last_visit).getTime() < startMs) return acc;
+      if (visitTs(v) < startMs) return acc;
       return acc + 1;
     }, 0);
   }, [visitorsList, includeStaff, staffIdsSet, startMs]);
@@ -560,11 +570,13 @@ const StaffHome = () => {
   // logic as visibleVisitorsCount, so all cards stay consistent with the toggle.
   const kpis = useMemo(() => {
     const visibleVisitors = visitorsList.filter(
-      (v) => (includeStaff || !isStaffVisitor(v.user_id)) && new Date(v.last_visit).getTime() >= startMs
+      (v) => (includeStaff || !isStaffVisitor(v.user_id)) && visitTs(v) >= startMs
     );
     const engaged = visibleVisitors.filter((v) => {
-      const dwell = v.first_visit ? new Date(v.last_visit).getTime() - new Date(v.first_visit).getTime() : 0;
-      return dwell >= ENGAGED_DWELL_MS || v.pages >= 2;
+      const lastT = visitTs(v);
+      const firstT = v.first_visit ? new Date(v.first_visit).getTime() : NaN;
+      const dwell = Number.isFinite(firstT) && Number.isFinite(lastT) ? lastT - (firstT as number) : 0;
+      return dwell >= ENGAGED_DWELL_MS || (v.pages ?? 0) >= 2;
     }).length;
     const signups = newSignups.filter((s) => includeStaff || !isStaffVisitor(s.user_id)).length;
     const cartUsers = new Set(
@@ -1251,7 +1263,7 @@ const StaffHome = () => {
               if (!includeStaff && v.user_id && staffIdsSet.has(v.user_id)) return false;
               if (visitorTypeFilter === "registered" && !v.user_id) return false;
               if (visitorTypeFilter === "anon" && v.user_id) return false;
-              const t = new Date(v.last_visit).getTime();
+              const t = visitTs(v);
               if (visitorDateFilter === "today" && t < todayStart.getTime()) return false;
               if (visitorDateFilter === "yesterday" && (t < yesterdayStart.getTime() || t >= todayStart.getTime())) return false;
               if (visitorDateFilter === "week" && t < weekStart.getTime()) return false;
@@ -1259,8 +1271,9 @@ const StaffHome = () => {
               if (visitorViewedFilter === "viewed" && !isViewed) return false;
               if (visitorViewedFilter === "not_viewed" && isViewed) return false;
               if (visitorEngagedOnly) {
-                const dwell = v.first_visit ? (new Date(v.last_visit).getTime() - new Date(v.first_visit).getTime()) : 0;
-                if (!(dwell >= ENGAGED_DWELL_MS || v.pages >= 2)) return false;
+                const firstT = v.first_visit ? new Date(v.first_visit).getTime() : NaN;
+                const dwell = Number.isFinite(firstT) && Number.isFinite(t) ? t - (firstT as number) : 0;
+                if (!(dwell >= ENGAGED_DWELL_MS || (v.pages ?? 0) >= 2)) return false;
               }
               return true;
             });
