@@ -26,6 +26,7 @@ import {
   X,
   Info,
   ChevronDown,
+  HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isNoiseVisit, ENGAGED_DWELL_MS } from "@/lib/visitorAnalytics";
@@ -33,6 +34,7 @@ import { viewedOnVisitDay } from "@/lib/visitDayMatch";
 import { isViewedUnderBasis as isViewedUnderBasisPure } from "@/lib/viewedUnderBasis";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 // Normalize a string for case-insensitive substring matching.
 // Strips Arabic diacritics + tatweel and lowercases the rest so "محمد" matches
@@ -1240,6 +1242,70 @@ const StaffHome = () => {
                 أول معاينة
               </button>
             </div>
+
+            {/* Help popover — explains the SQL semantics behind each anchor
+                with concrete timestamp examples. Opens on click; works on touch too. */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="شرح طريقة حساب آخر/أول معاينة"
+                  title="كيف تُحسب آخر/أول معاينة؟"
+                  className="inline-flex items-center justify-center w-7 h-7 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                >
+                  <HelpCircle className="w-4 h-4" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent side="bottom" align="end" className="w-[340px] text-xs leading-relaxed">
+                <div className="font-semibold text-sm mb-2">كيف يُحسب وقت المعاينة؟</div>
+                <p className="text-muted-foreground mb-3">
+                  لكل زائر قد يوجد عدة سجلات معاينة في جدول <code className="font-mono">visitor_session_views</code>.
+                  الفلتر يختار توقيتاً واحداً لكل زائر حسب الزر المفعّل:
+                </p>
+
+                <div className="space-y-2.5">
+                  <div className="rounded-md border border-border/60 bg-muted/30 p-2.5">
+                    <div className="font-medium mb-1">
+                      🔹 آخر معاينة → <code className="font-mono">MAX(last_viewed_at)</code>
+                    </div>
+                    <div className="text-muted-foreground">
+                      يأخذ أحدث توقيت سجّل فيه أي موظف فتح ملف الزائر.
+                    </div>
+                  </div>
+
+                  <div className="rounded-md border border-border/60 bg-muted/30 p-2.5">
+                    <div className="font-medium mb-1">
+                      🔸 أول معاينة → <code className="font-mono">MIN(first_viewed_at)</code>
+                    </div>
+                    <div className="text-muted-foreground">
+                      يأخذ أقدم توقيت سجّل فيه أي موظف فتح ملف الزائر لأول مرة.
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-3 pt-3 border-t border-border/60">
+                  <div className="font-medium mb-1.5">مثال — زائر له معاينتان:</div>
+                  <ul className="font-mono text-[11px] text-muted-foreground space-y-0.5 mb-2">
+                    <li>• 2024-06-14 09:30 (موظف أ — أول مرة)</li>
+                    <li>• 2024-06-15 18:45 (موظف ب — آخر مرة)</li>
+                  </ul>
+                  <ul className="text-[11px] space-y-0.5">
+                    <li>
+                      <Badge variant="outline" className="font-mono text-[10px] mr-1">آخر</Badge>
+                      يستخدم <code className="font-mono">2024-06-15 18:45</code>
+                    </li>
+                    <li>
+                      <Badge variant="outline" className="font-mono text-[10px] mr-1">أول</Badge>
+                      يستخدم <code className="font-mono">2024-06-14 09:30</code>
+                    </li>
+                  </ul>
+                  <div className="text-[11px] text-muted-foreground/80 mt-2">
+                    لو فلتر "اليوم" مفعّل (يبدأ <code className="font-mono">2024-06-15 00:00</code>) فالزائر يُحسب
+                    معايَناً تحت "آخر" فقط، وغير معايَن تحت "أول".
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Side-by-side count: how many visitors qualify under each anchor
