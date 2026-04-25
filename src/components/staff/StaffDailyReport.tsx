@@ -45,12 +45,12 @@ interface DynAnswer {
 
 interface ReportRow {
   id?: string;
-  customers_contacted: number;
-  customers_registered: number;
-  customers_with_invoices: number;
-  total_invoices_amount: number;
-  hot_leads_count: number;
-  follow_ups_done: number;
+  customers_contacted: number | null;
+  customers_registered: number | null;
+  customers_with_invoices: number | null;
+  total_invoices_amount: number | null;
+  hot_leads_count: number | null;
+  follow_ups_done: number | null;
   problems_faced: string;
   best_deal_today: string;
   tomorrow_plan: string;
@@ -59,12 +59,12 @@ interface ReportRow {
 }
 
 const EMPTY: ReportRow = {
-  customers_contacted: 0,
-  customers_registered: 0,
-  customers_with_invoices: 0,
-  total_invoices_amount: 0,
-  hot_leads_count: 0,
-  follow_ups_done: 0,
+  customers_contacted: null,
+  customers_registered: null,
+  customers_with_invoices: null,
+  total_invoices_amount: null,
+  hot_leads_count: null,
+  follow_ups_done: null,
   problems_faced: "",
   best_deal_today: "",
   tomorrow_plan: "",
@@ -72,6 +72,23 @@ const EMPTY: ReportRow = {
 };
 
 const MAX_TEXT = 1000;
+const MIN_TEXT = 10;
+
+// KPI fields that must be filled (entered value, even if 0)
+const REQUIRED_KPI_FIELDS: Array<{ key: keyof ReportRow; label: string }> = [
+  { key: "customers_contacted", label: "عملاء تم التواصل معاهم" },
+  { key: "customers_registered", label: "عملاء سجّلوا في المنصة" },
+  { key: "customers_with_invoices", label: "عملاء عملوا فاتورة" },
+  { key: "total_invoices_amount", label: "إجمالي الفواتير" },
+  { key: "hot_leads_count", label: "Leads ساخنة" },
+  { key: "follow_ups_done", label: "متابعات تمت" },
+];
+
+// Text fields that are mandatory with minimum length
+const REQUIRED_TEXT_FIELDS: Array<{ key: keyof ReportRow; label: string }> = [
+  { key: "best_deal_today", label: "أفضل صفقة اليوم" },
+  { key: "tomorrow_plan", label: "خطة بكرة" },
+];
 
 const StaffDailyReport = () => {
   const { user } = useAuth();
@@ -83,6 +100,7 @@ const StaffDailyReport = () => {
   const [showReminder, setShowReminder] = useState(false);
   const [dynQuestions, setDynQuestions] = useState<DynQuestion[]>([]);
   const [dynAnswers, setDynAnswers] = useState<Record<string, DynAnswer>>({});
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   const [teams, setTeams] = useState<TeamInfo[]>([]);
 
@@ -118,12 +136,12 @@ const StaffDailyReport = () => {
       if (data) {
         setReport({
           id: data.id,
-          customers_contacted: data.customers_contacted ?? 0,
-          customers_registered: data.customers_registered ?? 0,
-          customers_with_invoices: data.customers_with_invoices ?? 0,
-          total_invoices_amount: Number(data.total_invoices_amount ?? 0),
-          hot_leads_count: data.hot_leads_count ?? 0,
-          follow_ups_done: data.follow_ups_done ?? 0,
+          customers_contacted: data.customers_contacted ?? null,
+          customers_registered: data.customers_registered ?? null,
+          customers_with_invoices: data.customers_with_invoices ?? null,
+          total_invoices_amount: data.total_invoices_amount != null ? Number(data.total_invoices_amount) : null,
+          hot_leads_count: data.hot_leads_count ?? null,
+          follow_ups_done: data.follow_ups_done ?? null,
           problems_faced: data.problems_faced ?? "",
           best_deal_today: data.best_deal_today ?? "",
           tomorrow_plan: data.tomorrow_plan ?? "",
@@ -340,21 +358,43 @@ const StaffDailyReport = () => {
     setRestorePreview(null);
   };
 
+  // ===== Live validation (KPIs + required text + dynamic) =====
+  // KPI must have explicit value (null = not entered). 0 is allowed.
+  const kpiErrors = REQUIRED_KPI_FIELDS.filter((f) => report[f.key] == null);
+  const textErrors = REQUIRED_TEXT_FIELDS.filter(
+    (f) => (report[f.key] as string).trim().length < MIN_TEXT
+  );
+
   const handleSubmit = async () => {
     if (!user) return;
-    if (
-      report.customers_contacted === 0 &&
-      report.customers_registered === 0 &&
-      report.customers_with_invoices === 0 &&
-      !report.general_notes.trim()
-    ) {
+    setSubmitAttempted(true);
+
+    // Validate KPI numeric fields (must be entered)
+    if (kpiErrors.length > 0) {
       toast({
-        title: "تقرير فاضي",
-        description: "ادخل الأرقام أو على الأقل ملاحظة قبل التقديم",
+        title: `ناقص ${kpiErrors.length} رقم في الـ KPIs`,
+        description: `أدخل قيمة (حتى لو 0) في: ${kpiErrors.map((f) => f.label).join("، ")}`,
         variant: "destructive",
       });
+      const first = document.getElementById(`kpi-${kpiErrors[0].key}`);
+      first?.scrollIntoView({ behavior: "smooth", block: "center" });
+      (first?.querySelector("input") as HTMLInputElement | null)?.focus();
       return;
     }
+
+    // Validate required text fields (min 10 chars)
+    if (textErrors.length > 0) {
+      toast({
+        title: `تعليق إجباري ناقص`,
+        description: `اكتب ${MIN_TEXT} أحرف على الأقل في: ${textErrors.map((f) => f.label).join("، ")}`,
+        variant: "destructive",
+      });
+      const first = document.getElementById(`txt-${textErrors[0].key}`);
+      first?.scrollIntoView({ behavior: "smooth", block: "center" });
+      (first?.querySelector("textarea") as HTMLTextAreaElement | null)?.focus();
+      return;
+    }
+
     // Validate required dynamic questions
     for (const dq of dynQuestions) {
       if (!dq.is_required) continue;
@@ -370,6 +410,7 @@ const StaffDailyReport = () => {
           description: dq.question_text,
           variant: "destructive",
         });
+        scrollToQuestion(dq.id);
         return;
       }
     }
@@ -458,44 +499,98 @@ const StaffDailyReport = () => {
     label: string,
     icon: string,
     suffix?: string
-  ) => (
-    <div className="space-y-1.5">
-      <Label className="text-xs font-semibold flex items-center gap-1.5">
-        <span>{icon}</span>
-        {label}
-      </Label>
-      <div className="relative">
-        <Input
-          type="number"
-          min="0"
-          value={report[key] as number}
-          onChange={(e) =>
-            setReport((r) => ({ ...r, [key]: e.target.value === "" ? 0 : Number(e.target.value) }))
-          }
-          className="text-lg font-bold tabular-nums h-11"
-        />
-        {suffix && (
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
-            {suffix}
-          </span>
+  ) => {
+    const isRequired = REQUIRED_KPI_FIELDS.some((f) => f.key === key);
+    const value = report[key] as number | null;
+    const isEmpty = value == null;
+    const showError = isRequired && isEmpty && submitAttempted;
+    return (
+      <div className="space-y-1.5" id={`kpi-${key}`}>
+        <Label className="text-xs font-semibold flex items-center gap-1.5">
+          <span>{icon}</span>
+          <span>{label}</span>
+          {isRequired && <span className="text-destructive">*</span>}
+        </Label>
+        <div className="relative">
+          <Input
+            type="number"
+            min="0"
+            value={value ?? ""}
+            placeholder="—"
+            onChange={(e) =>
+              setReport((r) => ({
+                ...r,
+                [key]: e.target.value === "" ? null : Number(e.target.value),
+              }))
+            }
+            className={`text-lg font-bold tabular-nums h-11 ${
+              showError
+                ? "border-destructive focus-visible:ring-destructive bg-destructive/5"
+                : !isEmpty
+                  ? "border-emerald-500/40"
+                  : ""
+            }`}
+          />
+          {suffix && (
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
+              {suffix}
+            </span>
+          )}
+        </div>
+        {showError && (
+          <p className="text-[10px] text-destructive flex items-center gap-1">
+            <AlertCircle className="w-3 h-3" />
+            مطلوب — أدخل رقم (حتى لو 0)
+          </p>
         )}
       </div>
-    </div>
-  );
+    );
+  };
 
-  const textField = (key: keyof ReportRow, label: string, placeholder: string) => (
-    <div className="space-y-1.5">
-      <Label className="text-xs font-semibold">{label}</Label>
-      <Textarea
-        value={report[key] as string}
-        onChange={(e) => setReport((r) => ({ ...r, [key]: e.target.value.slice(0, MAX_TEXT) }))}
-        placeholder={placeholder}
-        rows={2}
-        maxLength={MAX_TEXT}
-        className="resize-none text-sm"
-      />
-    </div>
-  );
+  const textField = (key: keyof ReportRow, label: string, placeholder: string) => {
+    const isRequired = REQUIRED_TEXT_FIELDS.some((f) => f.key === key);
+    const value = report[key] as string;
+    const trimmedLen = value.trim().length;
+    const tooShort = isRequired && trimmedLen < MIN_TEXT;
+    const showError = tooShort && submitAttempted;
+    return (
+      <div className="space-y-1.5" id={`txt-${key}`}>
+        <Label className="text-xs font-semibold flex items-center gap-1.5">
+          <span>{label}</span>
+          {isRequired && <span className="text-destructive">*</span>}
+        </Label>
+        <Textarea
+          value={value}
+          onChange={(e) => setReport((r) => ({ ...r, [key]: e.target.value.slice(0, MAX_TEXT) }))}
+          placeholder={placeholder}
+          rows={2}
+          maxLength={MAX_TEXT}
+          className={`resize-none text-sm ${
+            showError
+              ? "border-destructive focus-visible:ring-destructive bg-destructive/5"
+              : isRequired && trimmedLen >= MIN_TEXT
+                ? "border-emerald-500/40"
+                : ""
+          }`}
+        />
+        <div className="flex items-center justify-between text-[10px]">
+          {showError ? (
+            <span className="text-destructive flex items-center gap-1">
+              <AlertCircle className="w-3 h-3" />
+              مطلوب — اكتب {MIN_TEXT} أحرف على الأقل ({trimmedLen}/{MIN_TEXT})
+            </span>
+          ) : isRequired ? (
+            <span className={trimmedLen >= MIN_TEXT ? "text-emerald-600" : "text-muted-foreground"}>
+              {trimmedLen}/{MIN_TEXT} حرف على الأقل
+            </span>
+          ) : (
+            <span />
+          )}
+          <span className="text-muted-foreground">{value.length}/{MAX_TEXT}</span>
+        </div>
+      </div>
+    );
+  };
 
   if (loading) {
     return (
@@ -506,6 +601,7 @@ const StaffDailyReport = () => {
   // Compute missing required dynamic questions (live)
   const missingRequired = computeMissingRequired(dynQuestions, dynAnswers);
   const missingCount = missingRequired.length;
+  const totalErrors = kpiErrors.length + textErrors.length + missingCount;
 
   // If the staff already submitted today, hide the form and show a clean confirmation card
   // with a back button and quick links (view details / last reports history).
@@ -786,30 +882,62 @@ const StaffDailyReport = () => {
           );
         })()}
 
-        {/* Required-missing live banner */}
-        {missingCount > 0 && (
+        {/* Required-missing live banner — KPIs + text + dynamic */}
+        {totalErrors > 0 && (
           <div className="mt-5 p-3 rounded-lg bg-destructive/10 border-2 border-destructive/40 text-destructive flex items-start gap-2.5">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold mb-1">
-                ناقص {missingCount} {missingCount === 1 ? "سؤال إجباري" : "أسئلة إجبارية"} — لازم تكمّلها قبل الحفظ
+              <p className="text-sm font-bold mb-2">
+                ناقص {totalErrors} حقل إجباري — لازم تكمّلهم قبل الحفظ
               </p>
               <ul className="text-xs space-y-1 pr-1">
+                {kpiErrors.map((f) => (
+                  <li key={`kpi-${f.key}`}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const el = document.getElementById(`kpi-${f.key}`);
+                        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                        (el?.querySelector("input") as HTMLInputElement | null)?.focus();
+                      }}
+                      className="text-right w-full truncate underline underline-offset-2 hover:no-underline flex items-center gap-1.5"
+                    >
+                      <span>›</span>
+                      <span className="truncate">رقم: {f.label}</span>
+                    </button>
+                  </li>
+                ))}
+                {textErrors.map((f) => (
+                  <li key={`txt-${f.key}`}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const el = document.getElementById(`txt-${f.key}`);
+                        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                        (el?.querySelector("textarea") as HTMLTextAreaElement | null)?.focus();
+                      }}
+                      className="text-right w-full truncate underline underline-offset-2 hover:no-underline flex items-center gap-1.5"
+                    >
+                      <span>›</span>
+                      <span className="truncate">تعليق: {f.label} (≥ {MIN_TEXT} حرف)</span>
+                    </button>
+                  </li>
+                ))}
                 {missingRequired.slice(0, 5).map((q) => (
                   <li key={q.id}>
                     <button
                       type="button"
                       onClick={() => scrollToQuestion(q.id)}
-                      className="text-right w-full truncate underline underline-offset-2 hover:text-destructive/80 hover:no-underline transition-colors flex items-center gap-1.5"
+                      className="text-right w-full truncate underline underline-offset-2 hover:no-underline flex items-center gap-1.5"
                       title="افتح السؤال وحدّد مكانه"
                     >
-                      <span className="text-destructive">›</span>
-                      <span className="truncate">{q.question_text}</span>
+                      <span>›</span>
+                      <span className="truncate">سؤال: {q.question_text}</span>
                     </button>
                   </li>
                 ))}
                 {missingRequired.length > 5 && (
-                  <li className="opacity-70 text-[11px] pr-3">+ {missingRequired.length - 5} أخرى…</li>
+                  <li className="opacity-70 text-[11px] pr-3">+ {missingRequired.length - 5} سؤال آخر…</li>
                 )}
               </ul>
             </div>
@@ -821,15 +949,16 @@ const StaffDailyReport = () => {
           <p className="text-xs text-muted-foreground">
             {submittedAt
               ? "تقدر تعدّل وتعيد الحفظ — الأدمن هيشوف آخر نسخة"
-              : missingCount > 0
-                ? `كمّل ${missingCount} سؤال إجباري قبل ما تقدر تحفظ`
-                : "ادخل الأرقام واضغط حفظ — الأدمن هيستلم إشعار فوري"}
+              : totalErrors > 0
+                ? `كمّل ${totalErrors} حقل إجباري قبل الحفظ`
+                : "كل الحقول الإجبارية مكتملة — اضغط حفظ"}
           </p>
-          <Button onClick={handleSubmit} disabled={saving || missingCount > 0} size="lg" className="gap-2">
+          <Button onClick={handleSubmit} disabled={saving || totalErrors > 0} size="lg" className="gap-2">
             <Save className="w-4 h-4" />
             {saving ? "جارٍ الحفظ..." : submittedAt ? "حفظ التعديلات" : "تقديم التقرير"}
           </Button>
         </div>
+
         </div>
       </Card>
 
