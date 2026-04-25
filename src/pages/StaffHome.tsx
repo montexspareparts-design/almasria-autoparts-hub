@@ -1263,7 +1263,7 @@ const StaffHome = () => {
               if (!includeStaff && v.user_id && staffIdsSet.has(v.user_id)) return false;
               if (visitorTypeFilter === "registered" && !v.user_id) return false;
               if (visitorTypeFilter === "anon" && v.user_id) return false;
-              const t = new Date(v.last_visit).getTime();
+              const t = visitTs(v);
               if (visitorDateFilter === "today" && t < todayStart.getTime()) return false;
               if (visitorDateFilter === "yesterday" && (t < yesterdayStart.getTime() || t >= todayStart.getTime())) return false;
               if (visitorDateFilter === "week" && t < weekStart.getTime()) return false;
@@ -1271,8 +1271,9 @@ const StaffHome = () => {
               if (visitorViewedFilter === "viewed" && !isViewed) return false;
               if (visitorViewedFilter === "not_viewed" && isViewed) return false;
               if (visitorEngagedOnly) {
-                const dwell = v.first_visit ? (new Date(v.last_visit).getTime() - new Date(v.first_visit).getTime()) : 0;
-                if (!(dwell >= ENGAGED_DWELL_MS || v.pages >= 2)) return false;
+                const firstT = v.first_visit ? new Date(v.first_visit).getTime() : NaN;
+                const dwell = Number.isFinite(firstT) && Number.isFinite(t) ? t - (firstT as number) : 0;
+                if (!(dwell >= ENGAGED_DWELL_MS || (v.pages ?? 0) >= 2)) return false;
               }
               return true;
             });
