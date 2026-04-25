@@ -1236,7 +1236,141 @@ const StaffHome = () => {
           </div>
         </section>
 
-        {/* Hot Leads */}
+        {/* Calculation rules panel — explains how each KPI is computed
+            and shows raw (pre-staff-filter) vs filtered counts. */}
+        <section>
+          <Card className="overflow-hidden border-border/60">
+            <button
+              type="button"
+              onClick={() => setRulesOpen((v) => !v)}
+              className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/40 transition-colors"
+              aria-expanded={rulesOpen}
+              aria-controls="kpi-rules-panel"
+            >
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <Info className="w-4 h-4 text-primary" />
+                قواعد الحساب الحالية
+                <Badge variant="outline" className="text-[10px] font-normal">
+                  {range === "today" ? "اليوم" : "آخر 7 أيام"}
+                  {" · "}
+                  {includeStaff ? "يشمل الموظفين" : "بدون الموظفين"}
+                </Badge>
+              </div>
+              <ChevronDown
+                className={cn(
+                  "w-4 h-4 text-muted-foreground transition-transform",
+                  rulesOpen && "rotate-180"
+                )}
+              />
+            </button>
+
+            {rulesOpen && (
+              <div id="kpi-rules-panel" className="border-t border-border/60 p-4 space-y-3 bg-muted/20">
+                <div className="text-[11px] text-muted-foreground leading-relaxed">
+                  كل رقم يتم حسابه بنفس النطاق الزمني المختار في الأعلى (<b>{range === "today" ? "اليوم فقط" : "آخر 7 أيام"}</b>)،
+                  ثم تُستثنى صفوف الموظفين تلقائياً ما لم يكن فلتر "الكل" مفعّل.
+                  العمود <b>قبل</b> = ما قبل استثناء الموظفين، <b>بعد</b> = الرقم الظاهر في البطاقات.
+                </div>
+
+                {(() => {
+                  const rows: Array<{
+                    label: string;
+                    rule: string;
+                    raw: number;
+                    filtered: number;
+                  }> = [
+                    {
+                      label: "الزوار",
+                      rule: "كل صف من visitor_sessions ضمن النطاق (يستبعد ضوضاء lovable/preview/bots).",
+                      raw: kpisRaw.visitors,
+                      filtered: kpis.visitors,
+                    },
+                    {
+                      label: "زوار متفاعلين",
+                      rule: `زائر مدة جلسته ≥ ${Math.round(ENGAGED_DWELL_MS / 1000)}ث أو شاهد ≥2 صفحة.`,
+                      raw: kpisRaw.engagedVisitors,
+                      filtered: kpis.engagedVisitors,
+                    },
+                    {
+                      label: "تسجيلات جديدة",
+                      rule: "حسابات أُنشئت ضمن النطاق (created_at).",
+                      raw: kpisRaw.signups,
+                      filtered: kpis.signups,
+                    },
+                    {
+                      label: "أضافوا للسلة",
+                      rule: "عدد المستخدمين الفريدين الذين أضافوا للسلة (last_added ضمن النطاق).",
+                      raw: kpisRaw.addedToCart,
+                      filtered: kpis.addedToCart,
+                    },
+                    {
+                      label: "اشتروا",
+                      rule: "عدد المستخدمين الفريدين الذين أنشأوا طلباً ضمن النطاق (created_at).",
+                      raw: kpisRaw.purchased,
+                      filtered: kpis.purchased,
+                    },
+                    {
+                      label: "Leads ساخنة",
+                      rule: "Leads بآخر نشاط ضمن النطاق ودرجة ≥ عتبة hot/warm.",
+                      raw: kpisRaw.hotLeads,
+                      filtered: kpis.hotLeads,
+                    },
+                  ];
+                  return (
+                    <div className="overflow-x-auto rounded-lg border border-border/60 bg-background">
+                      <table className="w-full text-xs">
+                        <thead className="bg-muted/40 text-muted-foreground">
+                          <tr>
+                            <th className="text-right px-3 py-2 font-medium">المؤشر</th>
+                            <th className="text-right px-3 py-2 font-medium">قاعدة الحساب</th>
+                            <th className="text-center px-3 py-2 font-medium w-16">قبل</th>
+                            <th className="text-center px-3 py-2 font-medium w-16">بعد</th>
+                            <th className="text-center px-3 py-2 font-medium w-20">مستثنى</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {rows.map((r) => {
+                            const excluded = Math.max(0, r.raw - r.filtered);
+                            return (
+                              <tr key={r.label} className="border-t border-border/40">
+                                <td className="px-3 py-2 font-medium whitespace-nowrap">{r.label}</td>
+                                <td className="px-3 py-2 text-muted-foreground leading-relaxed">{r.rule}</td>
+                                <td className="px-3 py-2 text-center font-mono tabular-nums text-muted-foreground">
+                                  {r.raw}
+                                </td>
+                                <td className="px-3 py-2 text-center font-mono tabular-nums font-bold">
+                                  {r.filtered}
+                                </td>
+                                <td className="px-3 py-2 text-center">
+                                  {excluded > 0 ? (
+                                    <Badge variant="secondary" className="font-mono tabular-nums text-[10px]">
+                                      −{excluded}
+                                    </Badge>
+                                  ) : (
+                                    <span className="text-muted-foreground/50">—</span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+                })()}
+
+                <div className="text-[11px] text-muted-foreground/80 flex items-start gap-1.5">
+                  <Info className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                  <span>
+                    "مستثنى" = عدد الصفوف التي حُذفت بسبب فلتر الموظفين فقط ضمن نفس النطاق.
+                    لمشاهدتهم ضمن الأرقام، بدّل الفلتر إلى "الكل".
+                  </span>
+                </div>
+              </div>
+            )}
+          </Card>
+        </section>
+
         <section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
