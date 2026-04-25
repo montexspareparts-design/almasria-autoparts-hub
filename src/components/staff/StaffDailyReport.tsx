@@ -412,6 +412,19 @@ const StaffDailyReport = () => {
     );
   }
 
+  // Compute missing required dynamic questions (live)
+  const missingRequired = dynQuestions.filter((q) => {
+    if (!q.is_required) return false;
+    const a = dynAnswers[q.id];
+    const filled =
+      (q.question_type === "number" && a?.number != null) ||
+      (q.question_type === "boolean" && a?.boolean != null) ||
+      (q.question_type === "choice" && !!a?.choice) ||
+      ((q.question_type === "text" || q.question_type === "textarea") && !!a?.text?.trim());
+    return !filled;
+  });
+  const missingCount = missingRequired.length;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -600,14 +613,36 @@ const StaffDailyReport = () => {
           );
         })()}
 
+        {/* Required-missing live banner */}
+        {missingCount > 0 && (
+          <div className="mt-5 p-3 rounded-lg bg-destructive/10 border-2 border-destructive/40 text-destructive flex items-start gap-2.5">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold mb-1">
+                ناقص {missingCount} {missingCount === 1 ? "سؤال إجباري" : "أسئلة إجبارية"} — لازم تكمّلها قبل الحفظ
+              </p>
+              <ul className="text-xs space-y-0.5 list-disc pr-4 opacity-90">
+                {missingRequired.slice(0, 5).map((q) => (
+                  <li key={q.id} className="truncate">{q.question_text}</li>
+                ))}
+                {missingRequired.length > 5 && (
+                  <li className="opacity-70">+ {missingRequired.length - 5} أخرى…</li>
+                )}
+              </ul>
+            </div>
+          </div>
+        )}
+
         {/* Submit */}
         <div className="mt-5 flex items-center justify-between gap-3 pt-4 border-t border-border/50">
           <p className="text-xs text-muted-foreground">
             {submittedAt
               ? "تقدر تعدّل وتعيد الحفظ — الأدمن هيشوف آخر نسخة"
-              : "ادخل الأرقام واضغط حفظ — الأدمن هيستلم إشعار فوري"}
+              : missingCount > 0
+                ? `كمّل ${missingCount} سؤال إجباري قبل ما تقدر تحفظ`
+                : "ادخل الأرقام واضغط حفظ — الأدمن هيستلم إشعار فوري"}
           </p>
-          <Button onClick={handleSubmit} disabled={saving} size="lg" className="gap-2">
+          <Button onClick={handleSubmit} disabled={saving || missingCount > 0} size="lg" className="gap-2">
             <Save className="w-4 h-4" />
             {saving ? "جارٍ الحفظ..." : submittedAt ? "حفظ التعديلات" : "تقديم التقرير"}
           </Button>
