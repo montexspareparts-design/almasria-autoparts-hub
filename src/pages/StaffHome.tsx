@@ -289,7 +289,7 @@ const StaffHome = () => {
       const { data: cartItems } = await supabase
         .from("dealer_cart_items")
         .select("user_id, created_at, quantity")
-        .gte("created_at", start)
+        .gte("created_at", widestStart)
         .order("created_at", { ascending: false });
       const cartUsers = new Set((cartItems || []).map((c) => c.user_id));
       const cartAggMap = new Map<string, { user_id: string; last_added: string; items: number }>();
