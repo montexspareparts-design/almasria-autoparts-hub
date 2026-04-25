@@ -649,7 +649,8 @@ const StaffHome = () => {
         icon: Activity,
         color: "text-cyan-600",
         bg: "from-cyan-500/10 to-cyan-500/5",
-        onClick: () => setVisitorsOpen(true),
+        onClick: () => { setVisitorEngagedOnly(true); setVisitorsOpen(true); },
+        subText: kpis.engagedVisitors > 0 ? "اضغط لرؤية القائمة (مدة ≥15ث أو ≥2 صفحة)" : undefined,
       },
       {
         label: `تسجيلات جديدة (${rangeSuffix})`,
@@ -665,7 +666,8 @@ const StaffHome = () => {
         icon: ShoppingCart,
         color: "text-amber-600",
         bg: "from-amber-500/10 to-amber-500/5",
-        onClick: () => navigate("/admin?section=customer-intel"),
+        onClick: () => setCartOpen(true),
+        subText: cartList.length > 0 ? `${cartList.reduce((s, c) => s + c.items, 0)} منتج بالسلال` : undefined,
       },
       {
         label: `اشتروا (${rangeSuffix})`,
@@ -673,7 +675,10 @@ const StaffHome = () => {
         icon: CheckCircle2,
         color: "text-green-600",
         bg: "from-green-500/10 to-green-500/5",
-        onClick: () => navigate("/admin?section=orders"),
+        onClick: () => setBuyersOpen(true),
+        subText: buyersList.length > 0
+          ? `إجمالي ${buyersList.reduce((s, b) => s + b.total_amount, 0).toLocaleString("ar-EG")} ج`
+          : undefined,
       },
       {
         label: "Leads ساخنة 🔥",
