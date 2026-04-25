@@ -853,4 +853,263 @@ const StaffDailyReport = () => {
   );
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Success card shown after the daily report has been submitted.
+// Provides: back button, view-details toggle, and last reports history.
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface SubmittedSuccessCardProps {
+  submittedAt: string;
+  report: ReportRow;
+  dynQuestions: DynQuestion[];
+  dynAnswers: Record<string, DynAnswer>;
+  userId: string | null;
+}
+
+interface HistoryItem {
+  id: string;
+  report_date: string;
+  submitted_at: string | null;
+  customers_contacted: number | null;
+  total_invoices_amount: number | null;
+}
+
+const SubmittedSuccessCard = ({
+  submittedAt,
+  report,
+  dynQuestions,
+  dynAnswers,
+  userId,
+}: SubmittedSuccessCardProps) => {
+  const [showDetails, setShowDetails] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [history, setHistory] = useState<HistoryItem[] | null>(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  const submittedTime = useMemo(
+    () =>
+      new Date(submittedAt).toLocaleTimeString("ar-EG", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    [submittedAt]
+  );
+  const submittedDate = useMemo(
+    () =>
+      new Date(submittedAt).toLocaleDateString("ar-EG", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+      }),
+    [submittedAt]
+  );
+
+  const handleBack = () => {
+    if (window.history.length > 1) window.history.back();
+  };
+
+  const loadHistory = async () => {
+    if (!userId || history) {
+      setShowHistory((s) => !s);
+      return;
+    }
+    setHistoryLoading(true);
+    setShowHistory(true);
+    const { data } = await supabase
+      .from("staff_daily_reports")
+      .select("id, report_date, submitted_at, customers_contacted, total_invoices_amount")
+      .eq("user_id", userId)
+      .order("report_date", { ascending: false })
+      .limit(7);
+    setHistory((data as HistoryItem[]) ?? []);
+    setHistoryLoading(false);
+  };
+
+  const dynAnsweredList = dynQuestions
+    .map((q) => ({ q, a: dynAnswers[q.id] }))
+    .filter(({ q, a }) => {
+      if (!a) return false;
+      if (q.question_type === "number") return a.number != null;
+      if (q.question_type === "boolean") return a.boolean != null;
+      if (q.question_type === "choice") return !!a.choice;
+      return !!a.text?.trim();
+    });
+
+  const renderAnswerValue = (q: DynQuestion, a: DynAnswer) => {
+    if (q.question_type === "number") return String(a.number);
+    if (q.question_type === "boolean") return a.boolean ? "نعم" : "لا";
+    if (q.question_type === "choice") return a.choice || "—";
+    return a.text || "—";
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.96 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.4 }}
+    >
+      <Card className="p-6 md:p-8 border-2 border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-card to-card">
+        {/* Hero */}
+        <div className="text-center">
+          <div className="mx-auto w-16 h-16 rounded-full bg-emerald-500/15 flex items-center justify-center mb-4">
+            <CheckCircle2 className="w-9 h-9 text-emerald-600" />
+          </div>
+          <h2 className="text-lg md:text-xl font-bold mb-1.5">تم تقديم تقرير اليوم ✅</h2>
+          <p className="text-sm text-muted-foreground mb-1">
+            شكراً لك! تم استلام تقريرك بنجاح.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {submittedDate} — الساعة {submittedTime}
+          </p>
+        </div>
+
+        {/* Quick action buttons */}
+        <div className="flex flex-wrap items-center justify-center gap-2 mt-5">
+          <Button
+            size="sm"
+            variant="default"
+            className="gap-1.5 h-9"
+            onClick={handleBack}
+          >
+            <ArrowRight className="w-4 h-4" />
+            رجوع للصفحة السابقة
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5 h-9"
+            onClick={() => setShowDetails((s) => !s)}
+          >
+            <Eye className="w-4 h-4" />
+            {showDetails ? "إخفاء التفاصيل" : "عرض تفاصيل التقرير"}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5 h-9"
+            onClick={loadHistory}
+          >
+            <HistoryIcon className="w-4 h-4" />
+            تاريخ آخر التقارير
+          </Button>
+        </div>
+
+        {/* Details panel */}
+        {showDetails && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            className="mt-5 overflow-hidden"
+          >
+            <div className="rounded-lg border border-emerald-500/20 bg-card/60 p-4 space-y-3">
+              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                ملخص KPIs
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+                <KpiPill label="عملاء تم التواصل" value={report.customers_contacted} />
+                <KpiPill label="عملاء سجّلوا" value={report.customers_registered} />
+                <KpiPill label="عملاء عملوا فاتورة" value={report.customers_with_invoices} />
+                <KpiPill label="إجمالي الفواتير" value={`${report.total_invoices_amount} ج.م`} />
+                <KpiPill label="Leads ساخنة" value={report.hot_leads_count} />
+                <KpiPill label="متابعات تمت" value={report.follow_ups_done} />
+              </div>
+
+              {(report.best_deal_today || report.problems_faced || report.tomorrow_plan || report.general_notes) && (
+                <>
+                  <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider pt-2">
+                    ملاحظات
+                  </h3>
+                  <div className="space-y-1.5 text-xs">
+                    {report.best_deal_today && <NoteRow label="أفضل صفقة" value={report.best_deal_today} />}
+                    {report.problems_faced && <NoteRow label="مشاكل" value={report.problems_faced} />}
+                    {report.tomorrow_plan && <NoteRow label="خطة بكرة" value={report.tomorrow_plan} />}
+                    {report.general_notes && <NoteRow label="عام" value={report.general_notes} />}
+                  </div>
+                </>
+              )}
+
+              {dynAnsweredList.length > 0 && (
+                <>
+                  <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider pt-2">
+                    الأسئلة الإضافية ({dynAnsweredList.length})
+                  </h3>
+                  <ul className="space-y-1 text-xs">
+                    {dynAnsweredList.map(({ q, a }) => (
+                      <li key={q.id} className="flex items-start gap-2">
+                        <span className="text-muted-foreground shrink-0">{q.question_text}:</span>
+                        <span className="font-semibold">{renderAnswerValue(q, a!)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
+
+        {/* History panel */}
+        {showHistory && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            className="mt-4 overflow-hidden"
+          >
+            <div className="rounded-lg border border-emerald-500/20 bg-card/60 p-4">
+              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
+                آخر 7 تقارير
+              </h3>
+              {historyLoading ? (
+                <div className="flex items-center justify-center py-4 text-muted-foreground text-xs gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  جاري التحميل…
+                </div>
+              ) : !history || history.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-3">لا توجد تقارير سابقة.</p>
+              ) : (
+                <ul className="divide-y divide-border/50">
+                  {history.map((h) => {
+                    const d = new Date(h.report_date).toLocaleDateString("ar-EG", {
+                      weekday: "short",
+                      day: "numeric",
+                      month: "short",
+                    });
+                    return (
+                      <li key={h.id} className="py-2 flex items-center justify-between gap-3 text-xs">
+                        <div className="flex items-center gap-2">
+                          <Badge variant={h.submitted_at ? "default" : "outline"} className="h-5 text-[10px]">
+                            {h.submitted_at ? "تم التقديم" : "مسودة"}
+                          </Badge>
+                          <span className="font-semibold">{d}</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-muted-foreground">
+                          <span>📞 {h.customers_contacted ?? 0}</span>
+                          <span>💰 {h.total_invoices_amount ?? 0} ج.م</span>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </Card>
+    </motion.div>
+  );
+};
+
+const KpiPill = ({ label, value }: { label: string; value: number | string }) => (
+  <div className="flex flex-col items-center justify-center rounded-md bg-muted/40 p-2">
+    <span className="text-[10px] text-muted-foreground">{label}</span>
+    <span className="font-bold tabular-nums text-sm">{value}</span>
+  </div>
+);
+
+const NoteRow = ({ label, value }: { label: string; value: string }) => (
+  <div className="flex items-start gap-2">
+    <span className="text-muted-foreground shrink-0 font-semibold">{label}:</span>
+    <span className="line-clamp-2">{value}</span>
+  </div>
+);
+
 export default StaffDailyReport;
