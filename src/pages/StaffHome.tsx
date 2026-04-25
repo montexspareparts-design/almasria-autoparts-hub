@@ -75,8 +75,10 @@ const StaffHome = () => {
   const [visitorsOpen, setVisitorsOpen] = useState(false);
   const [visitorsList, setVisitorsList] = useState<Array<{ user_id: string | null; session_key: string | null; full_name: string | null; phone: string | null; email: string | null; pages: number; last_visit: string; first_visit?: string; first_path?: string | null; referrer?: string | null; searches?: string[] }>>([]);
   const [viewedKeys, setViewedKeys] = useState<Set<string>>(new Set());
-  // Per-key earliest view timestamp — used to compute "viewed" under different time-basis modes.
+  // Per-key LAST view timestamp — used by date-based "viewed" basis modes.
   const [viewedAtMap, setViewedAtMap] = useState<Map<string, string>>(new Map());
+  // Per-key FIRST view timestamp — used when viewedAnchor === "first".
+  const [viewedFirstAtMap, setViewedFirstAtMap] = useState<Map<string, string>>(new Map());
   // All session views performed TODAY by ANY staff member — for the "viewed today" dialog
   // Map key = "u:<user_id>" or "s:<session_key>", value = aggregated view info
   const [todayViewsMap, setTodayViewsMap] = useState<Map<string, { staffIds: Set<string>; viewCount: number; lastViewedAt: string }>>(new Map());
@@ -105,6 +107,11 @@ const StaffHome = () => {
   //   - "event_day": viewed on the same calendar day as the visitor's last_visit
   //   - "all_time": any past view counts (legacy behavior)
   const [viewedBasis, setViewedBasis] = useState<"range" | "event_day" | "all_time">("range");
+  // Which timestamp drives date-based matching when basis ≠ "all_time":
+  //   - "last":  use the LATEST view per visitor (default — answers "هل عاينت العميل مؤخراً؟")
+  //   - "first": use the FIRST view per visitor (answers "هل عاينت العميل أصلاً منذ زيارته؟")
+  // Only affects "range" + "event_day" modes; "all_time" ignores it.
+  const [viewedAnchor, setViewedAnchor] = useState<"last" | "first">("last");
 
   // Guard
   useEffect(() => {
@@ -365,29 +372,30 @@ const StaffHome = () => {
       visitorsArr.sort((a, b) => b.last_visit.localeCompare(a.last_visit));
       setVisitorsList(visitorsArr);
 
-      // Fetch which visitors the current staff has already viewed (with timestamp)
+      // Fetch which visitors the current staff has already viewed (with both timestamps)
       try {
         const { data: views } = await supabase
           .from("visitor_session_views")
-          .select("customer_user_id, session_key, last_viewed_at")
+          .select("customer_user_id, session_key, first_viewed_at, last_viewed_at")
           .eq("staff_user_id", user!.id);
         const set = new Set<string>();
-        const tsMap = new Map<string, string>();
+        const lastMap = new Map<string, string>();
+        const firstMap = new Map<string, string>();
         (views || []).forEach((v: any) => {
-          const at = v.last_viewed_at as string | null;
-          if (v.customer_user_id) {
-            const k = `u:${v.customer_user_id}`;
+          const lastAt = v.last_viewed_at as string | null;
+          const firstAt = v.first_viewed_at as string | null;
+          const apply = (k: string) => {
             set.add(k);
-            if (at && (!tsMap.has(k) || at > (tsMap.get(k) as string))) tsMap.set(k, at);
-          }
-          if (v.session_key) {
-            const k = `s:${v.session_key}`;
-            set.add(k);
-            if (at && (!tsMap.has(k) || at > (tsMap.get(k) as string))) tsMap.set(k, at);
-          }
+            // last → keep MAX, first → keep MIN
+            if (lastAt && (!lastMap.has(k) || lastAt > (lastMap.get(k) as string))) lastMap.set(k, lastAt);
+            if (firstAt && (!firstMap.has(k) || firstAt < (firstMap.get(k) as string))) firstMap.set(k, firstAt);
+          };
+          if (v.customer_user_id) apply(`u:${v.customer_user_id}`);
+          if (v.session_key) apply(`s:${v.session_key}`);
         });
         setViewedKeys(set);
-        setViewedAtMap(tsMap);
+        setViewedAtMap(lastMap);
+        setViewedFirstAtMap(firstMap);
       } catch (e) {
         console.warn("[StaffHome] viewed keys fetch failed", e);
       }
@@ -504,11 +512,16 @@ const StaffHome = () => {
     if (!baseHit) return false;
     if (viewedBasis === "all_time") return true;
 
-    // Latest view timestamp across this visitor's keys
+    // Pick the anchor timestamp per the user's choice:
+    //   - "last":  most recent view across this visitor's keys (default)
+    //   - "first": earliest view across this visitor's keys
+    const anchorMap = viewedAnchor === "first" ? viewedFirstAtMap : viewedAtMap;
     let viewedAt: string | null = null;
     for (const k of keys) {
-      const t = viewedAtMap.get(k);
-      if (t && (!viewedAt || t > viewedAt)) viewedAt = t;
+      const t = anchorMap.get(k);
+      if (!t) continue;
+      if (!viewedAt) { viewedAt = t; continue; }
+      if (viewedAnchor === "first" ? t < viewedAt : t > viewedAt) viewedAt = t;
     }
     if (!viewedAt) return false; // no timestamp known → can't qualify under date-based modes
 
@@ -532,7 +545,7 @@ const StaffHome = () => {
       return isViewedUnderBasis(v) ? acc + 1 : acc;
     }, 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visitorsList, viewedKeys, viewedAtMap, includeStaff, staffIdsSet, viewedBasis, range]);
+  }, [visitorsList, viewedKeys, viewedAtMap, viewedFirstAtMap, includeStaff, staffIdsSet, viewedBasis, viewedAnchor, range]);
 
   // Helpers shared by all KPI memos so badges and cards stay in lockstep
   const isStaffVisitor = (uid: string | null | undefined) => !!uid && staffIdsSet.has(uid);
@@ -925,6 +938,52 @@ const StaffHome = () => {
                 )}
               >
                 أي وقت
+              </button>
+            </div>
+
+            {/* Anchor toggle — only meaningful for date-based modes (range / event_day) */}
+            <div
+              role="tablist"
+              aria-label="اختيار وقت المعاينة المرجعي"
+              className={cn(
+                "inline-flex items-center bg-muted/60 rounded-lg p-0.5 border border-border/50 transition-opacity",
+                viewedBasis === "all_time" && "opacity-50 pointer-events-none"
+              )}
+              title={
+                viewedBasis === "all_time"
+                  ? "هذا الخيار غير مفعّل في وضع 'أي وقت' لأن التاريخ لا يهم."
+                  : undefined
+              }
+            >
+              <button
+                role="tab"
+                aria-selected={viewedAnchor === "last"}
+                onClick={() => setViewedAnchor("last")}
+                title="يستخدم تاريخ آخر مرة فتحت فيها ملف العميل. يجاوب على: هل عاينته مؤخراً ضمن النطاق/اليوم؟"
+                aria-label="اعتمد على آخر معاينة"
+                className={cn(
+                  "px-2.5 py-1 text-[11px] font-medium rounded-md transition-all",
+                  viewedAnchor === "last"
+                    ? "bg-background shadow-sm text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                آخر معاينة
+              </button>
+              <button
+                role="tab"
+                aria-selected={viewedAnchor === "first"}
+                onClick={() => setViewedAnchor("first")}
+                title="يستخدم تاريخ أول مرة فتحت فيها ملف العميل. يجاوب على: هل تواصلت معه أصلاً منذ زيارته؟ (مفيد لو معاينات لاحقة قد تخفي إهمال البداية)"
+                aria-label="اعتمد على أول معاينة"
+                className={cn(
+                  "px-2.5 py-1 text-[11px] font-medium rounded-md transition-all",
+                  viewedAnchor === "first"
+                    ? "bg-background shadow-sm text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                أول معاينة
               </button>
             </div>
           </div>
