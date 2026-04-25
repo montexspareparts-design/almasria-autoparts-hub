@@ -2140,7 +2140,7 @@ const StaffHome = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
               <Flame className="w-5 h-5 text-red-600" />
-              Leads ساخنة
+              Leads ساخنة ({dialogRangeLabel(leadsRange)})
               <Badge variant="secondary" className="text-xs">{visibleLeads.length}</Badge>
               {visibleLeads.length !== hotLeads.length && (
                 <span className="text-[10px] text-muted-foreground font-normal" title="العدد بعد الفلاتر من إجمالي الـLeads">
