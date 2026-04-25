@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ClipboardList, CheckCircle2, AlertCircle, Save, Sparkles, Clock, HelpCircle, Users2, History as HistoryIcon, ChevronDown } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { computeMissingRequired } from "./dailyReportValidation";
+import { computeMissingRequired, isAnswerFilled } from "./dailyReportValidation";
 
 type QType = "text" | "textarea" | "number" | "choice" | "boolean";
 type QScope = "all" | "role" | "team" | "users";
@@ -207,8 +207,22 @@ const StaffDailyReport = () => {
       const focusable = el.querySelector<HTMLElement>("input, textarea, button, [role='combobox']");
       focusable?.focus();
     }, 350);
-    setTimeout(() => setHighlightedQId((cur) => (cur === qid ? null : cur)), 2200);
+    // Note: we no longer clear the highlight on a timer.
+    // It auto-clears via the effect below once the question is filled.
   };
+
+  // Auto-clear the "quick jump" highlight as soon as the targeted question is answered.
+  useEffect(() => {
+    if (!highlightedQId) return;
+    const target = dynQuestions.find((q) => q.id === highlightedQId);
+    if (!target) {
+      setHighlightedQId(null);
+      return;
+    }
+    if (isAnswerFilled(target, dynAnswers[highlightedQId])) {
+      setHighlightedQId(null);
+    }
+  }, [highlightedQId, dynAnswers, dynQuestions]);
 
   const previewRestore = async (mode: RestoreMode) => {
     if (!user) return;
@@ -619,7 +633,9 @@ const StaffDailyReport = () => {
                 key={q.id}
                 id={`dyn-q-${q.id}`}
                 className={`space-y-1.5 rounded-lg p-2 -m-2 transition-all duration-500 ${
-                  isHighlighted ? "ring-2 ring-destructive bg-destructive/5" : "ring-0"
+                  isHighlighted
+                    ? "ring-2 ring-destructive bg-destructive/10 shadow-[0_0_0_4px_hsl(var(--destructive)/0.15)] animate-pulse"
+                    : "ring-0"
                 }`}
               >
                 <Label className="text-xs font-semibold flex items-center gap-1.5">
