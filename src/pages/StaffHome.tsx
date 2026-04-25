@@ -679,6 +679,23 @@ const StaffHome = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visitorsList, viewedKeys, viewedAtMap, viewedFirstAtMap, includeStaff, staffIdsSet, viewedBasis, range]);
 
+  // Helpers shared by all KPI memos so badges and cards stay in lockstep
+  const isStaffVisitor = (uid: string | null | undefined) => !!uid && staffIdsSet.has(uid);
+  const startMs = useMemo(
+    () => new Date(range === "today" ? todayISO() : sevenDaysISO()).getTime(),
+    [range]
+  );
+
+  // Safe timestamp extractor — falls back to first_visit if last_visit missing,
+  // and returns -Infinity for completely missing data so it gets excluded from range filters
+  // instead of accidentally being counted (NaN comparisons return false → previously dropped silently).
+  const visitTs = (v: { last_visit?: string | null; first_visit?: string | null }) => {
+    const last = v.last_visit ? new Date(v.last_visit).getTime() : NaN;
+    if (Number.isFinite(last)) return last;
+    const first = v.first_visit ? new Date(v.first_visit).getTime() : NaN;
+    return Number.isFinite(first) ? first : -Infinity;
+  };
+
   // How many KPI-eligible visitors were SEEN (key exists in viewedKeys) but have
   // no timestamp in either viewedAtMap or viewedFirstAtMap — so they get silently
   // excluded from date-based "viewed" basis modes (range / event_day).
@@ -704,23 +721,6 @@ const StaffHome = () => {
     return n;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visitorsList, viewedKeys, viewedAtMap, viewedFirstAtMap, includeStaff, staffIdsSet, viewedBasis, startMs]);
-
-  // Helpers shared by all KPI memos so badges and cards stay in lockstep
-  const isStaffVisitor = (uid: string | null | undefined) => !!uid && staffIdsSet.has(uid);
-  const startMs = useMemo(
-    () => new Date(range === "today" ? todayISO() : sevenDaysISO()).getTime(),
-    [range]
-  );
-
-  // Safe timestamp extractor — falls back to first_visit if last_visit missing,
-  // and returns -Infinity for completely missing data so it gets excluded from range filters
-  // instead of accidentally being counted (NaN comparisons return false → previously dropped silently).
-  const visitTs = (v: { last_visit?: string | null; first_visit?: string | null }) => {
-    const last = v.last_visit ? new Date(v.last_visit).getTime() : NaN;
-    if (Number.isFinite(last)) return last;
-    const first = v.first_visit ? new Date(v.first_visit).getTime() : NaN;
-    return Number.isFinite(first) ? first : -Infinity;
-  };
 
   // Visitor count shown in the dialog title badge — uses the SAME staff exclusion
   // AND the same KPI range as the visitors KPI card, so badge ≡ kpis.visitors.
