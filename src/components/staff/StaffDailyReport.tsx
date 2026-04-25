@@ -737,6 +737,65 @@ const StaffDailyReport = () => {
           </Button>
         </div>
       </Card>
+
+      <AlertDialog open={!!restorePreview} onOpenChange={(o) => !o && setRestorePreview(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <HistoryIcon className="w-5 h-5 text-primary" />
+              تأكيد استرجاع بيانات أمس
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm">
+                <p className="text-foreground">
+                  هتستبدل القيم الحالية ببيانات أمس. تقدر تعدّل أي قيمة قبل ما تضغط حفظ.
+                </p>
+                {restorePreview && (
+                  <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+                    {(restorePreview.mode === "kpis" || restorePreview.mode === "both") && (
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="flex items-center gap-1.5">
+                          <ClipboardList className="w-3.5 h-3.5 text-emerald-600" />
+                          KPIs والنصوص
+                        </span>
+                        <Badge variant={restorePreview.hasReport ? "secondary" : "outline"} className="text-[10px]">
+                          {restorePreview.hasReport ? "✓ متوفّرة" : "غير موجودة"}
+                        </Badge>
+                      </div>
+                    )}
+                    {(restorePreview.mode === "dynamic" || restorePreview.mode === "both") && (
+                      <>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="flex items-center gap-1.5">
+                            <HelpCircle className="w-3.5 h-3.5 text-blue-600" />
+                            أسئلة إضافية مطابقة (نشطة اليوم)
+                          </span>
+                          <Badge className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
+                            {restorePreview.activeMatchedCount} سؤال
+                          </Badge>
+                        </div>
+                        {restorePreview.skippedInactive > 0 && (
+                          <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1.5 border-t border-dashed">
+                            <span className="flex items-center gap-1.5">
+                              <AlertCircle className="w-3 h-3" />
+                              تم تجاهل أسئلة لم تعد نشطة
+                            </span>
+                            <span>{restorePreview.skippedInactive}</span>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmRestore}>استرجاع</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </motion.div>
   );
 };
