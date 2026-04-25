@@ -1937,6 +1937,28 @@ const StaffHome = () => {
             </DialogDescription>
           </DialogHeader>
 
+          {/* Search bar — name / phone / email / order number */}
+          <div className="relative pt-2">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 mt-1 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <Input
+              value={buyersSearch}
+              onChange={(e) => setBuyersSearch(e.target.value)}
+              placeholder="ابحث بالاسم/الهاتف/الإيميل/رقم الطلب…"
+              className="h-9 text-xs pr-9 pl-8"
+              dir="rtl"
+            />
+            {buyersSearch && (
+              <button
+                type="button"
+                onClick={() => setBuyersSearch("")}
+                className="absolute left-2 top-1/2 -translate-y-1/2 mt-1 p-1 rounded hover:bg-muted text-muted-foreground"
+                aria-label="مسح البحث"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
           {/* Sort + filter bar */}
           <div className="flex flex-wrap items-center gap-2 pt-2 pb-1 border-b">
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
