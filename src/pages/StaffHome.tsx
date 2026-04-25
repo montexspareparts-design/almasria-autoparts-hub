@@ -24,6 +24,8 @@ import {
   Filter,
   Search,
   X,
+  Info,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isNoiseVisit, ENGAGED_DWELL_MS } from "@/lib/visitorAnalytics";
