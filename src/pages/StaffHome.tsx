@@ -626,7 +626,7 @@ const StaffHome = () => {
         onClick: () => navigate("/admin?section=customer-intel"),
       },
     ],
-    [kpis, navigate, rangeSuffix, viewedVisitorsCount, viewedBasis]
+    [kpis, navigate, rangeSuffix, viewedVisitorsCount, viewedBasis, viewedTodayVisitors]
   );
 
   const tierBadge = (tier: HotLead["tier"]) => {
