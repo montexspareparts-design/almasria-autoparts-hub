@@ -596,40 +596,17 @@ const StaffHome = () => {
   const rangeSuffix = range === "today" ? "اليوم" : "آخر 7 أيام";
 
   // Helper: was this visitor "viewed" under the selected time basis?
-  const isViewedUnderBasis = (v: { user_id: string | null; session_key: string | null; last_visit: string }) => {
-    const keys: string[] = [];
-    if (v.user_id) keys.push(`u:${v.user_id}`);
-    if (v.session_key) keys.push(`s:${v.session_key}`);
-    if (keys.length === 0) return false;
-    const baseHit = keys.some((k) => viewedKeys.has(k));
-    if (!baseHit) return false;
-    if (viewedBasis === "all_time") return true;
-
-    // Pick the anchor timestamp per the user's choice:
-    //   - "last":  most recent view across this visitor's keys (default)
-    //   - "first": earliest view across this visitor's keys
-    const anchorMap = viewedAnchor === "first" ? viewedFirstAtMap : viewedAtMap;
-    let viewedAt: string | null = null;
-    for (const k of keys) {
-      const t = anchorMap.get(k);
-      if (!t) continue;
-      if (!viewedAt) { viewedAt = t; continue; }
-      if (viewedAnchor === "first" ? t < viewedAt : t > viewedAt) viewedAt = t;
-    }
-    if (!viewedAt) return false; // no timestamp known → can't qualify under date-based modes
-
-    if (viewedBasis === "range") {
-      // Match the KPI range (today vs last 7d) using the same start used in fetchData
-      const start = range === "today" ? todayISO() : sevenDaysISO();
-      return viewedAt >= start;
-    }
-    if (viewedBasis === "event_day") {
-      // Same calendar day (local TZ) as the visitor's last_visit.
-      // Centralized in src/lib/visitDayMatch.ts (covered by visitDayMatch.test.ts).
-      return viewedOnVisitDay(viewedAt, v.last_visit);
-    }
-    return baseHit;
-  };
+  // Pure logic lives in src/lib/viewedUnderBasis.ts (covered by viewedUnderBasis.test.ts).
+  const isViewedUnderBasis = (v: { user_id: string | null; session_key: string | null; last_visit: string }) =>
+    isViewedUnderBasisPure({
+      visitor: v,
+      basis: viewedBasis,
+      anchor: viewedAnchor,
+      viewedKeys,
+      viewedAtMap,
+      viewedFirstAtMap,
+      rangeStartISO: range === "today" ? todayISO() : sevenDaysISO(),
+    });
 
   // Count how many of the displayed (non-staff) visitors the current staff has already opened
   const viewedVisitorsCount = useMemo(() => {
