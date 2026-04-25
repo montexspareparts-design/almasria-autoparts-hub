@@ -964,7 +964,7 @@ const StaffHome = () => {
         subText: hotLeads.length > 0 ? `${hotLeads.filter(l => l.tier === "hot").length} hot · ${hotLeads.filter(l => l.tier === "warm").length} warm` : undefined,
       },
     ],
-    [kpis, navigate, rangeSuffix, viewedVisitorsCount, viewedBasis, viewedTodayVisitors, cartList, buyersList, hotLeads]
+    [kpis, navigate, rangeSuffix, viewedVisitorsCount, viewedBasis, viewedTodayVisitors, cartList, buyersList, hotLeads, viewedMissingTimestampCount]
   );
 
   // ──────────────────────────────────────────────────────────────────────────
