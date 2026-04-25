@@ -24,6 +24,8 @@ import {
   Filter,
   Search,
   X,
+  Info,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isNoiseVisit, ENGAGED_DWELL_MS } from "@/lib/visitorAnalytics";
@@ -181,6 +183,8 @@ const StaffHome = () => {
   // Toggle: false = "Only Customers" (default, excludes staff). true = "All" (review only — shows staff too).
   const [includeStaff, setIncludeStaff] = useState<boolean>(false);
   const [staffIdsSet, setStaffIdsSet] = useState<Set<string>>(new Set());
+  // Collapsible "calculation rules" panel — shows per-KPI rules + raw vs filtered counts
+  const [rulesOpen, setRulesOpen] = useState<boolean>(false);
   // "Viewed" KPI time basis:
   //   - "range": viewed within the selected KPI range (today / 7d) — rolling window
   //   - "event_day": viewed on the same calendar day as the visitor's last_visit
@@ -743,6 +747,37 @@ const StaffHome = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visitorsList, newSignups, cartList, buyersList, hotLeads, includeStaff, staffIdsSet, startMs]);
 
+  // Raw counts BEFORE the staff-exclusion filter — used by the "rules" panel
+  // so staff can see exactly how many rows the staff filter is hiding.
+  // The range filter (startMs) is still applied so "before/after" compares
+  // apples-to-apples within the same time window.
+  const kpisRaw = useMemo(() => {
+    const visibleVisitors = visitorsList.filter((v) => visitTs(v) >= startMs);
+    const engaged = visibleVisitors.filter((v) => {
+      const lastT = visitTs(v);
+      const firstT = v.first_visit ? new Date(v.first_visit).getTime() : NaN;
+      const dwell = Number.isFinite(firstT) && Number.isFinite(lastT) ? lastT - (firstT as number) : 0;
+      return dwell >= ENGAGED_DWELL_MS || (v.pages ?? 0) >= 2;
+    }).length;
+    const signups = newSignups.filter((s) => new Date(s.created_at).getTime() >= startMs).length;
+    const cartUsers = new Set(
+      cartList.filter((c) => new Date(c.last_added).getTime() >= startMs).map((c) => c.user_id)
+    ).size;
+    const buyerUsers = new Set(
+      buyersList.filter((b) => new Date(b.created_at).getTime() >= startMs).map((b) => b.user_id)
+    ).size;
+    const hot = hotLeads.filter((l) => new Date(l.last_activity).getTime() >= startMs).length;
+    return {
+      visitors: visibleVisitors.length,
+      engagedVisitors: engaged,
+      signups,
+      addedToCart: cartUsers,
+      purchased: buyerUsers,
+      hotLeads: hot,
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visitorsList, newSignups, cartList, buyersList, hotLeads, startMs]);
+
   // Detect traffic source for a visitor (used as the "reason" filter in Viewed Today dialog)
   const detectSource = (firstPath: string | null, referrer: string | null) => {
     const hay = ((firstPath || "") + " " + (referrer || "")).toLowerCase();
@@ -1201,7 +1236,141 @@ const StaffHome = () => {
           </div>
         </section>
 
-        {/* Hot Leads */}
+        {/* Calculation rules panel — explains how each KPI is computed
+            and shows raw (pre-staff-filter) vs filtered counts. */}
+        <section>
+          <Card className="overflow-hidden border-border/60">
+            <button
+              type="button"
+              onClick={() => setRulesOpen((v) => !v)}
+              className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/40 transition-colors"
+              aria-expanded={rulesOpen}
+              aria-controls="kpi-rules-panel"
+            >
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <Info className="w-4 h-4 text-primary" />
+                قواعد الحساب الحالية
+                <Badge variant="outline" className="text-[10px] font-normal">
+                  {range === "today" ? "اليوم" : "آخر 7 أيام"}
+                  {" · "}
+                  {includeStaff ? "يشمل الموظفين" : "بدون الموظفين"}
+                </Badge>
+              </div>
+              <ChevronDown
+                className={cn(
+                  "w-4 h-4 text-muted-foreground transition-transform",
+                  rulesOpen && "rotate-180"
+                )}
+              />
+            </button>
+
+            {rulesOpen && (
+              <div id="kpi-rules-panel" className="border-t border-border/60 p-4 space-y-3 bg-muted/20">
+                <div className="text-[11px] text-muted-foreground leading-relaxed">
+                  كل رقم يتم حسابه بنفس النطاق الزمني المختار في الأعلى (<b>{range === "today" ? "اليوم فقط" : "آخر 7 أيام"}</b>)،
+                  ثم تُستثنى صفوف الموظفين تلقائياً ما لم يكن فلتر "الكل" مفعّل.
+                  العمود <b>قبل</b> = ما قبل استثناء الموظفين، <b>بعد</b> = الرقم الظاهر في البطاقات.
+                </div>
+
+                {(() => {
+                  const rows: Array<{
+                    label: string;
+                    rule: string;
+                    raw: number;
+                    filtered: number;
+                  }> = [
+                    {
+                      label: "الزوار",
+                      rule: "كل صف من visitor_sessions ضمن النطاق (يستبعد ضوضاء lovable/preview/bots).",
+                      raw: kpisRaw.visitors,
+                      filtered: kpis.visitors,
+                    },
+                    {
+                      label: "زوار متفاعلين",
+                      rule: `زائر مدة جلسته ≥ ${Math.round(ENGAGED_DWELL_MS / 1000)}ث أو شاهد ≥2 صفحة.`,
+                      raw: kpisRaw.engagedVisitors,
+                      filtered: kpis.engagedVisitors,
+                    },
+                    {
+                      label: "تسجيلات جديدة",
+                      rule: "حسابات أُنشئت ضمن النطاق (created_at).",
+                      raw: kpisRaw.signups,
+                      filtered: kpis.signups,
+                    },
+                    {
+                      label: "أضافوا للسلة",
+                      rule: "عدد المستخدمين الفريدين الذين أضافوا للسلة (last_added ضمن النطاق).",
+                      raw: kpisRaw.addedToCart,
+                      filtered: kpis.addedToCart,
+                    },
+                    {
+                      label: "اشتروا",
+                      rule: "عدد المستخدمين الفريدين الذين أنشأوا طلباً ضمن النطاق (created_at).",
+                      raw: kpisRaw.purchased,
+                      filtered: kpis.purchased,
+                    },
+                    {
+                      label: "Leads ساخنة",
+                      rule: "Leads بآخر نشاط ضمن النطاق ودرجة ≥ عتبة hot/warm.",
+                      raw: kpisRaw.hotLeads,
+                      filtered: kpis.hotLeads,
+                    },
+                  ];
+                  return (
+                    <div className="overflow-x-auto rounded-lg border border-border/60 bg-background">
+                      <table className="w-full text-xs">
+                        <thead className="bg-muted/40 text-muted-foreground">
+                          <tr>
+                            <th className="text-right px-3 py-2 font-medium">المؤشر</th>
+                            <th className="text-right px-3 py-2 font-medium">قاعدة الحساب</th>
+                            <th className="text-center px-3 py-2 font-medium w-16">قبل</th>
+                            <th className="text-center px-3 py-2 font-medium w-16">بعد</th>
+                            <th className="text-center px-3 py-2 font-medium w-20">مستثنى</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {rows.map((r) => {
+                            const excluded = Math.max(0, r.raw - r.filtered);
+                            return (
+                              <tr key={r.label} className="border-t border-border/40">
+                                <td className="px-3 py-2 font-medium whitespace-nowrap">{r.label}</td>
+                                <td className="px-3 py-2 text-muted-foreground leading-relaxed">{r.rule}</td>
+                                <td className="px-3 py-2 text-center font-mono tabular-nums text-muted-foreground">
+                                  {r.raw}
+                                </td>
+                                <td className="px-3 py-2 text-center font-mono tabular-nums font-bold">
+                                  {r.filtered}
+                                </td>
+                                <td className="px-3 py-2 text-center">
+                                  {excluded > 0 ? (
+                                    <Badge variant="secondary" className="font-mono tabular-nums text-[10px]">
+                                      −{excluded}
+                                    </Badge>
+                                  ) : (
+                                    <span className="text-muted-foreground/50">—</span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+                })()}
+
+                <div className="text-[11px] text-muted-foreground/80 flex items-start gap-1.5">
+                  <Info className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                  <span>
+                    "مستثنى" = عدد الصفوف التي حُذفت بسبب فلتر الموظفين فقط ضمن نفس النطاق.
+                    لمشاهدتهم ضمن الأرقام، بدّل الفلتر إلى "الكل".
+                  </span>
+                </div>
+              </div>
+            )}
+          </Card>
+        </section>
+
         <section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
