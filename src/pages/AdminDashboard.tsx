@@ -132,6 +132,7 @@ const sidebarGroups: SidebarGroup[] = [
         { id: "staff-roles", label: "إدارة الموظفين", icon: Users },
         { id: "audit-log", label: "سجل المراجعة", icon: Shield },
         { id: "account-attempts", label: "محاولات إنشاء/إعادة تعيين الحسابات", icon: KeyRound },
+        { id: "permission-requests", label: "طلبات الصلاحيات", icon: ShieldCheck },
         { id: "translations", label: "إدارة الترجمات (AR/EN)", icon: FileText },
         { id: "seo-preview", label: "معاينة SEO قبل النشر", icon: Eye },
         { id: "responsive-preview", label: "معاينة الأجهزة (موبايل/تابلت)", icon: Smartphone },
