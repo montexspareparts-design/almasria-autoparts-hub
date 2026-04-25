@@ -79,12 +79,14 @@ const StaffDailyReport = () => {
   const [dynQuestions, setDynQuestions] = useState<DynQuestion[]>([]);
   const [dynAnswers, setDynAnswers] = useState<Record<string, DynAnswer>>({});
 
+  const [teams, setTeams] = useState<TeamInfo[]>([]);
+
   const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const [reportRes, qRes, aRes] = await Promise.all([
+      const [reportRes, qRes, aRes, tmRes] = await Promise.all([
         supabase
           .from("staff_daily_reports")
           .select("*")
@@ -93,7 +95,7 @@ const StaffDailyReport = () => {
           .maybeSingle(),
         supabase
           .from("daily_report_questions")
-          .select("id, question_text, question_type, options, placeholder, is_required, sort_order")
+          .select("id, question_text, question_type, options, placeholder, is_required, sort_order, target_scope, target_team_ids")
           .eq("is_active", true)
           .order("sort_order", { ascending: true }),
         supabase
@@ -101,6 +103,10 @@ const StaffDailyReport = () => {
           .select("question_id, answer_text, answer_number, answer_boolean, answer_choice")
           .eq("user_id", user.id)
           .eq("report_date", today),
+        supabase
+          .from("team_members")
+          .select("team_id, teams:team_id(id, name, color)")
+          .eq("user_id", user.id),
       ]);
 
       const data = reportRes.data;
