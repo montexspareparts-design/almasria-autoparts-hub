@@ -525,21 +525,21 @@ const StaffDailyReport = () => {
               <DropdownMenuContent align="end" className="w-64">
                 <DropdownMenuLabel className="text-xs">اختر اللي تحب تسترجعه</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => restoreYesterday("both")} className="gap-2">
+                <DropdownMenuItem onClick={() => previewRestore("both")} className="gap-2">
                   <Sparkles className="w-3.5 h-3.5 text-primary" />
                   <div className="flex-1">
                     <div className="text-xs font-semibold">الاتنين معاً</div>
                     <div className="text-[10px] text-muted-foreground">KPIs + الأسئلة الإضافية</div>
                   </div>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => restoreYesterday("kpis")} className="gap-2">
+                <DropdownMenuItem onClick={() => previewRestore("kpis")} className="gap-2">
                   <ClipboardList className="w-3.5 h-3.5 text-emerald-600" />
                   <div className="flex-1">
                     <div className="text-xs font-semibold">KPIs والنصوص فقط</div>
                     <div className="text-[10px] text-muted-foreground">الأرقام والملاحظات الأساسية</div>
                   </div>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => restoreYesterday("dynamic")} className="gap-2">
+                <DropdownMenuItem onClick={() => previewRestore("dynamic")} className="gap-2">
                   <HelpCircle className="w-3.5 h-3.5 text-blue-600" />
                   <div className="flex-1">
                     <div className="text-xs font-semibold">الأسئلة الإضافية فقط</div>
