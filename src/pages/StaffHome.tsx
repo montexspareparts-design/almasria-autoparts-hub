@@ -180,10 +180,10 @@ const StaffHome = () => {
   // Per-dialog time range (today / 7d / month). Each Dialog can override the
   // global KPI range without forcing a refetch — lists are pre-fetched at the
   // widest window (this month) and filtered client-side.
-  const [visitorsRange, setVisitorsRange] = useState<DialogRangeKey>("today");
-  const [cartRange, setCartRange] = useState<DialogRangeKey>("today");
-  const [buyersRange, setBuyersRange] = useState<DialogRangeKey>("today");
-  const [leadsRange, setLeadsRange] = useState<DialogRangeKey>("7d");
+  const [visitorsRange, setVisitorsRange] = useSessionPersistedState<DialogRangeKey>("staffHome:visitors:range", "today");
+  const [cartRange, setCartRange] = useSessionPersistedState<DialogRangeKey>("staffHome:cart:range", "today");
+  const [buyersRange, setBuyersRange] = useSessionPersistedState<DialogRangeKey>("staffHome:buyers:range", "today");
+  const [leadsRange, setLeadsRange] = useSessionPersistedState<DialogRangeKey>("staffHome:leads:range", "7d");
   // Toggle: false = "Only Customers" (default, excludes staff). true = "All" (review only — shows staff too).
   const [includeStaff, setIncludeStaff] = useState<boolean>(false);
   const [staffIdsSet, setStaffIdsSet] = useState<Set<string>>(new Set());
