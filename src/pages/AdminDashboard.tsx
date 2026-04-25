@@ -136,6 +136,7 @@ const sidebarGroups: SidebarGroup[] = [
         { id: "account-attempts", label: "محاولات إنشاء/إعادة تعيين الحسابات", icon: KeyRound },
         { id: "permission-requests", label: "طلبات الصلاحيات", icon: ShieldCheck },
         { id: "daily-reports", label: "التقارير اليومية للموظفين", icon: FileText },
+        { id: "daily-report-editor", label: "محرر أسئلة التقرير اليومي", icon: HelpCircle },
         { id: "translations", label: "إدارة الترجمات (AR/EN)", icon: FileText },
         { id: "seo-preview", label: "معاينة SEO قبل النشر", icon: Eye },
         { id: "responsive-preview", label: "معاينة الأجهزة (موبايل/تابلت)", icon: Smartphone },
