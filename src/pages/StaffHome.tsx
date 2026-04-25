@@ -1855,7 +1855,7 @@ const StaffHome = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
               <ShoppingCart className="w-5 h-5 text-amber-600" />
-              أضافوا للسلة ({rangeSuffix})
+              أضافوا للسلة ({dialogRangeLabel(cartRange)})
               <Badge variant="secondary" className="text-xs">{visibleCart.length}</Badge>
               {visibleCart.length !== cartList.length && (
                 <span className="text-[10px] text-muted-foreground font-normal" title="العدد بعد تطبيق الفلاتر من إجمالي العملاء">
