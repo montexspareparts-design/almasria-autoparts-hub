@@ -226,6 +226,29 @@ const StaffDailyReport = () => {
 
     setSubmittedAt(payload.submitted_at);
     setShowReminder(false);
+
+    // Save dynamic answers (upsert per question)
+    const answerRows = dynQuestions
+      .map((q) => {
+        const a = dynAnswers[q.id];
+        if (!a) return null;
+        return {
+          question_id: q.id,
+          user_id: user.id,
+          report_date: today,
+          answer_text: a.text ?? null,
+          answer_number: a.number ?? null,
+          answer_boolean: a.boolean ?? null,
+          answer_choice: a.choice ?? null,
+        };
+      })
+      .filter(Boolean) as any[];
+    if (answerRows.length) {
+      await supabase
+        .from("daily_report_answers")
+        .upsert(answerRows, { onConflict: "question_id,user_id,report_date" });
+    }
+
     toast({
       title: "✅ تم تقديم التقرير",
       description: "تم إرساله للأدمن وحفظه بنجاح",
