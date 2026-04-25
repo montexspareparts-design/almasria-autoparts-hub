@@ -100,6 +100,7 @@ const StaffDailyReport = () => {
   const [showReminder, setShowReminder] = useState(false);
   const [dynQuestions, setDynQuestions] = useState<DynQuestion[]>([]);
   const [dynAnswers, setDynAnswers] = useState<Record<string, DynAnswer>>({});
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   const [teams, setTeams] = useState<TeamInfo[]>([]);
 
