@@ -940,6 +940,52 @@ const StaffHome = () => {
                 أي وقت
               </button>
             </div>
+
+            {/* Anchor toggle — only meaningful for date-based modes (range / event_day) */}
+            <div
+              role="tablist"
+              aria-label="اختيار وقت المعاينة المرجعي"
+              className={cn(
+                "inline-flex items-center bg-muted/60 rounded-lg p-0.5 border border-border/50 transition-opacity",
+                viewedBasis === "all_time" && "opacity-50 pointer-events-none"
+              )}
+              title={
+                viewedBasis === "all_time"
+                  ? "هذا الخيار غير مفعّل في وضع 'أي وقت' لأن التاريخ لا يهم."
+                  : undefined
+              }
+            >
+              <button
+                role="tab"
+                aria-selected={viewedAnchor === "last"}
+                onClick={() => setViewedAnchor("last")}
+                title="يستخدم تاريخ آخر مرة فتحت فيها ملف العميل. يجاوب على: هل عاينته مؤخراً ضمن النطاق/اليوم؟"
+                aria-label="اعتمد على آخر معاينة"
+                className={cn(
+                  "px-2.5 py-1 text-[11px] font-medium rounded-md transition-all",
+                  viewedAnchor === "last"
+                    ? "bg-background shadow-sm text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                آخر معاينة
+              </button>
+              <button
+                role="tab"
+                aria-selected={viewedAnchor === "first"}
+                onClick={() => setViewedAnchor("first")}
+                title="يستخدم تاريخ أول مرة فتحت فيها ملف العميل. يجاوب على: هل تواصلت معه أصلاً منذ زيارته؟ (مفيد لو معاينات لاحقة قد تخفي إهمال البداية)"
+                aria-label="اعتمد على أول معاينة"
+                className={cn(
+                  "px-2.5 py-1 text-[11px] font-medium rounded-md transition-all",
+                  viewedAnchor === "first"
+                    ? "bg-background shadow-sm text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                أول معاينة
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
