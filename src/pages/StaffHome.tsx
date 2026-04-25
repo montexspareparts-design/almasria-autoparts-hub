@@ -307,7 +307,7 @@ const StaffHome = () => {
       const { data: orders } = await supabase
         .from("orders")
         .select("user_id, order_number, total_amount, status, created_at")
-        .gte("created_at", start)
+        .gte("created_at", widestStart)
         .order("created_at", { ascending: false });
       const buyers = new Set((orders || []).map((o) => o.user_id));
 
