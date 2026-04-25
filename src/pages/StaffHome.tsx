@@ -167,9 +167,9 @@ const StaffHome = () => {
   const [leadsContactFilter, setLeadsContactFilter] = useSessionPersistedState<"all" | "with_phone" | "no_phone">("staffHome:leads:contact", "all");
   // Visitors dialog "engaged only" filter (driven by KPI card click)
   const [visitorEngagedOnly, setVisitorEngagedOnly] = useState(false);
-  const [visitorTypeFilter, setVisitorTypeFilter] = useState<"all" | "registered" | "anon">("all");
-  const [visitorDateFilter, setVisitorDateFilter] = useState<"all" | "today" | "yesterday" | "week" | "month">("today");
-  const [visitorViewedFilter, setVisitorViewedFilter] = useState<"all" | "viewed" | "not_viewed">("all");
+  const [visitorTypeFilter, setVisitorTypeFilter] = useSessionPersistedState<"all" | "registered" | "anon">("staffHome:visitors:type", "all");
+  const [visitorDateFilter, setVisitorDateFilter] = useSessionPersistedState<"all" | "today" | "yesterday" | "week" | "month">("staffHome:visitors:date", "today");
+  const [visitorViewedFilter, setVisitorViewedFilter] = useSessionPersistedState<"all" | "viewed" | "not_viewed">("staffHome:visitors:viewed", "all");
   // Free-text search inside each dialog (matches name / phone / email).
   // Phone matching ignores formatting (spaces, dashes, +20…), name matching
   // ignores Arabic diacritics & case. See normalizeSearch / matchesContactQuery.
