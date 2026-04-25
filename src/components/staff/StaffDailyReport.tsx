@@ -11,9 +11,10 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ClipboardList, CheckCircle2, AlertCircle, Save, Sparkles, Clock, HelpCircle } from "lucide-react";
+import { ClipboardList, CheckCircle2, AlertCircle, Save, Sparkles, Clock, HelpCircle, Users2 } from "lucide-react";
 
 type QType = "text" | "textarea" | "number" | "choice" | "boolean";
+type QScope = "all" | "role" | "team" | "users";
 interface DynQuestion {
   id: string;
   question_text: string;
@@ -21,6 +22,14 @@ interface DynQuestion {
   options: string[];
   placeholder: string | null;
   is_required: boolean;
+  sort_order: number;
+  target_scope: QScope;
+  target_team_ids: string[];
+}
+interface TeamInfo {
+  id: string;
+  name: string;
+  color: string | null;
 }
 interface DynAnswer {
   text?: string;
