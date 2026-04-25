@@ -88,6 +88,16 @@ const StaffHome = () => {
   const [viewedTodayOpen, setViewedTodayOpen] = useState(false);
   const [viewedTodayMethodFilter, setViewedTodayMethodFilter] = useState<"all" | "by_me" | "by_others" | "multiple">("all");
   const [viewedTodaySourceFilter, setViewedTodaySourceFilter] = useState<"all" | "facebook" | "google" | "instagram" | "tiktok" | "whatsapp" | "direct" | "other">("all");
+  // Cart users dialog
+  const [cartOpen, setCartOpen] = useState(false);
+  const [cartList, setCartList] = useState<Array<{ user_id: string; full_name: string | null; phone: string | null; email: string | null; items: number; last_added: string }>>([]);
+  // Buyers dialog
+  const [buyersOpen, setBuyersOpen] = useState(false);
+  const [buyersList, setBuyersList] = useState<Array<{ user_id: string; full_name: string | null; phone: string | null; email: string | null; order_number: string | null; total_amount: number; status: string; created_at: string }>>([]);
+  // Hot Leads dialog
+  const [hotLeadsOpen, setHotLeadsOpen] = useState(false);
+  // Visitors dialog "engaged only" filter (driven by KPI card click)
+  const [visitorEngagedOnly, setVisitorEngagedOnly] = useState(false);
   const [visitorTypeFilter, setVisitorTypeFilter] = useState<"all" | "registered" | "anon">("all");
   const [visitorDateFilter, setVisitorDateFilter] = useState<"all" | "today" | "yesterday" | "week">("today");
   const [visitorViewedFilter, setVisitorViewedFilter] = useState<"all" | "viewed" | "not_viewed">("all");
