@@ -81,6 +81,13 @@ const StaffHome = () => {
   const [viewedKeys, setViewedKeys] = useState<Set<string>>(new Set());
   // Per-key earliest view timestamp — used to compute "viewed" under different time-basis modes.
   const [viewedAtMap, setViewedAtMap] = useState<Map<string, string>>(new Map());
+  // All session views performed TODAY by ANY staff member — for the "viewed today" dialog
+  // Map key = "u:<user_id>" or "s:<session_key>", value = aggregated view info
+  const [todayViewsMap, setTodayViewsMap] = useState<Map<string, { staffIds: Set<string>; viewCount: number; lastViewedAt: string }>>(new Map());
+  const [staffNamesMap, setStaffNamesMap] = useState<Map<string, string>>(new Map());
+  const [viewedTodayOpen, setViewedTodayOpen] = useState(false);
+  const [viewedTodayMethodFilter, setViewedTodayMethodFilter] = useState<"all" | "by_me" | "by_others" | "multiple">("all");
+  const [viewedTodaySourceFilter, setViewedTodaySourceFilter] = useState<"all" | "facebook" | "google" | "instagram" | "tiktok" | "whatsapp" | "direct" | "other">("all");
   const [visitorTypeFilter, setVisitorTypeFilter] = useState<"all" | "registered" | "anon">("all");
   const [visitorDateFilter, setVisitorDateFilter] = useState<"all" | "today" | "yesterday" | "week">("today");
   const [visitorViewedFilter, setVisitorViewedFilter] = useState<"all" | "viewed" | "not_viewed">("all");
