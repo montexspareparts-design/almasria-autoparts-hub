@@ -9,7 +9,25 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { ClipboardList, CheckCircle2, AlertCircle, Save, Sparkles, Clock } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ClipboardList, CheckCircle2, AlertCircle, Save, Sparkles, Clock, HelpCircle } from "lucide-react";
+
+type QType = "text" | "textarea" | "number" | "choice" | "boolean";
+interface DynQuestion {
+  id: string;
+  question_text: string;
+  question_type: QType;
+  options: string[];
+  placeholder: string | null;
+  is_required: boolean;
+}
+interface DynAnswer {
+  text?: string;
+  number?: number;
+  boolean?: boolean;
+  choice?: string;
+}
 
 interface ReportRow {
   id?: string;
@@ -49,18 +67,34 @@ const StaffDailyReport = () => {
   const [saving, setSaving] = useState(false);
   const [submittedAt, setSubmittedAt] = useState<string | null>(null);
   const [showReminder, setShowReminder] = useState(false);
+  const [dynQuestions, setDynQuestions] = useState<DynQuestion[]>([]);
+  const [dynAnswers, setDynAnswers] = useState<Record<string, DynAnswer>>({});
 
   const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const { data } = await supabase
-        .from("staff_daily_reports")
-        .select("*")
-        .eq("staff_user_id", user.id)
-        .eq("report_date", today)
-        .maybeSingle();
+      const [reportRes, qRes, aRes] = await Promise.all([
+        supabase
+          .from("staff_daily_reports")
+          .select("*")
+          .eq("staff_user_id", user.id)
+          .eq("report_date", today)
+          .maybeSingle(),
+        supabase
+          .from("daily_report_questions")
+          .select("id, question_text, question_type, options, placeholder, is_required, sort_order")
+          .eq("is_active", true)
+          .order("sort_order", { ascending: true }),
+        supabase
+          .from("daily_report_answers")
+          .select("question_id, answer_text, answer_number, answer_boolean, answer_choice")
+          .eq("user_id", user.id)
+          .eq("report_date", today),
+      ]);
+
+      const data = reportRes.data;
       if (data) {
         setReport({
           id: data.id,
@@ -78,6 +112,33 @@ const StaffDailyReport = () => {
         });
         setSubmittedAt(data.submitted_at);
       }
+
+      if (qRes.data) {
+        setDynQuestions(
+          qRes.data.map((q: any) => ({
+            id: q.id,
+            question_text: q.question_text,
+            question_type: q.question_type as QType,
+            options: Array.isArray(q.options) ? q.options : [],
+            placeholder: q.placeholder,
+            is_required: q.is_required,
+          }))
+        );
+      }
+
+      if (aRes.data) {
+        const map: Record<string, DynAnswer> = {};
+        aRes.data.forEach((a: any) => {
+          map[a.question_id] = {
+            text: a.answer_text ?? undefined,
+            number: a.answer_number != null ? Number(a.answer_number) : undefined,
+            boolean: a.answer_boolean ?? undefined,
+            choice: a.answer_choice ?? undefined,
+          };
+        });
+        setDynAnswers(map);
+      }
+
       setLoading(false);
     };
     load();
@@ -106,6 +167,24 @@ const StaffDailyReport = () => {
         variant: "destructive",
       });
       return;
+    }
+    // Validate required dynamic questions
+    for (const dq of dynQuestions) {
+      if (!dq.is_required) continue;
+      const a = dynAnswers[dq.id];
+      const filled =
+        (dq.question_type === "number" && a?.number != null) ||
+        (dq.question_type === "boolean" && a?.boolean != null) ||
+        (dq.question_type === "choice" && !!a?.choice) ||
+        ((dq.question_type === "text" || dq.question_type === "textarea") && !!a?.text?.trim());
+      if (!filled) {
+        toast({
+          title: "سؤال إجباري ناقص",
+          description: dq.question_text,
+          variant: "destructive",
+        });
+        return;
+      }
     }
     setSaving(true);
 
@@ -147,6 +226,29 @@ const StaffDailyReport = () => {
 
     setSubmittedAt(payload.submitted_at);
     setShowReminder(false);
+
+    // Save dynamic answers (upsert per question)
+    const answerRows = dynQuestions
+      .map((q) => {
+        const a = dynAnswers[q.id];
+        if (!a) return null;
+        return {
+          question_id: q.id,
+          user_id: user.id,
+          report_date: today,
+          answer_text: a.text ?? null,
+          answer_number: a.number ?? null,
+          answer_boolean: a.boolean ?? null,
+          answer_choice: a.choice ?? null,
+        };
+      })
+      .filter(Boolean) as any[];
+    if (answerRows.length) {
+      await supabase
+        .from("daily_report_answers")
+        .upsert(answerRows, { onConflict: "question_id,user_id,report_date" });
+    }
+
     toast({
       title: "✅ تم تقديم التقرير",
       description: "تم إرساله للأدمن وحفظه بنجاح",
@@ -274,6 +376,73 @@ const StaffDailyReport = () => {
           {textField("tomorrow_plan", "خطة بكرة", "أهم 3 عملاء هتتصل بيهم، صفقة قيد التفاوض، ...")}
           {textField("general_notes", "ملاحظات عامة", "أي حاجة تاني تحب تنوّه عنها للأدمن")}
         </div>
+
+        {/* Dynamic admin-defined questions */}
+        {dynQuestions.length > 0 && (
+          <div className="mt-5 pt-5 border-t border-dashed border-primary/30">
+            <div className="flex items-center gap-2 mb-3">
+              <HelpCircle className="w-4 h-4 text-primary" />
+              <h3 className="text-sm font-bold">أسئلة إضافية من الإدارة</h3>
+              <Badge variant="outline" className="text-[10px]">{dynQuestions.length}</Badge>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {dynQuestions.map((q) => {
+                const a = dynAnswers[q.id] || {};
+                const setA = (patch: DynAnswer) =>
+                  setDynAnswers((prev) => ({ ...prev, [q.id]: { ...prev[q.id], ...patch } }));
+                return (
+                  <div key={q.id} className="space-y-1.5">
+                    <Label className="text-xs font-semibold flex items-center gap-1.5">
+                      {q.question_text}
+                      {q.is_required && <span className="text-destructive">*</span>}
+                    </Label>
+                    {q.question_type === "text" && (
+                      <Input
+                        value={a.text ?? ""}
+                        onChange={(e) => setA({ text: e.target.value })}
+                        placeholder={q.placeholder ?? ""}
+                      />
+                    )}
+                    {q.question_type === "textarea" && (
+                      <Textarea
+                        value={a.text ?? ""}
+                        onChange={(e) => setA({ text: e.target.value })}
+                        placeholder={q.placeholder ?? ""}
+                        rows={2}
+                        className="resize-none text-sm"
+                      />
+                    )}
+                    {q.question_type === "number" && (
+                      <Input
+                        type="number"
+                        value={a.number ?? ""}
+                        onChange={(e) => setA({ number: e.target.value === "" ? undefined : Number(e.target.value) })}
+                        placeholder={q.placeholder ?? ""}
+                        className="font-bold tabular-nums"
+                      />
+                    )}
+                    {q.question_type === "boolean" && (
+                      <div className="flex items-center gap-2 h-10">
+                        <Switch checked={!!a.boolean} onCheckedChange={(v) => setA({ boolean: v })} />
+                        <span className="text-sm">{a.boolean ? "نعم" : "لا"}</span>
+                      </div>
+                    )}
+                    {q.question_type === "choice" && (
+                      <Select value={a.choice ?? ""} onValueChange={(v) => setA({ choice: v })}>
+                        <SelectTrigger><SelectValue placeholder="اختر..." /></SelectTrigger>
+                        <SelectContent>
+                          {q.options.map((opt) => (
+                            <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Submit */}
         <div className="mt-5 flex items-center justify-between gap-3 pt-4 border-t border-border/50">

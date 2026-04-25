@@ -428,6 +428,107 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_report_answers: {
+        Row: {
+          answer_boolean: boolean | null
+          answer_choice: string | null
+          answer_number: number | null
+          answer_text: string | null
+          created_at: string
+          id: string
+          question_id: string
+          report_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answer_boolean?: boolean | null
+          answer_choice?: string | null
+          answer_number?: number | null
+          answer_text?: string | null
+          created_at?: string
+          id?: string
+          question_id: string
+          report_date?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answer_boolean?: boolean | null
+          answer_choice?: string | null
+          answer_number?: number | null
+          answer_text?: string | null
+          created_at?: string
+          id?: string
+          question_id?: string
+          report_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_report_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "daily_report_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_report_questions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          is_required: boolean
+          options: Json | null
+          placeholder: string | null
+          question_text: string
+          question_type: string
+          sort_order: number
+          target_role: Database["public"]["Enums"]["app_role"] | null
+          target_scope: string
+          target_team_ids: string[] | null
+          target_user_ids: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          is_required?: boolean
+          options?: Json | null
+          placeholder?: string | null
+          question_text: string
+          question_type?: string
+          sort_order?: number
+          target_role?: Database["public"]["Enums"]["app_role"] | null
+          target_scope?: string
+          target_team_ids?: string[] | null
+          target_user_ids?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          is_required?: boolean
+          options?: Json | null
+          placeholder?: string | null
+          question_text?: string
+          question_type?: string
+          sort_order?: number
+          target_role?: Database["public"]["Enums"]["app_role"] | null
+          target_scope?: string
+          target_team_ids?: string[] | null
+          target_user_ids?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       dealer_accounts: {
         Row: {
           active_session_id: string | null
@@ -2267,6 +2368,68 @@ export type Database = {
         }
         Relationships: []
       }
+      team_members: {
+        Row: {
+          added_at: string
+          added_by: string | null
+          id: string
+          team_id: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string
+          added_by?: string | null
+          id?: string
+          team_id: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string
+          added_by?: string | null
+          id?: string
+          team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ui_translations: {
         Row: {
           category: string
@@ -2634,6 +2797,7 @@ export type Database = {
       is_staff: { Args: { _user_id: string }; Returns: boolean }
       normalize_eg_phone: { Args: { raw: string }; Returns: string }
       phone_already_registered: { Args: { _phone: string }; Returns: boolean }
+      user_team_ids: { Args: { _user_id: string }; Returns: string[] }
       validate_coupon: {
         Args: { _code: string }
         Returns: {

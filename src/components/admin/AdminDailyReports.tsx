@@ -255,6 +255,8 @@ const AdminDailyReports = () => {
                   </div>
                 )}
 
+                <DynamicAnswersBlock userId={selected.staff_user_id} reportDate={selected.report_date} />
+
                 <p className="text-xs text-muted-foreground text-center pt-2 border-t">
                   قُدِّم في: {new Date(selected.submitted_at).toLocaleString("ar-EG")}
                 </p>
@@ -263,6 +265,45 @@ const AdminDailyReports = () => {
           )}
         </DialogContent>
       </Dialog>
+    </div>
+  );
+};
+
+const DynamicAnswersBlock = ({ userId, reportDate }: { userId: string; reportDate: string }) => {
+  const [rows, setRows] = useState<any[]>([]);
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      const { data } = await supabase
+        .from("daily_report_answers")
+        .select("answer_text, answer_number, answer_boolean, answer_choice, daily_report_questions(question_text, question_type)")
+        .eq("user_id", userId)
+        .eq("report_date", reportDate);
+      if (!cancel) setRows(data || []);
+    })();
+    return () => { cancel = true; };
+  }, [userId, reportDate]);
+
+  if (rows.length === 0) return null;
+
+  const fmt = (r: any) => {
+    if (r.answer_number != null) return String(r.answer_number);
+    if (r.answer_boolean != null) return r.answer_boolean ? "نعم" : "لا";
+    if (r.answer_choice) return r.answer_choice;
+    return r.answer_text || "—";
+  };
+
+  return (
+    <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
+      <p className="text-xs font-bold text-primary mb-2">❓ إجابات الأسئلة الإضافية</p>
+      <div className="space-y-2">
+        {rows.map((r, i) => (
+          <div key={i} className="text-sm">
+            <span className="font-semibold">{r.daily_report_questions?.question_text}: </span>
+            <span className="text-muted-foreground whitespace-pre-wrap">{fmt(r)}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
