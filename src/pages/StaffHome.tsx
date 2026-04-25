@@ -1377,6 +1377,9 @@ const StaffHome = () => {
           </div>
         </section>
 
+        {/* Daily Report — placed after KPIs so staff reviews numbers before writing the report */}
+        <StaffDailyReport />
+
         {/* Calculation rules panel — explains how each KPI is computed
             and shows raw (pre-staff-filter) vs filtered counts. */}
         <section>
