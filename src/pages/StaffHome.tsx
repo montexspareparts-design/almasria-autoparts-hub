@@ -372,29 +372,30 @@ const StaffHome = () => {
       visitorsArr.sort((a, b) => b.last_visit.localeCompare(a.last_visit));
       setVisitorsList(visitorsArr);
 
-      // Fetch which visitors the current staff has already viewed (with timestamp)
+      // Fetch which visitors the current staff has already viewed (with both timestamps)
       try {
         const { data: views } = await supabase
           .from("visitor_session_views")
-          .select("customer_user_id, session_key, last_viewed_at")
+          .select("customer_user_id, session_key, first_viewed_at, last_viewed_at")
           .eq("staff_user_id", user!.id);
         const set = new Set<string>();
-        const tsMap = new Map<string, string>();
+        const lastMap = new Map<string, string>();
+        const firstMap = new Map<string, string>();
         (views || []).forEach((v: any) => {
-          const at = v.last_viewed_at as string | null;
-          if (v.customer_user_id) {
-            const k = `u:${v.customer_user_id}`;
+          const lastAt = v.last_viewed_at as string | null;
+          const firstAt = v.first_viewed_at as string | null;
+          const apply = (k: string) => {
             set.add(k);
-            if (at && (!tsMap.has(k) || at > (tsMap.get(k) as string))) tsMap.set(k, at);
-          }
-          if (v.session_key) {
-            const k = `s:${v.session_key}`;
-            set.add(k);
-            if (at && (!tsMap.has(k) || at > (tsMap.get(k) as string))) tsMap.set(k, at);
-          }
+            // last → keep MAX, first → keep MIN
+            if (lastAt && (!lastMap.has(k) || lastAt > (lastMap.get(k) as string))) lastMap.set(k, lastAt);
+            if (firstAt && (!firstMap.has(k) || firstAt < (firstMap.get(k) as string))) firstMap.set(k, firstAt);
+          };
+          if (v.customer_user_id) apply(`u:${v.customer_user_id}`);
+          if (v.session_key) apply(`s:${v.session_key}`);
         });
         setViewedKeys(set);
-        setViewedAtMap(tsMap);
+        setViewedAtMap(lastMap);
+        setViewedFirstAtMap(firstMap);
       } catch (e) {
         console.warn("[StaffHome] viewed keys fetch failed", e);
       }
