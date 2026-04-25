@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ClipboardList, CheckCircle2, AlertCircle, Save, Sparkles, Clock, HelpCircle, Users2, History as HistoryIcon, ChevronDown } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { computeMissingRequired } from "./dailyReportValidation";
 
 type QType = "text" | "textarea" | "number" | "choice" | "boolean";
 type QScope = "all" | "role" | "team" | "users";
@@ -487,16 +488,7 @@ const StaffDailyReport = () => {
   }
 
   // Compute missing required dynamic questions (live)
-  const missingRequired = dynQuestions.filter((q) => {
-    if (!q.is_required) return false;
-    const a = dynAnswers[q.id];
-    const filled =
-      (q.question_type === "number" && a?.number != null) ||
-      (q.question_type === "boolean" && a?.boolean != null) ||
-      (q.question_type === "choice" && !!a?.choice) ||
-      ((q.question_type === "text" || q.question_type === "textarea") && !!a?.text?.trim());
-    return !filled;
-  });
+  const missingRequired = computeMissingRequired(dynQuestions, dynAnswers);
   const missingCount = missingRequired.length;
 
   return (
