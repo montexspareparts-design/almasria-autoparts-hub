@@ -159,7 +159,13 @@ const AdminNewOrderAlert = () => {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-md border-2 border-primary/40 shadow-2xl">
+      <DialogContent
+        // High-attention popup: thick destructive ring + pulsing shadow.
+        // Prevent accidental dismiss via ESC/outside-click — staff must take an action.
+        onEscapeKeyDown={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        className="max-w-md border-4 border-destructive shadow-[0_0_0_4px_hsl(var(--destructive)/0.3),0_25px_50px_-12px_hsl(var(--destructive)/0.6)] animate-[pulse_2s_ease-in-out_infinite]"
+      >
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center gap-2 text-xl">
