@@ -601,6 +601,7 @@ const StaffDailyReport = () => {
   // Compute missing required dynamic questions (live)
   const missingRequired = computeMissingRequired(dynQuestions, dynAnswers);
   const missingCount = missingRequired.length;
+  const totalErrors = kpiErrors.length + textErrors.length + missingCount;
 
   // If the staff already submitted today, hide the form and show a clean confirmation card
   // with a back button and quick links (view details / last reports history).
