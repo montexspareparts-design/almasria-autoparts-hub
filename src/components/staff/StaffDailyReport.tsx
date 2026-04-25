@@ -499,44 +499,98 @@ const StaffDailyReport = () => {
     label: string,
     icon: string,
     suffix?: string
-  ) => (
-    <div className="space-y-1.5">
-      <Label className="text-xs font-semibold flex items-center gap-1.5">
-        <span>{icon}</span>
-        {label}
-      </Label>
-      <div className="relative">
-        <Input
-          type="number"
-          min="0"
-          value={report[key] as number}
-          onChange={(e) =>
-            setReport((r) => ({ ...r, [key]: e.target.value === "" ? 0 : Number(e.target.value) }))
-          }
-          className="text-lg font-bold tabular-nums h-11"
-        />
-        {suffix && (
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
-            {suffix}
-          </span>
+  ) => {
+    const isRequired = REQUIRED_KPI_FIELDS.some((f) => f.key === key);
+    const value = report[key] as number | null;
+    const isEmpty = value == null;
+    const showError = isRequired && isEmpty && submitAttempted;
+    return (
+      <div className="space-y-1.5" id={`kpi-${key}`}>
+        <Label className="text-xs font-semibold flex items-center gap-1.5">
+          <span>{icon}</span>
+          <span>{label}</span>
+          {isRequired && <span className="text-destructive">*</span>}
+        </Label>
+        <div className="relative">
+          <Input
+            type="number"
+            min="0"
+            value={value ?? ""}
+            placeholder="—"
+            onChange={(e) =>
+              setReport((r) => ({
+                ...r,
+                [key]: e.target.value === "" ? null : Number(e.target.value),
+              }))
+            }
+            className={`text-lg font-bold tabular-nums h-11 ${
+              showError
+                ? "border-destructive focus-visible:ring-destructive bg-destructive/5"
+                : !isEmpty
+                  ? "border-emerald-500/40"
+                  : ""
+            }`}
+          />
+          {suffix && (
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
+              {suffix}
+            </span>
+          )}
+        </div>
+        {showError && (
+          <p className="text-[10px] text-destructive flex items-center gap-1">
+            <AlertCircle className="w-3 h-3" />
+            مطلوب — أدخل رقم (حتى لو 0)
+          </p>
         )}
       </div>
-    </div>
-  );
+    );
+  };
 
-  const textField = (key: keyof ReportRow, label: string, placeholder: string) => (
-    <div className="space-y-1.5">
-      <Label className="text-xs font-semibold">{label}</Label>
-      <Textarea
-        value={report[key] as string}
-        onChange={(e) => setReport((r) => ({ ...r, [key]: e.target.value.slice(0, MAX_TEXT) }))}
-        placeholder={placeholder}
-        rows={2}
-        maxLength={MAX_TEXT}
-        className="resize-none text-sm"
-      />
-    </div>
-  );
+  const textField = (key: keyof ReportRow, label: string, placeholder: string) => {
+    const isRequired = REQUIRED_TEXT_FIELDS.some((f) => f.key === key);
+    const value = report[key] as string;
+    const trimmedLen = value.trim().length;
+    const tooShort = isRequired && trimmedLen < MIN_TEXT;
+    const showError = tooShort && submitAttempted;
+    return (
+      <div className="space-y-1.5" id={`txt-${key}`}>
+        <Label className="text-xs font-semibold flex items-center gap-1.5">
+          <span>{label}</span>
+          {isRequired && <span className="text-destructive">*</span>}
+        </Label>
+        <Textarea
+          value={value}
+          onChange={(e) => setReport((r) => ({ ...r, [key]: e.target.value.slice(0, MAX_TEXT) }))}
+          placeholder={placeholder}
+          rows={2}
+          maxLength={MAX_TEXT}
+          className={`resize-none text-sm ${
+            showError
+              ? "border-destructive focus-visible:ring-destructive bg-destructive/5"
+              : isRequired && trimmedLen >= MIN_TEXT
+                ? "border-emerald-500/40"
+                : ""
+          }`}
+        />
+        <div className="flex items-center justify-between text-[10px]">
+          {showError ? (
+            <span className="text-destructive flex items-center gap-1">
+              <AlertCircle className="w-3 h-3" />
+              مطلوب — اكتب {MIN_TEXT} أحرف على الأقل ({trimmedLen}/{MIN_TEXT})
+            </span>
+          ) : isRequired ? (
+            <span className={trimmedLen >= MIN_TEXT ? "text-emerald-600" : "text-muted-foreground"}>
+              {trimmedLen}/{MIN_TEXT} حرف على الأقل
+            </span>
+          ) : (
+            <span />
+          )}
+          <span className="text-muted-foreground">{value.length}/{MAX_TEXT}</span>
+        </div>
+      </div>
+    );
+  };
 
   if (loading) {
     return (
