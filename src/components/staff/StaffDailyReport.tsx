@@ -364,7 +364,6 @@ const StaffDailyReport = () => {
   const textErrors = REQUIRED_TEXT_FIELDS.filter(
     (f) => (report[f.key] as string).trim().length < MIN_TEXT
   );
-  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   const handleSubmit = async () => {
     if (!user) return;
