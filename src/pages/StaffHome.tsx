@@ -1209,11 +1209,11 @@ const StaffHome = () => {
             <DialogTitle className="flex items-center gap-2 text-base">
               <Users className="w-5 h-5 text-blue-600" />
               زوار {rangeSuffix}
-              <Badge variant="secondary" className="text-xs">{visibleVisitorsCount}</Badge>
-              {!includeStaff && visibleVisitorsCount !== visitorsList.length && (
+              <Badge variant="secondary" className="text-xs">{dialogFilteredVisitors.length}</Badge>
+              {dialogFilteredVisitors.length !== visitorsList.length && (
                 <span
                   className="text-[10px] text-muted-foreground font-normal"
-                  title="إجمالي الزوار قبل استبعاد الموظفين"
+                  title="العدد بعد تطبيق الفلاتر النشطة من إجمالي الزوار"
                 >
                   من أصل {visitorsList.length}
                 </span>
