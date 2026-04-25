@@ -162,9 +162,9 @@ const StaffHome = () => {
   const [buyersContactFilter, setBuyersContactFilter] = useSessionPersistedState<"all" | "with_phone" | "no_phone">("staffHome:buyers:contact", "all");
   // Hot Leads dialog
   const [hotLeadsOpen, setHotLeadsOpen] = useState(false);
-  const [leadsSort, setLeadsSort] = useState<"score" | "recent">("score");
-  const [leadsTierFilter, setLeadsTierFilter] = useState<"all" | "hot" | "warm" | "cold">("all");
-  const [leadsContactFilter, setLeadsContactFilter] = useState<"all" | "with_phone" | "no_phone">("all");
+  const [leadsSort, setLeadsSort] = useSessionPersistedState<"score" | "recent">("staffHome:leads:sort", "score");
+  const [leadsTierFilter, setLeadsTierFilter] = useSessionPersistedState<"all" | "hot" | "warm" | "cold">("staffHome:leads:tier", "all");
+  const [leadsContactFilter, setLeadsContactFilter] = useSessionPersistedState<"all" | "with_phone" | "no_phone">("staffHome:leads:contact", "all");
   // Visitors dialog "engaged only" filter (driven by KPI card click)
   const [visitorEngagedOnly, setVisitorEngagedOnly] = useState(false);
   const [visitorTypeFilter, setVisitorTypeFilter] = useState<"all" | "registered" | "anon">("all");
