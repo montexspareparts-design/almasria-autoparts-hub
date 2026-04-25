@@ -512,11 +512,16 @@ const StaffHome = () => {
     if (!baseHit) return false;
     if (viewedBasis === "all_time") return true;
 
-    // Latest view timestamp across this visitor's keys
+    // Pick the anchor timestamp per the user's choice:
+    //   - "last":  most recent view across this visitor's keys (default)
+    //   - "first": earliest view across this visitor's keys
+    const anchorMap = viewedAnchor === "first" ? viewedFirstAtMap : viewedAtMap;
     let viewedAt: string | null = null;
     for (const k of keys) {
-      const t = viewedAtMap.get(k);
-      if (t && (!viewedAt || t > viewedAt)) viewedAt = t;
+      const t = anchorMap.get(k);
+      if (!t) continue;
+      if (!viewedAt) { viewedAt = t; continue; }
+      if (viewedAnchor === "first" ? t < viewedAt : t > viewedAt) viewedAt = t;
     }
     if (!viewedAt) return false; // no timestamp known → can't qualify under date-based modes
 
@@ -540,7 +545,7 @@ const StaffHome = () => {
       return isViewedUnderBasis(v) ? acc + 1 : acc;
     }, 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visitorsList, viewedKeys, viewedAtMap, includeStaff, staffIdsSet, viewedBasis, range]);
+  }, [visitorsList, viewedKeys, viewedAtMap, viewedFirstAtMap, includeStaff, staffIdsSet, viewedBasis, viewedAnchor, range]);
 
   // Helpers shared by all KPI memos so badges and cards stay in lockstep
   const isStaffVisitor = (uid: string | null | undefined) => !!uid && staffIdsSet.has(uid);
