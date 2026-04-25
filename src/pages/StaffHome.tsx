@@ -94,7 +94,29 @@ const sevenDaysISO = () => {
   return new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 };
 
+// First day of the current local month at 00:00.
+// Used as the widest "this month" window for per-dialog range overrides.
+const monthStartISO = () => {
+  const d = new Date();
+  d.setDate(1);
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
+};
+
 type RangeKey = "today" | "7d";
+// Per-dialog range: each Dialog can override the global KPI range with its own
+// time window without re-fetching (we fetch the widest range up-front).
+type DialogRangeKey = "today" | "7d" | "month";
+
+// Returns the earliest local timestamp (ms since epoch) for the given dialog range.
+const dialogRangeStartMs = (r: DialogRangeKey): number => {
+  if (r === "today") return new Date(todayISO()).getTime();
+  if (r === "7d") return new Date(sevenDaysISO()).getTime();
+  return new Date(monthStartISO()).getTime();
+};
+
+const dialogRangeLabel = (r: DialogRangeKey): string =>
+  r === "today" ? "اليوم" : r === "7d" ? "آخر 7 أيام" : "هذا الشهر";
 
 const StaffHome = () => {
   const { user, isAdmin, isModerator, loading: authLoading } = useAuth();
