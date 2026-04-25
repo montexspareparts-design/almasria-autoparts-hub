@@ -357,21 +357,44 @@ const StaffDailyReport = () => {
     setRestorePreview(null);
   };
 
+  // ===== Live validation (KPIs + required text + dynamic) =====
+  // KPI must have explicit value (null = not entered). 0 is allowed.
+  const kpiErrors = REQUIRED_KPI_FIELDS.filter((f) => report[f.key] == null);
+  const textErrors = REQUIRED_TEXT_FIELDS.filter(
+    (f) => (report[f.key] as string).trim().length < MIN_TEXT
+  );
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+
   const handleSubmit = async () => {
     if (!user) return;
-    if (
-      report.customers_contacted === 0 &&
-      report.customers_registered === 0 &&
-      report.customers_with_invoices === 0 &&
-      !report.general_notes.trim()
-    ) {
+    setSubmitAttempted(true);
+
+    // Validate KPI numeric fields (must be entered)
+    if (kpiErrors.length > 0) {
       toast({
-        title: "تقرير فاضي",
-        description: "ادخل الأرقام أو على الأقل ملاحظة قبل التقديم",
+        title: `ناقص ${kpiErrors.length} رقم في الـ KPIs`,
+        description: `أدخل قيمة (حتى لو 0) في: ${kpiErrors.map((f) => f.label).join("، ")}`,
         variant: "destructive",
       });
+      const first = document.getElementById(`kpi-${kpiErrors[0].key}`);
+      first?.scrollIntoView({ behavior: "smooth", block: "center" });
+      (first?.querySelector("input") as HTMLInputElement | null)?.focus();
       return;
     }
+
+    // Validate required text fields (min 10 chars)
+    if (textErrors.length > 0) {
+      toast({
+        title: `تعليق إجباري ناقص`,
+        description: `اكتب ${MIN_TEXT} أحرف على الأقل في: ${textErrors.map((f) => f.label).join("، ")}`,
+        variant: "destructive",
+      });
+      const first = document.getElementById(`txt-${textErrors[0].key}`);
+      first?.scrollIntoView({ behavior: "smooth", block: "center" });
+      (first?.querySelector("textarea") as HTMLTextAreaElement | null)?.focus();
+      return;
+    }
+
     // Validate required dynamic questions
     for (const dq of dynQuestions) {
       if (!dq.is_required) continue;
@@ -387,6 +410,7 @@ const StaffDailyReport = () => {
           description: dq.question_text,
           variant: "destructive",
         });
+        scrollToQuestion(dq.id);
         return;
       }
     }
