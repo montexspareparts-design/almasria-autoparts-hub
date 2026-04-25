@@ -107,6 +107,11 @@ const StaffHome = () => {
   //   - "event_day": viewed on the same calendar day as the visitor's last_visit
   //   - "all_time": any past view counts (legacy behavior)
   const [viewedBasis, setViewedBasis] = useState<"range" | "event_day" | "all_time">("range");
+  // Which timestamp drives date-based matching when basis ≠ "all_time":
+  //   - "last":  use the LATEST view per visitor (default — answers "هل عاينت العميل مؤخراً؟")
+  //   - "first": use the FIRST view per visitor (answers "هل عاينت العميل أصلاً منذ زيارته؟")
+  // Only affects "range" + "event_day" modes; "all_time" ignores it.
+  const [viewedAnchor, setViewedAnchor] = useState<"last" | "first">("last");
 
   // Guard
   useEffect(() => {
