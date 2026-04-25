@@ -830,6 +830,7 @@ const StaffDailyReport = () => {
             {saving ? "جارٍ الحفظ..." : submittedAt ? "حفظ التعديلات" : "تقديم التقرير"}
           </Button>
         </div>
+        </div>
       </Card>
 
       <AlertDialog open={!!restorePreview} onOpenChange={(o) => !o && setRestorePreview(null)}>
