@@ -548,6 +548,42 @@ const StaffHome = () => {
     );
   }, [visitorsList, includeStaff, staffIdsSet]);
 
+  // Helpers to apply the same staff-exclusion + range filters everywhere KPIs are derived
+  const isStaffVisitor = (uid: string | null | undefined) => !!uid && staffIdsSet.has(uid);
+  const startMs = useMemo(
+    () => new Date(range === "today" ? todayISO() : sevenDaysISO()).getTime(),
+    [range]
+  );
+
+  // Unified KPI numbers — computed from raw lists with the SAME staff-exclusion
+  // logic as visibleVisitorsCount, so all cards stay consistent with the toggle.
+  const kpis = useMemo(() => {
+    const visibleVisitors = visitorsList.filter(
+      (v) => (includeStaff || !isStaffVisitor(v.user_id)) && new Date(v.last_visit).getTime() >= startMs
+    );
+    const engaged = visibleVisitors.filter((v) => {
+      const dwell = v.first_visit ? new Date(v.last_visit).getTime() - new Date(v.first_visit).getTime() : 0;
+      return dwell >= ENGAGED_DWELL_MS || v.pages >= 2;
+    }).length;
+    const signups = newSignups.filter((s) => includeStaff || !isStaffVisitor(s.user_id)).length;
+    const cartUsers = new Set(
+      cartList.filter((c) => includeStaff || !isStaffVisitor(c.user_id)).map((c) => c.user_id)
+    ).size;
+    const buyerUsers = new Set(
+      buyersList.filter((b) => includeStaff || !isStaffVisitor(b.user_id)).map((b) => b.user_id)
+    ).size;
+    const hot = hotLeads.filter((l) => includeStaff || !isStaffVisitor(l.user_id)).length || hotLeadsCount;
+    return {
+      visitors: visibleVisitors.length,
+      engagedVisitors: engaged,
+      signups,
+      addedToCart: cartUsers,
+      purchased: buyerUsers,
+      hotLeads: hot,
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visitorsList, newSignups, cartList, buyersList, hotLeads, hotLeadsCount, includeStaff, staffIdsSet, startMs]);
+
   // Detect traffic source for a visitor (used as the "reason" filter in Viewed Today dialog)
   const detectSource = (firstPath: string | null, referrer: string | null) => {
     const hay = ((firstPath || "") + " " + (referrer || "")).toLowerCase();
