@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ClipboardList, CheckCircle2, AlertCircle, Save, Sparkles, Clock, HelpCircle, Users2, History as HistoryIcon, ChevronDown, ArrowRight, Eye, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerFooter, DrawerClose } from "@/components/ui/drawer";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { computeMissingRequired, isAnswerFilled } from "./dailyReportValidation";
@@ -986,10 +987,10 @@ const SubmittedSuccessCard = ({
             size="sm"
             variant="outline"
             className="gap-1.5 h-9"
-            onClick={() => setShowDetails((s) => !s)}
+            onClick={() => setShowDetails(true)}
           >
             <Eye className="w-4 h-4" />
-            {showDetails ? "إخفاء التفاصيل" : "عرض تفاصيل التقرير"}
+            عرض تفاصيل التقرير
           </Button>
           <Button
             size="sm"
@@ -1002,29 +1003,36 @@ const SubmittedSuccessCard = ({
           </Button>
         </div>
 
-        {/* Details panel */}
-        {showDetails && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            className="mt-5 overflow-hidden"
-          >
-            <div className="rounded-lg border border-emerald-500/20 bg-card/60 p-4 space-y-3">
-              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                ملخص KPIs
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
-                <KpiPill label="عملاء تم التواصل" value={report.customers_contacted} />
-                <KpiPill label="عملاء سجّلوا" value={report.customers_registered} />
-                <KpiPill label="عملاء عملوا فاتورة" value={report.customers_with_invoices} />
-                <KpiPill label="إجمالي الفواتير" value={`${report.total_invoices_amount} ج.م`} />
-                <KpiPill label="Leads ساخنة" value={report.hot_leads_count} />
-                <KpiPill label="متابعات تمت" value={report.follow_ups_done} />
-              </div>
+        {/* Details Drawer (slides up from bottom) */}
+        <Drawer open={showDetails} onOpenChange={setShowDetails}>
+          <DrawerContent className="max-h-[85vh]">
+            <DrawerHeader className="text-right">
+              <DrawerTitle className="flex items-center gap-2">
+                <ClipboardList className="w-5 h-5 text-primary" />
+                تفاصيل تقرير اليوم
+              </DrawerTitle>
+              <DrawerDescription className="text-xs">
+                {submittedDate} — تم التقديم الساعة {submittedTime}
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="px-4 pb-2 overflow-y-auto space-y-4">
+              <section className="space-y-2">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  ملخص KPIs
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+                  <KpiPill label="عملاء تم التواصل" value={report.customers_contacted} />
+                  <KpiPill label="عملاء سجّلوا" value={report.customers_registered} />
+                  <KpiPill label="عملاء عملوا فاتورة" value={report.customers_with_invoices} />
+                  <KpiPill label="إجمالي الفواتير" value={`${report.total_invoices_amount} ج.م`} />
+                  <KpiPill label="Leads ساخنة" value={report.hot_leads_count} />
+                  <KpiPill label="متابعات تمت" value={report.follow_ups_done} />
+                </div>
+              </section>
 
               {(report.best_deal_today || report.problems_faced || report.tomorrow_plan || report.general_notes) && (
-                <>
-                  <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider pt-2">
+                <section className="space-y-2">
+                  <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                     ملاحظات
                   </h3>
                   <div className="space-y-1.5 text-xs">
@@ -1033,27 +1041,32 @@ const SubmittedSuccessCard = ({
                     {report.tomorrow_plan && <NoteRow label="خطة بكرة" value={report.tomorrow_plan} />}
                     {report.general_notes && <NoteRow label="عام" value={report.general_notes} />}
                   </div>
-                </>
+                </section>
               )}
 
               {dynAnsweredList.length > 0 && (
-                <>
-                  <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider pt-2">
+                <section className="space-y-2">
+                  <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                     الأسئلة الإضافية ({dynAnsweredList.length})
                   </h3>
-                  <ul className="space-y-1 text-xs">
+                  <ul className="space-y-1.5 text-xs">
                     {dynAnsweredList.map(({ q, a }) => (
-                      <li key={q.id} className="flex items-start gap-2">
+                      <li key={q.id} className="flex items-start gap-2 border-b border-border/40 pb-1.5">
                         <span className="text-muted-foreground shrink-0">{q.question_text}:</span>
                         <span className="font-semibold">{renderAnswerValue(q, a!)}</span>
                       </li>
                     ))}
                   </ul>
-                </>
+                </section>
               )}
             </div>
-          </motion.div>
-        )}
+            <DrawerFooter>
+              <DrawerClose asChild>
+                <Button variant="outline" size="sm">إغلاق</Button>
+              </DrawerClose>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
 
         {/* History panel */}
         {showHistory && (
