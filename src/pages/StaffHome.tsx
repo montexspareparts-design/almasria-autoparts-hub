@@ -22,11 +22,46 @@ import {
   TrendingUp,
   CheckCheck,
   Filter,
+  Search,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isNoiseVisit, ENGAGED_DWELL_MS } from "@/lib/visitorAnalytics";
 import { viewedOnVisitDay } from "@/lib/visitDayMatch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+
+// Normalize a string for case-insensitive substring matching.
+// Strips Arabic diacritics + tatweel and lowercases the rest so "محمد" matches
+// "مُحَمَّد" and "ahmed" matches "Ahmed".
+const normalizeSearch = (s: string | null | undefined) =>
+  (s || "")
+    .toLowerCase()
+    .replace(/[\u064B-\u0652\u0670\u0640]/g, "")
+    .trim();
+
+// Strip everything except digits — used to compare phone numbers regardless of
+// formatting (spaces, dashes, +20 prefix, etc.).
+const digitsOnly = (s: string | null | undefined) => (s || "").replace(/\D/g, "");
+
+// Returns true if the contact (name/phone/email) matches the free-text query.
+// Empty/whitespace-only queries always match (search is treated as inactive).
+const matchesContactQuery = (
+  q: string,
+  contact: { full_name?: string | null; phone?: string | null; email?: string | null },
+) => {
+  const norm = normalizeSearch(q);
+  if (!norm) return true;
+  const name = normalizeSearch(contact.full_name);
+  const email = normalizeSearch(contact.email);
+  if (name.includes(norm) || email.includes(norm)) return true;
+  const qDigits = digitsOnly(q);
+  if (qDigits.length >= 3) {
+    const phoneDigits = digitsOnly(contact.phone);
+    if (phoneDigits.includes(qDigits)) return true;
+  }
+  return false;
+};
 
 interface KPI {
   label: string;
@@ -107,6 +142,13 @@ const StaffHome = () => {
   const [visitorTypeFilter, setVisitorTypeFilter] = useState<"all" | "registered" | "anon">("all");
   const [visitorDateFilter, setVisitorDateFilter] = useState<"all" | "today" | "yesterday" | "week">("today");
   const [visitorViewedFilter, setVisitorViewedFilter] = useState<"all" | "viewed" | "not_viewed">("all");
+  // Free-text search inside each dialog (matches name / phone / email).
+  // Phone matching ignores formatting (spaces, dashes, +20…), name matching
+  // ignores Arabic diacritics & case. See normalizeSearch / matchesContactQuery.
+  const [visitorsSearch, setVisitorsSearch] = useState("");
+  const [cartSearch, setCartSearch] = useState("");
+  const [buyersSearch, setBuyersSearch] = useState("");
+  const [leadsSearch, setLeadsSearch] = useState("");
   // Toggle: false = "Only Customers" (default, excludes staff). true = "All" (review only — shows staff too).
   const [includeStaff, setIncludeStaff] = useState<boolean>(false);
   const [staffIdsSet, setStaffIdsSet] = useState<Set<string>>(new Set());
@@ -608,10 +650,14 @@ const StaffHome = () => {
         const dwell = Number.isFinite(firstT) && Number.isFinite(t) ? t - (firstT as number) : 0;
         if (!(dwell >= ENGAGED_DWELL_MS || (v.pages ?? 0) >= 2)) return false;
       }
+      // Free-text search: name / phone / email. Anonymous visitors (no name,
+      // no phone, no email) automatically fall out as soon as a query is typed,
+      // which is the expected behavior for a contact-search box.
+      if (!matchesContactQuery(visitorsSearch, v)) return false;
       return true;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visitorsList, includeStaff, staffIdsSet, visitorTypeFilter, visitorDateFilter, visitorViewedFilter, visitorEngagedOnly, viewedKeys]);
+  }, [visitorsList, includeStaff, staffIdsSet, visitorTypeFilter, visitorDateFilter, visitorViewedFilter, visitorEngagedOnly, viewedKeys, visitorsSearch]);
 
 
   // Unified KPI numbers — computed from raw lists with the SAME staff-exclusion
@@ -775,13 +821,14 @@ const StaffHome = () => {
     const filtered = cartList.filter((c) => {
       if (cartContactFilter === "with_phone" && !c.phone) return false;
       if (cartContactFilter === "no_phone" && c.phone) return false;
+      if (!matchesContactQuery(cartSearch, c)) return false;
       return true;
     });
     return [...filtered].sort((a, b) => {
       if (cartSort === "items") return (b.items || 0) - (a.items || 0);
       return (b.last_added || "").localeCompare(a.last_added || "");
     });
-  }, [cartList, cartContactFilter, cartSort]);
+  }, [cartList, cartContactFilter, cartSort, cartSearch]);
 
   const visibleBuyers = useMemo(() => {
     const known = new Set(["pending", "confirmed", "shipped", "delivered", "cancelled"]);
@@ -793,26 +840,34 @@ const StaffHome = () => {
           if (known.has(b.status)) return false;
         } else if (b.status !== buyersStatusFilter) return false;
       }
+      // Also match against the order number so staff can paste/scan it.
+      if (buyersSearch.trim()) {
+        const matchesOrder = (b.order_number || "")
+          .toLowerCase()
+          .includes(buyersSearch.trim().toLowerCase());
+        if (!matchesContactQuery(buyersSearch, b) && !matchesOrder) return false;
+      }
       return true;
     });
     return [...filtered].sort((a, b) => {
       if (buyersSort === "amount") return (b.total_amount || 0) - (a.total_amount || 0);
       return (b.created_at || "").localeCompare(a.created_at || "");
     });
-  }, [buyersList, buyersContactFilter, buyersStatusFilter, buyersSort]);
+  }, [buyersList, buyersContactFilter, buyersStatusFilter, buyersSort, buyersSearch]);
 
   const visibleLeads = useMemo(() => {
     const filtered = hotLeads.filter((l) => {
       if (leadsContactFilter === "with_phone" && !l.phone) return false;
       if (leadsContactFilter === "no_phone" && l.phone) return false;
       if (leadsTierFilter !== "all" && l.tier !== leadsTierFilter) return false;
+      if (!matchesContactQuery(leadsSearch, l)) return false;
       return true;
     });
     return [...filtered].sort((a, b) => {
       if (leadsSort === "recent") return (b.last_activity || "").localeCompare(a.last_activity || "");
       return (b.score || 0) - (a.score || 0);
     });
-  }, [hotLeads, leadsContactFilter, leadsTierFilter, leadsSort]);
+  }, [hotLeads, leadsContactFilter, leadsTierFilter, leadsSort, leadsSearch]);
 
   const tierBadge = (tier: HotLead["tier"]) => {
     if (tier === "hot")
@@ -1337,6 +1392,28 @@ const StaffHome = () => {
             </DialogDescription>
           </DialogHeader>
 
+          {/* Search bar — name / phone / email (matches normalized values) */}
+          <div className="relative pt-2">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 mt-1 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <Input
+              value={visitorsSearch}
+              onChange={(e) => setVisitorsSearch(e.target.value)}
+              placeholder="ابحث بالاسم أو رقم الهاتف أو الإيميل…"
+              className="h-9 text-xs pr-9 pl-8"
+              dir="rtl"
+            />
+            {visitorsSearch && (
+              <button
+                type="button"
+                onClick={() => setVisitorsSearch("")}
+                className="absolute left-2 top-1/2 -translate-y-1/2 mt-1 p-1 rounded hover:bg-muted text-muted-foreground"
+                aria-label="مسح البحث"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
           {/* Filters */}
           <div className="flex flex-wrap items-center gap-2 pt-2 pb-1 border-b">
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -1730,6 +1807,28 @@ const StaffHome = () => {
             </DialogDescription>
           </DialogHeader>
 
+          {/* Search bar — name / phone / email */}
+          <div className="relative pt-2">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 mt-1 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <Input
+              value={cartSearch}
+              onChange={(e) => setCartSearch(e.target.value)}
+              placeholder="ابحث بالاسم أو رقم الهاتف أو الإيميل…"
+              className="h-9 text-xs pr-9 pl-8"
+              dir="rtl"
+            />
+            {cartSearch && (
+              <button
+                type="button"
+                onClick={() => setCartSearch("")}
+                className="absolute left-2 top-1/2 -translate-y-1/2 mt-1 p-1 rounded hover:bg-muted text-muted-foreground"
+                aria-label="مسح البحث"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
           {/* Sort + filter bar */}
           <div className="flex flex-wrap items-center gap-2 pt-2 pb-1 border-b">
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -1837,6 +1936,28 @@ const StaffHome = () => {
               قائمة الطلبات اللي وصلت في النطاق المختار — مع حالتها والمبلغ والعميل.
             </DialogDescription>
           </DialogHeader>
+
+          {/* Search bar — name / phone / email / order number */}
+          <div className="relative pt-2">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 mt-1 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <Input
+              value={buyersSearch}
+              onChange={(e) => setBuyersSearch(e.target.value)}
+              placeholder="ابحث بالاسم/الهاتف/الإيميل/رقم الطلب…"
+              className="h-9 text-xs pr-9 pl-8"
+              dir="rtl"
+            />
+            {buyersSearch && (
+              <button
+                type="button"
+                onClick={() => setBuyersSearch("")}
+                className="absolute left-2 top-1/2 -translate-y-1/2 mt-1 p-1 rounded hover:bg-muted text-muted-foreground"
+                aria-label="مسح البحث"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
 
           {/* Sort + filter bar */}
           <div className="flex flex-wrap items-center gap-2 pt-2 pb-1 border-b">
@@ -1954,6 +2075,28 @@ const StaffHome = () => {
               العملاء اللي ظهر منهم نية شراء قوية (بحث + معاينة + إضافة للسلة) ولسه ما اشتروش — رتبهم بالأولوية وكلّمهم.
             </DialogDescription>
           </DialogHeader>
+
+          {/* Search bar — name / phone / email */}
+          <div className="relative pt-2">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 mt-1 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <Input
+              value={leadsSearch}
+              onChange={(e) => setLeadsSearch(e.target.value)}
+              placeholder="ابحث بالاسم أو رقم الهاتف أو الإيميل…"
+              className="h-9 text-xs pr-9 pl-8"
+              dir="rtl"
+            />
+            {leadsSearch && (
+              <button
+                type="button"
+                onClick={() => setLeadsSearch("")}
+                className="absolute left-2 top-1/2 -translate-y-1/2 mt-1 p-1 rounded hover:bg-muted text-muted-foreground"
+                aria-label="مسح البحث"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
 
           {/* Sort + filter bar */}
           <div className="flex flex-wrap items-center gap-2 pt-2 pb-1 border-b">
