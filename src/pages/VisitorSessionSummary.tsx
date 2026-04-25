@@ -1241,13 +1241,20 @@ export default function VisitorSessionSummary() {
             {/* Previous sessions */}
             {sessions.length > 1 && (
               <Card id="section-sessions" className="scroll-mt-24 rounded-2xl">
-                <CardHeader className="pb-3">
+                <CardHeader
+                  className="pb-3 cursor-pointer hover:bg-muted/40 transition"
+                  onClick={() => toggleSection("section-sessions")}
+                  role="button"
+                  aria-expanded={isSectionOpen("section-sessions")}
+                >
                   <CardTitle className="flex items-center gap-2 text-base">
                     <History className="w-5 h-5 text-muted-foreground" />
                     الجلسات السابقة
                     <Badge variant="secondary" className="text-xs">{sessions.length - 1}</Badge>
+                    <ChevronDown className={`w-4 h-4 ms-auto text-muted-foreground transition-transform ${isSectionOpen("section-sessions") ? "rotate-180" : ""}`} />
                   </CardTitle>
                 </CardHeader>
+                {isSectionOpen("section-sessions") && (
                 <CardContent className="space-y-2">
                   {sessions.slice(1, 11).map((s, idx) => (
                     <details key={idx} className="group rounded-lg bg-muted/30 hover:bg-muted/60 transition">
