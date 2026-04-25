@@ -1821,10 +1821,15 @@ const StaffHome = () => {
             <DialogTitle className="flex items-center gap-2 text-base">
               <CheckCircle2 className="w-5 h-5 text-green-600" />
               طلبات {rangeSuffix}
-              <Badge variant="secondary" className="text-xs">{buyersList.length}</Badge>
-              {buyersList.length > 0 && (
+              <Badge variant="secondary" className="text-xs">{visibleBuyers.length}</Badge>
+              {visibleBuyers.length !== buyersList.length && (
+                <span className="text-[10px] text-muted-foreground font-normal" title="العدد بعد الفلاتر من إجمالي الطلبات">
+                  من أصل {buyersList.length}
+                </span>
+              )}
+              {visibleBuyers.length > 0 && (
                 <span className="text-[11px] text-muted-foreground font-normal">
-                  · إجمالي {buyersList.reduce((s, b) => s + b.total_amount, 0).toLocaleString("ar-EG")} ج
+                  · إجمالي {visibleBuyers.reduce((s, b) => s + b.total_amount, 0).toLocaleString("ar-EG")} ج
                 </span>
               )}
             </DialogTitle>
@@ -1832,11 +1837,55 @@ const StaffHome = () => {
               قائمة الطلبات اللي وصلت في النطاق المختار — مع حالتها والمبلغ والعميل.
             </DialogDescription>
           </DialogHeader>
-          {buyersList.length === 0 ? (
-            <div className="text-center py-10 text-sm text-muted-foreground">مفيش طلبات في هذا النطاق</div>
+
+          {/* Sort + filter bar */}
+          <div className="flex flex-wrap items-center gap-2 pt-2 pb-1 border-b">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Filter className="w-3.5 h-3.5" />
+              فرز/فلترة:
+            </div>
+            <Select value={buyersSort} onValueChange={(v) => setBuyersSort(v as any)}>
+              <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recent">الأحدث أولاً</SelectItem>
+                <SelectItem value="amount">الأعلى مبلغاً</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={buyersStatusFilter} onValueChange={(v) => setBuyersStatusFilter(v as any)}>
+              <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل الحالات</SelectItem>
+                <SelectItem value="pending">قيد الانتظار</SelectItem>
+                <SelectItem value="confirmed">مؤكد</SelectItem>
+                <SelectItem value="shipped">تم الشحن</SelectItem>
+                <SelectItem value="delivered">تم التسليم</SelectItem>
+                <SelectItem value="cancelled">ملغي</SelectItem>
+                <SelectItem value="other">حالات أخرى</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={buyersContactFilter} onValueChange={(v) => setBuyersContactFilter(v as any)}>
+              <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل العملاء</SelectItem>
+                <SelectItem value="with_phone">عنده هاتف</SelectItem>
+                <SelectItem value="no_phone">بدون هاتف</SelectItem>
+              </SelectContent>
+            </Select>
+            {(buyersSort !== "recent" || buyersStatusFilter !== "all" || buyersContactFilter !== "all") && (
+              <Button size="sm" variant="ghost" className="h-8 text-xs"
+                onClick={() => { setBuyersSort("recent"); setBuyersStatusFilter("all"); setBuyersContactFilter("all"); }}>
+                مسح
+              </Button>
+            )}
+          </div>
+
+          {visibleBuyers.length === 0 ? (
+            <div className="text-center py-10 text-sm text-muted-foreground">
+              {buyersList.length === 0 ? "مفيش طلبات في هذا النطاق" : "مفيش طلبات مطابقة للفلاتر"}
+            </div>
           ) : (
             <div className="space-y-2 mt-2">
-              {buyersList.map((b, i) => {
+              {visibleBuyers.map((b, i) => {
                 const at = new Date(b.created_at).toLocaleString("ar-EG", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
                 const statusColor =
                   b.status === "delivered" ? "bg-green-500/15 text-green-700"
