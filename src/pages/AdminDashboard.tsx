@@ -49,7 +49,7 @@ const AdminWhatsAppInbox = lazy(() => import("@/components/AdminWhatsAppInbox"))
 const StaffDailyDashboard = lazy(() => import("@/components/admin/StaffCRMCommandCenter"));
 const StaffWelcomeDashboard = lazy(() => import("@/components/admin/StaffWelcomeDashboard"));
 const StaffAccountSettings = lazy(() => import("@/components/admin/StaffAccountSettings"));
-const AdminNewOrderAlert = lazy(() => import("@/components/admin/AdminNewOrderAlert"));
+// AdminNewOrderAlert is now mounted globally in App.tsx
 const AdminSupportRequestAlert = lazy(() => import("@/components/admin/AdminSupportRequestAlert"));
 const AdminNotificationPhones = lazy(() => import("@/components/AdminNotificationPhones"));
 const AdminWhatsAppDeliveryStatus = lazy(() => import("@/components/admin/AdminWhatsAppDeliveryStatus"));
@@ -723,10 +723,8 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Real-time new order alert popup */}
-      <Suspense fallback={null}>
-        <AdminNewOrderAlert />
-      </Suspense>
+      {/* AdminNewOrderAlert is mounted globally in App.tsx so it fires on
+          every staff page (incl. /admin/staff-home), not only inside /admin. */}
       {/* Real-time chatbot support request alert popup */}
       <Suspense fallback={null}>
         <AdminSupportRequestAlert />

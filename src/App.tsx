@@ -4,6 +4,10 @@ const InstallBannerLazy = lazy(() => import("@/components/InstallBanner"));
 const WhatsAppFloat = lazy(() => import("@/components/WhatsAppFloat"));
 const AddPhonePrompt = lazy(() => import("@/components/AddPhonePrompt"));
 const VisitorLeadCapture = lazy(() => import("@/components/VisitorLeadCapture"));
+// Global staff alerts — mounted once at the app root so the popup fires on
+// ANY page (including /admin/staff-home), not only inside /admin.
+const AdminNewOrderAlertGlobal = lazy(() => import("@/components/admin/AdminNewOrderAlert"));
+const AdminNewSignupAlertGlobal = lazy(() => import("@/components/admin/AdminNewSignupAlert"));
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -95,6 +99,9 @@ const App = () => (
               <DeferredComponent delay={2500}><WhatsAppFloat /></DeferredComponent>
               <DeferredComponent delay={5000}><AddPhonePrompt /></DeferredComponent>
               <DeferredComponent delay={6000}><VisitorLeadCapture /></DeferredComponent>
+              {/* Staff popups — self-gate by role, no-op for non-staff */}
+              <DeferredComponent delay={1500}><AdminNewOrderAlertGlobal /></DeferredComponent>
+              <DeferredComponent delay={1500}><AdminNewSignupAlertGlobal /></DeferredComponent>
               {DealerRtlAuditor && (
                 <Suspense fallback={null}>
                   <DealerRtlAuditor />

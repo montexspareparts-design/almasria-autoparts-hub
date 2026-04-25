@@ -46,6 +46,9 @@ const AdminNewOrderAlert = () => {
   const [open, setOpen] = useState(false);
   const [soundOn, setSoundOn] = useState(isSoundEnabled());
   const seenIds = useRef<Set<string>>(new Set());
+  // Repeat the klaxon every N seconds while there are still un-actioned orders.
+  // Stops the moment the popup is dismissed or the list empties.
+  const repeatTimer = useRef<number | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -106,6 +109,26 @@ const AdminNewOrderAlert = () => {
     };
   }, [user]);
 
+  // Strong attention loop: re-play the klaxon every 8s while orders remain
+  // un-actioned and sound is enabled. Stops automatically when dismissed.
+  useEffect(() => {
+    if (repeatTimer.current) {
+      window.clearInterval(repeatTimer.current);
+      repeatTimer.current = null;
+    }
+    if (pendingOrders.length > 0 && soundOn && open) {
+      repeatTimer.current = window.setInterval(() => {
+        playNewOrderSound();
+      }, 8000);
+    }
+    return () => {
+      if (repeatTimer.current) {
+        window.clearInterval(repeatTimer.current);
+        repeatTimer.current = null;
+      }
+    };
+  }, [pendingOrders.length, soundOn, open]);
+
   const dismissOrder = (id: string) => {
     setPendingOrders((prev) => prev.filter((o) => o.id !== id));
     if (pendingOrders.length <= 1) setOpen(false);
@@ -136,7 +159,13 @@ const AdminNewOrderAlert = () => {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-md border-2 border-primary/40 shadow-2xl">
+      <DialogContent
+        // High-attention popup: thick destructive ring + pulsing shadow.
+        // Prevent accidental dismiss via ESC/outside-click — staff must take an action.
+        onEscapeKeyDown={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        className="max-w-md border-4 border-destructive shadow-[0_0_0_4px_hsl(var(--destructive)/0.3),0_25px_50px_-12px_hsl(var(--destructive)/0.6)] animate-[pulse_2s_ease-in-out_infinite]"
+      >
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center gap-2 text-xl">
