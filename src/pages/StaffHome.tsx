@@ -577,9 +577,16 @@ const StaffHome = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isAdmin, isModerator, range]);
 
-  // Sync the dialog's date filter with the KPI range toggle so users see what they expect.
+  // Sync each Dialog's range default with the global KPI range so a user that
+  // flips the global toggle sees Dialogs follow — but they can still override
+  // each Dialog independently after that.
   useEffect(() => {
     setVisitorDateFilter(range === "today" ? "today" : "all");
+    const mapped: DialogRangeKey = range === "today" ? "today" : "7d";
+    setVisitorsRange(mapped);
+    setCartRange(mapped);
+    setBuyersRange(mapped);
+    // leadsRange stays at its default ("7d") since "today" leads is rarely useful
   }, [range]);
 
   const rangeSuffix = range === "today" ? "اليوم" : "آخر 7 أيام";
