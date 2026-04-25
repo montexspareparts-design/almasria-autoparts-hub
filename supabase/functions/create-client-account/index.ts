@@ -40,12 +40,12 @@ serve(async (req) => {
     const callerId = claimsData.claims.sub as string;
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
-    const { data: isAdmin } = await adminClient.rpc("has_role", {
+    // Allow both admins and moderators (staff) to create/manage client accounts
+    const { data: isStaff } = await adminClient.rpc("is_staff", {
       _user_id: callerId,
-      _role: "admin",
     });
-    if (!isAdmin) {
-      return new Response(JSON.stringify({ error: "Forbidden" }), {
+    if (!isStaff) {
+      return new Response(JSON.stringify({ error: "Forbidden — صلاحية غير كافية" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
