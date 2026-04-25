@@ -731,12 +731,22 @@ const StaffDailyReport = () => {
               <p className="text-sm font-bold mb-1">
                 ناقص {missingCount} {missingCount === 1 ? "سؤال إجباري" : "أسئلة إجبارية"} — لازم تكمّلها قبل الحفظ
               </p>
-              <ul className="text-xs space-y-0.5 list-disc pr-4 opacity-90">
+              <ul className="text-xs space-y-1 pr-1">
                 {missingRequired.slice(0, 5).map((q) => (
-                  <li key={q.id} className="truncate">{q.question_text}</li>
+                  <li key={q.id}>
+                    <button
+                      type="button"
+                      onClick={() => scrollToQuestion(q.id)}
+                      className="text-right w-full truncate underline underline-offset-2 hover:text-destructive/80 hover:no-underline transition-colors flex items-center gap-1.5"
+                      title="افتح السؤال وحدّد مكانه"
+                    >
+                      <span className="text-destructive">›</span>
+                      <span className="truncate">{q.question_text}</span>
+                    </button>
+                  </li>
                 ))}
                 {missingRequired.length > 5 && (
-                  <li className="opacity-70">+ {missingRequired.length - 5} أخرى…</li>
+                  <li className="opacity-70 text-[11px] pr-3">+ {missingRequired.length - 5} أخرى…</li>
                 )}
               </ul>
             </div>
