@@ -35,6 +35,7 @@ import { isViewedUnderBasis as isViewedUnderBasisPure } from "@/lib/viewedUnderB
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useSessionPersistedState } from "@/hooks/useSessionPersistedState";
 
 // Normalize a string for case-insensitive substring matching.
 // Strips Arabic diacritics + tatweel and lowercases the rest so "محمد" matches
@@ -146,43 +147,43 @@ const StaffHome = () => {
   const [todayViewsMap, setTodayViewsMap] = useState<Map<string, { staffIds: Set<string>; viewCount: number; lastViewedAt: string }>>(new Map());
   const [staffNamesMap, setStaffNamesMap] = useState<Map<string, string>>(new Map());
   const [viewedTodayOpen, setViewedTodayOpen] = useState(false);
-  const [viewedTodayMethodFilter, setViewedTodayMethodFilter] = useState<"all" | "by_me" | "by_others" | "multiple">("all");
-  const [viewedTodaySourceFilter, setViewedTodaySourceFilter] = useState<"all" | "facebook" | "google" | "instagram" | "tiktok" | "whatsapp" | "direct" | "other">("all");
+  const [viewedTodayMethodFilter, setViewedTodayMethodFilter] = useSessionPersistedState<"all" | "by_me" | "by_others" | "multiple">("staffHome:viewedToday:method", "all");
+  const [viewedTodaySourceFilter, setViewedTodaySourceFilter] = useSessionPersistedState<"all" | "facebook" | "google" | "instagram" | "tiktok" | "whatsapp" | "direct" | "other">("staffHome:viewedToday:source", "all");
   // Cart users dialog
   const [cartOpen, setCartOpen] = useState(false);
   const [cartList, setCartList] = useState<Array<{ user_id: string; full_name: string | null; phone: string | null; email: string | null; items: number; last_added: string }>>([]);
-  const [cartSort, setCartSort] = useState<"recent" | "items">("recent");
-  const [cartContactFilter, setCartContactFilter] = useState<"all" | "with_phone" | "no_phone">("all");
+  const [cartSort, setCartSort] = useSessionPersistedState<"recent" | "items">("staffHome:cart:sort", "recent");
+  const [cartContactFilter, setCartContactFilter] = useSessionPersistedState<"all" | "with_phone" | "no_phone">("staffHome:cart:contact", "all");
   // Buyers dialog
   const [buyersOpen, setBuyersOpen] = useState(false);
   const [buyersList, setBuyersList] = useState<Array<{ user_id: string; full_name: string | null; phone: string | null; email: string | null; order_number: string | null; total_amount: number; status: string; created_at: string }>>([]);
-  const [buyersSort, setBuyersSort] = useState<"recent" | "amount">("recent");
-  const [buyersStatusFilter, setBuyersStatusFilter] = useState<"all" | "pending" | "confirmed" | "shipped" | "delivered" | "cancelled" | "other">("all");
-  const [buyersContactFilter, setBuyersContactFilter] = useState<"all" | "with_phone" | "no_phone">("all");
+  const [buyersSort, setBuyersSort] = useSessionPersistedState<"recent" | "amount">("staffHome:buyers:sort", "recent");
+  const [buyersStatusFilter, setBuyersStatusFilter] = useSessionPersistedState<"all" | "pending" | "confirmed" | "shipped" | "delivered" | "cancelled" | "other">("staffHome:buyers:status", "all");
+  const [buyersContactFilter, setBuyersContactFilter] = useSessionPersistedState<"all" | "with_phone" | "no_phone">("staffHome:buyers:contact", "all");
   // Hot Leads dialog
   const [hotLeadsOpen, setHotLeadsOpen] = useState(false);
-  const [leadsSort, setLeadsSort] = useState<"score" | "recent">("score");
-  const [leadsTierFilter, setLeadsTierFilter] = useState<"all" | "hot" | "warm" | "cold">("all");
-  const [leadsContactFilter, setLeadsContactFilter] = useState<"all" | "with_phone" | "no_phone">("all");
+  const [leadsSort, setLeadsSort] = useSessionPersistedState<"score" | "recent">("staffHome:leads:sort", "score");
+  const [leadsTierFilter, setLeadsTierFilter] = useSessionPersistedState<"all" | "hot" | "warm" | "cold">("staffHome:leads:tier", "all");
+  const [leadsContactFilter, setLeadsContactFilter] = useSessionPersistedState<"all" | "with_phone" | "no_phone">("staffHome:leads:contact", "all");
   // Visitors dialog "engaged only" filter (driven by KPI card click)
   const [visitorEngagedOnly, setVisitorEngagedOnly] = useState(false);
-  const [visitorTypeFilter, setVisitorTypeFilter] = useState<"all" | "registered" | "anon">("all");
-  const [visitorDateFilter, setVisitorDateFilter] = useState<"all" | "today" | "yesterday" | "week" | "month">("today");
-  const [visitorViewedFilter, setVisitorViewedFilter] = useState<"all" | "viewed" | "not_viewed">("all");
+  const [visitorTypeFilter, setVisitorTypeFilter] = useSessionPersistedState<"all" | "registered" | "anon">("staffHome:visitors:type", "all");
+  const [visitorDateFilter, setVisitorDateFilter] = useSessionPersistedState<"all" | "today" | "yesterday" | "week" | "month">("staffHome:visitors:date", "today");
+  const [visitorViewedFilter, setVisitorViewedFilter] = useSessionPersistedState<"all" | "viewed" | "not_viewed">("staffHome:visitors:viewed", "all");
   // Free-text search inside each dialog (matches name / phone / email).
   // Phone matching ignores formatting (spaces, dashes, +20…), name matching
   // ignores Arabic diacritics & case. See normalizeSearch / matchesContactQuery.
-  const [visitorsSearch, setVisitorsSearch] = useState("");
-  const [cartSearch, setCartSearch] = useState("");
-  const [buyersSearch, setBuyersSearch] = useState("");
-  const [leadsSearch, setLeadsSearch] = useState("");
+  const [visitorsSearch, setVisitorsSearch] = useSessionPersistedState<string>("staffHome:visitors:search", "");
+  const [cartSearch, setCartSearch] = useSessionPersistedState<string>("staffHome:cart:search", "");
+  const [buyersSearch, setBuyersSearch] = useSessionPersistedState<string>("staffHome:buyers:search", "");
+  const [leadsSearch, setLeadsSearch] = useSessionPersistedState<string>("staffHome:leads:search", "");
   // Per-dialog time range (today / 7d / month). Each Dialog can override the
   // global KPI range without forcing a refetch — lists are pre-fetched at the
   // widest window (this month) and filtered client-side.
-  const [visitorsRange, setVisitorsRange] = useState<DialogRangeKey>("today");
-  const [cartRange, setCartRange] = useState<DialogRangeKey>("today");
-  const [buyersRange, setBuyersRange] = useState<DialogRangeKey>("today");
-  const [leadsRange, setLeadsRange] = useState<DialogRangeKey>("7d");
+  const [visitorsRange, setVisitorsRange] = useSessionPersistedState<DialogRangeKey>("staffHome:visitors:range", "today");
+  const [cartRange, setCartRange] = useSessionPersistedState<DialogRangeKey>("staffHome:cart:range", "today");
+  const [buyersRange, setBuyersRange] = useSessionPersistedState<DialogRangeKey>("staffHome:buyers:range", "today");
+  const [leadsRange, setLeadsRange] = useSessionPersistedState<DialogRangeKey>("staffHome:leads:range", "7d");
   // Toggle: false = "Only Customers" (default, excludes staff). true = "All" (review only — shows staff too).
   const [includeStaff, setIncludeStaff] = useState<boolean>(false);
   const [staffIdsSet, setStaffIdsSet] = useState<Set<string>>(new Set());
