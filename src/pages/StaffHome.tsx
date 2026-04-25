@@ -183,6 +183,8 @@ const StaffHome = () => {
   // Toggle: false = "Only Customers" (default, excludes staff). true = "All" (review only — shows staff too).
   const [includeStaff, setIncludeStaff] = useState<boolean>(false);
   const [staffIdsSet, setStaffIdsSet] = useState<Set<string>>(new Set());
+  // Collapsible "calculation rules" panel — shows per-KPI rules + raw vs filtered counts
+  const [rulesOpen, setRulesOpen] = useState<boolean>(false);
   // "Viewed" KPI time basis:
   //   - "range": viewed within the selected KPI range (today / 7d) — rolling window
   //   - "event_day": viewed on the same calendar day as the visitor's last_visit
