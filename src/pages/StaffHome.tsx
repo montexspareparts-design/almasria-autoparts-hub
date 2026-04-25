@@ -412,16 +412,50 @@ const StaffHome = () => {
 
   const rangeSuffix = range === "today" ? "اليوم" : "آخر 7 أيام";
 
+  // Helper: was this visitor "viewed" under the selected time basis?
+  const isViewedUnderBasis = (v: { user_id: string | null; session_key: string | null; last_visit: string }) => {
+    const keys: string[] = [];
+    if (v.user_id) keys.push(`u:${v.user_id}`);
+    if (v.session_key) keys.push(`s:${v.session_key}`);
+    if (keys.length === 0) return false;
+    const baseHit = keys.some((k) => viewedKeys.has(k));
+    if (!baseHit) return false;
+    if (viewedBasis === "all_time") return true;
+
+    // Latest view timestamp across this visitor's keys
+    let viewedAt: string | null = null;
+    for (const k of keys) {
+      const t = viewedAtMap.get(k);
+      if (t && (!viewedAt || t > viewedAt)) viewedAt = t;
+    }
+    if (!viewedAt) return false; // no timestamp known → can't qualify under date-based modes
+
+    if (viewedBasis === "range") {
+      // Match the KPI range (today vs last 7d) using the same start used in fetchData
+      const start = range === "today" ? todayISO() : sevenDaysISO();
+      return viewedAt >= start;
+    }
+    if (viewedBasis === "event_day") {
+      // Same calendar day (local) as the visitor's last visit
+      const sameDay = (a: string, b: string) => {
+        const da = new Date(a); const db = new Date(b);
+        return da.getFullYear() === db.getFullYear()
+          && da.getMonth() === db.getMonth()
+          && da.getDate() === db.getDate();
+      };
+      return sameDay(viewedAt, v.last_visit);
+    }
+    return baseHit;
+  };
+
   // Count how many of the displayed (non-staff) visitors the current staff has already opened
   const viewedVisitorsCount = useMemo(() => {
     return visitorsList.reduce((acc, v) => {
       if (!includeStaff && v.user_id && staffIdsSet.has(v.user_id)) return acc;
-      const isViewed =
-        (v.user_id && viewedKeys.has(`u:${v.user_id}`)) ||
-        (v.session_key && viewedKeys.has(`s:${v.session_key}`));
-      return isViewed ? acc + 1 : acc;
+      return isViewedUnderBasis(v) ? acc + 1 : acc;
     }, 0);
-  }, [visitorsList, viewedKeys, includeStaff, staffIdsSet]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visitorsList, viewedKeys, viewedAtMap, includeStaff, staffIdsSet, viewedBasis, range]);
 
   // Count after the All/Only-Customers toggle (staff exclusion only — independent of date/type/viewed filters).
   // This is what the badge in the dialog title shows so users see the effect of the toggle live.
