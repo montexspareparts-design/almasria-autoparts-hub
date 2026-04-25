@@ -468,17 +468,46 @@ const StaffDailyReport = () => {
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={restoreYesterday}
-              className="gap-1.5 h-8 text-xs"
-              disabled={!!submittedAt}
-              title="استرجاع إجابات أمس كقيم افتراضية — تقدر تعدّلها قبل الحفظ"
-            >
-              <HistoryIcon className="w-3.5 h-3.5" />
-              استرجع تقرير أمس
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5 h-8 text-xs"
+                  disabled={!!submittedAt}
+                  title="استرجاع بيانات أمس كقيم افتراضية — تقدر تعدّلها قبل الحفظ"
+                >
+                  <HistoryIcon className="w-3.5 h-3.5" />
+                  استرجع من أمس
+                  <ChevronDown className="w-3 h-3 opacity-60" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuLabel className="text-xs">اختر اللي تحب تسترجعه</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => restoreYesterday("both")} className="gap-2">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  <div className="flex-1">
+                    <div className="text-xs font-semibold">الاتنين معاً</div>
+                    <div className="text-[10px] text-muted-foreground">KPIs + الأسئلة الإضافية</div>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => restoreYesterday("kpis")} className="gap-2">
+                  <ClipboardList className="w-3.5 h-3.5 text-emerald-600" />
+                  <div className="flex-1">
+                    <div className="text-xs font-semibold">KPIs والنصوص فقط</div>
+                    <div className="text-[10px] text-muted-foreground">الأرقام والملاحظات الأساسية</div>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => restoreYesterday("dynamic")} className="gap-2">
+                  <HelpCircle className="w-3.5 h-3.5 text-blue-600" />
+                  <div className="flex-1">
+                    <div className="text-xs font-semibold">الأسئلة الإضافية فقط</div>
+                    <div className="text-[10px] text-muted-foreground">إجابات أسئلة الإدارة/الفريق</div>
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             {submittedAt ? (
               <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 gap-1">
                 <CheckCircle2 className="w-3 h-3" />
