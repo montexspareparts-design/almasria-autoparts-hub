@@ -55,16 +55,18 @@ export function normalizePhoneSearch(input: string): PhoneSearchResult {
 
   // The raw digits the user typed (covers exact-match storage).
   push(digits);
-  // The peeled core (covers stored-without-prefix).
-  push(core);
-  // Local Egyptian format.
-  push(`0${core}`);
-  // International numeric formats.
-  push(`20${core}`);
-  push(`0020${core}`);
-  // International with + sign — note: + is non-digit so this only matches
-  // when DB stores the literal "+20…" string. ilike treats + literally.
-  push(`+20${core}`);
+  // Only generate prefixed variants when the core itself looks meaningful.
+  // Otherwise "12" would generate "2012", "002012" and create false matches.
+  if (core.length >= MIN_PARTIAL_LENGTH) {
+    push(core);
+    // Local Egyptian format.
+    push(`0${core}`);
+    // International numeric formats.
+    push(`20${core}`);
+    push(`0020${core}`);
+    // International with + sign — only matches when DB stores literal "+20…".
+    push(`+20${core}`);
+  }
 
   const variants = Array.from(variantSet).sort();
 
