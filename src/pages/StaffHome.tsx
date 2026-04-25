@@ -1326,6 +1326,166 @@ const StaffHome = () => {
           })()}
         </DialogContent>
       </Dialog>
+
+      {/* Viewed Today Dialog */}
+      <Dialog open={viewedTodayOpen} onOpenChange={setViewedTodayOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <CheckCheck className="w-5 h-5 text-violet-600" />
+              تمت معاينتهم اليوم
+              <Badge variant="secondary" className="text-xs">{viewedTodayVisitors.length}</Badge>
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              قائمة بكل الزوار اللي فتح ملفهم أي موظف اليوم — مع تفاصيل مين عاين وكام مرة، وفلترة سريعة حسب طريقة المعاينة أو مصدر الزائر.
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Filters */}
+          <div className="flex flex-wrap items-center gap-2 pt-2 pb-1 border-b">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Filter className="w-3.5 h-3.5" />
+              فلترة:
+            </div>
+            <Select value={viewedTodayMethodFilter} onValueChange={(v) => setViewedTodayMethodFilter(v as any)}>
+              <SelectTrigger className="h-8 w-[160px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل طرق المعاينة</SelectItem>
+                <SelectItem value="by_me">عاينتهم أنا</SelectItem>
+                <SelectItem value="by_others">عاينهم موظف آخر فقط</SelectItem>
+                <SelectItem value="multiple">مُعاين أكثر من مرة</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={viewedTodaySourceFilter} onValueChange={(v) => setViewedTodaySourceFilter(v as any)}>
+              <SelectTrigger className="h-8 w-[160px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل المصادر (السبب)</SelectItem>
+                <SelectItem value="facebook">📘 فيسبوك</SelectItem>
+                <SelectItem value="google">🔍 جوجل</SelectItem>
+                <SelectItem value="instagram">📷 إنستجرام</SelectItem>
+                <SelectItem value="tiktok">🎵 تيك توك</SelectItem>
+                <SelectItem value="whatsapp">💬 واتساب</SelectItem>
+                <SelectItem value="direct">🌐 مباشر</SelectItem>
+                <SelectItem value="other">🔗 موقع آخر</SelectItem>
+              </SelectContent>
+            </Select>
+            {(viewedTodayMethodFilter !== "all" || viewedTodaySourceFilter !== "all") && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 text-xs"
+                onClick={() => { setViewedTodayMethodFilter("all"); setViewedTodaySourceFilter("all"); }}
+              >
+                مسح الفلاتر
+              </Button>
+            )}
+          </div>
+
+          {(() => {
+            const meId = user?.id;
+            const filtered = viewedTodayVisitors.filter(({ v, viewInfo }) => {
+              // method filter
+              if (viewedTodayMethodFilter === "by_me" && (!meId || !viewInfo.staffIds.has(meId))) return false;
+              if (viewedTodayMethodFilter === "by_others" && (!meId || viewInfo.staffIds.has(meId))) return false;
+              if (viewedTodayMethodFilter === "multiple" && viewInfo.viewCount < 2) return false;
+              // source filter
+              if (viewedTodaySourceFilter !== "all") {
+                const src = detectSource(v.first_path || null, v.referrer || null);
+                if (src !== viewedTodaySourceFilter) return false;
+              }
+              return true;
+            });
+
+            if (filtered.length === 0) {
+              return (
+                <div className="text-center py-10 text-sm text-muted-foreground">
+                  مفيش زوار مطابقين للفلاتر المختارة
+                </div>
+              );
+            }
+
+            return (
+              <div className="space-y-2 mt-2">
+                {filtered.map(({ v, viewInfo, key }) => {
+                  const isAnon = !v.user_id;
+                  const name = v.full_name || (isAnon ? "زائر مجهول" : "بدون اسم");
+                  const lastView = new Date(viewInfo.lastViewedAt).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
+                  const src = detectSource(v.first_path || null, v.referrer || null);
+                  const viewedByMe = meId ? viewInfo.staffIds.has(meId) : false;
+                  const otherStaffNames = Array.from(viewInfo.staffIds)
+                    .filter((id) => id !== meId)
+                    .map((id) => staffNamesMap.get(id) || "موظف")
+                    .slice(0, 3);
+                  return (
+                    <div
+                      key={key}
+                      className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-muted/30 hover:bg-muted/60 transition flex-wrap"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-bold text-sm truncate">{name}</p>
+                          {isAnon ? (
+                            <Badge variant="outline" className="text-[10px] h-5 bg-amber-50 text-amber-700 border-amber-200">👤 لم يسجّل</Badge>
+                          ) : (
+                            <Badge className="bg-blue-500/15 text-blue-700 hover:bg-blue-500/20 text-[10px] h-5">مسجّل</Badge>
+                          )}
+                          <Badge variant="outline" className="text-[10px] h-5">{sourceLabel[src]}</Badge>
+                          <Badge variant="outline" className="text-[10px] h-5 bg-violet-50 text-violet-700 border-violet-200 gap-1">
+                            <Eye className="w-3 h-3" />
+                            {viewInfo.viewCount} معاينة
+                          </Badge>
+                          {viewedByMe && (
+                            <Badge variant="outline" className="text-[10px] h-5 bg-emerald-50 text-emerald-700 border-emerald-200">عاينتها أنا</Badge>
+                          )}
+                          {otherStaffNames.length > 0 && (
+                            <Badge variant="outline" className="text-[10px] h-5 bg-slate-50 text-slate-700 border-slate-200">
+                              + {otherStaffNames.join("، ")}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap text-[11px] text-muted-foreground">
+                          {v.phone && <span className="font-mono">📱 {v.phone}</span>}
+                          {v.email && <span className="truncate max-w-[200px]">✉️ {v.email}</span>}
+                          <span>👁️ {v.pages} صفحة</span>
+                          <span className="font-bold text-foreground">🕒 آخر معاينة {lastView}</span>
+                        </div>
+                      </div>
+                      <div className="flex gap-1.5 shrink-0">
+                        {v.phone && (
+                          <Button asChild size="sm" className="h-8 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
+                            <a
+                              href={`https://wa.me/${v.phone.replace(/^0/, "20").replace(/[^\d]/g, "")}`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              <MessageCircle className="w-3 h-3" />
+                              واتساب
+                            </a>
+                          </Button>
+                        )}
+                        {(v.user_id || v.session_key) && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 gap-1 text-xs"
+                            onClick={() => {
+                              setViewedTodayOpen(false);
+                              navigate(`/admin/visitor/${v.user_id || v.session_key}`);
+                            }}
+                          >
+                            <Eye className="w-3 h-3" />
+                            تفاصيل
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
