@@ -339,18 +339,29 @@ const StaffHome = () => {
       visitorsArr.sort((a, b) => b.last_visit.localeCompare(a.last_visit));
       setVisitorsList(visitorsArr);
 
-      // Fetch which visitors the current staff has already viewed
+      // Fetch which visitors the current staff has already viewed (with timestamp)
       try {
         const { data: views } = await supabase
           .from("visitor_session_views")
-          .select("customer_user_id, session_key")
+          .select("customer_user_id, session_key, last_viewed_at")
           .eq("staff_user_id", user!.id);
         const set = new Set<string>();
+        const tsMap = new Map<string, string>();
         (views || []).forEach((v: any) => {
-          if (v.customer_user_id) set.add(`u:${v.customer_user_id}`);
-          if (v.session_key) set.add(`s:${v.session_key}`);
+          const at = v.last_viewed_at as string | null;
+          if (v.customer_user_id) {
+            const k = `u:${v.customer_user_id}`;
+            set.add(k);
+            if (at && (!tsMap.has(k) || at > (tsMap.get(k) as string))) tsMap.set(k, at);
+          }
+          if (v.session_key) {
+            const k = `s:${v.session_key}`;
+            set.add(k);
+            if (at && (!tsMap.has(k) || at > (tsMap.get(k) as string))) tsMap.set(k, at);
+          }
         });
         setViewedKeys(set);
+        setViewedAtMap(tsMap);
       } catch (e) {
         console.warn("[StaffHome] viewed keys fetch failed", e);
       }
