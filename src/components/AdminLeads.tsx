@@ -645,12 +645,24 @@ const AdminLeads = () => {
           await registerClient(lead);
           return;
         }
-        toast({
-          title: "خطأ",
-          description: serverMsg || "فشل إعادة تعيين كلمة المرور",
-          variant: "destructive",
-        });
-        await logAttempt({ type: "reset_password", status: "failure", lead, errorMessage: serverMsg || "فشل إعادة تعيين كلمة المرور" });
+        const isPermissionError =
+          !isAdmin &&
+          (serverMsg.includes("صلاحية") || serverMsg.includes("Forbidden") || serverMsg.includes("Unauthorized") || serverMsg.includes("403"));
+        if (isPermissionError) {
+          requestPermission({
+            actionType: "reset_client_password",
+            actionDescription: `إعادة تعيين كلمة مرور العميل: ${lead.name} (${lead.phone})`,
+            contextData: { lead_id: lead.id, erp_customer_code: lead.erp_customer_code },
+          });
+          await logAttempt({ type: "reset_password", status: "failure", lead, errorMessage: "permission_request_sent" });
+        } else {
+          toast({
+            title: "خطأ",
+            description: serverMsg || "فشل إعادة تعيين كلمة المرور",
+            variant: "destructive",
+          });
+          await logAttempt({ type: "reset_password", status: "failure", lead, errorMessage: serverMsg || "فشل إعادة تعيين كلمة المرور" });
+        }
       } else {
         setCredentials({ username: lead.phone, password: newPassword, phone: lead.phone });
         setLeadCredentials(prev => ({ ...prev, [lead.id]: { username: cleanPhone, password: newPassword } }));
