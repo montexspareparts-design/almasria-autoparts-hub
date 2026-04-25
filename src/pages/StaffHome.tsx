@@ -555,12 +555,6 @@ const StaffHome = () => {
     }, 0);
   }, [visitorsList, includeStaff, staffIdsSet, startMs]);
 
-  // Helpers to apply the same staff-exclusion + range filters everywhere KPIs are derived
-  const isStaffVisitor = (uid: string | null | undefined) => !!uid && staffIdsSet.has(uid);
-  const startMs = useMemo(
-    () => new Date(range === "today" ? todayISO() : sevenDaysISO()).getTime(),
-    [range]
-  );
 
   // Unified KPI numbers — computed from raw lists with the SAME staff-exclusion
   // logic as visibleVisitorsCount, so all cards stay consistent with the toggle.
