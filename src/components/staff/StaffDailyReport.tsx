@@ -45,12 +45,12 @@ interface DynAnswer {
 
 interface ReportRow {
   id?: string;
-  customers_contacted: number;
-  customers_registered: number;
-  customers_with_invoices: number;
-  total_invoices_amount: number;
-  hot_leads_count: number;
-  follow_ups_done: number;
+  customers_contacted: number | null;
+  customers_registered: number | null;
+  customers_with_invoices: number | null;
+  total_invoices_amount: number | null;
+  hot_leads_count: number | null;
+  follow_ups_done: number | null;
   problems_faced: string;
   best_deal_today: string;
   tomorrow_plan: string;
@@ -59,12 +59,12 @@ interface ReportRow {
 }
 
 const EMPTY: ReportRow = {
-  customers_contacted: 0,
-  customers_registered: 0,
-  customers_with_invoices: 0,
-  total_invoices_amount: 0,
-  hot_leads_count: 0,
-  follow_ups_done: 0,
+  customers_contacted: null,
+  customers_registered: null,
+  customers_with_invoices: null,
+  total_invoices_amount: null,
+  hot_leads_count: null,
+  follow_ups_done: null,
   problems_faced: "",
   best_deal_today: "",
   tomorrow_plan: "",
@@ -72,6 +72,23 @@ const EMPTY: ReportRow = {
 };
 
 const MAX_TEXT = 1000;
+const MIN_TEXT = 10;
+
+// KPI fields that must be filled (entered value, even if 0)
+const REQUIRED_KPI_FIELDS: Array<{ key: keyof ReportRow; label: string }> = [
+  { key: "customers_contacted", label: "عملاء تم التواصل معاهم" },
+  { key: "customers_registered", label: "عملاء سجّلوا في المنصة" },
+  { key: "customers_with_invoices", label: "عملاء عملوا فاتورة" },
+  { key: "total_invoices_amount", label: "إجمالي الفواتير" },
+  { key: "hot_leads_count", label: "Leads ساخنة" },
+  { key: "follow_ups_done", label: "متابعات تمت" },
+];
+
+// Text fields that are mandatory with minimum length
+const REQUIRED_TEXT_FIELDS: Array<{ key: keyof ReportRow; label: string }> = [
+  { key: "best_deal_today", label: "أفضل صفقة اليوم" },
+  { key: "tomorrow_plan", label: "خطة بكرة" },
+];
 
 const StaffDailyReport = () => {
   const { user } = useAuth();
