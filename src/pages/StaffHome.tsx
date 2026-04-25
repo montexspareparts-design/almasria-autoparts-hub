@@ -899,6 +899,10 @@ const StaffHome = () => {
                 : viewedBasis === "all_time"
                 ? " · أي وقت"
                 : ""
+            }${
+              viewedMissingTimestampCount > 0
+                ? ` · مستثنى ${viewedMissingTimestampCount} لنقص توقيت المعاينة`
+                : ""
             }`
           : undefined,
       },
