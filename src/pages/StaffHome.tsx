@@ -147,8 +147,8 @@ const StaffHome = () => {
   const [todayViewsMap, setTodayViewsMap] = useState<Map<string, { staffIds: Set<string>; viewCount: number; lastViewedAt: string }>>(new Map());
   const [staffNamesMap, setStaffNamesMap] = useState<Map<string, string>>(new Map());
   const [viewedTodayOpen, setViewedTodayOpen] = useState(false);
-  const [viewedTodayMethodFilter, setViewedTodayMethodFilter] = useState<"all" | "by_me" | "by_others" | "multiple">("all");
-  const [viewedTodaySourceFilter, setViewedTodaySourceFilter] = useState<"all" | "facebook" | "google" | "instagram" | "tiktok" | "whatsapp" | "direct" | "other">("all");
+  const [viewedTodayMethodFilter, setViewedTodayMethodFilter] = useSessionPersistedState<"all" | "by_me" | "by_others" | "multiple">("staffHome:viewedToday:method", "all");
+  const [viewedTodaySourceFilter, setViewedTodaySourceFilter] = useSessionPersistedState<"all" | "facebook" | "google" | "instagram" | "tiktok" | "whatsapp" | "direct" | "other">("staffHome:viewedToday:source", "all");
   // Cart users dialog
   const [cartOpen, setCartOpen] = useState(false);
   const [cartList, setCartList] = useState<Array<{ user_id: string; full_name: string | null; phone: string | null; email: string | null; items: number; last_added: string }>>([]);
