@@ -194,6 +194,20 @@ const StaffDailyReport = () => {
     yAnswersData: any[];
   } | null>(null);
   const [restoreLoading, setRestoreLoading] = useState<RestoreMode | null>(null);
+  const [highlightedQId, setHighlightedQId] = useState<string | null>(null);
+
+  const scrollToQuestion = (qid: string) => {
+    const el = document.getElementById(`dyn-q-${qid}`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    setHighlightedQId(qid);
+    // Try to focus first interactive element inside
+    setTimeout(() => {
+      const focusable = el.querySelector<HTMLElement>("input, textarea, button, [role='combobox']");
+      focusable?.focus();
+    }, 350);
+    setTimeout(() => setHighlightedQId((cur) => (cur === qid ? null : cur)), 2200);
+  };
 
   const previewRestore = async (mode: RestoreMode) => {
     if (!user) return;
@@ -607,8 +621,15 @@ const StaffDailyReport = () => {
             const a = dynAnswers[q.id] || {};
             const setA = (patch: DynAnswer) =>
               setDynAnswers((prev) => ({ ...prev, [q.id]: { ...prev[q.id], ...patch } }));
+            const isHighlighted = highlightedQId === q.id;
             return (
-              <div key={q.id} className="space-y-1.5">
+              <div
+                key={q.id}
+                id={`dyn-q-${q.id}`}
+                className={`space-y-1.5 rounded-lg p-2 -m-2 transition-all duration-500 ${
+                  isHighlighted ? "ring-2 ring-destructive bg-destructive/5" : "ring-0"
+                }`}
+              >
                 <Label className="text-xs font-semibold flex items-center gap-1.5">
                   {q.question_text}
                   {q.is_required && <span className="text-destructive">*</span>}
@@ -710,12 +731,22 @@ const StaffDailyReport = () => {
               <p className="text-sm font-bold mb-1">
                 ناقص {missingCount} {missingCount === 1 ? "سؤال إجباري" : "أسئلة إجبارية"} — لازم تكمّلها قبل الحفظ
               </p>
-              <ul className="text-xs space-y-0.5 list-disc pr-4 opacity-90">
+              <ul className="text-xs space-y-1 pr-1">
                 {missingRequired.slice(0, 5).map((q) => (
-                  <li key={q.id} className="truncate">{q.question_text}</li>
+                  <li key={q.id}>
+                    <button
+                      type="button"
+                      onClick={() => scrollToQuestion(q.id)}
+                      className="text-right w-full truncate underline underline-offset-2 hover:text-destructive/80 hover:no-underline transition-colors flex items-center gap-1.5"
+                      title="افتح السؤال وحدّد مكانه"
+                    >
+                      <span className="text-destructive">›</span>
+                      <span className="truncate">{q.question_text}</span>
+                    </button>
+                  </li>
                 ))}
                 {missingRequired.length > 5 && (
-                  <li className="opacity-70">+ {missingRequired.length - 5} أخرى…</li>
+                  <li className="opacity-70 text-[11px] pr-3">+ {missingRequired.length - 5} أخرى…</li>
                 )}
               </ul>
             </div>
