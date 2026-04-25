@@ -67,18 +67,34 @@ const StaffDailyReport = () => {
   const [saving, setSaving] = useState(false);
   const [submittedAt, setSubmittedAt] = useState<string | null>(null);
   const [showReminder, setShowReminder] = useState(false);
+  const [dynQuestions, setDynQuestions] = useState<DynQuestion[]>([]);
+  const [dynAnswers, setDynAnswers] = useState<Record<string, DynAnswer>>({});
 
   const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const { data } = await supabase
-        .from("staff_daily_reports")
-        .select("*")
-        .eq("staff_user_id", user.id)
-        .eq("report_date", today)
-        .maybeSingle();
+      const [reportRes, qRes, aRes] = await Promise.all([
+        supabase
+          .from("staff_daily_reports")
+          .select("*")
+          .eq("staff_user_id", user.id)
+          .eq("report_date", today)
+          .maybeSingle(),
+        supabase
+          .from("daily_report_questions")
+          .select("id, question_text, question_type, options, placeholder, is_required, sort_order")
+          .eq("is_active", true)
+          .order("sort_order", { ascending: true }),
+        supabase
+          .from("daily_report_answers")
+          .select("question_id, answer_text, answer_number, answer_boolean, answer_choice")
+          .eq("user_id", user.id)
+          .eq("report_date", today),
+      ]);
+
+      const data = reportRes.data;
       if (data) {
         setReport({
           id: data.id,
@@ -96,6 +112,33 @@ const StaffDailyReport = () => {
         });
         setSubmittedAt(data.submitted_at);
       }
+
+      if (qRes.data) {
+        setDynQuestions(
+          qRes.data.map((q: any) => ({
+            id: q.id,
+            question_text: q.question_text,
+            question_type: q.question_type as QType,
+            options: Array.isArray(q.options) ? q.options : [],
+            placeholder: q.placeholder,
+            is_required: q.is_required,
+          }))
+        );
+      }
+
+      if (aRes.data) {
+        const map: Record<string, DynAnswer> = {};
+        aRes.data.forEach((a: any) => {
+          map[a.question_id] = {
+            text: a.answer_text ?? undefined,
+            number: a.answer_number != null ? Number(a.answer_number) : undefined,
+            boolean: a.answer_boolean ?? undefined,
+            choice: a.answer_choice ?? undefined,
+          };
+        });
+        setDynAnswers(map);
+      }
+
       setLoading(false);
     };
     load();
