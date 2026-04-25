@@ -181,8 +181,22 @@ const StaffDailyReport = () => {
     return () => clearInterval(interval);
   }, [user, today]);
 
-  const restoreYesterday = async (mode: "kpis" | "dynamic" | "both") => {
+  // Restore preview dialog state
+  type RestoreMode = "kpis" | "dynamic" | "both";
+  const [restorePreview, setRestorePreview] = useState<{
+    mode: RestoreMode;
+    hasReport: boolean;
+    activeMatchedCount: number; // dyn answers whose question IDs are still active today
+    totalYesterdayAnswers: number;
+    skippedInactive: number;
+    yReportData: any;
+    yAnswersData: any[];
+  } | null>(null);
+  const [restoreLoading, setRestoreLoading] = useState<RestoreMode | null>(null);
+
+  const previewRestore = async (mode: RestoreMode) => {
     if (!user) return;
+    setRestoreLoading(mode);
     const yest = new Date();
     yest.setDate(yest.getDate() - 1);
     const yDate = yest.toISOString().split("T")[0];
@@ -207,26 +221,54 @@ const StaffDailyReport = () => {
             .eq("report_date", yDate)
         : Promise.resolve({ data: [] } as any),
     ]);
+    setRestoreLoading(null);
 
     const hasReport = !!yReport.data;
-    const hasAnswers = !!(yAnswers.data && yAnswers.data.length);
+    const yAnswersArr: any[] = yAnswers.data || [];
+    const activeQIds = new Set(dynQuestions.map((q) => q.id));
+    const matched = yAnswersArr.filter((a) => activeQIds.has(a.question_id));
+    const activeMatchedCount = matched.length;
+    const skippedInactive = yAnswersArr.length - activeMatchedCount;
 
-    if ((wantKpis && !hasReport && !wantDyn) || (wantDyn && !hasAnswers && !wantKpis) || (wantKpis && wantDyn && !hasReport && !hasAnswers)) {
+    if (
+      (mode === "kpis" && !hasReport) ||
+      (mode === "dynamic" && activeMatchedCount === 0) ||
+      (mode === "both" && !hasReport && activeMatchedCount === 0)
+    ) {
       toast({
         title: "مفيش بيانات لاسترجاعها",
         description:
           mode === "kpis"
             ? "مفيش KPIs محفوظة من أمس"
             : mode === "dynamic"
-              ? "مفيش إجابات أسئلة إضافية من أمس"
+              ? skippedInactive > 0
+                ? `كل إجابات الأسئلة الإضافية لأمس (${skippedInactive}) مرتبطة بأسئلة لم تعد نشطة`
+                : "مفيش إجابات أسئلة إضافية من أمس"
               : "مفيش تقرير أمس أصلاً",
         variant: "destructive",
       });
       return;
     }
 
-    if (wantKpis && yReport.data) {
-      const d = yReport.data;
+    setRestorePreview({
+      mode,
+      hasReport,
+      activeMatchedCount,
+      totalYesterdayAnswers: yAnswersArr.length,
+      skippedInactive,
+      yReportData: yReport.data,
+      yAnswersData: matched,
+    });
+  };
+
+  const confirmRestore = () => {
+    if (!restorePreview) return;
+    const { mode, yReportData, yAnswersData, activeMatchedCount, hasReport } = restorePreview;
+    const wantKpis = mode === "kpis" || mode === "both";
+    const wantDyn = mode === "dynamic" || mode === "both";
+
+    if (wantKpis && yReportData) {
+      const d = yReportData;
       setReport((r) => ({
         ...r,
         customers_contacted: d.customers_contacted ?? 0,
@@ -242,31 +284,28 @@ const StaffDailyReport = () => {
       }));
     }
 
-    let restoredDyn = 0;
-    if (wantDyn && yAnswers.data && yAnswers.data.length) {
-      const activeQIds = new Set(dynQuestions.map((q) => q.id));
+    if (wantDyn && yAnswersData.length) {
       const map: Record<string, DynAnswer> = { ...dynAnswers };
-      yAnswers.data.forEach((a: any) => {
-        if (!activeQIds.has(a.question_id)) return;
+      yAnswersData.forEach((a: any) => {
         map[a.question_id] = {
           text: a.answer_text ?? undefined,
           number: a.answer_number != null ? Number(a.answer_number) : undefined,
           boolean: a.answer_boolean ?? undefined,
           choice: a.answer_choice ?? undefined,
         };
-        restoredDyn++;
       });
       setDynAnswers(map);
     }
 
     const parts: string[] = [];
     if (wantKpis && hasReport) parts.push("KPIs والنصوص");
-    if (wantDyn && restoredDyn > 0) parts.push(`${restoredDyn} سؤال إضافي`);
+    if (wantDyn && activeMatchedCount > 0) parts.push(`${activeMatchedCount} سؤال إضافي`);
 
     toast({
       title: "✅ تم الاسترجاع من أمس",
       description: `تم استرجاع ${parts.join(" + ")} — تقدر تعدّل أي قيمة قبل الحفظ`,
     });
+    setRestorePreview(null);
   };
 
   const handleSubmit = async () => {
