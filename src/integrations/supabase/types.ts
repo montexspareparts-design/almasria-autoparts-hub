@@ -1399,6 +1399,57 @@ export type Database = {
           },
         ]
       }
+      permission_requests: {
+        Row: {
+          action_description: string
+          action_type: string
+          admin_response: string | null
+          context_data: Json | null
+          created_at: string
+          id: string
+          reason: string | null
+          requester_email: string | null
+          requester_id: string
+          requester_name: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          action_description: string
+          action_type: string
+          admin_response?: string | null
+          context_data?: Json | null
+          created_at?: string
+          id?: string
+          reason?: string | null
+          requester_email?: string | null
+          requester_id: string
+          requester_name?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          action_description?: string
+          action_type?: string
+          admin_response?: string | null
+          context_data?: Json | null
+          created_at?: string
+          id?: string
+          reason?: string | null
+          requester_email?: string | null
+          requester_id?: string
+          requester_name?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       price_change_history: {
         Row: {
           change_percentage: number
