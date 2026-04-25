@@ -9,7 +9,25 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { ClipboardList, CheckCircle2, AlertCircle, Save, Sparkles, Clock } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ClipboardList, CheckCircle2, AlertCircle, Save, Sparkles, Clock, HelpCircle } from "lucide-react";
+
+type QType = "text" | "textarea" | "number" | "choice" | "boolean";
+interface DynQuestion {
+  id: string;
+  question_text: string;
+  question_type: QType;
+  options: string[];
+  placeholder: string | null;
+  is_required: boolean;
+}
+interface DynAnswer {
+  text?: string;
+  number?: number;
+  boolean?: boolean;
+  choice?: string;
+}
 
 interface ReportRow {
   id?: string;
