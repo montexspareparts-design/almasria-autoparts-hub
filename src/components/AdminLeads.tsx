@@ -541,14 +541,27 @@ const AdminLeads = () => {
       });
 
       const serverMsg = await extractFunctionErrorMessage(error as EdgeFunctionErrorLike | null, data);
+      const isPermissionError =
+        !isAdmin &&
+        (typeof serverMsg === "string" &&
+          (serverMsg.includes("صلاحية") || serverMsg.includes("Forbidden") || serverMsg.includes("Unauthorized") || serverMsg.includes("403")));
 
       if (error || data?.error) {
-        toast({
-          title: "خطأ",
-          description: serverMsg || "فشل إنشاء الحساب",
-          variant: "destructive",
-        });
-        await logAttempt({ type: "create", status: "failure", lead, errorMessage: serverMsg || "فشل إنشاء الحساب" });
+        if (isPermissionError) {
+          requestPermission({
+            actionType: "create_client_account",
+            actionDescription: `إنشاء حساب للعميل: ${lead.name} (${lead.phone})`,
+            contextData: { lead_id: lead.id, erp_customer_code: lead.erp_customer_code },
+          });
+          await logAttempt({ type: "create", status: "failure", lead, errorMessage: "permission_request_sent" });
+        } else {
+          toast({
+            title: "خطأ",
+            description: serverMsg || "فشل إنشاء الحساب",
+            variant: "destructive",
+          });
+          await logAttempt({ type: "create", status: "failure", lead, errorMessage: serverMsg || "فشل إنشاء الحساب" });
+        }
       } else if (data?.success) {
         setCredentials({ username: data.username, password: data.password, phone: lead.phone });
         setLeadCredentials(prev => ({ ...prev, [lead.id]: { username: lead.phone.replace(/\D/g, ""), password: data.password } }));
