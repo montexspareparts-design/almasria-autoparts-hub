@@ -373,6 +373,47 @@ const StaffHome = () => {
         console.warn("[StaffHome] viewed keys fetch failed", e);
       }
 
+      // Fetch ALL staff views performed TODAY (any staff) — powers the "Viewed Today" dialog
+      try {
+        const todayStartIso = todayISO();
+        const { data: allViews } = await supabase
+          .from("visitor_session_views")
+          .select("staff_user_id, customer_user_id, session_key, last_viewed_at, view_count")
+          .gte("last_viewed_at", todayStartIso);
+        const map = new Map<string, { staffIds: Set<string>; viewCount: number; lastViewedAt: string }>();
+        const staffIdsToFetch = new Set<string>();
+        (allViews || []).forEach((v: any) => {
+          const k = v.customer_user_id ? `u:${v.customer_user_id}` : (v.session_key ? `s:${v.session_key}` : null);
+          if (!k) return;
+          staffIdsToFetch.add(v.staff_user_id);
+          const cur = map.get(k);
+          const at = v.last_viewed_at as string;
+          const vc = (v.view_count as number) || 1;
+          if (cur) {
+            cur.staffIds.add(v.staff_user_id);
+            cur.viewCount += vc;
+            if (at > cur.lastViewedAt) cur.lastViewedAt = at;
+          } else {
+            map.set(k, { staffIds: new Set([v.staff_user_id]), viewCount: vc, lastViewedAt: at });
+          }
+        });
+        setTodayViewsMap(map);
+        // Resolve staff names
+        if (staffIdsToFetch.size > 0) {
+          const { data: staffProfiles } = await supabase
+            .from("profiles")
+            .select("user_id, full_name")
+            .in("user_id", Array.from(staffIdsToFetch));
+          const nMap = new Map<string, string>();
+          (staffProfiles || []).forEach((p: any) => nMap.set(p.user_id, p.full_name || "موظف"));
+          setStaffNamesMap(nMap);
+        } else {
+          setStaffNamesMap(new Map());
+        }
+      } catch (e) {
+        console.warn("[StaffHome] today views fetch failed", e);
+      }
+
       // KPI counts respect the selected range (today vs 7d) even though we fetched 7d for the dialog.
       const startMs = new Date(start).getTime();
       const inRange = (v: { last_visit: string }) => new Date(v.last_visit).getTime() >= startMs;
