@@ -2000,6 +2000,69 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_daily_reports: {
+        Row: {
+          best_deal_today: string | null
+          created_at: string
+          customers_contacted: number
+          customers_registered: number
+          customers_with_invoices: number
+          follow_ups_done: number
+          general_notes: string | null
+          hot_leads_count: number
+          id: string
+          problems_faced: string | null
+          report_date: string
+          staff_email: string | null
+          staff_name: string | null
+          staff_user_id: string
+          submitted_at: string
+          tomorrow_plan: string | null
+          total_invoices_amount: number
+          updated_at: string
+        }
+        Insert: {
+          best_deal_today?: string | null
+          created_at?: string
+          customers_contacted?: number
+          customers_registered?: number
+          customers_with_invoices?: number
+          follow_ups_done?: number
+          general_notes?: string | null
+          hot_leads_count?: number
+          id?: string
+          problems_faced?: string | null
+          report_date?: string
+          staff_email?: string | null
+          staff_name?: string | null
+          staff_user_id: string
+          submitted_at?: string
+          tomorrow_plan?: string | null
+          total_invoices_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          best_deal_today?: string | null
+          created_at?: string
+          customers_contacted?: number
+          customers_registered?: number
+          customers_with_invoices?: number
+          follow_ups_done?: number
+          general_notes?: string | null
+          hot_leads_count?: number
+          id?: string
+          problems_faced?: string | null
+          report_date?: string
+          staff_email?: string | null
+          staff_name?: string | null
+          staff_user_id?: string
+          submitted_at?: string
+          tomorrow_plan?: string | null
+          total_invoices_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       staff_passwords: {
         Row: {
           created_at: string
