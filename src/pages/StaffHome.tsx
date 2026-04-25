@@ -142,6 +142,13 @@ const StaffHome = () => {
   const [visitorTypeFilter, setVisitorTypeFilter] = useState<"all" | "registered" | "anon">("all");
   const [visitorDateFilter, setVisitorDateFilter] = useState<"all" | "today" | "yesterday" | "week">("today");
   const [visitorViewedFilter, setVisitorViewedFilter] = useState<"all" | "viewed" | "not_viewed">("all");
+  // Free-text search inside each dialog (matches name / phone / email).
+  // Phone matching ignores formatting (spaces, dashes, +20…), name matching
+  // ignores Arabic diacritics & case. See normalizeSearch / matchesContactQuery.
+  const [visitorsSearch, setVisitorsSearch] = useState("");
+  const [cartSearch, setCartSearch] = useState("");
+  const [buyersSearch, setBuyersSearch] = useState("");
+  const [leadsSearch, setLeadsSearch] = useState("");
   // Toggle: false = "Only Customers" (default, excludes staff). true = "All" (review only — shows staff too).
   const [includeStaff, setIncludeStaff] = useState<boolean>(false);
   const [staffIdsSet, setStaffIdsSet] = useState<Set<string>>(new Set());
