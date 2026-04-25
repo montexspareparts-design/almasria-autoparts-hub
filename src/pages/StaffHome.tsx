@@ -696,6 +696,32 @@ const StaffHome = () => {
     return Number.isFinite(first) ? first : -Infinity;
   };
 
+  // How many KPI-eligible visitors were SEEN (key exists in viewedKeys) but have
+  // no timestamp in either viewedAtMap or viewedFirstAtMap — so they get silently
+  // excluded from date-based "viewed" basis modes (range / event_day).
+  // This surfaces gaps in visitor_session_views (older rows missing the
+  // first_viewed_at / last_viewed_at columns).
+  const viewedMissingTimestampCount = useMemo(() => {
+    if (viewedBasis === "all_time") return 0; // anchor doesn't matter in all_time mode
+    let n = 0;
+    for (const v of visitorsList) {
+      if (!includeStaff && v.user_id && staffIdsSet.has(v.user_id)) continue;
+      if (visitTs(v) < startMs) continue; // outside the active KPI range
+      const keys: string[] = [];
+      if (v.user_id) keys.push(`u:${v.user_id}`);
+      if (v.session_key) keys.push(`s:${v.session_key}`);
+      if (keys.length === 0) continue;
+      // Only count visitors that were actually viewed at least once but lack timestamps
+      const seen = keys.some((k) => viewedKeys.has(k));
+      if (!seen) continue;
+      const hasLast = keys.some((k) => viewedAtMap.has(k));
+      const hasFirst = keys.some((k) => viewedFirstAtMap.has(k));
+      if (!hasLast && !hasFirst) n++;
+    }
+    return n;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visitorsList, viewedKeys, viewedAtMap, viewedFirstAtMap, includeStaff, staffIdsSet, viewedBasis, startMs]);
+
   // Visitor count shown in the dialog title badge — uses the SAME staff exclusion
   // AND the same KPI range as the visitors KPI card, so badge ≡ kpis.visitors.
   const visibleVisitorsCount = useMemo(() => {
@@ -873,6 +899,10 @@ const StaffHome = () => {
                 : viewedBasis === "all_time"
                 ? " · أي وقت"
                 : ""
+            }${
+              viewedMissingTimestampCount > 0
+                ? ` · مستثنى ${viewedMissingTimestampCount} لنقص توقيت المعاينة`
+                : ""
             }`
           : undefined,
       },
@@ -934,7 +964,7 @@ const StaffHome = () => {
         subText: hotLeads.length > 0 ? `${hotLeads.filter(l => l.tier === "hot").length} hot · ${hotLeads.filter(l => l.tier === "warm").length} warm` : undefined,
       },
     ],
-    [kpis, navigate, rangeSuffix, viewedVisitorsCount, viewedBasis, viewedTodayVisitors, cartList, buyersList, hotLeads]
+    [kpis, navigate, rangeSuffix, viewedVisitorsCount, viewedBasis, viewedTodayVisitors, cartList, buyersList, hotLeads, viewedMissingTimestampCount]
   );
 
   // ──────────────────────────────────────────────────────────────────────────
