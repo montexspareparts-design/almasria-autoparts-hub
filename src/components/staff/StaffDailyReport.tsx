@@ -168,6 +168,24 @@ const StaffDailyReport = () => {
       });
       return;
     }
+    // Validate required dynamic questions
+    for (const dq of dynQuestions) {
+      if (!dq.is_required) continue;
+      const a = dynAnswers[dq.id];
+      const filled =
+        (dq.question_type === "number" && a?.number != null) ||
+        (dq.question_type === "boolean" && a?.boolean != null) ||
+        (dq.question_type === "choice" && !!a?.choice) ||
+        ((dq.question_type === "text" || dq.question_type === "textarea") && !!a?.text?.trim());
+      if (!filled) {
+        toast({
+          title: "سؤال إجباري ناقص",
+          description: dq.question_text,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
     setSaving(true);
 
     // Get staff name/email for the snapshot
