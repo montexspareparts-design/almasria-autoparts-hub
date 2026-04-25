@@ -17,6 +17,7 @@ import {
   Calendar, Sparkles, TrendingUp, MousePointerClick, History,
   ExternalLink, Quote, Flame, StickyNote, Loader2, Pencil, Trash2,
   CheckCircle2, Headphones, MapPin, AlertTriangle, ShoppingCart, Layers, Mail, Send, Zap,
+  ChevronDown,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { checkDuplicateCommunication } from "@/lib/duplicateCommCheck";
@@ -117,6 +118,17 @@ export default function VisitorSessionSummary() {
   const [notes, setNotes] = useState<Array<{ id: string; note: string; created_at: string; staff_user_id: string; staff_name?: string | null }>>([]);
   const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
   const [focusedSection, setFocusedSection] = useState<string | null>(null);
+  // Sections start collapsed; clicking a KPI or a section header expands them.
+  const [openSections, setOpenSections] = useState<Set<string>>(new Set());
+  const isSectionOpen = (id: string) => openSections.has(id);
+  const toggleSection = (id: string) => {
+    setOpenSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   // Communications log (تسجيل تواصل لمنع التكرار)
   const [comms, setComms] = useState<Array<{ id: string; comm_type: string; note: string | null; created_at: string; staff_user_id: string; staff_name?: string | null }>>([]);
@@ -137,17 +149,26 @@ export default function VisitorSessionSummary() {
   };
 
   const scrollToSection = (id: string) => {
-    const el = document.getElementById(id);
-    if (!el) {
-      toast({ title: "لا توجد بيانات في هذا القسم", description: "هذا الزائر لم يسجّل نشاطًا هنا بعد." });
-      return;
-    }
-    // Clear any previous focus highlight
-    clearFocus();
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
-    el.classList.add("ring-4", "ring-primary", "ring-offset-2", "shadow-2xl", "scale-[1.01]", "transition-all");
-    el.setAttribute("data-focus-target", "true");
-    setFocusedSection(id);
+    // Always make sure the target section is open before scrolling.
+    setOpenSections((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+    // Wait for the section to render before scrolling/highlighting.
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if (!el) {
+        toast({ title: "لا توجد بيانات في هذا القسم", description: "هذا الزائر لم يسجّل نشاطًا هنا بعد." });
+        return;
+      }
+      clearFocus();
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      el.classList.add("ring-4", "ring-primary", "ring-offset-2", "shadow-2xl", "scale-[1.01]", "transition-all");
+      el.setAttribute("data-focus-target", "true");
+      setFocusedSection(id);
+    }, 60);
   };
 
   useEffect(() => {
@@ -1082,7 +1103,12 @@ export default function VisitorSessionSummary() {
             {/* Latest Session — main highlight */}
             {lastSession && (
               <Card id="section-latest-session" className="border-primary/20 shadow-lg overflow-hidden scroll-mt-24 rounded-2xl">
-                <CardHeader className="pb-4 bg-gradient-to-l from-primary/8 via-primary/4 to-transparent border-b">
+                <CardHeader
+                  className="pb-4 bg-gradient-to-l from-primary/8 via-primary/4 to-transparent border-b cursor-pointer hover:bg-primary/5 transition"
+                  onClick={() => toggleSection("section-latest-session")}
+                  role="button"
+                  aria-expanded={isSectionOpen("section-latest-session")}
+                >
                   <div className="flex items-start justify-between flex-wrap gap-3">
                     <div>
                       <CardTitle className="flex items-center gap-2 text-lg">
@@ -1090,6 +1116,7 @@ export default function VisitorSessionSummary() {
                           <Sparkles className="w-5 h-5 text-primary" />
                         </div>
                         أحدث جلسة
+                        <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform ${isSectionOpen("section-latest-session") ? "rotate-180" : ""}`} />
                       </CardTitle>
                       <p className="text-xs text-muted-foreground mt-2 mr-11">
                         {fmtDateTime(lastSession.start)}
@@ -1108,6 +1135,7 @@ export default function VisitorSessionSummary() {
                   </div>
                 </CardHeader>
 
+                {isSectionOpen("section-latest-session") && (
                 <CardContent className="pt-5 space-y-6">
                   {/* Quick session insights */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
@@ -1206,19 +1234,27 @@ export default function VisitorSessionSummary() {
                     </div>
                   )}
                 </CardContent>
+                )}
               </Card>
             )}
 
             {/* Previous sessions */}
             {sessions.length > 1 && (
               <Card id="section-sessions" className="scroll-mt-24 rounded-2xl">
-                <CardHeader className="pb-3">
+                <CardHeader
+                  className="pb-3 cursor-pointer hover:bg-muted/40 transition"
+                  onClick={() => toggleSection("section-sessions")}
+                  role="button"
+                  aria-expanded={isSectionOpen("section-sessions")}
+                >
                   <CardTitle className="flex items-center gap-2 text-base">
                     <History className="w-5 h-5 text-muted-foreground" />
                     الجلسات السابقة
                     <Badge variant="secondary" className="text-xs">{sessions.length - 1}</Badge>
+                    <ChevronDown className={`w-4 h-4 ms-auto text-muted-foreground transition-transform ${isSectionOpen("section-sessions") ? "rotate-180" : ""}`} />
                   </CardTitle>
                 </CardHeader>
+                {isSectionOpen("section-sessions") && (
                 <CardContent className="space-y-2">
                   {sessions.slice(1, 11).map((s, idx) => (
                     <details key={idx} className="group rounded-lg bg-muted/30 hover:bg-muted/60 transition">
@@ -1249,6 +1285,7 @@ export default function VisitorSessionSummary() {
                     </details>
                   ))}
                 </CardContent>
+                )}
               </Card>
             )}
           </>
