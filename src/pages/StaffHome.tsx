@@ -463,6 +463,42 @@ const StaffHome = () => {
         hotLeads: hotCount,
       });
       setHotLeads(leads.slice(0, 12));
+
+      // Build cart users list (with profiles) — sorted by latest add
+      const cartArr = Array.from(cartAggMap.values())
+        .map((c) => {
+          const p = profileMap.get(c.user_id);
+          const emailRaw = (p as any)?.email as string | undefined;
+          const email = emailRaw && !emailRaw.includes("@phone.almasria.local") ? emailRaw : null;
+          return {
+            user_id: c.user_id,
+            full_name: p?.full_name || null,
+            phone: p?.phone || null,
+            email,
+            items: c.items,
+            last_added: c.last_added,
+          };
+        })
+        .sort((a, b) => b.last_added.localeCompare(a.last_added));
+      setCartList(cartArr);
+
+      // Build buyers list — one row per order (recent orders today)
+      const buyersArr = (orders || []).map((o: any) => {
+        const p = profileMap.get(o.user_id);
+        const emailRaw = (p as any)?.email as string | undefined;
+        const email = emailRaw && !emailRaw.includes("@phone.almasria.local") ? emailRaw : null;
+        return {
+          user_id: o.user_id,
+          full_name: p?.full_name || null,
+          phone: p?.phone || null,
+          email,
+          order_number: o.order_number || null,
+          total_amount: Number(o.total_amount) || 0,
+          status: o.status || "pending",
+          created_at: o.created_at,
+        };
+      });
+      setBuyersList(buyersArr);
     } catch (e) {
       console.error("[StaffHome] fetch error", e);
     } finally {
