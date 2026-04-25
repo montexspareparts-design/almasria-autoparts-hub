@@ -527,89 +527,128 @@ const StaffDailyReport = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <Card className="p-5 md:p-6 border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-card to-card">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-5 flex-wrap gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center">
-              <ClipboardList className="w-5 h-5 text-primary" />
+      <Card className="overflow-hidden border border-border/60 shadow-lg shadow-primary/5 bg-card">
+        {/* Premium Header — corporate, dark, refined */}
+        <div className="relative bg-gradient-to-l from-slate-900 via-slate-900 to-slate-800 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 px-5 md:px-7 py-5 border-b border-primary/20">
+          {/* subtle gold accent line */}
+          <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400/60 to-transparent" />
+          {/* subtle pattern overlay */}
+          <div
+            className="absolute inset-0 opacity-[0.04] pointer-events-none"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle at 1px 1px, white 1px, transparent 0)",
+              backgroundSize: "20px 20px",
+            }}
+          />
+
+          <div className="relative flex items-start justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-4">
+              {/* Refined icon badge */}
+              <div className="relative">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/30 to-primary/10 border border-primary/30 flex items-center justify-center shadow-inner shadow-primary/20">
+                  <ClipboardList className="w-5 h-5 text-primary" strokeWidth={2.2} />
+                </div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-amber-400 ring-2 ring-slate-900 dark:ring-slate-950 animate-pulse" />
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base md:text-lg font-bold text-white tracking-tight">
+                    التقرير اليومي للموظف
+                  </h2>
+                  <Badge className="bg-amber-400/15 text-amber-300 border-amber-400/30 text-[10px] px-2 py-0 h-5 font-semibold">
+                    إلزامي
+                  </Badge>
+                </div>
+                <p className="text-[11px] md:text-xs text-slate-400 mt-1 flex items-center gap-1.5 flex-wrap">
+                  <Clock className="w-3 h-3" />
+                  <span>
+                    {new Date().toLocaleDateString("ar-EG", {
+                      weekday: "long",
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </span>
+                  <span className="text-slate-600">•</span>
+                  <span className="text-slate-400">آخر موعد للتقديم: 6:00 مساءً</span>
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-lg md:text-xl font-bold flex items-center gap-2">
-                التقرير اليومي
-                <Sparkles className="w-4 h-4 text-amber-500" />
-              </h2>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {new Date().toLocaleDateString("ar-EG", { weekday: "long", day: "numeric", month: "long" })}
-              </p>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5 h-8 text-xs bg-white/5 border-white/15 text-slate-200 hover:bg-white/10 hover:text-white hover:border-white/25"
+                    disabled={!!submittedAt}
+                    title="استرجاع بيانات أمس كقيم افتراضية — تقدر تعدّلها قبل الحفظ"
+                  >
+                    <HistoryIcon className="w-3.5 h-3.5" />
+                    استرجع من أمس
+                    <ChevronDown className="w-3 h-3 opacity-60" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64">
+                  <DropdownMenuLabel className="text-xs">اختر اللي تحب تسترجعه</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => previewRestore("both")} className="gap-2">
+                    <Sparkles className="w-3.5 h-3.5 text-primary" />
+                    <div className="flex-1">
+                      <div className="text-xs font-semibold">الاتنين معاً</div>
+                      <div className="text-[10px] text-muted-foreground">KPIs + الأسئلة الإضافية</div>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => previewRestore("kpis")} className="gap-2">
+                    <ClipboardList className="w-3.5 h-3.5 text-emerald-600" />
+                    <div className="flex-1">
+                      <div className="text-xs font-semibold">KPIs والنصوص فقط</div>
+                      <div className="text-[10px] text-muted-foreground">الأرقام والملاحظات الأساسية</div>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => previewRestore("dynamic")} className="gap-2">
+                    <HelpCircle className="w-3.5 h-3.5 text-blue-600" />
+                    <div className="flex-1">
+                      <div className="text-xs font-semibold">الأسئلة الإضافية فقط</div>
+                      <div className="text-[10px] text-muted-foreground">إجابات أسئلة الإدارة/الفريق</div>
+                    </div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {submittedAt ? (
+                <Badge className="bg-emerald-500/15 text-emerald-300 border-emerald-400/30 gap-1 h-8 px-3">
+                  <CheckCircle2 className="w-3 h-3" />
+                  تم التقديم — {new Date(submittedAt).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })}
+                </Badge>
+              ) : showReminder ? (
+                <Badge className="bg-red-500/20 text-red-300 border-red-400/40 gap-1 animate-pulse h-8 px-3">
+                  <AlertCircle className="w-3 h-3" />
+                  متأخر — تجاوز 6 مساءً
+                </Badge>
+              ) : (
+                <Badge className="bg-white/5 text-slate-300 border-white/15 gap-1 h-8 px-3">
+                  <Clock className="w-3 h-3" />
+                  مسودّة
+                </Badge>
+              )}
             </div>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="gap-1.5 h-8 text-xs"
-                  disabled={!!submittedAt}
-                  title="استرجاع بيانات أمس كقيم افتراضية — تقدر تعدّلها قبل الحفظ"
-                >
-                  <HistoryIcon className="w-3.5 h-3.5" />
-                  استرجع من أمس
-                  <ChevronDown className="w-3 h-3 opacity-60" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64">
-                <DropdownMenuLabel className="text-xs">اختر اللي تحب تسترجعه</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => previewRestore("both")} className="gap-2">
-                  <Sparkles className="w-3.5 h-3.5 text-primary" />
-                  <div className="flex-1">
-                    <div className="text-xs font-semibold">الاتنين معاً</div>
-                    <div className="text-[10px] text-muted-foreground">KPIs + الأسئلة الإضافية</div>
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => previewRestore("kpis")} className="gap-2">
-                  <ClipboardList className="w-3.5 h-3.5 text-emerald-600" />
-                  <div className="flex-1">
-                    <div className="text-xs font-semibold">KPIs والنصوص فقط</div>
-                    <div className="text-[10px] text-muted-foreground">الأرقام والملاحظات الأساسية</div>
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => previewRestore("dynamic")} className="gap-2">
-                  <HelpCircle className="w-3.5 h-3.5 text-blue-600" />
-                  <div className="flex-1">
-                    <div className="text-xs font-semibold">الأسئلة الإضافية فقط</div>
-                    <div className="text-[10px] text-muted-foreground">إجابات أسئلة الإدارة/الفريق</div>
-                  </div>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            {submittedAt ? (
-              <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 gap-1">
-                <CheckCircle2 className="w-3 h-3" />
-                تم التقديم — {new Date(submittedAt).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })}
-              </Badge>
-            ) : showReminder ? (
-              <Badge variant="destructive" className="gap-1 animate-pulse">
-                <AlertCircle className="w-3 h-3" />
-                لم يتم التقديم — تجاوز 6 مساءً
-              </Badge>
-            ) : (
-              <Badge variant="outline" className="gap-1">
-                <Clock className="w-3 h-3" />
-                مسودّة
-              </Badge>
-            )}
           </div>
         </div>
+
+        {/* Body */}
+        <div className="p-5 md:p-6">
 
         {!submittedAt && (
           <div className="mb-4 p-2.5 rounded-lg bg-amber-500/5 border border-amber-500/20 text-[11px] text-amber-700 dark:text-amber-400 flex items-center gap-2">
             <HistoryIcon className="w-3.5 h-3.5 shrink-0" />
-            <span>تقدر تضغط <strong>"استرجع تقرير أمس"</strong> فوق لتعبئة الحقول بإجابات يوم أمس — كلها قابلة للتعديل قبل الحفظ.</span>
+            <span>تقدر تضغط <strong>"استرجع من أمس"</strong> فوق لتعبئة الحقول بإجابات يوم أمس — كلها قابلة للتعديل قبل الحفظ.</span>
           </div>
         )}
+
 
         {/* Numeric KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-5">
