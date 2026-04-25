@@ -915,13 +915,14 @@ const SubmittedSuccessCard = ({
     }
     setHistoryLoading(true);
     setShowHistory(true);
-    const { data } = await (supabase as any)
+    const client: any = supabase;
+    const res = await client
       .from("staff_daily_reports")
       .select("id, report_date, submitted_at, customers_contacted, total_invoices_amount")
       .eq("user_id", userId)
       .order("report_date", { ascending: false })
       .limit(7);
-    setHistory((data as HistoryItem[]) ?? []);
+    setHistory((res?.data as HistoryItem[]) ?? []);
     setHistoryLoading(false);
   };
 
