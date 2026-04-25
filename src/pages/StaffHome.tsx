@@ -650,10 +650,14 @@ const StaffHome = () => {
         const dwell = Number.isFinite(firstT) && Number.isFinite(t) ? t - (firstT as number) : 0;
         if (!(dwell >= ENGAGED_DWELL_MS || (v.pages ?? 0) >= 2)) return false;
       }
+      // Free-text search: name / phone / email. Anonymous visitors (no name,
+      // no phone, no email) automatically fall out as soon as a query is typed,
+      // which is the expected behavior for a contact-search box.
+      if (!matchesContactQuery(visitorsSearch, v)) return false;
       return true;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visitorsList, includeStaff, staffIdsSet, visitorTypeFilter, visitorDateFilter, visitorViewedFilter, visitorEngagedOnly, viewedKeys]);
+  }, [visitorsList, includeStaff, staffIdsSet, visitorTypeFilter, visitorDateFilter, visitorViewedFilter, visitorEngagedOnly, viewedKeys, visitorsSearch]);
 
 
   // Unified KPI numbers — computed from raw lists with the SAME staff-exclusion
