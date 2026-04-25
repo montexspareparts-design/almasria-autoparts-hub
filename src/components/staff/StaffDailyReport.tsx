@@ -11,7 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ClipboardList, CheckCircle2, AlertCircle, Save, Sparkles, Clock, HelpCircle, Users2, History as HistoryIcon } from "lucide-react";
+import { ClipboardList, CheckCircle2, AlertCircle, Save, Sparkles, Clock, HelpCircle, Users2, History as HistoryIcon, ChevronDown } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 type QType = "text" | "textarea" | "number" | "choice" | "boolean";
 type QScope = "all" | "role" | "team" | "users";
@@ -180,36 +181,51 @@ const StaffDailyReport = () => {
     return () => clearInterval(interval);
   }, [user, today]);
 
-  const restoreYesterday = async () => {
+  const restoreYesterday = async (mode: "kpis" | "dynamic" | "both") => {
     if (!user) return;
     const yest = new Date();
     yest.setDate(yest.getDate() - 1);
     const yDate = yest.toISOString().split("T")[0];
 
+    const wantKpis = mode === "kpis" || mode === "both";
+    const wantDyn = mode === "dynamic" || mode === "both";
+
     const [yReport, yAnswers] = await Promise.all([
-      supabase
-        .from("staff_daily_reports")
-        .select("*")
-        .eq("staff_user_id", user.id)
-        .eq("report_date", yDate)
-        .maybeSingle(),
-      supabase
-        .from("daily_report_answers")
-        .select("question_id, answer_text, answer_number, answer_boolean, answer_choice")
-        .eq("user_id", user.id)
-        .eq("report_date", yDate),
+      wantKpis
+        ? supabase
+            .from("staff_daily_reports")
+            .select("*")
+            .eq("staff_user_id", user.id)
+            .eq("report_date", yDate)
+            .maybeSingle()
+        : Promise.resolve({ data: null } as any),
+      wantDyn
+        ? supabase
+            .from("daily_report_answers")
+            .select("question_id, answer_text, answer_number, answer_boolean, answer_choice")
+            .eq("user_id", user.id)
+            .eq("report_date", yDate)
+        : Promise.resolve({ data: [] } as any),
     ]);
 
-    if (!yReport.data && !(yAnswers.data && yAnswers.data.length)) {
+    const hasReport = !!yReport.data;
+    const hasAnswers = !!(yAnswers.data && yAnswers.data.length);
+
+    if ((wantKpis && !hasReport && !wantDyn) || (wantDyn && !hasAnswers && !wantKpis) || (wantKpis && wantDyn && !hasReport && !hasAnswers)) {
       toast({
-        title: "ولا تقرير امبارح",
-        description: "مفيش بيانات محفوظة من أمس عشان نسترجعها",
+        title: "مفيش بيانات لاسترجاعها",
+        description:
+          mode === "kpis"
+            ? "مفيش KPIs محفوظة من أمس"
+            : mode === "dynamic"
+              ? "مفيش إجابات أسئلة إضافية من أمس"
+              : "مفيش تقرير أمس أصلاً",
         variant: "destructive",
       });
       return;
     }
 
-    if (yReport.data) {
+    if (wantKpis && yReport.data) {
       const d = yReport.data;
       setReport((r) => ({
         ...r,
@@ -227,7 +243,7 @@ const StaffDailyReport = () => {
     }
 
     let restoredDyn = 0;
-    if (yAnswers.data && yAnswers.data.length) {
+    if (wantDyn && yAnswers.data && yAnswers.data.length) {
       const activeQIds = new Set(dynQuestions.map((q) => q.id));
       const map: Record<string, DynAnswer> = { ...dynAnswers };
       yAnswers.data.forEach((a: any) => {
@@ -243,9 +259,13 @@ const StaffDailyReport = () => {
       setDynAnswers(map);
     }
 
+    const parts: string[] = [];
+    if (wantKpis && hasReport) parts.push("KPIs والنصوص");
+    if (wantDyn && restoredDyn > 0) parts.push(`${restoredDyn} سؤال إضافي`);
+
     toast({
-      title: "✅ تم استرجاع تقرير أمس",
-      description: `تقدر تعدّل أي قيمة قبل الحفظ${restoredDyn > 0 ? ` — تم استرجاع ${restoredDyn} من الأسئلة الإضافية` : ""}`,
+      title: "✅ تم الاسترجاع من أمس",
+      description: `تم استرجاع ${parts.join(" + ")} — تقدر تعدّل أي قيمة قبل الحفظ`,
     });
   };
 
@@ -449,17 +469,46 @@ const StaffDailyReport = () => {
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={restoreYesterday}
-              className="gap-1.5 h-8 text-xs"
-              disabled={!!submittedAt}
-              title="استرجاع إجابات أمس كقيم افتراضية — تقدر تعدّلها قبل الحفظ"
-            >
-              <HistoryIcon className="w-3.5 h-3.5" />
-              استرجع تقرير أمس
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5 h-8 text-xs"
+                  disabled={!!submittedAt}
+                  title="استرجاع بيانات أمس كقيم افتراضية — تقدر تعدّلها قبل الحفظ"
+                >
+                  <HistoryIcon className="w-3.5 h-3.5" />
+                  استرجع من أمس
+                  <ChevronDown className="w-3 h-3 opacity-60" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuLabel className="text-xs">اختر اللي تحب تسترجعه</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => restoreYesterday("both")} className="gap-2">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  <div className="flex-1">
+                    <div className="text-xs font-semibold">الاتنين معاً</div>
+                    <div className="text-[10px] text-muted-foreground">KPIs + الأسئلة الإضافية</div>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => restoreYesterday("kpis")} className="gap-2">
+                  <ClipboardList className="w-3.5 h-3.5 text-emerald-600" />
+                  <div className="flex-1">
+                    <div className="text-xs font-semibold">KPIs والنصوص فقط</div>
+                    <div className="text-[10px] text-muted-foreground">الأرقام والملاحظات الأساسية</div>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => restoreYesterday("dynamic")} className="gap-2">
+                  <HelpCircle className="w-3.5 h-3.5 text-blue-600" />
+                  <div className="flex-1">
+                    <div className="text-xs font-semibold">الأسئلة الإضافية فقط</div>
+                    <div className="text-[10px] text-muted-foreground">إجابات أسئلة الإدارة/الفريق</div>
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             {submittedAt ? (
               <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 gap-1">
                 <CheckCircle2 className="w-3 h-3" />
