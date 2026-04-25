@@ -194,6 +194,20 @@ const StaffDailyReport = () => {
     yAnswersData: any[];
   } | null>(null);
   const [restoreLoading, setRestoreLoading] = useState<RestoreMode | null>(null);
+  const [highlightedQId, setHighlightedQId] = useState<string | null>(null);
+
+  const scrollToQuestion = (qid: string) => {
+    const el = document.getElementById(`dyn-q-${qid}`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    setHighlightedQId(qid);
+    // Try to focus first interactive element inside
+    setTimeout(() => {
+      const focusable = el.querySelector<HTMLElement>("input, textarea, button, [role='combobox']");
+      focusable?.focus();
+    }, 350);
+    setTimeout(() => setHighlightedQId((cur) => (cur === qid ? null : cur)), 2200);
+  };
 
   const previewRestore = async (mode: RestoreMode) => {
     if (!user) return;
