@@ -79,12 +79,19 @@ const StaffHome = () => {
   const [visitorsOpen, setVisitorsOpen] = useState(false);
   const [visitorsList, setVisitorsList] = useState<Array<{ user_id: string | null; session_key: string | null; full_name: string | null; phone: string | null; email: string | null; pages: number; last_visit: string; first_path?: string | null; referrer?: string | null; searches?: string[] }>>([]);
   const [viewedKeys, setViewedKeys] = useState<Set<string>>(new Set());
+  // Per-key earliest view timestamp — used to compute "viewed" under different time-basis modes.
+  const [viewedAtMap, setViewedAtMap] = useState<Map<string, string>>(new Map());
   const [visitorTypeFilter, setVisitorTypeFilter] = useState<"all" | "registered" | "anon">("all");
   const [visitorDateFilter, setVisitorDateFilter] = useState<"all" | "today" | "yesterday" | "week">("today");
   const [visitorViewedFilter, setVisitorViewedFilter] = useState<"all" | "viewed" | "not_viewed">("all");
   // Toggle: false = "Only Customers" (default, excludes staff). true = "All" (review only — shows staff too).
   const [includeStaff, setIncludeStaff] = useState<boolean>(false);
   const [staffIdsSet, setStaffIdsSet] = useState<Set<string>>(new Set());
+  // "Viewed" KPI time basis:
+  //   - "range": viewed within the selected KPI range (today / 7d) — rolling window
+  //   - "event_day": viewed on the same calendar day as the visitor's last_visit
+  //   - "all_time": any past view counts (legacy behavior)
+  const [viewedBasis, setViewedBasis] = useState<"range" | "event_day" | "all_time">("range");
 
   // Guard
   useEffect(() => {
@@ -332,18 +339,29 @@ const StaffHome = () => {
       visitorsArr.sort((a, b) => b.last_visit.localeCompare(a.last_visit));
       setVisitorsList(visitorsArr);
 
-      // Fetch which visitors the current staff has already viewed
+      // Fetch which visitors the current staff has already viewed (with timestamp)
       try {
         const { data: views } = await supabase
           .from("visitor_session_views")
-          .select("customer_user_id, session_key")
+          .select("customer_user_id, session_key, last_viewed_at")
           .eq("staff_user_id", user!.id);
         const set = new Set<string>();
+        const tsMap = new Map<string, string>();
         (views || []).forEach((v: any) => {
-          if (v.customer_user_id) set.add(`u:${v.customer_user_id}`);
-          if (v.session_key) set.add(`s:${v.session_key}`);
+          const at = v.last_viewed_at as string | null;
+          if (v.customer_user_id) {
+            const k = `u:${v.customer_user_id}`;
+            set.add(k);
+            if (at && (!tsMap.has(k) || at > (tsMap.get(k) as string))) tsMap.set(k, at);
+          }
+          if (v.session_key) {
+            const k = `s:${v.session_key}`;
+            set.add(k);
+            if (at && (!tsMap.has(k) || at > (tsMap.get(k) as string))) tsMap.set(k, at);
+          }
         });
         setViewedKeys(set);
+        setViewedAtMap(tsMap);
       } catch (e) {
         console.warn("[StaffHome] viewed keys fetch failed", e);
       }
@@ -394,16 +412,50 @@ const StaffHome = () => {
 
   const rangeSuffix = range === "today" ? "اليوم" : "آخر 7 أيام";
 
+  // Helper: was this visitor "viewed" under the selected time basis?
+  const isViewedUnderBasis = (v: { user_id: string | null; session_key: string | null; last_visit: string }) => {
+    const keys: string[] = [];
+    if (v.user_id) keys.push(`u:${v.user_id}`);
+    if (v.session_key) keys.push(`s:${v.session_key}`);
+    if (keys.length === 0) return false;
+    const baseHit = keys.some((k) => viewedKeys.has(k));
+    if (!baseHit) return false;
+    if (viewedBasis === "all_time") return true;
+
+    // Latest view timestamp across this visitor's keys
+    let viewedAt: string | null = null;
+    for (const k of keys) {
+      const t = viewedAtMap.get(k);
+      if (t && (!viewedAt || t > viewedAt)) viewedAt = t;
+    }
+    if (!viewedAt) return false; // no timestamp known → can't qualify under date-based modes
+
+    if (viewedBasis === "range") {
+      // Match the KPI range (today vs last 7d) using the same start used in fetchData
+      const start = range === "today" ? todayISO() : sevenDaysISO();
+      return viewedAt >= start;
+    }
+    if (viewedBasis === "event_day") {
+      // Same calendar day (local) as the visitor's last visit
+      const sameDay = (a: string, b: string) => {
+        const da = new Date(a); const db = new Date(b);
+        return da.getFullYear() === db.getFullYear()
+          && da.getMonth() === db.getMonth()
+          && da.getDate() === db.getDate();
+      };
+      return sameDay(viewedAt, v.last_visit);
+    }
+    return baseHit;
+  };
+
   // Count how many of the displayed (non-staff) visitors the current staff has already opened
   const viewedVisitorsCount = useMemo(() => {
     return visitorsList.reduce((acc, v) => {
       if (!includeStaff && v.user_id && staffIdsSet.has(v.user_id)) return acc;
-      const isViewed =
-        (v.user_id && viewedKeys.has(`u:${v.user_id}`)) ||
-        (v.session_key && viewedKeys.has(`s:${v.session_key}`));
-      return isViewed ? acc + 1 : acc;
+      return isViewedUnderBasis(v) ? acc + 1 : acc;
     }, 0);
-  }, [visitorsList, viewedKeys, includeStaff, staffIdsSet]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visitorsList, viewedKeys, viewedAtMap, includeStaff, staffIdsSet, viewedBasis, range]);
 
   // Count after the All/Only-Customers toggle (staff exclusion only — independent of date/type/viewed filters).
   // This is what the badge in the dialog title shows so users see the effect of the toggle live.
@@ -424,7 +476,15 @@ const StaffHome = () => {
         color: "text-blue-600",
         bg: "from-blue-500/10 to-blue-500/5",
         onClick: () => setVisitorsOpen(true),
-        subText: kpis.visitors > 0 ? `تمت معاينة ${viewedVisitorsCount} / ${kpis.visitors}` : undefined,
+        subText: kpis.visitors > 0
+          ? `تمت معاينة ${viewedVisitorsCount} / ${kpis.visitors}${
+              viewedBasis === "event_day"
+                ? " · بنفس يوم الزيارة"
+                : viewedBasis === "all_time"
+                ? " · أي وقت"
+                : ""
+            }`
+          : undefined,
       },
       {
         label: `زوار متفاعلين (${rangeSuffix})`,
@@ -467,7 +527,7 @@ const StaffHome = () => {
         onClick: () => navigate("/admin?section=customer-intel"),
       },
     ],
-    [kpis, navigate, rangeSuffix, viewedVisitorsCount]
+    [kpis, navigate, rangeSuffix, viewedVisitorsCount, viewedBasis]
   );
 
   const tierBadge = (tier: HotLead["tier"]) => {
@@ -597,6 +657,63 @@ const StaffHome = () => {
               </button>
             </div>
           </div>
+
+          {/* Viewed-KPI time-basis selector — controls how "تمت معاينة X / Y" is computed */}
+          <div className="flex items-center justify-end gap-2 mb-3 flex-wrap">
+            <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+              <Eye className="w-3.5 h-3.5" />
+              أساس "تمت المعاينة":
+            </span>
+            <div
+              role="tablist"
+              aria-label="أساس احتساب المعاينة"
+              className="inline-flex items-center bg-muted/60 rounded-lg p-0.5 border border-border/50"
+            >
+              <button
+                role="tab"
+                aria-selected={viewedBasis === "range"}
+                onClick={() => setViewedBasis("range")}
+                title="تُحتسب المعاينة فقط لو حصلت ضمن نفس النطاق المختار (اليوم / آخر 7 أيام)"
+                className={cn(
+                  "px-2.5 py-1 text-[11px] font-medium rounded-md transition-all",
+                  viewedBasis === "range"
+                    ? "bg-background shadow-sm text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                نطاق KPI
+              </button>
+              <button
+                role="tab"
+                aria-selected={viewedBasis === "event_day"}
+                onClick={() => setViewedBasis("event_day")}
+                title="تُحتسب المعاينة فقط لو حصلت في نفس يوم زيارة العميل"
+                className={cn(
+                  "px-2.5 py-1 text-[11px] font-medium rounded-md transition-all",
+                  viewedBasis === "event_day"
+                    ? "bg-background shadow-sm text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                يوم الزيارة
+              </button>
+              <button
+                role="tab"
+                aria-selected={viewedBasis === "all_time"}
+                onClick={() => setViewedBasis("all_time")}
+                title="أي معاينة سابقة تُحتسب بغض النظر عن التاريخ"
+                className={cn(
+                  "px-2.5 py-1 text-[11px] font-medium rounded-md transition-all",
+                  viewedBasis === "all_time"
+                    ? "bg-background shadow-sm text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                أي وقت
+              </button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             {kpiCards.map((kpi, i) => (
               <button
