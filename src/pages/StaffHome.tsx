@@ -515,6 +515,46 @@ const StaffHome = () => {
     );
   }, [visitorsList, includeStaff, staffIdsSet]);
 
+  // Detect traffic source for a visitor (used as the "reason" filter in Viewed Today dialog)
+  const detectSource = (firstPath: string | null, referrer: string | null) => {
+    const hay = ((firstPath || "") + " " + (referrer || "")).toLowerCase();
+    if (hay.includes("fbclid") || hay.includes("facebook") || hay.includes("utm_source=fb")) return "facebook";
+    if (hay.includes("instagram") || hay.includes("ig_")) return "instagram";
+    if (hay.includes("google") || hay.includes("gclid")) return "google";
+    if (hay.includes("tiktok") || hay.includes("ttclid")) return "tiktok";
+    if (hay.includes("whatsapp") || hay.includes("wa.me")) return "whatsapp";
+    if (!referrer) return "direct";
+    return "other";
+  };
+
+  const sourceLabel: Record<string, string> = {
+    facebook: "📘 فيسبوك",
+    instagram: "📷 إنستجرام",
+    google: "🔍 جوجل",
+    tiktok: "🎵 تيك توك",
+    whatsapp: "💬 واتساب",
+    direct: "🌐 مباشر",
+    other: "🔗 موقع آخر",
+  };
+
+  // Visitors viewed TODAY by any staff — joined with visitor data + view metadata
+  const viewedTodayVisitors = useMemo(() => {
+    const items: Array<{
+      v: typeof visitorsList[number];
+      viewInfo: { staffIds: Set<string>; viewCount: number; lastViewedAt: string };
+      key: string;
+    }> = [];
+    visitorsList.forEach((v) => {
+      const k = v.user_id ? `u:${v.user_id}` : (v.session_key ? `s:${v.session_key}` : null);
+      if (!k) return;
+      const info = todayViewsMap.get(k);
+      if (!info) return;
+      items.push({ v, viewInfo: info, key: k });
+    });
+    items.sort((a, b) => b.viewInfo.lastViewedAt.localeCompare(a.viewInfo.lastViewedAt));
+    return items;
+  }, [visitorsList, todayViewsMap]);
+
   const kpiCards: KPI[] = useMemo(
     () => [
       {
