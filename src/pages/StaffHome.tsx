@@ -157,9 +157,9 @@ const StaffHome = () => {
   // Buyers dialog
   const [buyersOpen, setBuyersOpen] = useState(false);
   const [buyersList, setBuyersList] = useState<Array<{ user_id: string; full_name: string | null; phone: string | null; email: string | null; order_number: string | null; total_amount: number; status: string; created_at: string }>>([]);
-  const [buyersSort, setBuyersSort] = useState<"recent" | "amount">("recent");
-  const [buyersStatusFilter, setBuyersStatusFilter] = useState<"all" | "pending" | "confirmed" | "shipped" | "delivered" | "cancelled" | "other">("all");
-  const [buyersContactFilter, setBuyersContactFilter] = useState<"all" | "with_phone" | "no_phone">("all");
+  const [buyersSort, setBuyersSort] = useSessionPersistedState<"recent" | "amount">("staffHome:buyers:sort", "recent");
+  const [buyersStatusFilter, setBuyersStatusFilter] = useSessionPersistedState<"all" | "pending" | "confirmed" | "shipped" | "delivered" | "cancelled" | "other">("staffHome:buyers:status", "all");
+  const [buyersContactFilter, setBuyersContactFilter] = useSessionPersistedState<"all" | "with_phone" | "no_phone">("staffHome:buyers:contact", "all");
   // Hot Leads dialog
   const [hotLeadsOpen, setHotLeadsOpen] = useState(false);
   const [leadsSort, setLeadsSort] = useState<"score" | "recent">("score");
