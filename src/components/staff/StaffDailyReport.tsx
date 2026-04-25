@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ClipboardList, CheckCircle2, AlertCircle, Save, Sparkles, Clock, HelpCircle, Users2, History as HistoryIcon, ChevronDown, ArrowRight, Eye, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { computeMissingRequired, isAnswerFilled } from "./dailyReportValidation";
@@ -904,8 +905,14 @@ const SubmittedSuccessCard = ({
     [submittedAt]
   );
 
+  const navigate = useNavigate();
   const handleBack = () => {
-    if (window.history.length > 1) window.history.back();
+    // Use SPA-friendly navigation; fall back to home if there's no history entry.
+    if (window.history.state && window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate("/", { replace: true });
+    }
   };
 
   const loadHistory = async () => {
