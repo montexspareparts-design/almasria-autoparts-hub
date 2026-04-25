@@ -200,10 +200,15 @@ const StaffHome = () => {
     setLoading(true);
     try {
       const start = range === "today" ? todayISO() : sevenDaysISO();
+      // Widest window we ever need client-side. We fetch lists at this depth
+      // so each Dialog can apply its own range (today / 7d / month) without
+      // a refetch round-trip. KPI cards still use `start` (the global range).
+      const widestStart = monthStartISO();
 
-      // 1) Visitors — always fetch last 7 days so the dialog's date filter (today/yesterday/week) is meaningful.
-      // KPI counts are computed against `start` below.
-      const visitsStart = sevenDaysISO();
+      // 1) Visitors — always fetch the widest window (this month) so each dialog's
+      // own range filter (today / 7d / month) works without a round-trip.
+      // KPI counts are still computed against `start` below.
+      const visitsStart = widestStart;
       const { data: visits } = await supabase
         .from("page_visits")
         .select("session_key, user_id, visited_at, path, referrer")
