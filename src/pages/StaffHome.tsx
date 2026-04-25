@@ -1102,9 +1102,6 @@ const StaffHome = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-        {/* Daily Report */}
-        <StaffDailyReport />
-
         {/* KPI Cards */}
         <section>
           <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
@@ -1379,6 +1376,9 @@ const StaffHome = () => {
             ))}
           </div>
         </section>
+
+        {/* Daily Report — placed after KPIs so staff reviews numbers before writing the report */}
+        <StaffDailyReport />
 
         {/* Calculation rules panel — explains how each KPI is computed
             and shows raw (pre-staff-filter) vs filtered counts. */}
