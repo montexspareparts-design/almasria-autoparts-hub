@@ -435,7 +435,18 @@ const StaffDailyReport = () => {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={restoreYesterday}
+              className="gap-1.5 h-8 text-xs"
+              disabled={!!submittedAt}
+              title="استرجاع إجابات أمس كقيم افتراضية — تقدر تعدّلها قبل الحفظ"
+            >
+              <History className="w-3.5 h-3.5" />
+              استرجع تقرير أمس
+            </Button>
             {submittedAt ? (
               <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 gap-1">
                 <CheckCircle2 className="w-3 h-3" />
@@ -454,6 +465,13 @@ const StaffDailyReport = () => {
             )}
           </div>
         </div>
+
+        {!submittedAt && (
+          <div className="mb-4 p-2.5 rounded-lg bg-amber-500/5 border border-amber-500/20 text-[11px] text-amber-700 dark:text-amber-400 flex items-center gap-2">
+            <History className="w-3.5 h-3.5 shrink-0" />
+            <span>تقدر تضغط <strong>"استرجع تقرير أمس"</strong> فوق لتعبئة الحقول بإجابات يوم أمس — كلها قابلة للتعديل قبل الحفظ.</span>
+          </div>
+        )}
 
         {/* Numeric KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-5">
