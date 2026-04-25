@@ -1988,7 +1988,7 @@ const StaffHome = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
               <CheckCircle2 className="w-5 h-5 text-green-600" />
-              طلبات {rangeSuffix}
+              طلبات {dialogRangeLabel(buyersRange)}
               <Badge variant="secondary" className="text-xs">{visibleBuyers.length}</Badge>
               {visibleBuyers.length !== buyersList.length && (
                 <span className="text-[10px] text-muted-foreground font-normal" title="العدد بعد الفلاتر من إجمالي الطلبات">
