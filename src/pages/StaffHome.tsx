@@ -538,8 +538,13 @@ const StaffHome = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visitorsList, viewedKeys, viewedAtMap, includeStaff, staffIdsSet, viewedBasis, range]);
 
-  // Count after the All/Only-Customers toggle (staff exclusion only — independent of date/type/viewed filters).
-  // This is what the badge in the dialog title shows so users see the effect of the toggle live.
+  // Helpers shared by all KPI memos so badges and cards stay in lockstep
+  const isStaffVisitor = (uid: string | null | undefined) => !!uid && staffIdsSet.has(uid);
+  const startMs = useMemo(
+    () => new Date(range === "today" ? todayISO() : sevenDaysISO()).getTime(),
+    [range]
+  );
+
   // Visitor count shown in the dialog title badge — uses the SAME staff exclusion
   // AND the same KPI range as the visitors KPI card, so badge ≡ kpis.visitors.
   const visibleVisitorsCount = useMemo(() => {
