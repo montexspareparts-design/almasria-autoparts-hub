@@ -1285,6 +1285,7 @@ export default function VisitorSessionSummary() {
                     </details>
                   ))}
                 </CardContent>
+                )}
               </Card>
             )}
           </>
