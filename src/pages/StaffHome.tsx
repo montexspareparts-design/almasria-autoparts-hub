@@ -162,7 +162,7 @@ const StaffHome = () => {
   // Visitors dialog "engaged only" filter (driven by KPI card click)
   const [visitorEngagedOnly, setVisitorEngagedOnly] = useState(false);
   const [visitorTypeFilter, setVisitorTypeFilter] = useState<"all" | "registered" | "anon">("all");
-  const [visitorDateFilter, setVisitorDateFilter] = useState<"all" | "today" | "yesterday" | "week">("today");
+  const [visitorDateFilter, setVisitorDateFilter] = useState<"all" | "today" | "yesterday" | "week" | "month">("today");
   const [visitorViewedFilter, setVisitorViewedFilter] = useState<"all" | "viewed" | "not_viewed">("all");
   // Free-text search inside each dialog (matches name / phone / email).
   // Phone matching ignores formatting (spaces, dashes, +20…), name matching
