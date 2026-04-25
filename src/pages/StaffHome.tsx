@@ -476,7 +476,15 @@ const StaffHome = () => {
         color: "text-blue-600",
         bg: "from-blue-500/10 to-blue-500/5",
         onClick: () => setVisitorsOpen(true),
-        subText: kpis.visitors > 0 ? `تمت معاينة ${viewedVisitorsCount} / ${kpis.visitors}` : undefined,
+        subText: kpis.visitors > 0
+          ? `تمت معاينة ${viewedVisitorsCount} / ${kpis.visitors}${
+              viewedBasis === "event_day"
+                ? " · بنفس يوم الزيارة"
+                : viewedBasis === "all_time"
+                ? " · أي وقت"
+                : ""
+            }`
+          : undefined,
       },
       {
         label: `زوار متفاعلين (${rangeSuffix})`,
