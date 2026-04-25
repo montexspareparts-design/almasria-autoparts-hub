@@ -882,30 +882,62 @@ const StaffDailyReport = () => {
           );
         })()}
 
-        {/* Required-missing live banner */}
-        {missingCount > 0 && (
+        {/* Required-missing live banner — KPIs + text + dynamic */}
+        {totalErrors > 0 && (
           <div className="mt-5 p-3 rounded-lg bg-destructive/10 border-2 border-destructive/40 text-destructive flex items-start gap-2.5">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold mb-1">
-                ناقص {missingCount} {missingCount === 1 ? "سؤال إجباري" : "أسئلة إجبارية"} — لازم تكمّلها قبل الحفظ
+              <p className="text-sm font-bold mb-2">
+                ناقص {totalErrors} حقل إجباري — لازم تكمّلهم قبل الحفظ
               </p>
               <ul className="text-xs space-y-1 pr-1">
+                {kpiErrors.map((f) => (
+                  <li key={`kpi-${f.key}`}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const el = document.getElementById(`kpi-${f.key}`);
+                        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                        (el?.querySelector("input") as HTMLInputElement | null)?.focus();
+                      }}
+                      className="text-right w-full truncate underline underline-offset-2 hover:no-underline flex items-center gap-1.5"
+                    >
+                      <span>›</span>
+                      <span className="truncate">رقم: {f.label}</span>
+                    </button>
+                  </li>
+                ))}
+                {textErrors.map((f) => (
+                  <li key={`txt-${f.key}`}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const el = document.getElementById(`txt-${f.key}`);
+                        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                        (el?.querySelector("textarea") as HTMLTextAreaElement | null)?.focus();
+                      }}
+                      className="text-right w-full truncate underline underline-offset-2 hover:no-underline flex items-center gap-1.5"
+                    >
+                      <span>›</span>
+                      <span className="truncate">تعليق: {f.label} (≥ {MIN_TEXT} حرف)</span>
+                    </button>
+                  </li>
+                ))}
                 {missingRequired.slice(0, 5).map((q) => (
                   <li key={q.id}>
                     <button
                       type="button"
                       onClick={() => scrollToQuestion(q.id)}
-                      className="text-right w-full truncate underline underline-offset-2 hover:text-destructive/80 hover:no-underline transition-colors flex items-center gap-1.5"
+                      className="text-right w-full truncate underline underline-offset-2 hover:no-underline flex items-center gap-1.5"
                       title="افتح السؤال وحدّد مكانه"
                     >
-                      <span className="text-destructive">›</span>
-                      <span className="truncate">{q.question_text}</span>
+                      <span>›</span>
+                      <span className="truncate">سؤال: {q.question_text}</span>
                     </button>
                   </li>
                 ))}
                 {missingRequired.length > 5 && (
-                  <li className="opacity-70 text-[11px] pr-3">+ {missingRequired.length - 5} أخرى…</li>
+                  <li className="opacity-70 text-[11px] pr-3">+ {missingRequired.length - 5} سؤال آخر…</li>
                 )}
               </ul>
             </div>
@@ -917,15 +949,16 @@ const StaffDailyReport = () => {
           <p className="text-xs text-muted-foreground">
             {submittedAt
               ? "تقدر تعدّل وتعيد الحفظ — الأدمن هيشوف آخر نسخة"
-              : missingCount > 0
-                ? `كمّل ${missingCount} سؤال إجباري قبل ما تقدر تحفظ`
-                : "ادخل الأرقام واضغط حفظ — الأدمن هيستلم إشعار فوري"}
+              : totalErrors > 0
+                ? `كمّل ${totalErrors} حقل إجباري قبل الحفظ`
+                : "كل الحقول الإجبارية مكتملة — اضغط حفظ"}
           </p>
-          <Button onClick={handleSubmit} disabled={saving || missingCount > 0} size="lg" className="gap-2">
+          <Button onClick={handleSubmit} disabled={saving || totalErrors > 0} size="lg" className="gap-2">
             <Save className="w-4 h-4" />
             {saving ? "جارٍ الحفظ..." : submittedAt ? "حفظ التعديلات" : "تقديم التقرير"}
           </Button>
         </div>
+
         </div>
       </Card>
 
