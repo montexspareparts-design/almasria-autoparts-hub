@@ -870,7 +870,11 @@ const StaffHome = () => {
   // ──────────────────────────────────────────────────────────────────────────
 
   const visibleCart = useMemo(() => {
+    const startMsCart = dialogRangeStartMs(cartRange);
     const filtered = cartList.filter((c) => {
+      // Per-dialog time window — clipped against the in-memory list which is
+      // already pre-fetched at the widest range (this month).
+      if (new Date(c.last_added).getTime() < startMsCart) return false;
       if (cartContactFilter === "with_phone" && !c.phone) return false;
       if (cartContactFilter === "no_phone" && c.phone) return false;
       if (!matchesContactQuery(cartSearch, c)) return false;
@@ -880,11 +884,13 @@ const StaffHome = () => {
       if (cartSort === "items") return (b.items || 0) - (a.items || 0);
       return (b.last_added || "").localeCompare(a.last_added || "");
     });
-  }, [cartList, cartContactFilter, cartSort, cartSearch]);
+  }, [cartList, cartContactFilter, cartSort, cartSearch, cartRange]);
 
   const visibleBuyers = useMemo(() => {
     const known = new Set(["pending", "confirmed", "shipped", "delivered", "cancelled"]);
+    const startMsBuyers = dialogRangeStartMs(buyersRange);
     const filtered = buyersList.filter((b) => {
+      if (new Date(b.created_at).getTime() < startMsBuyers) return false;
       if (buyersContactFilter === "with_phone" && !b.phone) return false;
       if (buyersContactFilter === "no_phone" && b.phone) return false;
       if (buyersStatusFilter !== "all") {
@@ -905,10 +911,12 @@ const StaffHome = () => {
       if (buyersSort === "amount") return (b.total_amount || 0) - (a.total_amount || 0);
       return (b.created_at || "").localeCompare(a.created_at || "");
     });
-  }, [buyersList, buyersContactFilter, buyersStatusFilter, buyersSort, buyersSearch]);
+  }, [buyersList, buyersContactFilter, buyersStatusFilter, buyersSort, buyersSearch, buyersRange]);
 
   const visibleLeads = useMemo(() => {
+    const startMsLeads = dialogRangeStartMs(leadsRange);
     const filtered = hotLeads.filter((l) => {
+      if (new Date(l.last_activity).getTime() < startMsLeads) return false;
       if (leadsContactFilter === "with_phone" && !l.phone) return false;
       if (leadsContactFilter === "no_phone" && l.phone) return false;
       if (leadsTierFilter !== "all" && l.tier !== leadsTierFilter) return false;
@@ -919,7 +927,7 @@ const StaffHome = () => {
       if (leadsSort === "recent") return (b.last_activity || "").localeCompare(a.last_activity || "");
       return (b.score || 0) - (a.score || 0);
     });
-  }, [hotLeads, leadsContactFilter, leadsTierFilter, leadsSort, leadsSearch]);
+  }, [hotLeads, leadsContactFilter, leadsTierFilter, leadsSort, leadsSearch, leadsRange]);
 
   const tierBadge = (tier: HotLead["tier"]) => {
     if (tier === "hot")
