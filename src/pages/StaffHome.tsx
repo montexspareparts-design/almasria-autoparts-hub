@@ -743,6 +743,37 @@ const StaffHome = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visitorsList, newSignups, cartList, buyersList, hotLeads, includeStaff, staffIdsSet, startMs]);
 
+  // Raw counts BEFORE the staff-exclusion filter — used by the "rules" panel
+  // so staff can see exactly how many rows the staff filter is hiding.
+  // The range filter (startMs) is still applied so "before/after" compares
+  // apples-to-apples within the same time window.
+  const kpisRaw = useMemo(() => {
+    const visibleVisitors = visitorsList.filter((v) => visitTs(v) >= startMs);
+    const engaged = visibleVisitors.filter((v) => {
+      const lastT = visitTs(v);
+      const firstT = v.first_visit ? new Date(v.first_visit).getTime() : NaN;
+      const dwell = Number.isFinite(firstT) && Number.isFinite(lastT) ? lastT - (firstT as number) : 0;
+      return dwell >= ENGAGED_DWELL_MS || (v.pages ?? 0) >= 2;
+    }).length;
+    const signups = newSignups.filter((s) => new Date(s.created_at).getTime() >= startMs).length;
+    const cartUsers = new Set(
+      cartList.filter((c) => new Date(c.last_added).getTime() >= startMs).map((c) => c.user_id)
+    ).size;
+    const buyerUsers = new Set(
+      buyersList.filter((b) => new Date(b.created_at).getTime() >= startMs).map((b) => b.user_id)
+    ).size;
+    const hot = hotLeads.filter((l) => new Date(l.last_activity).getTime() >= startMs).length;
+    return {
+      visitors: visibleVisitors.length,
+      engagedVisitors: engaged,
+      signups,
+      addedToCart: cartUsers,
+      purchased: buyerUsers,
+      hotLeads: hot,
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visitorsList, newSignups, cartList, buyersList, hotLeads, startMs]);
+
   // Detect traffic source for a visitor (used as the "reason" filter in Viewed Today dialog)
   const detectSource = (firstPath: string | null, referrer: string | null) => {
     const hay = ((firstPath || "") + " " + (referrer || "")).toLowerCase();
