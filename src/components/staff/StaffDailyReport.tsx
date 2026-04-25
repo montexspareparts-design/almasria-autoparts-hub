@@ -135,12 +135,12 @@ const StaffDailyReport = () => {
       if (data) {
         setReport({
           id: data.id,
-          customers_contacted: data.customers_contacted ?? 0,
-          customers_registered: data.customers_registered ?? 0,
-          customers_with_invoices: data.customers_with_invoices ?? 0,
-          total_invoices_amount: Number(data.total_invoices_amount ?? 0),
-          hot_leads_count: data.hot_leads_count ?? 0,
-          follow_ups_done: data.follow_ups_done ?? 0,
+          customers_contacted: data.customers_contacted ?? null,
+          customers_registered: data.customers_registered ?? null,
+          customers_with_invoices: data.customers_with_invoices ?? null,
+          total_invoices_amount: data.total_invoices_amount != null ? Number(data.total_invoices_amount) : null,
+          hot_leads_count: data.hot_leads_count ?? null,
+          follow_ups_done: data.follow_ups_done ?? null,
           problems_faced: data.problems_faced ?? "",
           best_deal_today: data.best_deal_today ?? "",
           tomorrow_plan: data.tomorrow_plan ?? "",
