@@ -152,8 +152,8 @@ const StaffHome = () => {
   // Cart users dialog
   const [cartOpen, setCartOpen] = useState(false);
   const [cartList, setCartList] = useState<Array<{ user_id: string; full_name: string | null; phone: string | null; email: string | null; items: number; last_added: string }>>([]);
-  const [cartSort, setCartSort] = useState<"recent" | "items">("recent");
-  const [cartContactFilter, setCartContactFilter] = useState<"all" | "with_phone" | "no_phone">("all");
+  const [cartSort, setCartSort] = useSessionPersistedState<"recent" | "items">("staffHome:cart:sort", "recent");
+  const [cartContactFilter, setCartContactFilter] = useSessionPersistedState<"all" | "with_phone" | "no_phone">("staffHome:cart:contact", "all");
   // Buyers dialog
   const [buyersOpen, setBuyersOpen] = useState(false);
   const [buyersList, setBuyersList] = useState<Array<{ user_id: string; full_name: string | null; phone: string | null; email: string | null; order_number: string | null; total_amount: number; status: string; created_at: string }>>([]);
