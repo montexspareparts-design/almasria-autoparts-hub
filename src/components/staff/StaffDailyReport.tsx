@@ -412,6 +412,19 @@ const StaffDailyReport = () => {
     );
   }
 
+  // Compute missing required dynamic questions (live)
+  const missingRequired = dynQuestions.filter((q) => {
+    if (!q.is_required) return false;
+    const a = dynAnswers[q.id];
+    const filled =
+      (q.question_type === "number" && a?.number != null) ||
+      (q.question_type === "boolean" && a?.boolean != null) ||
+      (q.question_type === "choice" && !!a?.choice) ||
+      ((q.question_type === "text" || q.question_type === "textarea") && !!a?.text?.trim());
+    return !filled;
+  });
+  const missingCount = missingRequired.length;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
