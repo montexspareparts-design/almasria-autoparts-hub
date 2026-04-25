@@ -1495,6 +1495,7 @@ const StaffHome = () => {
                 <SelectItem value="today">اليوم</SelectItem>
                 <SelectItem value="yesterday">أمس</SelectItem>
                 <SelectItem value="week">آخر 7 أيام</SelectItem>
+                <SelectItem value="month">هذا الشهر</SelectItem>
               </SelectContent>
             </Select>
             <Select value={visitorViewedFilter} onValueChange={(v) => setVisitorViewedFilter(v as any)}>
