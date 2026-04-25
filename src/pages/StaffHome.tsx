@@ -671,6 +671,7 @@ const StaffHome = () => {
     const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
     const yesterdayStart = new Date(todayStart); yesterdayStart.setDate(yesterdayStart.getDate() - 1);
     const weekStart = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
     return visitorsList.filter((v) => {
       if (!includeStaff && v.user_id && staffIdsSet.has(v.user_id)) return false;
       if (visitorTypeFilter === "registered" && !v.user_id) return false;
@@ -679,6 +680,7 @@ const StaffHome = () => {
       if (visitorDateFilter === "today" && t < todayStart.getTime()) return false;
       if (visitorDateFilter === "yesterday" && (t < yesterdayStart.getTime() || t >= todayStart.getTime())) return false;
       if (visitorDateFilter === "week" && t < weekStart.getTime()) return false;
+      if (visitorDateFilter === "month" && t < monthStart.getTime()) return false;
       const isViewed =
         (v.user_id && viewedKeys.has(`u:${v.user_id}`)) ||
         (v.session_key && viewedKeys.has(`s:${v.session_key}`));
