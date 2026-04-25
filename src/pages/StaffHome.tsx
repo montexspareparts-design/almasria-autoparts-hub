@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isNoiseVisit, ENGAGED_DWELL_MS } from "@/lib/visitorAnalytics";
+import { viewedOnVisitDay } from "@/lib/visitDayMatch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface KPI {
@@ -517,14 +518,9 @@ const StaffHome = () => {
       return viewedAt >= start;
     }
     if (viewedBasis === "event_day") {
-      // Same calendar day (local) as the visitor's last visit
-      const sameDay = (a: string, b: string) => {
-        const da = new Date(a); const db = new Date(b);
-        return da.getFullYear() === db.getFullYear()
-          && da.getMonth() === db.getMonth()
-          && da.getDate() === db.getDate();
-      };
-      return sameDay(viewedAt, v.last_visit);
+      // Same calendar day (local TZ) as the visitor's last_visit.
+      // Centralized in src/lib/visitDayMatch.ts (covered by visitDayMatch.test.ts).
+      return viewedOnVisitDay(viewedAt, v.last_visit);
     }
     return baseHit;
   };
@@ -905,7 +901,8 @@ const StaffHome = () => {
                 role="tab"
                 aria-selected={viewedBasis === "event_day"}
                 onClick={() => setViewedBasis("event_day")}
-                title="تُحتسب المعاينة فقط لو حصلت في نفس يوم زيارة العميل"
+                title="المطابقة حسب اليوم التقويمي (سنة/شهر/يوم) لتاريخ آخر زيارة للعميل (last_visit)، وبالاعتماد على المنطقة الزمنية لجهازك. مثلاً: زيارة الساعة 11:50م ومعاينة الساعة 12:10ص = يومان مختلفان."
+                aria-label="حساب المعاينة في نفس اليوم التقويمي لزيارة العميل بالتوقيت المحلي"
                 className={cn(
                   "px-2.5 py-1 text-[11px] font-medium rounded-md transition-all",
                   viewedBasis === "event_day"
