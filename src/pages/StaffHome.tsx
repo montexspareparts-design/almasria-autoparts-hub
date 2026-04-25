@@ -35,6 +35,7 @@ import { isViewedUnderBasis as isViewedUnderBasisPure } from "@/lib/viewedUnderB
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useSessionPersistedState } from "@/hooks/useSessionPersistedState";
 
 // Normalize a string for case-insensitive substring matching.
 // Strips Arabic diacritics + tatweel and lowercases the rest so "محمد" matches
