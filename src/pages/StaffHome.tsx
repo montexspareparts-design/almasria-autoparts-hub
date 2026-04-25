@@ -1436,7 +1436,7 @@ const StaffHome = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
               <Users className="w-5 h-5 text-blue-600" />
-              زوار {rangeSuffix}
+              زوار {visitorDateFilter === "today" ? "اليوم" : visitorDateFilter === "yesterday" ? "أمس" : visitorDateFilter === "week" ? "آخر 7 أيام" : visitorDateFilter === "month" ? "هذا الشهر" : "كل التواريخ"}
               <Badge variant="secondary" className="text-xs">{dialogFilteredVisitors.length}</Badge>
               {dialogFilteredVisitors.length !== visitorsList.length && (
                 <span
