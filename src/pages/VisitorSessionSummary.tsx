@@ -1103,7 +1103,12 @@ export default function VisitorSessionSummary() {
             {/* Latest Session — main highlight */}
             {lastSession && (
               <Card id="section-latest-session" className="border-primary/20 shadow-lg overflow-hidden scroll-mt-24 rounded-2xl">
-                <CardHeader className="pb-4 bg-gradient-to-l from-primary/8 via-primary/4 to-transparent border-b">
+                <CardHeader
+                  className="pb-4 bg-gradient-to-l from-primary/8 via-primary/4 to-transparent border-b cursor-pointer hover:bg-primary/5 transition"
+                  onClick={() => toggleSection("section-latest-session")}
+                  role="button"
+                  aria-expanded={isSectionOpen("section-latest-session")}
+                >
                   <div className="flex items-start justify-between flex-wrap gap-3">
                     <div>
                       <CardTitle className="flex items-center gap-2 text-lg">
@@ -1111,6 +1116,7 @@ export default function VisitorSessionSummary() {
                           <Sparkles className="w-5 h-5 text-primary" />
                         </div>
                         أحدث جلسة
+                        <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform ${isSectionOpen("section-latest-session") ? "rotate-180" : ""}`} />
                       </CardTitle>
                       <p className="text-xs text-muted-foreground mt-2 mr-11">
                         {fmtDateTime(lastSession.start)}
@@ -1129,6 +1135,7 @@ export default function VisitorSessionSummary() {
                   </div>
                 </CardHeader>
 
+                {isSectionOpen("section-latest-session") && (
                 <CardContent className="pt-5 space-y-6">
                   {/* Quick session insights */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
