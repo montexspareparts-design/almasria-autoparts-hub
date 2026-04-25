@@ -64,14 +64,9 @@ const StaffHome = () => {
   const { user, isAdmin, isModerator, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [kpis, setKpis] = useState({
-    visitors: 0,
-    engagedVisitors: 0,
-    signups: 0,
-    addedToCart: 0,
-    purchased: 0,
-    hotLeads: 0,
-  });
+  // Raw KPI inputs only — actual displayed numbers are computed via memos that
+  // react to the All/Only-Customers toggle for full consistency with visibleVisitorsCount.
+  const [hotLeadsCount, setHotLeadsCount] = useState(0);
   const [hotLeads, setHotLeads] = useState<HotLead[]>([]);
   const [range, setRange] = useState<RangeKey>("today");
   const [newSignups, setNewSignups] = useState<Array<{ user_id: string; full_name: string | null; phone: string | null; email: string | null; created_at: string; duplicates?: number; duplicateIds?: string[] }>>([]);
@@ -437,32 +432,11 @@ const StaffHome = () => {
         console.warn("[StaffHome] today views fetch failed", e);
       }
 
-      // KPI counts respect the selected range (today vs 7d) even though we fetched 7d for the dialog.
-      const startMs = new Date(start).getTime();
-      const inRange = (v: { last_visit: string }) => new Date(v.last_visit).getTime() >= startMs;
-
-      // Engaged visitors = sessions with dwell ≥ ENGAGED_DWELL_MS OR ≥ 2 distinct pages — exclude staff
-      const engagedCount = Array.from(visitorAgg.values())
-        .filter(inRange)
-        .filter((v) => !v.user_id || !staffIds.has(v.user_id))
-        .filter((v) => {
-          const dwell = new Date(v.last_visit).getTime() - new Date(v.first_visit).getTime();
-          return dwell >= ENGAGED_DWELL_MS || v.pages >= 2;
-        }).length;
-
-      // Recompute visitor count excluding staff (within selected range)
-      const visitorCountNoStaff = Array.from(visitorAgg.values())
-        .filter(inRange)
-        .filter((v) => !v.user_id || !staffIds.has(v.user_id)).length;
-
-      setKpis({
-        visitors: visitorCountNoStaff,
-        engagedVisitors: engagedCount,
-        signups: signupCount || 0,
-        addedToCart: cartUsers.size,
-        purchased: buyers.size,
-        hotLeads: hotCount,
-      });
+      // Note: KPI counts (visitors / engaged / cart / purchased) are derived via
+      // useMemos below from visitorsList / cartList / buyersList so they react live
+      // to the All/Only-Customers toggle exactly like visibleVisitorsCount.
+      // We only persist the raw "hot leads" count here since hotLeads list is already stored.
+      setHotLeadsCount(hotCount);
       setHotLeads(leads.slice(0, 12));
 
       // Build cart users list (with profiles) — sorted by latest add
@@ -564,15 +538,52 @@ const StaffHome = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visitorsList, viewedKeys, viewedAtMap, includeStaff, staffIdsSet, viewedBasis, range]);
 
-  // Count after the All/Only-Customers toggle (staff exclusion only — independent of date/type/viewed filters).
-  // This is what the badge in the dialog title shows so users see the effect of the toggle live.
+  // Helpers shared by all KPI memos so badges and cards stay in lockstep
+  const isStaffVisitor = (uid: string | null | undefined) => !!uid && staffIdsSet.has(uid);
+  const startMs = useMemo(
+    () => new Date(range === "today" ? todayISO() : sevenDaysISO()).getTime(),
+    [range]
+  );
+
+  // Visitor count shown in the dialog title badge — uses the SAME staff exclusion
+  // AND the same KPI range as the visitors KPI card, so badge ≡ kpis.visitors.
   const visibleVisitorsCount = useMemo(() => {
-    if (includeStaff) return visitorsList.length;
-    return visitorsList.reduce(
-      (acc, v) => (v.user_id && staffIdsSet.has(v.user_id) ? acc : acc + 1),
-      0
+    return visitorsList.reduce((acc, v) => {
+      if (!includeStaff && v.user_id && staffIdsSet.has(v.user_id)) return acc;
+      if (new Date(v.last_visit).getTime() < startMs) return acc;
+      return acc + 1;
+    }, 0);
+  }, [visitorsList, includeStaff, staffIdsSet, startMs]);
+
+
+  // Unified KPI numbers — computed from raw lists with the SAME staff-exclusion
+  // logic as visibleVisitorsCount, so all cards stay consistent with the toggle.
+  const kpis = useMemo(() => {
+    const visibleVisitors = visitorsList.filter(
+      (v) => (includeStaff || !isStaffVisitor(v.user_id)) && new Date(v.last_visit).getTime() >= startMs
     );
-  }, [visitorsList, includeStaff, staffIdsSet]);
+    const engaged = visibleVisitors.filter((v) => {
+      const dwell = v.first_visit ? new Date(v.last_visit).getTime() - new Date(v.first_visit).getTime() : 0;
+      return dwell >= ENGAGED_DWELL_MS || v.pages >= 2;
+    }).length;
+    const signups = newSignups.filter((s) => includeStaff || !isStaffVisitor(s.user_id)).length;
+    const cartUsers = new Set(
+      cartList.filter((c) => includeStaff || !isStaffVisitor(c.user_id)).map((c) => c.user_id)
+    ).size;
+    const buyerUsers = new Set(
+      buyersList.filter((b) => includeStaff || !isStaffVisitor(b.user_id)).map((b) => b.user_id)
+    ).size;
+    const hot = hotLeads.filter((l) => includeStaff || !isStaffVisitor(l.user_id)).length || hotLeadsCount;
+    return {
+      visitors: visibleVisitors.length,
+      engagedVisitors: engaged,
+      signups,
+      addedToCart: cartUsers,
+      purchased: buyerUsers,
+      hotLeads: hot,
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visitorsList, newSignups, cartList, buyersList, hotLeads, hotLeadsCount, includeStaff, staffIdsSet, startMs]);
 
   // Detect traffic source for a visitor (used as the "reason" filter in Viewed Today dialog)
   const detectSource = (firstPath: string | null, referrer: string | null) => {
