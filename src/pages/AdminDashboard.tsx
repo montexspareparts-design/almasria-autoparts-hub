@@ -58,6 +58,7 @@ const AdminTranslations = lazy(() => import("@/components/admin/AdminTranslation
 const AdminSEOPreview = lazy(() => import("@/components/admin/AdminSEOPreview"));
 const AdminResponsivePreview = lazy(() => import("@/components/admin/AdminResponsivePreview"));
 const AdminMobileErrorReport = lazy(() => import("@/components/admin/AdminMobileErrorReport"));
+const AdminPermissionRequests = lazy(() => import("@/components/admin/AdminPermissionRequests"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];
