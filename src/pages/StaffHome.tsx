@@ -821,13 +821,14 @@ const StaffHome = () => {
     const filtered = cartList.filter((c) => {
       if (cartContactFilter === "with_phone" && !c.phone) return false;
       if (cartContactFilter === "no_phone" && c.phone) return false;
+      if (!matchesContactQuery(cartSearch, c)) return false;
       return true;
     });
     return [...filtered].sort((a, b) => {
       if (cartSort === "items") return (b.items || 0) - (a.items || 0);
       return (b.last_added || "").localeCompare(a.last_added || "");
     });
-  }, [cartList, cartContactFilter, cartSort]);
+  }, [cartList, cartContactFilter, cartSort, cartSearch]);
 
   const visibleBuyers = useMemo(() => {
     const known = new Set(["pending", "confirmed", "shipped", "delivered", "cancelled"]);
@@ -839,26 +840,34 @@ const StaffHome = () => {
           if (known.has(b.status)) return false;
         } else if (b.status !== buyersStatusFilter) return false;
       }
+      // Also match against the order number so staff can paste/scan it.
+      if (buyersSearch.trim()) {
+        const matchesOrder = (b.order_number || "")
+          .toLowerCase()
+          .includes(buyersSearch.trim().toLowerCase());
+        if (!matchesContactQuery(buyersSearch, b) && !matchesOrder) return false;
+      }
       return true;
     });
     return [...filtered].sort((a, b) => {
       if (buyersSort === "amount") return (b.total_amount || 0) - (a.total_amount || 0);
       return (b.created_at || "").localeCompare(a.created_at || "");
     });
-  }, [buyersList, buyersContactFilter, buyersStatusFilter, buyersSort]);
+  }, [buyersList, buyersContactFilter, buyersStatusFilter, buyersSort, buyersSearch]);
 
   const visibleLeads = useMemo(() => {
     const filtered = hotLeads.filter((l) => {
       if (leadsContactFilter === "with_phone" && !l.phone) return false;
       if (leadsContactFilter === "no_phone" && l.phone) return false;
       if (leadsTierFilter !== "all" && l.tier !== leadsTierFilter) return false;
+      if (!matchesContactQuery(leadsSearch, l)) return false;
       return true;
     });
     return [...filtered].sort((a, b) => {
       if (leadsSort === "recent") return (b.last_activity || "").localeCompare(a.last_activity || "");
       return (b.score || 0) - (a.score || 0);
     });
-  }, [hotLeads, leadsContactFilter, leadsTierFilter, leadsSort]);
+  }, [hotLeads, leadsContactFilter, leadsTierFilter, leadsSort, leadsSearch]);
 
   const tierBadge = (tier: HotLead["tier"]) => {
     if (tier === "hot")
