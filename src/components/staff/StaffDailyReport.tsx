@@ -180,6 +180,75 @@ const StaffDailyReport = () => {
     return () => clearInterval(interval);
   }, [user, today]);
 
+  const restoreYesterday = async () => {
+    if (!user) return;
+    const yest = new Date();
+    yest.setDate(yest.getDate() - 1);
+    const yDate = yest.toISOString().split("T")[0];
+
+    const [yReport, yAnswers] = await Promise.all([
+      supabase
+        .from("staff_daily_reports")
+        .select("*")
+        .eq("staff_user_id", user.id)
+        .eq("report_date", yDate)
+        .maybeSingle(),
+      supabase
+        .from("daily_report_answers")
+        .select("question_id, answer_text, answer_number, answer_boolean, answer_choice")
+        .eq("user_id", user.id)
+        .eq("report_date", yDate),
+    ]);
+
+    if (!yReport.data && !(yAnswers.data && yAnswers.data.length)) {
+      toast({
+        title: "ولا تقرير امبارح",
+        description: "مفيش بيانات محفوظة من أمس عشان نسترجعها",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (yReport.data) {
+      const d = yReport.data;
+      setReport((r) => ({
+        ...r,
+        customers_contacted: d.customers_contacted ?? 0,
+        customers_registered: d.customers_registered ?? 0,
+        customers_with_invoices: d.customers_with_invoices ?? 0,
+        total_invoices_amount: Number(d.total_invoices_amount ?? 0),
+        hot_leads_count: d.hot_leads_count ?? 0,
+        follow_ups_done: d.follow_ups_done ?? 0,
+        problems_faced: d.problems_faced ?? "",
+        best_deal_today: d.best_deal_today ?? "",
+        tomorrow_plan: d.tomorrow_plan ?? "",
+        general_notes: d.general_notes ?? "",
+      }));
+    }
+
+    let restoredDyn = 0;
+    if (yAnswers.data && yAnswers.data.length) {
+      const activeQIds = new Set(dynQuestions.map((q) => q.id));
+      const map: Record<string, DynAnswer> = { ...dynAnswers };
+      yAnswers.data.forEach((a: any) => {
+        if (!activeQIds.has(a.question_id)) return;
+        map[a.question_id] = {
+          text: a.answer_text ?? undefined,
+          number: a.answer_number != null ? Number(a.answer_number) : undefined,
+          boolean: a.answer_boolean ?? undefined,
+          choice: a.answer_choice ?? undefined,
+        };
+        restoredDyn++;
+      });
+      setDynAnswers(map);
+    }
+
+    toast({
+      title: "✅ تم استرجاع تقرير أمس",
+      description: `تقدر تعدّل أي قيمة قبل الحفظ${restoredDyn > 0 ? ` — تم استرجاع ${restoredDyn} من الأسئلة الإضافية` : ""}`,
+    });
+  };
+
   const handleSubmit = async () => {
     if (!user) return;
     if (
