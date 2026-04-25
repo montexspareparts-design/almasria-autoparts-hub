@@ -117,7 +117,8 @@ const clientTypeTier: Record<string, "retail" | "wholesale_tier1"> = {
 };
 
 const AdminLeads = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
+  const { requestPermission } = usePermissionRequest();
   const { toast } = useToast();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
