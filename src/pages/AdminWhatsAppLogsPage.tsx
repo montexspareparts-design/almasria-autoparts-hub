@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, RefreshCw, Search, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
+import { normalizePhoneSearch } from "@/lib/phoneSearch";
 
 type LogRow = {
   id: string;
