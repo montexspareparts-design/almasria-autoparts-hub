@@ -17,6 +17,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { PermissionRequestProvider } from "@/hooks/usePermissionRequest";
 import SEOHead from "@/components/SEOHead";
 const Index = lazy(() => import("./pages/Index"));
 
@@ -92,6 +93,7 @@ const App = () => (
           <LanguageProvider>
           <AuthProvider>
             <CartProvider>
+              <PermissionRequestProvider>
               <SEOHead />
               <PageVisitTracker />
               <DeferredComponent delay={2000}><InstallBannerLazy /></DeferredComponent>
@@ -153,6 +155,7 @@ const App = () => (
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                </Suspense>
+              </PermissionRequestProvider>
             </CartProvider>
           </AuthProvider>
           </LanguageProvider>

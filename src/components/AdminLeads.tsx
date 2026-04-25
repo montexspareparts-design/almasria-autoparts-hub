@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePermissionRequest } from "@/hooks/usePermissionRequest";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -116,7 +117,8 @@ const clientTypeTier: Record<string, "retail" | "wholesale_tier1"> = {
 };
 
 const AdminLeads = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
+  const { requestPermission } = usePermissionRequest();
   const { toast } = useToast();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -539,14 +541,27 @@ const AdminLeads = () => {
       });
 
       const serverMsg = await extractFunctionErrorMessage(error as EdgeFunctionErrorLike | null, data);
+      const isPermissionError =
+        !isAdmin &&
+        (typeof serverMsg === "string" &&
+          (serverMsg.includes("صلاحية") || serverMsg.includes("Forbidden") || serverMsg.includes("Unauthorized") || serverMsg.includes("403")));
 
       if (error || data?.error) {
-        toast({
-          title: "خطأ",
-          description: serverMsg || "فشل إنشاء الحساب",
-          variant: "destructive",
-        });
-        await logAttempt({ type: "create", status: "failure", lead, errorMessage: serverMsg || "فشل إنشاء الحساب" });
+        if (isPermissionError) {
+          requestPermission({
+            actionType: "create_client_account",
+            actionDescription: `إنشاء حساب للعميل: ${lead.name} (${lead.phone})`,
+            contextData: { lead_id: lead.id, erp_customer_code: lead.erp_customer_code },
+          });
+          await logAttempt({ type: "create", status: "failure", lead, errorMessage: "permission_request_sent" });
+        } else {
+          toast({
+            title: "خطأ",
+            description: serverMsg || "فشل إنشاء الحساب",
+            variant: "destructive",
+          });
+          await logAttempt({ type: "create", status: "failure", lead, errorMessage: serverMsg || "فشل إنشاء الحساب" });
+        }
       } else if (data?.success) {
         setCredentials({ username: data.username, password: data.password, phone: lead.phone });
         setLeadCredentials(prev => ({ ...prev, [lead.id]: { username: lead.phone.replace(/\D/g, ""), password: data.password } }));
@@ -630,12 +645,24 @@ const AdminLeads = () => {
           await registerClient(lead);
           return;
         }
-        toast({
-          title: "خطأ",
-          description: serverMsg || "فشل إعادة تعيين كلمة المرور",
-          variant: "destructive",
-        });
-        await logAttempt({ type: "reset_password", status: "failure", lead, errorMessage: serverMsg || "فشل إعادة تعيين كلمة المرور" });
+        const isPermissionError =
+          !isAdmin &&
+          (serverMsg.includes("صلاحية") || serverMsg.includes("Forbidden") || serverMsg.includes("Unauthorized") || serverMsg.includes("403"));
+        if (isPermissionError) {
+          requestPermission({
+            actionType: "reset_client_password",
+            actionDescription: `إعادة تعيين كلمة مرور العميل: ${lead.name} (${lead.phone})`,
+            contextData: { lead_id: lead.id, erp_customer_code: lead.erp_customer_code },
+          });
+          await logAttempt({ type: "reset_password", status: "failure", lead, errorMessage: "permission_request_sent" });
+        } else {
+          toast({
+            title: "خطأ",
+            description: serverMsg || "فشل إعادة تعيين كلمة المرور",
+            variant: "destructive",
+          });
+          await logAttempt({ type: "reset_password", status: "failure", lead, errorMessage: serverMsg || "فشل إعادة تعيين كلمة المرور" });
+        }
       } else {
         setCredentials({ username: lead.phone, password: newPassword, phone: lead.phone });
         setLeadCredentials(prev => ({ ...prev, [lead.id]: { username: cleanPhone, password: newPassword } }));
