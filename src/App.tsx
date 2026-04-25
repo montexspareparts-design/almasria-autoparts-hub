@@ -93,6 +93,7 @@ const App = () => (
           <LanguageProvider>
           <AuthProvider>
             <CartProvider>
+              <PermissionRequestProvider>
               <SEOHead />
               <PageVisitTracker />
               <DeferredComponent delay={2000}><InstallBannerLazy /></DeferredComponent>
