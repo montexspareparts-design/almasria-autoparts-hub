@@ -360,6 +360,7 @@ const StaffHome = () => {
             email,
             pages: v.pages,
             last_visit: v.last_visit,
+            first_visit: v.first_visit,
             first_path: v.first_path,
             referrer: v.referrer,
           };
