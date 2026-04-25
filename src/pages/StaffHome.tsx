@@ -1943,17 +1943,63 @@ const StaffHome = () => {
             <DialogTitle className="flex items-center gap-2 text-base">
               <Flame className="w-5 h-5 text-red-600" />
               Leads ساخنة
-              <Badge variant="secondary" className="text-xs">{hotLeads.length}</Badge>
+              <Badge variant="secondary" className="text-xs">{visibleLeads.length}</Badge>
+              {visibleLeads.length !== hotLeads.length && (
+                <span className="text-[10px] text-muted-foreground font-normal" title="العدد بعد الفلاتر من إجمالي الـLeads">
+                  من أصل {hotLeads.length}
+                </span>
+              )}
             </DialogTitle>
             <DialogDescription className="text-xs">
               العملاء اللي ظهر منهم نية شراء قوية (بحث + معاينة + إضافة للسلة) ولسه ما اشتروش — رتبهم بالأولوية وكلّمهم.
             </DialogDescription>
           </DialogHeader>
-          {hotLeads.length === 0 ? (
-            <div className="text-center py-10 text-sm text-muted-foreground">مفيش Leads ساخنة حالياً</div>
+
+          {/* Sort + filter bar */}
+          <div className="flex flex-wrap items-center gap-2 pt-2 pb-1 border-b">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Filter className="w-3.5 h-3.5" />
+              فرز/فلترة:
+            </div>
+            <Select value={leadsSort} onValueChange={(v) => setLeadsSort(v as any)}>
+              <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="score">الأعلى نقاطاً</SelectItem>
+                <SelectItem value="recent">الأحدث نشاطاً</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={leadsTierFilter} onValueChange={(v) => setLeadsTierFilter(v as any)}>
+              <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل التصنيفات</SelectItem>
+                <SelectItem value="hot">🟢 جاهز يشتري</SelectItem>
+                <SelectItem value="warm">🟡 مهتم</SelectItem>
+                <SelectItem value="cold">🔴 بارد</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={leadsContactFilter} onValueChange={(v) => setLeadsContactFilter(v as any)}>
+              <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل العملاء</SelectItem>
+                <SelectItem value="with_phone">عنده هاتف</SelectItem>
+                <SelectItem value="no_phone">بدون هاتف</SelectItem>
+              </SelectContent>
+            </Select>
+            {(leadsSort !== "score" || leadsTierFilter !== "all" || leadsContactFilter !== "all") && (
+              <Button size="sm" variant="ghost" className="h-8 text-xs"
+                onClick={() => { setLeadsSort("score"); setLeadsTierFilter("all"); setLeadsContactFilter("all"); }}>
+                مسح
+              </Button>
+            )}
+          </div>
+
+          {visibleLeads.length === 0 ? (
+            <div className="text-center py-10 text-sm text-muted-foreground">
+              {hotLeads.length === 0 ? "مفيش Leads ساخنة حالياً" : "مفيش Leads مطابقة للفلاتر"}
+            </div>
           ) : (
             <div className="space-y-2 mt-2">
-              {hotLeads.map((l) => {
+              {visibleLeads.map((l) => {
                 const at = new Date(l.last_activity).toLocaleString("ar-EG", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
                 return (
                   <div key={l.user_id} className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-red-500/5 hover:bg-red-500/10 transition flex-wrap">
