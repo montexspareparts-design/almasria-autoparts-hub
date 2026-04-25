@@ -1896,6 +1896,14 @@ const StaffHome = () => {
               <Filter className="w-3.5 h-3.5" />
               فرز/فلترة:
             </div>
+            <Select value={cartRange} onValueChange={(v) => setCartRange(v as DialogRangeKey)}>
+              <SelectTrigger className="h-8 w-[140px] text-xs" title="نطاق الوقت لهذا الـDialog فقط — مستقل عن مؤشرات الـKPI"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="today">اليوم</SelectItem>
+                <SelectItem value="7d">آخر 7 أيام</SelectItem>
+                <SelectItem value="month">هذا الشهر</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={cartSort} onValueChange={(v) => setCartSort(v as any)}>
               <SelectTrigger className="h-8 w-[160px] text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>
