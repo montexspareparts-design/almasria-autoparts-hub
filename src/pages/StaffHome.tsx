@@ -173,10 +173,10 @@ const StaffHome = () => {
   // Free-text search inside each dialog (matches name / phone / email).
   // Phone matching ignores formatting (spaces, dashes, +20…), name matching
   // ignores Arabic diacritics & case. See normalizeSearch / matchesContactQuery.
-  const [visitorsSearch, setVisitorsSearch] = useState("");
-  const [cartSearch, setCartSearch] = useState("");
-  const [buyersSearch, setBuyersSearch] = useState("");
-  const [leadsSearch, setLeadsSearch] = useState("");
+  const [visitorsSearch, setVisitorsSearch] = useSessionPersistedState<string>("staffHome:visitors:search", "");
+  const [cartSearch, setCartSearch] = useSessionPersistedState<string>("staffHome:cart:search", "");
+  const [buyersSearch, setBuyersSearch] = useSessionPersistedState<string>("staffHome:buyers:search", "");
+  const [leadsSearch, setLeadsSearch] = useSessionPersistedState<string>("staffHome:leads:search", "");
   // Per-dialog time range (today / 7d / month). Each Dialog can override the
   // global KPI range without forcing a refetch — lists are pre-fetched at the
   // widest window (this month) and filtered client-side.
