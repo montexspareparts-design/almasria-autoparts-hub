@@ -505,6 +505,43 @@ const StaffDailyReport = () => {
   const missingRequired = computeMissingRequired(dynQuestions, dynAnswers);
   const missingCount = missingRequired.length;
 
+  // If the staff already submitted today, hide the form and show a clean confirmation card.
+  if (submittedAt) {
+    const submittedTime = new Date(submittedAt).toLocaleTimeString("ar-EG", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const submittedDate = new Date(submittedAt).toLocaleDateString("ar-EG", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    });
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4 }}
+      >
+        <Card className="p-6 md:p-8 border-2 border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-card to-card text-center">
+          <div className="mx-auto w-16 h-16 rounded-full bg-emerald-500/15 flex items-center justify-center mb-4">
+            <CheckCircle2 className="w-9 h-9 text-emerald-600" />
+          </div>
+          <h2 className="text-lg md:text-xl font-bold mb-1.5">تم تقديم تقرير اليوم ✅</h2>
+          <p className="text-sm text-muted-foreground mb-1">
+            شكراً لك! تم استلام تقريرك بنجاح.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {submittedDate} — الساعة {submittedTime}
+          </p>
+          <Badge className="mt-4 bg-emerald-500/10 text-emerald-600 border-emerald-500/30 gap-1">
+            <Sparkles className="w-3 h-3" />
+            شوفنا في تقرير بكرة
+          </Badge>
+        </Card>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
