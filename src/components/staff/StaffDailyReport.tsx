@@ -137,8 +137,20 @@ const StaffDailyReport = () => {
             options: Array.isArray(q.options) ? q.options : [],
             placeholder: q.placeholder,
             is_required: q.is_required,
+            sort_order: q.sort_order ?? 0,
+            target_scope: (q.target_scope ?? "all") as QScope,
+            target_team_ids: Array.isArray(q.target_team_ids) ? q.target_team_ids : [],
           }))
         );
+      }
+
+      if (tmRes.data) {
+        const ts: TeamInfo[] = [];
+        tmRes.data.forEach((row: any) => {
+          const t = row.teams;
+          if (t) ts.push({ id: t.id, name: t.name, color: t.color ?? null });
+        });
+        setTeams(ts);
       }
 
       if (aRes.data) {
