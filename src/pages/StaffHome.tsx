@@ -64,14 +64,9 @@ const StaffHome = () => {
   const { user, isAdmin, isModerator, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [kpis, setKpis] = useState({
-    visitors: 0,
-    engagedVisitors: 0,
-    signups: 0,
-    addedToCart: 0,
-    purchased: 0,
-    hotLeads: 0,
-  });
+  // Raw KPI inputs only — actual displayed numbers are computed via memos that
+  // react to the All/Only-Customers toggle for full consistency with visibleVisitorsCount.
+  const [hotLeadsCount, setHotLeadsCount] = useState(0);
   const [hotLeads, setHotLeads] = useState<HotLead[]>([]);
   const [range, setRange] = useState<RangeKey>("today");
   const [newSignups, setNewSignups] = useState<Array<{ user_id: string; full_name: string | null; phone: string | null; email: string | null; created_at: string; duplicates?: number; duplicateIds?: string[] }>>([]);
