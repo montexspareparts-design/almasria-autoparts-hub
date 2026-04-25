@@ -657,6 +657,63 @@ const StaffHome = () => {
               </button>
             </div>
           </div>
+
+          {/* Viewed-KPI time-basis selector — controls how "تمت معاينة X / Y" is computed */}
+          <div className="flex items-center justify-end gap-2 mb-3 flex-wrap">
+            <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+              <Eye className="w-3.5 h-3.5" />
+              أساس "تمت المعاينة":
+            </span>
+            <div
+              role="tablist"
+              aria-label="أساس احتساب المعاينة"
+              className="inline-flex items-center bg-muted/60 rounded-lg p-0.5 border border-border/50"
+            >
+              <button
+                role="tab"
+                aria-selected={viewedBasis === "range"}
+                onClick={() => setViewedBasis("range")}
+                title="تُحتسب المعاينة فقط لو حصلت ضمن نفس النطاق المختار (اليوم / آخر 7 أيام)"
+                className={cn(
+                  "px-2.5 py-1 text-[11px] font-medium rounded-md transition-all",
+                  viewedBasis === "range"
+                    ? "bg-background shadow-sm text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                نطاق KPI
+              </button>
+              <button
+                role="tab"
+                aria-selected={viewedBasis === "event_day"}
+                onClick={() => setViewedBasis("event_day")}
+                title="تُحتسب المعاينة فقط لو حصلت في نفس يوم زيارة العميل"
+                className={cn(
+                  "px-2.5 py-1 text-[11px] font-medium rounded-md transition-all",
+                  viewedBasis === "event_day"
+                    ? "bg-background shadow-sm text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                يوم الزيارة
+              </button>
+              <button
+                role="tab"
+                aria-selected={viewedBasis === "all_time"}
+                onClick={() => setViewedBasis("all_time")}
+                title="أي معاينة سابقة تُحتسب بغض النظر عن التاريخ"
+                className={cn(
+                  "px-2.5 py-1 text-[11px] font-medium rounded-md transition-all",
+                  viewedBasis === "all_time"
+                    ? "bg-background shadow-sm text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                أي وقت
+              </button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             {kpiCards.map((kpi, i) => (
               <button
