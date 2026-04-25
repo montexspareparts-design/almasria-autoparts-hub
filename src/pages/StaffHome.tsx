@@ -540,13 +540,15 @@ const StaffHome = () => {
 
   // Count after the All/Only-Customers toggle (staff exclusion only — independent of date/type/viewed filters).
   // This is what the badge in the dialog title shows so users see the effect of the toggle live.
+  // Visitor count shown in the dialog title badge — uses the SAME staff exclusion
+  // AND the same KPI range as the visitors KPI card, so badge ≡ kpis.visitors.
   const visibleVisitorsCount = useMemo(() => {
-    if (includeStaff) return visitorsList.length;
-    return visitorsList.reduce(
-      (acc, v) => (v.user_id && staffIdsSet.has(v.user_id) ? acc : acc + 1),
-      0
-    );
-  }, [visitorsList, includeStaff, staffIdsSet]);
+    return visitorsList.reduce((acc, v) => {
+      if (!includeStaff && v.user_id && staffIdsSet.has(v.user_id)) return acc;
+      if (new Date(v.last_visit).getTime() < startMs) return acc;
+      return acc + 1;
+    }, 0);
+  }, [visitorsList, includeStaff, staffIdsSet, startMs]);
 
   // Helpers to apply the same staff-exclusion + range filters everywhere KPIs are derived
   const isStaffVisitor = (uid: string | null | undefined) => !!uid && staffIdsSet.has(uid);
