@@ -1209,12 +1209,22 @@ const StaffHome = () => {
                 <SelectItem value="all">الكل (يشمل الموظفين)</SelectItem>
               </SelectContent>
             </Select>
-            {(visitorTypeFilter !== "all" || visitorDateFilter !== "all" || visitorViewedFilter !== "all") && (
+            <Button
+              size="sm"
+              variant={visitorEngagedOnly ? "default" : "outline"}
+              className="h-8 text-xs gap-1"
+              onClick={() => setVisitorEngagedOnly((p) => !p)}
+              title="إظهار الزوار المتفاعلين فقط (مدة ≥15ث أو ≥2 صفحة)"
+            >
+              <Activity className="w-3.5 h-3.5" />
+              متفاعلين فقط
+            </Button>
+            {(visitorTypeFilter !== "all" || visitorDateFilter !== "all" || visitorViewedFilter !== "all" || visitorEngagedOnly) && (
               <Button
                 size="sm"
                 variant="ghost"
                 className="h-8 text-xs"
-                onClick={() => { setVisitorTypeFilter("all"); setVisitorDateFilter("all"); setVisitorViewedFilter("all"); }}
+                onClick={() => { setVisitorTypeFilter("all"); setVisitorDateFilter("all"); setVisitorViewedFilter("all"); setVisitorEngagedOnly(false); }}
               >
                 مسح الفلاتر
               </Button>
@@ -1227,20 +1237,20 @@ const StaffHome = () => {
             const yesterdayStart = new Date(todayStart); yesterdayStart.setDate(yesterdayStart.getDate() - 1);
             const weekStart = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
             const filtered = visitorsList.filter((v) => {
-              // staff exclusion (default). Toggle "All" lets admins review staff visits too.
               if (!includeStaff && v.user_id && staffIdsSet.has(v.user_id)) return false;
-              // type
               if (visitorTypeFilter === "registered" && !v.user_id) return false;
               if (visitorTypeFilter === "anon" && v.user_id) return false;
-              // date
               const t = new Date(v.last_visit).getTime();
               if (visitorDateFilter === "today" && t < todayStart.getTime()) return false;
               if (visitorDateFilter === "yesterday" && (t < yesterdayStart.getTime() || t >= todayStart.getTime())) return false;
               if (visitorDateFilter === "week" && t < weekStart.getTime()) return false;
-              // viewed
               const isViewed = (v.user_id && viewedKeys.has(`u:${v.user_id}`)) || (v.session_key && viewedKeys.has(`s:${v.session_key}`));
               if (visitorViewedFilter === "viewed" && !isViewed) return false;
               if (visitorViewedFilter === "not_viewed" && isViewed) return false;
+              if (visitorEngagedOnly) {
+                const dwell = v.first_visit ? (new Date(v.last_visit).getTime() - new Date(v.first_visit).getTime()) : 0;
+                if (!(dwell >= ENGAGED_DWELL_MS || v.pages >= 2)) return false;
+              }
               return true;
             });
 
