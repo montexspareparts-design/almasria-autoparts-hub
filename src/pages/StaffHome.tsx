@@ -36,6 +36,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useSessionPersistedState } from "@/hooks/useSessionPersistedState";
+import StaffDailyReport from "@/components/staff/StaffDailyReport";
 
 // Normalize a string for case-insensitive substring matching.
 // Strips Arabic diacritics + tatweel and lowercases the rest so "محمد" matches
@@ -1101,6 +1102,9 @@ const StaffHome = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+        {/* Daily Report */}
+        <StaffDailyReport />
+
         {/* KPI Cards */}
         <section>
           <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
