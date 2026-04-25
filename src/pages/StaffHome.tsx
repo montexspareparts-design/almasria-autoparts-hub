@@ -686,10 +686,11 @@ const StaffHome = () => {
         icon: Flame,
         color: "text-red-600",
         bg: "from-red-500/15 to-orange-500/10",
-        onClick: () => navigate("/admin?section=customer-intel"),
+        onClick: () => setHotLeadsOpen(true),
+        subText: hotLeads.length > 0 ? `${hotLeads.filter(l => l.tier === "hot").length} hot · ${hotLeads.filter(l => l.tier === "warm").length} warm` : undefined,
       },
     ],
-    [kpis, navigate, rangeSuffix, viewedVisitorsCount, viewedBasis, viewedTodayVisitors]
+    [kpis, navigate, rangeSuffix, viewedVisitorsCount, viewedBasis, viewedTodayVisitors, cartList, buyersList, hotLeads]
   );
 
   const tierBadge = (tier: HotLead["tier"]) => {
