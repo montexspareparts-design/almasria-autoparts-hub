@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ClipboardList, CheckCircle2, AlertCircle, Save, Sparkles, Clock, HelpCircle, Users2, History as HistoryIcon, ChevronDown } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 type QType = "text" | "textarea" | "number" | "choice" | "boolean";
 type QScope = "all" | "role" | "team" | "users";
@@ -181,8 +182,22 @@ const StaffDailyReport = () => {
     return () => clearInterval(interval);
   }, [user, today]);
 
-  const restoreYesterday = async (mode: "kpis" | "dynamic" | "both") => {
+  // Restore preview dialog state
+  type RestoreMode = "kpis" | "dynamic" | "both";
+  const [restorePreview, setRestorePreview] = useState<{
+    mode: RestoreMode;
+    hasReport: boolean;
+    activeMatchedCount: number; // dyn answers whose question IDs are still active today
+    totalYesterdayAnswers: number;
+    skippedInactive: number;
+    yReportData: any;
+    yAnswersData: any[];
+  } | null>(null);
+  const [restoreLoading, setRestoreLoading] = useState<RestoreMode | null>(null);
+
+  const previewRestore = async (mode: RestoreMode) => {
     if (!user) return;
+    setRestoreLoading(mode);
     const yest = new Date();
     yest.setDate(yest.getDate() - 1);
     const yDate = yest.toISOString().split("T")[0];
@@ -207,26 +222,54 @@ const StaffDailyReport = () => {
             .eq("report_date", yDate)
         : Promise.resolve({ data: [] } as any),
     ]);
+    setRestoreLoading(null);
 
     const hasReport = !!yReport.data;
-    const hasAnswers = !!(yAnswers.data && yAnswers.data.length);
+    const yAnswersArr: any[] = yAnswers.data || [];
+    const activeQIds = new Set(dynQuestions.map((q) => q.id));
+    const matched = yAnswersArr.filter((a) => activeQIds.has(a.question_id));
+    const activeMatchedCount = matched.length;
+    const skippedInactive = yAnswersArr.length - activeMatchedCount;
 
-    if ((wantKpis && !hasReport && !wantDyn) || (wantDyn && !hasAnswers && !wantKpis) || (wantKpis && wantDyn && !hasReport && !hasAnswers)) {
+    if (
+      (mode === "kpis" && !hasReport) ||
+      (mode === "dynamic" && activeMatchedCount === 0) ||
+      (mode === "both" && !hasReport && activeMatchedCount === 0)
+    ) {
       toast({
         title: "مفيش بيانات لاسترجاعها",
         description:
           mode === "kpis"
             ? "مفيش KPIs محفوظة من أمس"
             : mode === "dynamic"
-              ? "مفيش إجابات أسئلة إضافية من أمس"
+              ? skippedInactive > 0
+                ? `كل إجابات الأسئلة الإضافية لأمس (${skippedInactive}) مرتبطة بأسئلة لم تعد نشطة`
+                : "مفيش إجابات أسئلة إضافية من أمس"
               : "مفيش تقرير أمس أصلاً",
         variant: "destructive",
       });
       return;
     }
 
-    if (wantKpis && yReport.data) {
-      const d = yReport.data;
+    setRestorePreview({
+      mode,
+      hasReport,
+      activeMatchedCount,
+      totalYesterdayAnswers: yAnswersArr.length,
+      skippedInactive,
+      yReportData: yReport.data,
+      yAnswersData: matched,
+    });
+  };
+
+  const confirmRestore = () => {
+    if (!restorePreview) return;
+    const { mode, yReportData, yAnswersData, activeMatchedCount, hasReport } = restorePreview;
+    const wantKpis = mode === "kpis" || mode === "both";
+    const wantDyn = mode === "dynamic" || mode === "both";
+
+    if (wantKpis && yReportData) {
+      const d = yReportData;
       setReport((r) => ({
         ...r,
         customers_contacted: d.customers_contacted ?? 0,
@@ -242,31 +285,28 @@ const StaffDailyReport = () => {
       }));
     }
 
-    let restoredDyn = 0;
-    if (wantDyn && yAnswers.data && yAnswers.data.length) {
-      const activeQIds = new Set(dynQuestions.map((q) => q.id));
+    if (wantDyn && yAnswersData.length) {
       const map: Record<string, DynAnswer> = { ...dynAnswers };
-      yAnswers.data.forEach((a: any) => {
-        if (!activeQIds.has(a.question_id)) return;
+      yAnswersData.forEach((a: any) => {
         map[a.question_id] = {
           text: a.answer_text ?? undefined,
           number: a.answer_number != null ? Number(a.answer_number) : undefined,
           boolean: a.answer_boolean ?? undefined,
           choice: a.answer_choice ?? undefined,
         };
-        restoredDyn++;
       });
       setDynAnswers(map);
     }
 
     const parts: string[] = [];
     if (wantKpis && hasReport) parts.push("KPIs والنصوص");
-    if (wantDyn && restoredDyn > 0) parts.push(`${restoredDyn} سؤال إضافي`);
+    if (wantDyn && activeMatchedCount > 0) parts.push(`${activeMatchedCount} سؤال إضافي`);
 
     toast({
       title: "✅ تم الاسترجاع من أمس",
       description: `تم استرجاع ${parts.join(" + ")} — تقدر تعدّل أي قيمة قبل الحفظ`,
     });
+    setRestorePreview(null);
   };
 
   const handleSubmit = async () => {
@@ -486,21 +526,21 @@ const StaffDailyReport = () => {
               <DropdownMenuContent align="end" className="w-64">
                 <DropdownMenuLabel className="text-xs">اختر اللي تحب تسترجعه</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => restoreYesterday("both")} className="gap-2">
+                <DropdownMenuItem onClick={() => previewRestore("both")} className="gap-2">
                   <Sparkles className="w-3.5 h-3.5 text-primary" />
                   <div className="flex-1">
                     <div className="text-xs font-semibold">الاتنين معاً</div>
                     <div className="text-[10px] text-muted-foreground">KPIs + الأسئلة الإضافية</div>
                   </div>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => restoreYesterday("kpis")} className="gap-2">
+                <DropdownMenuItem onClick={() => previewRestore("kpis")} className="gap-2">
                   <ClipboardList className="w-3.5 h-3.5 text-emerald-600" />
                   <div className="flex-1">
                     <div className="text-xs font-semibold">KPIs والنصوص فقط</div>
                     <div className="text-[10px] text-muted-foreground">الأرقام والملاحظات الأساسية</div>
                   </div>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => restoreYesterday("dynamic")} className="gap-2">
+                <DropdownMenuItem onClick={() => previewRestore("dynamic")} className="gap-2">
                   <HelpCircle className="w-3.5 h-3.5 text-blue-600" />
                   <div className="flex-1">
                     <div className="text-xs font-semibold">الأسئلة الإضافية فقط</div>
@@ -697,6 +737,65 @@ const StaffDailyReport = () => {
           </Button>
         </div>
       </Card>
+
+      <AlertDialog open={!!restorePreview} onOpenChange={(o) => !o && setRestorePreview(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <HistoryIcon className="w-5 h-5 text-primary" />
+              تأكيد استرجاع بيانات أمس
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm">
+                <p className="text-foreground">
+                  هتستبدل القيم الحالية ببيانات أمس. تقدر تعدّل أي قيمة قبل ما تضغط حفظ.
+                </p>
+                {restorePreview && (
+                  <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+                    {(restorePreview.mode === "kpis" || restorePreview.mode === "both") && (
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="flex items-center gap-1.5">
+                          <ClipboardList className="w-3.5 h-3.5 text-emerald-600" />
+                          KPIs والنصوص
+                        </span>
+                        <Badge variant={restorePreview.hasReport ? "secondary" : "outline"} className="text-[10px]">
+                          {restorePreview.hasReport ? "✓ متوفّرة" : "غير موجودة"}
+                        </Badge>
+                      </div>
+                    )}
+                    {(restorePreview.mode === "dynamic" || restorePreview.mode === "both") && (
+                      <>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="flex items-center gap-1.5">
+                            <HelpCircle className="w-3.5 h-3.5 text-blue-600" />
+                            أسئلة إضافية مطابقة (نشطة اليوم)
+                          </span>
+                          <Badge className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
+                            {restorePreview.activeMatchedCount} سؤال
+                          </Badge>
+                        </div>
+                        {restorePreview.skippedInactive > 0 && (
+                          <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1.5 border-t border-dashed">
+                            <span className="flex items-center gap-1.5">
+                              <AlertCircle className="w-3 h-3" />
+                              تم تجاهل أسئلة لم تعد نشطة
+                            </span>
+                            <span>{restorePreview.skippedInactive}</span>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmRestore}>استرجاع</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </motion.div>
   );
 };
