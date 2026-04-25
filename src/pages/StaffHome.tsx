@@ -75,8 +75,10 @@ const StaffHome = () => {
   const [visitorsOpen, setVisitorsOpen] = useState(false);
   const [visitorsList, setVisitorsList] = useState<Array<{ user_id: string | null; session_key: string | null; full_name: string | null; phone: string | null; email: string | null; pages: number; last_visit: string; first_visit?: string; first_path?: string | null; referrer?: string | null; searches?: string[] }>>([]);
   const [viewedKeys, setViewedKeys] = useState<Set<string>>(new Set());
-  // Per-key earliest view timestamp — used to compute "viewed" under different time-basis modes.
+  // Per-key LAST view timestamp — used by date-based "viewed" basis modes.
   const [viewedAtMap, setViewedAtMap] = useState<Map<string, string>>(new Map());
+  // Per-key FIRST view timestamp — used when viewedAnchor === "first".
+  const [viewedFirstAtMap, setViewedFirstAtMap] = useState<Map<string, string>>(new Map());
   // All session views performed TODAY by ANY staff member — for the "viewed today" dialog
   // Map key = "u:<user_id>" or "s:<session_key>", value = aggregated view info
   const [todayViewsMap, setTodayViewsMap] = useState<Map<string, { staffIds: Set<string>; viewCount: number; lastViewedAt: string }>>(new Map());
