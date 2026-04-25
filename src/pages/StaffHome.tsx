@@ -765,6 +765,55 @@ const StaffHome = () => {
     [kpis, navigate, rangeSuffix, viewedVisitorsCount, viewedBasis, viewedTodayVisitors, cartList, buyersList, hotLeads]
   );
 
+  // ──────────────────────────────────────────────────────────────────────────
+  // Filtered + sorted lists for the Cart / Buyers / Leads dialogs.
+  // Each memo applies the dialog-local filters then sorts — keeping the badge
+  // count and rendered list in lockstep just like the visitors dialog.
+  // ──────────────────────────────────────────────────────────────────────────
+
+  const visibleCart = useMemo(() => {
+    const filtered = cartList.filter((c) => {
+      if (cartContactFilter === "with_phone" && !c.phone) return false;
+      if (cartContactFilter === "no_phone" && c.phone) return false;
+      return true;
+    });
+    return [...filtered].sort((a, b) => {
+      if (cartSort === "items") return (b.items || 0) - (a.items || 0);
+      return (b.last_added || "").localeCompare(a.last_added || "");
+    });
+  }, [cartList, cartContactFilter, cartSort]);
+
+  const visibleBuyers = useMemo(() => {
+    const known = new Set(["pending", "confirmed", "shipped", "delivered", "cancelled"]);
+    const filtered = buyersList.filter((b) => {
+      if (buyersContactFilter === "with_phone" && !b.phone) return false;
+      if (buyersContactFilter === "no_phone" && b.phone) return false;
+      if (buyersStatusFilter !== "all") {
+        if (buyersStatusFilter === "other") {
+          if (known.has(b.status)) return false;
+        } else if (b.status !== buyersStatusFilter) return false;
+      }
+      return true;
+    });
+    return [...filtered].sort((a, b) => {
+      if (buyersSort === "amount") return (b.total_amount || 0) - (a.total_amount || 0);
+      return (b.created_at || "").localeCompare(a.created_at || "");
+    });
+  }, [buyersList, buyersContactFilter, buyersStatusFilter, buyersSort]);
+
+  const visibleLeads = useMemo(() => {
+    const filtered = hotLeads.filter((l) => {
+      if (leadsContactFilter === "with_phone" && !l.phone) return false;
+      if (leadsContactFilter === "no_phone" && l.phone) return false;
+      if (leadsTierFilter !== "all" && l.tier !== leadsTierFilter) return false;
+      return true;
+    });
+    return [...filtered].sort((a, b) => {
+      if (leadsSort === "recent") return (b.last_activity || "").localeCompare(a.last_activity || "");
+      return (b.score || 0) - (a.score || 0);
+    });
+  }, [hotLeads, leadsContactFilter, leadsTierFilter, leadsSort]);
+
   const tierBadge = (tier: HotLead["tier"]) => {
     if (tier === "hot")
       return (
