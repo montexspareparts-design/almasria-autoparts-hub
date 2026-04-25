@@ -377,6 +377,73 @@ const StaffDailyReport = () => {
           {textField("general_notes", "ملاحظات عامة", "أي حاجة تاني تحب تنوّه عنها للأدمن")}
         </div>
 
+        {/* Dynamic admin-defined questions */}
+        {dynQuestions.length > 0 && (
+          <div className="mt-5 pt-5 border-t border-dashed border-primary/30">
+            <div className="flex items-center gap-2 mb-3">
+              <HelpCircle className="w-4 h-4 text-primary" />
+              <h3 className="text-sm font-bold">أسئلة إضافية من الإدارة</h3>
+              <Badge variant="outline" className="text-[10px]">{dynQuestions.length}</Badge>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {dynQuestions.map((q) => {
+                const a = dynAnswers[q.id] || {};
+                const setA = (patch: DynAnswer) =>
+                  setDynAnswers((prev) => ({ ...prev, [q.id]: { ...prev[q.id], ...patch } }));
+                return (
+                  <div key={q.id} className="space-y-1.5">
+                    <Label className="text-xs font-semibold flex items-center gap-1.5">
+                      {q.question_text}
+                      {q.is_required && <span className="text-destructive">*</span>}
+                    </Label>
+                    {q.question_type === "text" && (
+                      <Input
+                        value={a.text ?? ""}
+                        onChange={(e) => setA({ text: e.target.value })}
+                        placeholder={q.placeholder ?? ""}
+                      />
+                    )}
+                    {q.question_type === "textarea" && (
+                      <Textarea
+                        value={a.text ?? ""}
+                        onChange={(e) => setA({ text: e.target.value })}
+                        placeholder={q.placeholder ?? ""}
+                        rows={2}
+                        className="resize-none text-sm"
+                      />
+                    )}
+                    {q.question_type === "number" && (
+                      <Input
+                        type="number"
+                        value={a.number ?? ""}
+                        onChange={(e) => setA({ number: e.target.value === "" ? undefined : Number(e.target.value) })}
+                        placeholder={q.placeholder ?? ""}
+                        className="font-bold tabular-nums"
+                      />
+                    )}
+                    {q.question_type === "boolean" && (
+                      <div className="flex items-center gap-2 h-10">
+                        <Switch checked={!!a.boolean} onCheckedChange={(v) => setA({ boolean: v })} />
+                        <span className="text-sm">{a.boolean ? "نعم" : "لا"}</span>
+                      </div>
+                    )}
+                    {q.question_type === "choice" && (
+                      <Select value={a.choice ?? ""} onValueChange={(v) => setA({ choice: v })}>
+                        <SelectTrigger><SelectValue placeholder="اختر..." /></SelectTrigger>
+                        <SelectContent>
+                          {q.options.map((opt) => (
+                            <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Submit */}
         <div className="mt-5 flex items-center justify-between gap-3 pt-4 border-t border-border/50">
           <p className="text-xs text-muted-foreground">
