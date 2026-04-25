@@ -640,6 +640,45 @@ const StaffHome = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visitorsList, viewedKeys, viewedAtMap, viewedFirstAtMap, includeStaff, staffIdsSet, viewedBasis, viewedAnchor, range]);
 
+  // Side-by-side comparison: how many visitors qualify under "last view" vs
+  // "first view" anchors — using the SAME range, basis, and staff filter as
+  // the active KPI. Helps staff see at a glance whether their choice of anchor
+  // is hiding/revealing visits.
+  const viewedAnchorBreakdown = useMemo(() => {
+    // Reuses the same date logic as isViewedUnderBasis but parameterized by anchor.
+    const start = range === "today" ? todayISO() : sevenDaysISO();
+    const countFor = (anchor: "last" | "first") => {
+      const anchorMap = anchor === "first" ? viewedFirstAtMap : viewedAtMap;
+      let n = 0;
+      for (const v of visitorsList) {
+        if (!includeStaff && v.user_id && staffIdsSet.has(v.user_id)) continue;
+        const keys: string[] = [];
+        if (v.user_id) keys.push(`u:${v.user_id}`);
+        if (v.session_key) keys.push(`s:${v.session_key}`);
+        if (keys.length === 0) continue;
+        if (!keys.some((k) => viewedKeys.has(k))) continue;
+        if (viewedBasis === "all_time") { n++; continue; }
+
+        let viewedAt: string | null = null;
+        for (const k of keys) {
+          const t = anchorMap.get(k);
+          if (!t) continue;
+          if (!viewedAt) { viewedAt = t; continue; }
+          if (anchor === "first" ? t < viewedAt : t > viewedAt) viewedAt = t;
+        }
+        if (!viewedAt) continue;
+        if (viewedBasis === "range") {
+          if (viewedAt >= start) n++;
+        } else if (viewedBasis === "event_day") {
+          if (viewedOnVisitDay(viewedAt, v.last_visit)) n++;
+        }
+      }
+      return n;
+    };
+    return { last: countFor("last"), first: countFor("first") };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visitorsList, viewedKeys, viewedAtMap, viewedFirstAtMap, includeStaff, staffIdsSet, viewedBasis, range]);
+
   // Helpers shared by all KPI memos so badges and cards stay in lockstep
   const isStaffVisitor = (uid: string | null | undefined) => !!uid && staffIdsSet.has(uid);
   const startMs = useMemo(
@@ -1194,6 +1233,32 @@ const StaffHome = () => {
               </button>
             </div>
           </div>
+
+          {/* Side-by-side count: how many visitors qualify under each anchor
+              for the SAME range/basis/staff filter. Helps staff understand
+              the impact of switching the anchor without toggling back-and-forth. */}
+          {viewedBasis !== "all_time" && (
+            <div className="flex flex-wrap items-center gap-2 mt-2 text-[11px]">
+              <span className="text-muted-foreground">مقارنة المرسي:</span>
+              <Badge
+                variant={viewedAnchor === "last" ? "default" : "outline"}
+                className="font-mono tabular-nums"
+              >
+                آخر معاينة · {viewedAnchorBreakdown.last}
+              </Badge>
+              <Badge
+                variant={viewedAnchor === "first" ? "default" : "outline"}
+                className="font-mono tabular-nums"
+              >
+                أول معاينة · {viewedAnchorBreakdown.first}
+              </Badge>
+              {viewedAnchorBreakdown.last !== viewedAnchorBreakdown.first && (
+                <span className="text-muted-foreground/80">
+                  (فرق {Math.abs(viewedAnchorBreakdown.last - viewedAnchorBreakdown.first)} زائر)
+                </span>
+              )}
+            </div>
+          )}
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             {kpiCards.map((kpi, i) => (
