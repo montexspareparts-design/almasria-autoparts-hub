@@ -901,7 +901,8 @@ const StaffHome = () => {
                 role="tab"
                 aria-selected={viewedBasis === "event_day"}
                 onClick={() => setViewedBasis("event_day")}
-                title="تُحتسب المعاينة فقط لو حصلت في نفس يوم زيارة العميل"
+                title="المطابقة حسب اليوم التقويمي (سنة/شهر/يوم) لتاريخ آخر زيارة للعميل (last_visit)، وبالاعتماد على المنطقة الزمنية لجهازك. مثلاً: زيارة الساعة 11:50م ومعاينة الساعة 12:10ص = يومان مختلفان."
+                aria-label="حساب المعاينة في نفس اليوم التقويمي لزيارة العميل بالتوقيت المحلي"
                 className={cn(
                   "px-2.5 py-1 text-[11px] font-medium rounded-md transition-all",
                   viewedBasis === "event_day"
