@@ -621,8 +621,15 @@ const StaffDailyReport = () => {
             const a = dynAnswers[q.id] || {};
             const setA = (patch: DynAnswer) =>
               setDynAnswers((prev) => ({ ...prev, [q.id]: { ...prev[q.id], ...patch } }));
+            const isHighlighted = highlightedQId === q.id;
             return (
-              <div key={q.id} className="space-y-1.5">
+              <div
+                key={q.id}
+                id={`dyn-q-${q.id}`}
+                className={`space-y-1.5 rounded-lg p-2 -m-2 transition-all duration-500 ${
+                  isHighlighted ? "ring-2 ring-destructive bg-destructive/5" : "ring-0"
+                }`}
+              >
                 <Label className="text-xs font-semibold flex items-center gap-1.5">
                   {q.question_text}
                   {q.is_required && <span className="text-destructive">*</span>}
