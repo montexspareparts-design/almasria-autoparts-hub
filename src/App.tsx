@@ -4,6 +4,7 @@ const InstallBannerLazy = lazy(() => import("@/components/InstallBanner"));
 const WhatsAppFloat = lazy(() => import("@/components/WhatsAppFloat"));
 const AddPhonePrompt = lazy(() => import("@/components/AddPhonePrompt"));
 const VisitorLeadCapture = lazy(() => import("@/components/VisitorLeadCapture"));
+const SmartLeadTriggers = lazy(() => import("@/components/SmartLeadTriggers"));
 // Global staff alerts — mounted once at the app root so the popup fires on
 // ANY page (including /admin/staff-home), not only inside /admin.
 const AdminNewOrderAlertGlobal = lazy(() => import("@/components/admin/AdminNewOrderAlert"));
@@ -101,6 +102,7 @@ const App = () => (
               <DeferredComponent delay={2500}><WhatsAppFloat /></DeferredComponent>
               <DeferredComponent delay={5000}><AddPhonePrompt /></DeferredComponent>
               <DeferredComponent delay={6000}><VisitorLeadCapture /></DeferredComponent>
+              <DeferredComponent delay={7000}><SmartLeadTriggers /></DeferredComponent>
               {/* Staff popups — self-gate by role, no-op for non-staff */}
               <DeferredComponent delay={1500}><AdminNewOrderAlertGlobal /></DeferredComponent>
               <DeferredComponent delay={1500}><AdminNewSignupAlertGlobal /></DeferredComponent>
