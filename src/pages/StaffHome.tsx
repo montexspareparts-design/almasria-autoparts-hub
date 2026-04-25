@@ -1234,6 +1234,32 @@ const StaffHome = () => {
             </div>
           </div>
 
+          {/* Side-by-side count: how many visitors qualify under each anchor
+              for the SAME range/basis/staff filter. Helps staff understand
+              the impact of switching the anchor without toggling back-and-forth. */}
+          {viewedBasis !== "all_time" && (
+            <div className="flex flex-wrap items-center gap-2 mt-2 text-[11px]">
+              <span className="text-muted-foreground">مقارنة المرسي:</span>
+              <Badge
+                variant={viewedAnchor === "last" ? "default" : "outline"}
+                className="font-mono tabular-nums"
+              >
+                آخر معاينة · {viewedAnchorBreakdown.last}
+              </Badge>
+              <Badge
+                variant={viewedAnchor === "first" ? "default" : "outline"}
+                className="font-mono tabular-nums"
+              >
+                أول معاينة · {viewedAnchorBreakdown.first}
+              </Badge>
+              {viewedAnchorBreakdown.last !== viewedAnchorBreakdown.first && (
+                <span className="text-muted-foreground/80">
+                  (فرق {Math.abs(viewedAnchorBreakdown.last - viewedAnchorBreakdown.first)} زائر)
+                </span>
+              )}
+            </div>
+          )}
+
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             {kpiCards.map((kpi, i) => (
               <button
