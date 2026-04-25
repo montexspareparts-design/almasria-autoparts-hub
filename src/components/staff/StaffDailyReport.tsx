@@ -915,7 +915,7 @@ const SubmittedSuccessCard = ({
     }
     setHistoryLoading(true);
     setShowHistory(true);
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from("staff_daily_reports")
       .select("id, report_date, submitted_at, customers_contacted, total_invoices_amount")
       .eq("user_id", userId)
