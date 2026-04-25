@@ -261,7 +261,7 @@ const StaffHome = () => {
       const { data: signupRows, count: signupCount } = await supabase
         .from("profiles")
         .select("user_id, full_name, phone, email, created_at", { count: "exact" })
-        .gte("created_at", start)
+        .gte("created_at", widestStart)
         .order("created_at", { ascending: false })
         .limit(100);
 
