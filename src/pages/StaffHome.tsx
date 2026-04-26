@@ -1837,12 +1837,19 @@ const StaffHome = () => {
               <Activity className="w-3.5 h-3.5" />
               متفاعلين فقط
             </Button>
-            {(visitorTypeFilter !== "all" || visitorDateFilter !== "all" || visitorViewedFilter !== "all" || visitorEngagedOnly) && (
+            {(visitorTypeFilter !== "all" || visitorDateFilter !== "all" || visitorViewedFilter !== "all" || visitorEngagedOnly || includeStaff || visitorsSearch) && (
               <Button
                 size="sm"
                 variant="ghost"
                 className="h-8 text-xs"
-                onClick={() => { setVisitorTypeFilter("all"); setVisitorDateFilter("all"); setVisitorViewedFilter("all"); setVisitorEngagedOnly(false); }}
+                onClick={() => {
+                  setVisitorTypeFilter("all");
+                  setVisitorDateFilter("all");
+                  setVisitorViewedFilter("all");
+                  setVisitorEngagedOnly(false);
+                  setIncludeStaff(false);
+                  setVisitorsSearch("");
+                }}
               >
                 مسح الفلاتر
               </Button>
@@ -1853,11 +1860,54 @@ const StaffHome = () => {
             // Use the shared dialogFilteredVisitors memo so the title badge ("X من أصل Y")
             // and this list are guaranteed to stay in sync as filters change.
             const filtered = dialogFilteredVisitors;
+            const hasAnyVisitor = visitorsList.length > 0;
+            const hasActiveFilter =
+              visitorTypeFilter !== "all" ||
+              visitorDateFilter !== "all" ||
+              visitorViewedFilter !== "all" ||
+              visitorEngagedOnly ||
+              !includeStaff ||
+              !!visitorsSearch;
 
             if (filtered.length === 0) {
               return (
-                <div className="text-center py-10 text-sm text-muted-foreground">
-                  مفيش زوار مطابقين للفلاتر
+                <div className="text-center py-10 text-sm text-muted-foreground space-y-3">
+                  {loading ? (
+                    <p>جاري تحميل بيانات الزوار…</p>
+                  ) : !hasAnyVisitor ? (
+                    <>
+                      <p>لم يتم تحميل أي زوار من قاعدة البيانات بعد.</p>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => fetchData()}
+                        className="text-xs h-8"
+                      >
+                        إعادة المحاولة
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <p>مفيش زوار مطابقين للفلاتر <span className="text-[11px]">(الإجمالي: {visitorsList.length})</span></p>
+                      {hasActiveFilter && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setVisitorTypeFilter("all");
+                            setVisitorDateFilter("all");
+                            setVisitorViewedFilter("all");
+                            setVisitorEngagedOnly(false);
+                            setIncludeStaff(false);
+                            setVisitorsSearch("");
+                          }}
+                          className="text-xs h-8"
+                        >
+                          مسح كل الفلاتر
+                        </Button>
+                      )}
+                    </>
+                  )}
                 </div>
               );
             }
