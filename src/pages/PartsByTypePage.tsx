@@ -155,25 +155,38 @@ const partTypes: PartTypeData[] = [
 /* ── Part Type Detail ── */
 const TypeDetailView = ({ type }: { type: PartTypeData }) => {
   const Icon = type.icon;
+
+  // Prefer the centralised, DB-aligned bilingual SEO meta when this slug
+  // maps to a real category in `product_categories.slug`. Fall back to
+  // the page-local copy below for legacy slugs (e.g. `engine`, `oils`)
+  // that don't have a 1:1 DB row — those still get reasonable Arabic-only
+  // meta from the original `partTypes` list.
+  const central = getCategorySEO(type.slug);
+
+  const titleAr = central?.titleAr ?? type.seoTitle;
+  const titleEn = central?.titleEn ?? type.seoTitle;
+  const descriptionAr = central?.descriptionAr ?? type.seoDescription;
+  const descriptionEn = central?.descriptionEn ?? type.seoDescription;
+  const keywordsAr = central?.keywordsAr ?? type.keywords;
+  const keywordsEn = central?.keywordsEn ?? type.keywords;
+
   return (
     <>
-      <Helmet>
-        <title>{type.seoTitle}</title>
-        <meta name="description" content={type.seoDescription} />
-        <meta name="keywords" content={type.keywords} />
-        <link rel="canonical" href={`${SITE}/parts-by-type/${type.slug}`} />
-        <meta property="og:type" content="website" />
-        <meta property="og:title" content={type.seoTitle} />
-        <meta property="og:description" content={type.seoDescription} />
-        <meta property="og:url" content={`${SITE}/parts-by-type/${type.slug}`} />
-        <meta property="og:locale" content="ar_EG" />
-        <meta property="og:site_name" content="المصرية جروب" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={type.seoTitle} />
-        <meta name="twitter:description" content={type.seoDescription} />
-        <link rel="alternate" hrefLang="ar" href={`${SITE}/parts-by-type/${type.slug}`} />
-        <link rel="alternate" hrefLang="x-default" href={`${SITE}/parts-by-type/${type.slug}`} />
-      </Helmet>
+      <SEOHead
+        titleAr={titleAr}
+        titleEn={titleEn}
+        descriptionAr={descriptionAr}
+        descriptionEn={descriptionEn}
+        keywordsAr={keywordsAr}
+        keywordsEn={keywordsEn}
+        ogType="website"
+        canonical={`/parts-by-type/${type.slug}`}
+        breadcrumbs={[
+          { ar: "الرئيسية", en: "Home", url: "/" },
+          { ar: "حسب نوع القطعة", en: "By Part Type", url: "/parts-by-type" },
+          { ar: type.nameAr, en: type.nameEn, url: `/parts-by-type/${type.slug}` },
+        ]}
+      />
       <BreadcrumbSchema items={[
         { name: "الرئيسية", url: SITE },
         { name: "حسب نوع القطعة", url: `${SITE}/parts-by-type` },
