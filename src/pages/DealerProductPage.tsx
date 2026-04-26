@@ -16,6 +16,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
+import SEOHead from "@/components/SEOHead";
+import { ProductSchema } from "@/components/SEOSchemaMarkup";
+import { buildProductSEO } from "@/lib/productSeo";
 
 interface Product {
   id: string;
