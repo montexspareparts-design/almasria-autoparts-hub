@@ -270,12 +270,14 @@ const ProductCard = memo(({
 
         {/* TOP-START column: Brand only (right in RTL, left in LTR) */}
         {brandRouteMap[product.brand] && (
-          <div className="absolute top-2 start-2 z-30 flex flex-col items-start gap-1.5 max-w-[55%] pointer-events-none">
+          <div className="absolute top-1.5 start-1.5 sm:top-2 sm:start-2 lg:top-2.5 lg:start-2.5 z-30 flex flex-col items-start gap-1 sm:gap-1.5 max-w-[48%] sm:max-w-[55%] pointer-events-none">
             <Link
               to={brandRouteMap[product.brand].path}
               onClick={(e) => e.stopPropagation()}
               className={`pointer-events-auto inline-flex items-center max-w-full truncate
-                text-[8px] sm:text-[9px] font-extrabold px-2 py-[3px] rounded-md leading-none whitespace-nowrap
+                text-[7px] sm:text-[9px] lg:text-[10px] font-extrabold
+                px-1.5 py-[2px] sm:px-2 sm:py-[3px] lg:px-2.5 lg:py-1
+                rounded-md leading-none whitespace-nowrap
                 backdrop-blur-md backdrop-saturate-150
                 ring-1 ring-white/30 shadow-[0_2px_8px_rgba(0,0,0,0.25)]
                 [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]
@@ -292,9 +294,11 @@ const ProductCard = memo(({
           Flex + gap means hiding Sale keeps Stock in place, and Sale always
           slides directly under Stock without manual top offsets.
         */}
-        <div className="absolute top-2 end-2 z-30 flex flex-col items-end gap-1.5 max-w-[55%] pointer-events-none">
+        <div className="absolute top-1.5 end-1.5 sm:top-2 sm:end-2 lg:top-2.5 lg:end-2.5 z-30 flex flex-col items-end gap-1 sm:gap-1.5 max-w-[48%] sm:max-w-[55%] pointer-events-none">
           <span
-            className={`pointer-events-auto inline-flex items-center gap-1 text-[8px] sm:text-[9px] font-bold px-2 py-[3px]
+            className={`pointer-events-auto inline-flex items-center gap-0.5 sm:gap-1
+              text-[7px] sm:text-[9px] lg:text-[10px] font-bold
+              px-1.5 py-[2px] sm:px-2 sm:py-[3px] lg:px-2.5 lg:py-1
               rounded-md leading-none whitespace-nowrap text-white
               backdrop-blur-md backdrop-saturate-150
               ring-1 ring-white/30
@@ -305,19 +309,21 @@ const ProductCard = memo(({
                   : "bg-red-600/95 shadow-[0_2px_10px_rgba(239,68,68,0.35)]"
               }`}
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_4px_rgba(255,255,255,0.6)]" />
+            <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-white shadow-[0_0_4px_rgba(255,255,255,0.6)]" />
             {stockAvailable ? "متوفر" : "غير متوفر"}
           </span>
 
           {product.is_on_sale && (
             <Badge
-              className="pointer-events-auto relative z-[1] bg-destructive/95 text-destructive-foreground text-[9px] font-black px-2 py-0.5
+              className="pointer-events-auto relative z-[1] bg-destructive/95 text-destructive-foreground
+                text-[7px] sm:text-[9px] lg:text-[10px] font-black
+                px-1.5 py-[2px] sm:px-2 sm:py-0.5 lg:px-2.5 lg:py-1
                 rounded-md tracking-wide
                 backdrop-blur-md backdrop-saturate-150
                 ring-1 ring-white/25 shadow-[0_2px_10px_rgba(220,38,38,0.4)]
                 [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]"
             >
-              <Sparkles className="w-2.5 h-2.5 mr-0.5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]" />
+              <Sparkles className="w-2 h-2 sm:w-2.5 sm:h-2.5 mr-0.5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]" />
               تخفيض
             </Badge>
           )}
@@ -325,15 +331,17 @@ const ProductCard = memo(({
 
         {/* BOTTOM-END column: Priced indicator — own corner, can never overlap top stack (left in RTL, right in LTR) */}
         {hasViewed && (
-          <div className="absolute bottom-2.5 end-2.5 z-40 flex flex-col items-end gap-1.5 pointer-events-none">
+          <div className="absolute bottom-2 end-2 sm:bottom-2.5 sm:end-2.5 lg:bottom-3 lg:end-3 z-40 flex flex-col items-end gap-1 sm:gap-1.5 pointer-events-none">
             <span
-              className="pointer-events-auto inline-flex items-center gap-1 bg-emerald-600/95 text-white text-[8px] font-bold px-2 py-0.5
+              className="pointer-events-auto inline-flex items-center gap-0.5 sm:gap-1 bg-emerald-600/95 text-white
+                text-[7px] sm:text-[9px] lg:text-[10px] font-bold
+                px-1.5 py-[2px] sm:px-2 sm:py-0.5 lg:px-2.5 lg:py-1
                 rounded-md
                 backdrop-blur-md backdrop-saturate-150
                 ring-1 ring-white/30 shadow-[0_2px_10px_rgba(16,185,129,0.35)]
                 [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]"
             >
-              <Check className="w-2.5 h-2.5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]" /> مسعّر
+              <Check className="w-2 h-2 sm:w-2.5 sm:h-2.5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]" /> مسعّر
             </span>
           </div>
         )}
