@@ -21,6 +21,7 @@ import TransferToColleagueDialog from "./TransferToColleagueDialog";
 import PerfDashboard from "./PerfDashboard";
 import { usePerfTracker } from "@/hooks/usePerfTracker";
 import { ArrowRightLeft } from "lucide-react";
+import StaffBentoHero from "./StaffBentoHero";
 
 // =================== Types ===================
 interface UrgentOrder {
@@ -621,6 +622,14 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
           onSnapshot={perf.takeSnapshot}
         />
       )}
+
+      {/* Bento Hero — daily command center */}
+      <StaffBentoHero
+        urgentOrdersCount={urgentOrders.length}
+        hotLeadsCount={searchLeads.length}
+        chatbotPendingCount={supportRequests.filter((r) => r.status === "pending").length}
+        onJumpToTab={(t) => setTab(t)}
+      />
 
       {/* Filters bar */}
       <div className="flex flex-wrap items-center gap-2">
