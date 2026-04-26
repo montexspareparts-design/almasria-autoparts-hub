@@ -15,6 +15,7 @@
  */
 
 type ProductLike = {
+  id?: string | null;
   name_ar?: string | null;
   name_en?: string | null;
   sku?: string | null;
@@ -23,6 +24,26 @@ type ProductLike = {
   description_en?: string | null;
   stock_quantity?: number | null;
   product_categories?: { name_ar?: string | null; name_en?: string | null } | null;
+};
+
+const SITE_URL = "https://www.almasriaautoparts.com";
+
+/**
+ * Build a stable canonical URL for an individual product.
+ *
+ * Today the only real, indexable per-product page is
+ * `/dealer/product/:id` — the public catalog renders products via
+ * `<ProductDetailDialog>` which is a modal layered on top of a listing
+ * route, NOT a navigable URL. So whenever SEO meta needs to point at
+ * "the product", it must point here.
+ *
+ * Returns null when no id is available — callers should then fall back
+ * to noindex for the modal so search engines don't conflate listing-
+ * page URLs with single-product metadata.
+ */
+export const buildProductCanonical = (product: ProductLike): string | null => {
+  if (!product.id) return null;
+  return `${SITE_URL}/dealer/product/${product.id}`;
 };
 
 const BRAND_LABEL_AR: Record<string, string> = {

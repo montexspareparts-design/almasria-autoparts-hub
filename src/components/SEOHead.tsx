@@ -134,15 +134,38 @@ const ROUTE_DEFAULTS: Record<
  * Centralized bilingual SEO head: titles, meta description, canonical,
  * hreflang (ar / en / x-default), Open Graph, Twitter, and breadcrumb JSON-LD.
  *
- * - Renders globally with route-based defaults when used as `<SEOHead />`.
- * - Pages can override any field by passing props.
+ * Canonical / hreflang policy
+ * ───────────────────────────
+ * 1. If `props.canonical` is passed (a real, indexable URL — e.g. a product
+ *    page at `/dealer/product/:id` or a brand landing at `/products/:brand`),
+ *    we use it verbatim for both <link rel="canonical"> AND every hreflang
+ *    variant. This keeps the per-product / per-dealer signal strong even
+ *    when the same view is rendered from multiple list-page URLs.
+ *
+ * 2. Otherwise we derive canonical from `pathname`, but FIRST we strip
+ *    trailing slashes, query strings, and hash fragments. This prevents
+ *    UTM noise (`?utm_source=fb`) and modal anchors (`#detail`) from
+ *    fragmenting the canonical signal across what is essentially the
+ *    same page.
+ *
+ * 3. `<ProductDetailDialog>` is a modal — it has NO real URL of its own.
+ *    To avoid telling Google "the listing page IS this product", that
+ *    dialog passes both `canonical` (pointing at the dedicated product
+ *    page) and `noindex` (telling crawlers not to index the modal-on-
+ *    listing combo). The two together resolve the conflict cleanly.
  */
 export const SEOHead = (props: SEOHeadProps = {}) => {
   const { isAr } = useLanguage();
   const { pathname } = useLocation();
 
   const path = pathname || "/";
-  const cleanPath = path.endsWith("/") && path !== "/" ? path.slice(0, -1) : path;
+  // Strip trailing slash (except root), query string, and hash so the
+  // derived canonical is stable regardless of UTM tags or scroll anchors.
+  const cleanPath = (() => {
+    let p = path.split("?")[0].split("#")[0];
+    if (p.length > 1 && p.endsWith("/")) p = p.slice(0, -1);
+    return p || "/";
+  })();
   const fallback = ROUTE_DEFAULTS[cleanPath] || ROUTE_DEFAULTS["/"];
 
   const titleAr = props.titleAr ?? fallback.titleAr;
@@ -152,7 +175,14 @@ export const SEOHead = (props: SEOHeadProps = {}) => {
   const keywordsAr = props.keywordsAr ?? fallback.keywordsAr;
   const keywordsEn = props.keywordsEn ?? fallback.keywordsEn;
 
-  const canonicalUrl = props.canonical || `${SITE_URL}${cleanPath}`;
+  // Canonical priority: explicit prop → derived clean path.
+  // If the caller passed a relative path ("/foo"), absolutise it.
+  const canonicalUrl = (() => {
+    if (!props.canonical) return `${SITE_URL}${cleanPath}`;
+    return props.canonical.startsWith("http")
+      ? props.canonical
+      : `${SITE_URL}${props.canonical.startsWith("/") ? "" : "/"}${props.canonical}`;
+  })();
   const image = props.image || DEFAULT_OG_IMAGE;
   const ogType = props.ogType || "website";
 
