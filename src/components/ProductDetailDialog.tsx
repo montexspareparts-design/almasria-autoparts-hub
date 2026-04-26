@@ -27,6 +27,8 @@ interface ProductDetailDialogProps {
   onRevealPrice?: (productId: string) => void;
   remainingViews?: number;
   limitReached?: boolean;
+  /** Year extracted from the search query — drives the live "fits your year" indicator. */
+  searchYear?: number | null;
 }
 
 const ProductDetailDialog = ({
@@ -43,6 +45,7 @@ const ProductDetailDialog = ({
   onRevealPrice,
   remainingViews = 0,
   limitReached = false,
+  searchYear = null,
 }: ProductDetailDialogProps) => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
