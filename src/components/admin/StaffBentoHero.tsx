@@ -464,21 +464,21 @@ export default function StaffBentoHero({
               value={newOrders24h}
               icon={<ShoppingBag className="w-3.5 h-3.5" />}
               tone="emerald"
-              to="/admin?section=orders"
+              onClick={() => onJumpToTab("urgent")}
             />
             <MiniStat
               label="تسجيلات جديدة"
               value={newSignups24h}
               icon={<UserPlus className="w-3.5 h-3.5" />}
               tone="emerald"
-              to="/admin?section=customers"
+              onClick={() => onJumpToTab("yesterday")}
             />
             <MiniStat
               label="إيصالات InstaPay"
               value={instapayPending}
               icon={<Wallet className="w-3.5 h-3.5" />}
               tone="emerald"
-              to="/admin?section=instapay"
+              onClick={() => onJumpToTab("urgent")}
               urgent={instapayPending > 0}
             />
             <MiniStat
@@ -486,7 +486,7 @@ export default function StaffBentoHero({
               value={partRequestsNew}
               icon={<FileSearch className="w-3.5 h-3.5" />}
               tone="emerald"
-              to="/admin?section=part-requests"
+              onClick={() => onJumpToTab("chatbot")}
               urgent={partRequestsNew > 0}
             />
           </div>
