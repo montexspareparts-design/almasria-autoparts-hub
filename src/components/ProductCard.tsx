@@ -206,8 +206,10 @@ const ProductCard = memo(({
       {/* ── Ambient glow on hover ── */}
       <div className="absolute -inset-[1px] rounded-[20px] bg-gradient-to-b from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none z-0" />
 
-      {/* ── Image Section ── unified 1:1 frame, identical inner padding everywhere */}
-      <div className="relative aspect-square bg-white overflow-hidden z-[1]">
+      {/* ── Image Section ── unified 1:1 frame, identical inner padding everywhere.
+          `badges-static` opts the inner badge-glass layers out of backdrop-filter
+          while idle (image is static) — blur is re-enabled on hover/focus only. */}
+      <div className="badges-static relative aspect-square bg-white overflow-hidden z-[1]">
         {/* Subtle vignette */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_60%,rgba(0,0,0,0.02)_100%)] z-10 pointer-events-none" />
 
@@ -260,7 +262,9 @@ const ProductCard = memo(({
 
           Auto-contrast strategy on every floating badge:
             1. Opaque-enough fill (≥95%) of a saturated color → readable text.
-            2. `backdrop-blur-md backdrop-saturate-150` → softens noisy
+            2. `.badge-glass` → progressive frosted background: opaque
+               fallback for low-end / older browsers, blur+saturate only
+               where supported and not on touch/idle (see index.css).
                backgrounds behind the badge.
             3. White text + `[text-shadow:0_1px_2px_rgba(0,0,0,0.35)]` keeps
                characters legible at the edges.
@@ -278,7 +282,7 @@ const ProductCard = memo(({
                 text-[7px] sm:text-[9px] lg:text-[10px] font-extrabold
                 px-1.5 py-[2px] sm:px-2 sm:py-[3px] lg:px-2.5 lg:py-1
                 rounded-md leading-none whitespace-nowrap
-                backdrop-blur-md backdrop-saturate-150
+                badge-glass
                 ring-1 ring-white/30 shadow-[0_2px_8px_rgba(0,0,0,0.25)]
                 [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]
                 hover:opacity-90 transition-opacity
@@ -300,7 +304,7 @@ const ProductCard = memo(({
               text-[7px] sm:text-[9px] lg:text-[10px] font-bold
               px-1.5 py-[2px] sm:px-2 sm:py-[3px] lg:px-2.5 lg:py-1
               rounded-md leading-none whitespace-nowrap text-white
-              backdrop-blur-md backdrop-saturate-150
+              badge-glass
               ring-1 ring-white/30
               [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]
               ${
@@ -316,10 +320,10 @@ const ProductCard = memo(({
           {product.is_on_sale && (
             <Badge
               className="pointer-events-auto relative z-[1] bg-destructive/95 text-destructive-foreground
-                text-[7px] sm:text-[9px] lg:text-[10px] font-black
+              text-[7px] sm:text-[9px] lg:text-[10px] font-black
                 px-1.5 py-[2px] sm:px-2 sm:py-0.5 lg:px-2.5 lg:py-1
                 rounded-md tracking-wide
-                backdrop-blur-md backdrop-saturate-150
+                badge-glass
                 ring-1 ring-white/25 shadow-[0_2px_10px_rgba(220,38,38,0.4)]
                 [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]"
             >
@@ -334,10 +338,10 @@ const ProductCard = memo(({
           <div className="absolute bottom-2 end-2 sm:bottom-2.5 sm:end-2.5 lg:bottom-3 lg:end-3 z-40 flex flex-col items-end gap-1 sm:gap-1.5 pointer-events-none">
             <span
               className="pointer-events-auto inline-flex items-center gap-0.5 sm:gap-1 bg-emerald-600/95 text-white
-                text-[7px] sm:text-[9px] lg:text-[10px] font-bold
+              text-[7px] sm:text-[9px] lg:text-[10px] font-bold
                 px-1.5 py-[2px] sm:px-2 sm:py-0.5 lg:px-2.5 lg:py-1
                 rounded-md
-                backdrop-blur-md backdrop-saturate-150
+                badge-glass
                 ring-1 ring-white/30 shadow-[0_2px_10px_rgba(16,185,129,0.35)]
                 [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]"
             >

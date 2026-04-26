@@ -249,3 +249,56 @@
   0% { transform: translateX(0); }
   100% { transform: translateX(50%); }
 }
+
+/* ─────────────────────────────────────────────────────────────────────
+   .badge-glass — performance-aware "frosted" badge background.
+
+   Strategy:
+   1. Default (NO blur) → opaque-enough fill keeps text legible everywhere
+      with zero GPU cost. Safe for low-end devices and older browsers.
+   2. Progressive enhancement: only when the browser supports
+      `backdrop-filter` AND the user has not requested reduced
+      transparency, we apply blur + saturation for the premium frosted
+      look. Background opacity is reduced so the blur is visible.
+   3. `.badges-static` opt-out hook: parent containers (e.g. product
+      cards that aren't currently hovered/animating) can disable blur to
+      avoid forcing the compositor to repaint a blurred layer on every
+      scroll frame. Re-enabled via `.group:hover .badge-glass` for the
+      hover micro-interaction only.
+   ───────────────────────────────────────────────────────────────────── */
+.badge-glass {
+  /* Strong fallback fill — readable without any filter */
+  background-color: rgba(0, 0, 0, 0.55);
+}
+
+@supports ((backdrop-filter: blur(6px)) or (-webkit-backdrop-filter: blur(6px))) {
+  @media (prefers-reduced-transparency: no-preference) {
+    .badge-glass {
+      background-color: rgba(0, 0, 0, 0.35);
+      -webkit-backdrop-filter: blur(6px) saturate(1.4);
+      backdrop-filter: blur(6px) saturate(1.4);
+    }
+    /* Static-image cards: skip blur until user interacts (hover/focus) */
+    .badges-static .badge-glass {
+      background-color: rgba(0, 0, 0, 0.55);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+    .badges-static:hover .badge-glass,
+    .badges-static:focus-within .badge-glass {
+      background-color: rgba(0, 0, 0, 0.35);
+      -webkit-backdrop-filter: blur(6px) saturate(1.4);
+      backdrop-filter: blur(6px) saturate(1.4);
+    }
+  }
+}
+
+/* Coarse-pointer (touch) devices: blur is expensive on mobile GPUs and
+   there is no hover anyway → never apply blur there. */
+@media (hover: none) and (pointer: coarse) {
+  .badge-glass {
+    background-color: rgba(0, 0, 0, 0.55) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
