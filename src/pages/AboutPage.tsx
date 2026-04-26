@@ -65,14 +65,18 @@ const distributionSectors = [
 const AboutPage = () => {
   return (
     <div className="min-h-screen">
-      <Helmet>
-        <title>عن المصرية جروب | منصة توزيع مؤسسية معتمدة منذ 1999</title>
-        <meta
-          name="description"
-          content="المصرية جروب مجموعة توزيع رائدة منذ 1999، موزع معتمد لقطع غيار وزيوت تويوتا الأصلية. شبكة +2000 عميل، توصيل سريع خلال 48 ساعة، وعلامة MTX."
-        />
-        <link rel="canonical" href="https://www.almasriaautoparts.com/about" />
-      </Helmet>
+      <SEOHead
+        titleAr="من نحن — منصة توزيع مؤسسية معتمدة منذ 1999"
+        titleEn="About Us — Enterprise Distribution Since 1999"
+        descriptionAr="المصرية جروب مجموعة توزيع رائدة منذ 1999، موزع معتمد لقطع غيار وزيوت تويوتا الأصلية. شبكة +2000 عميل، توصيل سريع خلال 48 ساعة، وعلامة MTX."
+        descriptionEn="Al Masria Group is a leading distributor since 1999 — authorized for Toyota genuine parts & oils. 2,000+ customer network, 48-hour nationwide delivery, plus our MTX brand."
+        keywordsAr="عن المصرية جروب, تاريخ الشركة, موزع تويوتا مصر, MTX"
+        keywordsEn="about Al Masria Group, company history, Toyota distributor Egypt, MTX"
+        breadcrumbs={[
+          { ar: "الرئيسية", en: "Home", url: "/" },
+          { ar: "من نحن", en: "About", url: "/about" },
+        ]}
+      />
 
       <Navbar />
 
