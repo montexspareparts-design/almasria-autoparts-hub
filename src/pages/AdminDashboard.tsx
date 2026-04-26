@@ -27,6 +27,7 @@ const AdminERPSync = lazy(() => import("@/components/AdminERPSync"));
 const AdminERPSyncStatus = lazy(() => import("@/components/AdminERPSyncStatus"));
 const AdminPushNotifications = lazy(() => import("@/components/AdminPushNotifications"));
 const AdminProducts = lazy(() => import("@/components/AdminProducts"));
+const AdminYearCoverage = lazy(() => import("@/components/admin/AdminYearCoverage"));
 const AdminAnalytics = lazy(() => import("@/components/AdminAnalytics"));
 const AdminStaffPerformance = lazy(() => import("@/components/AdminStaffPerformance"));
 const AdminCustomerProfile = lazy(() => import("@/components/AdminCustomerProfile"));
@@ -100,6 +101,7 @@ const sidebarGroups: SidebarGroup[] = [
     items: [
       { id: "products", label: "إدارة المنتجات", icon: Package },
       { id: "bulk-import", label: "استيراد جماعي", icon: ArrowLeftRight },
+      { id: "year-coverage", label: "تغطية السنوات", icon: Clock },
       { id: "orders", label: "إدارة الطلبات", icon: ShoppingBag },
       { id: "coupons", label: "الكوبونات", icon: Tag },
       { id: "qty-discounts", label: "خصومات الكمية", icon: Layers },
@@ -664,6 +666,8 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminProducts /></Suspense>;
       case "bulk-import":
         return <Suspense fallback={<SectionLoader />}><AdminBulkImport /></Suspense>;
+      case "year-coverage":
+        return <Suspense fallback={<SectionLoader />}><AdminYearCoverage /></Suspense>;
       case "coupons":
         return <Suspense fallback={<SectionLoader />}><AdminCoupons /></Suspense>;
       case "qty-discounts":
