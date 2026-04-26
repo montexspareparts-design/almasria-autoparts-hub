@@ -195,5 +195,23 @@ export function ImageBadgeColumn({
   );
 }
 
+/**
+ * IMAGE_OVERLAY_Z — canonical z-index ladder for any surface that floats
+ * content on top of a product image. Import these constants instead of
+ * hand-writing `z-30`/`z-40`/etc. so the ordering invariant holds:
+ *
+ *     SKELETON (0) < IMAGE (1) < DECOR (10) < INFO (30) < STATE (40)
+ *
+ * The skeleton lives inside <LazyImage> and is hard-coded to z-0; this
+ * map is consumed by every consumer that places things ABOVE the image.
+ */
+export const IMAGE_OVERLAY_Z = {
+  skeleton: 0,
+  image: 1,
+  decoration: 10,
+  badgeInfo: 30,
+  badgeState: 40,
+} as const;
+
 export { ImageBadge, imageBadgeVariants };
 export type { Tone };

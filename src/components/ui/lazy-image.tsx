@@ -123,15 +123,23 @@ export const LazyImage = ({
       )}
     >
       {/* Shimmer skeleton — opacity-driven; respects prefers-reduced-motion
-          via the `motion-reduce:` variants on the sweeping band. */}
+          via the `motion-reduce:` variants on the sweeping band.
+
+          ⚠️ INVARIANT: this layer MUST stay at z-0 (and pointer-events-none
+          once faded out). Any sibling overlay — badges, decorative gradients,
+          hover sweeps — must use a STRICTLY HIGHER z-index. The canonical
+          ladder lives in `IMAGE_OVERLAY_Z` (src/components/ui/image-badge.tsx).
+          Do not change `z-0` below without first updating the consumers. */}
       {!!src && !errored && (
         <div
           aria-hidden="true"
+          // z-0 + pointer-events-none guarantees badges (z-30/40) stay clickable
+          // and visually anchored even before the image has decoded.
           className={cn(
-            "absolute inset-0 z-0 overflow-hidden",
+            "absolute inset-0 z-0 pointer-events-none overflow-hidden",
             "bg-gradient-to-br from-muted/40 via-muted/20 to-muted/40",
             "transition-opacity duration-500 ease-out",
-            skeletonActive ? "opacity-100" : "opacity-0 pointer-events-none",
+            skeletonActive ? "opacity-100" : "opacity-0",
             skeletonClassName
           )}
         >

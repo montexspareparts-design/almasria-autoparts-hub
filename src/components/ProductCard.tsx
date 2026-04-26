@@ -103,7 +103,14 @@ const ProductCard = memo(({
           transition-all duration-500"
         onClick={() => onProductClick(product)}
       >
-        {/* Image — fixed square frame across breakpoints, consistent inner padding */}
+        {/* Image — fixed square frame across breakpoints, consistent inner padding.
+            Z-INDEX LADDER (list mode) — keep in sync with grid mode below:
+              z-0  : LazyImage skeleton (inside the padded box)
+              z-1  : The image itself, hover shimmer base
+              z-10 : Decorative sweep overlay
+              z-30 : Floating badges (Sale here, Stock/Brand on grid)
+            The skeleton MUST stay at the bottom so badges remain visually
+            anchored while the image is still decoding. */}
         <div className="w-28 sm:w-40 md:w-48 aspect-square shrink-0 bg-white relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-white via-white to-muted/10" />
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out z-10 pointer-events-none" />
@@ -123,7 +130,7 @@ const ProductCard = memo(({
             )}
           </div>
           {product.is_on_sale && (
-            <Badge className="absolute top-2 end-2 z-20 bg-destructive text-destructive-foreground text-[8px] font-black px-2 py-0.5 shadow-lg shadow-destructive/30 rounded-lg">
+            <Badge className="absolute top-2 end-2 z-30 bg-destructive text-destructive-foreground text-[8px] font-black px-2 py-0.5 shadow-lg shadow-destructive/30 rounded-lg">
               تخفيض
             </Badge>
           )}
@@ -210,7 +217,16 @@ const ProductCard = memo(({
 
       {/* ── Image Section ── unified 1:1 frame, identical inner padding everywhere.
           `badges-static` opts the inner badge-glass layers out of backdrop-filter
-          while idle (image is static) — blur is re-enabled on hover/focus only. */}
+          while idle (image is static) — blur is re-enabled on hover/focus only.
+
+          Z-INDEX LADDER (grid mode) — single source of truth, do not deviate:
+            z-0  : Skeleton shimmer (inside <LazyImage> wrapper)
+            z-1  : The decoded <img> tag itself
+            z-10 : Decorative overlays (vignette, bottom fade, hover sweep)
+            z-30 : Informational badges (Brand on top-start, Stock on top-end)
+            z-40 : Promotional / state badges (Sale, Priced)
+          The skeleton is *always* the lowest layer so badges stay perfectly
+          anchored from first paint, even before the image bytes arrive. */}
       <div className="badges-static relative aspect-square bg-white overflow-hidden z-[1]">
         {/* Subtle vignette */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_60%,rgba(0,0,0,0.02)_100%)] z-10 pointer-events-none" />
