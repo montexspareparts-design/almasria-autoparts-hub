@@ -198,7 +198,7 @@ const ProductCard = memo(({
       <div className="relative aspect-[4/3] bg-white overflow-hidden z-[1]">
         {/* Subtle vignette */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_60%,rgba(0,0,0,0.02)_100%)] z-10 pointer-events-none" />
-        
+
         {/* Bottom fade for seamless transition */}
         <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-card to-transparent z-10 pointer-events-none" />
 
@@ -210,7 +210,7 @@ const ProductCard = memo(({
             src={product.image_url}
             alt={product.name_ar}
             wrapperClassName="w-full h-full"
-            className="w-full h-full object-contain p-2 sm:p-6 group-hover:scale-[1.06] transition-transform duration-[800ms] ease-[cubic-bezier(0.23,1,0.32,1)]"
+            className="w-full h-full object-contain p-3 sm:p-5 group-hover:scale-[1.06] transition-transform duration-[800ms] ease-[cubic-bezier(0.23,1,0.32,1)]"
             optimizeWidth={400}
           />
         ) : (
@@ -219,29 +219,29 @@ const ProductCard = memo(({
           </div>
         )}
 
-        {/* Sale badge — glass morphism style */}
+        {/* Stock dot — top-left corner, minimal */}
+        <div className="absolute top-2.5 left-2.5 z-20">
+          <div className={`w-2.5 h-2.5 rounded-full shadow-md ${
+            stockAvailable
+              ? "bg-emerald-400 ring-[3px] ring-emerald-400/25 shadow-emerald-500/30"
+              : "bg-red-400 ring-[3px] ring-red-400/25 shadow-red-400/30"
+          }`} />
+        </div>
+
+        {/* Sale badge — top-left, below stock dot when on sale */}
         {product.is_on_sale && (
-          <div className="absolute top-3 left-3 z-20">
-            <Badge className="bg-destructive/95 backdrop-blur-md text-destructive-foreground text-[9px] font-black px-2.5 py-1 shadow-xl shadow-destructive/25 rounded-xl tracking-wide border border-white/10">
-              <Sparkles className="w-3 h-3 mr-1" />
+          <div className="absolute top-7 left-2.5 z-20">
+            <Badge className="bg-destructive/95 backdrop-blur-md text-destructive-foreground text-[9px] font-black px-2 py-0.5 shadow-lg shadow-destructive/25 rounded-md tracking-wide border border-white/10">
+              <Sparkles className="w-2.5 h-2.5 mr-0.5" />
               تخفيض
             </Badge>
           </div>
         )}
 
-        {/* Stock dot — elegant */}
-        <div className="absolute top-3.5 right-3.5 z-20">
-          <div className={`w-2.5 h-2.5 rounded-full shadow-lg ${
-            stockAvailable
-              ? "bg-emerald-400 ring-[3px] ring-emerald-400/20 shadow-emerald-500/30"
-              : "bg-red-400 ring-[3px] ring-red-400/20 shadow-red-400/30"
-          }`} />
-        </div>
-
-        {/* Priced indicator */}
+        {/* Priced indicator — bottom-left */}
         {hasViewed && (
-          <div className="absolute bottom-3 left-3 z-20">
-            <span className="inline-flex items-center gap-1 bg-emerald-500/90 backdrop-blur-md text-white text-[8px] font-bold px-2 py-0.5 rounded-lg shadow-lg shadow-emerald-500/20 border border-emerald-400/20">
+          <div className="absolute bottom-2.5 left-2.5 z-20">
+            <span className="inline-flex items-center gap-1 bg-emerald-500/90 backdrop-blur-md text-white text-[8px] font-bold px-2 py-0.5 rounded-md shadow-lg shadow-emerald-500/20 border border-emerald-400/20">
               <Check className="w-2.5 h-2.5" /> مسعّر
             </span>
           </div>
@@ -249,31 +249,33 @@ const ProductCard = memo(({
       </div>
 
       {/* ── Content Section ── */}
-      <div className="relative flex-1 flex flex-col p-2 sm:p-[18px] z-[1] text-right" onClick={(e) => e.stopPropagation()}>
-        {/* Top row: Stock + Brand + SKU */}
-        <div className="mb-2.5 flex items-start justify-between gap-1">
-          <span className="text-[8px] sm:text-[9px] font-mono text-muted-foreground/35 tracking-[0.15em] leading-none select-all text-left shrink-0">
-            {product.sku}
-          </span>
-          <div className="flex items-center justify-end gap-1.5 flex-wrap min-w-0">
-            <StockBadge available={stockAvailable} />
-            {brandRouteMap[product.brand] && (
-              <Link
-                to={brandRouteMap[product.brand].path}
-                className={`text-[7px] sm:text-[8px] font-extrabold px-2 py-[3px] rounded-lg hover:opacity-80 transition-opacity shadow-sm ${brandRouteMap[product.brand].color}`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {brandRouteMap[product.brand].label}
-              </Link>
-            )}
-          </div>
+      <div className="relative flex-1 flex flex-col p-2.5 sm:p-4 z-[1] text-right" onClick={(e) => e.stopPropagation()}>
+        {/* Top row: Stock badge + Brand badge — clean & aligned */}
+        <div className="mb-2 flex items-center justify-end gap-1.5 flex-wrap">
+          {brandRouteMap[product.brand] && (
+            <Link
+              to={brandRouteMap[product.brand].path}
+              className={`text-[8px] sm:text-[9px] font-extrabold px-2 py-[3px] rounded-md hover:opacity-80 transition-opacity shadow-sm leading-none ${brandRouteMap[product.brand].color}`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {brandRouteMap[product.brand].label}
+            </Link>
+          )}
+          <StockBadge available={stockAvailable} />
         </div>
 
         {/* Name */}
-        <h3 className="font-bold text-card-foreground text-[10px] sm:text-[13px] leading-[1.5] line-clamp-2 min-h-[2.4em] mb-1 text-right
+        <h3 className="font-bold text-card-foreground text-[11px] sm:text-[13px] leading-[1.5] line-clamp-2 min-h-[2.4em] mb-1 text-right
           group-hover:text-primary transition-colors duration-400">
           {product.name_ar}
         </h3>
+
+        {/* SKU — subtle, single line under name */}
+        <div className="mb-2 text-right">
+          <span className="text-[8px] sm:text-[9px] font-mono text-muted-foreground/40 tracking-[0.1em] leading-none select-all">
+            {product.sku}
+          </span>
+        </div>
 
         {/* Year coverage badge — shows "fits 2008 ✓" when user searched by year */}
         {coverage && (
