@@ -41,9 +41,20 @@ const TABLE_LABELS: Record<string, string> = {
   site_settings: "إعدادات الموقع",
   product_categories: "التصنيفات",
   maintenance_bundles: "باقات الصيانة",
+  bundle_items: "محتويات الباقات",
   quantity_discounts: "خصومات الكمية",
+  product_tier_prices: "أسعار الفئات",
   user_roles: "صلاحيات المستخدمين",
   notifications: "الإشعارات",
+  erp_config: "إعدادات الفيصل (ERP)",
+  admin_notification_phones: "أرقام إشعارات الأدمن",
+  daily_report_questions: "أسئلة التقرير اليومي",
+  "auth.users": "حسابات المستخدمين",
+};
+
+const ROLE_BADGE: Record<string, { label: string; color: string }> = {
+  admin: { label: "أدمن", color: "bg-red-500/10 text-red-600 border-red-500/30" },
+  moderator: { label: "موظف", color: "bg-amber-500/10 text-amber-700 border-amber-500/30" },
 };
 
 const ITEMS_PER_PAGE = 20;
