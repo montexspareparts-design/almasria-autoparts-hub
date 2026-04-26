@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Helmet } from "react-helmet-async";
+import SEOHead from "@/components/SEOHead";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, Clock, Cog, Truck, Package, MapPin, FileText, Users, ChevronLeft } from "lucide-react";
