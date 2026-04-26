@@ -10,6 +10,7 @@ const VINScannerDialog = lazy(() => import("@/components/VINScannerDialog"));
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ProductCard from "@/components/ProductCard";
+import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 import ProductFilterSidebar from "@/components/ProductFilterSidebar";
 import ProductSearchAutocomplete from "@/components/ProductSearchAutocomplete";
 import ProductCommandPalette from "@/components/ProductCommandPalette";
