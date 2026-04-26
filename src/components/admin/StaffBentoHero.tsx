@@ -144,6 +144,23 @@ export default function StaffBentoHero({
         (profs || []).map((p: any) => [p.user_id, { name: p.full_name || "عميل", phone: p.phone || null }])
       );
     }
+    // جلب آخر تواصل لكل عميل (أحدث customer_communications.created_at قبل وقت التذكير)
+    const lastContactMap = new Map<string, string>();
+    if (customerIds.length) {
+      const { data: lastComms } = await supabase
+        .from("customer_communications")
+        .select("customer_user_id, created_at")
+        .in("customer_user_id", customerIds)
+        .order("created_at", { ascending: false })
+        .limit(500);
+      // أول ظهور لكل عميل = أحدث تواصل (مرتّب تنازلياً)
+      for (const c of (lastComms || []) as any[]) {
+        if (c.customer_user_id && !lastContactMap.has(c.customer_user_id)) {
+          lastContactMap.set(c.customer_user_id, c.created_at);
+        }
+      }
+    }
+
     setReminders(
       ((remRows || []) as any[]).map((r) => ({
         id: r.id,
@@ -153,6 +170,7 @@ export default function StaffBentoHero({
         reminder_at: r.reminder_at,
         note: r.note,
         comm_type: r.comm_type,
+        last_contact_at: r.customer_user_id ? lastContactMap.get(r.customer_user_id) || null : null,
       }))
     );
 
