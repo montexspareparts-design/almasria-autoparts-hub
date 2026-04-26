@@ -575,15 +575,35 @@ export default function StaffBentoHero({
                       </div>
                       {r.note && <div className="text-muted-foreground truncate text-[10px] mt-0.5">{r.note}</div>}
                     </div>
-                    {r.customer_phone && (
-                      <a
-                        href={`tel:${r.customer_phone}`}
-                        className="p-1.5 rounded bg-emerald-100 hover:bg-emerald-200 text-emerald-700 shrink-0"
-                        title="اتصال"
+                    <div className="flex items-center gap-1 shrink-0">
+                      {r.customer_phone && (
+                        <a
+                          href={`tel:${r.customer_phone}`}
+                          className="p-1.5 rounded bg-emerald-100 hover:bg-emerald-200 text-emerald-700"
+                          title="اتصال"
+                        >
+                          <Phone className="w-3 h-3" />
+                        </a>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleMarkContacted(r)}
+                        disabled={contactingId === r.id}
+                        className={cn(
+                          "inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold transition-colors",
+                          "bg-emerald-600 hover:bg-emerald-700 text-white",
+                          "disabled:opacity-60 disabled:cursor-not-allowed"
+                        )}
+                        title="تسجيل تواصل سريع"
                       >
-                        <Phone className="w-3 h-3" />
-                      </a>
-                    )}
+                        {contactingId === r.id ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="w-3 h-3" />
+                        )}
+                        تم التواصل
+                      </button>
+                    </div>
                   </div>
                 );
               })}
