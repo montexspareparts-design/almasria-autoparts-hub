@@ -134,7 +134,18 @@ const ProductDetailDialog = ({
 
   // Bilingual SEO meta + Product JSON-LD — only emitted while the dialog
   // is open so it doesn't pollute SEO of the underlying listing page.
+  //
+  // Canonical / indexing strategy:
+  //   • The dialog is a MODAL — it lives at the listing-page URL
+  //     (e.g. /products?... or /products/:brand). Letting <SEOHead> derive
+  //     canonical from `pathname` would tell Google "this listing IS this
+  //     product", which is wrong and dilutes both pages.
+  //   • So we point canonical at the dedicated product page when one
+  //     exists (`/dealer/product/:id`), and we mark the modal `noindex`
+  //     so crawlers consolidate on that real URL instead of the modal-
+  //     on-listing combo.
   const seo = buildProductSEO(product);
+  const productCanonical = buildProductCanonical(product);
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -149,6 +160,8 @@ const ProductDetailDialog = ({
             keywordsEn={seo.keywordsEn}
             ogType="product"
             image={product.image_url || undefined}
+            canonical={productCanonical || undefined}
+            noindex
           />
           <ProductSchema
             name={product.name_ar || product.name_en || product.sku}
