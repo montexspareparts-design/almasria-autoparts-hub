@@ -4,6 +4,7 @@ import { LazyImage } from "@/components/ui/lazy-image";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ImageBadge, ImageBadgeColumn } from "@/components/ui/image-badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
