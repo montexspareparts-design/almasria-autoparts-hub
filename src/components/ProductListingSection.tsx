@@ -417,6 +417,10 @@ const ProductListingSection = memo(({
                             limitReached={limitReached}
                             dailyViewCount={dailyViewCount}
                             dailyLimit={dailyLimit}
+                            searchYear={(() => {
+                              const m = (filters.search || "").match(/\b(19|20)\d{2}\b/);
+                              return m ? parseInt(m[0]) : null;
+                            })()}
                             getProductPrice={getProductPrice}
                             onProductClick={setSelectedProduct}
                             onAddToCart={handleAddToCart}
