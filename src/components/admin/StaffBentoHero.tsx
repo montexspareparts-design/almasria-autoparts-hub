@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 import {
   Users, ShoppingBag, BellRing, Flame, ArrowLeft, Wallet, FileSearch,
   MessageSquare, UserPlus, Clock, AlertTriangle, CalendarDays, Eye,
-  Sparkles, ChevronRight, Phone,
+  Sparkles, ChevronRight, Phone, Timer, TrendingUp,
 } from "lucide-react";
 
 interface Reminder {
@@ -64,11 +64,18 @@ export default function StaffBentoHero({
   const [visitorsNow, setVisitorsNow] = useState(0);
   const [reminders, setReminders] = useState<Reminder[]>([]);
 
+  // ===== شريط مختصرات اليوم =====
+  const [newVisitorsToday, setNewVisitorsToday] = useState(0);
+  const [overdueTasksTotal, setOverdueTasksTotal] = useState(0);
+  const [avgResponseMin, setAvgResponseMin] = useState<number | null>(null);
+
   const fetchHero = async () => {
     if (!user) return;
     const now = Date.now();
     const since30m = new Date(now - 30 * 60 * 1000).toISOString();
     const since24h = new Date(now - 24 * 3600 * 1000).toISOString();
+    const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
+    const startOfDayIso = startOfDay.toISOString();
 
     // 1) زوار الآن
     const { count: vCount } = await supabase
@@ -143,6 +150,68 @@ export default function StaffBentoHero({
         comm_type: r.comm_type,
       }))
     );
+
+    // ===== شريط مختصرات اليوم =====
+    // (أ) عدد الزوار الجدد اليوم — جلسات بدأت بعد منتصف الليل لمستخدمين ليست لهم session سابقة
+    try {
+      const { data: todaySessions } = await supabase
+        .from("customer_sessions")
+        .select("user_id, session_key, first_seen_at")
+        .gte("first_seen_at", startOfDayIso)
+        .limit(1000);
+      // اعتبر فريدًا حسب user_id (أو session_key للزوار المجهولين)
+      const uniq = new Set<string>();
+      (todaySessions || []).forEach((s: any) => {
+        uniq.add(s.user_id || `anon:${s.session_key}`);
+      });
+      setNewVisitorsToday(uniq.size);
+    } catch {
+      // fallback: page_visits اليوم (مميّز حسب session_key)
+      try {
+        const { data: pv } = await supabase
+          .from("page_visits")
+          .select("session_key, user_id")
+          .gte("visited_at", startOfDayIso)
+          .limit(2000);
+        const uniq = new Set<string>();
+        (pv || []).forEach((r: any) => uniq.add(r.user_id || `anon:${r.session_key}`));
+        setNewVisitorsToday(uniq.size);
+      } catch { /* */ }
+    }
+
+    // (ب) عدد المهام المتأخرة — تذكيرات الموظف الحالي (reminder_at < now AND !done)
+    const { count: overdueCount } = await supabase
+      .from("customer_communications")
+      .select("id", { count: "exact", head: true })
+      .eq("staff_user_id", user.id)
+      .eq("is_done", false)
+      .not("reminder_at", "is", null)
+      .lt("reminder_at", new Date(now).toISOString());
+    setOverdueTasksTotal(overdueCount || 0);
+
+    // (ج) متوسط وقت الاستجابة — support_requests اللي اتقفلت اليوم
+    try {
+      const { data: closed } = await supabase
+        .from("support_requests")
+        .select("created_at, resolved_at, claimed_at")
+        .gte("created_at", startOfDayIso)
+        .not("resolved_at", "is", null)
+        .limit(200);
+      const diffs = (closed || [])
+        .map((r: any) => {
+          // نفضّل claimed_at (أول رد من الموظف) إن وُجد، وإلا resolved_at
+          const respondedAt = r.claimed_at || r.resolved_at;
+          if (!respondedAt || !r.created_at) return null;
+          return (new Date(respondedAt).getTime() - new Date(r.created_at).getTime()) / 60000;
+        })
+        .filter((v): v is number => v !== null && v >= 0);
+      if (diffs.length > 0) {
+        const avg = diffs.reduce((a, b) => a + b, 0) / diffs.length;
+        setAvgResponseMin(Math.round(avg));
+      } else {
+        setAvgResponseMin(null);
+      }
+    } catch { /* */ }
   };
 
   useEffect(() => {
@@ -202,6 +271,38 @@ export default function StaffBentoHero({
             تحديث مباشر كل دقيقة
           </span>
         </div>
+      </div>
+
+      {/* ===== شريط مختصرات اليوم ===== */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <ShortcutTile
+          icon={<TrendingUp className="w-4 h-4" />}
+          label="زوار جدد اليوم"
+          value={newVisitorsToday.toString()}
+          hint="منذ منتصف الليل"
+          tone="emerald"
+          to="/admin/staff-home"
+          ctaLabel="عرض الزوار"
+        />
+        <ShortcutTile
+          icon={<AlertTriangle className="w-4 h-4" />}
+          label="مهام متأخرة"
+          value={overdueTasksTotal.toString()}
+          hint={overdueTasksTotal > 0 ? "تحتاج تواصل فوراً" : "كل شيء تمام ✓"}
+          tone={overdueTasksTotal > 0 ? "red" : "slate"}
+          onClick={() => onJumpToTab("urgent")}
+          ctaLabel="فتح المهام"
+          urgent={overdueTasksTotal > 0}
+        />
+        <ShortcutTile
+          icon={<Timer className="w-4 h-4" />}
+          label="متوسط وقت الاستجابة"
+          value={avgResponseMin !== null ? `${avgResponseMin}د` : "—"}
+          hint={avgResponseMin === null ? "لا طلبات اليوم" : avgResponseMin <= 15 ? "ممتاز 🚀" : avgResponseMin <= 60 ? "مقبول" : "بطيء — ركّز"}
+          tone={avgResponseMin === null ? "slate" : avgResponseMin <= 15 ? "emerald" : avgResponseMin <= 60 ? "amber" : "red"}
+          onClick={() => onJumpToTab("chatbot")}
+          ctaLabel="طلبات الدعم"
+        />
       </div>
 
       {/* Bento Grid — 5 sections */}
@@ -528,4 +629,68 @@ function UrgentTile({ label, hint, value, icon, onClick }: UrgentTileProps) {
       <div className="text-[9px] text-muted-foreground">{hint}</div>
     </button>
   );
+}
+
+// ===== ShortcutTile — بطاقة مختصر علوي =====
+interface ShortcutTileProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  hint: string;
+  tone: "emerald" | "red" | "amber" | "slate";
+  to?: string;
+  onClick?: () => void;
+  ctaLabel: string;
+  urgent?: boolean;
+}
+
+const shortcutTones: Record<ShortcutTileProps["tone"], { wrap: string; valueColor: string; iconBg: string }> = {
+  emerald: {
+    wrap: "from-emerald-500/10 to-transparent border-emerald-200 dark:border-emerald-900",
+    valueColor: "text-emerald-700 dark:text-emerald-300",
+    iconBg: "bg-emerald-500/15 text-emerald-700",
+  },
+  red: {
+    wrap: "from-red-500/10 to-transparent border-red-200 dark:border-red-900",
+    valueColor: "text-red-700 dark:text-red-300",
+    iconBg: "bg-red-500/15 text-red-700",
+  },
+  amber: {
+    wrap: "from-amber-500/10 to-transparent border-amber-200 dark:border-amber-900",
+    valueColor: "text-amber-700 dark:text-amber-300",
+    iconBg: "bg-amber-500/15 text-amber-700",
+  },
+  slate: {
+    wrap: "from-muted/30 to-transparent border-border",
+    valueColor: "text-foreground",
+    iconBg: "bg-muted text-muted-foreground",
+  },
+};
+
+function ShortcutTile({ icon, label, value, hint, tone, to, onClick, ctaLabel, urgent }: ShortcutTileProps) {
+  const t = shortcutTones[tone];
+  const inner = (
+    <Card className={cn(
+      "p-3 bg-gradient-to-br border-2 hover:shadow-md transition cursor-pointer h-full",
+      t.wrap,
+      urgent && "ring-2 ring-red-300 dark:ring-red-800 animate-pulse"
+    )}>
+      <div className="flex items-center gap-3">
+        <div className={cn("p-2 rounded-lg shrink-0", t.iconBg)}>{icon}</div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-2">
+            <span className={cn("text-2xl font-black leading-none", t.valueColor)}>{value}</span>
+            <span className="text-[10px] text-muted-foreground truncate">{label}</span>
+          </div>
+          <div className="text-[10px] text-muted-foreground mt-1 truncate">{hint}</div>
+        </div>
+        <div className="flex items-center gap-1 text-[10px] font-bold text-foreground/70 shrink-0">
+          {ctaLabel}
+          <ChevronRight className="w-3 h-3" />
+        </div>
+      </div>
+    </Card>
+  );
+  if (to) return <Link to={to} className="block">{inner}</Link>;
+  return <button onClick={onClick} className="text-right w-full block">{inner}</button>;
 }
