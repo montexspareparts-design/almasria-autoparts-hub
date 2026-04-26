@@ -265,6 +265,9 @@ const DealerProductPage = () => {
   );
 
   const seo = buildProductSEO(product);
+  // Real, indexable canonical for THIS product. The same value is used by
+  // <ProductDetailDialog> so list-page modal views consolidate here.
+  const productCanonical = buildProductCanonical(product);
 
   return (
     <>
@@ -277,6 +280,7 @@ const DealerProductPage = () => {
         keywordsEn={seo.keywordsEn}
         ogType="product"
         image={product.image_url || undefined}
+        canonical={productCanonical || undefined}
       />
       <ProductSchema
         name={product.name_ar || product.name_en || product.sku}
