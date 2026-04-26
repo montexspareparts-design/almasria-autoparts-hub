@@ -7,10 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
-import { User, Phone, Save, Loader2, Shield, Volume2, VolumeX, Sun, Moon, Monitor, Type, Minus, Plus, Palette, Car, Bus, Check } from "lucide-react";
+import { User, Phone, Save, Loader2, Shield, Volume2, VolumeX, Sun, Moon, Monitor, Type, Minus, Plus, Palette, Car, Bus, Check, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { isSoundEnabled, setSoundEnabled, playPricingSound } from "@/lib/pricingSound";
 import { useTheme } from "next-themes";
+import { useHighContrast } from "@/hooks/useHighContrast";
 
 const tierLabels: Record<string, string> = {
   wholesale_tier1: "تاجر جملة – درجة أولى",
@@ -29,6 +30,7 @@ const setFontSizeStorage = (size: number) => {
 const DealerAccountSettings = () => {
   const { user, dealerAccount } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { enabled: highContrast, toggle: toggleHighContrast } = useHighContrast();
   const [profile, setProfile] = useState({ full_name: "", phone: "", email: "" });
   const [soundOn, setSoundOn] = useState(isSoundEnabled());
   const [fontSize, setFontSize] = useState(getFontSize());
@@ -313,6 +315,36 @@ const DealerAccountSettings = () => {
               </button>
             )}
             <p className="text-[10px] text-muted-foreground">معاينة: <span style={{ fontSize: `${fontSize}px` }}>هذا نص تجريبي بالحجم المختار</span></p>
+          </div>
+
+          {/* High Contrast — accessibility */}
+          <div className="space-y-2 pt-2 border-t border-border/40">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-start gap-2 min-w-0">
+                <Eye className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-foreground">وضع التباين العالي</p>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    يزيد عتامة البادجات وقوة الظلال والإطارات لتحسين القراءة لذوي الإعاقة البصرية.
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={highContrast}
+                onCheckedChange={toggleHighContrast}
+                aria-label="تفعيل وضع التباين العالي"
+              />
+            </div>
+            {/* Live preview chip — same .badge-glass utility used on product cards */}
+            <div className="mt-2 p-3 rounded-lg bg-muted/40 flex items-center gap-2">
+              <span className="text-[10px] text-muted-foreground">معاينة:</span>
+              <span className="badge-glass ring-1 ring-white/30 text-white text-[10px] font-bold px-2 py-1 rounded-md [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
+                متوفر
+              </span>
+              <span className="badge-glass ring-1 ring-white/30 text-white text-[10px] font-black px-2 py-1 rounded-md tracking-wide [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
+                تخفيض
+              </span>
+            </div>
           </div>
         </CardContent>
       </Card>
