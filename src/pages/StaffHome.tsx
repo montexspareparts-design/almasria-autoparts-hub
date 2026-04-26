@@ -1897,6 +1897,42 @@ const StaffHome = () => {
                 <SelectItem value="viewed">تمت المعاينة</SelectItem>
               </SelectContent>
             </Select>
+            {/* New: source filter — تمييز الزوار حسب مصدر الإعلان */}
+            <Select value={visitorSourceFilter} onValueChange={(v) => setVisitorSourceFilter(v as any)}>
+              <SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent position="popper" className="z-[100]">
+                <SelectItem value="all">كل المصادر</SelectItem>
+                <SelectItem value="facebook">📘 فيسبوك</SelectItem>
+                <SelectItem value="google">🔍 جوجل</SelectItem>
+                <SelectItem value="instagram">📷 إنستجرام</SelectItem>
+                <SelectItem value="tiktok">🎵 تيك توك</SelectItem>
+                <SelectItem value="whatsapp">💬 واتساب</SelectItem>
+                <SelectItem value="direct">🌐 مباشر</SelectItem>
+                <SelectItem value="other">🔗 موقع آخر</SelectItem>
+              </SelectContent>
+            </Select>
+            {/* New: activity filter — حسب الإجراء الذي قام به الزائر */}
+            <Select value={visitorActivityFilter} onValueChange={(v) => setVisitorActivityFilter(v as any)}>
+              <SelectTrigger className="h-8 w-[160px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent position="popper" className="z-[100]">
+                <SelectItem value="all">كل الأنشطة</SelectItem>
+                <SelectItem value="ordered">🛍️ عمل طلب</SelectItem>
+                <SelectItem value="added_cart">🛒 أضاف للسلة</SelectItem>
+                <SelectItem value="searched">🔎 بحث عن منتج</SelectItem>
+                <SelectItem value="viewed_products">👁️ شاف منتجات</SelectItem>
+                <SelectItem value="browsed_only">📄 تصفّح فقط</SelectItem>
+              </SelectContent>
+            </Select>
+            {/* New: minimum pages — لاستبعاد الزوار العابرين */}
+            <Select value={visitorMinPages} onValueChange={(v) => setVisitorMinPages(v as any)}>
+              <SelectTrigger className="h-8 w-[130px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent position="popper" className="z-[100]">
+                <SelectItem value="all">أي عدد صفحات</SelectItem>
+                <SelectItem value="2">≥ صفحتين</SelectItem>
+                <SelectItem value="5">≥ 5 صفحات</SelectItem>
+                <SelectItem value="10">≥ 10 صفحات</SelectItem>
+              </SelectContent>
+            </Select>
             {/* All / Only Customers toggle — default hides staff; "All" is for admin review */}
             <Select value={includeStaff ? "all" : "customers"} onValueChange={(v) => setIncludeStaff(v === "all")}>
               <SelectTrigger className="h-8 w-[170px] text-xs"><SelectValue /></SelectTrigger>
@@ -1915,7 +1951,19 @@ const StaffHome = () => {
               <Activity className="w-3.5 h-3.5" />
               متفاعلين فقط
             </Button>
-            {(visitorTypeFilter !== "all" || visitorDateFilter !== "all" || visitorViewedFilter !== "all" || visitorEngagedOnly || includeStaff || visitorsSearch) && (
+            {/* Export filtered list as a comprehensive CSV report */}
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 text-xs gap-1 border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+              onClick={() => exportVisitorsReport(dialogFilteredVisitors)}
+              disabled={dialogFilteredVisitors.length === 0}
+              title="تنزيل تقرير شامل CSV عن الزوار المعروضين الآن"
+            >
+              <Download className="w-3.5 h-3.5" />
+              تصدير تقرير ({dialogFilteredVisitors.length})
+            </Button>
+            {(visitorTypeFilter !== "all" || visitorDateFilter !== "all" || visitorViewedFilter !== "all" || visitorSourceFilter !== "all" || visitorActivityFilter !== "all" || visitorMinPages !== "all" || visitorEngagedOnly || includeStaff || visitorsSearch) && (
               <Button
                 size="sm"
                 variant="ghost"
@@ -1924,6 +1972,9 @@ const StaffHome = () => {
                   setVisitorTypeFilter("all");
                   setVisitorDateFilter("all");
                   setVisitorViewedFilter("all");
+                  setVisitorSourceFilter("all");
+                  setVisitorActivityFilter("all");
+                  setVisitorMinPages("all");
                   setVisitorEngagedOnly(false);
                   setIncludeStaff(false);
                   setVisitorsSearch("");
