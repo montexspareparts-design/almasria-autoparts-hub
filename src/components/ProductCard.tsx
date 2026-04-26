@@ -102,21 +102,24 @@ const ProductCard = memo(({
           transition-all duration-500"
         onClick={() => onProductClick(product)}
       >
-        {/* Image */}
-        <div className="w-28 sm:w-48 shrink-0 bg-white relative flex items-center justify-center p-3 sm:p-5 overflow-hidden">
+        {/* Image — fixed square frame across breakpoints, consistent inner padding */}
+        <div className="w-28 sm:w-40 md:w-48 aspect-square shrink-0 bg-white relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-white via-white to-muted/10" />
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out z-10 pointer-events-none" />
-          {product.image_url ? (
-            <LazyImage
-              src={product.image_url}
-              alt={product.name_ar}
-              wrapperClassName="w-full h-full"
-              className="w-full h-full object-contain mix-blend-multiply relative z-[1] group-hover:scale-110 transition-transform duration-700"
-              optimizeWidth={200}
-            />
-          ) : (
-            <Package className="w-10 h-10 text-muted-foreground/10 relative z-[1]" />
-          )}
+          {/* Padded inner box keeps every product image inside the same usable area */}
+          <div className="absolute inset-0 p-3 sm:p-4 flex items-center justify-center">
+            {product.image_url ? (
+              <LazyImage
+                src={product.image_url}
+                alt={product.name_ar}
+                wrapperClassName="w-full h-full flex items-center justify-center"
+                className="max-w-full max-h-full w-auto h-auto object-contain mix-blend-multiply relative z-[1] group-hover:scale-110 transition-transform duration-700"
+                optimizeWidth={240}
+              />
+            ) : (
+              <Package className="w-10 h-10 text-muted-foreground/15 relative z-[1]" />
+            )}
+          </div>
           {product.is_on_sale && (
             <Badge className="absolute top-2 left-2 z-20 bg-destructive text-destructive-foreground text-[8px] font-black px-2 py-0.5 shadow-lg shadow-destructive/30 rounded-lg">
               تخفيض
@@ -204,30 +207,35 @@ const ProductCard = memo(({
       {/* ── Ambient glow on hover ── */}
       <div className="absolute -inset-[1px] rounded-[20px] bg-gradient-to-b from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none z-0" />
 
-      {/* ── Image Section ── */}
-      <div className="relative aspect-[4/3] bg-white overflow-hidden z-[1]">
+      {/* ── Image Section ── unified 1:1 frame, identical inner padding everywhere */}
+      <div className="relative aspect-square bg-white overflow-hidden z-[1]">
         {/* Subtle vignette */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_60%,rgba(0,0,0,0.02)_100%)] z-10 pointer-events-none" />
 
-        {/* Bottom fade for seamless transition */}
+        {/* Bottom fade for seamless transition into the content section */}
         <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-card to-transparent z-10 pointer-events-none" />
 
         {/* Luxury shimmer sweep */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-[200%] group-hover:translate-x-[200%] transition-transform duration-[1.4s] ease-in-out z-10 pointer-events-none" />
 
-        {product.image_url ? (
-          <LazyImage
-            src={product.image_url}
-            alt={product.name_ar}
-            wrapperClassName="w-full h-full"
-            className="w-full h-full object-contain p-3 sm:p-5 group-hover:scale-[1.06] transition-transform duration-[800ms] ease-[cubic-bezier(0.23,1,0.32,1)]"
-            optimizeWidth={400}
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Package className="w-14 h-14 text-muted-foreground/8" />
-          </div>
-        )}
+        {/*
+          Reserved padded inner box ensures every product image — regardless of its
+          natural dimensions — fits inside the SAME usable area, so cards stay
+          perfectly aligned across the grid on every screen size.
+        */}
+        <div className="absolute inset-0 p-4 sm:p-5 flex items-center justify-center">
+          {product.image_url ? (
+            <LazyImage
+              src={product.image_url}
+              alt={product.name_ar}
+              wrapperClassName="w-full h-full flex items-center justify-center"
+              className="max-w-full max-h-full w-auto h-auto object-contain mix-blend-multiply group-hover:scale-[1.06] transition-transform duration-[800ms] ease-[cubic-bezier(0.23,1,0.32,1)]"
+              optimizeWidth={400}
+            />
+          ) : (
+            <Package className="w-14 h-14 text-muted-foreground/15" />
+          )}
+        </div>
 
         {/*
           Image overlays — fixed positions with explicit z-index hierarchy:
