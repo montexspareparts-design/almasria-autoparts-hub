@@ -1799,7 +1799,7 @@ const StaffHome = () => {
             </div>
             <Select value={visitorTypeFilter} onValueChange={(v) => setVisitorTypeFilter(v as any)}>
               <SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" className="z-[100]">
                 <SelectItem value="all">كل الزوار</SelectItem>
                 <SelectItem value="registered">مسجّل (له بيانات)</SelectItem>
                 <SelectItem value="anon">زائر مجهول</SelectItem>
@@ -1807,7 +1807,7 @@ const StaffHome = () => {
             </Select>
             <Select value={visitorDateFilter} onValueChange={(v) => setVisitorDateFilter(v as any)}>
               <SelectTrigger className="h-8 w-[130px] text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" className="z-[100]">
                 <SelectItem value="all">كل التواريخ</SelectItem>
                 <SelectItem value="today">اليوم</SelectItem>
                 <SelectItem value="yesterday">أمس</SelectItem>
@@ -1817,7 +1817,7 @@ const StaffHome = () => {
             </Select>
             <Select value={visitorViewedFilter} onValueChange={(v) => setVisitorViewedFilter(v as any)}>
               <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" className="z-[100]">
                 <SelectItem value="all">معاين/غير معاين</SelectItem>
                 <SelectItem value="not_viewed">لم تتم معاينته</SelectItem>
                 <SelectItem value="viewed">تمت المعاينة</SelectItem>
@@ -1826,7 +1826,7 @@ const StaffHome = () => {
             {/* All / Only Customers toggle — default hides staff; "All" is for admin review */}
             <Select value={includeStaff ? "all" : "customers"} onValueChange={(v) => setIncludeStaff(v === "all")}>
               <SelectTrigger className="h-8 w-[170px] text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" className="z-[100]">
                 <SelectItem value="customers">العملاء فقط (افتراضي)</SelectItem>
                 <SelectItem value="all">الكل (يشمل الموظفين)</SelectItem>
               </SelectContent>
