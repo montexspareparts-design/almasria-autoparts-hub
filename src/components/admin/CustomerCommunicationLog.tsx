@@ -42,6 +42,9 @@ interface CommRecord {
   note: string | null;
   staff_user_id: string;
   created_at: string;
+  reminder_at: string | null;
+  is_done: boolean;
+  done_at: string | null;
   staff_name?: string;
 }
 
