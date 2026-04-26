@@ -55,6 +55,7 @@ const TrackOrderPage = lazy(() => import("./pages/TrackOrderPage"));
 const DevDealerPreview = lazy(() => import("./pages/DevDealerPreview"));
 const VisitorSessionSummary = lazy(() => import("./pages/VisitorSessionSummary"));
 const StaffHome = lazy(() => import("./pages/StaffHome"));
+const StaffDailyReportPage = lazy(() => import("./pages/StaffDailyReportPage"));
 const VisitorLeadsPage = lazy(() => import("./pages/VisitorLeadsPage"));
 const AdminWhatsAppLogsPage = lazy(() => import("./pages/AdminWhatsAppLogsPage"));
 import PageVisitTracker from "./components/PageVisitTracker";
