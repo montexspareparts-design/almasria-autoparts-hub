@@ -93,77 +93,36 @@ const BREAKPOINTS: Record<BreakpointKey, { label: string; width: string; tw: str
 };
 
 /**
- * BadgeStack — يطابق حرفياً البادجات المستخدمة داخل grid-mode في
- * src/components/ProductCard.tsx (TOP-START / TOP-END / BOTTOM-END).
+ * BadgeStack — يستخدم نفس مكوّن <ImageBadge> الموحّد المستعمل داخل
+ * src/components/ProductCard.tsx، فيكون هذا الاختبار مرآة حقيقية
+ * 1:1 لما يراه المستخدم النهائي (بدون أي class مكرّر).
  */
 function BadgeStack({ stockAvailable, onSale, hasViewed }: { stockAvailable: boolean; onSale: boolean; hasViewed: boolean }) {
   return (
     <>
-      {/* TOP-START : Brand */}
-      <div className="absolute top-1.5 start-1.5 sm:top-2 sm:start-2 lg:top-2.5 lg:start-2.5 z-30 flex flex-col items-start gap-1 sm:gap-1.5 max-w-[48%] sm:max-w-[55%] pointer-events-none">
-        <span
-          className="pointer-events-auto inline-flex items-center max-w-full truncate
-            text-[7px] sm:text-[9px] lg:text-[10px] font-extrabold
-            px-1.5 py-[2px] sm:px-2 sm:py-[3px] lg:px-2.5 lg:py-1
-            rounded-md leading-none whitespace-nowrap
-            backdrop-blur-md backdrop-saturate-150
-            ring-1 ring-white/30 shadow-[0_2px_8px_rgba(0,0,0,0.25)]
-            [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]
-            bg-red-600/95 text-white"
-        >
+      <ImageBadgeColumn corner="top-start">
+        <ImageBadge tone="brand" size="sm" colorClass="bg-red-600/95 text-white">
           تويوتا أصلي
-        </span>
-      </div>
+        </ImageBadge>
+      </ImageBadgeColumn>
 
-      {/* TOP-END : Stock + Sale */}
-      <div className="absolute top-1.5 end-1.5 sm:top-2 sm:end-2 lg:top-2.5 lg:end-2.5 z-30 flex flex-col items-end gap-1 sm:gap-1.5 max-w-[48%] sm:max-w-[55%] pointer-events-none">
-        <span
-          className={`pointer-events-auto inline-flex items-center gap-0.5 sm:gap-1
-            text-[7px] sm:text-[9px] lg:text-[10px] font-bold
-            px-1.5 py-[2px] sm:px-2 sm:py-[3px] lg:px-2.5 lg:py-1
-            rounded-md leading-none whitespace-nowrap text-white
-            backdrop-blur-md backdrop-saturate-150
-            ring-1 ring-white/30
-            [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]
-            ${stockAvailable
-              ? "bg-emerald-600/95 shadow-[0_2px_10px_rgba(16,185,129,0.35)]"
-              : "bg-red-600/95 shadow-[0_2px_10px_rgba(239,68,68,0.35)]"}`}
-        >
-          <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-white shadow-[0_0_4px_rgba(255,255,255,0.6)]" />
+      <ImageBadgeColumn corner="top-end">
+        <ImageBadge tone="stock" size="sm" stockAvailable={stockAvailable}>
           {stockAvailable ? "متوفر" : "غير متوفر"}
-        </span>
-
+        </ImageBadge>
         {onSale && (
-          <Badge
-            className="pointer-events-auto relative z-[1] bg-destructive/95 text-destructive-foreground
-              text-[7px] sm:text-[9px] lg:text-[10px] font-black
-              px-1.5 py-[2px] sm:px-2 sm:py-0.5 lg:px-2.5 lg:py-1
-              rounded-md tracking-wide
-              backdrop-blur-md backdrop-saturate-150
-              ring-1 ring-white/25 shadow-[0_2px_10px_rgba(220,38,38,0.4)]
-              [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]"
-          >
-            <Sparkles className="w-2 h-2 sm:w-2.5 sm:h-2.5 mr-0.5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]" />
+          <ImageBadge tone="sale" size="sm" icon={<Sparkles />}>
             تخفيض
-          </Badge>
+          </ImageBadge>
         )}
-      </div>
+      </ImageBadgeColumn>
 
-      {/* BOTTOM-END : Priced */}
       {hasViewed && (
-        <div className="absolute bottom-2 end-2 sm:bottom-2.5 sm:end-2.5 lg:bottom-3 lg:end-3 z-40 flex flex-col items-end gap-1 sm:gap-1.5 pointer-events-none">
-          <span
-            className="pointer-events-auto inline-flex items-center gap-0.5 sm:gap-1 bg-emerald-600/95 text-white
-              text-[7px] sm:text-[9px] lg:text-[10px] font-bold
-              px-1.5 py-[2px] sm:px-2 sm:py-0.5 lg:px-2.5 lg:py-1
-              rounded-md
-              backdrop-blur-md backdrop-saturate-150
-              ring-1 ring-white/30 shadow-[0_2px_10px_rgba(16,185,129,0.35)]
-              [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]"
-          >
-            <Check className="w-2 h-2 sm:w-2.5 sm:h-2.5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]" /> مسعّر
-          </span>
-        </div>
+        <ImageBadgeColumn corner="bottom-end" level={40}>
+          <ImageBadge tone="priced" size="sm" icon={<Check />}>
+            مسعّر
+          </ImageBadge>
+        </ImageBadgeColumn>
       )}
     </>
   );
