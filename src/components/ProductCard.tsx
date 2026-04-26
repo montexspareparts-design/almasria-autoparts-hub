@@ -123,10 +123,20 @@ const ProductCard = memo(({
                 wrapperClassName="w-full h-full flex items-center justify-center"
                 className="max-w-full max-h-full w-auto h-auto object-contain mix-blend-multiply relative z-[1] group-hover:scale-110 transition-transform duration-700"
                 optimizeWidth={240}
-                hideSkeletonIcon
+                placeholderIcon={
+                  <Package
+                    className="w-10 h-10 text-muted-foreground/25"
+                    strokeWidth={1.25}
+                  />
+                }
               />
             ) : (
-              <Package className="w-10 h-10 text-muted-foreground/15 relative z-[1]" />
+              // Same icon, same color, same stroke as the LazyImage placeholder
+              // → cards without an image look identical to cards still loading.
+              <Package
+                className="w-10 h-10 text-muted-foreground/25 relative z-[1]"
+                strokeWidth={1.25}
+              />
             )}
           </div>
           {product.is_on_sale && (
