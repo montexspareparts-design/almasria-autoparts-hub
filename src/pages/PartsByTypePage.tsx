@@ -274,11 +274,19 @@ const TypeDetailView = ({ type }: { type: PartTypeData }) => {
 /* ── Landing ── */
 const TypesLanding = () => (
   <>
-    <Helmet>
-      <title>قطع غيار تويوتا حسب نوع القطعة | المصرية جروب</title>
-      <meta name="description" content="تصفح قطع غيار تويوتا الأصلية حسب نوع القطعة: فلاتر، زيوت، فرامل، تعليق، كهرباء، محرك، تبريد. موزع معتمد في مصر." />
-      <link rel="canonical" href={`${SITE}/parts-by-type`} />
-    </Helmet>
+    <SEOHead
+      titleAr="قطع غيار تويوتا حسب نوع القطعة"
+      titleEn="Toyota Parts by Category"
+      descriptionAr="تصفح قطع غيار تويوتا الأصلية حسب نوع القطعة: فلاتر، زيوت بنزين/ديزل، فرامل، عفشة ومساعدين، كهرباء وبوجيهات، تبريد، جوانات وسيور. موزع معتمد في مصر."
+      descriptionEn="Browse Toyota genuine parts by category: filters, gasoline & diesel oils, brakes, suspension & shocks, electrical & spark plugs, cooling, gaskets and belts. Authorized distributor in Egypt."
+      keywordsAr="قطع غيار تويوتا, فلاتر تويوتا, زيوت تويوتا, فرامل تويوتا, عفشة تويوتا, كهرباء تويوتا, تبريد تويوتا"
+      keywordsEn="Toyota parts Egypt, Toyota filters, Toyota oil, Toyota brakes, Toyota suspension, Toyota electrical, Toyota cooling"
+      canonical="/parts-by-type"
+      breadcrumbs={[
+        { ar: "الرئيسية", en: "Home", url: "/" },
+        { ar: "حسب نوع القطعة", en: "By Part Type", url: "/parts-by-type" },
+      ]}
+    />
     <BreadcrumbSchema items={[
       { name: "الرئيسية", url: SITE },
       { name: "حسب نوع القطعة", url: `${SITE}/parts-by-type` },
