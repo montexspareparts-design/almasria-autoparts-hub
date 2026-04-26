@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import SEOHead from "@/components/SEOHead";
 import { ProductSchema } from "@/components/SEOSchemaMarkup";
-import { buildProductSEO } from "@/lib/productSeo";
+import { buildProductSEO, buildProductCanonical } from "@/lib/productSeo";
 import ProductFitmentSection from "@/components/ProductFitmentSection";
 
 interface Product {
