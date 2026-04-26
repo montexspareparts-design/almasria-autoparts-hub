@@ -172,6 +172,12 @@ const StaffHome = () => {
   const [visitorTypeFilter, setVisitorTypeFilter] = useSessionPersistedState<"all" | "registered" | "anon">("staffHome:visitors:type", "all");
   const [visitorDateFilter, setVisitorDateFilter] = useSessionPersistedState<"all" | "today" | "yesterday" | "week" | "month">("staffHome:visitors:date", "today");
   const [visitorViewedFilter, setVisitorViewedFilter] = useSessionPersistedState<"all" | "viewed" | "not_viewed">("staffHome:visitors:viewed", "all");
+  // ── New: visitor source / activity / depth filters for comprehensive reporting
+  const [visitorSourceFilter, setVisitorSourceFilter] = useSessionPersistedState<"all" | "facebook" | "google" | "instagram" | "tiktok" | "whatsapp" | "direct" | "other">("staffHome:visitors:source", "all");
+  const [visitorActivityFilter, setVisitorActivityFilter] = useSessionPersistedState<"all" | "ordered" | "added_cart" | "searched" | "viewed_products" | "browsed_only">("staffHome:visitors:activity", "all");
+  const [visitorMinPages, setVisitorMinPages] = useSessionPersistedState<"all" | "2" | "5" | "10">("staffHome:visitors:minPages", "all");
+  // Per-visitor activity flags (built from searchesRes/cartRes/ordersRes/viewsRes in fetchData)
+  const [visitorActivityMap, setVisitorActivityMap] = useState<Map<string, { searched: boolean; addedToCart: boolean; ordered: boolean; viewedProducts: boolean; searchTerms: string[]; orderCount: number; cartItems: number }>>(new Map());
   // Free-text search inside each dialog (matches name / phone / email).
   // Phone matching ignores formatting (spaces, dashes, +20…), name matching
   // ignores Arabic diacritics & case. See normalizeSearch / matchesContactQuery.
