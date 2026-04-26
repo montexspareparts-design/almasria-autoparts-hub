@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowRight, ArrowLeft, Package, Tag, Plus, Minus, ShoppingCart,
@@ -19,6 +19,7 @@ import Navbar from "@/components/Navbar";
 import SEOHead from "@/components/SEOHead";
 import { ProductSchema } from "@/components/SEOSchemaMarkup";
 import { buildProductSEO } from "@/lib/productSeo";
+import ProductFitmentSection from "@/components/ProductFitmentSection";
 
 interface Product {
   id: string;
@@ -53,6 +54,7 @@ const ease = [0.22, 1, 0.36, 1] as const;
 const DealerProductPage = () => {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, dealerAccount } = useAuth();
   const { lang } = useLanguage();
   const { toast } = useToast();
@@ -67,6 +69,17 @@ const DealerProductPage = () => {
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [alsoOrdered, setAlsoOrdered] = useState<Product[]>([]);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [profileCar, setProfileCar] = useState<{ model: string | null; year: number | null }>({ model: null, year: null });
+
+  // Year extracted from URL (?year=2018) — keeps fitment verdict in sync
+  // when the dealer arrives from a year-aware search (Toyota Corolla 2018).
+  const urlYear = useMemo(() => {
+    const y = searchParams.get("year");
+    if (!y) return null;
+    const n = parseInt(y);
+    return Number.isFinite(n) && n >= 1990 && n <= 2099 ? n : null;
+  }, [searchParams]);
+
 
   // Fetch product
   useEffect(() => {
@@ -88,6 +101,19 @@ const DealerProductPage = () => {
       setLoading(false);
     })();
   }, [productId]);
+
+  // Fetch dealer's saved car (model + year) for fitment verdict
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("car_model, car_year")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (data) setProfileCar({ model: data.car_model || null, year: data.car_year || null });
+    })();
+  }, [user]);
 
   // Fetch tier price, reviews, related, favorites in parallel
   useEffect(() => {
@@ -359,6 +385,14 @@ const DealerProductPage = () => {
                   </span>
                 )}
               </div>
+
+              {/* Year/Model fitment — shows verdict vs URL search year + dealer's saved car */}
+              <ProductFitmentSection
+                product={product}
+                searchYear={urlYear}
+                profileCarYear={profileCar.year}
+                profileCarModel={profileCar.model}
+              />
 
               <Separator />
 
