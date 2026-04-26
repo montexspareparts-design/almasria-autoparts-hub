@@ -37,6 +37,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useSessionPersistedState } from "@/hooks/useSessionPersistedState";
 import DailyReportTabCard from "@/components/staff/DailyReportTabCard";
+import StaffRemindersPanel from "@/components/staff/StaffRemindersPanel";
 
 // Normalize a string for case-insensitive substring matching.
 // Strips Arabic diacritics + tatweel and lowercases the rest so "محمد" matches
@@ -1102,6 +1103,9 @@ const StaffHome = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+        {/* Reminders panel — top priority for staff workflow */}
+        <StaffRemindersPanel staffOnly={true} limit={5} />
+
         {/* KPI Cards */}
         <section>
           <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">

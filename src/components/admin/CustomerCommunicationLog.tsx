@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Send, Trash2, MessageCircle, Phone, Mail, MapPin, User, Calendar, Clock } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Loader2, Send, Trash2, MessageCircle, Phone, Mail, MapPin, User, Calendar, Clock, Bell, BellOff, CheckCircle2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { checkDuplicateCommunication } from "@/lib/duplicateCommCheck";
+import { cn } from "@/lib/utils";
 
 const COMM_TYPES = [
   { value: "phone", label: "📞 مكالمة هاتفية", icon: Phone, color: "bg-blue-100 text-blue-800" },
@@ -40,6 +42,9 @@ interface CommRecord {
   note: string | null;
   staff_user_id: string;
   created_at: string;
+  reminder_at: string | null;
+  is_done: boolean;
+  done_at: string | null;
   staff_name?: string;
 }
 
@@ -54,6 +59,7 @@ export default function CustomerCommunicationLog({ customerUserId, compact = fal
   const [records, setRecords] = useState<CommRecord[]>([]);
   const [commType, setCommType] = useState("phone");
   const [note, setNote] = useState("");
+  const [reminderAt, setReminderAt] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -87,18 +93,28 @@ export default function CustomerCommunicationLog({ customerUserId, compact = fal
     const dup = await checkDuplicateCommunication({ customerUserId, commType });
     if (dup.isDuplicate && !dup.shouldProceed) return;
     setSaving(true);
-    const { error } = await supabase.from("customer_communications").insert({
+    const payload: Record<string, any> = {
       customer_user_id: customerUserId,
       staff_user_id: user.id,
       comm_type: commType,
       note: note.trim() || null,
-    });
+    };
+    if (reminderAt) {
+      payload.reminder_at = new Date(reminderAt).toISOString();
+    }
+    const { error } = await supabase.from("customer_communications").insert(payload as any);
     if (error) {
       toast({ title: "خطأ", description: "فشل حفظ سجل التواصل", variant: "destructive" });
     } else {
       setNote("");
+      setReminderAt("");
       await fetchRecords();
-      toast({ title: "تم", description: "تم تسجيل التواصل بنجاح" });
+      toast({
+        title: reminderAt ? "✓ تم التسجيل وضبط التذكير" : "تم",
+        description: reminderAt
+          ? `هتلاقي تذكير في "تذكيراتي" يوم ${new Date(reminderAt).toLocaleDateString("ar-EG")}`
+          : "تم تسجيل التواصل بنجاح",
+      });
     }
     setSaving(false);
   };
@@ -107,6 +123,30 @@ export default function CustomerCommunicationLog({ customerUserId, compact = fal
     await supabase.from("customer_communications").delete().eq("id", id);
     setRecords(prev => prev.filter(r => r.id !== id));
   };
+
+  const handleMarkDone = async (id: string) => {
+    const { error } = await supabase
+      .from("customer_communications")
+      .update({ is_done: true, done_at: new Date().toISOString() })
+      .eq("id", id);
+    if (!error) {
+      setRecords(prev => prev.map(r => r.id === id ? { ...r, is_done: true, done_at: new Date().toISOString() } : r));
+      toast({ title: "✓ تم تعليم التذكير كمكتمل" });
+    }
+  };
+
+  // Quick reminder shortcuts
+  const setReminderShortcut = (kind: "1h" | "3h" | "tomorrow_9am" | "next_week") => {
+    const d = new Date();
+    if (kind === "1h") d.setHours(d.getHours() + 1);
+    else if (kind === "3h") d.setHours(d.getHours() + 3);
+    else if (kind === "tomorrow_9am") { d.setDate(d.getDate() + 1); d.setHours(9, 0, 0, 0); }
+    else if (kind === "next_week") { d.setDate(d.getDate() + 7); d.setHours(10, 0, 0, 0); }
+    // datetime-local format requires "YYYY-MM-DDTHH:mm"
+    const pad = (n: number) => String(n).padStart(2, "0");
+    setReminderAt(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`);
+  };
+
 
   const getTypeInfo = (type: string) => COMM_TYPES.find(t => t.value === type) || COMM_TYPES[0];
 
@@ -150,6 +190,53 @@ export default function CustomerCommunicationLog({ customerUserId, compact = fal
             className="text-sm resize-none"
             onKeyDown={e => { if (e.key === "Enter" && e.ctrlKey) handleAdd(); }}
           />
+
+          {/* Reminder section — collapsible */}
+          <div className="rounded-md border border-dashed border-border/60 bg-muted/20 p-2.5 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1.5">
+                <Bell className="w-3.5 h-3.5 text-amber-600" />
+                تذكير متابعة (اختياري)
+              </span>
+              {reminderAt && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 px-2 text-[10px] text-muted-foreground"
+                  onClick={() => setReminderAt("")}
+                >
+                  <BellOff className="w-3 h-3 ml-1" />
+                  إلغاء
+                </Button>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Button size="sm" variant="outline" className="h-7 text-[10px] px-2" onClick={() => setReminderShortcut("1h")}>
+                +١ ساعة
+              </Button>
+              <Button size="sm" variant="outline" className="h-7 text-[10px] px-2" onClick={() => setReminderShortcut("3h")}>
+                +٣ ساعات
+              </Button>
+              <Button size="sm" variant="outline" className="h-7 text-[10px] px-2" onClick={() => setReminderShortcut("tomorrow_9am")}>
+                بكرة ٩ص
+              </Button>
+              <Button size="sm" variant="outline" className="h-7 text-[10px] px-2" onClick={() => setReminderShortcut("next_week")}>
+                الأسبوع الجاي
+              </Button>
+              <Input
+                type="datetime-local"
+                value={reminderAt}
+                onChange={e => setReminderAt(e.target.value)}
+                className="h-7 text-[11px] flex-1 min-w-[160px]"
+              />
+            </div>
+            {reminderAt && (
+              <p className="text-[10px] text-amber-700 dark:text-amber-400 flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" />
+                هيظهر تذكير في "تذكيراتي" يوم {new Date(reminderAt).toLocaleString("ar-EG", { dateStyle: "full", timeStyle: "short" })}
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Records list */}
@@ -163,12 +250,37 @@ export default function CustomerCommunicationLog({ customerUserId, compact = fal
           <div className={`space-y-2 ${compact ? "max-h-48" : "max-h-72"} overflow-y-auto`}>
             {records.map(record => {
               const typeInfo = getTypeInfo(record.comm_type);
+              const hasReminder = !!record.reminder_at;
+              const isOverdue = hasReminder && !record.is_done && new Date(record.reminder_at!).getTime() < Date.now();
               return (
-                <div key={record.id} className="bg-muted/50 rounded-lg p-3 text-sm group relative">
-                  <div className="flex items-center gap-2 mb-1">
+                <div
+                  key={record.id}
+                  className={cn(
+                    "rounded-lg p-3 text-sm group relative border",
+                    isOverdue
+                      ? "bg-red-50/50 border-red-200 dark:bg-red-950/10 dark:border-red-900"
+                      : hasReminder && !record.is_done
+                        ? "bg-amber-50/50 border-amber-200 dark:bg-amber-950/10 dark:border-amber-900"
+                        : "bg-muted/50 border-transparent"
+                  )}
+                >
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <Badge variant="secondary" className={`text-xs ${typeInfo.color}`}>
                       {typeInfo.label}
                     </Badge>
+                    {hasReminder && (
+                      <Badge
+                        variant={record.is_done ? "outline" : isOverdue ? "destructive" : "default"}
+                        className="text-[10px] gap-1"
+                      >
+                        {record.is_done ? <CheckCircle2 className="w-3 h-3" /> : <Bell className="w-3 h-3" />}
+                        {record.is_done
+                          ? "تم"
+                          : isOverdue
+                            ? `متأخر · ${new Date(record.reminder_at!).toLocaleString("ar-EG", { dateStyle: "short", timeStyle: "short" })}`
+                            : `متابعة · ${new Date(record.reminder_at!).toLocaleString("ar-EG", { dateStyle: "short", timeStyle: "short" })}`}
+                      </Badge>
+                    )}
                   </div>
                   {record.note && (
                     <p className="text-foreground whitespace-pre-wrap mt-1">{record.note}</p>
@@ -194,16 +306,30 @@ export default function CustomerCommunicationLog({ customerUserId, compact = fal
                       )}
                     </div>
                   </div>
-                  {record.staff_user_id === user?.id && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute top-1 left-1 h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive"
-                      onClick={() => handleDelete(record.id)}
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
-                  )}
+                  <div className="absolute top-1 left-1 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {hasReminder && !record.is_done && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-6 px-2 text-[10px] gap-1"
+                        onClick={() => handleMarkDone(record.id)}
+                        title="تم التنفيذ"
+                      >
+                        <CheckCircle2 className="w-3 h-3" />
+                        تم
+                      </Button>
+                    )}
+                    {record.staff_user_id === user?.id && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-destructive hover:text-destructive"
+                        onClick={() => handleDelete(record.id)}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               );
             })}
