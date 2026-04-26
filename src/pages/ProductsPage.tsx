@@ -4,6 +4,7 @@ import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { Package, ChevronLeft, ShieldCheck } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
+import { getCategorySEO } from "@/lib/categorySeo";
 import { BreadcrumbSchema } from "@/components/SEOSchemaMarkup";
 import AutoPartsBackground from "@/components/AutoPartsBackground";
 import { Button } from "@/components/ui/button";
@@ -215,10 +216,18 @@ const ProductsPage = () => {
     );
   }
 
-  const pageTitle = config?.title || "تصفح حسب الفئة";
-  const pageTitleEn = config?.titleEn || "Browse by Category";
-  const pageDescription = config?.description || "تصفح جميع المنتجات حسب الفئة المختارة من جميع الماركات المتاحة.";
-  const pageDescriptionEn = config?.descriptionEn || "Browse all products by selected category across all available brands.";
+  // When a category filter is active, prefer the centralised, DB-aligned
+  // bilingual SEO meta from `categorySeo.ts` (Toyota-keyword + SKU-aware).
+  // Otherwise fall back to brand config or generic catalog copy.
+  const categorySlug = searchParams.get("category");
+  const categoryMeta = getCategorySEO(categorySlug);
+
+  const pageTitle = categoryMeta?.titleAr || config?.title || "تصفح حسب الفئة";
+  const pageTitleEn = categoryMeta?.titleEn || config?.titleEn || "Browse by Category";
+  const pageDescription = categoryMeta?.descriptionAr || config?.description || "تصفح جميع المنتجات حسب الفئة المختارة من جميع الماركات المتاحة.";
+  const pageDescriptionEn = categoryMeta?.descriptionEn || config?.descriptionEn || "Browse all products by selected category across all available brands.";
+  const pageKeywordsAr = categoryMeta?.keywordsAr;
+  const pageKeywordsEn = categoryMeta?.keywordsEn;
 
   return (
     <div className="min-h-screen bg-background">
@@ -227,18 +236,26 @@ const ProductsPage = () => {
         titleEn={pageTitleEn}
         descriptionAr={pageDescription}
         descriptionEn={pageDescriptionEn}
+        keywordsAr={pageKeywordsAr}
+        keywordsEn={pageKeywordsEn}
         ogType={config ? "product" : "website"}
         breadcrumbs={
-          config
+          categoryMeta
             ? [
                 { ar: "الرئيسية", en: "Home", url: "/" },
                 { ar: "المنتجات", en: "Products", url: "/products" },
-                { ar: config.title, en: config.titleEn || config.subtitle, url: `/products/${brand}` },
+                { ar: categoryMeta.nameAr, en: categoryMeta.nameEn, url: `/products?category=${categoryMeta.slug}` },
               ]
-            : [
-                { ar: "الرئيسية", en: "Home", url: "/" },
-                { ar: "المنتجات", en: "Products", url: "/products" },
-              ]
+            : config
+              ? [
+                  { ar: "الرئيسية", en: "Home", url: "/" },
+                  { ar: "المنتجات", en: "Products", url: "/products" },
+                  { ar: config.title, en: config.titleEn || config.subtitle, url: `/products/${brand}` },
+                ]
+              : [
+                  { ar: "الرئيسية", en: "Home", url: "/" },
+                  { ar: "المنتجات", en: "Products", url: "/products" },
+                ]
         }
       />
       <Navbar />

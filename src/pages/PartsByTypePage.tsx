@@ -1,4 +1,3 @@
-import { Helmet } from "react-helmet-async";
 import { Link, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Filter, ChevronLeft, ShieldCheck, Car, Wrench, Droplets, Zap, Disc, Settings2, Wind } from "lucide-react";
@@ -6,6 +5,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 import { BreadcrumbSchema, ItemListSchema } from "@/components/SEOSchemaMarkup";
+import SEOHead from "@/components/SEOHead";
+import { getCategorySEO } from "@/lib/categorySeo";
 
 const SITE = "https://www.almasriaautoparts.com";
 
@@ -154,25 +155,38 @@ const partTypes: PartTypeData[] = [
 /* ── Part Type Detail ── */
 const TypeDetailView = ({ type }: { type: PartTypeData }) => {
   const Icon = type.icon;
+
+  // Prefer the centralised, DB-aligned bilingual SEO meta when this slug
+  // maps to a real category in `product_categories.slug`. Fall back to
+  // the page-local copy below for legacy slugs (e.g. `engine`, `oils`)
+  // that don't have a 1:1 DB row — those still get reasonable Arabic-only
+  // meta from the original `partTypes` list.
+  const central = getCategorySEO(type.slug);
+
+  const titleAr = central?.titleAr ?? type.seoTitle;
+  const titleEn = central?.titleEn ?? type.seoTitle;
+  const descriptionAr = central?.descriptionAr ?? type.seoDescription;
+  const descriptionEn = central?.descriptionEn ?? type.seoDescription;
+  const keywordsAr = central?.keywordsAr ?? type.keywords;
+  const keywordsEn = central?.keywordsEn ?? type.keywords;
+
   return (
     <>
-      <Helmet>
-        <title>{type.seoTitle}</title>
-        <meta name="description" content={type.seoDescription} />
-        <meta name="keywords" content={type.keywords} />
-        <link rel="canonical" href={`${SITE}/parts-by-type/${type.slug}`} />
-        <meta property="og:type" content="website" />
-        <meta property="og:title" content={type.seoTitle} />
-        <meta property="og:description" content={type.seoDescription} />
-        <meta property="og:url" content={`${SITE}/parts-by-type/${type.slug}`} />
-        <meta property="og:locale" content="ar_EG" />
-        <meta property="og:site_name" content="المصرية جروب" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={type.seoTitle} />
-        <meta name="twitter:description" content={type.seoDescription} />
-        <link rel="alternate" hrefLang="ar" href={`${SITE}/parts-by-type/${type.slug}`} />
-        <link rel="alternate" hrefLang="x-default" href={`${SITE}/parts-by-type/${type.slug}`} />
-      </Helmet>
+      <SEOHead
+        titleAr={titleAr}
+        titleEn={titleEn}
+        descriptionAr={descriptionAr}
+        descriptionEn={descriptionEn}
+        keywordsAr={keywordsAr}
+        keywordsEn={keywordsEn}
+        ogType="website"
+        canonical={`/parts-by-type/${type.slug}`}
+        breadcrumbs={[
+          { ar: "الرئيسية", en: "Home", url: "/" },
+          { ar: "حسب نوع القطعة", en: "By Part Type", url: "/parts-by-type" },
+          { ar: type.nameAr, en: type.nameEn, url: `/parts-by-type/${type.slug}` },
+        ]}
+      />
       <BreadcrumbSchema items={[
         { name: "الرئيسية", url: SITE },
         { name: "حسب نوع القطعة", url: `${SITE}/parts-by-type` },
@@ -260,11 +274,19 @@ const TypeDetailView = ({ type }: { type: PartTypeData }) => {
 /* ── Landing ── */
 const TypesLanding = () => (
   <>
-    <Helmet>
-      <title>قطع غيار تويوتا حسب نوع القطعة | المصرية جروب</title>
-      <meta name="description" content="تصفح قطع غيار تويوتا الأصلية حسب نوع القطعة: فلاتر، زيوت، فرامل، تعليق، كهرباء، محرك، تبريد. موزع معتمد في مصر." />
-      <link rel="canonical" href={`${SITE}/parts-by-type`} />
-    </Helmet>
+    <SEOHead
+      titleAr="قطع غيار تويوتا حسب نوع القطعة"
+      titleEn="Toyota Parts by Category"
+      descriptionAr="تصفح قطع غيار تويوتا الأصلية حسب نوع القطعة: فلاتر، زيوت بنزين/ديزل، فرامل، عفشة ومساعدين، كهرباء وبوجيهات، تبريد، جوانات وسيور. موزع معتمد في مصر."
+      descriptionEn="Browse Toyota genuine parts by category: filters, gasoline & diesel oils, brakes, suspension & shocks, electrical & spark plugs, cooling, gaskets and belts. Authorized distributor in Egypt."
+      keywordsAr="قطع غيار تويوتا, فلاتر تويوتا, زيوت تويوتا, فرامل تويوتا, عفشة تويوتا, كهرباء تويوتا, تبريد تويوتا"
+      keywordsEn="Toyota parts Egypt, Toyota filters, Toyota oil, Toyota brakes, Toyota suspension, Toyota electrical, Toyota cooling"
+      canonical="/parts-by-type"
+      breadcrumbs={[
+        { ar: "الرئيسية", en: "Home", url: "/" },
+        { ar: "حسب نوع القطعة", en: "By Part Type", url: "/parts-by-type" },
+      ]}
+    />
     <BreadcrumbSchema items={[
       { name: "الرئيسية", url: SITE },
       { name: "حسب نوع القطعة", url: `${SITE}/parts-by-type` },
