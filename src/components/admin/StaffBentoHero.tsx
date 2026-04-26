@@ -282,7 +282,7 @@ export default function StaffBentoHero({
     const t = setInterval(fetchHero, 60_000);
     return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+  }, [user?.id, periodFilter]);
 
   /**
    * منطق الأولوية التلقائية:
