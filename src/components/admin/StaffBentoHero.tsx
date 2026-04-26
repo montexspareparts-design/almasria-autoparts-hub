@@ -803,3 +803,41 @@ function ShortcutTile({ icon, label, value, hint, tone, to, onClick, ctaLabel, u
   if (to) return <Link to={to} className="block">{inner}</Link>;
   return <button onClick={onClick} className="text-right w-full block">{inner}</button>;
 }
+
+// ===== شارة الأولوية =====
+interface PriorityBadgeProps {
+  priority: Priority;
+  compact?: boolean;
+}
+
+const priorityStyles: Record<Priority, { bg: string; label: string; emoji: string }> = {
+  critical: { bg: "bg-red-600 text-white", label: "حرج", emoji: "🔥" },
+  high:     { bg: "bg-orange-500 text-white", label: "عالي", emoji: "⚡" },
+  medium:   { bg: "bg-amber-400 text-amber-950", label: "متوسط", emoji: "•" },
+  low:      { bg: "bg-muted text-muted-foreground", label: "عادي", emoji: "·" },
+};
+
+function PriorityBadge({ priority, compact }: PriorityBadgeProps) {
+  const s = priorityStyles[priority];
+  if (compact) {
+    return (
+      <span
+        className={cn("inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold shrink-0", s.bg)}
+        title={s.label}
+      >
+        {s.emoji}
+      </span>
+    );
+  }
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold shrink-0 leading-none h-5",
+        s.bg
+      )}
+    >
+      <span className="text-[10px]">{s.emoji}</span>
+      {s.label}
+    </span>
+  );
+}
