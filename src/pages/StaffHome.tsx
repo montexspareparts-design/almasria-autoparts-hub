@@ -41,6 +41,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useSessionPersistedState } from "@/hooks/useSessionPersistedState";
 import DailyReportTabCard from "@/components/staff/DailyReportTabCard";
 import StaffRemindersPanel from "@/components/staff/StaffRemindersPanel";
+import VisitorPipelineControl from "@/components/staff/VisitorPipelineControl";
 
 // Normalize a string for case-insensitive substring matching.
 // Strips Arabic diacritics + tatweel and lowercases the rest so "محمد" matches
@@ -2198,6 +2199,13 @@ const StaffHome = () => {
                           else source = "🌐 مباشر";
                           return <Badge variant="outline" className="text-[10px] h-5">{source}</Badge>;
                         })()}
+                        {/* Pipeline stage control — interactive workflow per visitor */}
+                        <VisitorPipelineControl
+                          userId={v.user_id}
+                          sessionKey={v.session_key}
+                          phone={v.phone}
+                          fullName={v.full_name}
+                        />
                       </div>
                       <div className="flex items-center gap-2 mt-1 flex-wrap text-[11px] text-muted-foreground">
                         {v.phone && <span className="font-mono">📱 {v.phone}</span>}
