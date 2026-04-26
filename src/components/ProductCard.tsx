@@ -142,15 +142,14 @@ const ProductCard = memo(({
               </Link>
             )}
           </div>
-          {/* SKU — always single line, never wraps or stacks with badges */}
-          <div className="w-full text-right overflow-hidden">
-            <span
-              dir="ltr"
+          {/* SKU — single line, logical alignment so it sits at the inline-start in both RTL and LTR */}
+          <div className="w-full text-start overflow-hidden">
+            <bdi
               title={product.sku}
               className="inline-block max-w-full truncate align-middle text-[8px] sm:text-[10px] font-mono bg-muted/40 text-muted-foreground/70 px-1.5 sm:px-2 py-0.5 rounded-md leading-none tracking-widest whitespace-nowrap select-all"
             >
               {product.sku}
-            </span>
+            </bdi>
           </div>
           <h3 className="font-bold text-card-foreground text-[11px] sm:text-sm leading-snug sm:leading-relaxed line-clamp-2 group-hover:text-primary transition-colors duration-300 text-right">
             {product.name_ar}
