@@ -695,11 +695,14 @@ export default function StaffBentoHero({
             <div className="text-[11px] text-muted-foreground mt-1">زائر آخر ٣٠ دقيقة</div>
           </div>
           <div className="grid grid-cols-2 gap-1.5 mt-2">
-            <Button asChild size="sm" variant="outline" className="h-8 text-[11px] gap-1">
-              <Link to="/admin/staff-home">
-                <Users className="w-3 h-3" />
-                التفصيلية
-              </Link>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 text-[11px] gap-1"
+              onClick={() => onJumpToTab("yesterday")}
+            >
+              <Users className="w-3 h-3" />
+              التفصيلية
             </Button>
             <Button
               size="sm"
