@@ -68,6 +68,7 @@ export const LazyImage = ({
   optimizeWidth,
   skeletonClassName,
   hideSkeletonIcon = false,
+  placeholderIcon,
   ...rest
 }: LazyImageProps & { optimizeWidth?: number }) => {
   const ref = useRef<HTMLDivElement>(null);
