@@ -123,6 +123,15 @@ const ProductCard = memo(({
           <h3 className="font-bold text-card-foreground text-[11px] sm:text-sm leading-snug sm:leading-relaxed line-clamp-2 group-hover:text-primary transition-colors duration-300 text-right">
             {product.name_ar}
           </h3>
+          {coverage && (
+            <span className={`inline-flex items-center gap-1 self-end text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-md leading-none border ${
+              coverage.isAlternative
+                ? "bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-700/50"
+                : "bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-700/50"
+            }`}>
+              {coverage.text}
+            </span>
+          )}
           {product.product_categories && (
             <p className="text-[9px] sm:text-xs text-muted-foreground/50 leading-none text-right">{(product.product_categories as any).name_ar}</p>
           )}
