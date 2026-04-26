@@ -21,6 +21,7 @@ import TransferToColleagueDialog from "./TransferToColleagueDialog";
 import PerfDashboard from "./PerfDashboard";
 import { usePerfTracker } from "@/hooks/usePerfTracker";
 import { ArrowRightLeft } from "lucide-react";
+import StaffBentoHero from "./StaffBentoHero";
 
 // =================== Types ===================
 interface UrgentOrder {
