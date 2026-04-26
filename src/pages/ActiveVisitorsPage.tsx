@@ -286,16 +286,23 @@ export default function ActiveVisitorsPage() {
               الزوار النشطون الآن
             </h1>
             <p className="text-xs text-muted-foreground">
-              المتصفحون خلال آخر {WINDOW_MIN} دقيقة · يتحدّث كل 30 ثانية
+              المتصفحون خلال آخر {hoursLabel[hoursFilter]} · يتحدّث كل 30 ثانية
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="gap-1.5 px-3 py-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="font-bold">{visitors.length}</span>
-            <span className="text-muted-foreground">زائر مباشر</span>
+            <span className="font-bold">{filtered.length}</span>
+            <span className="text-muted-foreground">/ {visitors.length} زائر</span>
           </Badge>
+          {overdueCount > 0 && (
+            <Badge variant="destructive" className="gap-1.5 px-3 py-1.5">
+              <AlertTriangle className="w-3.5 h-3.5" />
+              <span className="font-bold">{overdueCount}</span>
+              <span className="opacity-90">متأخر</span>
+            </Badge>
+          )}
           <Button
             variant="outline"
             size="sm"
@@ -307,6 +314,53 @@ export default function ActiveVisitorsPage() {
             تحديث
           </Button>
         </div>
+      </div>
+
+      {/* Quick filters: time window + "متأخر" toggle */}
+      <div className="flex items-center gap-2 flex-wrap bg-muted/40 p-2 rounded-lg border border-border/50">
+        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground px-1.5">
+          <Filter className="w-3.5 h-3.5" />
+          خلال:
+        </span>
+        {(["30m", "1h", "3h", "6h", "24h"] as const).map((h) => {
+          const active = hoursFilter === h;
+          return (
+            <button
+              key={h}
+              onClick={() => setHoursFilter(h)}
+              className={cn(
+                "px-2.5 py-1 rounded-md text-[11px] font-bold border transition",
+                active
+                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                  : "bg-background border-border text-foreground hover:bg-muted"
+              )}
+            >
+              {hoursLabel[h]}
+            </button>
+          );
+        })}
+        <span className="opacity-30 mx-1">|</span>
+        <button
+          onClick={() => setOverdueOnly((v) => !v)}
+          className={cn(
+            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold border transition",
+            overdueOnly
+              ? "bg-red-600 text-white border-red-600 shadow-sm"
+              : "bg-background border-red-200 dark:border-red-900/40 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
+          )}
+          title={`زوار نشطون لم يُتواصل معهم خلال آخر ${OVERDUE_HOURS} ساعة`}
+        >
+          <AlertTriangle className="w-3.5 h-3.5" />
+          متأخر فقط
+          {overdueCount > 0 && (
+            <Badge
+              variant={overdueOnly ? "secondary" : "destructive"}
+              className={cn("h-4 px-1 text-[9px]", overdueOnly && "bg-white/20 text-white border-0")}
+            >
+              {overdueCount}
+            </Badge>
+          )}
+        </button>
       </div>
 
       {/* Search */}
