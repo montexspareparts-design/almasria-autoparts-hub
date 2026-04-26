@@ -2568,6 +2568,39 @@ export type Database = {
         }
         Relationships: []
       }
+      visitor_pipeline_status: {
+        Row: {
+          created_at: string
+          customer_user_id: string | null
+          id: string
+          notes: string | null
+          stage: Database["public"]["Enums"]["visitor_pipeline_stage"]
+          updated_at: string
+          updated_by: string
+          visitor_session_key: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_user_id?: string | null
+          id?: string
+          notes?: string | null
+          stage?: Database["public"]["Enums"]["visitor_pipeline_stage"]
+          updated_at?: string
+          updated_by: string
+          visitor_session_key?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_user_id?: string | null
+          id?: string
+          notes?: string | null
+          stage?: Database["public"]["Enums"]["visitor_pipeline_stage"]
+          updated_at?: string
+          updated_by?: string
+          visitor_session_key?: string | null
+        }
+        Relationships: []
+      }
       visitor_session_views: {
         Row: {
           created_at: string
@@ -2904,6 +2937,13 @@ export type Database = {
         | "denso"
         | "aisin"
         | "fbk"
+      visitor_pipeline_stage:
+        | "new"
+        | "interested"
+        | "quote_sent"
+        | "contacted"
+        | "not_interested"
+        | "won"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3047,6 +3087,14 @@ export const Constants = {
         "denso",
         "aisin",
         "fbk",
+      ],
+      visitor_pipeline_stage: [
+        "new",
+        "interested",
+        "quote_sent",
+        "contacted",
+        "not_interested",
+        "won",
       ],
     },
   },
