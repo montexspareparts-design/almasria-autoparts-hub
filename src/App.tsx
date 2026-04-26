@@ -28,6 +28,7 @@ const DealerRegister = lazy(() => import("./pages/DealerRegister"));
 const ClientRegister = lazy(() => import("./pages/ClientRegister"));
 const DealerDashboard = lazy(() => import("./pages/DealerDashboard"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const BadgeContrastQA = lazy(() => import("./pages/admin/BadgeContrastQA"));
 const DealerLogin = lazy(() => import("./pages/DealerLogin"));
 const DealerProductPage = lazy(() => import("./pages/DealerProductPage"));
 const ProductsPage = lazy(() => import("./pages/ProductsPage"));
@@ -157,6 +158,7 @@ const App = () => (
                     <Route path="/staff/daily-report" element={<StaffDailyReportPage />} />
                     <Route path="/admin/visitor-leads" element={<VisitorLeadsPage />} />
                     <Route path="/admin/whatsapp-logs" element={<AdminWhatsAppLogsPage />} />
+                    <Route path="/admin/badge-qa" element={<BadgeContrastQA />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                </Suspense>
