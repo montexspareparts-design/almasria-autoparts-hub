@@ -386,6 +386,14 @@ const DealerProductPage = () => {
                 )}
               </div>
 
+              {/* Year/Model fitment — shows verdict vs URL search year + dealer's saved car */}
+              <ProductFitmentSection
+                product={product}
+                searchYear={urlYear}
+                profileCarYear={profileCar.year}
+                profileCarModel={profileCar.model}
+              />
+
               <Separator />
 
               {/* Price */}
