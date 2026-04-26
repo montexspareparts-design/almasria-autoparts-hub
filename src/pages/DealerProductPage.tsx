@@ -54,6 +54,7 @@ const ease = [0.22, 1, 0.36, 1] as const;
 const DealerProductPage = () => {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, dealerAccount } = useAuth();
   const { lang } = useLanguage();
   const { toast } = useToast();
@@ -68,6 +69,17 @@ const DealerProductPage = () => {
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [alsoOrdered, setAlsoOrdered] = useState<Product[]>([]);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [profileCar, setProfileCar] = useState<{ model: string | null; year: number | null }>({ model: null, year: null });
+
+  // Year extracted from URL (?year=2018) — keeps fitment verdict in sync
+  // when the dealer arrives from a year-aware search (Toyota Corolla 2018).
+  const urlYear = useMemo(() => {
+    const y = searchParams.get("year");
+    if (!y) return null;
+    const n = parseInt(y);
+    return Number.isFinite(n) && n >= 1990 && n <= 2099 ? n : null;
+  }, [searchParams]);
+
 
   // Fetch product
   useEffect(() => {
