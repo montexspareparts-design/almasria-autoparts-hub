@@ -18,6 +18,10 @@ interface LazyImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, "src"
   /** Hide the small Package icon inside the skeleton (use when overlays already
       communicate "loading", e.g. product cards with badges). Default false. */
   hideSkeletonIcon?: boolean;
+  /** Custom placeholder icon shown both during load and on fallback.
+      Defaults to lucide `Package`. Pass any ReactNode for brand-specific
+      placeholders (e.g. a car-part silhouette). */
+  placeholderIcon?: React.ReactNode;
 }
 
 /**
