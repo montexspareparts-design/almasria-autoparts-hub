@@ -306,6 +306,55 @@ export default function StaffBentoHero({
     return { overdue, todayList, upcomingList, criticalCount, highCount };
   }, [reminders]);
 
+  /**
+   * زر سريع: "تم التواصل"
+   *  - يقفل التذكير الحالي (is_done = true)
+   *  - يسجّل تواصل جديد مكتمل (تحديث آلي لـ last_contact_at)
+   *  - يعيد حساب الأولوية فوراً عبر تحديث state محلياً + إعادة جلب
+   */
+  const handleMarkContacted = async (r: Reminder) => {
+    if (!user || contactingId) return;
+    setContactingId(r.id);
+    const nowIso = new Date().toISOString();
+    try {
+      const { error: e1 } = await supabase
+        .from("customer_communications")
+        .update({ is_done: true, done_at: nowIso })
+        .eq("id", r.id);
+      if (e1) throw e1;
+
+      const { error: e2 } = await supabase
+        .from("customer_communications")
+        .insert({
+          staff_user_id: user.id,
+          customer_user_id: r.customer_user_id,
+          comm_type: r.comm_type || "phone",
+          note: `تم التواصل ✓ ${r.note ? `— ${r.note}` : ""}`.trim(),
+          is_done: true,
+          done_at: nowIso,
+        });
+      if (e2) throw e2;
+
+      // تحديث محلي فوري — يشيل المهمة ويُحدّث "آخر تواصل" لباقي مهام نفس العميل
+      setReminders((prev) =>
+        prev
+          .filter((x) => x.id !== r.id)
+          .map((x) =>
+            x.customer_user_id && x.customer_user_id === r.customer_user_id
+              ? { ...x, last_contact_at: nowIso }
+              : x
+          )
+      );
+      toast.success(`تم تسجيل التواصل مع ${r.customer_name || "العميل"} ✓`);
+      fetchHero();
+    } catch (err: any) {
+      console.error("[markContacted]", err);
+      toast.error("فشل تسجيل التواصل — حاول مرة أخرى");
+    } finally {
+      setContactingId(null);
+    }
+  };
+
   const totalNewToday = newOrders24h + newSignups24h + instapayPending + partRequestsNew;
   const totalUrgent = urgentOrdersCount + chatbotPendingCount + hotLeadsCount;
   const totalFollowups = todayList.length;
