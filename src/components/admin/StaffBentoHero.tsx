@@ -958,3 +958,61 @@ function PriorityBadge({ priority, compact }: PriorityBadgeProps) {
     </span>
   );
 }
+
+// ===== زر التأجيل (Snooze) — Popover بخيارات سريعة =====
+interface SnoozeButtonProps {
+  reminder: Reminder;
+  busy: boolean;
+  onSnooze: (r: Reminder, minutes: number, label: string) => void;
+}
+
+const SNOOZE_OPTIONS: Array<{ minutes: number; label: string }> = [
+  { minutes: 15,        label: "١٥ دقيقة" },
+  { minutes: 60,        label: "ساعة" },
+  { minutes: 180,       label: "٣ ساعات" },
+  { minutes: 60 * 24,   label: "بكرة (٢٤س)" },
+];
+
+function SnoozeButton({ reminder, busy, onSnooze }: SnoozeButtonProps) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          disabled={busy}
+          className={cn(
+            "inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold transition-colors",
+            "bg-amber-500 hover:bg-amber-600 text-white",
+            "disabled:opacity-60 disabled:cursor-not-allowed"
+          )}
+          title="تأجيل التذكير"
+        >
+          {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Clock3 className="w-3 h-3" />}
+          تأجيل
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-44 p-1.5" align="end" dir="rtl">
+        <div className="text-[10px] text-muted-foreground px-1.5 py-1 font-bold">
+          أجّل التذكير لـ:
+        </div>
+        <div className="space-y-0.5">
+          {SNOOZE_OPTIONS.map((opt) => (
+            <button
+              key={opt.minutes}
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                onSnooze(reminder, opt.minutes, opt.label);
+              }}
+              className="w-full text-right px-2 py-1.5 rounded text-[11px] hover:bg-amber-50 dark:hover:bg-amber-950/30 hover:text-amber-700 dark:hover:text-amber-300 transition-colors flex items-center justify-between gap-2"
+            >
+              <span className="font-medium">{opt.label}</span>
+              <Clock3 className="w-3 h-3 text-muted-foreground" />
+            </button>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
