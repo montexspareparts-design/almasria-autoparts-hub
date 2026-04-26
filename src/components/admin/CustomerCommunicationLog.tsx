@@ -59,6 +59,7 @@ export default function CustomerCommunicationLog({ customerUserId, compact = fal
   const [records, setRecords] = useState<CommRecord[]>([]);
   const [commType, setCommType] = useState("phone");
   const [note, setNote] = useState("");
+  const [reminderAt, setReminderAt] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -92,18 +93,28 @@ export default function CustomerCommunicationLog({ customerUserId, compact = fal
     const dup = await checkDuplicateCommunication({ customerUserId, commType });
     if (dup.isDuplicate && !dup.shouldProceed) return;
     setSaving(true);
-    const { error } = await supabase.from("customer_communications").insert({
+    const payload: Record<string, any> = {
       customer_user_id: customerUserId,
       staff_user_id: user.id,
       comm_type: commType,
       note: note.trim() || null,
-    });
+    };
+    if (reminderAt) {
+      payload.reminder_at = new Date(reminderAt).toISOString();
+    }
+    const { error } = await supabase.from("customer_communications").insert(payload);
     if (error) {
       toast({ title: "خطأ", description: "فشل حفظ سجل التواصل", variant: "destructive" });
     } else {
       setNote("");
+      setReminderAt("");
       await fetchRecords();
-      toast({ title: "تم", description: "تم تسجيل التواصل بنجاح" });
+      toast({
+        title: reminderAt ? "✓ تم التسجيل وضبط التذكير" : "تم",
+        description: reminderAt
+          ? `هتلاقي تذكير في "تذكيراتي" يوم ${new Date(reminderAt).toLocaleDateString("ar-EG")}`
+          : "تم تسجيل التواصل بنجاح",
+      });
     }
     setSaving(false);
   };
@@ -112,6 +123,30 @@ export default function CustomerCommunicationLog({ customerUserId, compact = fal
     await supabase.from("customer_communications").delete().eq("id", id);
     setRecords(prev => prev.filter(r => r.id !== id));
   };
+
+  const handleMarkDone = async (id: string) => {
+    const { error } = await supabase
+      .from("customer_communications")
+      .update({ is_done: true, done_at: new Date().toISOString() })
+      .eq("id", id);
+    if (!error) {
+      setRecords(prev => prev.map(r => r.id === id ? { ...r, is_done: true, done_at: new Date().toISOString() } : r));
+      toast({ title: "✓ تم تعليم التذكير كمكتمل" });
+    }
+  };
+
+  // Quick reminder shortcuts
+  const setReminderShortcut = (kind: "1h" | "3h" | "tomorrow_9am" | "next_week") => {
+    const d = new Date();
+    if (kind === "1h") d.setHours(d.getHours() + 1);
+    else if (kind === "3h") d.setHours(d.getHours() + 3);
+    else if (kind === "tomorrow_9am") { d.setDate(d.getDate() + 1); d.setHours(9, 0, 0, 0); }
+    else if (kind === "next_week") { d.setDate(d.getDate() + 7); d.setHours(10, 0, 0, 0); }
+    // datetime-local format requires "YYYY-MM-DDTHH:mm"
+    const pad = (n: number) => String(n).padStart(2, "0");
+    setReminderAt(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`);
+  };
+
 
   const getTypeInfo = (type: string) => COMM_TYPES.find(t => t.value === type) || COMM_TYPES[0];
 
