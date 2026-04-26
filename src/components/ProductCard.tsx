@@ -238,49 +238,60 @@ const ProductCard = memo(({
         </div>
 
         {/*
-          Image overlays — fixed positions with explicit z-index hierarchy:
-          - z-10  : decorative layers (vignette, fade, shimmer)
-          - z-30  : informational badges (stock availability, brand)
-          - z-40  : promotional badges (sale, priced)
-          The product name lives in the content section below in a separate
-          stacking context, so overlays can never cover the title or hide the image.
+          Image overlays — deterministic stacking system
+          ──────────────────────────────────────────────
+          Two flex columns are anchored to the image corners. Each column lays
+          out its badges with a fixed `gap`, so badges always stack in a stable
+          order with consistent spacing — no matter which combination of badges
+          is present (Brand, Stock, Sale, Priced).
+
+          STACK ORDER (top → bottom inside each column):
+            ▸ TOP-RIGHT  : Brand (Toyota Genuine, MTX, etc.)
+            ▸ TOP-LEFT   : Stock (متوفر / غير متوفر) → Sale (تخفيض)
+            ▸ BOTTOM-LEFT: Priced (مسعّر)
+
+          Z-index hierarchy:
+            - z-10 : decorative layers (vignette, fade, shimmer)
+            - z-30 : informational badges (Brand, Stock)
+            - z-40 : promotional badges (Sale, Priced)
+
+          Auto-contrast strategy on every floating badge:
+            1. Opaque-enough fill (≥95%) of a saturated color → readable text.
+            2. `backdrop-blur-md backdrop-saturate-150` → softens noisy
+               backgrounds behind the badge.
+            3. White text + `[text-shadow:0_1px_2px_rgba(0,0,0,0.35)]` keeps
+               characters legible at the edges.
+            4. White ring + colored outer shadow → halo separates the badge
+               from both light and dark image areas.
         */}
 
-        {/*
-          Auto-contrast overlay badges
-          ────────────────────────────
-          Goal: stay legible over ANY image background (white, dark, busy).
-          Strategy applied to every floating badge:
-          1. Opaque-enough fill (≥90%) of a saturated brand color → readable text.
-          2. `backdrop-blur-md backdrop-saturate-150` → softens noisy backgrounds
-             behind the badge so contrast survives even on photographed parts.
-          3. White text + `[text-shadow:0_1px_2px_rgba(0,0,0,0.35)]` → keeps
-             characters legible if the fill ever loses contrast at the edges.
-          4. White ring + colored outer shadow → halo separates the badge from
-             both light and dark image areas.
-        */}
-
-        {/* Brand badge — fixed top-right corner of the image */}
+        {/* TOP-RIGHT column: Brand only */}
         {brandRouteMap[product.brand] && (
-          <Link
-            to={brandRouteMap[product.brand].path}
-            onClick={(e) => e.stopPropagation()}
-            className={`absolute top-2 right-2 z-30 inline-flex items-center max-w-[55%] truncate
-              text-[8px] sm:text-[9px] font-extrabold px-2 py-[3px] rounded-md leading-none whitespace-nowrap
-              backdrop-blur-md backdrop-saturate-150
-              ring-1 ring-white/30 shadow-[0_2px_8px_rgba(0,0,0,0.25)]
-              [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]
-              hover:opacity-90 transition-opacity
-              ${brandRouteMap[product.brand].color}`}
-          >
-            {brandRouteMap[product.brand].label}
-          </Link>
+          <div className="absolute top-2 right-2 z-30 flex flex-col items-end gap-1.5 max-w-[55%] pointer-events-none">
+            <Link
+              to={brandRouteMap[product.brand].path}
+              onClick={(e) => e.stopPropagation()}
+              className={`pointer-events-auto inline-flex items-center max-w-full truncate
+                text-[8px] sm:text-[9px] font-extrabold px-2 py-[3px] rounded-md leading-none whitespace-nowrap
+                backdrop-blur-md backdrop-saturate-150
+                ring-1 ring-white/30 shadow-[0_2px_8px_rgba(0,0,0,0.25)]
+                [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]
+                hover:opacity-90 transition-opacity
+                ${brandRouteMap[product.brand].color}`}
+            >
+              {brandRouteMap[product.brand].label}
+            </Link>
+          </div>
         )}
 
-        {/* Stock availability badge — fixed top-left corner of the image */}
-        <div className="absolute top-2 left-2 z-30 max-w-[45%]">
+        {/*
+          TOP-LEFT column: Stock then Sale (when present).
+          Flex + gap means hiding Sale keeps Stock in place, and Sale always
+          slides directly under Stock without manual top offsets.
+        */}
+        <div className="absolute top-2 left-2 z-30 flex flex-col items-start gap-1.5 max-w-[55%] pointer-events-none">
           <span
-            className={`inline-flex items-center gap-1 text-[8px] sm:text-[9px] font-bold px-2 py-[3px]
+            className={`pointer-events-auto inline-flex items-center gap-1 text-[8px] sm:text-[9px] font-bold px-2 py-[3px]
               rounded-md leading-none whitespace-nowrap text-white
               backdrop-blur-md backdrop-saturate-150
               ring-1 ring-white/30
@@ -294,13 +305,10 @@ const ProductCard = memo(({
             <span className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_4px_rgba(255,255,255,0.6)]" />
             {stockAvailable ? "متوفر" : "غير متوفر"}
           </span>
-        </div>
 
-        {/* Sale badge — stacks below the stock badge on the left */}
-        {product.is_on_sale && (
-          <div className="absolute top-10 left-2 z-40">
+          {product.is_on_sale && (
             <Badge
-              className="bg-destructive/95 text-destructive-foreground text-[9px] font-black px-2 py-0.5
+              className="pointer-events-auto relative z-[1] bg-destructive/95 text-destructive-foreground text-[9px] font-black px-2 py-0.5
                 rounded-md tracking-wide
                 backdrop-blur-md backdrop-saturate-150
                 ring-1 ring-white/25 shadow-[0_2px_10px_rgba(220,38,38,0.4)]
@@ -309,14 +317,14 @@ const ProductCard = memo(({
               <Sparkles className="w-2.5 h-2.5 mr-0.5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]" />
               تخفيض
             </Badge>
-          </div>
-        )}
+          )}
+        </div>
 
-        {/* Priced indicator — bottom-left of the image */}
+        {/* BOTTOM-LEFT column: Priced indicator — own corner, can never overlap top stack */}
         {hasViewed && (
-          <div className="absolute bottom-2.5 left-2.5 z-40">
+          <div className="absolute bottom-2.5 left-2.5 z-40 flex flex-col items-start gap-1.5 pointer-events-none">
             <span
-              className="inline-flex items-center gap-1 bg-emerald-600/95 text-white text-[8px] font-bold px-2 py-0.5
+              className="pointer-events-auto inline-flex items-center gap-1 bg-emerald-600/95 text-white text-[8px] font-bold px-2 py-0.5
                 rounded-md
                 backdrop-blur-md backdrop-saturate-150
                 ring-1 ring-white/30 shadow-[0_2px_10px_rgba(16,185,129,0.35)]
