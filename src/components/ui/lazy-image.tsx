@@ -118,7 +118,7 @@ export const LazyImage = ({
           aria-hidden="true"
           className="absolute inset-0 z-0 overflow-hidden bg-gradient-to-br from-muted/40 via-muted/20 to-muted/40"
         >
-          <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.6s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent" />
+          <div className="absolute inset-0 -translate-x-full animate-skeleton-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent" />
           {fallbackIcon && (
             <div className="absolute inset-0 flex items-center justify-center">
               <Package className="w-1/4 h-1/4 text-muted-foreground/20" />
