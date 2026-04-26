@@ -27,6 +27,8 @@ interface ProductCardProps {
   limitReached: boolean;
   dailyViewCount: number;
   dailyLimit: number;
+  /** Year extracted from current search query — used to show "fits YYYY" badge */
+  searchYear?: number | null;
   getProductPrice: (product: any) => number;
   onProductClick: (product: any) => void;
   onAddToCart: (product: any) => void;
@@ -34,9 +36,32 @@ interface ProductCardProps {
   onLoginRequired: () => void;
 }
 
+/** Build coverage label like "يناسب موديلات 2005-2019 ✓" */
+const buildCoverageLabel = (
+  product: any,
+  searchYear?: number | null
+): { text: string; isAlternative: boolean } | null => {
+  const yf = product.year_from as number | null;
+  const yt = product.year_to as number | null;
+  if (!yf) return null;
+  const range = yt && yt > yf ? `${yf}-${yt}` : `${yf}+`;
+  // Did the user search by a specific year?
+  if (searchYear) {
+    const fits = (!yt || searchYear <= yt) && searchYear >= yf;
+    if (!fits) return null;
+    // Check if the product name itself contains the searched year — if not, it's an "alternative"
+    const nameHasYear = String(product.name_ar || "").includes(String(searchYear));
+    return {
+      text: nameHasYear ? `يناسب ${searchYear} ✓` : `يركّب على ${searchYear} ✓ (موديلات ${range})`,
+      isAlternative: !nameHasYear,
+    };
+  }
+  return { text: `يناسب موديلات ${range}`, isAlternative: false };
+};
+
 const ProductCard = memo(({
   product, index, viewMode, user, isDealer, isRetailTier = false, viewedProductIds,
-  limitReached, dailyViewCount, dailyLimit,
+  limitReached, dailyViewCount, dailyLimit, searchYear,
   getProductPrice, onProductClick, onAddToCart, onRecordView, onLoginRequired,
 }: ProductCardProps) => {
 
@@ -44,6 +69,7 @@ const ProductCard = memo(({
   const hasViewed = viewedProductIds.includes(product.id);
   const canSeePrice = user && (!isDealer || isRetailTier || hasViewed);
   const price = canSeePrice ? (isDealer && !isRetailTier ? getProductPrice(product) : product.base_price) : null;
+  const coverage = buildCoverageLabel(product, searchYear);
 
   if (viewMode === "list") {
     return (
@@ -97,6 +123,15 @@ const ProductCard = memo(({
           <h3 className="font-bold text-card-foreground text-[11px] sm:text-sm leading-snug sm:leading-relaxed line-clamp-2 group-hover:text-primary transition-colors duration-300 text-right">
             {product.name_ar}
           </h3>
+          {coverage && (
+            <span className={`inline-flex items-center gap-1 self-end text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-md leading-none border ${
+              coverage.isAlternative
+                ? "bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-700/50"
+                : "bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-700/50"
+            }`}>
+              {coverage.text}
+            </span>
+          )}
           {product.product_categories && (
             <p className="text-[9px] sm:text-xs text-muted-foreground/50 leading-none text-right">{(product.product_categories as any).name_ar}</p>
           )}
@@ -220,6 +255,19 @@ const ProductCard = memo(({
           group-hover:text-primary transition-colors duration-400">
           {product.name_ar}
         </h3>
+
+        {/* Year coverage badge — shows "fits 2008 ✓" when user searched by year */}
+        {coverage && (
+          <div className="mb-1.5 flex justify-end">
+            <span className={`inline-flex items-center gap-1 text-[8px] sm:text-[10px] font-bold px-2 py-1 rounded-md leading-none border ${
+              coverage.isAlternative
+                ? "bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-700/50"
+                : "bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-700/50"
+            }`}>
+              {coverage.text}
+            </span>
+          </div>
+        )}
 
         {/* Category */}
         {product.product_categories && (
