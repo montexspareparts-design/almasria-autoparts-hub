@@ -2058,6 +2058,137 @@ const StaffHome = () => {
             )}
           </div>
 
+          {/* ===== لوحة ملخص الزوار (محسوبة بعد الفلاتر) ===== */}
+          {dialogFilteredVisitors.length > 0 && (() => {
+            const total = dialogFilteredVisitors.length;
+            // مصادر الزوار
+            const sources: Record<string, { count: number; label: string; icon: string }> = {
+              facebook:  { count: 0, label: "فيسبوك",   icon: "📘" },
+              google:    { count: 0, label: "جوجل",     icon: "🔍" },
+              instagram: { count: 0, label: "إنستجرام", icon: "📷" },
+              tiktok:    { count: 0, label: "تيك توك",  icon: "🎵" },
+              whatsapp:  { count: 0, label: "واتساب",   icon: "💬" },
+              direct:    { count: 0, label: "مباشر",    icon: "🌐" },
+              other:     { count: 0, label: "موقع آخر", icon: "🔗" },
+            };
+            // أنشطة الزوار
+            const acts = { ordered: 0, addedToCart: 0, searched: 0, viewedProducts: 0, browsedOnly: 0 };
+            let registered = 0;
+            let totalSessions = 0;
+            for (const v of dialogFilteredVisitors) {
+              if (v.user_id) registered++;
+              totalSessions += v.pages || 0;
+              const hay = ((v.first_path || "") + " " + (v.referrer || "")).toLowerCase();
+              let src: keyof typeof sources;
+              if (hay.includes("fbclid") || hay.includes("facebook") || hay.includes("utm_source=fb")) src = "facebook";
+              else if (hay.includes("instagram") || hay.includes("ig_")) src = "instagram";
+              else if (hay.includes("google") || hay.includes("gclid")) src = "google";
+              else if (hay.includes("tiktok") || hay.includes("ttclid")) src = "tiktok";
+              else if (hay.includes("whatsapp") || hay.includes("wa.me")) src = "whatsapp";
+              else if (v.referrer) src = "other";
+              else src = "direct";
+              sources[src].count++;
+              const a = v.user_id ? visitorActivityMap.get(v.user_id) : null;
+              if (a?.ordered) acts.ordered++;
+              else if (a?.addedToCart) acts.addedToCart++;
+              else if (a?.searched) acts.searched++;
+              else if (a?.viewedProducts) acts.viewedProducts++;
+              else acts.browsedOnly++;
+            }
+            const sortedSources = Object.entries(sources)
+              .filter(([, s]) => s.count > 0)
+              .sort((a, b) => b[1].count - a[1].count);
+            const sortedActs = (
+              [
+                ["ordered",        "🛍️ عمل طلب",      acts.ordered],
+                ["addedToCart",    "🛒 أضاف للسلة",    acts.addedToCart],
+                ["searched",       "🔎 بحث عن منتج",   acts.searched],
+                ["viewedProducts", "👁️ شاف منتجات",   acts.viewedProducts],
+                ["browsedOnly",    "📄 تصفّح فقط",     acts.browsedOnly],
+              ] as const
+            )
+              .filter(([, , c]) => (c as number) > 0)
+              .sort((a, b) => (b[2] as number) - (a[2] as number));
+            const pct = (n: number) => total === 0 ? 0 : Math.round((n / total) * 100);
+
+            return (
+              <div className="mt-3 mb-2 rounded-lg border bg-gradient-to-br from-blue-50/60 via-card to-card dark:from-blue-950/20 p-3 space-y-3">
+                {/* صف الإجماليات */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="rounded-md bg-card border p-2">
+                    <div className="text-[10px] text-muted-foreground">إجمالي الزوار (بعد الفلاتر)</div>
+                    <div className="text-xl font-black text-blue-700 dark:text-blue-300 leading-tight">{total}</div>
+                    {dialogFilteredVisitors.length !== visitorsList.length && (
+                      <div className="text-[10px] text-muted-foreground">من أصل {visitorsList.length}</div>
+                    )}
+                  </div>
+                  <div className="rounded-md bg-card border p-2">
+                    <div className="text-[10px] text-muted-foreground">مسجّلون</div>
+                    <div className="text-xl font-black text-emerald-700 dark:text-emerald-300 leading-tight">{registered}</div>
+                    <div className="text-[10px] text-muted-foreground">{pct(registered)}% من الإجمالي</div>
+                  </div>
+                  <div className="rounded-md bg-card border p-2">
+                    <div className="text-[10px] text-muted-foreground">زوار مجهولون</div>
+                    <div className="text-xl font-black text-amber-700 dark:text-amber-300 leading-tight">{total - registered}</div>
+                    <div className="text-[10px] text-muted-foreground">{pct(total - registered)}%</div>
+                  </div>
+                  <div className="rounded-md bg-card border p-2">
+                    <div className="text-[10px] text-muted-foreground">إجمالي الجلسات / صفحات</div>
+                    <div className="text-xl font-black text-purple-700 dark:text-purple-300 leading-tight">{totalSessions}</div>
+                    <div className="text-[10px] text-muted-foreground">
+                      ~{total > 0 ? (totalSessions / total).toFixed(1) : "0"} صفحة/زائر
+                    </div>
+                  </div>
+                </div>
+
+                {/* مصادر الزيارة */}
+                <div>
+                  <div className="text-[11px] font-bold text-foreground mb-1.5 flex items-center gap-1">
+                    <Filter className="w-3 h-3" />
+                    المصادر ({sortedSources.length})
+                  </div>
+                  <div className="space-y-1">
+                    {sortedSources.map(([key, s]) => (
+                      <div key={key} className="flex items-center gap-2 text-[11px]">
+                        <span className="w-20 shrink-0 text-muted-foreground">{s.icon} {s.label}</span>
+                        <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all"
+                            style={{ width: `${pct(s.count)}%` }}
+                          />
+                        </div>
+                        <span className="w-16 text-end text-muted-foreground tabular-nums">
+                          <span className="font-bold text-foreground">{s.count}</span> ({pct(s.count)}%)
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* أعلى الأنشطة */}
+                <div>
+                  <div className="text-[11px] font-bold text-foreground mb-1.5 flex items-center gap-1">
+                    <Activity className="w-3 h-3" />
+                    أعلى الأنشطة
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                    {sortedActs.map(([key, label, count]) => (
+                      <div
+                        key={key as string}
+                        className="rounded-md border bg-card px-2 py-1.5 flex items-center justify-between"
+                      >
+                        <span className="text-[11px] text-foreground">{label as string}</span>
+                        <span className="text-[11px] font-bold text-foreground tabular-nums">
+                          {count as number} <span className="text-muted-foreground font-normal">({pct(count as number)}%)</span>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
           {(() => {
             // Use the shared dialogFilteredVisitors memo so the title badge ("X من أصل Y")
             // and this list are guaranteed to stay in sync as filters change.
