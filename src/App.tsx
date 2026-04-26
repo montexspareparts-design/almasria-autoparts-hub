@@ -58,6 +58,7 @@ const VisitorSessionSummary = lazy(() => import("./pages/VisitorSessionSummary")
 const StaffHome = lazy(() => import("./pages/StaffHome"));
 const StaffDailyReportPage = lazy(() => import("./pages/StaffDailyReportPage"));
 const VisitorLeadsPage = lazy(() => import("./pages/VisitorLeadsPage"));
+const ActiveVisitorsPage = lazy(() => import("./pages/ActiveVisitorsPage"));
 const AdminWhatsAppLogsPage = lazy(() => import("./pages/AdminWhatsAppLogsPage"));
 import PageVisitTracker from "./components/PageVisitTracker";
 const DealerRtlAuditor = import.meta.env.DEV
@@ -157,6 +158,7 @@ const App = () => (
                     <Route path="/admin/daily-report" element={<StaffDailyReportPage />} />
                     <Route path="/staff/daily-report" element={<StaffDailyReportPage />} />
                     <Route path="/admin/visitor-leads" element={<VisitorLeadsPage />} />
+                    <Route path="/admin/active-visitors" element={<ActiveVisitorsPage />} />
                     <Route path="/admin/whatsapp-logs" element={<AdminWhatsAppLogsPage />} />
                     <Route path="/admin/badge-qa" element={<BadgeContrastQA />} />
                     <Route path="*" element={<NotFound />} />

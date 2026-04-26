@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 import {
   Users, ShoppingBag, BellRing, Flame, ArrowLeft, Wallet, FileSearch,
   MessageSquare, UserPlus, Clock, AlertTriangle, CalendarDays, Eye,
-  Sparkles, ChevronRight, Phone, Timer, TrendingUp, CheckCircle2, Loader2,
+  Sparkles, ChevronRight, Phone, Timer, TrendingUp, CheckCircle2, Loader2, Activity,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -695,14 +695,11 @@ export default function StaffBentoHero({
             <div className="text-[11px] text-muted-foreground mt-1">زائر آخر ٣٠ دقيقة</div>
           </div>
           <div className="grid grid-cols-2 gap-1.5 mt-2">
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8 text-[11px] gap-1"
-              onClick={() => onJumpToTab("yesterday")}
-            >
-              <Users className="w-3 h-3" />
-              التفصيلية
+            <Button asChild size="sm" variant="outline" className="h-8 text-[11px] gap-1">
+              <Link to="/admin/active-visitors">
+                <Activity className="w-3 h-3" />
+                النشطون الآن
+              </Link>
             </Button>
             <Button
               size="sm"
