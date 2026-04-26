@@ -3,8 +3,10 @@ import App from "./App.tsx";
 import "./index.css";
 import { setupLazyImportRecovery } from "@/lib/lazyImportRecovery";
 import { installMobileErrorReporter } from "@/lib/mobileErrorReport";
+import { initHighContrastEarly } from "@/hooks/useHighContrast";
 
 installMobileErrorReporter();
+initHighContrastEarly();
 
 const removeSplash = () => {
   const splash = document.getElementById("splash-screen");
