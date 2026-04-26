@@ -76,6 +76,27 @@ export default function StaffBentoHero({
   const [contactingId, setContactingId] = useState<string | null>(null);
   const [snoozingId, setSnoozingId] = useState<string | null>(null);
 
+  // ===== فلترة الفترة (تؤثر على "زوار الآن" و "طلبات بدون تواصل") =====
+  type HeroPeriod = "30m" | "24h" | "today";
+  const [periodFilter, setPeriodFilter] = useState<HeroPeriod>("30m");
+  /** عدد الطلبات بدون تواصل ضمن الفترة المختارة (يطغى على prop urgentOrdersCount) */
+  const [urgentOrdersFiltered, setUrgentOrdersFiltered] = useState<number | null>(null);
+
+  /** رجّع تاريخ بداية الفترة بناءً على الفلتر */
+  const getPeriodStartIso = (p: HeroPeriod): string => {
+    const now = Date.now();
+    if (p === "30m") return new Date(now - 30 * 60 * 1000).toISOString();
+    if (p === "24h") return new Date(now - 24 * 3600 * 1000).toISOString();
+    const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
+    return startOfDay.toISOString();
+  };
+
+  const periodLabels: Record<HeroPeriod, string> = {
+    "30m": "آخر ٣٠ دقيقة",
+    "24h": "آخر ٢٤ ساعة",
+    "today": "اليوم",
+  };
+
   // ===== شريط مختصرات اليوم =====
   const [newVisitorsToday, setNewVisitorsToday] = useState(0);
   const [overdueTasksTotal, setOverdueTasksTotal] = useState(0);
@@ -84,17 +105,29 @@ export default function StaffBentoHero({
   const fetchHero = async () => {
     if (!user) return;
     const now = Date.now();
-    const since30m = new Date(now - 30 * 60 * 1000).toISOString();
+    const periodStartIso = getPeriodStartIso(periodFilter);
     const since24h = new Date(now - 24 * 3600 * 1000).toISOString();
     const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
     const startOfDayIso = startOfDay.toISOString();
 
-    // 1) زوار الآن
+    // 1) زوار الآن — حسب الفترة المختارة
     const { count: vCount } = await supabase
       .from("customer_sessions")
       .select("user_id", { count: "exact", head: true })
-      .gte("last_seen_at", since30m);
+      .gte("last_seen_at", periodStartIso);
     setVisitorsNow(vCount || 0);
+
+    // 1b) طلبات بدون تواصل — حسب نفس الفترة
+    try {
+      const { count: uoCount } = await supabase
+        .from("orders")
+        .select("id", { count: "exact", head: true })
+        .gte("created_at", periodStartIso)
+        .is("first_contacted_at", null);
+      setUrgentOrdersFiltered(uoCount ?? 0);
+    } catch {
+      setUrgentOrdersFiltered(null);
+    }
 
     // 2) جديد اليوم — طلبات
     const { count: oCount } = await supabase
@@ -249,7 +282,7 @@ export default function StaffBentoHero({
     const t = setInterval(fetchHero, 60_000);
     return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+  }, [user?.id, periodFilter]);
 
   /**
    * منطق الأولوية التلقائية:
@@ -389,7 +422,8 @@ export default function StaffBentoHero({
   };
 
   const totalNewToday = newOrders24h + newSignups24h + instapayPending + partRequestsNew;
-  const totalUrgent = urgentOrdersCount + chatbotPendingCount + hotLeadsCount;
+  const effectiveUrgentOrders = urgentOrdersFiltered ?? urgentOrdersCount;
+  const totalUrgent = effectiveUrgentOrders + chatbotPendingCount + hotLeadsCount;
   const totalFollowups = todayList.length;
 
   const fmtTime = (iso: string) => {
@@ -436,10 +470,39 @@ export default function StaffBentoHero({
             ({new Date().toLocaleDateString("ar-EG", { weekday: "long", day: "numeric", month: "long" })})
           </span>
         </div>
-        <div className="flex items-center gap-1.5 text-[10px]">
-          <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-100 dark:bg-emerald-900/40 px-2 py-0.5 rounded-full font-bold">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* فلترة الفترة — تؤثّر على "زوار الآن" و "طلبات بدون تواصل" */}
+          <div
+            role="tablist"
+            aria-label="فلترة الفترة"
+            className="inline-flex items-center rounded-full border border-border bg-card p-0.5 shadow-sm"
+          >
+            {(["30m", "24h", "today"] as const).map((p) => {
+              const active = periodFilter === p;
+              const label = p === "30m" ? "٣٠د" : p === "24h" ? "٢٤س" : "اليوم";
+              return (
+                <button
+                  key={p}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setPeriodFilter(p)}
+                  className={cn(
+                    "px-2.5 py-1 text-[11px] font-bold rounded-full transition-colors",
+                    active
+                      ? "bg-primary text-primary-foreground shadow"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                  title={periodLabels[p]}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          <span className="inline-flex items-center gap-1 text-[10px] text-emerald-700 bg-emerald-100 dark:bg-emerald-900/40 px-2 py-0.5 rounded-full font-bold">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            تحديث مباشر كل دقيقة
+            تحديث كل دقيقة
           </span>
         </div>
       </div>
@@ -537,8 +600,8 @@ export default function StaffBentoHero({
           <div className="grid grid-cols-3 gap-2">
             <UrgentTile
               label="طلبات بدون تواصل"
-              hint="آخر 48س"
-              value={urgentOrdersCount}
+              hint={periodLabels[periodFilter]}
+              value={effectiveUrgentOrders}
               icon={<ShoppingBag className="w-4 h-4" />}
               onClick={() => onJumpToTab("urgent")}
             />
@@ -747,7 +810,7 @@ export default function StaffBentoHero({
             <div className="text-5xl font-black text-blue-700 dark:text-blue-300 leading-none">
               {visitorsNow}
             </div>
-            <div className="text-[11px] text-muted-foreground mt-1">زائر آخر ٣٠ دقيقة</div>
+            <div className="text-[11px] text-muted-foreground mt-1">زائر — {periodLabels[periodFilter]}</div>
           </div>
           <div className="grid grid-cols-2 gap-1.5 mt-2">
             <Button asChild size="sm" variant="outline" className="h-8 text-[11px] gap-1">
