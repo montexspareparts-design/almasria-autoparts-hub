@@ -102,21 +102,24 @@ const ProductCard = memo(({
           transition-all duration-500"
         onClick={() => onProductClick(product)}
       >
-        {/* Image */}
-        <div className="w-28 sm:w-48 shrink-0 bg-white relative flex items-center justify-center p-3 sm:p-5 overflow-hidden">
+        {/* Image — fixed square frame across breakpoints, consistent inner padding */}
+        <div className="w-28 sm:w-40 md:w-48 aspect-square shrink-0 bg-white relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-white via-white to-muted/10" />
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out z-10 pointer-events-none" />
-          {product.image_url ? (
-            <LazyImage
-              src={product.image_url}
-              alt={product.name_ar}
-              wrapperClassName="w-full h-full"
-              className="w-full h-full object-contain mix-blend-multiply relative z-[1] group-hover:scale-110 transition-transform duration-700"
-              optimizeWidth={200}
-            />
-          ) : (
-            <Package className="w-10 h-10 text-muted-foreground/10 relative z-[1]" />
-          )}
+          {/* Padded inner box keeps every product image inside the same usable area */}
+          <div className="absolute inset-0 p-3 sm:p-4 flex items-center justify-center">
+            {product.image_url ? (
+              <LazyImage
+                src={product.image_url}
+                alt={product.name_ar}
+                wrapperClassName="w-full h-full flex items-center justify-center"
+                className="max-w-full max-h-full w-auto h-auto object-contain mix-blend-multiply relative z-[1] group-hover:scale-110 transition-transform duration-700"
+                optimizeWidth={240}
+              />
+            ) : (
+              <Package className="w-10 h-10 text-muted-foreground/15 relative z-[1]" />
+            )}
+          </div>
           {product.is_on_sale && (
             <Badge className="absolute top-2 left-2 z-20 bg-destructive text-destructive-foreground text-[8px] font-black px-2 py-0.5 shadow-lg shadow-destructive/30 rounded-lg">
               تخفيض
