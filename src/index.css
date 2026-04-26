@@ -302,3 +302,48 @@
     backdrop-filter: none !important;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────────
+   High-Contrast mode (html.hc-mode)
+   ----------------------------------
+   Activated via the in-app accessibility toggle (see useHighContrast.ts)
+   or auto-enabled when the OS reports `prefers-contrast: more`.
+   Goal: maximize legibility for low-vision users without changing layout.
+   ───────────────────────────────────────────────────────────────────── */
+html.hc-mode .badge-glass {
+  /* Near-opaque fill — eliminates show-through entirely */
+  background-color: rgba(0, 0, 0, 0.92) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  /* Thicker, brighter halo separates badge from any background */
+  box-shadow:
+    0 0 0 2px #ffffff,
+    0 4px 14px rgba(0, 0, 0, 0.55) !important;
+}
+
+/* Stronger text shadow on every floating badge so glyphs stay crisp */
+html.hc-mode [class*="text-shadow"],
+html.hc-mode .badge-glass {
+  text-shadow:
+    0 0 2px rgba(0, 0, 0, 0.95),
+    0 1px 3px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* Promote ring contrast on the colored stock / sale / priced pills */
+html.hc-mode .ring-white\/30,
+html.hc-mode .ring-white\/25 {
+  --tw-ring-color: #ffffff !important;
+  --tw-ring-offset-width: 1px;
+}
+
+/* Brighter focus outlines for keyboard users */
+html.hc-mode :focus-visible {
+  outline: 3px solid #ffeb3b !important;
+  outline-offset: 2px !important;
+}
+
+/* Underline all in-content links for instant affordance */
+html.hc-mode a:not(.no-hc-underline) {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
