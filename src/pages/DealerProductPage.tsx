@@ -102,6 +102,19 @@ const DealerProductPage = () => {
     })();
   }, [productId]);
 
+  // Fetch dealer's saved car (model + year) for fitment verdict
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("car_model, car_year")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (data) setProfileCar({ model: data.car_model || null, year: data.car_year || null });
+    })();
+  }, [user]);
+
   // Fetch tier price, reviews, related, favorites in parallel
   useEffect(() => {
     if (!product || !user) return;
