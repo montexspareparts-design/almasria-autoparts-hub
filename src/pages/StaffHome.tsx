@@ -27,6 +27,9 @@ import {
   Info,
   ChevronDown,
   HelpCircle,
+  Download,
+  ShoppingBag,
+  Package,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isNoiseVisit, ENGAGED_DWELL_MS } from "@/lib/visitorAnalytics";
@@ -172,6 +175,12 @@ const StaffHome = () => {
   const [visitorTypeFilter, setVisitorTypeFilter] = useSessionPersistedState<"all" | "registered" | "anon">("staffHome:visitors:type", "all");
   const [visitorDateFilter, setVisitorDateFilter] = useSessionPersistedState<"all" | "today" | "yesterday" | "week" | "month">("staffHome:visitors:date", "today");
   const [visitorViewedFilter, setVisitorViewedFilter] = useSessionPersistedState<"all" | "viewed" | "not_viewed">("staffHome:visitors:viewed", "all");
+  // ── New: visitor source / activity / depth filters for comprehensive reporting
+  const [visitorSourceFilter, setVisitorSourceFilter] = useSessionPersistedState<"all" | "facebook" | "google" | "instagram" | "tiktok" | "whatsapp" | "direct" | "other">("staffHome:visitors:source", "all");
+  const [visitorActivityFilter, setVisitorActivityFilter] = useSessionPersistedState<"all" | "ordered" | "added_cart" | "searched" | "viewed_products" | "browsed_only">("staffHome:visitors:activity", "all");
+  const [visitorMinPages, setVisitorMinPages] = useSessionPersistedState<"all" | "2" | "5" | "10">("staffHome:visitors:minPages", "all");
+  // Per-visitor activity flags (built from searchesRes/cartRes/ordersRes/viewsRes in fetchData)
+  const [visitorActivityMap, setVisitorActivityMap] = useState<Map<string, { searched: boolean; addedToCart: boolean; ordered: boolean; viewedProducts: boolean; searchTerms: string[]; orderCount: number; cartItems: number }>>(new Map());
   // Free-text search inside each dialog (matches name / phone / email).
   // Phone matching ignores formatting (spaces, dashes, +20…), name matching
   // ignores Arabic diacritics & case. See normalizeSearch / matchesContactQuery.
@@ -575,6 +584,44 @@ const StaffHome = () => {
         };
       });
       setBuyersList(buyersArr);
+
+      // Build per-visitor activity map (ordered / cart / search / product views)
+      // Used by the visitor-report filters and the CSV export so each row carries
+      // a complete picture of what the visitor actually DID on the site.
+      const activityMap = new Map<string, { searched: boolean; addedToCart: boolean; ordered: boolean; viewedProducts: boolean; searchTerms: string[]; orderCount: number; cartItems: number }>();
+      const ensure = (uid: string) => {
+        let cur = activityMap.get(uid);
+        if (!cur) {
+          cur = { searched: false, addedToCart: false, ordered: false, viewedProducts: false, searchTerms: [], orderCount: 0, cartItems: 0 };
+          activityMap.set(uid, cur);
+        }
+        return cur;
+      };
+      for (const s of searchesRes.data || []) {
+        if (!s.user_id) continue;
+        const a = ensure(s.user_id);
+        a.searched = true;
+        if (s.search_query && a.searchTerms.length < 5 && !a.searchTerms.includes(s.search_query)) {
+          a.searchTerms.push(s.search_query);
+        }
+      }
+      for (const c of cartRes.data || []) {
+        if (!c.user_id) continue;
+        const a = ensure(c.user_id);
+        a.addedToCart = true;
+        a.cartItems += 1;
+      }
+      for (const o of ordersRes.data || []) {
+        if (!o.user_id) continue;
+        const a = ensure(o.user_id);
+        a.ordered = true;
+        a.orderCount += 1;
+      }
+      for (const v of viewsRes.data || []) {
+        if (!v.user_id) continue;
+        ensure(v.user_id).viewedProducts = true;
+      }
+      setVisitorActivityMap(activityMap);
     } catch (e) {
       console.error("[StaffHome] fetch error", e);
     } finally {
@@ -715,6 +762,78 @@ const StaffHome = () => {
     }, 0);
   }, [visitorsList, includeStaff, staffIdsSet, startMs]);
 
+  // Export the currently-filtered visitors to a comprehensive CSV report.
+  // Includes contact info, source attribution, full timestamps, session depth,
+  // and per-visitor activity flags (search/cart/order) for offline review.
+  const exportVisitorsReport = (rows: typeof visitorsList) => {
+    if (!rows.length) return;
+    const detectSource = (v: typeof rows[number]): string => {
+      const hay = ((v.first_path || "") + " " + (v.referrer || "")).toLowerCase();
+      if (hay.includes("fbclid") || hay.includes("facebook") || hay.includes("utm_source=fb")) return "فيسبوك";
+      if (hay.includes("instagram") || hay.includes("ig_")) return "إنستجرام";
+      if (hay.includes("google") || hay.includes("gclid")) return "جوجل";
+      if (hay.includes("tiktok") || hay.includes("ttclid")) return "تيك توك";
+      if (hay.includes("whatsapp") || hay.includes("wa.me")) return "واتساب";
+      if (v.referrer) return "موقع آخر";
+      return "مباشر";
+    };
+    const escape = (val: unknown) => {
+      const s = val == null ? "" : String(val);
+      if (s.includes(",") || s.includes('"') || s.includes("\n")) return `"${s.replace(/"/g, '""')}"`;
+      return s;
+    };
+    const headers = [
+      "النوع", "الاسم", "الهاتف", "الإيميل", "المصدر",
+      "أول دخول", "آخر زيارة", "مدة الجلسة (دقيقة)", "عدد الصفحات",
+      "أول صفحة", "Referrer",
+      "بحث؟", "كلمات البحث", "شاف منتجات؟", "أضاف للسلة؟", "عدد عناصر السلة",
+      "عمل طلب؟", "عدد الطلبات", "تمت المعاينة من قبل موظف؟",
+    ];
+    const lines = [headers.join(",")];
+    for (const v of rows) {
+      const isAnon = !v.user_id;
+      const a = v.user_id ? visitorActivityMap.get(v.user_id) : null;
+      const lastDate = new Date(v.last_visit);
+      const firstDate = v.first_visit ? new Date(v.first_visit) : null;
+      const durationMin = firstDate ? Math.max(0, Math.round((lastDate.getTime() - firstDate.getTime()) / 60000)) : 0;
+      const isViewed =
+        (v.user_id && viewedKeys.has(`u:${v.user_id}`)) ||
+        (v.session_key && viewedKeys.has(`s:${v.session_key}`));
+      lines.push([
+        isAnon ? "زائر مجهول" : "مسجّل",
+        v.full_name || "",
+        v.phone || "",
+        v.email || "",
+        detectSource(v),
+        firstDate ? firstDate.toLocaleString("ar-EG") : "",
+        lastDate.toLocaleString("ar-EG"),
+        durationMin,
+        v.pages ?? 0,
+        v.first_path || "",
+        v.referrer || "",
+        a?.searched ? "نعم" : "لا",
+        (a?.searchTerms || []).join(" | "),
+        a?.viewedProducts ? "نعم" : "لا",
+        a?.addedToCart ? "نعم" : "لا",
+        a?.cartItems || 0,
+        a?.ordered ? "نعم" : "لا",
+        a?.orderCount || 0,
+        isViewed ? "نعم" : "لا",
+      ].map(escape).join(","));
+    }
+    // Prepend BOM for Excel UTF-8 Arabic compatibility
+    const blob = new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    const stamp = new Date().toISOString().slice(0, 10);
+    link.download = `visitors-report-${stamp}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   // Single source of truth for the visitors Dialog list + badge:
   // applies ALL active filters (staff toggle, type, date, viewed, engaged).
   // Both the title badge and the rendered list use this exact array
@@ -743,6 +862,33 @@ const StaffHome = () => {
         const dwell = Number.isFinite(firstT) && Number.isFinite(t) ? t - (firstT as number) : 0;
         if (!(dwell >= ENGAGED_DWELL_MS || (v.pages ?? 0) >= 2)) return false;
       }
+      // Source filter — derived from first_path / referrer (UTM/click ids).
+      if (visitorSourceFilter !== "all") {
+        const hay = ((v.first_path || "") + " " + (v.referrer || "")).toLowerCase();
+        let src: string;
+        if (hay.includes("fbclid") || hay.includes("facebook") || hay.includes("utm_source=fb")) src = "facebook";
+        else if (hay.includes("instagram") || hay.includes("ig_")) src = "instagram";
+        else if (hay.includes("google") || hay.includes("gclid")) src = "google";
+        else if (hay.includes("tiktok") || hay.includes("ttclid")) src = "tiktok";
+        else if (hay.includes("whatsapp") || hay.includes("wa.me")) src = "whatsapp";
+        else if (v.referrer) src = "other";
+        else src = "direct";
+        if (src !== visitorSourceFilter) return false;
+      }
+      // Activity filter — what the visitor actually did on the site.
+      if (visitorActivityFilter !== "all") {
+        const a = v.user_id ? visitorActivityMap.get(v.user_id) : null;
+        if (visitorActivityFilter === "ordered" && !a?.ordered) return false;
+        if (visitorActivityFilter === "added_cart" && !a?.addedToCart) return false;
+        if (visitorActivityFilter === "searched" && !a?.searched) return false;
+        if (visitorActivityFilter === "viewed_products" && !a?.viewedProducts) return false;
+        if (visitorActivityFilter === "browsed_only" && (a?.ordered || a?.addedToCart || a?.searched || a?.viewedProducts)) return false;
+      }
+      // Min pages depth filter
+      if (visitorMinPages !== "all") {
+        const min = parseInt(visitorMinPages, 10);
+        if ((v.pages ?? 0) < min) return false;
+      }
       // Free-text search: name / phone / email. Anonymous visitors (no name,
       // no phone, no email) automatically fall out as soon as a query is typed,
       // which is the expected behavior for a contact-search box.
@@ -750,7 +896,7 @@ const StaffHome = () => {
       return true;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visitorsList, includeStaff, staffIdsSet, visitorTypeFilter, visitorDateFilter, visitorViewedFilter, visitorEngagedOnly, viewedKeys, visitorsSearch]);
+  }, [visitorsList, includeStaff, staffIdsSet, visitorTypeFilter, visitorDateFilter, visitorViewedFilter, visitorEngagedOnly, viewedKeys, visitorsSearch, visitorSourceFilter, visitorActivityFilter, visitorMinPages, visitorActivityMap]);
 
 
   // Unified KPI numbers — computed from raw lists with the SAME staff-exclusion
@@ -1823,6 +1969,42 @@ const StaffHome = () => {
                 <SelectItem value="viewed">تمت المعاينة</SelectItem>
               </SelectContent>
             </Select>
+            {/* New: source filter — تمييز الزوار حسب مصدر الإعلان */}
+            <Select value={visitorSourceFilter} onValueChange={(v) => setVisitorSourceFilter(v as any)}>
+              <SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent position="popper" className="z-[100]">
+                <SelectItem value="all">كل المصادر</SelectItem>
+                <SelectItem value="facebook">📘 فيسبوك</SelectItem>
+                <SelectItem value="google">🔍 جوجل</SelectItem>
+                <SelectItem value="instagram">📷 إنستجرام</SelectItem>
+                <SelectItem value="tiktok">🎵 تيك توك</SelectItem>
+                <SelectItem value="whatsapp">💬 واتساب</SelectItem>
+                <SelectItem value="direct">🌐 مباشر</SelectItem>
+                <SelectItem value="other">🔗 موقع آخر</SelectItem>
+              </SelectContent>
+            </Select>
+            {/* New: activity filter — حسب الإجراء الذي قام به الزائر */}
+            <Select value={visitorActivityFilter} onValueChange={(v) => setVisitorActivityFilter(v as any)}>
+              <SelectTrigger className="h-8 w-[160px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent position="popper" className="z-[100]">
+                <SelectItem value="all">كل الأنشطة</SelectItem>
+                <SelectItem value="ordered">🛍️ عمل طلب</SelectItem>
+                <SelectItem value="added_cart">🛒 أضاف للسلة</SelectItem>
+                <SelectItem value="searched">🔎 بحث عن منتج</SelectItem>
+                <SelectItem value="viewed_products">👁️ شاف منتجات</SelectItem>
+                <SelectItem value="browsed_only">📄 تصفّح فقط</SelectItem>
+              </SelectContent>
+            </Select>
+            {/* New: minimum pages — لاستبعاد الزوار العابرين */}
+            <Select value={visitorMinPages} onValueChange={(v) => setVisitorMinPages(v as any)}>
+              <SelectTrigger className="h-8 w-[130px] text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent position="popper" className="z-[100]">
+                <SelectItem value="all">أي عدد صفحات</SelectItem>
+                <SelectItem value="2">≥ صفحتين</SelectItem>
+                <SelectItem value="5">≥ 5 صفحات</SelectItem>
+                <SelectItem value="10">≥ 10 صفحات</SelectItem>
+              </SelectContent>
+            </Select>
             {/* All / Only Customers toggle — default hides staff; "All" is for admin review */}
             <Select value={includeStaff ? "all" : "customers"} onValueChange={(v) => setIncludeStaff(v === "all")}>
               <SelectTrigger className="h-8 w-[170px] text-xs"><SelectValue /></SelectTrigger>
@@ -1841,7 +2023,19 @@ const StaffHome = () => {
               <Activity className="w-3.5 h-3.5" />
               متفاعلين فقط
             </Button>
-            {(visitorTypeFilter !== "all" || visitorDateFilter !== "all" || visitorViewedFilter !== "all" || visitorEngagedOnly || includeStaff || visitorsSearch) && (
+            {/* Export filtered list as a comprehensive CSV report */}
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 text-xs gap-1 border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+              onClick={() => exportVisitorsReport(dialogFilteredVisitors)}
+              disabled={dialogFilteredVisitors.length === 0}
+              title="تنزيل تقرير شامل CSV عن الزوار المعروضين الآن"
+            >
+              <Download className="w-3.5 h-3.5" />
+              تصدير تقرير ({dialogFilteredVisitors.length})
+            </Button>
+            {(visitorTypeFilter !== "all" || visitorDateFilter !== "all" || visitorViewedFilter !== "all" || visitorSourceFilter !== "all" || visitorActivityFilter !== "all" || visitorMinPages !== "all" || visitorEngagedOnly || includeStaff || visitorsSearch) && (
               <Button
                 size="sm"
                 variant="ghost"
@@ -1850,6 +2044,9 @@ const StaffHome = () => {
                   setVisitorTypeFilter("all");
                   setVisitorDateFilter("all");
                   setVisitorViewedFilter("all");
+                  setVisitorSourceFilter("all");
+                  setVisitorActivityFilter("all");
+                  setVisitorMinPages("all");
                   setVisitorEngagedOnly(false);
                   setIncludeStaff(false);
                   setVisitorsSearch("");
@@ -2007,6 +2204,45 @@ const StaffHome = () => {
                         {v.email && <span className="truncate max-w-[200px]">✉️ {v.email}</span>}
                         <span>👁️ {v.pages} صفحة</span>
                       </div>
+                      {/* Activity badges — quick visual summary of what visitor did */}
+                      {v.user_id && (() => {
+                        const a = visitorActivityMap.get(v.user_id);
+                        if (!a) return null;
+                        if (!a.searched && !a.addedToCart && !a.ordered && !a.viewedProducts) return null;
+                        return (
+                          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                            {a.ordered && (
+                              <Badge className="bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/20 text-[10px] h-5 gap-1">
+                                <ShoppingBag className="w-3 h-3" />
+                                طلب ({a.orderCount})
+                              </Badge>
+                            )}
+                            {a.addedToCart && !a.ordered && (
+                              <Badge className="bg-orange-500/15 text-orange-700 hover:bg-orange-500/20 text-[10px] h-5 gap-1">
+                                <ShoppingCart className="w-3 h-3" />
+                                سلة ({a.cartItems})
+                              </Badge>
+                            )}
+                            {a.searched && (
+                              <Badge className="bg-violet-500/15 text-violet-700 hover:bg-violet-500/20 text-[10px] h-5 gap-1" title={a.searchTerms.join(" • ")}>
+                                <Search className="w-3 h-3" />
+                                بحث
+                              </Badge>
+                            )}
+                            {a.viewedProducts && (
+                              <Badge variant="outline" className="text-[10px] h-5 gap-1">
+                                <Package className="w-3 h-3" />
+                                شاف منتجات
+                              </Badge>
+                            )}
+                            {a.searched && a.searchTerms.length > 0 && (
+                              <span className="text-[10px] text-muted-foreground italic">
+                                "{a.searchTerms.slice(0, 2).join(" • ")}"
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
                       {/* Visit timeline — clear dates for staff */}
                       <div className="flex items-center gap-2 mt-1.5 flex-wrap text-[11px]">
                         <span
