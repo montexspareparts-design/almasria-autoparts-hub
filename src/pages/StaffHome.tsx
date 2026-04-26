@@ -41,6 +41,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useSessionPersistedState } from "@/hooks/useSessionPersistedState";
 import DailyReportTabCard from "@/components/staff/DailyReportTabCard";
 import StaffRemindersPanel from "@/components/staff/StaffRemindersPanel";
+import StaffAutoTasksPanel from "@/components/staff/StaffAutoTasksPanel";
 import VisitorPipelineControl from "@/components/staff/VisitorPipelineControl";
 
 // Normalize a string for case-insensitive substring matching.
