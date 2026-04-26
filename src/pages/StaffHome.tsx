@@ -762,6 +762,78 @@ const StaffHome = () => {
     }, 0);
   }, [visitorsList, includeStaff, staffIdsSet, startMs]);
 
+  // Export the currently-filtered visitors to a comprehensive CSV report.
+  // Includes contact info, source attribution, full timestamps, session depth,
+  // and per-visitor activity flags (search/cart/order) for offline review.
+  const exportVisitorsReport = (rows: typeof visitorsList) => {
+    if (!rows.length) return;
+    const detectSource = (v: typeof rows[number]): string => {
+      const hay = ((v.first_path || "") + " " + (v.referrer || "")).toLowerCase();
+      if (hay.includes("fbclid") || hay.includes("facebook") || hay.includes("utm_source=fb")) return "فيسبوك";
+      if (hay.includes("instagram") || hay.includes("ig_")) return "إنستجرام";
+      if (hay.includes("google") || hay.includes("gclid")) return "جوجل";
+      if (hay.includes("tiktok") || hay.includes("ttclid")) return "تيك توك";
+      if (hay.includes("whatsapp") || hay.includes("wa.me")) return "واتساب";
+      if (v.referrer) return "موقع آخر";
+      return "مباشر";
+    };
+    const escape = (val: unknown) => {
+      const s = val == null ? "" : String(val);
+      if (s.includes(",") || s.includes('"') || s.includes("\n")) return `"${s.replace(/"/g, '""')}"`;
+      return s;
+    };
+    const headers = [
+      "النوع", "الاسم", "الهاتف", "الإيميل", "المصدر",
+      "أول دخول", "آخر زيارة", "مدة الجلسة (دقيقة)", "عدد الصفحات",
+      "أول صفحة", "Referrer",
+      "بحث؟", "كلمات البحث", "شاف منتجات؟", "أضاف للسلة؟", "عدد عناصر السلة",
+      "عمل طلب؟", "عدد الطلبات", "تمت المعاينة من قبل موظف؟",
+    ];
+    const lines = [headers.join(",")];
+    for (const v of rows) {
+      const isAnon = !v.user_id;
+      const a = v.user_id ? visitorActivityMap.get(v.user_id) : null;
+      const lastDate = new Date(v.last_visit);
+      const firstDate = v.first_visit ? new Date(v.first_visit) : null;
+      const durationMin = firstDate ? Math.max(0, Math.round((lastDate.getTime() - firstDate.getTime()) / 60000)) : 0;
+      const isViewed =
+        (v.user_id && viewedKeys.has(`u:${v.user_id}`)) ||
+        (v.session_key && viewedKeys.has(`s:${v.session_key}`));
+      lines.push([
+        isAnon ? "زائر مجهول" : "مسجّل",
+        v.full_name || "",
+        v.phone || "",
+        v.email || "",
+        detectSource(v),
+        firstDate ? firstDate.toLocaleString("ar-EG") : "",
+        lastDate.toLocaleString("ar-EG"),
+        durationMin,
+        v.pages ?? 0,
+        v.first_path || "",
+        v.referrer || "",
+        a?.searched ? "نعم" : "لا",
+        (a?.searchTerms || []).join(" | "),
+        a?.viewedProducts ? "نعم" : "لا",
+        a?.addedToCart ? "نعم" : "لا",
+        a?.cartItems || 0,
+        a?.ordered ? "نعم" : "لا",
+        a?.orderCount || 0,
+        isViewed ? "نعم" : "لا",
+      ].map(escape).join(","));
+    }
+    // Prepend BOM for Excel UTF-8 Arabic compatibility
+    const blob = new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    const stamp = new Date().toISOString().slice(0, 10);
+    link.download = `visitors-report-${stamp}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   // Single source of truth for the visitors Dialog list + badge:
   // applies ALL active filters (staff toggle, type, date, viewed, engaged).
   // Both the title badge and the rendered list use this exact array
