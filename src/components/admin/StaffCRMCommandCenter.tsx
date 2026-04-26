@@ -400,6 +400,68 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
     return () => { supabase.removeChannel(channel); };
   }, [user]);
 
+  /**
+   * Realtime: إشعارات داخلية فورية بدون تحديث يدوي.
+   *  - new INSERT في orders → "🆕 طلب جديد عاجل" + صوت + إعادة جلب البيانات
+   *  - new INSERT في customer_search_logs لعميل بحث ≥3 مرات بدون شراء → "🔥 ليد ساخن جديد"
+   *
+   * Toasts قابلة للنقر — تفتح التبويب المناسب في نفس اللوحة.
+   */
+  useEffect(() => {
+    if (!user) return;
+    let cooldownLeads = 0; // anti-spam: حد أدنى ٢٠ث بين تنبيهات الليدز
+    const ch = supabase
+      .channel("crm-bento-live-alerts")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "orders" },
+        async (payload) => {
+          const o = payload.new as any;
+          // Lazy import to avoid circular deps + only play on demand
+          try {
+            const { playNewOrderSound } = await import("@/lib/orderAlertSound");
+            playNewOrderSound();
+          } catch { /* */ }
+          toast({
+            title: "🆕 طلب جديد عاجل",
+            description: `طلب رقم ${o.order_number || ""} — افتح المهام العاجلة للمتابعة`,
+          });
+          fetchAll();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "customer_search_logs" },
+        async (payload) => {
+          const s = payload.new as any;
+          if (!s.user_id) return;
+          // عدّ بحث المستخدم — لو وصل ≥3 ولم يشتر → ليد ساخن
+          const { count: searchCount } = await supabase
+            .from("customer_search_logs")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", s.user_id);
+          if (!searchCount || searchCount < 3) return;
+          const { count: orderCount } = await supabase
+            .from("orders")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", s.user_id);
+          if ((orderCount || 0) > 0) return;
+          // anti-spam
+          const now = Date.now();
+          if (now - cooldownLeads < 20_000) return;
+          cooldownLeads = now;
+          toast({
+            title: "🔥 ليد ساخن جديد",
+            description: `عميل بحث ${searchCount} مرة بدون شراء — افتح "Leads ساخنة" للتواصل`,
+          });
+          fetchAll();
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
   // =================== Actions ===================
   const markContacted = async (customerUserId: string, context: string) => {
     if (!user) return;
