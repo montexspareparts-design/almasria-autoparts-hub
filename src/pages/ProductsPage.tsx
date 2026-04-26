@@ -236,18 +236,26 @@ const ProductsPage = () => {
         titleEn={pageTitleEn}
         descriptionAr={pageDescription}
         descriptionEn={pageDescriptionEn}
+        keywordsAr={pageKeywordsAr}
+        keywordsEn={pageKeywordsEn}
         ogType={config ? "product" : "website"}
         breadcrumbs={
-          config
+          categoryMeta
             ? [
                 { ar: "الرئيسية", en: "Home", url: "/" },
                 { ar: "المنتجات", en: "Products", url: "/products" },
-                { ar: config.title, en: config.titleEn || config.subtitle, url: `/products/${brand}` },
+                { ar: categoryMeta.nameAr, en: categoryMeta.nameEn, url: `/products?category=${categoryMeta.slug}` },
               ]
-            : [
-                { ar: "الرئيسية", en: "Home", url: "/" },
-                { ar: "المنتجات", en: "Products", url: "/products" },
-              ]
+            : config
+              ? [
+                  { ar: "الرئيسية", en: "Home", url: "/" },
+                  { ar: "المنتجات", en: "Products", url: "/products" },
+                  { ar: config.title, en: config.titleEn || config.subtitle, url: `/products/${brand}` },
+                ]
+              : [
+                  { ar: "الرئيسية", en: "Home", url: "/" },
+                  { ar: "المنتجات", en: "Products", url: "/products" },
+                ]
         }
       />
       <Navbar />
