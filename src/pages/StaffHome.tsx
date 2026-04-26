@@ -1837,12 +1837,19 @@ const StaffHome = () => {
               <Activity className="w-3.5 h-3.5" />
               متفاعلين فقط
             </Button>
-            {(visitorTypeFilter !== "all" || visitorDateFilter !== "all" || visitorViewedFilter !== "all" || visitorEngagedOnly) && (
+            {(visitorTypeFilter !== "all" || visitorDateFilter !== "all" || visitorViewedFilter !== "all" || visitorEngagedOnly || includeStaff || visitorsSearch) && (
               <Button
                 size="sm"
                 variant="ghost"
                 className="h-8 text-xs"
-                onClick={() => { setVisitorTypeFilter("all"); setVisitorDateFilter("all"); setVisitorViewedFilter("all"); setVisitorEngagedOnly(false); }}
+                onClick={() => {
+                  setVisitorTypeFilter("all");
+                  setVisitorDateFilter("all");
+                  setVisitorViewedFilter("all");
+                  setVisitorEngagedOnly(false);
+                  setIncludeStaff(false);
+                  setVisitorsSearch("");
+                }}
               >
                 مسح الفلاتر
               </Button>
