@@ -636,6 +636,11 @@ export default function StaffBentoHero({
                         )}
                         تم التواصل
                       </button>
+                      <SnoozeButton
+                        reminder={r}
+                        busy={snoozingId === r.id}
+                        onSnooze={handleSnooze}
+                      />
                     </div>
                   </div>
                 );
