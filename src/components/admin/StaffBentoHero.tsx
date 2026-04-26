@@ -76,6 +76,27 @@ export default function StaffBentoHero({
   const [contactingId, setContactingId] = useState<string | null>(null);
   const [snoozingId, setSnoozingId] = useState<string | null>(null);
 
+  // ===== فلترة الفترة (تؤثر على "زوار الآن" و "طلبات بدون تواصل") =====
+  type HeroPeriod = "30m" | "24h" | "today";
+  const [periodFilter, setPeriodFilter] = useState<HeroPeriod>("30m");
+  /** عدد الطلبات بدون تواصل ضمن الفترة المختارة (يطغى على prop urgentOrdersCount) */
+  const [urgentOrdersFiltered, setUrgentOrdersFiltered] = useState<number | null>(null);
+
+  /** رجّع تاريخ بداية الفترة بناءً على الفلتر */
+  const getPeriodStartIso = (p: HeroPeriod): string => {
+    const now = Date.now();
+    if (p === "30m") return new Date(now - 30 * 60 * 1000).toISOString();
+    if (p === "24h") return new Date(now - 24 * 3600 * 1000).toISOString();
+    const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
+    return startOfDay.toISOString();
+  };
+
+  const periodLabels: Record<HeroPeriod, string> = {
+    "30m": "آخر ٣٠ دقيقة",
+    "24h": "آخر ٢٤ ساعة",
+    "today": "اليوم",
+  };
+
   // ===== شريط مختصرات اليوم =====
   const [newVisitorsToday, setNewVisitorsToday] = useState(0);
   const [overdueTasksTotal, setOverdueTasksTotal] = useState(0);
