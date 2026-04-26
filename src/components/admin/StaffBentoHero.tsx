@@ -69,6 +69,7 @@ export default function StaffBentoHero({
   // زوار / تذكيرات
   const [visitorsNow, setVisitorsNow] = useState(0);
   const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [contactingId, setContactingId] = useState<string | null>(null);
 
   // ===== شريط مختصرات اليوم =====
   const [newVisitorsToday, setNewVisitorsToday] = useState(0);
