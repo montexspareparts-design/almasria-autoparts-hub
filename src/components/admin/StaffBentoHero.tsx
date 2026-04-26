@@ -360,6 +360,34 @@ export default function StaffBentoHero({
     }
   };
 
+  /**
+   * زر سريع: "تأجيل" — يحدّث reminder_at بكمية دقائق محددة (15د/1س/3س/غداً).
+   * يعيد حساب الأولوية لحظياً + يفرز المهام تلقائياً.
+   */
+  const handleSnooze = async (r: Reminder, minutes: number, label: string) => {
+    if (!user || snoozingId) return;
+    setSnoozingId(r.id);
+    const newReminderAt = new Date(Date.now() + minutes * 60_000).toISOString();
+    try {
+      const { error } = await supabase
+        .from("customer_communications")
+        .update({ reminder_at: newReminderAt, is_done: false })
+        .eq("id", r.id);
+      if (error) throw error;
+
+      setReminders((prev) =>
+        prev.map((x) => (x.id === r.id ? { ...x, reminder_at: newReminderAt } : x))
+      );
+      toast.success(`تم تأجيل "${r.customer_name || "التذكير"}" — ${label}`);
+      fetchHero();
+    } catch (err: any) {
+      console.error("[snooze]", err);
+      toast.error("فشل تأجيل التذكير — حاول مرة أخرى");
+    } finally {
+      setSnoozingId(null);
+    }
+  };
+
   const totalNewToday = newOrders24h + newSignups24h + instapayPending + partRequestsNew;
   const totalUrgent = urgentOrdersCount + chatbotPendingCount + hotLeadsCount;
   const totalFollowups = todayList.length;
