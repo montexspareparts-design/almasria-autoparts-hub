@@ -140,17 +140,28 @@ export const LazyImage = ({
           aria-hidden="true"
           // z-0 + pointer-events-none guarantees badges (z-30/40) stay clickable
           // and visually anchored even before the image has decoded.
+          //
+          // ⚠️ ANTI-FLICKER NOTE: only the SKELETON animates opacity. The
+          // <img> below snaps from 0→1 in a single paint AFTER `decode()`
+          // resolves, so the only thing the eye sees during the swap is
+          // this gradient layer fading out on top of an already-painted
+          // photo. Cross-fading both layers caused a luminance hump
+          // (skeleton 50% + image 50% ≈ near-white blink) — fixed.
           className={cn(
             "absolute inset-0 z-0 pointer-events-none overflow-hidden",
             "bg-gradient-to-br from-muted/40 via-muted/20 to-muted/40",
-            "transition-opacity duration-500 ease-out",
+            "transition-opacity duration-700 ease-in-out",
+            "will-change-[opacity]",
             skeletonActive ? "opacity-100" : "opacity-0",
             skeletonClassName
           )}
         >
           <div
+            // Lower peak luminance (white/40 instead of /60) → smaller
+            // brightness delta when the band finishes its sweep, so the
+            // hand-off to the photo feels seamless.
             className="absolute inset-0 -translate-x-full animate-skeleton-shimmer
-              bg-gradient-to-r from-transparent via-white/60 to-transparent
+              bg-gradient-to-r from-transparent via-white/40 to-transparent
               motion-reduce:animate-none motion-reduce:opacity-0"
           />
           {/* Centered placeholder icon — same visual language as the fallback
@@ -178,13 +189,29 @@ export const LazyImage = ({
           decoding="async"
           // @ts-expect-error fetchpriority is valid HTML, not yet in React types
           fetchpriority={eager ? "high" : "low"}
-          onLoad={() => {
-            loadedCache.add(src!);
-            setLoaded(true);
+          onLoad={(e) => {
+            // Use HTMLImageElement.decode() to ensure the bitmap is fully
+            // rasterised on the compositor BEFORE we flip opacity to 1.
+            // Without this, large JPEGs occasionally paint a partially-
+            // decoded frame, producing a sub-50ms flicker.
+            const img = e.currentTarget;
+            const finish = () => {
+              loadedCache.add(src!);
+              setLoaded(true);
+            };
+            if (typeof img.decode === "function") {
+              img.decode().then(finish).catch(finish);
+            } else {
+              finish();
+            }
           }}
           onError={() => setErrored(true)}
           className={cn(
-            "relative z-[1] transition-opacity duration-500 ease-out",
+            // No opacity transition on the image: we snap from 0→1 in a
+            // single frame once decode() resolves. The skeleton above
+            // handles the smooth visual fade. Result: no luminance hump,
+            // no cross-fade overshoot, no flicker.
+            "relative z-[1]",
             loaded ? "opacity-100" : "opacity-0",
             className
           )}
