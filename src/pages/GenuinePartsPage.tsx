@@ -38,11 +38,18 @@ const GenuinePartsPage = () => {
 
   return (
     <div className="min-h-screen overflow-x-hidden">
-      <Helmet>
-        <title>قطع غيار تويوتا الأصلية في مصر | المصرية جروب (موزع معتمد)</title>
-        <meta name="description" content="المصرية جروب موزع معتمد لقطع غيار تويوتا الأصلية في مصر. توريد عبر قنوات رسمية، تغطية وطنية، وتسليم خلال 48 ساعة عبر شبكة توزيع منظمة." />
-        <link rel="canonical" href="https://www.almasriaautoparts.com/products/genuine-toyota-parts" />
-      </Helmet>
+      <SEOHead
+        titleAr="قطع غيار تويوتا الأصلية في مصر — موزع معتمد"
+        titleEn="Toyota Genuine Parts in Egypt — Authorized Distributor"
+        descriptionAr="المصرية جروب موزع معتمد لقطع غيار تويوتا الأصلية في مصر. توريد عبر قنوات رسمية، تغطية وطنية، وتسليم خلال 48 ساعة عبر شبكة توزيع منظمة."
+        descriptionEn="Al Masria Group is the authorized distributor for Toyota genuine parts in Egypt — official supply channels, nationwide coverage, and 48-hour delivery."
+        keywordsAr="قطع غيار تويوتا الاصلية, موزع تويوتا معتمد, ضمان وكالة تويوتا, مصر"
+        keywordsEn="Toyota genuine parts, authorized Toyota distributor, dealer warranty, Egypt"
+        breadcrumbs={[
+          { ar: "الرئيسية", en: "Home", url: "/" },
+          { ar: "قطع غيار تويوتا الأصلية", en: "Toyota Genuine Parts", url: "/genuine-parts" },
+        ]}
+      />
       <Navbar />
 
       {/* ═══ 1. Hero ═══ */}
