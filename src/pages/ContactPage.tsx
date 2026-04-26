@@ -12,6 +12,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
+import SEOHead from "@/components/SEOHead";
 
 const WHATSAPP_NUMBER = "201027815696"; // WhatsApp Business (WhatsMeta CRM)
 const PHONE_NUMBER = "+201153961008";
