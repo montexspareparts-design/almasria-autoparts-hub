@@ -26,9 +26,10 @@ import { cn } from "@/lib/utils";
 import {
   Users, ShoppingBag, BellRing, Flame, ArrowLeft, Wallet, FileSearch,
   MessageSquare, UserPlus, Clock, AlertTriangle, CalendarDays, Eye,
-  Sparkles, ChevronRight, Phone, Timer, TrendingUp, CheckCircle2, Loader2, Activity,
+  Sparkles, ChevronRight, Phone, Timer, TrendingUp, CheckCircle2, Loader2, Activity, Clock3,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface Reminder {
   id: string;
@@ -73,6 +74,7 @@ export default function StaffBentoHero({
   const [visitorsNow, setVisitorsNow] = useState(0);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [contactingId, setContactingId] = useState<string | null>(null);
+  const [snoozingId, setSnoozingId] = useState<string | null>(null);
 
   // ===== شريط مختصرات اليوم =====
   const [newVisitorsToday, setNewVisitorsToday] = useState(0);
@@ -358,6 +360,34 @@ export default function StaffBentoHero({
     }
   };
 
+  /**
+   * زر سريع: "تأجيل" — يحدّث reminder_at بكمية دقائق محددة (15د/1س/3س/غداً).
+   * يعيد حساب الأولوية لحظياً + يفرز المهام تلقائياً.
+   */
+  const handleSnooze = async (r: Reminder, minutes: number, label: string) => {
+    if (!user || snoozingId) return;
+    setSnoozingId(r.id);
+    const newReminderAt = new Date(Date.now() + minutes * 60_000).toISOString();
+    try {
+      const { error } = await supabase
+        .from("customer_communications")
+        .update({ reminder_at: newReminderAt, is_done: false })
+        .eq("id", r.id);
+      if (error) throw error;
+
+      setReminders((prev) =>
+        prev.map((x) => (x.id === r.id ? { ...x, reminder_at: newReminderAt } : x))
+      );
+      toast.success(`تم تأجيل "${r.customer_name || "التذكير"}" — ${label}`);
+      fetchHero();
+    } catch (err: any) {
+      console.error("[snooze]", err);
+      toast.error("فشل تأجيل التذكير — حاول مرة أخرى");
+    } finally {
+      setSnoozingId(null);
+    }
+  };
+
   const totalNewToday = newOrders24h + newSignups24h + instapayPending + partRequestsNew;
   const totalUrgent = urgentOrdersCount + chatbotPendingCount + hotLeadsCount;
   const totalFollowups = todayList.length;
@@ -606,6 +636,11 @@ export default function StaffBentoHero({
                         )}
                         تم التواصل
                       </button>
+                      <SnoozeButton
+                        reminder={r}
+                        busy={snoozingId === r.id}
+                        onSnooze={handleSnooze}
+                      />
                     </div>
                   </div>
                 );
@@ -659,6 +694,26 @@ export default function StaffBentoHero({
                         <span className="opacity-50">·</span>
                         <span className="font-mono text-emerald-600 font-bold">{cd.text}</span>
                       </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleMarkContacted(r)}
+                        disabled={contactingId === r.id}
+                        className={cn(
+                          "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors",
+                          "bg-emerald-600 hover:bg-emerald-700 text-white",
+                          "disabled:opacity-60 disabled:cursor-not-allowed"
+                        )}
+                        title="تسجيل تواصل سريع"
+                      >
+                        {contactingId === r.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
+                      </button>
+                      <SnoozeButton
+                        reminder={r}
+                        busy={snoozingId === r.id}
+                        onSnooze={handleSnooze}
+                      />
                     </div>
                   </div>
                 );
@@ -921,5 +976,63 @@ function PriorityBadge({ priority, compact }: PriorityBadgeProps) {
       <span className="text-[10px]">{s.emoji}</span>
       {s.label}
     </span>
+  );
+}
+
+// ===== زر التأجيل (Snooze) — Popover بخيارات سريعة =====
+interface SnoozeButtonProps {
+  reminder: Reminder;
+  busy: boolean;
+  onSnooze: (r: Reminder, minutes: number, label: string) => void;
+}
+
+const SNOOZE_OPTIONS: Array<{ minutes: number; label: string }> = [
+  { minutes: 15,        label: "١٥ دقيقة" },
+  { minutes: 60,        label: "ساعة" },
+  { minutes: 180,       label: "٣ ساعات" },
+  { minutes: 60 * 24,   label: "بكرة (٢٤س)" },
+];
+
+function SnoozeButton({ reminder, busy, onSnooze }: SnoozeButtonProps) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          disabled={busy}
+          className={cn(
+            "inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold transition-colors",
+            "bg-amber-500 hover:bg-amber-600 text-white",
+            "disabled:opacity-60 disabled:cursor-not-allowed"
+          )}
+          title="تأجيل التذكير"
+        >
+          {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Clock3 className="w-3 h-3" />}
+          تأجيل
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-44 p-1.5" align="end" dir="rtl">
+        <div className="text-[10px] text-muted-foreground px-1.5 py-1 font-bold">
+          أجّل التذكير لـ:
+        </div>
+        <div className="space-y-0.5">
+          {SNOOZE_OPTIONS.map((opt) => (
+            <button
+              key={opt.minutes}
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                onSnooze(reminder, opt.minutes, opt.label);
+              }}
+              className="w-full text-right px-2 py-1.5 rounded text-[11px] hover:bg-amber-50 dark:hover:bg-amber-950/30 hover:text-amber-700 dark:hover:text-amber-300 transition-colors flex items-center justify-between gap-2"
+            >
+              <span className="font-medium">{opt.label}</span>
+              <Clock3 className="w-3 h-3 text-muted-foreground" />
+            </button>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
