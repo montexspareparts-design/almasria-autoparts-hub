@@ -216,22 +216,31 @@ const ProductsPage = () => {
   }
 
   const pageTitle = config?.title || "تصفح حسب الفئة";
+  const pageTitleEn = config?.titleEn || "Browse by Category";
   const pageDescription = config?.description || "تصفح جميع المنتجات حسب الفئة المختارة من جميع الماركات المتاحة.";
+  const pageDescriptionEn = config?.descriptionEn || "Browse all products by selected category across all available brands.";
 
   return (
     <div className="min-h-screen bg-background">
-      <Helmet>
-        <title>{pageTitle} | المصرية جروب</title>
-        <meta name="description" content={pageDescription} />
-        <link rel="canonical" href={`https://www.almasriaautoparts.com/products${brand ? `/${brand}` : ''}`} />
-      </Helmet>
-      {config && (
-        <BreadcrumbSchema items={[
-          { name: "الرئيسية", url: "https://www.almasriaautoparts.com/" },
-          { name: "المنتجات", url: "https://www.almasriaautoparts.com/products" },
-          { name: config.title, url: `https://www.almasriaautoparts.com/products/${brand}` },
-        ]} />
-      )}
+      <SEOHead
+        titleAr={pageTitle}
+        titleEn={pageTitleEn}
+        descriptionAr={pageDescription}
+        descriptionEn={pageDescriptionEn}
+        ogType={config ? "product" : "website"}
+        breadcrumbs={
+          config
+            ? [
+                { ar: "الرئيسية", en: "Home", url: "/" },
+                { ar: "المنتجات", en: "Products", url: "/products" },
+                { ar: config.title, en: config.titleEn || config.subtitle, url: `/products/${brand}` },
+              ]
+            : [
+                { ar: "الرئيسية", en: "Home", url: "/" },
+                { ar: "المنتجات", en: "Products", url: "/products" },
+              ]
+        }
+      />
       <Navbar />
       {config && (
         <BrandHeroBanner
