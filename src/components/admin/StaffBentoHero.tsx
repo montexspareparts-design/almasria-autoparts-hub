@@ -482,7 +482,14 @@ export default function StaffBentoHero({
           title="متابعة العملاء"
           subtitle="مكالمات اليوم"
           tone="amber"
-          totalLabel={`${totalFollowups} عميل`}
+          totalLabel={
+            criticalCount + highCount > 0 ? (
+              <span className="inline-flex items-center gap-1">
+                {criticalCount > 0 && <span className="px-1.5 py-0.5 rounded-full bg-red-600 text-white font-bold">{criticalCount} حرج</span>}
+                {highCount > 0 && <span className="px-1.5 py-0.5 rounded-full bg-orange-500 text-white font-bold">{highCount} عالي</span>}
+              </span>
+            ) : `${totalFollowups} عميل`
+          }
         >
           {todayList.length === 0 ? (
             <div className="text-xs text-muted-foreground py-4 text-center">
