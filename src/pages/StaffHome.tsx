@@ -2204,6 +2204,45 @@ const StaffHome = () => {
                         {v.email && <span className="truncate max-w-[200px]">✉️ {v.email}</span>}
                         <span>👁️ {v.pages} صفحة</span>
                       </div>
+                      {/* Activity badges — quick visual summary of what visitor did */}
+                      {v.user_id && (() => {
+                        const a = visitorActivityMap.get(v.user_id);
+                        if (!a) return null;
+                        if (!a.searched && !a.addedToCart && !a.ordered && !a.viewedProducts) return null;
+                        return (
+                          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                            {a.ordered && (
+                              <Badge className="bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/20 text-[10px] h-5 gap-1">
+                                <ShoppingBag className="w-3 h-3" />
+                                طلب ({a.orderCount})
+                              </Badge>
+                            )}
+                            {a.addedToCart && !a.ordered && (
+                              <Badge className="bg-orange-500/15 text-orange-700 hover:bg-orange-500/20 text-[10px] h-5 gap-1">
+                                <ShoppingCart className="w-3 h-3" />
+                                سلة ({a.cartItems})
+                              </Badge>
+                            )}
+                            {a.searched && (
+                              <Badge className="bg-violet-500/15 text-violet-700 hover:bg-violet-500/20 text-[10px] h-5 gap-1" title={a.searchTerms.join(" • ")}>
+                                <Search className="w-3 h-3" />
+                                بحث
+                              </Badge>
+                            )}
+                            {a.viewedProducts && (
+                              <Badge variant="outline" className="text-[10px] h-5 gap-1">
+                                <Package className="w-3 h-3" />
+                                شاف منتجات
+                              </Badge>
+                            )}
+                            {a.searched && a.searchTerms.length > 0 && (
+                              <span className="text-[10px] text-muted-foreground italic">
+                                "{a.searchTerms.slice(0, 2).join(" • ")}"
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
                       {/* Visit timeline — clear dates for staff */}
                       <div className="flex items-center gap-2 mt-1.5 flex-wrap text-[11px]">
                         <span
