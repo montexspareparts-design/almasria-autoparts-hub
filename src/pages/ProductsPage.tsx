@@ -216,10 +216,18 @@ const ProductsPage = () => {
     );
   }
 
-  const pageTitle = config?.title || "تصفح حسب الفئة";
-  const pageTitleEn = config?.titleEn || "Browse by Category";
-  const pageDescription = config?.description || "تصفح جميع المنتجات حسب الفئة المختارة من جميع الماركات المتاحة.";
-  const pageDescriptionEn = config?.descriptionEn || "Browse all products by selected category across all available brands.";
+  // When a category filter is active, prefer the centralised, DB-aligned
+  // bilingual SEO meta from `categorySeo.ts` (Toyota-keyword + SKU-aware).
+  // Otherwise fall back to brand config or generic catalog copy.
+  const categorySlug = searchParams.get("category");
+  const categoryMeta = getCategorySEO(categorySlug);
+
+  const pageTitle = categoryMeta?.titleAr || config?.title || "تصفح حسب الفئة";
+  const pageTitleEn = categoryMeta?.titleEn || config?.titleEn || "Browse by Category";
+  const pageDescription = categoryMeta?.descriptionAr || config?.description || "تصفح جميع المنتجات حسب الفئة المختارة من جميع الماركات المتاحة.";
+  const pageDescriptionEn = categoryMeta?.descriptionEn || config?.descriptionEn || "Browse all products by selected category across all available brands.";
+  const pageKeywordsAr = categoryMeta?.keywordsAr;
+  const pageKeywordsEn = categoryMeta?.keywordsEn;
 
   return (
     <div className="min-h-screen bg-background">
