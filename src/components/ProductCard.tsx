@@ -36,11 +36,30 @@ interface ProductCardProps {
   onLoginRequired: () => void;
 }
 
+/** Categories where year-coverage badge is irrelevant (e.g. oils — not tied to model year). */
+const NO_YEAR_COVERAGE_CATEGORIES = new Set([
+  "oils-gasoline",
+  "oils-diesel",
+  "oils-transmission",
+]);
+
+const isOilProduct = (product: any): boolean => {
+  if (product?.brand === "toyota_oils") return true;
+  const catSlug = product?.product_categories?.slug || product?.category_slug;
+  if (catSlug && NO_YEAR_COVERAGE_CATEGORIES.has(catSlug)) return true;
+  const catNameAr = product?.product_categories?.name_ar || "";
+  if (catNameAr.includes("زيت") || catNameAr.includes("زيوت")) return true;
+  return false;
+};
+
 /** Build coverage label like "يناسب موديلات 2005-2019 ✓" */
 const buildCoverageLabel = (
   product: any,
   searchYear?: number | null
 ): { text: string; isAlternative: boolean } | null => {
+  // الزيوت لا ترتبط بسنة الموديل — لا تعرض بادج التغطية
+  if (isOilProduct(product)) return null;
+
   const yf = product.year_from as number | null;
   const yt = product.year_to as number | null;
   if (!yf) return null;
