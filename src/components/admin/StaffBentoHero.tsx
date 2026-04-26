@@ -781,7 +781,7 @@ export default function StaffBentoHero({
             <div className="text-5xl font-black text-blue-700 dark:text-blue-300 leading-none">
               {visitorsNow}
             </div>
-            <div className="text-[11px] text-muted-foreground mt-1">زائر آخر ٣٠ دقيقة</div>
+            <div className="text-[11px] text-muted-foreground mt-1">زائر — {periodLabels[periodFilter]}</div>
           </div>
           <div className="grid grid-cols-2 gap-1.5 mt-2">
             <Button asChild size="sm" variant="outline" className="h-8 text-[11px] gap-1">
