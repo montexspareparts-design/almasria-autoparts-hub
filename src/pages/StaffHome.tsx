@@ -787,6 +787,33 @@ const StaffHome = () => {
         const dwell = Number.isFinite(firstT) && Number.isFinite(t) ? t - (firstT as number) : 0;
         if (!(dwell >= ENGAGED_DWELL_MS || (v.pages ?? 0) >= 2)) return false;
       }
+      // Source filter — derived from first_path / referrer (UTM/click ids).
+      if (visitorSourceFilter !== "all") {
+        const hay = ((v.first_path || "") + " " + (v.referrer || "")).toLowerCase();
+        let src: string;
+        if (hay.includes("fbclid") || hay.includes("facebook") || hay.includes("utm_source=fb")) src = "facebook";
+        else if (hay.includes("instagram") || hay.includes("ig_")) src = "instagram";
+        else if (hay.includes("google") || hay.includes("gclid")) src = "google";
+        else if (hay.includes("tiktok") || hay.includes("ttclid")) src = "tiktok";
+        else if (hay.includes("whatsapp") || hay.includes("wa.me")) src = "whatsapp";
+        else if (v.referrer) src = "other";
+        else src = "direct";
+        if (src !== visitorSourceFilter) return false;
+      }
+      // Activity filter — what the visitor actually did on the site.
+      if (visitorActivityFilter !== "all") {
+        const a = v.user_id ? visitorActivityMap.get(v.user_id) : null;
+        if (visitorActivityFilter === "ordered" && !a?.ordered) return false;
+        if (visitorActivityFilter === "added_cart" && !a?.addedToCart) return false;
+        if (visitorActivityFilter === "searched" && !a?.searched) return false;
+        if (visitorActivityFilter === "viewed_products" && !a?.viewedProducts) return false;
+        if (visitorActivityFilter === "browsed_only" && (a?.ordered || a?.addedToCart || a?.searched || a?.viewedProducts)) return false;
+      }
+      // Min pages depth filter
+      if (visitorMinPages !== "all") {
+        const min = parseInt(visitorMinPages, 10);
+        if ((v.pages ?? 0) < min) return false;
+      }
       // Free-text search: name / phone / email. Anonymous visitors (no name,
       // no phone, no email) automatically fall out as soon as a query is typed,
       // which is the expected behavior for a contact-search box.
@@ -794,7 +821,7 @@ const StaffHome = () => {
       return true;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visitorsList, includeStaff, staffIdsSet, visitorTypeFilter, visitorDateFilter, visitorViewedFilter, visitorEngagedOnly, viewedKeys, visitorsSearch]);
+  }, [visitorsList, includeStaff, staffIdsSet, visitorTypeFilter, visitorDateFilter, visitorViewedFilter, visitorEngagedOnly, viewedKeys, visitorsSearch, visitorSourceFilter, visitorActivityFilter, visitorMinPages, visitorActivityMap]);
 
 
   // Unified KPI numbers — computed from raw lists with the SAME staff-exclusion
