@@ -47,7 +47,7 @@ const LazySection = memo(({ children, fallback = <SectionFallback /> }: { childr
 });
 LazySection.displayName = "LazySection";
 
-const faqItems = [
+const faqItemsAr = [
   { question: "هل جميع قطع الغيار أصلية؟", answer: "نعم، جميع قطع الغيار التي نوفرها أصلية ١٠٠٪ من تويوتا مباشرة. نحن موزع معتمد رسمي ونوفر ضمان وكالة على جميع المنتجات." },
   { question: "كيف أتحقق من أصالة القطعة؟", answer: "كل قطعة أصلية تحمل رقم تويوتا المرجعي وعلامة الهولوجرام. يمكنك التحقق عبر رقم الشاسيه أو التواصل معنا لتأكيد التوافق." },
   { question: "ما المطلوب من العميل لتحديد القطعة؟", answer: "يكفي توفير موديل السيارة وسنة الصنع ورقم الشاسيه. يمكنك أيضًا إرسال صورة للقطعة المطلوبة عبر واتساب لتسريع عملية التحديد." },
@@ -56,6 +56,17 @@ const faqItems = [
   { question: "هل يوجد حد أدنى للطلب؟", answer: "الحد الأدنى يختلف حسب فئة العميل. للتجار والموزعين يوجد حد أدنى يتم تحديده عند فتح الحساب. للعملاء العاديين لا يوجد حد أدنى." },
   { question: "ما هي طرق الدفع المتاحة؟", answer: "نقبل الدفع نقدًا عند الاستلام، التحويل البنكي، وفودافون كاش. للتجار المعتمدين نوفر نظام ائتمان بحسب الاتفاق." },
   { question: "هل يمكن إرجاع أو استبدال المنتجات؟", answer: "نعم، نوفر سياسة إرجاع واستبدال خلال ١٤ يوم من تاريخ الشراء بشرط أن يكون المنتج في حالته الأصلية مع الفاتورة." },
+];
+
+const faqItemsEn = [
+  { question: "Are all parts genuine?", answer: "Yes — every part we sell is 100% genuine Toyota. We are an authorized distributor and offer dealer warranty on all products." },
+  { question: "How do I verify part authenticity?", answer: "Each genuine part carries a Toyota reference number and a hologram seal. You can verify via the chassis (VIN) number or contact us to confirm compatibility." },
+  { question: "What information do I need to identify a part?", answer: "Provide your car model, year, and VIN. You can also send a photo of the required part via WhatsApp for faster identification." },
+  { question: "What are the available delivery areas?", answer: "We deliver to all governorates of Egypt through our nationwide branch network. Delivery typically takes 24–72 hours depending on the area." },
+  { question: "How can I register as a dealer or distributor?", answer: "Apply through the Dealer Registration page. You'll need to submit your commercial register and tax card. Applications are reviewed within 48 hours." },
+  { question: "Is there a minimum order value?", answer: "The minimum varies by customer tier. Dealers and distributors have a minimum agreed at account opening. Retail customers have no minimum." },
+  { question: "What payment methods are available?", answer: "We accept cash on delivery, bank transfer, and Vodafone Cash. Approved dealers have a credit facility based on agreement." },
+  { question: "Can I return or exchange products?", answer: "Yes — we offer a 14-day return and exchange policy provided the product is in original condition with the invoice." },
 ];
 
 const Index = () => {
