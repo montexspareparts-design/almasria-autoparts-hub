@@ -422,7 +422,7 @@ export default function StaffBentoHero({
           value={newVisitorsToday.toString()}
           hint="منذ منتصف الليل"
           tone="emerald"
-          to="/admin/staff-home"
+          onClick={() => onJumpToTab("yesterday")}
           ctaLabel="عرض الزوار"
         />
         <ShortcutTile
