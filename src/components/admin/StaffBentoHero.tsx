@@ -630,3 +630,67 @@ function UrgentTile({ label, hint, value, icon, onClick }: UrgentTileProps) {
     </button>
   );
 }
+
+// ===== ShortcutTile — بطاقة مختصر علوي =====
+interface ShortcutTileProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  hint: string;
+  tone: "emerald" | "red" | "amber" | "slate";
+  to?: string;
+  onClick?: () => void;
+  ctaLabel: string;
+  urgent?: boolean;
+}
+
+const shortcutTones: Record<ShortcutTileProps["tone"], { wrap: string; valueColor: string; iconBg: string }> = {
+  emerald: {
+    wrap: "from-emerald-500/10 to-transparent border-emerald-200 dark:border-emerald-900",
+    valueColor: "text-emerald-700 dark:text-emerald-300",
+    iconBg: "bg-emerald-500/15 text-emerald-700",
+  },
+  red: {
+    wrap: "from-red-500/10 to-transparent border-red-200 dark:border-red-900",
+    valueColor: "text-red-700 dark:text-red-300",
+    iconBg: "bg-red-500/15 text-red-700",
+  },
+  amber: {
+    wrap: "from-amber-500/10 to-transparent border-amber-200 dark:border-amber-900",
+    valueColor: "text-amber-700 dark:text-amber-300",
+    iconBg: "bg-amber-500/15 text-amber-700",
+  },
+  slate: {
+    wrap: "from-muted/30 to-transparent border-border",
+    valueColor: "text-foreground",
+    iconBg: "bg-muted text-muted-foreground",
+  },
+};
+
+function ShortcutTile({ icon, label, value, hint, tone, to, onClick, ctaLabel, urgent }: ShortcutTileProps) {
+  const t = shortcutTones[tone];
+  const inner = (
+    <Card className={cn(
+      "p-3 bg-gradient-to-br border-2 hover:shadow-md transition cursor-pointer h-full",
+      t.wrap,
+      urgent && "ring-2 ring-red-300 dark:ring-red-800 animate-pulse"
+    )}>
+      <div className="flex items-center gap-3">
+        <div className={cn("p-2 rounded-lg shrink-0", t.iconBg)}>{icon}</div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-2">
+            <span className={cn("text-2xl font-black leading-none", t.valueColor)}>{value}</span>
+            <span className="text-[10px] text-muted-foreground truncate">{label}</span>
+          </div>
+          <div className="text-[10px] text-muted-foreground mt-1 truncate">{hint}</div>
+        </div>
+        <div className="flex items-center gap-1 text-[10px] font-bold text-foreground/70 shrink-0">
+          {ctaLabel}
+          <ChevronRight className="w-3 h-3" />
+        </div>
+      </div>
+    </Card>
+  );
+  if (to) return <Link to={to} className="block">{inner}</Link>;
+  return <button onClick={onClick} className="text-right w-full block">{inner}</button>;
+}
