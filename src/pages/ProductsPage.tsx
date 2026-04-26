@@ -117,11 +117,18 @@ const ProductsPage = () => {
   if (!config && !hasCategoryFilter) {
     return (
       <div className="min-h-screen bg-dark-section">
-        <Helmet>
-          <title>منتجاتنا | المصرية جروب — قطع غيار وزيوت تويوتا الأصلية</title>
-          <meta name="description" content="تصفح كتالوج المصرية جروب: قطع غيار تويوتا الأصلية، زيوت تويوتا، MTX Aftermarket، DENSO، و AISIN. أكثر من 960 صنف متاح." />
-          <link rel="canonical" href="https://www.almasriaautoparts.com/products" />
-        </Helmet>
+        <SEOHead
+          titleAr="منتجاتنا — قطع غيار وزيوت تويوتا الأصلية"
+          titleEn="Our Products — Toyota Genuine Parts & Oils"
+          descriptionAr="تصفح كتالوج المصرية جروب: قطع غيار تويوتا الأصلية، زيوت تويوتا، MTX Aftermarket، DENSO، وAISIN. أكثر من 960 صنف متاح."
+          descriptionEn="Browse Al Masria Group catalog: Toyota genuine parts, oils, MTX Aftermarket, DENSO, and AISIN — 960+ items in stock."
+          keywordsAr="منتجات تويوتا, قطع غيار اصلية, زيوت تويوتا, MTX, DENSO, AISIN"
+          keywordsEn="Toyota products, genuine parts, Toyota oil, MTX, DENSO, AISIN"
+          breadcrumbs={[
+            { ar: "الرئيسية", en: "Home", url: "/" },
+            { ar: "المنتجات", en: "Products", url: "/products" },
+          ]}
+        />
         <Navbar />
         <section className="min-h-screen pt-24 pb-20 relative overflow-hidden flex flex-col">
           <div className="absolute inset-0">
