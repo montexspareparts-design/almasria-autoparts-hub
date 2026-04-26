@@ -150,6 +150,68 @@ export default function StaffBentoHero({
         comm_type: r.comm_type,
       }))
     );
+
+    // ===== شريط مختصرات اليوم =====
+    // (أ) عدد الزوار الجدد اليوم — جلسات بدأت بعد منتصف الليل لمستخدمين ليست لهم session سابقة
+    try {
+      const { data: todaySessions } = await supabase
+        .from("customer_sessions")
+        .select("user_id, session_key, first_seen_at")
+        .gte("first_seen_at", startOfDayIso)
+        .limit(1000);
+      // اعتبر فريدًا حسب user_id (أو session_key للزوار المجهولين)
+      const uniq = new Set<string>();
+      (todaySessions || []).forEach((s: any) => {
+        uniq.add(s.user_id || `anon:${s.session_key}`);
+      });
+      setNewVisitorsToday(uniq.size);
+    } catch {
+      // fallback: page_visits اليوم (مميّز حسب session_key)
+      try {
+        const { data: pv } = await supabase
+          .from("page_visits")
+          .select("session_key, user_id")
+          .gte("visited_at", startOfDayIso)
+          .limit(2000);
+        const uniq = new Set<string>();
+        (pv || []).forEach((r: any) => uniq.add(r.user_id || `anon:${r.session_key}`));
+        setNewVisitorsToday(uniq.size);
+      } catch { /* */ }
+    }
+
+    // (ب) عدد المهام المتأخرة — تذكيرات الموظف الحالي (reminder_at < now AND !done)
+    const { count: overdueCount } = await supabase
+      .from("customer_communications")
+      .select("id", { count: "exact", head: true })
+      .eq("staff_user_id", user.id)
+      .eq("is_done", false)
+      .not("reminder_at", "is", null)
+      .lt("reminder_at", new Date(now).toISOString());
+    setOverdueTasksTotal(overdueCount || 0);
+
+    // (ج) متوسط وقت الاستجابة — support_requests اللي اتقفلت اليوم
+    try {
+      const { data: closed } = await supabase
+        .from("support_requests")
+        .select("created_at, resolved_at, claimed_at")
+        .gte("created_at", startOfDayIso)
+        .not("resolved_at", "is", null)
+        .limit(200);
+      const diffs = (closed || [])
+        .map((r: any) => {
+          // نفضّل claimed_at (أول رد من الموظف) إن وُجد، وإلا resolved_at
+          const respondedAt = r.claimed_at || r.resolved_at;
+          if (!respondedAt || !r.created_at) return null;
+          return (new Date(respondedAt).getTime() - new Date(r.created_at).getTime()) / 60000;
+        })
+        .filter((v): v is number => v !== null && v >= 0);
+      if (diffs.length > 0) {
+        const avg = diffs.reduce((a, b) => a + b, 0) / diffs.length;
+        setAvgResponseMin(Math.round(avg));
+      } else {
+        setAvgResponseMin(null);
+      }
+    } catch { /* */ }
   };
 
   useEffect(() => {
