@@ -26,8 +26,9 @@ import { cn } from "@/lib/utils";
 import {
   Users, ShoppingBag, BellRing, Flame, ArrowLeft, Wallet, FileSearch,
   MessageSquare, UserPlus, Clock, AlertTriangle, CalendarDays, Eye,
-  Sparkles, ChevronRight, Phone, Timer, TrendingUp,
+  Sparkles, ChevronRight, Phone, Timer, TrendingUp, CheckCircle2, Loader2,
 } from "lucide-react";
+import { toast } from "sonner";
 
 interface Reminder {
   id: string;
@@ -68,6 +69,7 @@ export default function StaffBentoHero({
   // زوار / تذكيرات
   const [visitorsNow, setVisitorsNow] = useState(0);
   const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [contactingId, setContactingId] = useState<string | null>(null);
 
   // ===== شريط مختصرات اليوم =====
   const [newVisitorsToday, setNewVisitorsToday] = useState(0);
@@ -304,6 +306,55 @@ export default function StaffBentoHero({
     return { overdue, todayList, upcomingList, criticalCount, highCount };
   }, [reminders]);
 
+  /**
+   * زر سريع: "تم التواصل"
+   *  - يقفل التذكير الحالي (is_done = true)
+   *  - يسجّل تواصل جديد مكتمل (تحديث آلي لـ last_contact_at)
+   *  - يعيد حساب الأولوية فوراً عبر تحديث state محلياً + إعادة جلب
+   */
+  const handleMarkContacted = async (r: Reminder) => {
+    if (!user || contactingId) return;
+    setContactingId(r.id);
+    const nowIso = new Date().toISOString();
+    try {
+      const { error: e1 } = await supabase
+        .from("customer_communications")
+        .update({ is_done: true, done_at: nowIso })
+        .eq("id", r.id);
+      if (e1) throw e1;
+
+      const { error: e2 } = await supabase
+        .from("customer_communications")
+        .insert({
+          staff_user_id: user.id,
+          customer_user_id: r.customer_user_id,
+          comm_type: r.comm_type || "phone",
+          note: `تم التواصل ✓ ${r.note ? `— ${r.note}` : ""}`.trim(),
+          is_done: true,
+          done_at: nowIso,
+        });
+      if (e2) throw e2;
+
+      // تحديث محلي فوري — يشيل المهمة ويُحدّث "آخر تواصل" لباقي مهام نفس العميل
+      setReminders((prev) =>
+        prev
+          .filter((x) => x.id !== r.id)
+          .map((x) =>
+            x.customer_user_id && x.customer_user_id === r.customer_user_id
+              ? { ...x, last_contact_at: nowIso }
+              : x
+          )
+      );
+      toast.success(`تم تسجيل التواصل مع ${r.customer_name || "العميل"} ✓`);
+      fetchHero();
+    } catch (err: any) {
+      console.error("[markContacted]", err);
+      toast.error("فشل تسجيل التواصل — حاول مرة أخرى");
+    } finally {
+      setContactingId(null);
+    }
+  };
+
   const totalNewToday = newOrders24h + newSignups24h + instapayPending + partRequestsNew;
   const totalUrgent = urgentOrdersCount + chatbotPendingCount + hotLeadsCount;
   const totalFollowups = todayList.length;
@@ -524,15 +575,35 @@ export default function StaffBentoHero({
                       </div>
                       {r.note && <div className="text-muted-foreground truncate text-[10px] mt-0.5">{r.note}</div>}
                     </div>
-                    {r.customer_phone && (
-                      <a
-                        href={`tel:${r.customer_phone}`}
-                        className="p-1.5 rounded bg-emerald-100 hover:bg-emerald-200 text-emerald-700 shrink-0"
-                        title="اتصال"
+                    <div className="flex items-center gap-1 shrink-0">
+                      {r.customer_phone && (
+                        <a
+                          href={`tel:${r.customer_phone}`}
+                          className="p-1.5 rounded bg-emerald-100 hover:bg-emerald-200 text-emerald-700"
+                          title="اتصال"
+                        >
+                          <Phone className="w-3 h-3" />
+                        </a>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleMarkContacted(r)}
+                        disabled={contactingId === r.id}
+                        className={cn(
+                          "inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold transition-colors",
+                          "bg-emerald-600 hover:bg-emerald-700 text-white",
+                          "disabled:opacity-60 disabled:cursor-not-allowed"
+                        )}
+                        title="تسجيل تواصل سريع"
                       >
-                        <Phone className="w-3 h-3" />
-                      </a>
-                    )}
+                        {contactingId === r.id ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="w-3 h-3" />
+                        )}
+                        تم التواصل
+                      </button>
+                    </div>
                   </div>
                 );
               })}
