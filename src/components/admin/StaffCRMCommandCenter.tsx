@@ -628,7 +628,13 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
         urgentOrdersCount={urgentOrders.length}
         hotLeadsCount={searchLeads.length}
         chatbotPendingCount={supportRequests.filter((r) => r.status === "pending").length}
-        onJumpToTab={(t) => setTab(t)}
+        onJumpToTab={(t) => {
+          setTab(t);
+          // مرّر الشاشة لشريط التبويبات عشان الموظف يشوف المحتوى فوراً
+          requestAnimationFrame(() => {
+            tabsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+          });
+        }}
       />
 
       {/* Filters bar */}
@@ -659,7 +665,7 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
       </div>
 
       {/* Tabs */}
-      <Tabs value={tab} onValueChange={(v) => setTab(v as any)} dir="rtl">
+      <Tabs ref={tabsRef as any} value={tab} onValueChange={(v) => setTab(v as any)} dir="rtl">
         <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 h-auto">
           <TabsTrigger value="urgent" className="flex flex-col gap-0.5 py-2.5 data-[state=active]:bg-red-50 data-[state=active]:text-red-700">
             <div className="flex items-center gap-1.5">
