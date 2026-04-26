@@ -27,12 +27,37 @@ interface ProductCardProps {
   limitReached: boolean;
   dailyViewCount: number;
   dailyLimit: number;
+  /** Year extracted from current search query — used to show "fits YYYY" badge */
+  searchYear?: number | null;
   getProductPrice: (product: any) => number;
   onProductClick: (product: any) => void;
   onAddToCart: (product: any) => void;
   onRecordView: (productId: string) => void;
   onLoginRequired: () => void;
 }
+
+/** Build coverage label like "يناسب موديلات 2005-2019 ✓" */
+const buildCoverageLabel = (
+  product: any,
+  searchYear?: number | null
+): { text: string; isAlternative: boolean } | null => {
+  const yf = product.year_from as number | null;
+  const yt = product.year_to as number | null;
+  if (!yf) return null;
+  const range = yt && yt > yf ? `${yf}-${yt}` : `${yf}+`;
+  // Did the user search by a specific year?
+  if (searchYear) {
+    const fits = (!yt || searchYear <= yt) && searchYear >= yf;
+    if (!fits) return null;
+    // Check if the product name itself contains the searched year — if not, it's an "alternative"
+    const nameHasYear = String(product.name_ar || "").includes(String(searchYear));
+    return {
+      text: nameHasYear ? `يناسب ${searchYear} ✓` : `يركّب على ${searchYear} ✓ (موديلات ${range})`,
+      isAlternative: !nameHasYear,
+    };
+  }
+  return { text: `يناسب موديلات ${range}`, isAlternative: false };
+};
 
 const ProductCard = memo(({
   product, index, viewMode, user, isDealer, isRetailTier = false, viewedProductIds,
