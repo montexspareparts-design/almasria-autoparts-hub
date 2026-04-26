@@ -12,6 +12,7 @@ import { Link } from "react-router-dom";
 import SEOHead from "@/components/SEOHead";
 import { ProductSchema } from "@/components/SEOSchemaMarkup";
 import { buildProductSEO } from "@/lib/productSeo";
+import ProductFitmentSection from "@/components/ProductFitmentSection";
 
 interface ProductDetailDialogProps {
   product: any | null;
