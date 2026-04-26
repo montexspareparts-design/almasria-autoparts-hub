@@ -26,8 +26,9 @@ import { cn } from "@/lib/utils";
 import {
   Users, ShoppingBag, BellRing, Flame, ArrowLeft, Wallet, FileSearch,
   MessageSquare, UserPlus, Clock, AlertTriangle, CalendarDays, Eye,
-  Sparkles, ChevronRight, Phone, Timer, TrendingUp,
+  Sparkles, ChevronRight, Phone, Timer, TrendingUp, CheckCircle2, Loader2,
 } from "lucide-react";
+import { toast } from "sonner";
 
 interface Reminder {
   id: string;
