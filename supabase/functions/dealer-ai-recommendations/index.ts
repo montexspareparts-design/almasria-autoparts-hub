@@ -22,11 +22,31 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { user_id, force_refresh } = await req.json();
-    if (!user_id) {
-      return new Response(JSON.stringify({ error: "user_id required" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // Require authenticated user; derive user_id from verified JWT (never trust body)
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+    const token = authHeader.replace("Bearer ", "");
+    const authedClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: claimsData, error: claimsErr } = await authedClient.auth.getClaims(token);
+    if (claimsErr || !claimsData?.claims?.sub) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const user_id = claimsData.claims.sub as string;
+
+    let force_refresh = false;
+    try {
+      const body = await req.json();
+      force_refresh = !!body?.force_refresh;
+    } catch {
+      // body optional
     }
 
     // 1. Check cache (unless force_refresh)
