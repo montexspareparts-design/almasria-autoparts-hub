@@ -695,6 +695,26 @@ export default function StaffBentoHero({
                         <span className="font-mono text-emerald-600 font-bold">{cd.text}</span>
                       </div>
                     </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleMarkContacted(r)}
+                        disabled={contactingId === r.id}
+                        className={cn(
+                          "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors",
+                          "bg-emerald-600 hover:bg-emerald-700 text-white",
+                          "disabled:opacity-60 disabled:cursor-not-allowed"
+                        )}
+                        title="تسجيل تواصل سريع"
+                      >
+                        {contactingId === r.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
+                      </button>
+                      <SnoozeButton
+                        reminder={r}
+                        busy={snoozingId === r.id}
+                        onSnooze={handleSnooze}
+                      />
+                    </div>
                   </div>
                 );
               })}
