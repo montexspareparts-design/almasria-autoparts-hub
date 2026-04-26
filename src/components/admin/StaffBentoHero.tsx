@@ -470,10 +470,39 @@ export default function StaffBentoHero({
             ({new Date().toLocaleDateString("ar-EG", { weekday: "long", day: "numeric", month: "long" })})
           </span>
         </div>
-        <div className="flex items-center gap-1.5 text-[10px]">
-          <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-100 dark:bg-emerald-900/40 px-2 py-0.5 rounded-full font-bold">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* فلترة الفترة — تؤثّر على "زوار الآن" و "طلبات بدون تواصل" */}
+          <div
+            role="tablist"
+            aria-label="فلترة الفترة"
+            className="inline-flex items-center rounded-full border border-border bg-card p-0.5 shadow-sm"
+          >
+            {(["30m", "24h", "today"] as const).map((p) => {
+              const active = periodFilter === p;
+              const label = p === "30m" ? "٣٠د" : p === "24h" ? "٢٤س" : "اليوم";
+              return (
+                <button
+                  key={p}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setPeriodFilter(p)}
+                  className={cn(
+                    "px-2.5 py-1 text-[11px] font-bold rounded-full transition-colors",
+                    active
+                      ? "bg-primary text-primary-foreground shadow"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                  title={periodLabels[p]}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          <span className="inline-flex items-center gap-1 text-[10px] text-emerald-700 bg-emerald-100 dark:bg-emerald-900/40 px-2 py-0.5 rounded-full font-bold">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            تحديث مباشر كل دقيقة
+            تحديث كل دقيقة
           </span>
         </div>
       </div>
