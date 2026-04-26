@@ -10,6 +10,7 @@ const VINScannerDialog = lazy(() => import("@/components/VINScannerDialog"));
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ProductCard from "@/components/ProductCard";
+import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 import ProductFilterSidebar from "@/components/ProductFilterSidebar";
 import ProductSearchAutocomplete from "@/components/ProductSearchAutocomplete";
 import ProductCommandPalette from "@/components/ProductCommandPalette";
@@ -374,15 +375,11 @@ const ProductListingSection = memo(({
                 </div>
               </div>
 
-              {/* Loading state */}
+              {/* Loading state — skeleton cards mirror real layout to prevent layout shift */}
               {isLoading ? (
                 <div className={viewMode === "grid" ? "grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5" : "space-y-3"}>
-                  {Array.from({ length: 12 }).map((_, i) => (
-                    <div key={i} className="bg-card border border-border rounded-xl p-4 animate-pulse">
-                      <div className="h-4 bg-muted rounded w-3/4 mb-3" />
-                      <div className="h-3 bg-muted rounded w-1/2 mb-2" />
-                      <div className="h-3 bg-muted rounded w-1/3" />
-                    </div>
+                  {Array.from({ length: viewMode === "grid" ? 12 : 6 }).map((_, i) => (
+                    <ProductCardSkeleton key={i} viewMode={viewMode} />
                   ))}
                 </div>
               ) : paginatedProducts.length === 0 ? (
