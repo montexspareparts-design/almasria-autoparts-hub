@@ -1930,10 +1930,28 @@ const StaffHome = () => {
                 return filtered.map((v, idx) => {
                   const isAnon = !v.user_id;
                   const name = v.full_name || (isAnon ? "زائر مجهول" : "بدون اسم");
-                  const last = new Date(v.last_visit).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
+                  const lastDate = new Date(v.last_visit);
+                  const last = lastDate.toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
+                  const fullDateTime = lastDate.toLocaleString("ar-EG", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
                   const dayLabel = fmtDay(v.last_visit);
                   const showHeader = dayLabel !== lastDayLabel;
                   lastDayLabel = dayLabel;
+                  // First visit + session duration
+                  const firstDate = v.first_visit ? new Date(v.first_visit) : null;
+                  const firstTime = firstDate ? firstDate.toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" }) : null;
+                  const firstFull = firstDate ? firstDate.toLocaleString("ar-EG", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : null;
+                  const durationMin = firstDate ? Math.max(0, Math.round((lastDate.getTime() - firstDate.getTime()) / 60000)) : 0;
+                  const durationLabel = durationMin >= 60
+                    ? `${Math.floor(durationMin / 60)}س ${durationMin % 60}د`
+                    : durationMin > 0
+                    ? `${durationMin} دقيقة`
+                    : "أقل من دقيقة";
+                  // "منذ كذا" relative time
+                  const diffMs = Date.now() - lastDate.getTime();
+                  const diffMin = Math.floor(diffMs / 60000);
+                  const diffHr = Math.floor(diffMin / 60);
+                  const diffDay = Math.floor(diffHr / 24);
+                  const relative = diffMin < 1 ? "الآن" : diffMin < 60 ? `منذ ${diffMin}د` : diffHr < 24 ? `منذ ${diffHr}س` : `منذ ${diffDay}ي`;
                   const detailKey = v.user_id || v.session_key || `anon-${idx}`;
                   const isViewed = (v.user_id && viewedKeys.has(`u:${v.user_id}`)) || (v.session_key && viewedKeys.has(`s:${v.session_key}`));
                   return (
@@ -1988,7 +2006,35 @@ const StaffHome = () => {
                         {v.phone && <span className="font-mono">📱 {v.phone}</span>}
                         {v.email && <span className="truncate max-w-[200px]">✉️ {v.email}</span>}
                         <span>👁️ {v.pages} صفحة</span>
-                        <span className="font-bold text-foreground">🕒 {last}</span>
+                      </div>
+                      {/* Visit timeline — clear dates for staff */}
+                      <div className="flex items-center gap-2 mt-1.5 flex-wrap text-[11px]">
+                        <span
+                          className="inline-flex items-center gap-1 font-semibold text-foreground bg-primary/5 border border-primary/20 px-1.5 py-0.5 rounded"
+                          title={`آخر زيارة: ${fullDateTime}`}
+                        >
+                          🕒 آخر زيارة: {last}
+                          <span className="text-muted-foreground font-normal">({relative})</span>
+                        </span>
+                        {firstTime && firstDate && lastDate.getTime() - firstDate.getTime() > 60000 && (
+                          <span
+                            className="inline-flex items-center gap-1 text-muted-foreground bg-muted/40 px-1.5 py-0.5 rounded"
+                            title={`أول زيارة: ${firstFull}`}
+                          >
+                            🚪 دخل: {firstTime}
+                          </span>
+                        )}
+                        {durationMin > 0 && (
+                          <span className="inline-flex items-center gap-1 text-muted-foreground bg-muted/40 px-1.5 py-0.5 rounded">
+                            ⏱️ مدة الجلسة: {durationLabel}
+                          </span>
+                        )}
+                        <span
+                          className="inline-flex items-center gap-1 text-muted-foreground/80 text-[10px]"
+                          title="التاريخ الكامل بالميلادي"
+                        >
+                          📅 {fullDateTime}
+                        </span>
                       </div>
                       {isAnon && !v.phone && !v.email && (
                         <p className="text-[10px] text-muted-foreground/80 mt-1 italic leading-relaxed">
