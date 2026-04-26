@@ -256,6 +256,19 @@ const ProductCard = memo(({
           {product.name_ar}
         </h3>
 
+        {/* Year coverage badge — shows "fits 2008 ✓" when user searched by year */}
+        {coverage && (
+          <div className="mb-1.5 flex justify-end">
+            <span className={`inline-flex items-center gap-1 text-[8px] sm:text-[10px] font-bold px-2 py-1 rounded-md leading-none border ${
+              coverage.isAlternative
+                ? "bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-700/50"
+                : "bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-700/50"
+            }`}>
+              {coverage.text}
+            </span>
+          </div>
+        )}
+
         {/* Category */}
         {product.product_categories && (
           <p className="text-[8px] sm:text-[10px] text-muted-foreground/40 leading-none truncate mb-2.5 text-right">
