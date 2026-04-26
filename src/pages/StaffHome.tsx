@@ -36,7 +36,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useSessionPersistedState } from "@/hooks/useSessionPersistedState";
-import StaffDailyReport from "@/components/staff/StaffDailyReport";
+import DailyReportTabCard from "@/components/staff/DailyReportTabCard";
 
 // Normalize a string for case-insensitive substring matching.
 // Strips Arabic diacritics + tatweel and lowercases the rest so "محمد" matches
@@ -1377,8 +1377,8 @@ const StaffHome = () => {
           </div>
         </section>
 
-        {/* Daily Report — placed after KPIs so staff reviews numbers before writing the report */}
-        <StaffDailyReport />
+        {/* Daily Report — compact tab card; clicking opens the dedicated page */}
+        <DailyReportTabCard />
 
         {/* Calculation rules panel — explains how each KPI is computed
             and shows raw (pre-staff-filter) vs filtered counts. */}
