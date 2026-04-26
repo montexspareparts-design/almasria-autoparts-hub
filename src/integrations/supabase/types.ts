@@ -2487,6 +2487,27 @@ export type Database = {
         }
         Relationships: []
       }
+      vehicle_model_aliases: {
+        Row: {
+          aliases: string[]
+          canonical_name: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          aliases?: string[]
+          canonical_name: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          aliases?: string[]
+          canonical_name?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       visitor_leads: {
         Row: {
           contacted_at: string | null
@@ -2781,6 +2802,9 @@ export type Database = {
         }
         Returns: boolean
       }
+      extract_models_from_name: { Args: { p_name: string }; Returns: string[] }
+      extract_part_family: { Args: { p_name: string }; Returns: string }
+      extract_year_from_name: { Args: { p_name: string }; Returns: number }
       generate_order_number: { Args: never; Returns: string }
       get_best_selling_products: {
         Args: { _limit?: number }
@@ -2797,6 +2821,42 @@ export type Database = {
       is_staff: { Args: { _user_id: string }; Returns: boolean }
       normalize_eg_phone: { Args: { raw: string }; Returns: string }
       phone_already_registered: { Args: { _phone: string }; Returns: boolean }
+      recompute_product_year_coverage: { Args: never; Returns: undefined }
+      search_products_by_year: {
+        Args: { p_model?: string; p_query?: string; p_year?: number }
+        Returns: {
+          base_price: number
+          brand: Database["public"]["Enums"]["product_brand"]
+          category_id: string | null
+          compatible_models: string[] | null
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          erp_item_code: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          is_featured: boolean
+          is_on_sale: boolean
+          max_order_cap: number | null
+          min_order_qty: number
+          name_ar: string
+          name_en: string | null
+          safety_stock: number
+          sale_price: number | null
+          sku: string
+          stock_quantity: number
+          updated_at: string
+          year_from: number | null
+          year_to: number | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "products"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       user_team_ids: { Args: { _user_id: string }; Returns: string[] }
       validate_coupon: {
         Args: { _code: string }
