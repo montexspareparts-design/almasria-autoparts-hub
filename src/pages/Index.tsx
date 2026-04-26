@@ -71,6 +71,7 @@ const faqItemsEn = [
 
 const Index = () => {
   const { dealerAccount, isAdmin, isModerator, loading } = useAuth();
+  const { isAr } = useLanguage();
   const isDealer = !!dealerAccount && !isModerator;
   const savedRole = typeof window !== "undefined" ? localStorage.getItem("almasria_last_role") : null;
 
@@ -92,15 +93,18 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
-      <Helmet>
-        <title>المصرية جروب | موزع معتمد لقطع غيار وزيوت تويوتا الأصلية في مصر</title>
-        <meta name="description" content="منذ 1999 نقدم توزيعًا مؤسسيًا لقطع غيار وزيوت تويوتا الأصلية عبر شبكة تغطي مصر، تسليم خلال 48 ساعة، وعلامتنا MTX بجودة تضاهي المواصفات الأصلية." />
-        <link rel="canonical" href="https://www.almasriaautoparts.com/" />
-      </Helmet>
+      <SEOHead
+        titleAr="موزع معتمد لقطع غيار وزيوت تويوتا الأصلية في مصر"
+        titleEn="Authorized Toyota Genuine Parts & Oils Distributor in Egypt"
+        descriptionAr="منذ 1999 نقدم توزيعًا مؤسسيًا لقطع غيار وزيوت تويوتا الأصلية عبر شبكة تغطي مصر، تسليم خلال 48 ساعة، وعلامتنا MTX بجودة تضاهي المواصفات الأصلية."
+        descriptionEn="Since 1999, Al Masria Group delivers Toyota genuine parts & oils across Egypt within 48 hours — plus our MTX brand engineered to OEM-grade quality."
+        keywordsAr="قطع غيار تويوتا, زيوت تويوتا, موزع تويوتا مصر, MTX, قطع غيار اصلية, تويوتا"
+        keywordsEn="Toyota parts Egypt, Toyota genuine parts, Toyota oil, MTX aftermarket, auto parts Egypt"
+      />
       <OrganizationSchema />
       <WebSiteSchema />
       <LocalBusinessSchema />
-      <FAQSchema items={faqItems} />
+      <FAQSchema items={isAr ? faqItemsAr : faqItemsEn} />
       <Navbar />
       <HeroSection />
 
