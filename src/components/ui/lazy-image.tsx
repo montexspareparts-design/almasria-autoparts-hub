@@ -13,6 +13,11 @@ interface LazyImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, "src"
   fallbackIcon?: boolean;
   /** Eager load (above-the-fold). Default lazy. */
   eager?: boolean;
+  /** Extra classes for the skeleton layer (e.g. rounded radius to match the card frame). */
+  skeletonClassName?: string;
+  /** Hide the small Package icon inside the skeleton (use when overlays already
+      communicate "loading", e.g. product cards with badges). Default false. */
+  hideSkeletonIcon?: boolean;
 }
 
 /**
@@ -57,6 +62,8 @@ export const LazyImage = ({
   fallbackIcon = true,
   eager = false,
   optimizeWidth,
+  skeletonClassName,
+  hideSkeletonIcon = false,
   ...rest
 }: LazyImageProps & { optimizeWidth?: number }) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -98,9 +105,14 @@ export const LazyImage = ({
   const showImage = !!src && !errored && visible;
   const showFallback = (!src || errored) && fallbackIcon;
 
-  // Skeleton shows while: image not yet visible (lazy) OR visible but not loaded yet.
-  // It stays *behind* any sibling overlays (badges) because it sits at z-0 inside the wrapper.
-  const showSkeleton = !!src && !errored && !loaded;
+  // Skeleton lifecycle:
+  //   - Mounted while the image is queued, fetching, or decoding.
+  //   - Smoothly fades out (opacity transition) on load instead of
+  //     unmounting — so the swap from gradient → photo doesn't pop and
+  //     any sibling overlays (badges) appear visually anchored.
+  //   - Sits at z-0 so badges (z-30/40) and decorative layers (z-10) on
+  //     the parent card always stay perfectly in place above it.
+  const skeletonActive = !!src && !errored && !loaded;
 
   return (
     <div
@@ -110,16 +122,25 @@ export const LazyImage = ({
         wrapperClassName
       )}
     >
-      {/* Shimmer skeleton — fills the wrapper, sits at the bottom layer.
-          Uses a moving gradient sweep over a neutral base so badges remain
-          fully legible on top while the image is loading. */}
-      {showSkeleton && (
+      {/* Shimmer skeleton — opacity-driven; respects prefers-reduced-motion
+          via the `motion-reduce:` variants on the sweeping band. */}
+      {!!src && !errored && (
         <div
           aria-hidden="true"
-          className="absolute inset-0 z-0 overflow-hidden bg-gradient-to-br from-muted/40 via-muted/20 to-muted/40"
+          className={cn(
+            "absolute inset-0 z-0 overflow-hidden",
+            "bg-gradient-to-br from-muted/40 via-muted/20 to-muted/40",
+            "transition-opacity duration-500 ease-out",
+            skeletonActive ? "opacity-100" : "opacity-0 pointer-events-none",
+            skeletonClassName
+          )}
         >
-          <div className="absolute inset-0 -translate-x-full animate-skeleton-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent" />
-          {fallbackIcon && (
+          <div
+            className="absolute inset-0 -translate-x-full animate-skeleton-shimmer
+              bg-gradient-to-r from-transparent via-white/60 to-transparent
+              motion-reduce:animate-none motion-reduce:opacity-0"
+          />
+          {fallbackIcon && !hideSkeletonIcon && (
             <div className="absolute inset-0 flex items-center justify-center">
               <Package className="w-1/4 h-1/4 text-muted-foreground/20" />
             </div>
@@ -141,7 +162,7 @@ export const LazyImage = ({
           }}
           onError={() => setErrored(true)}
           className={cn(
-            "relative z-[1] transition-opacity duration-300",
+            "relative z-[1] transition-opacity duration-500 ease-out",
             loaded ? "opacity-100" : "opacity-0",
             className
           )}
