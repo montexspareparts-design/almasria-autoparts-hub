@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import SEOHead from "@/components/SEOHead";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,10 +15,16 @@ const PoliciesPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>السياسات والشروط | المصرية جروب</title>
-        <meta name="description" content="سياسة الخصوصية والشروط والأحكام وسياسة الشحن والتوصيل وسياسة الإرجاع والاسترداد - المصرية جروب لقطع غيار تويوتا الأصلية" />
-      </Helmet>
+      <SEOHead
+        titleAr="السياسات والشروط — الخصوصية والشحن والاسترجاع"
+        titleEn="Policies — Terms, Privacy, Shipping & Returns"
+        descriptionAr="سياسة الخصوصية والشروط والأحكام وسياسة الشحن والتوصيل وسياسة الإرجاع والاسترداد — المصرية جروب لقطع غيار تويوتا الأصلية."
+        descriptionEn="Privacy policy, terms & conditions, shipping & delivery policy, and refund/return policy — Al Masria Group Toyota genuine parts."
+        breadcrumbs={[
+          { ar: "الرئيسية", en: "Home", url: "/" },
+          { ar: "السياسات", en: "Policies", url: "/policies" },
+        ]}
+      />
       <Navbar />
       <main className="min-h-screen bg-background pt-24 pb-16">
         <div className="container mx-auto px-4">
