@@ -571,8 +571,8 @@ export default function StaffBentoHero({
           <div className="grid grid-cols-3 gap-2">
             <UrgentTile
               label="طلبات بدون تواصل"
-              hint="آخر 48س"
-              value={urgentOrdersCount}
+              hint={periodLabels[periodFilter]}
+              value={effectiveUrgentOrders}
               icon={<ShoppingBag className="w-4 h-4" />}
               onClick={() => onJumpToTab("urgent")}
             />
