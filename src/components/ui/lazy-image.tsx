@@ -18,6 +18,10 @@ interface LazyImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, "src"
   /** Hide the small Package icon inside the skeleton (use when overlays already
       communicate "loading", e.g. product cards with badges). Default false. */
   hideSkeletonIcon?: boolean;
+  /** Custom placeholder icon shown both during load and on fallback.
+      Defaults to lucide `Package`. Pass any ReactNode for brand-specific
+      placeholders (e.g. a car-part silhouette). */
+  placeholderIcon?: React.ReactNode;
 }
 
 /**
@@ -64,6 +68,7 @@ export const LazyImage = ({
   optimizeWidth,
   skeletonClassName,
   hideSkeletonIcon = false,
+  placeholderIcon,
   ...rest
 }: LazyImageProps & { optimizeWidth?: number }) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -148,9 +153,18 @@ export const LazyImage = ({
               bg-gradient-to-r from-transparent via-white/60 to-transparent
               motion-reduce:animate-none motion-reduce:opacity-0"
           />
+          {/* Centered placeholder icon — same visual language as the fallback
+              below so the box looks identical whether the image is queued,
+              loading, missing, or errored. Kept very subtle (≈25% opacity)
+              so badges and decorative layers above remain the focal point. */}
           {fallbackIcon && !hideSkeletonIcon && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <Package className="w-1/4 h-1/4 text-muted-foreground/20" />
+              {placeholderIcon ?? (
+                <Package
+                  className="w-1/4 h-1/4 max-w-[64px] max-h-[64px] text-muted-foreground/25"
+                  strokeWidth={1.25}
+                />
+              )}
             </div>
           )}
         </div>
@@ -178,8 +192,16 @@ export const LazyImage = ({
         />
       )}
       {showFallback && (
-        <div className="w-full h-full flex items-center justify-center">
-          <Package className="w-1/3 h-1/3 text-muted-foreground/20" />
+        // Same icon, same sizing rules, same color as the skeleton placeholder
+        // → swapping between (loading) ↔ (no image) ↔ (error) is visually
+        // seamless inside the product card frame.
+        <div className="absolute inset-0 flex items-center justify-center">
+          {placeholderIcon ?? (
+            <Package
+              className="w-1/4 h-1/4 max-w-[64px] max-h-[64px] text-muted-foreground/25"
+              strokeWidth={1.25}
+            />
+          )}
         </div>
       )}
     </div>
