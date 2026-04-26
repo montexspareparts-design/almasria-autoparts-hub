@@ -5,7 +5,7 @@ import {
   BarChart3, BadgeCheck, ChevronLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Helmet } from "react-helmet-async";
+import SEOHead from "@/components/SEOHead";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -70,12 +70,18 @@ const MTXPage = () => {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      <Helmet>
-        <title>MTX | العلامة التابعة للمصرية جروب والمتخصصة في استيراد قطع غيار تويوتا</title>
-        <meta name="description" content="MTX إحدى شركات المصرية جروب، توفر قطع غيار تويوتا مستوردة من أفضل الموردين العالميين بجودة تضاهي الأصلية وبسعر تنافسي، لخدمة التجار ومراكز الصيانة والشركات." />
-        <meta name="keywords" content="MTX, قطع غيار تويوتا, استيراد قطع غيار, موزع معتمد, أفترماركت, جودة تضاهي الأصلية, DENSO, AISIN" />
-        <link rel="canonical" href="https://www.almasriaautoparts.com/mtx" />
-      </Helmet>
+      <SEOHead
+        titleAr="MTX — العلامة التجارية لقطع غيار تويوتا البديلة"
+        titleEn="MTX — Toyota Aftermarket Parts Brand"
+        descriptionAr="MTX إحدى شركات المصرية جروب، توفر قطع غيار تويوتا مستوردة من أفضل الموردين العالميين بجودة تضاهي الأصلية وبسعر تنافسي، لخدمة التجار ومراكز الصيانة والشركات."
+        descriptionEn="MTX is an Al Masria Group brand offering Toyota aftermarket parts imported from top global suppliers — OEM-grade quality at competitive prices for dealers, service centers, and fleets."
+        keywordsAr="MTX, قطع غيار تويوتا, استيراد قطع غيار, موزع معتمد, أفترماركت, جودة تضاهي الأصلية, DENSO, AISIN"
+        keywordsEn="MTX, Toyota aftermarket, imported parts, OEM quality, DENSO, AISIN, Egypt"
+        breadcrumbs={[
+          { ar: "الرئيسية", en: "Home", url: "/" },
+          { ar: "MTX", en: "MTX", url: "/mtx" },
+        ]}
+      />
       <Navbar />
 
       {/* ═══ Section 1 — Hero ═══ */}
