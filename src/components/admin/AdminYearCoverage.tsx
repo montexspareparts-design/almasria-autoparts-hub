@@ -63,19 +63,26 @@ export default function AdminYearCoverage() {
       if (filter === "missing") return p.year_from == null;
       if (filter === "single_year") return p.year_from != null && p.year_to === p.year_from;
       if (filter === "wide_range") return p.year_from != null && p.year_to != null && p.year_to - p.year_from >= 15;
+      if (filter === "invalid") return isInvalidRow(p);
       return true;
     });
   }, [products, search, filter]);
 
+  const invalidRows = useMemo(
+    () => (products ? products.filter(isInvalidRow) : []),
+    [products]
+  );
+
   const stats = useMemo(() => {
-    if (!products) return { total: 0, withCoverage: 0, missing: 0, wide: 0 };
+    if (!products) return { total: 0, withCoverage: 0, missing: 0, wide: 0, invalid: 0 };
     return {
       total: products.length,
       withCoverage: products.filter((p) => p.year_from != null).length,
       missing: products.filter((p) => p.year_from == null).length,
       wide: products.filter((p) => p.year_from != null && p.year_to != null && p.year_to - p.year_from >= 15).length,
+      invalid: invalidRows.length,
     };
-  }, [products]);
+  }, [products, invalidRows]);
 
   const updateEdit = (id: string, field: "year_from" | "year_to", value: string) => {
     const num = value === "" ? null : parseInt(value);
