@@ -69,6 +69,7 @@ const AdminAuditLog = () => {
   const [filterUser, setFilterUser] = useState("");
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
   const [profilesMap, setProfilesMap] = useState<Record<string, string>>({});
+  const [rolesMap, setRolesMap] = useState<Record<string, "admin" | "moderator">>({});
 
   const fetchLogs = async () => {
     setLoading(true);
@@ -86,18 +87,33 @@ const AdminAuditLog = () => {
     setLogs((data as AuditLog[]) || []);
     setTotalCount(count || 0);
 
-    // Fetch profile names for unique user IDs
+    // Fetch profile names + roles for unique user IDs
     const userIds = [...new Set((data || []).map((l: any) => l.performed_by))];
     if (userIds.length > 0) {
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, full_name, email")
-        .in("user_id", userIds);
-      const map: Record<string, string> = {};
+      const [{ data: profiles }, { data: roles }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("user_id, full_name, email")
+          .in("user_id", userIds),
+        supabase
+          .from("user_roles")
+          .select("user_id, role")
+          .in("user_id", userIds)
+          .in("role", ["admin", "moderator"]),
+      ]);
+      const nameMap: Record<string, string> = {};
       (profiles || []).forEach((p: any) => {
-        map[p.user_id] = p.full_name || p.email || p.user_id.slice(0, 8);
+        nameMap[p.user_id] = p.full_name || p.email || p.user_id.slice(0, 8);
       });
-      setProfilesMap(map);
+      setProfilesMap(nameMap);
+
+      // Admin wins over moderator if user has both
+      const rMap: Record<string, "admin" | "moderator"> = {};
+      (roles || []).forEach((r: any) => {
+        if (rMap[r.user_id] === "admin") return;
+        rMap[r.user_id] = r.role;
+      });
+      setRolesMap(rMap);
     }
 
     setLoading(false);
