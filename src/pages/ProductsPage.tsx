@@ -31,35 +31,47 @@ import brandAisin from "@/assets/brand-aisin.webp";
 import brandFbkBrakes from "@/assets/brand-fbk-logo.webp";
 import oilBg from "@/assets/oil-hero-bg.webp";
 
-const brandConfig: Record<string, { title: string; subtitle: string; description: string; badge: string; brandKey: string; logo: string; backgroundImage?: string; logoScale?: number }> = {
+const brandConfig: Record<string, { title: string; subtitle: string; titleEn?: string; descriptionEn?: string; description: string; badge: string; brandKey: string; logo: string; backgroundImage?: string; logoScale?: number }> = {
   "toyota-genuine": {
     title: "قطع غيار تويوتا الأصلية", subtitle: "Toyota Genuine Parts",
+    titleEn: "Toyota Genuine Parts",
     description: "قطع غيار أصلية 100% من تويوتا اليابان. نحن موزع معتمد رسمي لجميع أنواع قطع غيار تويوتا الأصلية في مصر.",
+    descriptionEn: "100% genuine Toyota parts from Japan. Authorized distributor of every category of Toyota genuine parts in Egypt.",
     badge: "موزع معتمد رسمي", brandKey: "toyota_genuine", logo: brandGenuineParts, logoScale: 250,
   },
   "toyota-oils": {
     title: "زيوت تويوتا الأصلية", subtitle: "Toyota Genuine Motor Oil",
+    titleEn: "Toyota Genuine Motor Oil",
     description: "زيوت تويوتا الأصلية بجميع درجات اللزوجة. زيوت المحرك، زيوت الفتيس، سوائل الفرامل، وجميع سوائل تويوتا الأصلية.",
+    descriptionEn: "Toyota genuine oils across all viscosities — engine oils, transmission fluids, brake fluids, and complete fluid lineup.",
     badge: "موزع معتمد رسمي", brandKey: "toyota_oils", logo: brandToyotaOil, backgroundImage: oilBg, logoScale: 350,
   },
   "mtx-aftermarket": {
     title: "MTX Aftermarket", subtitle: "قطع غيار مستوردة بأعلى جودة",
+    titleEn: "MTX Aftermarket — Premium Imported Parts",
     description: "MTX هي علامتنا التجارية المسجلة لقطع الغيار المستوردة عالية الجودة بأفضل الأسعار.",
+    descriptionEn: "MTX is our registered aftermarket brand for premium imported parts at the most competitive prices.",
     badge: "علامة تجارية مسجلة", brandKey: "mtx_aftermarket", logo: brandMtx,
   },
   "fbk-brakes": {
     title: "تيل فرامل", subtitle: "FBK Brake Pads",
+    titleEn: "FBK Brake Pads",
     description: "تشكيلة كبيرة من تيل فرامل عالية الجودة لجميع موديلات تويوتا تضمن أداء ممتاز وعمر افتراضي أطول.",
+    descriptionEn: "Wide range of high-quality FBK brake pads for all Toyota models — superior performance and longer service life.",
     badge: "جودة ماليزية", brandKey: "fbk", logo: brandFbkBrakes, logoScale: 350,
   },
   "denso": {
     title: "DENSO", subtitle: "قطع غيار دينسو اليابانية",
+    titleEn: "DENSO — Japanese Auto Components",
     description: "قطع غيار دينسو الأصلية - الشركة اليابانية الرائدة في تصنيع مكونات السيارات عالية الجودة.",
+    descriptionEn: "Genuine DENSO parts — the leading Japanese manufacturer of high-quality automotive components.",
     badge: "وكيل معتمد", brandKey: "denso", logo: brandDenso,
   },
   "aisin": {
     title: "AISIN", subtitle: "قطع غيار أيسن اليابانية",
+    titleEn: "AISIN — Japanese Auto Components",
     description: "قطع غيار أيسن الأصلية - من أكبر مصنعي قطع غيار السيارات في العالم، جودة يابانية معتمدة.",
+    descriptionEn: "Genuine AISIN parts — one of the world's largest automotive parts manufacturers, certified Japanese quality.",
     badge: "وكيل معتمد", brandKey: "aisin", logo: brandAisin,
   },
 };
