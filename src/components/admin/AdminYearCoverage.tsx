@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, RefreshCw, Save, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Loader2, Search, RefreshCw, Save, AlertTriangle, CheckCircle2, Wrench } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface ProductRow {
@@ -25,10 +25,21 @@ interface ProductRow {
 export default function AdminYearCoverage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"all" | "missing" | "single_year" | "wide_range">("all");
+  const [filter, setFilter] = useState<"all" | "missing" | "single_year" | "wide_range" | "invalid">("all");
   const [edits, setEdits] = useState<Record<string, { year_from?: number | null; year_to?: number | null }>>({});
   const [savingId, setSavingId] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
+  const [fixing, setFixing] = useState(false);
+
+  const CURRENT_YEAR = new Date().getFullYear();
+  // قيمة غير منطقية: نهاية أصغر من بداية، أو سنة بداية أكبر من المستقبل القريب، أو نهاية أبعد من سنتين قادمتين
+  const isInvalidRow = (p: { year_from: number | null; year_to: number | null }) => {
+    if (p.year_from == null) return false;
+    if (p.year_to != null && p.year_to < p.year_from) return true;
+    if (p.year_from < 1950 || p.year_from > CURRENT_YEAR + 1) return true;
+    if (p.year_to != null && p.year_to > CURRENT_YEAR + 2) return true;
+    return false;
+  };
 
   const { data: products, isLoading } = useQuery({
     queryKey: ["admin_year_coverage_products"],
@@ -52,19 +63,26 @@ export default function AdminYearCoverage() {
       if (filter === "missing") return p.year_from == null;
       if (filter === "single_year") return p.year_from != null && p.year_to === p.year_from;
       if (filter === "wide_range") return p.year_from != null && p.year_to != null && p.year_to - p.year_from >= 15;
+      if (filter === "invalid") return isInvalidRow(p);
       return true;
     });
   }, [products, search, filter]);
 
+  const invalidRows = useMemo(
+    () => (products ? products.filter(isInvalidRow) : []),
+    [products]
+  );
+
   const stats = useMemo(() => {
-    if (!products) return { total: 0, withCoverage: 0, missing: 0, wide: 0 };
+    if (!products) return { total: 0, withCoverage: 0, missing: 0, wide: 0, invalid: 0 };
     return {
       total: products.length,
       withCoverage: products.filter((p) => p.year_from != null).length,
       missing: products.filter((p) => p.year_from == null).length,
       wide: products.filter((p) => p.year_from != null && p.year_to != null && p.year_to - p.year_from >= 15).length,
+      invalid: invalidRows.length,
     };
-  }, [products]);
+  }, [products, invalidRows]);
 
   const updateEdit = (id: string, field: "year_from" | "year_to", value: string) => {
     const num = value === "" ? null : parseInt(value);
@@ -114,6 +132,60 @@ export default function AdminYearCoverage() {
     queryClient.invalidateQueries({ queryKey: ["admin_year_coverage_products"] });
   };
 
+  /**
+   * تصحيح سريع للقيم غير المنطقية:
+   * - لو year_to < year_from  →  year_to = year_from
+   * - لو year_from خارج النطاق المعقول → نخليها = year_to (لو موجود) أو نمسحها
+   * - لو year_to في المستقبل البعيد (>CURRENT_YEAR+2) → year_to = CURRENT_YEAR
+   */
+  const quickFixInvalid = async () => {
+    if (invalidRows.length === 0) {
+      toast({ title: "لا توجد قيم غير منطقية", description: "كل النطاقات سليمة ✅" });
+      return;
+    }
+    const confirmed = window.confirm(
+      `سيتم توحيد ${invalidRows.length} منتج تلقائياً (تصحيح year_to ليساوي year_from عند الشذوذ). متابعة؟`
+    );
+    if (!confirmed) return;
+
+    setFixing(true);
+    let success = 0;
+    let failed = 0;
+
+    for (const p of invalidRows) {
+      let newFrom = p.year_from;
+      let newTo = p.year_to;
+
+      // year_from خارج النطاق
+      if (newFrom != null && (newFrom < 1950 || newFrom > CURRENT_YEAR + 1)) {
+        newFrom = newTo && newTo >= 1950 && newTo <= CURRENT_YEAR + 1 ? newTo : null;
+      }
+      // year_to في المستقبل البعيد
+      if (newTo != null && newTo > CURRENT_YEAR + 2) {
+        newTo = CURRENT_YEAR;
+      }
+      // year_to أصغر من year_from → نوحدهم
+      if (newFrom != null && newTo != null && newTo < newFrom) {
+        newTo = newFrom;
+      }
+
+      const { error } = await supabase
+        .from("products")
+        .update({ year_from: newFrom, year_to: newTo })
+        .eq("id", p.id);
+      if (error) failed++;
+      else success++;
+    }
+
+    setFixing(false);
+    toast({
+      title: failed === 0 ? "✅ تم التصحيح بنجاح" : "⚠️ تم التصحيح جزئياً",
+      description: `نجح: ${success} | فشل: ${failed}`,
+      variant: failed > 0 ? "destructive" : "default",
+    });
+    queryClient.invalidateQueries({ queryKey: ["admin_year_coverage_products"] });
+  };
+
   return (
     <div dir="rtl" className="space-y-4">
       <Card>
@@ -129,7 +201,7 @@ export default function AdminYearCoverage() {
         </CardHeader>
         <CardContent className="space-y-4">
           {/* KPIs */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <div className="bg-muted/30 rounded-lg p-3 text-center">
               <div className="text-2xl font-bold">{stats.total}</div>
               <div className="text-xs text-muted-foreground">إجمالي</div>
@@ -145,6 +217,10 @@ export default function AdminYearCoverage() {
             <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-3 text-center">
               <div className="text-2xl font-bold text-amber-700 dark:text-amber-300">{stats.wide}</div>
               <div className="text-xs text-muted-foreground">نطاق واسع (15+ سنة)</div>
+            </div>
+            <div className="bg-orange-50 dark:bg-orange-950/30 rounded-lg p-3 text-center">
+              <div className="text-2xl font-bold text-orange-700 dark:text-orange-300">{stats.invalid}</div>
+              <div className="text-xs text-muted-foreground">قيم غير منطقية</div>
             </div>
           </div>
 
@@ -165,6 +241,7 @@ export default function AdminYearCoverage() {
                 { v: "missing", label: "بدون تغطية" },
                 { v: "single_year", label: "سنة واحدة فقط" },
                 { v: "wide_range", label: "نطاق واسع" },
+                { v: "invalid", label: `غير منطقية${stats.invalid > 0 ? ` (${stats.invalid})` : ""}` },
               ].map((opt) => (
                 <Button
                   key={opt.v}
@@ -175,9 +252,19 @@ export default function AdminYearCoverage() {
                   {opt.label}
                 </Button>
               ))}
-              <Button size="sm" variant="secondary" onClick={reRunAutoInference} disabled={running}>
+              <Button size="sm" variant="secondary" onClick={reRunAutoInference} disabled={running || fixing}>
                 {running ? <Loader2 className="w-4 h-4 animate-spin ml-1" /> : <RefreshCw className="w-4 h-4 ml-1" />}
                 إعادة الاستنتاج التلقائي
+              </Button>
+              <Button
+                size="sm"
+                variant={stats.invalid > 0 ? "destructive" : "outline"}
+                onClick={quickFixInvalid}
+                disabled={fixing || running || stats.invalid === 0}
+                title="يصحح year_to تلقائياً ليساوي year_from عند وجود قيم شاذة"
+              >
+                {fixing ? <Loader2 className="w-4 h-4 animate-spin ml-1" /> : <Wrench className="w-4 h-4 ml-1" />}
+                تصحيح سريع{stats.invalid > 0 ? ` (${stats.invalid})` : ""}
               </Button>
             </div>
           </div>
