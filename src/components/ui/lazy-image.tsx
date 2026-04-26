@@ -98,15 +98,35 @@ export const LazyImage = ({
   const showImage = !!src && !errored && visible;
   const showFallback = (!src || errored) && fallbackIcon;
 
+  // Skeleton shows while: image not yet visible (lazy) OR visible but not loaded yet.
+  // It stays *behind* any sibling overlays (badges) because it sits at z-0 inside the wrapper.
+  const showSkeleton = !!src && !errored && !loaded;
+
   return (
     <div
       ref={ref}
       className={cn(
         "relative overflow-hidden bg-muted/30",
-        !loaded && showImage && "animate-pulse",
         wrapperClassName
       )}
     >
+      {/* Shimmer skeleton — fills the wrapper, sits at the bottom layer.
+          Uses a moving gradient sweep over a neutral base so badges remain
+          fully legible on top while the image is loading. */}
+      {showSkeleton && (
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 z-0 overflow-hidden bg-gradient-to-br from-muted/40 via-muted/20 to-muted/40"
+        >
+          <div className="absolute inset-0 -translate-x-full animate-skeleton-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent" />
+          {fallbackIcon && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Package className="w-1/4 h-1/4 text-muted-foreground/20" />
+            </div>
+          )}
+        </div>
+      )}
+
       {showImage && (
         <img
           src={optimizeSrc(src!, optimizeWidth)}
@@ -121,7 +141,7 @@ export const LazyImage = ({
           }}
           onError={() => setErrored(true)}
           className={cn(
-            "transition-opacity duration-300",
+            "relative z-[1] transition-opacity duration-300",
             loaded ? "opacity-100" : "opacity-0",
             className
           )}
