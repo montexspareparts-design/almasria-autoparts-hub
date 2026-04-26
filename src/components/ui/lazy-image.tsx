@@ -160,6 +160,13 @@ export const LazyImage = ({
             // Lower peak luminance (white/40 instead of /60) → smaller
             // brightness delta when the band finishes its sweep, so the
             // hand-off to the photo feels seamless.
+            //
+            // RTL: the `-translate-x-full` below is just the static
+            // starting offset before the animation hijacks `transform`.
+            // The keyframe itself is direction-aware via the
+            // `[dir="rtl"] .animate-skeleton-shimmer` override in
+            // index.css → in Arabic layouts the band sweeps right→left,
+            // matching the reading flow.
             className="absolute inset-0 -translate-x-full animate-skeleton-shimmer
               bg-gradient-to-r from-transparent via-white/40 to-transparent
               motion-reduce:animate-none motion-reduce:opacity-0"

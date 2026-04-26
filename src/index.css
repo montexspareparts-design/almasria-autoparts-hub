@@ -251,6 +251,30 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────
+   Skeleton shimmer — RTL direction fix.
+
+   The default keyframe (defined in tailwind.config.ts) sweeps the band
+   from translateX(-100%) → translateX(100%), i.e. left → right, which
+   feels natural in LTR (matches reading direction).
+
+   Tailwind's `-translate-x-full` and the `translateX(100%)` inside the
+   keyframe are PHYSICAL — they do NOT mirror under `dir="rtl"`. So
+   without this override the band still slides L→R inside an Arabic
+   layout, looking like it's reading "backwards".
+
+   Below we redefine the animation when the nearest RTL ancestor is
+   present, sending the band right → left to match the reading flow.
+   ───────────────────────────────────────────────────────────────────── */
+[dir="rtl"] .animate-skeleton-shimmer {
+  animation-name: skeleton-shimmer-rtl;
+}
+
+@keyframes skeleton-shimmer-rtl {
+  0% { transform: translateX(200%); }
+  100% { transform: translateX(0%); }
+}
+
+/* ─────────────────────────────────────────────────────────────────────
    .badge-glass — performance-aware "frosted" badge background.
 
    Strategy:
