@@ -554,14 +554,58 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     "brakes", "spark-plugs-coils", "belts-bearings", "water-cooling",
   ]), []);
 
-  /* ── Smart year extraction from search query ── */
+  /* ── Smart year extraction from search query ──
+   * يدعم الصيغ التالية:
+   *  - 4 أرقام مباشرة:        2008
+   *  - أرقام عربية/هندية:      ٢٠٠٨
+   *  - بادئات شائعة:           "موديل 2008" / "سنة 2008" / "model 2008" / "year 2008" / "M2008"
+   *  - ملتصقة بحروف:           "HS2008" / "هايس2008" / "كورولا2018"
+   *  - اختصار سنتين:           "موديل 08" → 2008  /  "موديل 95" → 1995
+   *  - نطاق سنوات:             "2005-2010" / "من 2005 الى 2010" → نأخذ أول سنة
+   */
+  const convertArabicDigits = (s: string): string =>
+    s.replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)))
+     .replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)));
+
   const extractYearFromSearch = (search: string): number | null => {
-    const match = search.match(/\b(19|20)\d{2}\b/);
-    return match ? parseInt(match[0]) : null;
+    const normalized = convertArabicDigits(search);
+    const currentYear = new Date().getFullYear();
+
+    // 1) سنة كاملة (4 أرقام) — مع أو بدون حروف ملاصقة (HS2008, موديل2008)
+    const fullYear = normalized.match(/(?:^|[^\d])((?:19|20)\d{2})(?:[^\d]|$)/);
+    if (fullYear) {
+      const y = parseInt(fullYear[1], 10);
+      if (y >= 1950 && y <= currentYear + 1) return y;
+    }
+
+    // 2) صيغة مختصرة بعد كلمات دالة فقط (موديل/سنة/model/year/m)
+    //    لتجنب التقاط أرقام عشوائية (مثل أكواد القطع)
+    const shortYear = normalized.match(
+      /(?:موديل|موديلات|سنه|سنة|عام|model|year|\bm)\s*[-:]?\s*(\d{2})(?!\d)/i
+    );
+    if (shortYear) {
+      const yy = parseInt(shortYear[1], 10);
+      const y = yy <= (currentYear % 100) + 1 ? 2000 + yy : 1900 + yy;
+      if (y >= 1950 && y <= currentYear + 1) return y;
+    }
+
+    return null;
   };
 
   const removeYearFromSearch = (search: string): string => {
-    return search.replace(/\b(19|20)\d{2}\b/g, "").replace(/\s+/g, " ").trim();
+    let out = convertArabicDigits(search);
+    // إزالة الكلمات الدالة + السنة (4 أرقام أو 2)
+    out = out.replace(
+      /(?:موديل|موديلات|سنه|سنة|عام|model|year)\s*[-:]?\s*\d{2,4}/gi,
+      " "
+    );
+    // إزالة "M2008" أو "m08"
+    out = out.replace(/\bm\s*[-:]?\s*\d{2,4}\b/gi, " ");
+    // إزالة أي سنة 4 أرقام متبقية (حتى لو ملتصقة بحروف: HS2008)
+    out = out.replace(/(19|20)\d{2}/g, " ");
+    // إزالة نطاقات (-) المتبقية
+    out = out.replace(/\s*[-–—]\s*/g, " ");
+    return out.replace(/\s+/g, " ").trim();
   };
 
   /* ── Filtering with Arabic normalization + smart year matching ── */
