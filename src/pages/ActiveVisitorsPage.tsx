@@ -221,15 +221,52 @@ export default function ActiveVisitorsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Window in ms for the "خلال X" filter
+  const hoursWindowMs = useMemo(() => {
+    switch (hoursFilter) {
+      case "30m": return 30 * 60 * 1000;
+      case "1h": return 60 * 60 * 1000;
+      case "3h": return 3 * 60 * 60 * 1000;
+      case "6h": return 6 * 60 * 60 * 1000;
+      case "24h": return 24 * 60 * 60 * 1000;
+    }
+  }, [hoursFilter]);
+
+  // "متأخر" = نشط داخل النافذة + (لم يُتواصل معه أبداً) أو (آخر تواصل أقدم من OVERDUE_HOURS)
+  const isOverdue = (v: ActiveVisitor) => {
+    if (v.has_open_reminder) return false; // فيه تذكير معلّق — مش متأخر
+    if (!v.last_contacted_at) return true; // لم يُتواصل معه إطلاقاً
+    return Date.now() - new Date(v.last_contacted_at).getTime() > OVERDUE_HOURS * 60 * 60 * 1000;
+  };
+
+  // عداد الزوار المتأخرين داخل النافذة الزمنية الحالية — للبادج
+  const overdueCount = useMemo(() => {
+    const cutoff = Date.now() - hoursWindowMs;
+    return visitors.filter((v) => new Date(v.last_seen_at).getTime() >= cutoff && isOverdue(v)).length;
+  }, [visitors, hoursWindowMs]);
+
   const filtered = useMemo(() => {
+    const cutoff = Date.now() - hoursWindowMs;
+    let list = visitors.filter((v) => new Date(v.last_seen_at).getTime() >= cutoff);
+    if (overdueOnly) list = list.filter(isOverdue);
     const q = search.trim().toLowerCase();
-    if (!q) return visitors;
-    return visitors.filter((v) =>
-      (v.name || "").toLowerCase().includes(q) ||
-      (v.phone || "").includes(q) ||
-      (v.last_path || "").toLowerCase().includes(q)
-    );
-  }, [visitors, search]);
+    if (q) {
+      list = list.filter((v) =>
+        (v.name || "").toLowerCase().includes(q) ||
+        (v.phone || "").includes(q) ||
+        (v.last_path || "").toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [visitors, search, hoursWindowMs, overdueOnly]);
+
+  const hoursLabel: Record<typeof hoursFilter, string> = {
+    "30m": "30 دقيقة",
+    "1h": "ساعة",
+    "3h": "3 ساعات",
+    "6h": "6 ساعات",
+    "24h": "24 ساعة",
+  };
 
   return (
     <div className="container mx-auto p-4 max-w-6xl space-y-4" dir="rtl">
