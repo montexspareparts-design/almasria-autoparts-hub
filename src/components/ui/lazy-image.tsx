@@ -13,6 +13,11 @@ interface LazyImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, "src"
   fallbackIcon?: boolean;
   /** Eager load (above-the-fold). Default lazy. */
   eager?: boolean;
+  /** Extra classes for the skeleton layer (e.g. rounded radius to match the card frame). */
+  skeletonClassName?: string;
+  /** Hide the small Package icon inside the skeleton (use when overlays already
+      communicate "loading", e.g. product cards with badges). Default false. */
+  hideSkeletonIcon?: boolean;
 }
 
 /**
