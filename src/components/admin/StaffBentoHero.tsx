@@ -37,7 +37,12 @@ interface Reminder {
   reminder_at: string;
   note: string | null;
   comm_type: string;
+  /** آخر تواصل للعميل (أحدث customer_communications.created_at). null لو الموظف لم يتواصل قبل كده */
+  last_contact_at?: string | null;
 }
+
+/** درجة الأولوية المحسوبة لكل مهمة */
+type Priority = "critical" | "high" | "medium" | "low";
 
 interface Props {
   urgentOrdersCount: number;
@@ -139,6 +144,23 @@ export default function StaffBentoHero({
         (profs || []).map((p: any) => [p.user_id, { name: p.full_name || "عميل", phone: p.phone || null }])
       );
     }
+    // جلب آخر تواصل لكل عميل (أحدث customer_communications.created_at قبل وقت التذكير)
+    const lastContactMap = new Map<string, string>();
+    if (customerIds.length) {
+      const { data: lastComms } = await supabase
+        .from("customer_communications")
+        .select("customer_user_id, created_at")
+        .in("customer_user_id", customerIds)
+        .order("created_at", { ascending: false })
+        .limit(500);
+      // أول ظهور لكل عميل = أحدث تواصل (مرتّب تنازلياً)
+      for (const c of (lastComms || []) as any[]) {
+        if (c.customer_user_id && !lastContactMap.has(c.customer_user_id)) {
+          lastContactMap.set(c.customer_user_id, c.created_at);
+        }
+      }
+    }
+
     setReminders(
       ((remRows || []) as any[]).map((r) => ({
         id: r.id,
@@ -148,6 +170,7 @@ export default function StaffBentoHero({
         reminder_at: r.reminder_at,
         note: r.note,
         comm_type: r.comm_type,
+        last_contact_at: r.customer_user_id ? lastContactMap.get(r.customer_user_id) || null : null,
       }))
     );
 
@@ -221,19 +244,64 @@ export default function StaffBentoHero({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
-  const { overdue, todayList, upcomingList } = useMemo(() => {
+  /**
+   * منطق الأولوية التلقائية:
+   *   - critical: متأخر > ٢ ساعة، أو لم يتم التواصل أبداً ومتأخر
+   *   - high:     متأخر، أو موعده خلال الساعة القادمة، أو لم يُتواصل من >٧ أيام
+   *   - medium:   موعده اليوم
+   *   - low:      موعده قادم لاحقاً
+   * + ترتيب القائمة: critical → high → medium → low ثم بالأقدم متأخراً
+   */
+  const computePriority = (r: Reminder): Priority => {
+    const nowMs = Date.now();
+    const reminderMs = new Date(r.reminder_at).getTime();
+    const diffMin = (reminderMs - nowMs) / 60000;
+    const lastContactDays = r.last_contact_at
+      ? (nowMs - new Date(r.last_contact_at).getTime()) / 86400000
+      : null;
+
+    // critical: متأخر >2س، أو متأخر ولم يُتواصل أبداً
+    if (diffMin < -120) return "critical";
+    if (diffMin < 0 && lastContactDays === null) return "critical";
+
+    // high: متأخر بسيط، أو خلال الساعة القادمة، أو فجوة تواصل >7 أيام
+    if (diffMin < 0) return "high";
+    if (diffMin <= 60) return "high";
+    if (lastContactDays !== null && lastContactDays > 7) return "high";
+
+    // medium: موعده اليوم
+    const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
+    if (reminderMs <= todayEnd.getTime()) return "medium";
+
+    return "low";
+  };
+
+  const priorityWeight: Record<Priority, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+
+  const { overdue, todayList, upcomingList, criticalCount, highCount } = useMemo(() => {
     const nowMs = Date.now();
     const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
-    let overdue = 0;
+    let overdue = 0, criticalCount = 0, highCount = 0;
     const todayList: Reminder[] = [];
     const upcomingList: Reminder[] = [];
     for (const r of reminders) {
       const t = new Date(r.reminder_at).getTime();
+      const p = computePriority(r);
+      if (p === "critical") criticalCount++;
+      else if (p === "high") highCount++;
       if (t < nowMs) { overdue++; todayList.push(r); }
       else if (t <= todayEnd.getTime()) todayList.push(r);
       else upcomingList.push(r);
     }
-    return { overdue, todayList, upcomingList };
+    // ترتيب: الأولوية الأعلى أولاً، ثم الأقدم متأخراً
+    const sortByPriority = (a: Reminder, b: Reminder) => {
+      const dp = priorityWeight[computePriority(a)] - priorityWeight[computePriority(b)];
+      if (dp !== 0) return dp;
+      return new Date(a.reminder_at).getTime() - new Date(b.reminder_at).getTime();
+    };
+    todayList.sort(sortByPriority);
+    upcomingList.sort(sortByPriority);
+    return { overdue, todayList, upcomingList, criticalCount, highCount };
   }, [reminders]);
 
   const totalNewToday = newOrders24h + newSignups24h + instapayPending + partRequestsNew;
@@ -244,14 +312,33 @@ export default function StaffBentoHero({
     const d = new Date(iso);
     return d.toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
   };
-  const fmtRel = (iso: string) => {
-    const diff = Math.round((new Date(iso).getTime() - Date.now()) / 60000);
-    if (diff < -60 * 24) return `متأخر ${Math.floor(-diff / (60 * 24))}ي`;
-    if (diff < -60) return `متأخر ${Math.floor(-diff / 60)}س`;
-    if (diff < 0) return `متأخر ${-diff}د`;
-    if (diff < 60) return `بعد ${diff}د`;
-    if (diff < 60 * 24) return `بعد ${Math.floor(diff / 60)}س`;
-    return `بعد ${Math.floor(diff / (60 * 24))}ي`;
+
+  /** عدّ تنازلي للموعد القادم أو "متأخر منذ ..." للماضي */
+  const fmtCountdown = (iso: string): { text: string; isOverdue: boolean } => {
+    const diffMin = Math.round((new Date(iso).getTime() - Date.now()) / 60000);
+    const abs = Math.abs(diffMin);
+    let text: string;
+    if (abs < 60) text = `${abs}د`;
+    else if (abs < 60 * 24) text = `${Math.floor(abs / 60)}س ${abs % 60}د`;
+    else text = `${Math.floor(abs / (60 * 24))}ي`;
+    return diffMin < 0
+      ? { text: `⏰ متأخر ${text}`, isOverdue: true }
+      : { text: `⏳ بعد ${text}`, isOverdue: false };
+  };
+
+  /** مدة منذ آخر تواصل (للعرض كـ chip ثاني) */
+  const fmtSinceLastContact = (iso: string | null | undefined): string => {
+    if (!iso) return "لم يتم التواصل أبداً";
+    const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+    if (days === 0) {
+      const hrs = Math.floor((Date.now() - new Date(iso).getTime()) / 3600000);
+      if (hrs === 0) return "تواصل قبل دقائق";
+      return `تواصل قبل ${hrs}س`;
+    }
+    if (days === 1) return "تواصل أمس";
+    if (days < 7) return `تواصل قبل ${days} أيام`;
+    if (days < 30) return `تواصل قبل ${Math.floor(days / 7)} أسابيع`;
+    return `تواصل قبل ${Math.floor(days / 30)} شهر`;
   };
 
   return (
@@ -395,40 +482,52 @@ export default function StaffBentoHero({
           title="متابعة العملاء"
           subtitle="مكالمات اليوم"
           tone="amber"
-          totalLabel={`${totalFollowups} عميل`}
+          totalLabel={
+            criticalCount + highCount > 0 ? (
+              <span className="inline-flex items-center gap-1">
+                {criticalCount > 0 && <span className="px-1.5 py-0.5 rounded-full bg-red-600 text-white font-bold">{criticalCount} حرج</span>}
+                {highCount > 0 && <span className="px-1.5 py-0.5 rounded-full bg-orange-500 text-white font-bold">{highCount} عالي</span>}
+              </span>
+            ) : `${totalFollowups} عميل`
+          }
         >
           {todayList.length === 0 ? (
             <div className="text-xs text-muted-foreground py-4 text-center">
               لا توجد متابعات لليوم 🎉
             </div>
           ) : (
-            <div className="space-y-1.5 max-h-[140px] overflow-y-auto">
+            <div className="space-y-1.5 max-h-[180px] overflow-y-auto">
               {todayList.slice(0, 5).map((r) => {
-                const isOverdue = new Date(r.reminder_at).getTime() < Date.now();
+                const priority = computePriority(r);
+                const cd = fmtCountdown(r.reminder_at);
+                const lastContactText = fmtSinceLastContact(r.last_contact_at);
                 return (
                   <div
                     key={r.id}
                     className={cn(
-                      "flex items-center gap-2 p-1.5 rounded border text-[11px]",
-                      isOverdue
-                        ? "bg-red-50 dark:bg-red-950/30 border-red-200"
-                        : "bg-card border-border"
+                      "flex items-center gap-2 p-2 rounded border-l-4 text-[11px]",
+                      priority === "critical" && "bg-red-50 dark:bg-red-950/40 border-l-red-600 border-y border-r border-red-200",
+                      priority === "high" && "bg-orange-50 dark:bg-orange-950/30 border-l-orange-500 border-y border-r border-orange-200",
+                      priority === "medium" && "bg-amber-50/50 dark:bg-amber-950/20 border-l-amber-500 border-y border-r border-amber-200",
+                      priority === "low" && "bg-card border-l-muted-foreground/30 border-y border-r border-border"
                     )}
                   >
+                    <PriorityBadge priority={priority} />
                     <div className="flex-1 min-w-0">
                       <div className="font-bold text-foreground truncate">{r.customer_name}</div>
-                      {r.note && <div className="text-muted-foreground truncate">{r.note}</div>}
+                      <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground mt-0.5 flex-wrap">
+                        <span className={cn("font-mono font-bold", cd.isOverdue ? "text-red-600" : "text-emerald-600")}>
+                          {cd.text}
+                        </span>
+                        <span className="opacity-50">·</span>
+                        <span className={cn(!r.last_contact_at && "text-red-600 font-bold")}>{lastContactText}</span>
+                      </div>
+                      {r.note && <div className="text-muted-foreground truncate text-[10px] mt-0.5">{r.note}</div>}
                     </div>
-                    <span className={cn(
-                      "text-[10px] font-mono shrink-0",
-                      isOverdue ? "text-red-600 font-bold" : "text-amber-600"
-                    )}>
-                      {fmtRel(r.reminder_at)}
-                    </span>
                     {r.customer_phone && (
                       <a
                         href={`tel:${r.customer_phone}`}
-                        className="p-1 rounded bg-emerald-100 hover:bg-emerald-200 text-emerald-700 shrink-0"
+                        className="p-1.5 rounded bg-emerald-100 hover:bg-emerald-200 text-emerald-700 shrink-0"
                         title="اتصال"
                       >
                         <Phone className="w-3 h-3" />
@@ -465,21 +564,31 @@ export default function StaffBentoHero({
               لا مواعيد قادمة
             </div>
           ) : (
-            <div className="space-y-1.5 max-h-[140px] overflow-y-auto">
-              {upcomingList.slice(0, 5).map((r) => (
-                <div
-                  key={r.id}
-                  className="flex items-center gap-2 p-1.5 rounded border bg-card text-[11px]"
-                >
-                  <Clock className="w-3 h-3 text-purple-600 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-bold text-foreground truncate">{r.customer_name}</div>
-                    <div className="text-muted-foreground text-[10px]">
-                      {new Date(r.reminder_at).toLocaleDateString("ar-EG", { weekday: "short", day: "numeric", month: "short" })} — {fmtTime(r.reminder_at)}
+            <div className="space-y-1.5 max-h-[160px] overflow-y-auto">
+              {upcomingList.slice(0, 5).map((r) => {
+                const priority = computePriority(r);
+                const cd = fmtCountdown(r.reminder_at);
+                return (
+                  <div
+                    key={r.id}
+                    className={cn(
+                      "flex items-center gap-2 p-1.5 rounded border-l-4 border-y border-r bg-card text-[11px]",
+                      priority === "high" ? "border-l-orange-500 border-orange-200" : "border-l-purple-400 border-border"
+                    )}
+                  >
+                    <PriorityBadge priority={priority} compact />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-foreground truncate">{r.customer_name}</div>
+                      <div className="flex items-center gap-1 text-[10px] text-muted-foreground flex-wrap">
+                        <Clock className="w-2.5 h-2.5" />
+                        {new Date(r.reminder_at).toLocaleDateString("ar-EG", { weekday: "short", day: "numeric", month: "short" })} {fmtTime(r.reminder_at)}
+                        <span className="opacity-50">·</span>
+                        <span className="font-mono text-emerald-600 font-bold">{cd.text}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               {upcomingList.length > 5 && (
                 <div className="text-[10px] text-center text-muted-foreground pt-1">
                   +{upcomingList.length - 5} موعد آخر
@@ -693,4 +802,42 @@ function ShortcutTile({ icon, label, value, hint, tone, to, onClick, ctaLabel, u
   );
   if (to) return <Link to={to} className="block">{inner}</Link>;
   return <button onClick={onClick} className="text-right w-full block">{inner}</button>;
+}
+
+// ===== شارة الأولوية =====
+interface PriorityBadgeProps {
+  priority: Priority;
+  compact?: boolean;
+}
+
+const priorityStyles: Record<Priority, { bg: string; label: string; emoji: string }> = {
+  critical: { bg: "bg-red-600 text-white", label: "حرج", emoji: "🔥" },
+  high:     { bg: "bg-orange-500 text-white", label: "عالي", emoji: "⚡" },
+  medium:   { bg: "bg-amber-400 text-amber-950", label: "متوسط", emoji: "•" },
+  low:      { bg: "bg-muted text-muted-foreground", label: "عادي", emoji: "·" },
+};
+
+function PriorityBadge({ priority, compact }: PriorityBadgeProps) {
+  const s = priorityStyles[priority];
+  if (compact) {
+    return (
+      <span
+        className={cn("inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold shrink-0", s.bg)}
+        title={s.label}
+      >
+        {s.emoji}
+      </span>
+    );
+  }
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold shrink-0 leading-none h-5",
+        s.bg
+      )}
+    >
+      <span className="text-[10px]">{s.emoji}</span>
+      {s.label}
+    </span>
+  );
 }
