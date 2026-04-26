@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, RefreshCw, Save, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Loader2, Search, RefreshCw, Save, AlertTriangle, CheckCircle2, Wrench } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface ProductRow {
