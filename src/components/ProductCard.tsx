@@ -262,7 +262,9 @@ const ProductCard = memo(({
 
           Auto-contrast strategy on every floating badge:
             1. Opaque-enough fill (≥95%) of a saturated color → readable text.
-            2. `backdrop-blur-md backdrop-saturate-150` → softens noisy
+            2. `.badge-glass` → progressive frosted background: opaque
+               fallback for low-end / older browsers, blur+saturate only
+               where supported and not on touch/idle (see index.css).
                backgrounds behind the badge.
             3. White text + `[text-shadow:0_1px_2px_rgba(0,0,0,0.35)]` keeps
                characters legible at the edges.
