@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Send, Trash2, MessageCircle, Phone, Mail, MapPin, User, Calendar, Clock } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Loader2, Send, Trash2, MessageCircle, Phone, Mail, MapPin, User, Calendar, Clock, Bell, BellOff, CheckCircle2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { checkDuplicateCommunication } from "@/lib/duplicateCommCheck";
+import { cn } from "@/lib/utils";
 
 const COMM_TYPES = [
   { value: "phone", label: "📞 مكالمة هاتفية", icon: Phone, color: "bg-blue-100 text-blue-800" },
