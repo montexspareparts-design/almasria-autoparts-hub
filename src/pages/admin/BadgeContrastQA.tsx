@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { ImageBadge, ImageBadgeColumn } from "@/components/ui/image-badge";
 import { Sparkles, Check, ArrowRight } from "lucide-react";
 
 /**
