@@ -41,9 +41,20 @@ const TABLE_LABELS: Record<string, string> = {
   site_settings: "إعدادات الموقع",
   product_categories: "التصنيفات",
   maintenance_bundles: "باقات الصيانة",
+  bundle_items: "محتويات الباقات",
   quantity_discounts: "خصومات الكمية",
+  product_tier_prices: "أسعار الفئات",
   user_roles: "صلاحيات المستخدمين",
   notifications: "الإشعارات",
+  erp_config: "إعدادات الفيصل (ERP)",
+  admin_notification_phones: "أرقام إشعارات الأدمن",
+  daily_report_questions: "أسئلة التقرير اليومي",
+  "auth.users": "حسابات المستخدمين",
+};
+
+const ROLE_BADGE: Record<string, { label: string; color: string }> = {
+  admin: { label: "أدمن", color: "bg-red-500/10 text-red-600 border-red-500/30" },
+  moderator: { label: "موظف", color: "bg-amber-500/10 text-amber-700 border-amber-500/30" },
 };
 
 const ITEMS_PER_PAGE = 20;
@@ -58,6 +69,7 @@ const AdminAuditLog = () => {
   const [filterUser, setFilterUser] = useState("");
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
   const [profilesMap, setProfilesMap] = useState<Record<string, string>>({});
+  const [rolesMap, setRolesMap] = useState<Record<string, "admin" | "moderator">>({});
 
   const fetchLogs = async () => {
     setLoading(true);
@@ -75,18 +87,33 @@ const AdminAuditLog = () => {
     setLogs((data as AuditLog[]) || []);
     setTotalCount(count || 0);
 
-    // Fetch profile names for unique user IDs
+    // Fetch profile names + roles for unique user IDs
     const userIds = [...new Set((data || []).map((l: any) => l.performed_by))];
     if (userIds.length > 0) {
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, full_name, email")
-        .in("user_id", userIds);
-      const map: Record<string, string> = {};
+      const [{ data: profiles }, { data: roles }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("user_id, full_name, email")
+          .in("user_id", userIds),
+        supabase
+          .from("user_roles")
+          .select("user_id, role")
+          .in("user_id", userIds)
+          .in("role", ["admin", "moderator"]),
+      ]);
+      const nameMap: Record<string, string> = {};
       (profiles || []).forEach((p: any) => {
-        map[p.user_id] = p.full_name || p.email || p.user_id.slice(0, 8);
+        nameMap[p.user_id] = p.full_name || p.email || p.user_id.slice(0, 8);
       });
-      setProfilesMap(map);
+      setProfilesMap(nameMap);
+
+      // Admin wins over moderator if user has both
+      const rMap: Record<string, "admin" | "moderator"> = {};
+      (roles || []).forEach((r: any) => {
+        if (rMap[r.user_id] === "admin") return;
+        rMap[r.user_id] = r.role;
+      });
+      setRolesMap(rMap);
     }
 
     setLoading(false);
@@ -169,8 +196,9 @@ const AdminAuditLog = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/30">
-                    <TableHead className="text-right">التاريخ</TableHead>
+                    <TableHead className="text-right">التاريخ والوقت</TableHead>
                     <TableHead className="text-right">المستخدم</TableHead>
+                    <TableHead className="text-right">الدور</TableHead>
                     <TableHead className="text-right">الإجراء</TableHead>
                     <TableHead className="text-right">الجدول</TableHead>
                     <TableHead className="text-right">معرف السجل</TableHead>
@@ -180,13 +208,24 @@ const AdminAuditLog = () => {
                 <TableBody>
                   {logs.map((log) => {
                     const actionInfo = ACTION_LABELS[log.action] || { label: log.action, color: "bg-muted text-muted-foreground" };
+                    const role = rolesMap[log.performed_by];
+                    const roleBadge = role ? ROLE_BADGE[role] : null;
                     return (
                       <TableRow key={log.id} className="hover:bg-muted/20">
-                        <TableCell className="text-xs whitespace-nowrap">
-                          {format(new Date(log.created_at), "dd/MM/yyyy HH:mm", { locale: ar })}
+                        <TableCell className="text-xs whitespace-nowrap font-mono">
+                          {format(new Date(log.created_at), "dd/MM/yyyy HH:mm:ss", { locale: ar })}
                         </TableCell>
                         <TableCell className="text-xs">
                           {profilesMap[log.performed_by] || log.performed_by.slice(0, 8) + "..."}
+                        </TableCell>
+                        <TableCell>
+                          {roleBadge ? (
+                            <Badge variant="outline" className={`text-xs ${roleBadge.color}`}>
+                              {roleBadge.label}
+                            </Badge>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className={`text-xs ${actionInfo.color}`}>
@@ -250,7 +289,14 @@ const AdminAuditLog = () => {
                   </div>
                   <div>
                     <span className="text-muted-foreground">المستخدم:</span>
-                    <p className="font-medium">{profilesMap[selectedLog.performed_by] || selectedLog.performed_by}</p>
+                    <p className="font-medium flex items-center gap-2">
+                      {profilesMap[selectedLog.performed_by] || selectedLog.performed_by}
+                      {rolesMap[selectedLog.performed_by] && (
+                        <Badge variant="outline" className={`text-[10px] ${ROLE_BADGE[rolesMap[selectedLog.performed_by]!].color}`}>
+                          {ROLE_BADGE[rolesMap[selectedLog.performed_by]!].label}
+                        </Badge>
+                      )}
+                    </p>
                   </div>
                   <div>
                     <span className="text-muted-foreground">الإجراء:</span>
