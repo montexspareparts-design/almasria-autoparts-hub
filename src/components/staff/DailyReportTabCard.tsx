@@ -34,7 +34,7 @@ export default function DailyReportTabCard() {
 
       // 1) Check if a submitted report row exists for today
       const { data: submission } = await supabase
-        .from("staff_daily_reports" as any)
+        .from("staff_daily_reports")
         .select("id, submitted_at")
         .eq("user_id", user.id)
         .eq("report_date", today)
