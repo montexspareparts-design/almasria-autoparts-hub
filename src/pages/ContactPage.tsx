@@ -12,6 +12,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
+import SEOHead from "@/components/SEOHead";
 
 const WHATSAPP_NUMBER = "201027815696"; // WhatsApp Business (WhatsMeta CRM)
 const PHONE_NUMBER = "+201153961008";
@@ -140,13 +141,19 @@ const ContactPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        titleAr="تواصل معنا — واتساب البيزنس وفروعنا"
+        titleEn="Contact Us — WhatsApp Business and Branches"
+        descriptionAr="تواصل مع المصرية جروب عبر واتساب البيزنس، الهاتف، أو البريد الرسمي. وقم بزيارة فروعنا في القاهرة، الجيزة، الأقصر، ودبي."
+        descriptionEn="Reach Al Masria Group via WhatsApp Business, phone, or official email — and visit our branches in Cairo, Giza, Luxor, and Dubai."
+        keywordsAr="تواصل معنا, واتساب المصرية جروب, فروع تويوتا مصر, عناوين"
+        keywordsEn="contact Al Masria Group, Toyota parts contact Egypt, branches, locations"
+        breadcrumbs={[
+          { ar: "الرئيسية", en: "Home", url: "/" },
+          { ar: "تواصل معنا", en: "Contact", url: "/contact" },
+        ]}
+      />
       <Helmet>
-        <title>اتصل بنا | المصرية جروب — موزع قطع غيار تويوتا الأصلية</title>
-        <meta
-          name="description"
-          content="تواصل مع المصرية جروب عبر واتساب البيزنس، الهاتف، البريد الرسمي، أو زُر أحد فروعنا في القاهرة، الجيزة، الأقصر ودبي."
-        />
-        <link rel="canonical" href="https://www.almasriaautoparts.com/contact" />
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",

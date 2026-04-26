@@ -3,6 +3,7 @@ import { useParams, Link, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { Package, ChevronLeft, ShieldCheck } from "lucide-react";
+import SEOHead from "@/components/SEOHead";
 import { BreadcrumbSchema } from "@/components/SEOSchemaMarkup";
 import AutoPartsBackground from "@/components/AutoPartsBackground";
 import { Button } from "@/components/ui/button";
@@ -30,35 +31,47 @@ import brandAisin from "@/assets/brand-aisin.webp";
 import brandFbkBrakes from "@/assets/brand-fbk-logo.webp";
 import oilBg from "@/assets/oil-hero-bg.webp";
 
-const brandConfig: Record<string, { title: string; subtitle: string; description: string; badge: string; brandKey: string; logo: string; backgroundImage?: string; logoScale?: number }> = {
+const brandConfig: Record<string, { title: string; subtitle: string; titleEn?: string; descriptionEn?: string; description: string; badge: string; brandKey: string; logo: string; backgroundImage?: string; logoScale?: number }> = {
   "toyota-genuine": {
     title: "قطع غيار تويوتا الأصلية", subtitle: "Toyota Genuine Parts",
+    titleEn: "Toyota Genuine Parts",
     description: "قطع غيار أصلية 100% من تويوتا اليابان. نحن موزع معتمد رسمي لجميع أنواع قطع غيار تويوتا الأصلية في مصر.",
+    descriptionEn: "100% genuine Toyota parts from Japan. Authorized distributor of every category of Toyota genuine parts in Egypt.",
     badge: "موزع معتمد رسمي", brandKey: "toyota_genuine", logo: brandGenuineParts, logoScale: 250,
   },
   "toyota-oils": {
     title: "زيوت تويوتا الأصلية", subtitle: "Toyota Genuine Motor Oil",
+    titleEn: "Toyota Genuine Motor Oil",
     description: "زيوت تويوتا الأصلية بجميع درجات اللزوجة. زيوت المحرك، زيوت الفتيس، سوائل الفرامل، وجميع سوائل تويوتا الأصلية.",
+    descriptionEn: "Toyota genuine oils across all viscosities — engine oils, transmission fluids, brake fluids, and complete fluid lineup.",
     badge: "موزع معتمد رسمي", brandKey: "toyota_oils", logo: brandToyotaOil, backgroundImage: oilBg, logoScale: 350,
   },
   "mtx-aftermarket": {
     title: "MTX Aftermarket", subtitle: "قطع غيار مستوردة بأعلى جودة",
+    titleEn: "MTX Aftermarket — Premium Imported Parts",
     description: "MTX هي علامتنا التجارية المسجلة لقطع الغيار المستوردة عالية الجودة بأفضل الأسعار.",
+    descriptionEn: "MTX is our registered aftermarket brand for premium imported parts at the most competitive prices.",
     badge: "علامة تجارية مسجلة", brandKey: "mtx_aftermarket", logo: brandMtx,
   },
   "fbk-brakes": {
     title: "تيل فرامل", subtitle: "FBK Brake Pads",
+    titleEn: "FBK Brake Pads",
     description: "تشكيلة كبيرة من تيل فرامل عالية الجودة لجميع موديلات تويوتا تضمن أداء ممتاز وعمر افتراضي أطول.",
+    descriptionEn: "Wide range of high-quality FBK brake pads for all Toyota models — superior performance and longer service life.",
     badge: "جودة ماليزية", brandKey: "fbk", logo: brandFbkBrakes, logoScale: 350,
   },
   "denso": {
     title: "DENSO", subtitle: "قطع غيار دينسو اليابانية",
+    titleEn: "DENSO — Japanese Auto Components",
     description: "قطع غيار دينسو الأصلية - الشركة اليابانية الرائدة في تصنيع مكونات السيارات عالية الجودة.",
+    descriptionEn: "Genuine DENSO parts — the leading Japanese manufacturer of high-quality automotive components.",
     badge: "وكيل معتمد", brandKey: "denso", logo: brandDenso,
   },
   "aisin": {
     title: "AISIN", subtitle: "قطع غيار أيسن اليابانية",
+    titleEn: "AISIN — Japanese Auto Components",
     description: "قطع غيار أيسن الأصلية - من أكبر مصنعي قطع غيار السيارات في العالم، جودة يابانية معتمدة.",
+    descriptionEn: "Genuine AISIN parts — one of the world's largest automotive parts manufacturers, certified Japanese quality.",
     badge: "وكيل معتمد", brandKey: "aisin", logo: brandAisin,
   },
 };
@@ -117,11 +130,18 @@ const ProductsPage = () => {
   if (!config && !hasCategoryFilter) {
     return (
       <div className="min-h-screen bg-dark-section">
-        <Helmet>
-          <title>منتجاتنا | المصرية جروب — قطع غيار وزيوت تويوتا الأصلية</title>
-          <meta name="description" content="تصفح كتالوج المصرية جروب: قطع غيار تويوتا الأصلية، زيوت تويوتا، MTX Aftermarket، DENSO، و AISIN. أكثر من 960 صنف متاح." />
-          <link rel="canonical" href="https://www.almasriaautoparts.com/products" />
-        </Helmet>
+        <SEOHead
+          titleAr="منتجاتنا — قطع غيار وزيوت تويوتا الأصلية"
+          titleEn="Our Products — Toyota Genuine Parts & Oils"
+          descriptionAr="تصفح كتالوج المصرية جروب: قطع غيار تويوتا الأصلية، زيوت تويوتا، MTX Aftermarket، DENSO، وAISIN. أكثر من 960 صنف متاح."
+          descriptionEn="Browse Al Masria Group catalog: Toyota genuine parts, oils, MTX Aftermarket, DENSO, and AISIN — 960+ items in stock."
+          keywordsAr="منتجات تويوتا, قطع غيار اصلية, زيوت تويوتا, MTX, DENSO, AISIN"
+          keywordsEn="Toyota products, genuine parts, Toyota oil, MTX, DENSO, AISIN"
+          breadcrumbs={[
+            { ar: "الرئيسية", en: "Home", url: "/" },
+            { ar: "المنتجات", en: "Products", url: "/products" },
+          ]}
+        />
         <Navbar />
         <section className="min-h-screen pt-24 pb-20 relative overflow-hidden flex flex-col">
           <div className="absolute inset-0">
@@ -196,22 +216,31 @@ const ProductsPage = () => {
   }
 
   const pageTitle = config?.title || "تصفح حسب الفئة";
+  const pageTitleEn = config?.titleEn || "Browse by Category";
   const pageDescription = config?.description || "تصفح جميع المنتجات حسب الفئة المختارة من جميع الماركات المتاحة.";
+  const pageDescriptionEn = config?.descriptionEn || "Browse all products by selected category across all available brands.";
 
   return (
     <div className="min-h-screen bg-background">
-      <Helmet>
-        <title>{pageTitle} | المصرية جروب</title>
-        <meta name="description" content={pageDescription} />
-        <link rel="canonical" href={`https://www.almasriaautoparts.com/products${brand ? `/${brand}` : ''}`} />
-      </Helmet>
-      {config && (
-        <BreadcrumbSchema items={[
-          { name: "الرئيسية", url: "https://www.almasriaautoparts.com/" },
-          { name: "المنتجات", url: "https://www.almasriaautoparts.com/products" },
-          { name: config.title, url: `https://www.almasriaautoparts.com/products/${brand}` },
-        ]} />
-      )}
+      <SEOHead
+        titleAr={pageTitle}
+        titleEn={pageTitleEn}
+        descriptionAr={pageDescription}
+        descriptionEn={pageDescriptionEn}
+        ogType={config ? "product" : "website"}
+        breadcrumbs={
+          config
+            ? [
+                { ar: "الرئيسية", en: "Home", url: "/" },
+                { ar: "المنتجات", en: "Products", url: "/products" },
+                { ar: config.title, en: config.titleEn || config.subtitle, url: `/products/${brand}` },
+              ]
+            : [
+                { ar: "الرئيسية", en: "Home", url: "/" },
+                { ar: "المنتجات", en: "Products", url: "/products" },
+              ]
+        }
+      />
       <Navbar />
       {config && (
         <BrandHeroBanner
