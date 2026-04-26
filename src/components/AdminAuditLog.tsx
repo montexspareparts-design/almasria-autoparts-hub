@@ -289,7 +289,14 @@ const AdminAuditLog = () => {
                   </div>
                   <div>
                     <span className="text-muted-foreground">المستخدم:</span>
-                    <p className="font-medium">{profilesMap[selectedLog.performed_by] || selectedLog.performed_by}</p>
+                    <p className="font-medium flex items-center gap-2">
+                      {profilesMap[selectedLog.performed_by] || selectedLog.performed_by}
+                      {rolesMap[selectedLog.performed_by] && (
+                        <Badge variant="outline" className={`text-[10px] ${ROLE_BADGE[rolesMap[selectedLog.performed_by]!].color}`}>
+                          {ROLE_BADGE[rolesMap[selectedLog.performed_by]!].label}
+                        </Badge>
+                      )}
+                    </p>
                   </div>
                   <div>
                     <span className="text-muted-foreground">الإجراء:</span>
