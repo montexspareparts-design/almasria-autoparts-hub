@@ -132,6 +132,60 @@ export default function AdminYearCoverage() {
     queryClient.invalidateQueries({ queryKey: ["admin_year_coverage_products"] });
   };
 
+  /**
+   * تصحيح سريع للقيم غير المنطقية:
+   * - لو year_to < year_from  →  year_to = year_from
+   * - لو year_from خارج النطاق المعقول → نخليها = year_to (لو موجود) أو نمسحها
+   * - لو year_to في المستقبل البعيد (>CURRENT_YEAR+2) → year_to = CURRENT_YEAR
+   */
+  const quickFixInvalid = async () => {
+    if (invalidRows.length === 0) {
+      toast({ title: "لا توجد قيم غير منطقية", description: "كل النطاقات سليمة ✅" });
+      return;
+    }
+    const confirmed = window.confirm(
+      `سيتم توحيد ${invalidRows.length} منتج تلقائياً (تصحيح year_to ليساوي year_from عند الشذوذ). متابعة؟`
+    );
+    if (!confirmed) return;
+
+    setFixing(true);
+    let success = 0;
+    let failed = 0;
+
+    for (const p of invalidRows) {
+      let newFrom = p.year_from;
+      let newTo = p.year_to;
+
+      // year_from خارج النطاق
+      if (newFrom != null && (newFrom < 1950 || newFrom > CURRENT_YEAR + 1)) {
+        newFrom = newTo && newTo >= 1950 && newTo <= CURRENT_YEAR + 1 ? newTo : null;
+      }
+      // year_to في المستقبل البعيد
+      if (newTo != null && newTo > CURRENT_YEAR + 2) {
+        newTo = CURRENT_YEAR;
+      }
+      // year_to أصغر من year_from → نوحدهم
+      if (newFrom != null && newTo != null && newTo < newFrom) {
+        newTo = newFrom;
+      }
+
+      const { error } = await supabase
+        .from("products")
+        .update({ year_from: newFrom, year_to: newTo })
+        .eq("id", p.id);
+      if (error) failed++;
+      else success++;
+    }
+
+    setFixing(false);
+    toast({
+      title: failed === 0 ? "✅ تم التصحيح بنجاح" : "⚠️ تم التصحيح جزئياً",
+      description: `نجح: ${success} | فشل: ${failed}`,
+      variant: failed > 0 ? "destructive" : "default",
+    });
+    queryClient.invalidateQueries({ queryKey: ["admin_year_coverage_products"] });
+  };
+
   return (
     <div dir="rtl" className="space-y-4">
       <Card>
