@@ -168,11 +168,30 @@ export default function ActiveVisitorsPage() {
       });
     }
 
+    // 5) سجلات التواصل لكل المستخدمين النشطين — لتحديد "متأخر" + إخفاء من تم التواصل معه مؤخراً
+    //    نجلب آخر 30 يوم فقط ونحتفظ بأحدث تواصل + أي تذكير معلّق غير منفّذ.
+    const commsSince = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: commsRows } = await supabase
+      .from("customer_communications")
+      .select("customer_user_id, created_at, reminder_at, is_done")
+      .in("customer_user_id", userIds)
+      .gte("created_at", commsSince);
+    const commsByUser = new Map<string, { last_contacted_at: string | null; has_open_reminder: boolean }>();
+    (commsRows || []).forEach((c: any) => {
+      const cur = commsByUser.get(c.customer_user_id) || { last_contacted_at: null, has_open_reminder: false };
+      if (!cur.last_contacted_at || c.created_at > cur.last_contacted_at) {
+        cur.last_contacted_at = c.created_at;
+      }
+      if (c.reminder_at && !c.is_done) cur.has_open_reminder = true;
+      commsByUser.set(c.customer_user_id, cur);
+    });
+
     // دمج
     const merged: ActiveVisitor[] = userIds.map((uid) => {
       const sess = byUser.get(uid)!;
       const ent = entryMap.get(uid);
       const prof: any = profMap.get(uid);
+      const cc = commsByUser.get(uid);
       return {
         user_id: uid,
         name: prof?.full_name || null,
@@ -182,6 +201,8 @@ export default function ActiveVisitorsPage() {
         page_views: sess.page_views,
         last_path: ent?.last_path || null,
         last_page_title: ent?.last_page_title || null,
+        last_contacted_at: cc?.last_contacted_at || null,
+        has_open_reminder: cc?.has_open_reminder || false,
       };
     });
 
