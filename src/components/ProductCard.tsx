@@ -126,18 +126,28 @@ const ProductCard = memo(({
 
         {/* Content */}
         <div className="flex-1 p-3 sm:p-4 flex flex-col justify-center min-w-0 gap-1.5 sm:gap-2 text-right" onClick={(e) => e.stopPropagation()}>
-          <div className="flex items-center justify-end gap-1.5 sm:gap-2 flex-wrap">
-            <span className="text-[8px] sm:text-[10px] font-mono bg-muted/50 text-muted-foreground/70 px-1.5 sm:px-2 py-0.5 rounded-md leading-none tracking-widest">{product.sku}</span>
+          {/* Top row: badges only — SKU lives on its own line */}
+          <div className="flex items-center justify-end gap-1.5 sm:gap-2 flex-nowrap">
             <StockBadge available={stockAvailable} />
             {brandRouteMap[product.brand] && (
               <Link
                 to={brandRouteMap[product.brand].path}
-                className={`text-[7px] sm:text-[9px] font-bold px-1.5 sm:px-2 py-0.5 rounded-md hover:opacity-80 transition-opacity shadow-sm ${brandRouteMap[product.brand].color}`}
+                className={`text-[7px] sm:text-[9px] font-bold px-1.5 sm:px-2 py-0.5 rounded-md hover:opacity-80 transition-opacity shadow-sm whitespace-nowrap ${brandRouteMap[product.brand].color}`}
                 onClick={(e) => e.stopPropagation()}
               >
                 {brandRouteMap[product.brand].label}
               </Link>
             )}
+          </div>
+          {/* SKU — always single line, never wraps or stacks with badges */}
+          <div className="w-full text-right overflow-hidden">
+            <span
+              dir="ltr"
+              title={product.sku}
+              className="inline-block max-w-full truncate align-middle text-[8px] sm:text-[10px] font-mono bg-muted/40 text-muted-foreground/70 px-1.5 sm:px-2 py-0.5 rounded-md leading-none tracking-widest whitespace-nowrap select-all"
+            >
+              {product.sku}
+            </span>
           </div>
           <h3 className="font-bold text-card-foreground text-[11px] sm:text-sm leading-snug sm:leading-relaxed line-clamp-2 group-hover:text-primary transition-colors duration-300 text-right">
             {product.name_ar}
