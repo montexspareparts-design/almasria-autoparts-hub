@@ -105,17 +105,29 @@ export default function StaffBentoHero({
   const fetchHero = async () => {
     if (!user) return;
     const now = Date.now();
-    const since30m = new Date(now - 30 * 60 * 1000).toISOString();
+    const periodStartIso = getPeriodStartIso(periodFilter);
     const since24h = new Date(now - 24 * 3600 * 1000).toISOString();
     const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
     const startOfDayIso = startOfDay.toISOString();
 
-    // 1) زوار الآن
+    // 1) زوار الآن — حسب الفترة المختارة
     const { count: vCount } = await supabase
       .from("customer_sessions")
       .select("user_id", { count: "exact", head: true })
-      .gte("last_seen_at", since30m);
+      .gte("last_seen_at", periodStartIso);
     setVisitorsNow(vCount || 0);
+
+    // 1b) طلبات بدون تواصل — حسب نفس الفترة
+    try {
+      const { count: uoCount } = await supabase
+        .from("orders")
+        .select("id", { count: "exact", head: true })
+        .gte("created_at", periodStartIso)
+        .is("first_contacted_at", null);
+      setUrgentOrdersFiltered(uoCount ?? 0);
+    } catch {
+      setUrgentOrdersFiltered(null);
+    }
 
     // 2) جديد اليوم — طلبات
     const { count: oCount } = await supabase
