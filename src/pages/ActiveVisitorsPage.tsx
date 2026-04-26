@@ -409,6 +409,18 @@ export default function ActiveVisitorsPage() {
                           <Badge variant="outline" className="text-[10px] h-5">
                             {fmtSinceLast(v.last_seen_at)}
                           </Badge>
+                          {isOverdue(v) && (
+                            <Badge variant="destructive" className="text-[10px] h-5 gap-1">
+                              <AlertTriangle className="w-3 h-3" />
+                              متأخر
+                            </Badge>
+                          )}
+                          {v.has_open_reminder && (
+                            <Badge variant="secondary" className="text-[10px] h-5 gap-1 bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-300/40">
+                              <Clock className="w-3 h-3" />
+                              تذكير معلّق
+                            </Badge>
+                          )}
                         </div>
 
                         {v.phone && (
