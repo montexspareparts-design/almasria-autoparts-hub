@@ -81,11 +81,16 @@ export default function ActiveVisitorsPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
+  // فلتر "خلال X ساعة" — يحدد نافذة آخر نشاط للزائر (30د، 1س، 3س، 6س، 24س)
+  const [hoursFilter, setHoursFilter] = useState<"30m" | "1h" | "3h" | "6h" | "24h">("30m");
+  // فلتر "متأخر" — يعرض فقط الزوار النشطين اللي مفيش معاهم تواصل في آخر OVERDUE_HOURS ساعة
+  const [overdueOnly, setOverdueOnly] = useState(false);
 
   const fetchActive = async () => {
-    const since = new Date(Date.now() - WINDOW_MIN * 60 * 1000).toISOString();
+    // نجلب أوسع نافذة (24 ساعة) دفعة واحدة، والفلاتر تعمل عميل-جانب بدون refetch
+    const since = new Date(Date.now() - MAX_WINDOW_HOURS * 60 * 60 * 1000).toISOString();
 
-    // 1) جلسات نشطة آخر 30 دقيقة
+    // 1) جلسات نشطة آخر 24 ساعة
     const { data: sessions, error } = await supabase
       .from("customer_sessions")
       .select("user_id, last_seen_at, page_views")
