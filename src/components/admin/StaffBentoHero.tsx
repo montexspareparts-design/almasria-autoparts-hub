@@ -273,6 +273,38 @@ export default function StaffBentoHero({
         </div>
       </div>
 
+      {/* ===== شريط مختصرات اليوم ===== */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <ShortcutTile
+          icon={<TrendingUp className="w-4 h-4" />}
+          label="زوار جدد اليوم"
+          value={newVisitorsToday.toString()}
+          hint="منذ منتصف الليل"
+          tone="emerald"
+          to="/admin/staff-home"
+          ctaLabel="عرض الزوار"
+        />
+        <ShortcutTile
+          icon={<AlertTriangle className="w-4 h-4" />}
+          label="مهام متأخرة"
+          value={overdueTasksTotal.toString()}
+          hint={overdueTasksTotal > 0 ? "تحتاج تواصل فوراً" : "كل شيء تمام ✓"}
+          tone={overdueTasksTotal > 0 ? "red" : "slate"}
+          onClick={() => onJumpToTab("urgent")}
+          ctaLabel="فتح المهام"
+          urgent={overdueTasksTotal > 0}
+        />
+        <ShortcutTile
+          icon={<Timer className="w-4 h-4" />}
+          label="متوسط وقت الاستجابة"
+          value={avgResponseMin !== null ? `${avgResponseMin}د` : "—"}
+          hint={avgResponseMin === null ? "لا طلبات اليوم" : avgResponseMin <= 15 ? "ممتاز 🚀" : avgResponseMin <= 60 ? "مقبول" : "بطيء — ركّز"}
+          tone={avgResponseMin === null ? "slate" : avgResponseMin <= 15 ? "emerald" : avgResponseMin <= 60 ? "amber" : "red"}
+          onClick={() => onJumpToTab("chatbot")}
+          ctaLabel="طلبات الدعم"
+        />
+      </div>
+
       {/* Bento Grid — 5 sections */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3">
 
