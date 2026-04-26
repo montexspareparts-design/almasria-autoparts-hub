@@ -26,9 +26,10 @@ import { cn } from "@/lib/utils";
 import {
   Users, ShoppingBag, BellRing, Flame, ArrowLeft, Wallet, FileSearch,
   MessageSquare, UserPlus, Clock, AlertTriangle, CalendarDays, Eye,
-  Sparkles, ChevronRight, Phone, Timer, TrendingUp, CheckCircle2, Loader2, Activity,
+  Sparkles, ChevronRight, Phone, Timer, TrendingUp, CheckCircle2, Loader2, Activity, Clock3,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface Reminder {
   id: string;
