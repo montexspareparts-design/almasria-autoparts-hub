@@ -128,8 +128,34 @@ const ProductDetailDialog = ({
     fbk: "تيل فرامل FBK",
   };
 
+  // Bilingual SEO meta + Product JSON-LD — only emitted while the dialog
+  // is open so it doesn't pollute SEO of the underlying listing page.
+  const seo = buildProductSEO(product);
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
+      {open && (
+        <>
+          <SEOHead
+            titleAr={seo.titleAr}
+            titleEn={seo.titleEn}
+            descriptionAr={seo.descriptionAr}
+            descriptionEn={seo.descriptionEn}
+            keywordsAr={seo.keywordsAr}
+            keywordsEn={seo.keywordsEn}
+            ogType="product"
+            image={product.image_url || undefined}
+          />
+          <ProductSchema
+            name={product.name_ar || product.name_en || product.sku}
+            sku={product.sku}
+            description={product.description_ar || product.description_en || undefined}
+            image={product.image_url || undefined}
+            brand={seo.schemaBrand}
+            availability={(product.stock_quantity ?? 0) > 0}
+          />
+        </>
+      )}
       <DialogContent className="max-w-2xl max-h-[90vh] sm:max-h-[90vh] p-0 gap-0 overflow-hidden w-[95vw] sm:w-full rounded-2xl sm:rounded-lg" dir="rtl">
         <DialogHeader className="sr-only">
           <DialogTitle>{product.name_ar}</DialogTitle>
