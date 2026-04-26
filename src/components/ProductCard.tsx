@@ -61,7 +61,7 @@ const buildCoverageLabel = (
 
 const ProductCard = memo(({
   product, index, viewMode, user, isDealer, isRetailTier = false, viewedProductIds,
-  limitReached, dailyViewCount, dailyLimit,
+  limitReached, dailyViewCount, dailyLimit, searchYear,
   getProductPrice, onProductClick, onAddToCart, onRecordView, onLoginRequired,
 }: ProductCardProps) => {
 
@@ -69,6 +69,7 @@ const ProductCard = memo(({
   const hasViewed = viewedProductIds.includes(product.id);
   const canSeePrice = user && (!isDealer || isRetailTier || hasViewed);
   const price = canSeePrice ? (isDealer && !isRetailTier ? getProductPrice(product) : product.base_price) : null;
+  const coverage = buildCoverageLabel(product, searchYear);
 
   if (viewMode === "list") {
     return (
