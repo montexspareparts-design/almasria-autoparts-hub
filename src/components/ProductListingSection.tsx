@@ -501,6 +501,12 @@ const ProductListingSection = memo(({
         onRevealPrice={(productId) => recordView(productId)}
         remainingViews={dailyLimit - dailyViewCount}
         limitReached={limitReached}
+        searchYear={(() => {
+          // Same regex used by ProductCard — keep the dialog's "fits your year"
+          // verdict in lockstep with the badge shown on the card.
+          const m = (filters.search || "").match(/\b(19|20)\d{2}\b/);
+          return m ? parseInt(m[0]) : null;
+        })()}
       />
     </>
   );
