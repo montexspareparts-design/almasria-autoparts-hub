@@ -25,10 +25,21 @@ interface ProductRow {
 export default function AdminYearCoverage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"all" | "missing" | "single_year" | "wide_range">("all");
+  const [filter, setFilter] = useState<"all" | "missing" | "single_year" | "wide_range" | "invalid">("all");
   const [edits, setEdits] = useState<Record<string, { year_from?: number | null; year_to?: number | null }>>({});
   const [savingId, setSavingId] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
+  const [fixing, setFixing] = useState(false);
+
+  const CURRENT_YEAR = new Date().getFullYear();
+  // قيمة غير منطقية: نهاية أصغر من بداية، أو سنة بداية أكبر من المستقبل القريب، أو نهاية أبعد من سنتين قادمتين
+  const isInvalidRow = (p: { year_from: number | null; year_to: number | null }) => {
+    if (p.year_from == null) return false;
+    if (p.year_to != null && p.year_to < p.year_from) return true;
+    if (p.year_from < 1950 || p.year_from > CURRENT_YEAR + 1) return true;
+    if (p.year_to != null && p.year_to > CURRENT_YEAR + 2) return true;
+    return false;
+  };
 
   const { data: products, isLoading } = useQuery({
     queryKey: ["admin_year_coverage_products"],
