@@ -489,33 +489,38 @@ export default function StaffBentoHero({
               لا توجد متابعات لليوم 🎉
             </div>
           ) : (
-            <div className="space-y-1.5 max-h-[140px] overflow-y-auto">
+            <div className="space-y-1.5 max-h-[180px] overflow-y-auto">
               {todayList.slice(0, 5).map((r) => {
-                const isOverdue = new Date(r.reminder_at).getTime() < Date.now();
+                const priority = computePriority(r);
+                const cd = fmtCountdown(r.reminder_at);
+                const lastContactText = fmtSinceLastContact(r.last_contact_at);
                 return (
                   <div
                     key={r.id}
                     className={cn(
-                      "flex items-center gap-2 p-1.5 rounded border text-[11px]",
-                      isOverdue
-                        ? "bg-red-50 dark:bg-red-950/30 border-red-200"
-                        : "bg-card border-border"
+                      "flex items-center gap-2 p-2 rounded border-l-4 text-[11px]",
+                      priority === "critical" && "bg-red-50 dark:bg-red-950/40 border-l-red-600 border-y border-r border-red-200",
+                      priority === "high" && "bg-orange-50 dark:bg-orange-950/30 border-l-orange-500 border-y border-r border-orange-200",
+                      priority === "medium" && "bg-amber-50/50 dark:bg-amber-950/20 border-l-amber-500 border-y border-r border-amber-200",
+                      priority === "low" && "bg-card border-l-muted-foreground/30 border-y border-r border-border"
                     )}
                   >
+                    <PriorityBadge priority={priority} />
                     <div className="flex-1 min-w-0">
                       <div className="font-bold text-foreground truncate">{r.customer_name}</div>
-                      {r.note && <div className="text-muted-foreground truncate">{r.note}</div>}
+                      <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground mt-0.5 flex-wrap">
+                        <span className={cn("font-mono font-bold", cd.isOverdue ? "text-red-600" : "text-emerald-600")}>
+                          {cd.text}
+                        </span>
+                        <span className="opacity-50">·</span>
+                        <span className={cn(!r.last_contact_at && "text-red-600 font-bold")}>{lastContactText}</span>
+                      </div>
+                      {r.note && <div className="text-muted-foreground truncate text-[10px] mt-0.5">{r.note}</div>}
                     </div>
-                    <span className={cn(
-                      "text-[10px] font-mono shrink-0",
-                      isOverdue ? "text-red-600 font-bold" : "text-amber-600"
-                    )}>
-                      {fmtRel(r.reminder_at)}
-                    </span>
                     {r.customer_phone && (
                       <a
                         href={`tel:${r.customer_phone}`}
-                        className="p-1 rounded bg-emerald-100 hover:bg-emerald-200 text-emerald-700 shrink-0"
+                        className="p-1.5 rounded bg-emerald-100 hover:bg-emerald-200 text-emerald-700 shrink-0"
                         title="اتصال"
                       >
                         <Phone className="w-3 h-3" />
