@@ -58,6 +58,7 @@ const VisitorSessionSummary = lazy(() => import("./pages/VisitorSessionSummary")
 const StaffHome = lazy(() => import("./pages/StaffHome"));
 const StaffDailyReportPage = lazy(() => import("./pages/StaffDailyReportPage"));
 const VisitorLeadsPage = lazy(() => import("./pages/VisitorLeadsPage"));
+const ActiveVisitorsPage = lazy(() => import("./pages/ActiveVisitorsPage"));
 const AdminWhatsAppLogsPage = lazy(() => import("./pages/AdminWhatsAppLogsPage"));
 import PageVisitTracker from "./components/PageVisitTracker";
 const DealerRtlAuditor = import.meta.env.DEV
