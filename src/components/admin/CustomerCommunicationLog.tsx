@@ -250,12 +250,37 @@ export default function CustomerCommunicationLog({ customerUserId, compact = fal
           <div className={`space-y-2 ${compact ? "max-h-48" : "max-h-72"} overflow-y-auto`}>
             {records.map(record => {
               const typeInfo = getTypeInfo(record.comm_type);
+              const hasReminder = !!record.reminder_at;
+              const isOverdue = hasReminder && !record.is_done && new Date(record.reminder_at!).getTime() < Date.now();
               return (
-                <div key={record.id} className="bg-muted/50 rounded-lg p-3 text-sm group relative">
-                  <div className="flex items-center gap-2 mb-1">
+                <div
+                  key={record.id}
+                  className={cn(
+                    "rounded-lg p-3 text-sm group relative border",
+                    isOverdue
+                      ? "bg-red-50/50 border-red-200 dark:bg-red-950/10 dark:border-red-900"
+                      : hasReminder && !record.is_done
+                        ? "bg-amber-50/50 border-amber-200 dark:bg-amber-950/10 dark:border-amber-900"
+                        : "bg-muted/50 border-transparent"
+                  )}
+                >
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <Badge variant="secondary" className={`text-xs ${typeInfo.color}`}>
                       {typeInfo.label}
                     </Badge>
+                    {hasReminder && (
+                      <Badge
+                        variant={record.is_done ? "outline" : isOverdue ? "destructive" : "default"}
+                        className="text-[10px] gap-1"
+                      >
+                        {record.is_done ? <CheckCircle2 className="w-3 h-3" /> : <Bell className="w-3 h-3" />}
+                        {record.is_done
+                          ? "تم"
+                          : isOverdue
+                            ? `متأخر · ${new Date(record.reminder_at!).toLocaleString("ar-EG", { dateStyle: "short", timeStyle: "short" })}`
+                            : `متابعة · ${new Date(record.reminder_at!).toLocaleString("ar-EG", { dateStyle: "short", timeStyle: "short" })}`}
+                      </Badge>
+                    )}
                   </div>
                   {record.note && (
                     <p className="text-foreground whitespace-pre-wrap mt-1">{record.note}</p>
@@ -281,16 +306,30 @@ export default function CustomerCommunicationLog({ customerUserId, compact = fal
                       )}
                     </div>
                   </div>
-                  {record.staff_user_id === user?.id && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute top-1 left-1 h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive"
-                      onClick={() => handleDelete(record.id)}
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
-                  )}
+                  <div className="absolute top-1 left-1 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {hasReminder && !record.is_done && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-6 px-2 text-[10px] gap-1"
+                        onClick={() => handleMarkDone(record.id)}
+                        title="تم التنفيذ"
+                      >
+                        <CheckCircle2 className="w-3 h-3" />
+                        تم
+                      </Button>
+                    )}
+                    {record.staff_user_id === user?.id && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-destructive hover:text-destructive"
+                        onClick={() => handleDelete(record.id)}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               );
             })}
