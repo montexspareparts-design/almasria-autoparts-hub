@@ -190,6 +190,53 @@ export default function CustomerCommunicationLog({ customerUserId, compact = fal
             className="text-sm resize-none"
             onKeyDown={e => { if (e.key === "Enter" && e.ctrlKey) handleAdd(); }}
           />
+
+          {/* Reminder section — collapsible */}
+          <div className="rounded-md border border-dashed border-border/60 bg-muted/20 p-2.5 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1.5">
+                <Bell className="w-3.5 h-3.5 text-amber-600" />
+                تذكير متابعة (اختياري)
+              </span>
+              {reminderAt && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 px-2 text-[10px] text-muted-foreground"
+                  onClick={() => setReminderAt("")}
+                >
+                  <BellOff className="w-3 h-3 ml-1" />
+                  إلغاء
+                </Button>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Button size="sm" variant="outline" className="h-7 text-[10px] px-2" onClick={() => setReminderShortcut("1h")}>
+                +١ ساعة
+              </Button>
+              <Button size="sm" variant="outline" className="h-7 text-[10px] px-2" onClick={() => setReminderShortcut("3h")}>
+                +٣ ساعات
+              </Button>
+              <Button size="sm" variant="outline" className="h-7 text-[10px] px-2" onClick={() => setReminderShortcut("tomorrow_9am")}>
+                بكرة ٩ص
+              </Button>
+              <Button size="sm" variant="outline" className="h-7 text-[10px] px-2" onClick={() => setReminderShortcut("next_week")}>
+                الأسبوع الجاي
+              </Button>
+              <Input
+                type="datetime-local"
+                value={reminderAt}
+                onChange={e => setReminderAt(e.target.value)}
+                className="h-7 text-[11px] flex-1 min-w-[160px]"
+              />
+            </div>
+            {reminderAt && (
+              <p className="text-[10px] text-amber-700 dark:text-amber-400 flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" />
+                هيظهر تذكير في "تذكيراتي" يوم {new Date(reminderAt).toLocaleString("ar-EG", { dateStyle: "full", timeStyle: "short" })}
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Records list */}
