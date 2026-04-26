@@ -45,11 +45,14 @@ interface Reminder {
 /** درجة الأولوية المحسوبة لكل مهمة */
 type Priority = "critical" | "high" | "medium" | "low";
 
+/** التبويبات المتاحة في لوحة المهام (نفس قيم Tabs في StaffCRMCommandCenter) */
+export type StaffJumpTab = "urgent" | "chatbot" | "search" | "yesterday";
+
 interface Props {
   urgentOrdersCount: number;
   hotLeadsCount: number;
   chatbotPendingCount: number;
-  onJumpToTab: (tab: "urgent" | "chatbot" | "search" | "yesterday") => void;
+  onJumpToTab: (tab: StaffJumpTab) => void;
 }
 
 export default function StaffBentoHero({
