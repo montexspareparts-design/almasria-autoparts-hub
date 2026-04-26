@@ -121,7 +121,7 @@ const ProductCard = memo(({
             )}
           </div>
           {product.is_on_sale && (
-            <Badge className="absolute top-2 left-2 z-20 bg-destructive text-destructive-foreground text-[8px] font-black px-2 py-0.5 shadow-lg shadow-destructive/30 rounded-lg">
+            <Badge className="absolute top-2 end-2 z-20 bg-destructive text-destructive-foreground text-[8px] font-black px-2 py-0.5 shadow-lg shadow-destructive/30 rounded-lg">
               تخفيض
             </Badge>
           )}
@@ -245,10 +245,14 @@ const ProductCard = memo(({
           order with consistent spacing — no matter which combination of badges
           is present (Brand, Stock, Sale, Priced).
 
-          STACK ORDER (top → bottom inside each column):
-            ▸ TOP-RIGHT  : Brand (Toyota Genuine, MTX, etc.)
-            ▸ TOP-LEFT   : Stock (متوفر / غير متوفر) → Sale (تخفيض)
-            ▸ BOTTOM-LEFT: Priced (مسعّر)
+          STACK ORDER (top → bottom inside each column) — RTL/LTR aware via logical props:
+            ▸ TOP-START  : Brand (Toyota Genuine, MTX, etc.)   — right in RTL, left in LTR
+            ▸ TOP-END    : Stock (متوفر / غير متوفر) → Sale (تخفيض) — left in RTL, right in LTR
+            ▸ BOTTOM-END : Priced (مسعّر)                     — left in RTL, right in LTR
+
+          We use Tailwind's logical `start-*` / `end-*` utilities so the badges
+          flip automatically with the document/component direction — no manual
+          dir checks, no empty corners, no unexpected mirroring.
 
           Z-index hierarchy:
             - z-10 : decorative layers (vignette, fade, shimmer)
@@ -265,9 +269,9 @@ const ProductCard = memo(({
                from both light and dark image areas.
         */}
 
-        {/* TOP-RIGHT column: Brand only */}
+        {/* TOP-START column: Brand only (right in RTL, left in LTR) */}
         {brandRouteMap[product.brand] && (
-          <div className="absolute top-2 right-2 z-30 flex flex-col items-end gap-1.5 max-w-[55%] pointer-events-none">
+          <div className="absolute top-2 start-2 z-30 flex flex-col items-start gap-1.5 max-w-[55%] pointer-events-none">
             <Link
               to={brandRouteMap[product.brand].path}
               onClick={(e) => e.stopPropagation()}
@@ -285,11 +289,11 @@ const ProductCard = memo(({
         )}
 
         {/*
-          TOP-LEFT column: Stock then Sale (when present).
+          TOP-END column: Stock then Sale (when present) — left in RTL, right in LTR.
           Flex + gap means hiding Sale keeps Stock in place, and Sale always
           slides directly under Stock without manual top offsets.
         */}
-        <div className="absolute top-2 left-2 z-30 flex flex-col items-start gap-1.5 max-w-[55%] pointer-events-none">
+        <div className="absolute top-2 end-2 z-30 flex flex-col items-end gap-1.5 max-w-[55%] pointer-events-none">
           <span
             className={`pointer-events-auto inline-flex items-center gap-1 text-[8px] sm:text-[9px] font-bold px-2 py-[3px]
               rounded-md leading-none whitespace-nowrap text-white
@@ -320,9 +324,9 @@ const ProductCard = memo(({
           )}
         </div>
 
-        {/* BOTTOM-LEFT column: Priced indicator — own corner, can never overlap top stack */}
+        {/* BOTTOM-END column: Priced indicator — own corner, can never overlap top stack (left in RTL, right in LTR) */}
         {hasViewed && (
-          <div className="absolute bottom-2.5 left-2.5 z-40 flex flex-col items-start gap-1.5 pointer-events-none">
+          <div className="absolute bottom-2.5 end-2.5 z-40 flex flex-col items-end gap-1.5 pointer-events-none">
             <span
               className="pointer-events-auto inline-flex items-center gap-1 bg-emerald-600/95 text-white text-[8px] font-bold px-2 py-0.5
                 rounded-md
