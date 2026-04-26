@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowRight, ArrowLeft, Package, Tag, Plus, Minus, ShoppingCart,
@@ -19,6 +19,7 @@ import Navbar from "@/components/Navbar";
 import SEOHead from "@/components/SEOHead";
 import { ProductSchema } from "@/components/SEOSchemaMarkup";
 import { buildProductSEO } from "@/lib/productSeo";
+import ProductFitmentSection from "@/components/ProductFitmentSection";
 
 interface Product {
   id: string;
