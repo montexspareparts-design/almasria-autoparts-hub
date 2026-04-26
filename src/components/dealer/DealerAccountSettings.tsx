@@ -316,6 +316,36 @@ const DealerAccountSettings = () => {
             )}
             <p className="text-[10px] text-muted-foreground">معاينة: <span style={{ fontSize: `${fontSize}px` }}>هذا نص تجريبي بالحجم المختار</span></p>
           </div>
+
+          {/* High Contrast — accessibility */}
+          <div className="space-y-2 pt-2 border-t border-border/40">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-start gap-2 min-w-0">
+                <Eye className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-foreground">وضع التباين العالي</p>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    يزيد عتامة البادجات وقوة الظلال والإطارات لتحسين القراءة لذوي الإعاقة البصرية.
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={highContrast}
+                onCheckedChange={toggleHighContrast}
+                aria-label="تفعيل وضع التباين العالي"
+              />
+            </div>
+            {/* Live preview chip — same .badge-glass utility used on product cards */}
+            <div className="mt-2 p-3 rounded-lg bg-muted/40 flex items-center gap-2">
+              <span className="text-[10px] text-muted-foreground">معاينة:</span>
+              <span className="badge-glass ring-1 ring-white/30 text-white text-[10px] font-bold px-2 py-1 rounded-md [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
+                متوفر
+              </span>
+              <span className="badge-glass ring-1 ring-white/30 text-white text-[10px] font-black px-2 py-1 rounded-md tracking-wide [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
+                تخفيض
+              </span>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
