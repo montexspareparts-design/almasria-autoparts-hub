@@ -280,9 +280,13 @@ const ProductCard = memo(({
           {product.name_ar}
         </h3>
 
-        {/* SKU — subtle, single line under name */}
-        <div className="mb-2 text-right">
-          <span className="text-[8px] sm:text-[9px] font-mono text-muted-foreground/40 tracking-[0.1em] leading-none select-all">
+        {/* SKU — always a single, non-wrapping line; never stacks beside badges */}
+        <div className="mb-2 w-full text-right overflow-hidden">
+          <span
+            dir="ltr"
+            title={product.sku}
+            className="inline-block max-w-full truncate align-middle text-[8px] sm:text-[9px] font-mono text-muted-foreground/50 tracking-[0.1em] leading-none whitespace-nowrap select-all"
+          >
             {product.sku}
           </span>
         </div>
