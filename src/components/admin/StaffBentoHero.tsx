@@ -64,11 +64,18 @@ export default function StaffBentoHero({
   const [visitorsNow, setVisitorsNow] = useState(0);
   const [reminders, setReminders] = useState<Reminder[]>([]);
 
+  // ===== شريط مختصرات اليوم =====
+  const [newVisitorsToday, setNewVisitorsToday] = useState(0);
+  const [overdueTasksTotal, setOverdueTasksTotal] = useState(0);
+  const [avgResponseMin, setAvgResponseMin] = useState<number | null>(null);
+
   const fetchHero = async () => {
     if (!user) return;
     const now = Date.now();
     const since30m = new Date(now - 30 * 60 * 1000).toISOString();
     const since24h = new Date(now - 24 * 3600 * 1000).toISOString();
+    const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
+    const startOfDayIso = startOfDay.toISOString();
 
     // 1) زوار الآن
     const { count: vCount } = await supabase
