@@ -244,19 +244,64 @@ export default function StaffBentoHero({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
-  const { overdue, todayList, upcomingList } = useMemo(() => {
+  /**
+   * منطق الأولوية التلقائية:
+   *   - critical: متأخر > ٢ ساعة، أو لم يتم التواصل أبداً ومتأخر
+   *   - high:     متأخر، أو موعده خلال الساعة القادمة، أو لم يُتواصل من >٧ أيام
+   *   - medium:   موعده اليوم
+   *   - low:      موعده قادم لاحقاً
+   * + ترتيب القائمة: critical → high → medium → low ثم بالأقدم متأخراً
+   */
+  const computePriority = (r: Reminder): Priority => {
+    const nowMs = Date.now();
+    const reminderMs = new Date(r.reminder_at).getTime();
+    const diffMin = (reminderMs - nowMs) / 60000;
+    const lastContactDays = r.last_contact_at
+      ? (nowMs - new Date(r.last_contact_at).getTime()) / 86400000
+      : null;
+
+    // critical: متأخر >2س، أو متأخر ولم يُتواصل أبداً
+    if (diffMin < -120) return "critical";
+    if (diffMin < 0 && lastContactDays === null) return "critical";
+
+    // high: متأخر بسيط، أو خلال الساعة القادمة، أو فجوة تواصل >7 أيام
+    if (diffMin < 0) return "high";
+    if (diffMin <= 60) return "high";
+    if (lastContactDays !== null && lastContactDays > 7) return "high";
+
+    // medium: موعده اليوم
+    const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
+    if (reminderMs <= todayEnd.getTime()) return "medium";
+
+    return "low";
+  };
+
+  const priorityWeight: Record<Priority, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+
+  const { overdue, todayList, upcomingList, criticalCount, highCount } = useMemo(() => {
     const nowMs = Date.now();
     const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
-    let overdue = 0;
+    let overdue = 0, criticalCount = 0, highCount = 0;
     const todayList: Reminder[] = [];
     const upcomingList: Reminder[] = [];
     for (const r of reminders) {
       const t = new Date(r.reminder_at).getTime();
+      const p = computePriority(r);
+      if (p === "critical") criticalCount++;
+      else if (p === "high") highCount++;
       if (t < nowMs) { overdue++; todayList.push(r); }
       else if (t <= todayEnd.getTime()) todayList.push(r);
       else upcomingList.push(r);
     }
-    return { overdue, todayList, upcomingList };
+    // ترتيب: الأولوية الأعلى أولاً، ثم الأقدم متأخراً
+    const sortByPriority = (a: Reminder, b: Reminder) => {
+      const dp = priorityWeight[computePriority(a)] - priorityWeight[computePriority(b)];
+      if (dp !== 0) return dp;
+      return new Date(a.reminder_at).getTime() - new Date(b.reminder_at).getTime();
+    };
+    todayList.sort(sortByPriority);
+    upcomingList.sort(sortByPriority);
+    return { overdue, todayList, upcomingList, criticalCount, highCount };
   }, [reminders]);
 
   const totalNewToday = newOrders24h + newSignups24h + instapayPending + partRequestsNew;
@@ -267,14 +312,33 @@ export default function StaffBentoHero({
     const d = new Date(iso);
     return d.toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
   };
-  const fmtRel = (iso: string) => {
-    const diff = Math.round((new Date(iso).getTime() - Date.now()) / 60000);
-    if (diff < -60 * 24) return `متأخر ${Math.floor(-diff / (60 * 24))}ي`;
-    if (diff < -60) return `متأخر ${Math.floor(-diff / 60)}س`;
-    if (diff < 0) return `متأخر ${-diff}د`;
-    if (diff < 60) return `بعد ${diff}د`;
-    if (diff < 60 * 24) return `بعد ${Math.floor(diff / 60)}س`;
-    return `بعد ${Math.floor(diff / (60 * 24))}ي`;
+
+  /** عدّ تنازلي للموعد القادم أو "متأخر منذ ..." للماضي */
+  const fmtCountdown = (iso: string): { text: string; isOverdue: boolean } => {
+    const diffMin = Math.round((new Date(iso).getTime() - Date.now()) / 60000);
+    const abs = Math.abs(diffMin);
+    let text: string;
+    if (abs < 60) text = `${abs}د`;
+    else if (abs < 60 * 24) text = `${Math.floor(abs / 60)}س ${abs % 60}د`;
+    else text = `${Math.floor(abs / (60 * 24))}ي`;
+    return diffMin < 0
+      ? { text: `⏰ متأخر ${text}`, isOverdue: true }
+      : { text: `⏳ بعد ${text}`, isOverdue: false };
+  };
+
+  /** مدة منذ آخر تواصل (للعرض كـ chip ثاني) */
+  const fmtSinceLastContact = (iso: string | null | undefined): string => {
+    if (!iso) return "لم يتم التواصل أبداً";
+    const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+    if (days === 0) {
+      const hrs = Math.floor((Date.now() - new Date(iso).getTime()) / 3600000);
+      if (hrs === 0) return "تواصل قبل دقائق";
+      return `تواصل قبل ${hrs}س`;
+    }
+    if (days === 1) return "تواصل أمس";
+    if (days < 7) return `تواصل قبل ${days} أيام`;
+    if (days < 30) return `تواصل قبل ${Math.floor(days / 7)} أسابيع`;
+    return `تواصل قبل ${Math.floor(days / 30)} شهر`;
   };
 
   return (
