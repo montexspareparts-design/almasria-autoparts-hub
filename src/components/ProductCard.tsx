@@ -242,113 +242,56 @@ const ProductCard = memo(({
         {/*
           Image overlays — deterministic stacking system
           ──────────────────────────────────────────────
-          Two flex columns are anchored to the image corners. Each column lays
-          out its badges with a fixed `gap`, so badges always stack in a stable
-          order with consistent spacing — no matter which combination of badges
-          is present (Brand, Stock, Sale, Priced).
+          Every floating badge here is rendered through the unified
+          <ImageBadge /> primitive (src/components/ui/image-badge.tsx).
+          That component owns the entire auto-contrast recipe — frosted
+          backdrop fallback, white halo ring, drop shadow, text-shadow,
+          responsive sizing, RTL-aware corner anchoring — so all card
+          surfaces (grid, list, dialog, admin QA) stay pixel-consistent.
+          To tweak how badges look on photos, edit ImageBadge — never
+          re-derive these classes inline here.
 
-          STACK ORDER (top → bottom inside each column) — RTL/LTR aware via logical props:
-            ▸ TOP-START  : Brand (Toyota Genuine, MTX, etc.)   — right in RTL, left in LTR
-            ▸ TOP-END    : Stock (متوفر / غير متوفر) → Sale (تخفيض) — left in RTL, right in LTR
-            ▸ BOTTOM-END : Priced (مسعّر)                     — left in RTL, right in LTR
-
-          We use Tailwind's logical `start-*` / `end-*` utilities so the badges
-          flip automatically with the document/component direction — no manual
-          dir checks, no empty corners, no unexpected mirroring.
-
-          Z-index hierarchy:
-            - z-10 : decorative layers (vignette, fade, shimmer)
-            - z-30 : informational badges (Brand, Stock)
-            - z-40 : promotional badges (Sale, Priced)
-
-          Auto-contrast strategy on every floating badge:
-            1. Opaque-enough fill (≥95%) of a saturated color → readable text.
-            2. `.badge-glass` → progressive frosted background: opaque
-               fallback for low-end / older browsers, blur+saturate only
-               where supported and not on touch/idle (see index.css).
-               backgrounds behind the badge.
-            3. White text + `[text-shadow:0_1px_2px_rgba(0,0,0,0.35)]` keeps
-               characters legible at the edges.
-            4. White ring + colored outer shadow → halo separates the badge
-               from both light and dark image areas.
+          STACK ORDER (top → bottom inside each corner column):
+            ▸ TOP-START  : Brand     — z-30
+            ▸ TOP-END    : Stock → Sale — z-30
+            ▸ BOTTOM-END : Priced    — z-40 (sits above corner shadow)
         */}
 
-        {/* TOP-START column: Brand only (right in RTL, left in LTR) */}
+        {/* TOP-START : Brand */}
         {brandRouteMap[product.brand] && (
-          <div className="absolute top-1.5 start-1.5 sm:top-2 sm:start-2 lg:top-2.5 lg:start-2.5 z-30 flex flex-col items-start gap-1 sm:gap-1.5 max-w-[48%] sm:max-w-[55%] pointer-events-none">
+          <ImageBadgeColumn corner="top-start">
             <Link
               to={brandRouteMap[product.brand].path}
               onClick={(e) => e.stopPropagation()}
-              className={`pointer-events-auto inline-flex items-center max-w-full truncate
-                text-[7px] sm:text-[9px] lg:text-[10px] font-extrabold
-                px-1.5 py-[2px] sm:px-2 sm:py-[3px] lg:px-2.5 lg:py-1
-                rounded-md leading-none whitespace-nowrap
-                badge-glass
-                ring-1 ring-white/30 shadow-[0_2px_8px_rgba(0,0,0,0.25)]
-                [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]
-                hover:opacity-90 transition-opacity
-                ${brandRouteMap[product.brand].color}`}
+              className="hover:opacity-90 transition-opacity max-w-full"
             >
-              {brandRouteMap[product.brand].label}
+              <ImageBadge tone="brand" size="sm" colorClass={brandRouteMap[product.brand].color}>
+                {brandRouteMap[product.brand].label}
+              </ImageBadge>
             </Link>
-          </div>
+          </ImageBadgeColumn>
         )}
 
-        {/*
-          TOP-END column: Stock then Sale (when present) — left in RTL, right in LTR.
-          Flex + gap means hiding Sale keeps Stock in place, and Sale always
-          slides directly under Stock without manual top offsets.
-        */}
-        <div className="absolute top-1.5 end-1.5 sm:top-2 sm:end-2 lg:top-2.5 lg:end-2.5 z-30 flex flex-col items-end gap-1 sm:gap-1.5 max-w-[48%] sm:max-w-[55%] pointer-events-none">
-          <span
-            className={`pointer-events-auto inline-flex items-center gap-0.5 sm:gap-1
-              text-[7px] sm:text-[9px] lg:text-[10px] font-bold
-              px-1.5 py-[2px] sm:px-2 sm:py-[3px] lg:px-2.5 lg:py-1
-              rounded-md leading-none whitespace-nowrap text-white
-              badge-glass
-              ring-1 ring-white/30
-              [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]
-              ${
-                stockAvailable
-                  ? "bg-emerald-600/95 shadow-[0_2px_10px_rgba(16,185,129,0.35)]"
-                  : "bg-red-600/95 shadow-[0_2px_10px_rgba(239,68,68,0.35)]"
-              }`}
-          >
-            <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-white shadow-[0_0_4px_rgba(255,255,255,0.6)]" />
+        {/* TOP-END : Stock + Sale */}
+        <ImageBadgeColumn corner="top-end">
+          <ImageBadge tone="stock" size="sm" stockAvailable={stockAvailable}>
             {stockAvailable ? "متوفر" : "غير متوفر"}
-          </span>
+          </ImageBadge>
 
           {product.is_on_sale && (
-            <Badge
-              className="pointer-events-auto relative z-[1] bg-destructive/95 text-destructive-foreground
-              text-[7px] sm:text-[9px] lg:text-[10px] font-black
-                px-1.5 py-[2px] sm:px-2 sm:py-0.5 lg:px-2.5 lg:py-1
-                rounded-md tracking-wide
-                badge-glass
-                ring-1 ring-white/25 shadow-[0_2px_10px_rgba(220,38,38,0.4)]
-                [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]"
-            >
-              <Sparkles className="w-2 h-2 sm:w-2.5 sm:h-2.5 mr-0.5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]" />
+            <ImageBadge tone="sale" size="sm" icon={<Sparkles />}>
               تخفيض
-            </Badge>
+            </ImageBadge>
           )}
-        </div>
+        </ImageBadgeColumn>
 
-        {/* BOTTOM-END column: Priced indicator — own corner, can never overlap top stack (left in RTL, right in LTR) */}
+        {/* BOTTOM-END : Priced */}
         {hasViewed && (
-          <div className="absolute bottom-2 end-2 sm:bottom-2.5 sm:end-2.5 lg:bottom-3 lg:end-3 z-40 flex flex-col items-end gap-1 sm:gap-1.5 pointer-events-none">
-            <span
-              className="pointer-events-auto inline-flex items-center gap-0.5 sm:gap-1 bg-emerald-600/95 text-white
-              text-[7px] sm:text-[9px] lg:text-[10px] font-bold
-                px-1.5 py-[2px] sm:px-2 sm:py-0.5 lg:px-2.5 lg:py-1
-                rounded-md
-                badge-glass
-                ring-1 ring-white/30 shadow-[0_2px_10px_rgba(16,185,129,0.35)]
-                [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]"
-            >
-              <Check className="w-2 h-2 sm:w-2.5 sm:h-2.5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]" /> مسعّر
-            </span>
-          </div>
+          <ImageBadgeColumn corner="bottom-end" level={40}>
+            <ImageBadge tone="priced" size="sm" icon={<Check />}>
+              مسعّر
+            </ImageBadge>
+          </ImageBadgeColumn>
         )}
       </div>
 
