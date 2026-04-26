@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 import {
   Users, ShoppingBag, BellRing, Flame, ArrowLeft, Wallet, FileSearch,
   MessageSquare, UserPlus, Clock, AlertTriangle, CalendarDays, Eye,
-  Sparkles, ChevronRight, Phone,
+  Sparkles, ChevronRight, Phone, Timer, TrendingUp,
 } from "lucide-react";
 
 interface Reminder {
