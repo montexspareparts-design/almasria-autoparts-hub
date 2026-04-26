@@ -16,6 +16,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
+import SEOHead from "@/components/SEOHead";
+import { ProductSchema } from "@/components/SEOSchemaMarkup";
+import { buildProductSEO } from "@/lib/productSeo";
 
 interface Product {
   id: string;
@@ -235,11 +238,32 @@ const DealerProductPage = () => {
     </Link>
   );
 
+  const seo = buildProductSEO(product);
+
   return (
     <>
+      <SEOHead
+        titleAr={seo.titleAr}
+        titleEn={seo.titleEn}
+        descriptionAr={seo.descriptionAr}
+        descriptionEn={seo.descriptionEn}
+        keywordsAr={seo.keywordsAr}
+        keywordsEn={seo.keywordsEn}
+        ogType="product"
+        image={product.image_url || undefined}
+      />
+      <ProductSchema
+        name={product.name_ar || product.name_en || product.sku}
+        sku={product.sku}
+        description={product.description_ar || product.description_en || undefined}
+        image={product.image_url || undefined}
+        brand={seo.schemaBrand}
+        availability={(product.stock_quantity ?? 0) > 0}
+      />
       <Navbar />
       <div data-dealer-scope className="pt-16 md:pt-20 pb-28 min-h-screen bg-background" dir={isRTL ? "rtl" : "ltr"}>
         <div className="container mx-auto px-4 max-w-4xl">
+
 
           {/* Breadcrumb */}
           <motion.div
