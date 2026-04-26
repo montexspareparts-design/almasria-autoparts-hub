@@ -330,26 +330,38 @@ export type Database = {
         Row: {
           comm_type: string
           created_at: string
-          customer_user_id: string
+          customer_user_id: string | null
+          done_at: string | null
           id: string
+          is_done: boolean
           note: string | null
+          reminder_at: string | null
           staff_user_id: string
+          visitor_session_key: string | null
         }
         Insert: {
           comm_type?: string
           created_at?: string
-          customer_user_id: string
+          customer_user_id?: string | null
+          done_at?: string | null
           id?: string
+          is_done?: boolean
           note?: string | null
+          reminder_at?: string | null
           staff_user_id: string
+          visitor_session_key?: string | null
         }
         Update: {
           comm_type?: string
           created_at?: string
-          customer_user_id?: string
+          customer_user_id?: string | null
+          done_at?: string | null
           id?: string
+          is_done?: boolean
           note?: string | null
+          reminder_at?: string | null
           staff_user_id?: string
+          visitor_session_key?: string | null
         }
         Relationships: []
       }
