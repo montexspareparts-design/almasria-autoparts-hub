@@ -37,6 +37,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useSessionPersistedState } from "@/hooks/useSessionPersistedState";
 import DailyReportTabCard from "@/components/staff/DailyReportTabCard";
+import StaffRemindersPanel from "@/components/staff/StaffRemindersPanel";
 
 // Normalize a string for case-insensitive substring matching.
 // Strips Arabic diacritics + tatweel and lowercases the rest so "محمد" matches
