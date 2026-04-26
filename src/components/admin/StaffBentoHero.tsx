@@ -557,21 +557,31 @@ export default function StaffBentoHero({
               لا مواعيد قادمة
             </div>
           ) : (
-            <div className="space-y-1.5 max-h-[140px] overflow-y-auto">
-              {upcomingList.slice(0, 5).map((r) => (
-                <div
-                  key={r.id}
-                  className="flex items-center gap-2 p-1.5 rounded border bg-card text-[11px]"
-                >
-                  <Clock className="w-3 h-3 text-purple-600 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-bold text-foreground truncate">{r.customer_name}</div>
-                    <div className="text-muted-foreground text-[10px]">
-                      {new Date(r.reminder_at).toLocaleDateString("ar-EG", { weekday: "short", day: "numeric", month: "short" })} — {fmtTime(r.reminder_at)}
+            <div className="space-y-1.5 max-h-[160px] overflow-y-auto">
+              {upcomingList.slice(0, 5).map((r) => {
+                const priority = computePriority(r);
+                const cd = fmtCountdown(r.reminder_at);
+                return (
+                  <div
+                    key={r.id}
+                    className={cn(
+                      "flex items-center gap-2 p-1.5 rounded border-l-4 border-y border-r bg-card text-[11px]",
+                      priority === "high" ? "border-l-orange-500 border-orange-200" : "border-l-purple-400 border-border"
+                    )}
+                  >
+                    <PriorityBadge priority={priority} compact />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-foreground truncate">{r.customer_name}</div>
+                      <div className="flex items-center gap-1 text-[10px] text-muted-foreground flex-wrap">
+                        <Clock className="w-2.5 h-2.5" />
+                        {new Date(r.reminder_at).toLocaleDateString("ar-EG", { weekday: "short", day: "numeric", month: "short" })} {fmtTime(r.reminder_at)}
+                        <span className="opacity-50">·</span>
+                        <span className="font-mono text-emerald-600 font-bold">{cd.text}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               {upcomingList.length > 5 && (
                 <div className="text-[10px] text-center text-muted-foreground pt-1">
                   +{upcomingList.length - 5} موعد آخر
