@@ -300,15 +300,14 @@ const ProductCard = memo(({
           {product.name_ar}
         </h3>
 
-        {/* SKU — always a single, non-wrapping line; never stacks beside badges */}
-        <div className="mb-2 w-full text-right overflow-hidden">
-          <span
-            dir="ltr"
+        {/* SKU — single line, RTL-safe (LTR digits stay readable but block aligns to start in RTL) */}
+        <div className="mb-2 w-full overflow-hidden text-start">
+          <bdi
             title={product.sku}
             className="inline-block max-w-full truncate align-middle text-[8px] sm:text-[9px] font-mono text-muted-foreground/50 tracking-[0.1em] leading-none whitespace-nowrap select-all"
           >
             {product.sku}
-          </span>
+          </bdi>
         </div>
 
         {/* Year coverage badge — shows "fits 2008 ✓" when user searched by year */}
