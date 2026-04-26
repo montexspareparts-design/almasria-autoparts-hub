@@ -27,7 +27,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import {
   Users, Phone, MessageCircle, Eye, RefreshCw, Search,
-  Clock, MapPin, ArrowLeft, Activity, Loader2,
+  Clock, MapPin, ArrowLeft, Activity, Loader2, AlertTriangle, Filter,
 } from "lucide-react";
 
 interface ActiveVisitor {
@@ -39,9 +39,14 @@ interface ActiveVisitor {
   page_views: number;
   last_path: string | null;
   last_page_title: string | null;
+  last_contacted_at: string | null; // آخر تواصل مسجّل لهذا الزائر
+  has_open_reminder: boolean;       // عنده تذكير معلّق غير منفّذ
 }
 
-const WINDOW_MIN = 30;
+// أكبر نافذة زمنية ممكن نعرضها — نجلب البيانات لها مرة واحدة ونفلتر عميل-جانب.
+const MAX_WINDOW_HOURS = 24;
+// عتبة "متأخر": زائر نشط ولم يُتواصل معه خلال آخر N ساعات (افتراضي 2 ساعة)
+const OVERDUE_HOURS = 2;
 
 const fmtTime = (iso: string) =>
   new Date(iso).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
@@ -76,11 +81,16 @@ export default function ActiveVisitorsPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
+  // فلتر "خلال X ساعة" — يحدد نافذة آخر نشاط للزائر (30د، 1س، 3س، 6س، 24س)
+  const [hoursFilter, setHoursFilter] = useState<"30m" | "1h" | "3h" | "6h" | "24h">("30m");
+  // فلتر "متأخر" — يعرض فقط الزوار النشطين اللي مفيش معاهم تواصل في آخر OVERDUE_HOURS ساعة
+  const [overdueOnly, setOverdueOnly] = useState(false);
 
   const fetchActive = async () => {
-    const since = new Date(Date.now() - WINDOW_MIN * 60 * 1000).toISOString();
+    // نجلب أوسع نافذة (24 ساعة) دفعة واحدة، والفلاتر تعمل عميل-جانب بدون refetch
+    const since = new Date(Date.now() - MAX_WINDOW_HOURS * 60 * 60 * 1000).toISOString();
 
-    // 1) جلسات نشطة آخر 30 دقيقة
+    // 1) جلسات نشطة آخر 24 ساعة
     const { data: sessions, error } = await supabase
       .from("customer_sessions")
       .select("user_id, last_seen_at, page_views")
@@ -158,11 +168,30 @@ export default function ActiveVisitorsPage() {
       });
     }
 
+    // 5) سجلات التواصل لكل المستخدمين النشطين — لتحديد "متأخر" + إخفاء من تم التواصل معه مؤخراً
+    //    نجلب آخر 30 يوم فقط ونحتفظ بأحدث تواصل + أي تذكير معلّق غير منفّذ.
+    const commsSince = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: commsRows } = await supabase
+      .from("customer_communications")
+      .select("customer_user_id, created_at, reminder_at, is_done")
+      .in("customer_user_id", userIds)
+      .gte("created_at", commsSince);
+    const commsByUser = new Map<string, { last_contacted_at: string | null; has_open_reminder: boolean }>();
+    (commsRows || []).forEach((c: any) => {
+      const cur = commsByUser.get(c.customer_user_id) || { last_contacted_at: null, has_open_reminder: false };
+      if (!cur.last_contacted_at || c.created_at > cur.last_contacted_at) {
+        cur.last_contacted_at = c.created_at;
+      }
+      if (c.reminder_at && !c.is_done) cur.has_open_reminder = true;
+      commsByUser.set(c.customer_user_id, cur);
+    });
+
     // دمج
     const merged: ActiveVisitor[] = userIds.map((uid) => {
       const sess = byUser.get(uid)!;
       const ent = entryMap.get(uid);
       const prof: any = profMap.get(uid);
+      const cc = commsByUser.get(uid);
       return {
         user_id: uid,
         name: prof?.full_name || null,
@@ -172,6 +201,8 @@ export default function ActiveVisitorsPage() {
         page_views: sess.page_views,
         last_path: ent?.last_path || null,
         last_page_title: ent?.last_page_title || null,
+        last_contacted_at: cc?.last_contacted_at || null,
+        has_open_reminder: cc?.has_open_reminder || false,
       };
     });
 
@@ -190,15 +221,52 @@ export default function ActiveVisitorsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Window in ms for the "خلال X" filter
+  const hoursWindowMs = useMemo(() => {
+    switch (hoursFilter) {
+      case "30m": return 30 * 60 * 1000;
+      case "1h": return 60 * 60 * 1000;
+      case "3h": return 3 * 60 * 60 * 1000;
+      case "6h": return 6 * 60 * 60 * 1000;
+      case "24h": return 24 * 60 * 60 * 1000;
+    }
+  }, [hoursFilter]);
+
+  // "متأخر" = نشط داخل النافذة + (لم يُتواصل معه أبداً) أو (آخر تواصل أقدم من OVERDUE_HOURS)
+  const isOverdue = (v: ActiveVisitor) => {
+    if (v.has_open_reminder) return false; // فيه تذكير معلّق — مش متأخر
+    if (!v.last_contacted_at) return true; // لم يُتواصل معه إطلاقاً
+    return Date.now() - new Date(v.last_contacted_at).getTime() > OVERDUE_HOURS * 60 * 60 * 1000;
+  };
+
+  // عداد الزوار المتأخرين داخل النافذة الزمنية الحالية — للبادج
+  const overdueCount = useMemo(() => {
+    const cutoff = Date.now() - hoursWindowMs;
+    return visitors.filter((v) => new Date(v.last_seen_at).getTime() >= cutoff && isOverdue(v)).length;
+  }, [visitors, hoursWindowMs]);
+
   const filtered = useMemo(() => {
+    const cutoff = Date.now() - hoursWindowMs;
+    let list = visitors.filter((v) => new Date(v.last_seen_at).getTime() >= cutoff);
+    if (overdueOnly) list = list.filter(isOverdue);
     const q = search.trim().toLowerCase();
-    if (!q) return visitors;
-    return visitors.filter((v) =>
-      (v.name || "").toLowerCase().includes(q) ||
-      (v.phone || "").includes(q) ||
-      (v.last_path || "").toLowerCase().includes(q)
-    );
-  }, [visitors, search]);
+    if (q) {
+      list = list.filter((v) =>
+        (v.name || "").toLowerCase().includes(q) ||
+        (v.phone || "").includes(q) ||
+        (v.last_path || "").toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [visitors, search, hoursWindowMs, overdueOnly]);
+
+  const hoursLabel: Record<typeof hoursFilter, string> = {
+    "30m": "30 دقيقة",
+    "1h": "ساعة",
+    "3h": "3 ساعات",
+    "6h": "6 ساعات",
+    "24h": "24 ساعة",
+  };
 
   return (
     <div className="container mx-auto p-4 max-w-6xl space-y-4" dir="rtl">
@@ -218,16 +286,23 @@ export default function ActiveVisitorsPage() {
               الزوار النشطون الآن
             </h1>
             <p className="text-xs text-muted-foreground">
-              المتصفحون خلال آخر {WINDOW_MIN} دقيقة · يتحدّث كل 30 ثانية
+              المتصفحون خلال آخر {hoursLabel[hoursFilter]} · يتحدّث كل 30 ثانية
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="gap-1.5 px-3 py-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="font-bold">{visitors.length}</span>
-            <span className="text-muted-foreground">زائر مباشر</span>
+            <span className="font-bold">{filtered.length}</span>
+            <span className="text-muted-foreground">/ {visitors.length} زائر</span>
           </Badge>
+          {overdueCount > 0 && (
+            <Badge variant="destructive" className="gap-1.5 px-3 py-1.5">
+              <AlertTriangle className="w-3.5 h-3.5" />
+              <span className="font-bold">{overdueCount}</span>
+              <span className="opacity-90">متأخر</span>
+            </Badge>
+          )}
           <Button
             variant="outline"
             size="sm"
@@ -239,6 +314,53 @@ export default function ActiveVisitorsPage() {
             تحديث
           </Button>
         </div>
+      </div>
+
+      {/* Quick filters: time window + "متأخر" toggle */}
+      <div className="flex items-center gap-2 flex-wrap bg-muted/40 p-2 rounded-lg border border-border/50">
+        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground px-1.5">
+          <Filter className="w-3.5 h-3.5" />
+          خلال:
+        </span>
+        {(["30m", "1h", "3h", "6h", "24h"] as const).map((h) => {
+          const active = hoursFilter === h;
+          return (
+            <button
+              key={h}
+              onClick={() => setHoursFilter(h)}
+              className={cn(
+                "px-2.5 py-1 rounded-md text-[11px] font-bold border transition",
+                active
+                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                  : "bg-background border-border text-foreground hover:bg-muted"
+              )}
+            >
+              {hoursLabel[h]}
+            </button>
+          );
+        })}
+        <span className="opacity-30 mx-1">|</span>
+        <button
+          onClick={() => setOverdueOnly((v) => !v)}
+          className={cn(
+            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold border transition",
+            overdueOnly
+              ? "bg-red-600 text-white border-red-600 shadow-sm"
+              : "bg-background border-red-200 dark:border-red-900/40 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
+          )}
+          title={`زوار نشطون لم يُتواصل معهم خلال آخر ${OVERDUE_HOURS} ساعة`}
+        >
+          <AlertTriangle className="w-3.5 h-3.5" />
+          متأخر فقط
+          {overdueCount > 0 && (
+            <Badge
+              variant={overdueOnly ? "secondary" : "destructive"}
+              className={cn("h-4 px-1 text-[9px]", overdueOnly && "bg-white/20 text-white border-0")}
+            >
+              {overdueCount}
+            </Badge>
+          )}
+        </button>
       </div>
 
       {/* Search */}
@@ -287,6 +409,18 @@ export default function ActiveVisitorsPage() {
                           <Badge variant="outline" className="text-[10px] h-5">
                             {fmtSinceLast(v.last_seen_at)}
                           </Badge>
+                          {isOverdue(v) && (
+                            <Badge variant="destructive" className="text-[10px] h-5 gap-1">
+                              <AlertTriangle className="w-3 h-3" />
+                              متأخر
+                            </Badge>
+                          )}
+                          {v.has_open_reminder && (
+                            <Badge variant="secondary" className="text-[10px] h-5 gap-1 bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-300/40">
+                              <Clock className="w-3 h-3" />
+                              تذكير معلّق
+                            </Badge>
+                          )}
                         </div>
 
                         {v.phone && (
