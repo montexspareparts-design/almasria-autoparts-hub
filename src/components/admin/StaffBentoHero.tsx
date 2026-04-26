@@ -422,7 +422,8 @@ export default function StaffBentoHero({
   };
 
   const totalNewToday = newOrders24h + newSignups24h + instapayPending + partRequestsNew;
-  const totalUrgent = urgentOrdersCount + chatbotPendingCount + hotLeadsCount;
+  const effectiveUrgentOrders = urgentOrdersFiltered ?? urgentOrdersCount;
+  const totalUrgent = effectiveUrgentOrders + chatbotPendingCount + hotLeadsCount;
   const totalFollowups = todayList.length;
 
   const fmtTime = (iso: string) => {
