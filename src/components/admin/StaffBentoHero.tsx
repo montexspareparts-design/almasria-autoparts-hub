@@ -759,10 +759,11 @@ interface MiniStatProps {
   icon: React.ReactNode;
   tone: string;
   to?: string;
+  onClick?: () => void;
   urgent?: boolean;
 }
 
-function MiniStat({ label, value, icon, to, urgent }: MiniStatProps) {
+function MiniStat({ label, value, icon, to, onClick, urgent }: MiniStatProps) {
   const inner = (
     <div className={cn(
       "p-2 rounded-lg border bg-card hover:shadow-sm transition flex items-center gap-2 cursor-pointer h-full",
@@ -776,6 +777,13 @@ function MiniStat({ label, value, icon, to, urgent }: MiniStatProps) {
       {value > 0 && <ChevronRight className="w-3 h-3 text-muted-foreground shrink-0" />}
     </div>
   );
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className="text-right w-full">
+        {inner}
+      </button>
+    );
+  }
   return to ? <Link to={to}>{inner}</Link> : inner;
 }
 
