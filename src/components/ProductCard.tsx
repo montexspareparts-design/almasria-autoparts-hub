@@ -246,12 +246,32 @@ const ProductCard = memo(({
           stacking context, so overlays can never cover the title or hide the image.
         */}
 
+        {/*
+          Auto-contrast overlay badges
+          ────────────────────────────
+          Goal: stay legible over ANY image background (white, dark, busy).
+          Strategy applied to every floating badge:
+          1. Opaque-enough fill (≥90%) of a saturated brand color → readable text.
+          2. `backdrop-blur-md backdrop-saturate-150` → softens noisy backgrounds
+             behind the badge so contrast survives even on photographed parts.
+          3. White text + `[text-shadow:0_1px_2px_rgba(0,0,0,0.35)]` → keeps
+             characters legible if the fill ever loses contrast at the edges.
+          4. White ring + colored outer shadow → halo separates the badge from
+             both light and dark image areas.
+        */}
+
         {/* Brand badge — fixed top-right corner of the image */}
         {brandRouteMap[product.brand] && (
           <Link
             to={brandRouteMap[product.brand].path}
             onClick={(e) => e.stopPropagation()}
-            className={`absolute top-2 right-2 z-30 inline-flex items-center max-w-[55%] truncate text-[8px] sm:text-[9px] font-extrabold px-2 py-[3px] rounded-md leading-none whitespace-nowrap shadow-md backdrop-blur-md border border-white/15 hover:opacity-90 transition-opacity ${brandRouteMap[product.brand].color}`}
+            className={`absolute top-2 right-2 z-30 inline-flex items-center max-w-[55%] truncate
+              text-[8px] sm:text-[9px] font-extrabold px-2 py-[3px] rounded-md leading-none whitespace-nowrap
+              backdrop-blur-md backdrop-saturate-150
+              ring-1 ring-white/30 shadow-[0_2px_8px_rgba(0,0,0,0.25)]
+              [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]
+              hover:opacity-90 transition-opacity
+              ${brandRouteMap[product.brand].color}`}
           >
             {brandRouteMap[product.brand].label}
           </Link>
@@ -260,13 +280,18 @@ const ProductCard = memo(({
         {/* Stock availability badge — fixed top-left corner of the image */}
         <div className="absolute top-2 left-2 z-30 max-w-[45%]">
           <span
-            className={`inline-flex items-center gap-1 text-[8px] sm:text-[9px] font-bold px-2 py-[3px] rounded-md leading-none whitespace-nowrap shadow-md backdrop-blur-md border ${
-              stockAvailable
-                ? "bg-emerald-500/90 text-white border-emerald-400/30"
-                : "bg-red-500/90 text-white border-red-400/30"
-            }`}
+            className={`inline-flex items-center gap-1 text-[8px] sm:text-[9px] font-bold px-2 py-[3px]
+              rounded-md leading-none whitespace-nowrap text-white
+              backdrop-blur-md backdrop-saturate-150
+              ring-1 ring-white/30
+              [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]
+              ${
+                stockAvailable
+                  ? "bg-emerald-600/95 shadow-[0_2px_10px_rgba(16,185,129,0.35)]"
+                  : "bg-red-600/95 shadow-[0_2px_10px_rgba(239,68,68,0.35)]"
+              }`}
           >
-            <span className={`w-1.5 h-1.5 rounded-full ${stockAvailable ? "bg-white" : "bg-white/80"}`} />
+            <span className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_4px_rgba(255,255,255,0.6)]" />
             {stockAvailable ? "متوفر" : "غير متوفر"}
           </span>
         </div>
@@ -274,8 +299,14 @@ const ProductCard = memo(({
         {/* Sale badge — stacks below the stock badge on the left */}
         {product.is_on_sale && (
           <div className="absolute top-10 left-2 z-40">
-            <Badge className="bg-destructive/95 backdrop-blur-md text-destructive-foreground text-[9px] font-black px-2 py-0.5 shadow-lg shadow-destructive/25 rounded-md tracking-wide border border-white/10">
-              <Sparkles className="w-2.5 h-2.5 mr-0.5" />
+            <Badge
+              className="bg-destructive/95 text-destructive-foreground text-[9px] font-black px-2 py-0.5
+                rounded-md tracking-wide
+                backdrop-blur-md backdrop-saturate-150
+                ring-1 ring-white/25 shadow-[0_2px_10px_rgba(220,38,38,0.4)]
+                [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]"
+            >
+              <Sparkles className="w-2.5 h-2.5 mr-0.5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]" />
               تخفيض
             </Badge>
           </div>
@@ -284,8 +315,14 @@ const ProductCard = memo(({
         {/* Priced indicator — bottom-left of the image */}
         {hasViewed && (
           <div className="absolute bottom-2.5 left-2.5 z-40">
-            <span className="inline-flex items-center gap-1 bg-emerald-500/90 backdrop-blur-md text-white text-[8px] font-bold px-2 py-0.5 rounded-md shadow-lg shadow-emerald-500/20 border border-emerald-400/20">
-              <Check className="w-2.5 h-2.5" /> مسعّر
+            <span
+              className="inline-flex items-center gap-1 bg-emerald-600/95 text-white text-[8px] font-bold px-2 py-0.5
+                rounded-md
+                backdrop-blur-md backdrop-saturate-150
+                ring-1 ring-white/30 shadow-[0_2px_10px_rgba(16,185,129,0.35)]
+                [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]"
+            >
+              <Check className="w-2.5 h-2.5 drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]" /> مسعّر
             </span>
           </div>
         )}
