@@ -623,6 +623,14 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
         />
       )}
 
+      {/* Bento Hero — daily command center */}
+      <StaffBentoHero
+        urgentOrdersCount={urgentOrders.length}
+        hotLeadsCount={searchLeads.length}
+        chatbotPendingCount={supportRequests.filter((r) => r.status === "pending").length}
+        onJumpToTab={(t) => setTab(t)}
+      />
+
       {/* Filters bar */}
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex gap-1 rounded-lg bg-muted p-1">
