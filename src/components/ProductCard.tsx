@@ -229,18 +229,43 @@ const ProductCard = memo(({
           </div>
         )}
 
-        {/* Stock dot — top-left corner, minimal */}
-        <div className="absolute top-2.5 left-2.5 z-20">
-          <div className={`w-2.5 h-2.5 rounded-full shadow-md ${
-            stockAvailable
-              ? "bg-emerald-400 ring-[3px] ring-emerald-400/25 shadow-emerald-500/30"
-              : "bg-red-400 ring-[3px] ring-red-400/25 shadow-red-400/30"
-          }`} />
+        {/*
+          Image overlays — fixed positions with explicit z-index hierarchy:
+          - z-10  : decorative layers (vignette, fade, shimmer)
+          - z-30  : informational badges (stock availability, brand)
+          - z-40  : promotional badges (sale, priced)
+          The product name lives in the content section below in a separate
+          stacking context, so overlays can never cover the title or hide the image.
+        */}
+
+        {/* Brand badge — fixed top-right corner of the image */}
+        {brandRouteMap[product.brand] && (
+          <Link
+            to={brandRouteMap[product.brand].path}
+            onClick={(e) => e.stopPropagation()}
+            className={`absolute top-2 right-2 z-30 inline-flex items-center max-w-[55%] truncate text-[8px] sm:text-[9px] font-extrabold px-2 py-[3px] rounded-md leading-none whitespace-nowrap shadow-md backdrop-blur-md border border-white/15 hover:opacity-90 transition-opacity ${brandRouteMap[product.brand].color}`}
+          >
+            {brandRouteMap[product.brand].label}
+          </Link>
+        )}
+
+        {/* Stock availability badge — fixed top-left corner of the image */}
+        <div className="absolute top-2 left-2 z-30 max-w-[45%]">
+          <span
+            className={`inline-flex items-center gap-1 text-[8px] sm:text-[9px] font-bold px-2 py-[3px] rounded-md leading-none whitespace-nowrap shadow-md backdrop-blur-md border ${
+              stockAvailable
+                ? "bg-emerald-500/90 text-white border-emerald-400/30"
+                : "bg-red-500/90 text-white border-red-400/30"
+            }`}
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${stockAvailable ? "bg-white" : "bg-white/80"}`} />
+            {stockAvailable ? "متوفر" : "غير متوفر"}
+          </span>
         </div>
 
-        {/* Sale badge — top-left, below stock dot when on sale */}
+        {/* Sale badge — stacks below the stock badge on the left */}
         {product.is_on_sale && (
-          <div className="absolute top-7 left-2.5 z-20">
+          <div className="absolute top-10 left-2 z-40">
             <Badge className="bg-destructive/95 backdrop-blur-md text-destructive-foreground text-[9px] font-black px-2 py-0.5 shadow-lg shadow-destructive/25 rounded-md tracking-wide border border-white/10">
               <Sparkles className="w-2.5 h-2.5 mr-0.5" />
               تخفيض
@@ -248,9 +273,9 @@ const ProductCard = memo(({
           </div>
         )}
 
-        {/* Priced indicator — bottom-left */}
+        {/* Priced indicator — bottom-left of the image */}
         {hasViewed && (
-          <div className="absolute bottom-2.5 left-2.5 z-20">
+          <div className="absolute bottom-2.5 left-2.5 z-40">
             <span className="inline-flex items-center gap-1 bg-emerald-500/90 backdrop-blur-md text-white text-[8px] font-bold px-2 py-0.5 rounded-md shadow-lg shadow-emerald-500/20 border border-emerald-400/20">
               <Check className="w-2.5 h-2.5" /> مسعّر
             </span>
@@ -258,21 +283,8 @@ const ProductCard = memo(({
         )}
       </div>
 
-      {/* ── Content Section ── */}
-      <div className="relative flex-1 flex flex-col p-2.5 sm:p-4 z-[1] text-right" onClick={(e) => e.stopPropagation()}>
-        {/* Top row: Stock badge + Brand badge — clean & aligned */}
-        <div className="mb-2 flex items-center justify-end gap-1.5 flex-wrap">
-          {brandRouteMap[product.brand] && (
-            <Link
-              to={brandRouteMap[product.brand].path}
-              className={`text-[8px] sm:text-[9px] font-extrabold px-2 py-[3px] rounded-md hover:opacity-80 transition-opacity shadow-sm leading-none ${brandRouteMap[product.brand].color}`}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {brandRouteMap[product.brand].label}
-            </Link>
-          )}
-          <StockBadge available={stockAvailable} />
-        </div>
+      {/* ── Content Section ── (separate stacking context above image overlays) */}
+      <div className="relative flex-1 flex flex-col p-2.5 sm:p-4 z-[2] text-right" onClick={(e) => e.stopPropagation()}>
 
         {/* Name */}
         <h3 className="font-bold text-card-foreground text-[11px] sm:text-[13px] leading-[1.5] line-clamp-2 min-h-[2.4em] mb-1 text-right
