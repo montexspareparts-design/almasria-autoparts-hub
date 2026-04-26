@@ -27,7 +27,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import {
   Users, Phone, MessageCircle, Eye, RefreshCw, Search,
-  Clock, MapPin, ArrowLeft, Activity, Loader2,
+  Clock, MapPin, ArrowLeft, Activity, Loader2, AlertTriangle, Filter,
 } from "lucide-react";
 
 interface ActiveVisitor {
@@ -39,9 +39,14 @@ interface ActiveVisitor {
   page_views: number;
   last_path: string | null;
   last_page_title: string | null;
+  last_contacted_at: string | null; // آخر تواصل مسجّل لهذا الزائر
+  has_open_reminder: boolean;       // عنده تذكير معلّق غير منفّذ
 }
 
-const WINDOW_MIN = 30;
+// أكبر نافذة زمنية ممكن نعرضها — نجلب البيانات لها مرة واحدة ونفلتر عميل-جانب.
+const MAX_WINDOW_HOURS = 24;
+// عتبة "متأخر": زائر نشط ولم يُتواصل معه خلال آخر N ساعات (افتراضي 2 ساعة)
+const OVERDUE_HOURS = 2;
 
 const fmtTime = (iso: string) =>
   new Date(iso).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
