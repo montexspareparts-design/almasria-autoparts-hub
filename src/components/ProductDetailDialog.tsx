@@ -12,6 +12,7 @@ import { Link } from "react-router-dom";
 import SEOHead from "@/components/SEOHead";
 import { ProductSchema } from "@/components/SEOSchemaMarkup";
 import { buildProductSEO } from "@/lib/productSeo";
+import ProductFitmentSection from "@/components/ProductFitmentSection";
 
 interface ProductDetailDialogProps {
   product: any | null;
@@ -27,6 +28,8 @@ interface ProductDetailDialogProps {
   onRevealPrice?: (productId: string) => void;
   remainingViews?: number;
   limitReached?: boolean;
+  /** Year extracted from the search query — drives the live "fits your year" indicator. */
+  searchYear?: number | null;
 }
 
 const ProductDetailDialog = ({
@@ -43,6 +46,7 @@ const ProductDetailDialog = ({
   onRevealPrice,
   remainingViews = 0,
   limitReached = false,
+  searchYear = null,
 }: ProductDetailDialogProps) => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
@@ -245,6 +249,17 @@ const ProductDetailDialog = ({
           {product.name_en && (
             <p className="text-xs sm:text-sm text-muted-foreground -mt-1.5 sm:-mt-2">{product.name_en}</p>
           )}
+
+          {/* ── Fitment / Compatibility ──
+              Surfaces year-range, compatible models, and a live verdict
+              against (a) the year the user searched for and (b) the year
+              from the user's saved car profile. Hidden for oils. */}
+          <ProductFitmentSection
+            product={product}
+            searchYear={searchYear}
+            profileCarYear={carYear ?? null}
+            profileCarModel={carModel ?? null}
+          />
 
           <Separator />
 
