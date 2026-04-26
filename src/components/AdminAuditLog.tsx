@@ -196,8 +196,9 @@ const AdminAuditLog = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/30">
-                    <TableHead className="text-right">التاريخ</TableHead>
+                    <TableHead className="text-right">التاريخ والوقت</TableHead>
                     <TableHead className="text-right">المستخدم</TableHead>
+                    <TableHead className="text-right">الدور</TableHead>
                     <TableHead className="text-right">الإجراء</TableHead>
                     <TableHead className="text-right">الجدول</TableHead>
                     <TableHead className="text-right">معرف السجل</TableHead>
@@ -207,13 +208,24 @@ const AdminAuditLog = () => {
                 <TableBody>
                   {logs.map((log) => {
                     const actionInfo = ACTION_LABELS[log.action] || { label: log.action, color: "bg-muted text-muted-foreground" };
+                    const role = rolesMap[log.performed_by];
+                    const roleBadge = role ? ROLE_BADGE[role] : null;
                     return (
                       <TableRow key={log.id} className="hover:bg-muted/20">
-                        <TableCell className="text-xs whitespace-nowrap">
-                          {format(new Date(log.created_at), "dd/MM/yyyy HH:mm", { locale: ar })}
+                        <TableCell className="text-xs whitespace-nowrap font-mono">
+                          {format(new Date(log.created_at), "dd/MM/yyyy HH:mm:ss", { locale: ar })}
                         </TableCell>
                         <TableCell className="text-xs">
                           {profilesMap[log.performed_by] || log.performed_by.slice(0, 8) + "..."}
+                        </TableCell>
+                        <TableCell>
+                          {roleBadge ? (
+                            <Badge variant="outline" className={`text-xs ${roleBadge.color}`}>
+                              {roleBadge.label}
+                            </Badge>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className={`text-xs ${actionInfo.color}`}>
