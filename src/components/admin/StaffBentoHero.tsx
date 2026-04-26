@@ -45,11 +45,14 @@ interface Reminder {
 /** درجة الأولوية المحسوبة لكل مهمة */
 type Priority = "critical" | "high" | "medium" | "low";
 
+/** التبويبات المتاحة في لوحة المهام (نفس قيم Tabs في StaffCRMCommandCenter) */
+export type StaffJumpTab = "urgent" | "chatbot" | "search" | "yesterday";
+
 interface Props {
   urgentOrdersCount: number;
   hotLeadsCount: number;
   chatbotPendingCount: number;
-  onJumpToTab: (tab: "urgent" | "chatbot" | "search" | "yesterday") => void;
+  onJumpToTab: (tab: StaffJumpTab) => void;
 }
 
 export default function StaffBentoHero({
@@ -419,7 +422,7 @@ export default function StaffBentoHero({
           value={newVisitorsToday.toString()}
           hint="منذ منتصف الليل"
           tone="emerald"
-          to="/admin/staff-home"
+          onClick={() => onJumpToTab("yesterday")}
           ctaLabel="عرض الزوار"
         />
         <ShortcutTile
@@ -461,21 +464,21 @@ export default function StaffBentoHero({
               value={newOrders24h}
               icon={<ShoppingBag className="w-3.5 h-3.5" />}
               tone="emerald"
-              to="/admin?section=orders"
+              onClick={() => onJumpToTab("urgent")}
             />
             <MiniStat
               label="تسجيلات جديدة"
               value={newSignups24h}
               icon={<UserPlus className="w-3.5 h-3.5" />}
               tone="emerald"
-              to="/admin?section=customers"
+              onClick={() => onJumpToTab("yesterday")}
             />
             <MiniStat
               label="إيصالات InstaPay"
               value={instapayPending}
               icon={<Wallet className="w-3.5 h-3.5" />}
               tone="emerald"
-              to="/admin?section=instapay"
+              onClick={() => onJumpToTab("urgent")}
               urgent={instapayPending > 0}
             />
             <MiniStat
@@ -483,7 +486,7 @@ export default function StaffBentoHero({
               value={partRequestsNew}
               icon={<FileSearch className="w-3.5 h-3.5" />}
               tone="emerald"
-              to="/admin?section=part-requests"
+              onClick={() => onJumpToTab("chatbot")}
               urgent={partRequestsNew > 0}
             />
           </div>
@@ -692,11 +695,14 @@ export default function StaffBentoHero({
             <div className="text-[11px] text-muted-foreground mt-1">زائر آخر ٣٠ دقيقة</div>
           </div>
           <div className="grid grid-cols-2 gap-1.5 mt-2">
-            <Button asChild size="sm" variant="outline" className="h-8 text-[11px] gap-1">
-              <Link to="/admin/staff-home">
-                <Users className="w-3 h-3" />
-                التفصيلية
-              </Link>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 text-[11px] gap-1"
+              onClick={() => onJumpToTab("yesterday")}
+            >
+              <Users className="w-3 h-3" />
+              التفصيلية
             </Button>
             <Button
               size="sm"
@@ -756,10 +762,11 @@ interface MiniStatProps {
   icon: React.ReactNode;
   tone: string;
   to?: string;
+  onClick?: () => void;
   urgent?: boolean;
 }
 
-function MiniStat({ label, value, icon, to, urgent }: MiniStatProps) {
+function MiniStat({ label, value, icon, to, onClick, urgent }: MiniStatProps) {
   const inner = (
     <div className={cn(
       "p-2 rounded-lg border bg-card hover:shadow-sm transition flex items-center gap-2 cursor-pointer h-full",
@@ -773,6 +780,13 @@ function MiniStat({ label, value, icon, to, urgent }: MiniStatProps) {
       {value > 0 && <ChevronRight className="w-3 h-3 text-muted-foreground shrink-0" />}
     </div>
   );
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className="text-right w-full">
+        {inner}
+      </button>
+    );
+  }
   return to ? <Link to={to}>{inner}</Link> : inner;
 }
 
