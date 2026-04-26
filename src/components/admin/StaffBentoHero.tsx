@@ -37,7 +37,12 @@ interface Reminder {
   reminder_at: string;
   note: string | null;
   comm_type: string;
+  /** آخر تواصل للعميل (أحدث customer_communications.created_at). null لو الموظف لم يتواصل قبل كده */
+  last_contact_at?: string | null;
 }
+
+/** درجة الأولوية المحسوبة لكل مهمة */
+type Priority = "critical" | "high" | "medium" | "low";
 
 interface Props {
   urgentOrdersCount: number;
