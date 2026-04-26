@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { checkDuplicateCommunication } from "@/lib/duplicateCommCheck";
+import VisitorCommunicationsTab from "@/components/admin/VisitorCommunicationsTab";
 
 interface PageVisit { id: string; path: string; page_title: string | null; visited_at: string; referrer: string | null; }
 interface SearchEntry { id: string; search_query: string; created_at: string; results_count: number | null; }
@@ -1291,55 +1292,12 @@ export default function VisitorSessionSummary() {
           </>
         )}
 
-        {/* Communications Log — سجل التواصل لمنع التكرار */}
-        {comms.length > 0 && (
-          <Card id="section-comms" className="border-blue-200/60 dark:border-blue-900/40 shadow-md overflow-hidden scroll-mt-24 rounded-2xl">
-            <CardHeader className="pb-3 bg-gradient-to-l from-blue-500/10 via-blue-500/5 to-transparent border-b">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <div className="w-9 h-9 rounded-xl bg-blue-500/15 flex items-center justify-center">
-                  <CheckCircle2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                سجل التواصل مع العميل
-                <Badge variant="secondary" className="text-[10px]">{comms.length}</Badge>
-              </CardTitle>
-              <p className="text-xs text-muted-foreground mt-1.5 mr-11">
-                كل تعامل سابق مع العميل مسجّل هنا — لمنع تكرار نفس الخطوة من موظف آخر.
-              </p>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-2">
-              {comms.map((c) => {
-                const meta = COMM_TYPES[c.comm_type] || COMM_TYPES.other;
-                const Icon = meta.icon;
-                const isMine = c.staff_user_id === user?.id;
-                return (
-                  <div
-                    key={c.id}
-                    className={`p-3 rounded-lg border transition ${
-                      isMine
-                        ? "bg-blue-500/5 border-blue-500/20 hover:bg-blue-500/10"
-                        : "bg-muted/40 border-border hover:bg-muted/60"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-2 flex-wrap">
-                      <div className="flex items-center gap-2 text-[11px] flex-wrap">
-                        <Icon className={`w-3.5 h-3.5 ${meta.color}`} />
-                        <span className="font-bold text-foreground">{meta.label}</span>
-                        <span className="text-muted-foreground">•</span>
-                        <UserIcon className="w-3 h-3 text-muted-foreground" />
-                        <span className="font-bold text-muted-foreground">{c.staff_name}</span>
-                        {isMine && <Badge variant="outline" className="text-[9px] h-4 px-1 border-blue-500/40 text-blue-600">أنت</Badge>}
-                      </div>
-                      <span className="text-[11px] text-muted-foreground font-mono">{fmtDateTime(c.created_at)}</span>
-                    </div>
-                    {c.note && (
-                      <p className="text-sm text-foreground mt-2 whitespace-pre-wrap leading-relaxed">{c.note}</p>
-                    )}
-                  </div>
-                );
-              })}
-            </CardContent>
-          </Card>
-        )}
+        {/* Unified Communications Tab — مكالمات + واتساب (يدوي/آلي) + إيميل + ملاحظات تواصل */}
+        <VisitorCommunicationsTab
+          customerUserId={userId}
+          customerPhone={profile?.phone || null}
+          currentStaffId={user?.id || null}
+        />
 
         {/* Saved Notes */}
         {notes.length > 0 && (
