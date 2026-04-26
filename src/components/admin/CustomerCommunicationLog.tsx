@@ -102,7 +102,7 @@ export default function CustomerCommunicationLog({ customerUserId, compact = fal
     if (reminderAt) {
       payload.reminder_at = new Date(reminderAt).toISOString();
     }
-    const { error } = await supabase.from("customer_communications").insert(payload);
+    const { error } = await supabase.from("customer_communications").insert(payload as any);
     if (error) {
       toast({ title: "خطأ", description: "فشل حفظ سجل التواصل", variant: "destructive" });
     } else {
