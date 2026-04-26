@@ -581,6 +581,44 @@ const StaffHome = () => {
         };
       });
       setBuyersList(buyersArr);
+
+      // Build per-visitor activity map (ordered / cart / search / product views)
+      // Used by the visitor-report filters and the CSV export so each row carries
+      // a complete picture of what the visitor actually DID on the site.
+      const activityMap = new Map<string, { searched: boolean; addedToCart: boolean; ordered: boolean; viewedProducts: boolean; searchTerms: string[]; orderCount: number; cartItems: number }>();
+      const ensure = (uid: string) => {
+        let cur = activityMap.get(uid);
+        if (!cur) {
+          cur = { searched: false, addedToCart: false, ordered: false, viewedProducts: false, searchTerms: [], orderCount: 0, cartItems: 0 };
+          activityMap.set(uid, cur);
+        }
+        return cur;
+      };
+      for (const s of searchesRes.data || []) {
+        if (!s.user_id) continue;
+        const a = ensure(s.user_id);
+        a.searched = true;
+        if (s.search_query && a.searchTerms.length < 5 && !a.searchTerms.includes(s.search_query)) {
+          a.searchTerms.push(s.search_query);
+        }
+      }
+      for (const c of cartRes.data || []) {
+        if (!c.user_id) continue;
+        const a = ensure(c.user_id);
+        a.addedToCart = true;
+        a.cartItems += 1;
+      }
+      for (const o of ordersRes.data || []) {
+        if (!o.user_id) continue;
+        const a = ensure(o.user_id);
+        a.ordered = true;
+        a.orderCount += 1;
+      }
+      for (const v of viewsRes.data || []) {
+        if (!v.user_id) continue;
+        ensure(v.user_id).viewedProducts = true;
+      }
+      setVisitorActivityMap(activityMap);
     } catch (e) {
       console.error("[StaffHome] fetch error", e);
     } finally {
