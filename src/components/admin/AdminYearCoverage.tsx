@@ -201,7 +201,7 @@ export default function AdminYearCoverage() {
         </CardHeader>
         <CardContent className="space-y-4">
           {/* KPIs */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <div className="bg-muted/30 rounded-lg p-3 text-center">
               <div className="text-2xl font-bold">{stats.total}</div>
               <div className="text-xs text-muted-foreground">إجمالي</div>
@@ -217,6 +217,10 @@ export default function AdminYearCoverage() {
             <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-3 text-center">
               <div className="text-2xl font-bold text-amber-700 dark:text-amber-300">{stats.wide}</div>
               <div className="text-xs text-muted-foreground">نطاق واسع (15+ سنة)</div>
+            </div>
+            <div className="bg-orange-50 dark:bg-orange-950/30 rounded-lg p-3 text-center">
+              <div className="text-2xl font-bold text-orange-700 dark:text-orange-300">{stats.invalid}</div>
+              <div className="text-xs text-muted-foreground">قيم غير منطقية</div>
             </div>
           </div>
 
@@ -237,6 +241,7 @@ export default function AdminYearCoverage() {
                 { v: "missing", label: "بدون تغطية" },
                 { v: "single_year", label: "سنة واحدة فقط" },
                 { v: "wide_range", label: "نطاق واسع" },
+                { v: "invalid", label: `غير منطقية${stats.invalid > 0 ? ` (${stats.invalid})` : ""}` },
               ].map((opt) => (
                 <Button
                   key={opt.v}
@@ -247,9 +252,19 @@ export default function AdminYearCoverage() {
                   {opt.label}
                 </Button>
               ))}
-              <Button size="sm" variant="secondary" onClick={reRunAutoInference} disabled={running}>
+              <Button size="sm" variant="secondary" onClick={reRunAutoInference} disabled={running || fixing}>
                 {running ? <Loader2 className="w-4 h-4 animate-spin ml-1" /> : <RefreshCw className="w-4 h-4 ml-1" />}
                 إعادة الاستنتاج التلقائي
+              </Button>
+              <Button
+                size="sm"
+                variant={stats.invalid > 0 ? "destructive" : "outline"}
+                onClick={quickFixInvalid}
+                disabled={fixing || running || stats.invalid === 0}
+                title="يصحح year_to تلقائياً ليساوي year_from عند وجود قيم شاذة"
+              >
+                {fixing ? <Loader2 className="w-4 h-4 animate-spin ml-1" /> : <Wrench className="w-4 h-4 ml-1" />}
+                تصحيح سريع{stats.invalid > 0 ? ` (${stats.invalid})` : ""}
               </Button>
             </div>
           </div>
