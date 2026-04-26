@@ -91,6 +91,7 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
   const { user, isAdmin } = useAuth();
   const { toast } = useToast();
   const [tab, setTab] = useState<"urgent" | "chatbot" | "search" | "yesterday" | "leaderboard">("urgent");
+  const tabsRef = useRef<HTMLDivElement | null>(null);
   const [segmentFilter, setSegmentFilter] = useState<"all" | "b2b" | "b2c">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
