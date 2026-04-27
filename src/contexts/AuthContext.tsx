@@ -24,6 +24,18 @@ interface AuthContextType {
   isAdmin: boolean;
   isModerator: boolean;
   signOut: () => Promise<void>;
+  /**
+   * Impersonation — Admin-only "View as employee" mode.
+   * When active, isAdmin is forced to false and isModerator to true
+   * so the UI behaves exactly like the impersonated employee would see it.
+   * The underlying Supabase session is unchanged → the admin still owns
+   * every action; impersonation is purely a frontend display switch.
+   */
+  isImpersonating: boolean;
+  impersonatedUserId: string | null;
+  impersonatedName: string | null;
+  startImpersonation: (target: { userId: string; name: string }) => void;
+  stopImpersonation: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -35,6 +47,11 @@ const AuthContext = createContext<AuthContextType>({
   isAdmin: false,
   isModerator: false,
   signOut: async () => {},
+  isImpersonating: false,
+  impersonatedUserId: null,
+  impersonatedName: null,
+  startImpersonation: () => {},
+  stopImpersonation: () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
