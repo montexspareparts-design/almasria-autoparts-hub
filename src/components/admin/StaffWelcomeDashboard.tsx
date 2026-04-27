@@ -149,6 +149,18 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
       totalStaff,
     });
 
+    // عملاء بدون تواصل: لم يُتواصَل معهم نهائياً، أو آخر تواصل > 7 أيام
+    const noContact = (myAssignmentsRes.data || []).filter((a: any) =>
+      !a.last_contacted_at || a.last_contacted_at < days7Ago
+    ).length;
+
+    setStatusCounters({
+      critical: criticalRes.count || 0,
+      slaBreached: slaBreachedRes.count || 0,
+      hotLeads: hotLeadsRes.count || 0,
+      noContact,
+    });
+
     setConversations(recentConvRes.data || []);
     setPendingOrders(pendingOrdersRes.data || []);
     setLoading(false);
