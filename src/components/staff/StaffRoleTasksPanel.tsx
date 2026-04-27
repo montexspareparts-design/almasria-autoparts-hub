@@ -326,6 +326,7 @@ export default function StaffRoleTasksPanel({ limit = 10, searchQuery = "" }: Pr
       const collected: RoleTask[] = [];
 
       if (role === "moderator") {
+        // موظف المبيعات: يشوف مهام المبيعات فقط (متابعة العملاء، Leads، السلال، إلخ)
         await Promise.all([
           fetchQuoteFollowups(collected, isHidden),
           fetchPendingOrderContacts(collected, isHidden),
@@ -334,13 +335,21 @@ export default function StaffRoleTasksPanel({ limit = 10, searchQuery = "" }: Pr
           fetchActiveVisitors(collected, isHidden),
         ]);
       } else if (role === "admin") {
+        // المدير: يشوف الكل — المهام الإشرافية + كل مهام المبيعات
         await Promise.all([
+          // إشرافية
           fetchDealerApplications(collected, isHidden),
           fetchHighValueOrders(collected, isHidden),
           fetchErpSyncAlerts(collected, isHidden),
           fetchStaleDailyReports(collected, isHidden),
           fetchStalePayments(collected, isHidden),
           fetchPendingStockAlerts(collected, isHidden),
+          // مبيعات (نفس مهام الموظف — المدير يشوفها كمان)
+          fetchQuoteFollowups(collected, isHidden),
+          fetchPendingOrderContacts(collected, isHidden),
+          fetchAbandonedCarts(collected, isHidden),
+          fetchLeadFollowups(collected, isHidden),
+          fetchActiveVisitors(collected, isHidden),
         ]);
       }
 
