@@ -79,6 +79,7 @@ export default function AdminStaffPerformance() {
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<keyof StaffMetric>("score");
   const [selectedStaff, setSelectedStaff] = useState<{ id: string; name: string } | null>(null);
+  const [selectedKpi, setSelectedKpi] = useState<KpiKey | null>(null);
 
   const { from, to } = useMemo(() => getDateRange(range), [range]);
 
