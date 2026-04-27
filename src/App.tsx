@@ -9,6 +9,7 @@ const SmartLeadTriggers = lazy(() => import("@/components/SmartLeadTriggers"));
 // ANY page (including /admin/staff-home), not only inside /admin.
 const AdminNewOrderAlertGlobal = lazy(() => import("@/components/admin/AdminNewOrderAlert"));
 const AdminNewSignupAlertGlobal = lazy(() => import("@/components/admin/AdminNewSignupAlert"));
+const ImpersonationBanner = lazy(() => import("@/components/admin/ImpersonationBanner"));
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
