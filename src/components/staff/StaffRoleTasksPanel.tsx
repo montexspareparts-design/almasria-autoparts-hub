@@ -685,6 +685,14 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
     (t: RoleTask, sla: SlaInfo): boolean => {
       switch (filter) {
         case "all": return true;
+        case "critical": return sla.status === "critical";
+        case "high": return t.severity === "high";
+        case "today": {
+          // Created within the same calendar day as "now" (local time)
+          const now = new Date();
+          const start = new Date(now); start.setHours(0, 0, 0, 0);
+          return new Date(t.agedAtIso).getTime() >= start.getTime();
+        }
         case "urgent": return t.severity === "high" || sla.status === "critical";
         case "hot_leads":
           return t.kind === "lead_followup" || t.kind === "active_visitor_engage";
