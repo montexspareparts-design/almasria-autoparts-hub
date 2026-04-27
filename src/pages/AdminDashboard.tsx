@@ -212,7 +212,8 @@ const AdminDashboard = () => {
 
   const filteredSidebarSections = filteredSidebarGroups.flatMap(g => g.items);
 
-  const activeSection = searchParams.get("section") || (filteredSidebarSections[0]?.id || "analytics");
+  // نقطة البداية الموحّدة = "الرئيسية للموظف" (daily-dashboard) لكل من الأدمن والموظف.
+  const activeSection = searchParams.get("section") || (filteredSidebarSections[0]?.id || "daily-dashboard");
 
   const setActiveSection = (section: string) => {
     setSearchParams({ section });
