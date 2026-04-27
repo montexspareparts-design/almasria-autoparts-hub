@@ -85,23 +85,111 @@ interface RoleTask {
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
 
+/** SLA in hours per task kind. Tasks aged beyond this are flagged "متأخر/Breached". */
 const KIND_META: Record<
   RoleTaskKind,
-  { label: string; icon: typeof FileText; color: string; role: StaffRole | "both" }
+  {
+    label: string;
+    icon: typeof FileText;
+    color: string;
+    role: StaffRole | "both";
+    /** SLA window — task is "on track" until this many hours pass. */
+    slaHours: number;
+  }
 > = {
   // Moderator
-  quote_followup: { label: "متابعة عرض سعر", icon: FileText, color: "text-blue-600", role: "moderator" },
-  pending_order_contact: { label: "تواصل مع طلب جديد", icon: ShoppingCart, color: "text-amber-600", role: "moderator" },
-  abandoned_cart: { label: "سلة مهجورة", icon: Package, color: "text-orange-600", role: "moderator" },
-  lead_followup: { label: "متابعة Lead", icon: Flame, color: "text-rose-600", role: "moderator" },
-  active_visitor_engage: { label: "زائر نشط الآن", icon: UsersIcon, color: "text-cyan-600", role: "moderator" },
+  quote_followup: { label: "متابعة عرض سعر", icon: FileText, color: "text-blue-600", role: "moderator", slaHours: 24 },
+  pending_order_contact: { label: "تواصل مع طلب جديد", icon: ShoppingCart, color: "text-amber-600", role: "moderator", slaHours: 4 },
+  abandoned_cart: { label: "سلة مهجورة", icon: Package, color: "text-orange-600", role: "moderator", slaHours: 12 },
+  lead_followup: { label: "متابعة Lead", icon: Flame, color: "text-rose-600", role: "moderator", slaHours: 24 },
+  active_visitor_engage: { label: "زائر نشط الآن", icon: UsersIcon, color: "text-cyan-600", role: "moderator", slaHours: 1 },
   // Admin
-  review_dealer_application: { label: "مراجعة طلب تاجر جديد", icon: UserCheck, color: "text-indigo-600", role: "admin" },
-  review_high_value_order: { label: "اعتماد طلب عالي القيمة", icon: ShieldCheck, color: "text-purple-600", role: "admin" },
-  erp_sync_alert: { label: "تنبيه مزامنة ERP", icon: Database, color: "text-red-600", role: "admin" },
-  staff_no_daily_report: { label: "موظف بدون تقرير يومي", icon: ClipboardList, color: "text-amber-700", role: "admin" },
-  stale_payment_transaction: { label: "معاملة دفع معلّقة", icon: CreditCard, color: "text-pink-600", role: "admin" },
-  stock_alert_pending: { label: "تنبيه مخزون لم يُبلَّغ", icon: TrendingDown, color: "text-emerald-700", role: "admin" },
+  review_dealer_application: { label: "مراجعة طلب تاجر جديد", icon: UserCheck, color: "text-indigo-600", role: "admin", slaHours: 24 },
+  review_high_value_order: { label: "اعتماد طلب عالي القيمة", icon: ShieldCheck, color: "text-purple-600", role: "admin", slaHours: 6 },
+  erp_sync_alert: { label: "تنبيه مزامنة ERP", icon: Database, color: "text-red-600", role: "admin", slaHours: 12 },
+  staff_no_daily_report: { label: "موظف بدون تقرير يومي", icon: ClipboardList, color: "text-amber-700", role: "admin", slaHours: 8 },
+  stale_payment_transaction: { label: "معاملة دفع معلّقة", icon: CreditCard, color: "text-pink-600", role: "admin", slaHours: 12 },
+  stock_alert_pending: { label: "تنبيه مخزون لم يُبلَّغ", icon: TrendingDown, color: "text-emerald-700", role: "admin", slaHours: 48 },
+};
+
+/**
+ * SLA status derived from age vs SLA window:
+ *  - on_track : age < 70% of SLA            (green)
+ *  - warning  : 70% ≤ age < 100% of SLA     (amber)
+ *  - breached : age ≥ SLA but < 24h         (red)
+ *  - critical : age ≥ 24h regardless of SLA (red + pulse, dedicated banner)
+ */
+type SlaStatus = "on_track" | "warning" | "breached" | "critical";
+
+interface SlaInfo {
+  status: SlaStatus;
+  ageHours: number;
+  slaHours: number;
+  /** 0..1 progress within SLA window (capped at 1). */
+  progress: number;
+  /** Human-readable remaining time (negative = overdue). */
+  remainingLabel: string;
+}
+
+function computeSla(agedAtIso: string, slaHours: number): SlaInfo {
+  const ageHrs = (Date.now() - new Date(agedAtIso).getTime()) / HOUR;
+  const progress = Math.min(1, ageHrs / slaHours);
+  let status: SlaStatus;
+  if (ageHrs >= 24) status = "critical";
+  else if (ageHrs >= slaHours) status = "breached";
+  else if (ageHrs >= slaHours * 0.7) status = "warning";
+  else status = "on_track";
+
+  const remaining = slaHours - ageHrs;
+  const remainingLabel =
+    remaining >= 1
+      ? `${Math.round(remaining)}س متبقية`
+      : remaining >= 0
+      ? `أقل من ساعة`
+      : remaining > -24
+      ? `متأخر ${Math.round(-remaining)}س`
+      : `متأخر ${Math.round(-remaining / 24)} يوم`;
+
+  return { status, ageHours: ageHrs, slaHours, progress, remainingLabel };
+}
+
+const SLA_STYLES: Record<SlaStatus, { bar: string; ring: string; cardBorder: string; cardBg: string; chip: string; chipText: string; pulse: boolean }> = {
+  on_track: {
+    bar: "bg-emerald-500",
+    ring: "ring-emerald-200",
+    cardBorder: "border-border",
+    cardBg: "bg-card",
+    chip: "bg-emerald-100 border-emerald-200",
+    chipText: "text-emerald-800",
+    pulse: false,
+  },
+  warning: {
+    bar: "bg-amber-500",
+    ring: "ring-amber-200",
+    cardBorder: "border-amber-300",
+    cardBg: "bg-amber-50/40",
+    chip: "bg-amber-100 border-amber-200",
+    chipText: "text-amber-800",
+    pulse: false,
+  },
+  breached: {
+    bar: "bg-red-500",
+    ring: "ring-red-200",
+    cardBorder: "border-red-300",
+    cardBg: "bg-red-50/40",
+    chip: "bg-red-100 border-red-200",
+    chipText: "text-red-800",
+    pulse: false,
+  },
+  critical: {
+    bar: "bg-red-600",
+    ring: "ring-red-300",
+    cardBorder: "border-red-500",
+    cardBg: "bg-red-50",
+    chip: "bg-red-600 border-red-700",
+    chipText: "text-white",
+    pulse: true,
+  },
 };
 
 function severityBadge(sev: RoleTask["severity"]) {
@@ -121,6 +209,32 @@ function severityBadge(sev: RoleTask["severity"]) {
   }
   return null;
 }
+
+function SlaBadge({ sla }: { sla: SlaInfo }) {
+  const s = SLA_STYLES[sla.status];
+  const label =
+    sla.status === "critical"
+      ? `🚨 SLA متأخر +24س`
+      : sla.status === "breached"
+      ? `⛔ SLA منتهي`
+      : sla.status === "warning"
+      ? `⚠️ قارب SLA`
+      : `✓ ضمن SLA`;
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-md border",
+        s.chip,
+        s.chipText,
+        sla.pulse && "animate-pulse"
+      )}
+      title={`${sla.remainingLabel} (SLA ${sla.slaHours}س)`}
+    >
+      {label}
+    </span>
+  );
+}
+
 
 interface Props {
   /** Maximum tasks rendered. Defaults to 10. */
