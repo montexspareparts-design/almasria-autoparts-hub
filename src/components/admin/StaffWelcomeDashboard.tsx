@@ -72,6 +72,21 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
   const [staffName, setStaffName] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
+  // KPI display preferences (cosmetic — persisted locally for the staff member).
+  // Will be wired into viewedUnderBasis logic when the "Viewed Visitors" KPI returns.
+  const [kpiRange, setKpiRange] = useState<"today" | "7d">(
+    () => (localStorage.getItem("kpi_range") as "today" | "7d") || "today"
+  );
+  const [kpiBasis, setKpiBasis] = useState<"event_day" | "range" | "all_time">(
+    () => (localStorage.getItem("kpi_basis") as "event_day" | "range" | "all_time") || "range"
+  );
+  const [kpiAnchor, setKpiAnchor] = useState<"first" | "last">(
+    () => (localStorage.getItem("kpi_anchor") as "first" | "last") || "last"
+  );
+  useEffect(() => { localStorage.setItem("kpi_range", kpiRange); }, [kpiRange]);
+  useEffect(() => { localStorage.setItem("kpi_basis", kpiBasis); }, [kpiBasis]);
+  useEffect(() => { localStorage.setItem("kpi_anchor", kpiAnchor); }, [kpiAnchor]);
+
   // Single source of truth for permissions — see src/lib/staffPermissions.ts.
   // The "صلاحيات الأدوار" admin screen renders the exact same lists.
   const roles = { isAdmin, isModerator };
