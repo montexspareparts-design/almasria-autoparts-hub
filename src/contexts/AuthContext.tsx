@@ -24,6 +24,18 @@ interface AuthContextType {
   isAdmin: boolean;
   isModerator: boolean;
   signOut: () => Promise<void>;
+  /**
+   * Impersonation — Admin-only "View as employee" mode.
+   * When active, isAdmin is forced to false and isModerator to true
+   * so the UI behaves exactly like the impersonated employee would see it.
+   * The underlying Supabase session is unchanged → the admin still owns
+   * every action; impersonation is purely a frontend display switch.
+   */
+  isImpersonating: boolean;
+  impersonatedUserId: string | null;
+  impersonatedName: string | null;
+  startImpersonation: (target: { userId: string; name: string }) => void;
+  stopImpersonation: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -35,6 +47,11 @@ const AuthContext = createContext<AuthContextType>({
   isAdmin: false,
   isModerator: false,
   signOut: async () => {},
+  isImpersonating: false,
+  impersonatedUserId: null,
+  impersonatedName: null,
+  startImpersonation: () => {},
+  stopImpersonation: () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -43,6 +60,28 @@ const SESSION_KEY = "dealer_session_id";
 
 function generateSessionId() {
   return crypto.randomUUID();
+}
+
+// sessionStorage key — impersonation is per-tab and never persists across browser restarts.
+const IMPERSONATE_KEY = "almasria_impersonate_v1";
+
+interface ImpersonationState {
+  userId: string;
+  name: string;
+}
+
+function readImpersonation(): ImpersonationState | null {
+  try {
+    const raw = sessionStorage.getItem(IMPERSONATE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed.userId === "string" && typeof parsed.name === "string") {
+      return parsed;
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
 }
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -54,8 +93,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isModerator, setIsModerator] = useState(false);
   const [showCompleteProfile, setShowCompleteProfile] = useState(false);
   const [showRoleSelection, setShowRoleSelection] = useState(false);
+  const [impersonation, setImpersonation] = useState<ImpersonationState | null>(() => readImpersonation());
   const sessionCheckRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { toast } = useToast();
+
+  const startImpersonation = useCallback((target: { userId: string; name: string }) => {
+    const next: ImpersonationState = { userId: target.userId, name: target.name };
+    sessionStorage.setItem(IMPERSONATE_KEY, JSON.stringify(next));
+    setImpersonation(next);
+  }, []);
+
+  const stopImpersonation = useCallback(() => {
+    sessionStorage.removeItem(IMPERSONATE_KEY);
+    setImpersonation(null);
+  }, []);
+
 
   // Central cleanup for ALL auth-related localStorage keys
   const clearAllAuthStorage = useCallback(() => {
@@ -229,7 +281,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setDealerAccount(null);
     setIsAdmin(false);
     setIsModerator(false);
+    // Always drop any impersonation when signing out so the next user
+    // doesn't inherit a stale "view as employee" state.
+    sessionStorage.removeItem(IMPERSONATE_KEY);
+    setImpersonation(null);
   };
+
+  // Effective role flags — when an admin is impersonating an employee, the UI
+  // should behave exactly like the employee. The underlying auth.uid() and
+  // RLS still belong to the admin (frontend-only switch).
+  const isImpersonating = !!impersonation && isAdmin;
+  const effectiveIsAdmin = isImpersonating ? false : isAdmin;
+  const effectiveIsModerator = isImpersonating ? true : isModerator;
+  const effectiveIsDealer = !!dealerAccount && !effectiveIsModerator && !effectiveIsAdmin;
 
   return (
     <AuthContext.Provider
@@ -238,10 +302,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         session,
         loading,
         dealerAccount,
-        isDealer: !!dealerAccount && !isModerator,
-        isAdmin,
-        isModerator,
+        isDealer: effectiveIsDealer,
+        isAdmin: effectiveIsAdmin,
+        isModerator: effectiveIsModerator,
         signOut,
+        isImpersonating,
+        impersonatedUserId: impersonation?.userId ?? null,
+        impersonatedName: impersonation?.name ?? null,
+        startImpersonation,
+        stopImpersonation,
       }}
     >
       {children}

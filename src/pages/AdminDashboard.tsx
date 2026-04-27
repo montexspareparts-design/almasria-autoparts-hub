@@ -53,6 +53,7 @@ const StaffAccountSettings = lazy(() => import("@/components/admin/StaffAccountS
 // AdminNewOrderAlert is now mounted globally in App.tsx
 const AdminSupportRequestAlert = lazy(() => import("@/components/admin/AdminSupportRequestAlert"));
 const AdminNotificationPhones = lazy(() => import("@/components/AdminNotificationPhones"));
+const ViewAsEmployeeDialog = lazy(() => import("@/components/admin/ViewAsEmployeeDialog"));
 const AdminWhatsAppDeliveryStatus = lazy(() => import("@/components/admin/AdminWhatsAppDeliveryStatus"));
 const AdminClientAccountAttempts = lazy(() => import("@/components/admin/AdminClientAccountAttempts"));
 const AdminTranslations = lazy(() => import("@/components/admin/AdminTranslations"));
@@ -170,7 +171,10 @@ const SectionLoader = forwardRef<HTMLDivElement>((_props, ref) => (
 SectionLoader.displayName = "SectionLoader";
 
 const AdminDashboard = () => {
-  const { user, isAdmin, isModerator, isDealer, loading: authLoading, signOut } = useAuth();
+  const { user, isAdmin, isModerator, isDealer, loading: authLoading, signOut, isImpersonating } = useAuth();
+  // The real admin (even while impersonating) should still see the "View as employee" button.
+  const isRealAdmin = isAdmin || isImpersonating;
+  const [viewAsOpen, setViewAsOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -813,6 +817,21 @@ const AdminDashboard = () => {
               </Button>
             )}
 
+            {/* "View as employee" — only visible to the real admin (or the
+                admin currently impersonating, so they can switch employees). */}
+            {isRealAdmin && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setViewAsOpen(true)}
+                className="gap-1 text-[11px] font-bold text-amber-300 hover:bg-amber-500/10 rounded-lg h-8 px-2"
+                title="معاينة الواجهة كموظف"
+              >
+                <Eye className="w-3 h-3" />
+                <span className="hidden sm:inline">اعرض كموظف</span>
+              </Button>
+            )}
+
             <Button
               variant="ghost"
               size="icon"
@@ -824,6 +843,13 @@ const AdminDashboard = () => {
           </div>
         </div>
       </header>
+
+      {/* Lazy-mount the picker dialog only when the admin opens it */}
+      {isRealAdmin && viewAsOpen && (
+        <Suspense fallback={null}>
+          <ViewAsEmployeeDialog open={viewAsOpen} onOpenChange={setViewAsOpen} />
+        </Suspense>
+      )}
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
