@@ -723,14 +723,14 @@ export default function StaffRoleTasksPanel({ limit = 10, searchQuery = "" }: Pr
 
 
   const titleLabel = useMemo(() => {
-    if (role === "admin") return "مهام المشرف";
-    if (role === "moderator") return "مهام المندوب";
+    if (role === "admin") return "مهام المدير";
+    if (role === "moderator") return "مهام موظف المبيعات";
     return "مهام الموظف";
   }, [role]);
 
   const subtitle = useMemo(() => {
-    if (role === "admin") return "10 إجراءات إشرافية مقترحة بناءً على حالة النظام";
-    if (role === "moderator") return "10 إجراءات مبيعات مقترحة بناءً على نشاط العملاء";
+    if (role === "admin") return "كل المهام: إشرافية + مبيعات (نظرة شاملة على نشاط الفريق)";
+    if (role === "moderator") return "إجراءات مبيعات مقترحة بناءً على نشاط العملاء";
     return "";
   }, [role]);
 
