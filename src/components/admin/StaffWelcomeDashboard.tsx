@@ -4,10 +4,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   MessageCircle, ShoppingCart, Clock, Loader2, ArrowLeft, UserCheck,
   PhoneCall, UserPlus, Search, Trophy, Star, Zap, Target,
   AlertTriangle, Flame, TimerOff, UserX,
+  LayoutDashboard, ListChecks,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -232,13 +234,7 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
       {/* مؤشرات الحالة — Critical / SLA / Hot Leads / بدون تواصل */}
       <StatusIndicatorsBar counters={statusCounters} onNavigate={safeNavigate} canAccess={canAccess} />
 
-      {/* Role-based dynamic tasks (مهام موظف المبيعات) — visible immediately
-          on the staff home so they don't need to click "كل المهام" first. */}
-      <Suspense fallback={<div className="flex items-center justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>}>
-        <StaffRoleTasksPanel limit={10} />
-      </Suspense>
-
-      {/* Quick Actions Bar — تختفي الأزرار غير المسموح بها للموظف */}
+      {/* Quick Actions Bar — يفضل ظاهر دايمًا فوق التبويبات */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <Button
           variant="outline"
@@ -285,192 +281,239 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
         )}
       </div>
 
-      {/* My Achievements Today */}
-      <Card className="border-primary/20 bg-gradient-to-l from-primary/[0.04] to-transparent">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-bold flex items-center gap-2">
-            <Zap className="w-4 h-4 text-primary" />
-            إنجازي اليوم
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-3 gap-3">
-          <div className="text-center p-2 rounded-lg bg-blue-50/60 border border-blue-100">
-            <div className="flex items-center justify-center gap-1.5 mb-1">
-              <PhoneCall className="w-3.5 h-3.5 text-blue-600" />
-              <p className="text-[11px] text-blue-700 font-semibold">مكالماتي</p>
-            </div>
-            <p className="text-2xl font-bold text-blue-700">{stats?.myCallsToday || 0}</p>
-          </div>
-          <div className="text-center p-2 rounded-lg bg-emerald-50/60 border border-emerald-100">
-            <div className="flex items-center justify-center gap-1.5 mb-1">
-              <Target className="w-3.5 h-3.5 text-emerald-600" />
-              <p className="text-[11px] text-emerald-700 font-semibold">عملاء جدد</p>
-            </div>
-            <p className="text-2xl font-bold text-emerald-700">{stats?.myLeadsToday || 0}</p>
-          </div>
-          <div className="text-center p-2 rounded-lg bg-amber-50/60 border border-amber-100">
-            <div className="flex items-center justify-center gap-1.5 mb-1">
-              <Star className="w-3.5 h-3.5 text-amber-600 fill-amber-600" />
-              <p className="text-[11px] text-amber-700 font-semibold">تقييمي</p>
-            </div>
-            <p className="text-2xl font-bold text-amber-700">
-              {stats?.myAvgRating ? stats.myAvgRating.toFixed(1) : "—"}
-              <span className="text-[10px] font-normal text-amber-600">/5</span>
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      {/* ============================================================
+          تبويبات داخل نفس الصفحة — تجزئة المحتوى الطويل لتجربة أسرع.
+          الترتيب يتبع تسلسل عمل الموظف:
+            1) نظرة سريعة (إنجازي + KPIs)
+            2) مهامي (الباقي من قائمة المهام الديناميكية)
+            3) المحادثات (آخر واتساب)
+            4) الطلبات (بانتظار الرد)
+          ============================================================ */}
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full h-auto p-1 bg-muted/50">
+          <TabsTrigger value="overview" className="gap-1.5 text-xs sm:text-sm py-2">
+            <LayoutDashboard className="w-3.5 h-3.5" />
+            نظرة سريعة
+          </TabsTrigger>
+          <TabsTrigger value="tasks" className="gap-1.5 text-xs sm:text-sm py-2">
+            <ListChecks className="w-3.5 h-3.5" />
+            مهامي
+          </TabsTrigger>
+          <TabsTrigger value="conversations" className="gap-1.5 text-xs sm:text-sm py-2">
+            <MessageCircle className="w-3.5 h-3.5" />
+            المحادثات
+            {stats?.unreadMessagesCount ? (
+              <Badge className="bg-emerald-600 text-white text-[10px] h-4 min-w-4 px-1">{stats.unreadMessagesCount}</Badge>
+            ) : null}
+          </TabsTrigger>
+          <TabsTrigger value="orders" className="gap-1.5 text-xs sm:text-sm py-2">
+            <ShoppingCart className="w-3.5 h-3.5" />
+            الطلبات
+            {stats?.pendingOrdersCount ? (
+              <Badge className="bg-amber-600 text-white text-[10px] h-4 min-w-4 px-1">{stats.pendingOrdersCount}</Badge>
+            ) : null}
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Inbox KPIs (compact strip) */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <Card
-          className="cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-emerald-500"
-          onClick={() => onNavigate?.("whatsapp-inbox")}
-        >
-          <CardContent className="p-3 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
-              <MessageCircle className="w-4 h-4 text-emerald-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xl font-bold text-foreground">{stats?.assignedConversations || 0}</p>
-              <p className="text-[11px] text-muted-foreground">محادثات مسندة لي</p>
-            </div>
-            <ArrowLeft className="w-4 h-4 text-muted-foreground" />
-          </CardContent>
-        </Card>
-
-        <Card
-          className="cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-amber-500"
-          onClick={() => onNavigate?.("whatsapp-inbox")}
-        >
-          <CardContent className="p-3 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
-              <MessageCircle className="w-4 h-4 text-amber-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xl font-bold text-foreground">{stats?.unreadMessagesCount || 0}</p>
-              <p className="text-[11px] text-muted-foreground">رسائل غير مقروءة</p>
-            </div>
-            <ArrowLeft className="w-4 h-4 text-muted-foreground" />
-          </CardContent>
-        </Card>
-
-        <Card
-          className="cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-blue-500"
-          onClick={() => onNavigate?.("orders")}
-        >
-          <CardContent className="p-3 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
-              <ShoppingCart className="w-4 h-4 text-blue-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xl font-bold text-foreground">{stats?.pendingOrdersCount || 0}</p>
-              <p className="text-[11px] text-muted-foreground">طلبات بانتظار الرد</p>
-            </div>
-            <ArrowLeft className="w-4 h-4 text-muted-foreground" />
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Recent WhatsApp Conversations */}
-        <Card>
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-bold flex items-center gap-2">
-              <MessageCircle className="w-4 h-4 text-emerald-600" />
-              آخر محادثات الواتساب
-            </CardTitle>
-            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => onNavigate?.("whatsapp-inbox")}>
-              الكل
-            </Button>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {conversations.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-4">لا توجد محادثات حديثة</p>
-            ) : (
-              conversations.map(conv => (
-                <div
-                  key={conv.id}
-                  className="flex items-center gap-3 p-2.5 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors"
-                  onClick={() => onNavigate?.("whatsapp-inbox")}
-                >
-                  <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
-                    <span className="text-xs font-bold text-emerald-700">
-                      {(conv.contact_name || conv.phone).slice(0, 2)}
-                    </span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="font-semibold text-sm text-foreground truncate">
-                        {conv.contact_name || conv.phone}
-                      </p>
-                      <span className="text-[10px] text-muted-foreground shrink-0">
-                        {formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: true, locale: ar })}
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {conv.last_message_preview || "—"}
-                    </p>
-                  </div>
-                  {conv.unread_count > 0 && (
-                    <Badge className="bg-emerald-600 text-white text-[10px] h-5 min-w-5 px-1.5 shrink-0">
-                      {conv.unread_count}
-                    </Badge>
-                  )}
+        {/* ----- Tab 1: نظرة سريعة (إنجازي اليوم + KPIs المختصرة) ----- */}
+        <TabsContent value="overview" className="space-y-4 mt-4">
+          {/* My Achievements Today */}
+          <Card className="border-primary/20 bg-gradient-to-l from-primary/[0.04] to-transparent">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-bold flex items-center gap-2">
+                <Zap className="w-4 h-4 text-primary" />
+                إنجازي اليوم
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-3 gap-3">
+              <div className="text-center p-2 rounded-lg bg-blue-50/60 border border-blue-100">
+                <div className="flex items-center justify-center gap-1.5 mb-1">
+                  <PhoneCall className="w-3.5 h-3.5 text-blue-600" />
+                  <p className="text-[11px] text-blue-700 font-semibold">مكالماتي</p>
                 </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
+                <p className="text-2xl font-bold text-blue-700">{stats?.myCallsToday || 0}</p>
+              </div>
+              <div className="text-center p-2 rounded-lg bg-emerald-50/60 border border-emerald-100">
+                <div className="flex items-center justify-center gap-1.5 mb-1">
+                  <Target className="w-3.5 h-3.5 text-emerald-600" />
+                  <p className="text-[11px] text-emerald-700 font-semibold">عملاء جدد</p>
+                </div>
+                <p className="text-2xl font-bold text-emerald-700">{stats?.myLeadsToday || 0}</p>
+              </div>
+              <div className="text-center p-2 rounded-lg bg-amber-50/60 border border-amber-100">
+                <div className="flex items-center justify-center gap-1.5 mb-1">
+                  <Star className="w-3.5 h-3.5 text-amber-600 fill-amber-600" />
+                  <p className="text-[11px] text-amber-700 font-semibold">تقييمي</p>
+                </div>
+                <p className="text-2xl font-bold text-amber-700">
+                  {stats?.myAvgRating ? stats.myAvgRating.toFixed(1) : "—"}
+                  <span className="text-[10px] font-normal text-amber-600">/5</span>
+                </p>
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Pending Orders */}
-        <Card>
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-bold flex items-center gap-2">
-              <Clock className="w-4 h-4 text-amber-600" />
-              طلبات بانتظار الرد
-            </CardTitle>
-            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => onNavigate?.("orders")}>
-              الكل
-            </Button>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {pendingOrders.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-4">لا توجد طلبات بانتظار الرد 🎉</p>
-            ) : (
-              pendingOrders.map(order => (
-                <div
-                  key={order.id}
-                  className="flex items-center gap-3 p-2.5 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors"
-                  onClick={() => onNavigate?.("orders")}
-                >
-                  <div className="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
-                    <ShoppingCart className="w-4 h-4 text-amber-700" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="font-semibold text-sm text-foreground truncate">
-                        #{order.order_number}
-                      </p>
-                      <span className="text-[10px] text-muted-foreground shrink-0">
-                        {formatDistanceToNow(new Date(order.created_at), { addSuffix: true, locale: ar })}
+          {/* Inbox KPIs (compact strip) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <Card
+              className="cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-emerald-500"
+              onClick={() => onNavigate?.("whatsapp-inbox")}
+            >
+              <CardContent className="p-3 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
+                  <MessageCircle className="w-4 h-4 text-emerald-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xl font-bold text-foreground">{stats?.assignedConversations || 0}</p>
+                  <p className="text-[11px] text-muted-foreground">محادثات مسندة لي</p>
+                </div>
+                <ArrowLeft className="w-4 h-4 text-muted-foreground" />
+              </CardContent>
+            </Card>
+
+            <Card
+              className="cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-amber-500"
+              onClick={() => onNavigate?.("whatsapp-inbox")}
+            >
+              <CardContent className="p-3 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+                  <MessageCircle className="w-4 h-4 text-amber-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xl font-bold text-foreground">{stats?.unreadMessagesCount || 0}</p>
+                  <p className="text-[11px] text-muted-foreground">رسائل غير مقروءة</p>
+                </div>
+                <ArrowLeft className="w-4 h-4 text-muted-foreground" />
+              </CardContent>
+            </Card>
+
+            <Card
+              className="cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-blue-500"
+              onClick={() => onNavigate?.("orders")}
+            >
+              <CardContent className="p-3 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+                  <ShoppingCart className="w-4 h-4 text-blue-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xl font-bold text-foreground">{stats?.pendingOrdersCount || 0}</p>
+                  <p className="text-[11px] text-muted-foreground">طلبات بانتظار الرد</p>
+                </div>
+                <ArrowLeft className="w-4 h-4 text-muted-foreground" />
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* ----- Tab 2: مهامي (Role Tasks Panel) ----- */}
+        <TabsContent value="tasks" className="mt-4">
+          <Suspense fallback={<div className="flex items-center justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>}>
+            <StaffRoleTasksPanel limit={20} />
+          </Suspense>
+        </TabsContent>
+
+        {/* ----- Tab 3: المحادثات ----- */}
+        <TabsContent value="conversations" className="mt-4">
+          <Card>
+            <CardHeader className="pb-2 flex flex-row items-center justify-between">
+              <CardTitle className="text-sm font-bold flex items-center gap-2">
+                <MessageCircle className="w-4 h-4 text-emerald-600" />
+                آخر محادثات الواتساب
+              </CardTitle>
+              <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => onNavigate?.("whatsapp-inbox")}>
+                الكل
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {conversations.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-4">لا توجد محادثات حديثة</p>
+              ) : (
+                conversations.map(conv => (
+                  <div
+                    key={conv.id}
+                    className="flex items-center gap-3 p-2.5 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors"
+                    onClick={() => onNavigate?.("whatsapp-inbox")}
+                  >
+                    <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                      <span className="text-xs font-bold text-emerald-700">
+                        {(conv.contact_name || conv.phone).slice(0, 2)}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-xs text-muted-foreground">
-                        {order.total_amount.toLocaleString("ar-EG")} ج.م
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-semibold text-sm text-foreground truncate">
+                          {conv.contact_name || conv.phone}
+                        </p>
+                        <span className="text-[10px] text-muted-foreground shrink-0">
+                          {formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: true, locale: ar })}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {conv.last_message_preview || "—"}
                       </p>
-                      <Badge variant="outline" className="text-[10px] h-4 border-amber-300 text-amber-700">
-                        {order.status === "pending" ? "بانتظار المراجعة" : "بانتظار الدفع"}
+                    </div>
+                    {conv.unread_count > 0 && (
+                      <Badge className="bg-emerald-600 text-white text-[10px] h-5 min-w-5 px-1.5 shrink-0">
+                        {conv.unread_count}
                       </Badge>
+                    )}
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ----- Tab 4: الطلبات بانتظار الرد ----- */}
+        <TabsContent value="orders" className="mt-4">
+          <Card>
+            <CardHeader className="pb-2 flex flex-row items-center justify-between">
+              <CardTitle className="text-sm font-bold flex items-center gap-2">
+                <Clock className="w-4 h-4 text-amber-600" />
+                طلبات بانتظار الرد
+              </CardTitle>
+              <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => onNavigate?.("orders")}>
+                الكل
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {pendingOrders.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-4">لا توجد طلبات بانتظار الرد 🎉</p>
+              ) : (
+                pendingOrders.map(order => (
+                  <div
+                    key={order.id}
+                    className="flex items-center gap-3 p-2.5 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors"
+                    onClick={() => onNavigate?.("orders")}
+                  >
+                    <div className="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                      <ShoppingCart className="w-4 h-4 text-amber-700" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-semibold text-sm text-foreground truncate">
+                          #{order.order_number}
+                        </p>
+                        <span className="text-[10px] text-muted-foreground shrink-0">
+                          {formatDistanceToNow(new Date(order.created_at), { addSuffix: true, locale: ar })}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs text-muted-foreground">
+                          {order.total_amount.toLocaleString("ar-EG")} ج.م
+                        </p>
+                        <Badge variant="outline" className="text-[10px] h-4 border-amber-300 text-amber-700">
+                          {order.status === "pending" ? "بانتظار المراجعة" : "بانتظار الدفع"}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
