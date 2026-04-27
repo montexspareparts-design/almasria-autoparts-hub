@@ -56,7 +56,7 @@ interface StaffWelcomeDashboardProps {
 }
 
 export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashboardProps) {
-  const { user } = useAuth();
+  const { user, isAdmin, isModerator } = useAuth();
   const [stats, setStats] = useState<WelcomeStats | null>(null);
   const [statusCounters, setStatusCounters] = useState<StatusCounters>({
     critical: 0, slaBreached: 0, hotLeads: 0, noContact: 0,
@@ -65,6 +65,26 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
   const [pendingOrders, setPendingOrders] = useState<PendingOrder[]>([]);
   const [staffName, setStaffName] = useState<string>("");
   const [loading, setLoading] = useState(true);
+
+  // الأقسام المتاحة للموظف (Moderator). الأدمن يشوف كل حاجة.
+  // مرجع المسارات: MODERATOR_SECTIONS في src/pages/AdminDashboard.tsx
+  const MODERATOR_ALLOWED = new Set([
+    "daily-dashboard", "customer-intel", "analytics",
+    "customers", "orders", "leads", "account-settings",
+    "staff-performance", // متاح لأن لوحة المهام بتلينك ليه (الأدمن فقط لكن نسمح بالعرض)
+  ]);
+  const canAccess = (section: string): boolean => {
+    // الأدمن (سواء impersonating أو لا) يقدر يفتح أي قسم
+    if (isAdmin) return true;
+    // staff-performance حصراً للأدمن
+    if (section === "staff-performance") return false;
+    return MODERATOR_ALLOWED.has(section);
+  };
+  // wrapper آمن: لو القسم مش مسموح بيفلب لأقرب بديل بدل ما يضيع المستخدم في صفحة فاضية
+  const safeNavigate = (section: string, fallback = "daily-dashboard") => {
+    if (!onNavigate) return;
+    onNavigate(canAccess(section) ? section : fallback);
+  };
 
   useEffect(() => {
     if (user) fetchData();
@@ -223,7 +243,7 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
       </Card>
 
       {/* مؤشرات الحالة — Critical / SLA / Hot Leads / بدون تواصل */}
-      <StatusIndicatorsBar counters={statusCounters} onNavigate={onNavigate} />
+      <StatusIndicatorsBar counters={statusCounters} onNavigate={safeNavigate} canAccess={canAccess} />
 
       {/* Role-based dynamic tasks (مهام موظف المبيعات) — visible immediately
           on the staff home so they don't need to click "كل المهام" first. */}
@@ -231,12 +251,12 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
         <StaffRoleTasksPanel limit={10} />
       </Suspense>
 
-      {/* Quick Actions Bar */}
+      {/* Quick Actions Bar — تختفي الأزرار غير المسموح بها للموظف */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <Button
           variant="outline"
           className="h-auto py-3 flex-col gap-1.5 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700"
-          onClick={() => onNavigate?.("leads")}
+          onClick={() => safeNavigate("leads")}
         >
           <UserPlus className="w-5 h-5" />
           <span className="text-xs font-semibold">عميل جديد</span>
@@ -244,7 +264,7 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
         <Button
           variant="outline"
           className="h-auto py-3 flex-col gap-1.5 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700"
-          onClick={() => onNavigate?.("customer-profile")}
+          onClick={() => safeNavigate("customers")}
         >
           <PhoneCall className="w-5 h-5" />
           <span className="text-xs font-semibold">تسجيل مكالمة</span>
@@ -252,19 +272,30 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
         <Button
           variant="outline"
           className="h-auto py-3 flex-col gap-1.5 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700"
-          onClick={() => onNavigate?.("customer-profile")}
+          onClick={() => safeNavigate("customers")}
         >
           <Search className="w-5 h-5" />
           <span className="text-xs font-semibold">بحث عميل</span>
         </Button>
-        <Button
-          variant="outline"
-          className="h-auto py-3 flex-col gap-1.5 hover:bg-amber-50 hover:border-amber-300 hover:text-amber-700"
-          onClick={() => onNavigate?.("whatsapp-inbox")}
-        >
-          <MessageCircle className="w-5 h-5" />
-          <span className="text-xs font-semibold">صندوق الواتساب</span>
-        </Button>
+        {canAccess("whatsapp-inbox") ? (
+          <Button
+            variant="outline"
+            className="h-auto py-3 flex-col gap-1.5 hover:bg-amber-50 hover:border-amber-300 hover:text-amber-700"
+            onClick={() => onNavigate?.("whatsapp-inbox")}
+          >
+            <MessageCircle className="w-5 h-5" />
+            <span className="text-xs font-semibold">صندوق الواتساب</span>
+          </Button>
+        ) : (
+          <Button
+            variant="outline"
+            className="h-auto py-3 flex-col gap-1.5 hover:bg-amber-50 hover:border-amber-300 hover:text-amber-700"
+            onClick={() => safeNavigate("customer-intel")}
+          >
+            <Zap className="w-5 h-5" />
+            <span className="text-xs font-semibold">ذكاء العملاء</span>
+          </Button>
+        )}
       </div>
 
       {/* My Achievements Today */}
@@ -513,15 +544,16 @@ const STATUS_ITEMS: StatusItemConfig[] = [
     icon: UserX,
     active: "bg-violet-50 border-violet-300 text-violet-700 hover:bg-violet-100",
     empty: "bg-muted/30 border-border text-muted-foreground",
-    navTo: "customer-profile",
+    navTo: "customers",
   },
 ];
 
 function StatusIndicatorsBar({
-  counters, onNavigate,
+  counters, onNavigate, canAccess,
 }: {
   counters: StatusCounters;
   onNavigate?: (section: string) => void;
+  canAccess?: (section: string) => boolean;
 }) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
@@ -529,15 +561,19 @@ function StatusIndicatorsBar({
         const count = counters[item.key];
         const isActive = count > 0;
         const Icon = item.icon;
+        // إذا كان للمؤشر مسار وغير مسموح للدور الحالي، نعطّل الزر
+        const allowed = item.navTo ? (canAccess ? canAccess(item.navTo) : true) : false;
+        const clickable = !!item.navTo && allowed;
         return (
           <button
             key={item.key}
             type="button"
-            onClick={() => item.navTo && onNavigate?.(item.navTo)}
-            disabled={!item.navTo}
+            onClick={() => clickable && item.navTo && onNavigate?.(item.navTo)}
+            disabled={!clickable}
+            title={!allowed && item.navTo ? "هذا القسم غير متاح لدورك" : undefined}
             className={`relative text-right rounded-xl border p-3 transition-all ${
               isActive ? item.active : item.empty
-            } ${item.navTo ? "cursor-pointer hover:shadow-sm hover:-translate-y-0.5 active:scale-[0.98]" : "cursor-default"}`}
+            } ${clickable ? "cursor-pointer hover:shadow-sm hover:-translate-y-0.5 active:scale-[0.98]" : "cursor-default"}`}
             aria-label={`${item.label}: ${count}`}
           >
             <div className="flex items-center justify-between mb-1">
