@@ -577,9 +577,16 @@ const AdminDashboard = () => {
   const renderActiveSection = () => {
     switch (activeSection) {
       case "daily-dashboard":
+        // الموظفون يشوفون مركز قيادة المتابعة الكامل (نفس واجهة /admin/staff-home)
+        if (isModerator && !isAdmin) {
+          return (
+            <Suspense fallback={<SectionLoader />}>
+              <StaffHome />
+            </Suspense>
+          );
+        }
         return (
           <Suspense fallback={<SectionLoader />}>
-            {isModerator && !isAdmin && <StaffWelcomeDashboard onNavigate={setActiveSection} />}
             <StaffDailyDashboard onNavigate={setActiveSection} />
           </Suspense>
         );
