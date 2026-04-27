@@ -691,7 +691,10 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
                             size="sm"
                             variant="outline"
                             className="h-7 text-xs"
-                            onClick={() => navigate(t.href!)}
+                            onClick={async () => {
+                              await logAction(t, "open");
+                              navigate(t.href!);
+                            }}
                           >
                             <ExternalLink className="w-3 h-3 ml-1" />
                             فتح
@@ -699,7 +702,7 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
                         )}
                         {t.phone && (
                           <>
-                            <a href={`tel:${t.phone}`}>
+                            <a href={`tel:${t.phone}`} onClick={() => handleContact(t, "phone")}>
                               <Button size="sm" variant="outline" className="h-7 text-xs">
                                 <Phone className="w-3 h-3 ml-1" /> اتصال
                               </Button>
@@ -708,6 +711,7 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
                               href={`https://wa.me/${t.phone.replace(/\D/g, "")}`}
                               target="_blank"
                               rel="noreferrer"
+                              onClick={() => handleContact(t, "whatsapp")}
                             >
                               <Button size="sm" variant="outline" className="h-7 text-xs text-green-700">
                                 <MessageCircle className="w-3 h-3 ml-1" /> واتساب
@@ -715,6 +719,22 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
                             </a>
                           </>
                         )}
+                        {(() => {
+                          const ap = approveMeta(t.kind);
+                          if (!ap) return null;
+                          const ApIcon = ap.icon;
+                          return (
+                            <Button
+                              size="sm"
+                              className="h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                              disabled={busyId === t.id}
+                              onClick={() => handleApprove(t)}
+                            >
+                              <ApIcon className="w-3 h-3 ml-1" />
+                              {ap.label}
+                            </Button>
+                          );
+                        })()}
                         <Button
                           size="sm"
                           className="h-7 text-xs"
