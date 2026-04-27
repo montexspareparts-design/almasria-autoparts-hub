@@ -16,7 +16,7 @@
  * Polling كل 60 ثانية.
  */
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
@@ -63,6 +63,7 @@ export default function StaffBentoHero({
   onJumpToTab,
 }: Props) {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   // جديد اليوم
   const [newOrders24h, setNewOrders24h] = useState(0);
@@ -515,8 +516,8 @@ export default function StaffBentoHero({
           value={newVisitorsToday.toString()}
           hint="منذ منتصف الليل"
           tone="emerald"
-          onClick={() => onJumpToTab("yesterday")}
-          ctaLabel="عرض الزوار"
+          onClick={() => navigate("/admin/new-visitors")}
+          ctaLabel="عرض الزوار + حالة المتابعة"
         />
         <ShortcutTile
           icon={<AlertTriangle className="w-4 h-4" />}
@@ -823,7 +824,7 @@ export default function StaffBentoHero({
               size="sm"
               variant="outline"
               className="h-8 text-[11px] gap-1"
-              onClick={() => onJumpToTab("yesterday")}
+              onClick={() => navigate("/admin/new-visitors")}
             >
               زوار أمس
               <ArrowLeft className="w-3 h-3" />
