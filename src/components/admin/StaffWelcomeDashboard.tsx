@@ -27,6 +27,13 @@ interface WelcomeStats {
   totalStaff: number;
 }
 
+interface StatusCounters {
+  critical: number;       // طلبات pending > 30 دقيقة بدون رد
+  slaBreached: number;    // طلبات pending > 60 دقيقة
+  hotLeads: number;       // leads status=new خلال آخر 24س
+  noContact: number;      // عملاء مسندين دون تواصل > 7 أيام (أو إطلاقاً)
+}
+
 interface RecentConversation {
   id: string;
   contact_name: string | null;
