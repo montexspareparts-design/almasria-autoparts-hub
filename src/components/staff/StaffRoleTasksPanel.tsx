@@ -385,7 +385,9 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
         .single();
       if (error) throw error;
 
-      // Side effect: mark order as first-contacted (capture prior value for undo)
+      // Side effect: mark order as first-contacted (capture prior value for undo).
+      // If this side-effect fails AFTER the comm log was inserted, we roll
+      // back the comm log so we don't leave the system in an inconsistent state.
       let revertOrderContact = false;
       if (t.kind === "pending_order_contact") {
         const { data: prior } = await supabase
@@ -394,10 +396,17 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
           .eq("id", t.refId)
           .maybeSingle();
         if (!prior?.first_contacted_at) {
-          await supabase
+          const { error: sideErr } = await supabase
             .from("orders")
             .update({ first_contacted_at: new Date().toISOString() })
             .eq("id", t.refId);
+          if (sideErr) {
+            // Roll back the comm log we just inserted to keep things consistent
+            if (inserted?.id) {
+              await supabase.from("customer_communications").delete().eq("id", inserted.id);
+            }
+            throw new Error(`تعذّر تحديث حالة الطلب: ${sideErr.message}`);
+          }
           revertOrderContact = true;
         }
       }
