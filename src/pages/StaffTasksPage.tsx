@@ -83,10 +83,17 @@ export default function StaffTasksPage() {
             </button>
           )}
         </div>
-        <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
-          يتم البحث داخل نفس نتائج الفلتر النشط — اكتب جزء من الاسم أو رقم الطلب
-          (مثل <code className="bg-muted px-1 rounded">ORD-2025</code>) أو رقم الموبايل.
-        </p>
+        <div className="flex items-center justify-between gap-2 mt-2 flex-wrap">
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            يتم البحث داخل نفس نتائج الفلتر النشط — اكتب جزء من الاسم أو رقم الطلب
+            (مثل <code className="bg-muted px-1 rounded">ORD-2025</code>) أو رقم الموبايل.
+          </p>
+          {isNumericMode && (
+            <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200 whitespace-nowrap">
+              ⚡ وضع البحث السريع — أرقام فقط (موبايل + رقم الطلب)
+            </span>
+          )}
+        </div>
       </Card>
 
       {/* Full tasks list — high limit so nothing is hidden */}
