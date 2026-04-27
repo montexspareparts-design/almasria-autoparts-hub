@@ -7,11 +7,22 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
   Trophy, Users, Clock, Phone, MessageCircle, Zap, Activity,
   Calendar, TrendingUp, Eye, Award, Target, ArrowUpDown, RefreshCw,
 } from "lucide-react";
 import StaffPerformanceDetail from "@/components/admin/StaffPerformanceDetail";
+
+type KpiKey = "active" | "actions" | "customers" | "calls" | "sla";
+interface KpiInfo {
+  key: KpiKey;
+  title: string;
+  description: string;
+  getValue: (s: StaffMetric) => number | null;
+  formatter: (v: number | null) => string;
+  emptyHint: string;
+}
 
 interface StaffMetric {
   user_id: string;
