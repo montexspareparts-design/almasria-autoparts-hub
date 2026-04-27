@@ -318,45 +318,11 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
 
 
 
-        {/* ----- Tab 1: نظرة سريعة (إنجازي اليوم + KPIs المختصرة) ----- */}
+        {/* ----- Tab 1: نظرة سريعة (KPIs أولاً، ثم إنجازي اليوم) -----
+            الترتيب يطابق سؤال الموظف الأول صباحاً: "إيه اللي بيستنّاني؟"
+            ثم: "إيه اللي عملته لحد دلوقتي؟" */}
         <TabsContent value="overview" className="space-y-4 mt-4">
-          {/* My Achievements Today */}
-          <Card className="border-primary/20 bg-gradient-to-l from-primary/[0.04] to-transparent">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold flex items-center gap-2">
-                <Zap className="w-4 h-4 text-primary" />
-                إنجازي اليوم
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-3 gap-3">
-              <div className="text-center p-2 rounded-lg bg-blue-50/60 border border-blue-100">
-                <div className="flex items-center justify-center gap-1.5 mb-1">
-                  <PhoneCall className="w-3.5 h-3.5 text-blue-600" />
-                  <p className="text-[11px] text-blue-700 font-semibold">مكالماتي</p>
-                </div>
-                <p className="text-2xl font-bold text-blue-700">{stats?.myCallsToday || 0}</p>
-              </div>
-              <div className="text-center p-2 rounded-lg bg-emerald-50/60 border border-emerald-100">
-                <div className="flex items-center justify-center gap-1.5 mb-1">
-                  <Target className="w-3.5 h-3.5 text-emerald-600" />
-                  <p className="text-[11px] text-emerald-700 font-semibold">عملاء جدد</p>
-                </div>
-                <p className="text-2xl font-bold text-emerald-700">{stats?.myLeadsToday || 0}</p>
-              </div>
-              <div className="text-center p-2 rounded-lg bg-amber-50/60 border border-amber-100">
-                <div className="flex items-center justify-center gap-1.5 mb-1">
-                  <Star className="w-3.5 h-3.5 text-amber-600 fill-amber-600" />
-                  <p className="text-[11px] text-amber-700 font-semibold">تقييمي</p>
-                </div>
-                <p className="text-2xl font-bold text-amber-700">
-                  {stats?.myAvgRating ? stats.myAvgRating.toFixed(1) : "—"}
-                  <span className="text-[10px] font-normal text-amber-600">/5</span>
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Inbox KPIs (compact strip) */}
+          {/* 1) Inbox KPIs (compact strip) — what's waiting for me */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Card
               className="cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-emerald-500"
@@ -406,6 +372,42 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
               </CardContent>
             </Card>
           </div>
+
+          {/* 2) My Achievements Today — what I've already done */}
+          <Card className="border-primary/20 bg-gradient-to-l from-primary/[0.04] to-transparent">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-bold flex items-center gap-2">
+                <Zap className="w-4 h-4 text-primary" />
+                إنجازي اليوم
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-3 gap-3">
+              <div className="text-center p-2 rounded-lg bg-blue-50/60 border border-blue-100">
+                <div className="flex items-center justify-center gap-1.5 mb-1">
+                  <PhoneCall className="w-3.5 h-3.5 text-blue-600" />
+                  <p className="text-[11px] text-blue-700 font-semibold">مكالماتي</p>
+                </div>
+                <p className="text-2xl font-bold text-blue-700">{stats?.myCallsToday || 0}</p>
+              </div>
+              <div className="text-center p-2 rounded-lg bg-emerald-50/60 border border-emerald-100">
+                <div className="flex items-center justify-center gap-1.5 mb-1">
+                  <Target className="w-3.5 h-3.5 text-emerald-600" />
+                  <p className="text-[11px] text-emerald-700 font-semibold">عملاء جدد</p>
+                </div>
+                <p className="text-2xl font-bold text-emerald-700">{stats?.myLeadsToday || 0}</p>
+              </div>
+              <div className="text-center p-2 rounded-lg bg-amber-50/60 border border-amber-100">
+                <div className="flex items-center justify-center gap-1.5 mb-1">
+                  <Star className="w-3.5 h-3.5 text-amber-600 fill-amber-600" />
+                  <p className="text-[11px] text-amber-700 font-semibold">تقييمي</p>
+                </div>
+                <p className="text-2xl font-bold text-amber-700">
+                  {stats?.myAvgRating ? stats.myAvgRating.toFixed(1) : "—"}
+                  <span className="text-[10px] font-normal text-amber-600">/5</span>
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* ----- Tab 2: مهامي (Role Tasks Panel) ----- */}
