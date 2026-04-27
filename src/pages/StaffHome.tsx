@@ -1253,7 +1253,7 @@ const StaffHome = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-        {/* Quick links: full tasks page + auto-generated daily brief */}
+        {/* Quick links: full tasks page + auto-generated daily brief — kept pinned for fast access */}
         <div className="flex items-center justify-end gap-2 flex-wrap">
           <Button
             size="sm"
@@ -1275,14 +1275,6 @@ const StaffHome = () => {
           </Button>
         </div>
 
-        {/* Role-based dynamic tasks (10 max) — admin gets supervisor tasks, moderator gets sales tasks */}
-        <StaffRoleTasksPanel limit={10} />
-
-        {/* Auto-generated daily tasks — derived from system state (quotes, orders, carts, applications) */}
-        <StaffAutoTasksPanel limit={6} />
-
-        {/* Reminders panel — top priority for staff workflow */}
-        <StaffRemindersPanel staffOnly={true} limit={5} />
 
         {/* KPI Cards */}
         <section>
