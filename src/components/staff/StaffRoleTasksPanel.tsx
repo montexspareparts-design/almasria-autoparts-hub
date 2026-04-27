@@ -252,6 +252,10 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [snoozeOpenFor, setSnoozeOpenFor] = useState<string | null>(null);
+  /** Active priority filter chip. `all` = no filter. */
+  const [filter, setFilter] = useState<
+    "all" | "urgent" | "hot_leads" | "no_contact" | "sla_breached"
+  >("all");
   // Live tick every 60s so SLA progress + remaining label refresh without a full refetch
   const [, setNowTick] = useState(0);
   useEffect(() => {
