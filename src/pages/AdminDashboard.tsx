@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, XCircle, Clock, Eye, LogOut, Trash2, Users, ShoppingBag, Video, FileText, Image, Brain, Zap, Bell, ListVideo, Menu, X, ChevronRight, Package, BarChart3, Tag, Layers, TrendingUp, ArrowLeftRight, Briefcase, Banknote, Shield, Building2, ShieldCheck, MessageCircle, User as UserIcon, Phone, KeyRound, Smartphone, Activity, HelpCircle } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Clock, Eye, LogOut, Trash2, Users, ShoppingBag, Video, FileText, Image, Brain, Zap, Bell, ListVideo, Menu, X, ChevronRight, Package, BarChart3, Tag, Layers, TrendingUp, ArrowLeftRight, Briefcase, Banknote, Shield, Building2, ShieldCheck, MessageCircle, User as UserIcon, Phone, KeyRound, Smartphone, Activity, HelpCircle, ClipboardList } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Database } from "@/integrations/supabase/types";
@@ -905,6 +905,15 @@ const AdminDashboard = () => {
             {/* Quick Nav Strip for moderators */}
             {isModerator && !isAdmin && (
               <div className="flex items-center gap-1.5 mb-4 overflow-x-auto scrollbar-none pb-1">
+                {/* Direct shortcut to the full role-based tasks page (visible to moderators
+                    since they don't see /admin/staff-home where the same button lives). */}
+                <button
+                  onClick={() => navigate("/admin/tasks")}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold whitespace-nowrap transition-all shrink-0 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30"
+                >
+                  <ClipboardList className="w-3.5 h-3.5" />
+                  كل المهام
+                </button>
                 {filteredSidebarSections.map((section) => {
                   const Icon = section.icon;
                   const isActive = activeSection === section.id;
