@@ -109,7 +109,7 @@ const sidebarGroups: SidebarGroup[] = [
       { id: "products", label: "إدارة المنتجات", icon: Package },
       { id: "bulk-import", label: "استيراد جماعي", icon: ArrowLeftRight },
       { id: "year-coverage", label: "تغطية السنوات", icon: Clock },
-      { id: "orders", label: "إدارة الطلبات", icon: ShoppingBag },
+      // ملاحظة: "إدارة الطلبات" نُقلت إلى مجموعة "الرئيسية" لأنها مهمة الموظف اليومية الأساسية.
       { id: "coupons", label: "الكوبونات", icon: Tag },
       { id: "qty-discounts", label: "خصومات الكمية", icon: Layers },
       { id: "price-lists", label: "عروض الأسعار", icon: FileText },
