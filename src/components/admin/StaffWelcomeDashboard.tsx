@@ -516,6 +516,7 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
             </CardContent>
           </Card>
         </TabsContent>
+        </div>
       </Tabs>
     </div>
   );
