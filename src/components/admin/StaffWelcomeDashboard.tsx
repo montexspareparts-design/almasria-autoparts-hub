@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
+import { canAccessSection, buildSafeNavigate } from "@/lib/staffPermissions";
 
 // Lazy-load the role tasks panel so the welcome dashboard renders fast
 // while the panel hydrates its own data in the background.
