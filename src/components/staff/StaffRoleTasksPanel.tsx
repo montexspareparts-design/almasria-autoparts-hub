@@ -385,7 +385,9 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
         .single();
       if (error) throw error;
 
-      // Side effect: mark order as first-contacted (capture prior value for undo)
+      // Side effect: mark order as first-contacted (capture prior value for undo).
+      // If this side-effect fails AFTER the comm log was inserted, we roll
+      // back the comm log so we don't leave the system in an inconsistent state.
       let revertOrderContact = false;
       if (t.kind === "pending_order_contact") {
         const { data: prior } = await supabase
@@ -394,10 +396,17 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
           .eq("id", t.refId)
           .maybeSingle();
         if (!prior?.first_contacted_at) {
-          await supabase
+          const { error: sideErr } = await supabase
             .from("orders")
             .update({ first_contacted_at: new Date().toISOString() })
             .eq("id", t.refId);
+          if (sideErr) {
+            // Roll back the comm log we just inserted to keep things consistent
+            if (inserted?.id) {
+              await supabase.from("customer_communications").delete().eq("id", inserted.id);
+            }
+            throw new Error(`تعذّر تحديث حالة الطلب: ${sideErr.message}`);
+          }
           revertOrderContact = true;
         }
       }
@@ -502,16 +511,35 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
     }
   };
 
-  /** Phone / WhatsApp click — opens the link AND records it. */
+  /** Phone / WhatsApp click — opens the link AND records it.
+   * Partial-failure handling: if the audit log insert fails we keep the
+   * task visible (no UI removal here) and surface a clear toast so the
+   * staff member knows the contact wasn't logged automatically.
+   */
   const handleContact = async (t: RoleTask, channel: "phone" | "whatsapp") => {
-    await logAction(t, channel);
-    // refresh first_contacted_at side-effect for orders
+    const logged = await logAction(t, channel);
+    if (!logged) {
+      toast({
+        title: "تعذر تسجيل التواصل",
+        description: `تم فتح ${channel === "phone" ? "الاتصال" : "واتساب"} لكن لم يُسجَّل تلقائياً — التذكير لا يزال مفتوحاً. حاول مرة أخرى أو سجّله يدوياً.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    // refresh first_contacted_at side-effect for orders (only if log succeeded)
     if (t.kind === "pending_order_contact") {
-      await supabase
+      const { error: sideErr } = await supabase
         .from("orders")
         .update({ first_contacted_at: new Date().toISOString() })
         .eq("id", t.refId)
         .is("first_contacted_at", null);
+      if (sideErr) {
+        toast({
+          title: "تم التسجيل لكن تعذّر تحديث حالة الطلب",
+          description: sideErr.message,
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -580,9 +608,12 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
         label = "done";
       }
 
-      // Insert audit log row and capture id so we can delete it on undo
+      // Insert audit log row and capture id so we can delete it on undo.
+      // Partial-failure handling: if logging fails we ROLL BACK the entity
+      // update we just performed, keep the task visible, and surface a clear
+      // toast so the staff member knows nothing was applied.
       const commType = t.kind === "lead_followup" ? "role_task" : "role_task";
-      const { data: logRow } = await supabase
+      const { data: logRow, error: logErr } = await supabase
         .from("customer_communications")
         .insert({
           staff_user_id: user.id,
@@ -594,6 +625,27 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
         })
         .select("id")
         .single();
+
+      if (logErr) {
+        // Roll back the entity change so the system stays consistent
+        let rollbackError: string | null = null;
+        if (undoUpdate) {
+          const { error: rbErr } = await (supabase.from(undoUpdate.table as any) as any)
+            .update(undoUpdate.values)
+            .eq("id", t.refId);
+          if (rbErr) rollbackError = rbErr.message;
+        }
+        toast({
+          title: "فشل جزئي — لم يتم اعتماد المهمة",
+          description: rollbackError
+            ? `تعذّر حفظ سجل الإجراء (${logErr.message}) وتعذّر التراجع تلقائياً (${rollbackError}). راجع السجلات يدوياً.`
+            : `تعذّر حفظ سجل الإجراء (${logErr.message}). تم التراجع عن التغيير والتذكير لا يزال مفتوحاً.`,
+          variant: "destructive",
+          duration: 8000,
+        });
+        // Important: do NOT remove the task from the list — keep the reminder visible
+        return;
+      }
 
       setTasks((prev) => prev.filter((x) => x.id !== t.id));
 
