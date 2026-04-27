@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo, useRef, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,14 +14,27 @@ import {
   CheckCircle2, Clock, Building2, ShoppingBag, Loader2, RefreshCw, Briefcase, Activity, Bot, MessageSquare, ExternalLink, Mail, AlertTriangle, Download
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import WhatsAppQuickChat from "./WhatsAppQuickChat";
-import CustomerActivitySummary from "./CustomerActivitySummary";
-import SupportRequestAISummary from "./SupportRequestAISummary";
-import TransferToColleagueDialog from "./TransferToColleagueDialog";
-import PerfDashboard from "./PerfDashboard";
 import { usePerfTracker } from "@/hooks/usePerfTracker";
 import { ArrowRightLeft } from "lucide-react";
 import StaffBentoHero from "./StaffBentoHero";
+
+// Heavy panels & dialogs — lazy-loaded to keep the initial bundle small.
+// They only render after the user interacts (opens a row, clicks a button, etc.).
+const WhatsAppQuickChatLazy = lazy(() => import("./WhatsAppQuickChat"));
+const CustomerActivitySummary = lazy(() => import("./CustomerActivitySummary"));
+const SupportRequestAISummary = lazy(() => import("./SupportRequestAISummary"));
+const TransferToColleagueDialog = lazy(() => import("./TransferToColleagueDialog"));
+const PerfDashboard = lazy(() => import("./PerfDashboard"));
+
+// Thin wrapper so the 4 inline call-sites don't each need a Suspense boundary.
+// Fallback is a small ghost button matching the WhatsApp button size.
+function WhatsAppQuickChat(props: React.ComponentProps<typeof WhatsAppQuickChatLazy>) {
+  return (
+    <Suspense fallback={<div className="h-7 w-16 rounded-md bg-muted animate-pulse" />}>
+      <WhatsAppQuickChatLazy {...props} />
+    </Suspense>
+  );
+}
 
 // =================== Types ===================
 interface UrgentOrder {
@@ -671,19 +684,21 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
         </div>
       </div>
 
-      {/* Performance dashboard — قابل للطي */}
+      {/* Performance dashboard — قابل للطي (lazy) */}
       {perfPanelOpen && (
-        <PerfDashboard
-          live={{
-            mountMs: perf.mountMs,
-            renderCount: perf.renderCount,
-            badgeCount: perf.badgeCount,
-            avgTabSwitchMs: perf.avgTabSwitchMs,
-          }}
-          badgesEnabled={badgesEnabled}
-          onToggleBadges={setBadgesEnabled}
-          onSnapshot={perf.takeSnapshot}
-        />
+        <Suspense fallback={<Skeleton className="h-32 w-full rounded-lg" />}>
+          <PerfDashboard
+            live={{
+              mountMs: perf.mountMs,
+              renderCount: perf.renderCount,
+              badgeCount: perf.badgeCount,
+              avgTabSwitchMs: perf.avgTabSwitchMs,
+            }}
+            badgesEnabled={badgesEnabled}
+            onToggleBadges={setBadgesEnabled}
+            onSnapshot={perf.takeSnapshot}
+          />
+        </Suspense>
       )}
 
       {/* Bento Hero — daily command center */}
@@ -1221,32 +1236,35 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
         )}
       </Tabs>
 
-      {/* Activity Summary Drawer */}
-      <CustomerActivitySummary
-        open={!!summaryUser}
-        onOpenChange={(o) => { if (!o) setSummaryUser(null); }}
-        userId={summaryUser?.id || null}
-        customerName={summaryUser?.name}
-        customerPhone={summaryUser?.phone}
-        isDealer={summaryUser?.isDealer}
-      />
+      {/* Lazy-loaded dialogs — Suspense fallback is null since they're hidden until opened. */}
+      <Suspense fallback={null}>
+        {/* Activity Summary Drawer */}
+        <CustomerActivitySummary
+          open={!!summaryUser}
+          onOpenChange={(o) => { if (!o) setSummaryUser(null); }}
+          userId={summaryUser?.id || null}
+          customerName={summaryUser?.name}
+          customerPhone={summaryUser?.phone}
+          isDealer={summaryUser?.isDealer}
+        />
 
-      {/* AI Summary for chatbot conversations */}
-      <SupportRequestAISummary
-        open={!!aiSummaryReq}
-        onOpenChange={(o) => { if (!o) setAiSummaryReq(null); }}
-        requestId={aiSummaryReq?.id || null}
-        customerName={aiSummaryReq?.name}
-      />
+        {/* AI Summary for chatbot conversations */}
+        <SupportRequestAISummary
+          open={!!aiSummaryReq}
+          onOpenChange={(o) => { if (!o) setAiSummaryReq(null); }}
+          requestId={aiSummaryReq?.id || null}
+          customerName={aiSummaryReq?.name}
+        />
 
-      {/* Transfer to colleague dialog */}
-      <TransferToColleagueDialog
-        open={!!transferReq}
-        onOpenChange={(o) => { if (!o) setTransferReq(null); }}
-        requestId={transferReq?.id || null}
-        customerName={transferReq?.name}
-        onTransferred={() => fetchAll()}
-      />
+        {/* Transfer to colleague dialog */}
+        <TransferToColleagueDialog
+          open={!!transferReq}
+          onOpenChange={(o) => { if (!o) setTransferReq(null); }}
+          requestId={transferReq?.id || null}
+          customerName={transferReq?.name}
+          onTransferred={() => fetchAll()}
+        />
+      </Suspense>
     </div>
   );
 }
