@@ -156,19 +156,11 @@ const sidebarGroups: SidebarGroup[] = [
     },
 ];
 
-// Sections accessible by moderators (employees).
-// IMPORTANT: keep this list MINIMAL — only the 6 core sections requested by the team
-// (لوحة المهام اليومية / مركز قيادة المتابعة / مهام الموظف are all rendered inside
-// "daily-dashboard"). "account-settings" stays so staff can change their own password.
-const MODERATOR_SECTIONS = new Set([
-  "daily-dashboard", // لوحة المهام اليومية + مركز قيادة المتابعة + لوحة مهام الموظف + مركز قيادة الموظف
-  "customer-intel",  // ذكاء العملاء
-  "analytics",       // التحليلات
-  "customers",       // ملف العملاء
-  "orders",          // الطلبات
-  "leads",           // Leads
-  "account-settings",// إعدادات حسابي (ضرورية لتغيير كلمة المرور)
-]);
+// Sections accessible by moderators (employees) — single source of truth.
+// See src/lib/staffPermissions.ts. Mirrored by StaffWelcomeDashboard
+// (StatusIndicatorsBar / Quick Actions / safeNavigate) and the
+// "صلاحيات الأدوار" preview screen so they never drift apart.
+import { MODERATOR_SECTIONS } from "@/lib/staffPermissions";
 
 const sidebarSections = sidebarGroups.flatMap(g => g.items);
 
