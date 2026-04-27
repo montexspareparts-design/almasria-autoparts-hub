@@ -7,11 +7,22 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
   Trophy, Users, Clock, Phone, MessageCircle, Zap, Activity,
   Calendar, TrendingUp, Eye, Award, Target, ArrowUpDown, RefreshCw,
 } from "lucide-react";
 import StaffPerformanceDetail from "@/components/admin/StaffPerformanceDetail";
+
+type KpiKey = "active" | "actions" | "customers" | "calls" | "sla";
+interface KpiInfo {
+  key: KpiKey;
+  title: string;
+  description: string;
+  getValue: (s: StaffMetric) => number | null;
+  formatter: (v: number | null) => string;
+  emptyHint: string;
+}
 
 interface StaffMetric {
   user_id: string;
@@ -68,6 +79,7 @@ export default function AdminStaffPerformance() {
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<keyof StaffMetric>("score");
   const [selectedStaff, setSelectedStaff] = useState<{ id: string; name: string } | null>(null);
+  const [selectedKpi, setSelectedKpi] = useState<KpiKey | null>(null);
 
   const { from, to } = useMemo(() => getDateRange(range), [range]);
 
@@ -279,13 +291,13 @@ export default function AdminStaffPerformance() {
         </div>
       </div>
 
-      {/* Top KPIs */}
+      {/* Top KPIs - clickable to drill down */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <KpiCard icon={Users} label="موظفين نشطين" value={fmtNum(staff.filter(s => s.total_actions > 0).length)} sub={`من ${staff.length}`} color="blue" />
-        <KpiCard icon={Activity} label="إجمالي الإجراءات" value={fmtNum(totalActions)} color="purple" />
-        <KpiCard icon={Phone} label="عملاء تم التواصل معهم" value={fmtNum(totalCustomers)} color="emerald" />
-        <KpiCard icon={MessageCircle} label="مكالمات + واتساب" value={fmtNum(totalCalls)} color="green" />
-        <KpiCard icon={Zap} label="متوسط سرعة الرد (SLA)" value={orgSla ? `${orgSla}د` : "—"} sub="على الطلبات الجديدة" color="amber" />
+        <KpiCard icon={Users} label="موظفين نشطين" value={fmtNum(staff.filter(s => s.total_actions > 0).length)} sub={`من ${staff.length}`} color="blue" onClick={() => setSelectedKpi("active")} />
+        <KpiCard icon={Activity} label="إجمالي الإجراءات" value={fmtNum(totalActions)} color="purple" onClick={() => setSelectedKpi("actions")} />
+        <KpiCard icon={Phone} label="عملاء تم التواصل معهم" value={fmtNum(totalCustomers)} color="emerald" onClick={() => setSelectedKpi("customers")} />
+        <KpiCard icon={MessageCircle} label="مكالمات + واتساب" value={fmtNum(totalCalls)} color="green" onClick={() => setSelectedKpi("calls")} />
+        <KpiCard icon={Zap} label="متوسط سرعة الرد (SLA)" value={orgSla ? `${orgSla}د` : "—"} sub="على الطلبات الجديدة" color="amber" onClick={() => setSelectedKpi("sla")} />
       </div>
 
       {/* Leaderboard Top 3 */}
@@ -437,11 +449,117 @@ export default function AdminStaffPerformance() {
         dateFrom={from}
         dateTo={to}
       />
+
+      {/* KPI breakdown dialog */}
+      <KpiBreakdownDialog
+        kpi={selectedKpi}
+        staff={staff}
+        rangeLabel={rangeLabel}
+        onClose={() => setSelectedKpi(null)}
+        onPickStaff={(id, name) => { setSelectedKpi(null); setSelectedStaff({ id, name }); }}
+      />
     </div>
   );
 }
 
-function KpiCard({ icon: Icon, label, value, sub, color }: { icon: any; label: string; value: any; sub?: string; color: string }) {
+function KpiBreakdownDialog({
+  kpi, staff, rangeLabel, onClose, onPickStaff,
+}: {
+  kpi: KpiKey | null;
+  staff: StaffMetric[];
+  rangeLabel: string;
+  onClose: () => void;
+  onPickStaff: (id: string, name: string) => void;
+}) {
+  const config: Record<KpiKey, KpiInfo> = {
+    active: {
+      key: "active", title: "موظفين نشطين",
+      description: "الموظفون اللي قاموا بأي إجراء (تواصل، تحديث، أو معالجة طلب).",
+      getValue: (s) => s.total_actions,
+      formatter: (v) => v ? `${fmtNum(v!)} إجراء` : "—",
+      emptyHint: "لا يوجد موظفون نشطون في هذه الفترة.",
+    },
+    actions: {
+      key: "actions", title: "إجمالي الإجراءات",
+      description: "كل إجراء سجّله الموظف (مكالمات، رسائل، ملاحظات، علامات تواصل).",
+      getValue: (s) => s.total_actions,
+      formatter: (v) => v ? fmtNum(v!) : "—",
+      emptyHint: "لم يتم تسجيل إجراءات.",
+    },
+    customers: {
+      key: "customers", title: "عملاء تم التواصل معهم",
+      description: "عدد العملاء الفريدين اللي تواصل معاهم الموظف.",
+      getValue: (s) => s.unique_customers_contacted,
+      formatter: (v) => v ? `${fmtNum(v!)} عميل` : "—",
+      emptyHint: "لا يوجد تواصل مسجّل.",
+    },
+    calls: {
+      key: "calls", title: "مكالمات + واتساب",
+      description: "إجمالي المكالمات الهاتفية ورسائل الواتساب الصادرة.",
+      getValue: (s) => s.phone_calls + s.whatsapp_msgs,
+      formatter: (v) => v ? `${fmtNum(v!)} رسالة/مكالمة` : "—",
+      emptyHint: "لا توجد اتصالات مسجّلة.",
+    },
+    sla: {
+      key: "sla", title: "متوسط سرعة الرد (SLA)",
+      description: "متوسط الوقت بين وصول الطلب وأول رد من الموظف عليه (بالدقائق).",
+      getValue: (s) => s.avg_response_minutes,
+      formatter: (v) => v != null ? `${v}د` : "لم يردّ بعد",
+      emptyHint: "لا توجد بيانات SLA — لم يستلم الموظفون طلبات جديدة.",
+    },
+  };
+
+  const info = kpi ? config[kpi] : null;
+  const rows = info
+    ? [...staff]
+        .map(s => ({ s, v: info.getValue(s) }))
+        .filter(({ v }) => kpi === "sla" ? v != null : (v ?? 0) > 0)
+        .sort((a, b) => {
+          const av = a.v ?? 0; const bv = b.v ?? 0;
+          return kpi === "sla" ? av - bv : bv - av; // SLA الأقل أفضل
+        })
+    : [];
+
+  return (
+    <Dialog open={!!kpi} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-lg" dir="rtl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Activity className="w-5 h-5 text-primary" />
+            {info?.title} — {rangeLabel}
+          </DialogTitle>
+          <DialogDescription>{info?.description}</DialogDescription>
+        </DialogHeader>
+        <div className="max-h-[60vh] overflow-y-auto space-y-1.5 mt-2">
+          {rows.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">{info?.emptyHint}</p>
+          ) : (
+            rows.map(({ s, v }, i) => (
+              <button
+                key={s.user_id}
+                onClick={() => onPickStaff(s.user_id, s.name)}
+                className="w-full flex items-center justify-between gap-3 p-3 rounded-lg border bg-card hover:bg-accent/40 hover:border-primary/40 transition-colors text-right"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <Badge variant="outline" className="shrink-0 font-bold">{i + 1}</Badge>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm truncate">{s.name}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">{s.role === "admin" ? "أدمن" : "موظف"}</p>
+                  </div>
+                </div>
+                <div className="shrink-0 text-left">
+                  <p className="font-black text-sm tabular-nums">{info!.formatter(v)}</p>
+                </div>
+              </button>
+            ))
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function KpiCard({ icon: Icon, label, value, sub, color, onClick }: { icon: any; label: string; value: any; sub?: string; color: string; onClick?: () => void }) {
   const colorMap: Record<string, string> = {
     blue: "from-blue-500/10 to-blue-500/5 border-blue-200 dark:border-blue-900",
     purple: "from-purple-500/10 to-purple-500/5 border-purple-200 dark:border-purple-900",
@@ -453,15 +571,22 @@ function KpiCard({ icon: Icon, label, value, sub, color }: { icon: any; label: s
     blue: "text-blue-600", purple: "text-purple-600", emerald: "text-emerald-600",
     green: "text-green-600", amber: "text-amber-600",
   };
+  const interactive = !!onClick;
   return (
-    <div className={`rounded-xl border bg-gradient-to-br ${colorMap[color]} p-3`}>
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={!interactive}
+      className={`text-right rounded-xl border bg-gradient-to-br ${colorMap[color]} p-3 transition-all ${interactive ? "cursor-pointer hover:shadow-md hover:-translate-y-0.5 hover:border-primary/40 active:scale-[0.98]" : "cursor-default"}`}
+    >
       <div className="flex items-center justify-between mb-1.5">
         <Icon className={`w-4 h-4 ${iconColor[color]}`} />
+        {interactive && <Eye className="w-3 h-3 text-muted-foreground/60" />}
       </div>
       <p className="text-2xl font-black leading-none">{value}</p>
       <p className="text-[10px] text-muted-foreground font-medium mt-1">{label}</p>
       {sub && <p className="text-[9px] text-muted-foreground mt-0.5">{sub}</p>}
-    </div>
+    </button>
   );
 }
 
