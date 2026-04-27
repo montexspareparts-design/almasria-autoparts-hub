@@ -27,6 +27,8 @@ import {
   TrendingDown,
   Users as UsersIcon,
   Bell,
+  ThumbsUp,
+  ArrowRightCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
