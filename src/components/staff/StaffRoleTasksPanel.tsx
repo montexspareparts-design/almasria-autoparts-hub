@@ -523,59 +523,110 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
     setBusyId(t.id);
     try {
       let label = "";
+      // Captured for undo: the prior state we'll restore if the user clicks تراجع
+      let undoUpdate: { table: string; values: Record<string, any> } | null = null;
+
       if (t.kind === "review_dealer_application") {
+        const { data: prior } = await supabase
+          .from("dealer_applications")
+          .select("status, reviewed_at, reviewed_by")
+          .eq("id", t.refId).maybeSingle();
         const { error } = await supabase
           .from("dealer_applications")
-          .update({
-            status: "approved",
-            reviewed_at: new Date().toISOString(),
-            reviewed_by: user.id,
-          })
+          .update({ status: "approved", reviewed_at: new Date().toISOString(), reviewed_by: user.id })
           .eq("id", t.refId);
         if (error) throw error;
         label = "approved";
+        undoUpdate = { table: "dealer_applications", values: {
+          status: prior?.status ?? "pending",
+          reviewed_at: prior?.reviewed_at ?? null,
+          reviewed_by: prior?.reviewed_by ?? null,
+        }};
       } else if (t.kind === "review_high_value_order") {
-        const { error } = await supabase
-          .from("orders")
-          .update({ status: "confirmed" })
-          .eq("id", t.refId);
+        const { data: prior } = await supabase.from("orders").select("status").eq("id", t.refId).maybeSingle();
+        const { error } = await supabase.from("orders").update({ status: "confirmed" }).eq("id", t.refId);
         if (error) throw error;
         label = "confirmed";
+        undoUpdate = { table: "orders", values: { status: prior?.status ?? "pending" } };
       } else if (t.kind === "lead_followup") {
-        const { error } = await supabase
-          .from("leads")
-          .update({ status: "contacted" })
-          .eq("id", t.refId);
+        const { data: prior } = await supabase.from("leads").select("status").eq("id", t.refId).maybeSingle();
+        const { error } = await supabase.from("leads").update({ status: "contacted" }).eq("id", t.refId);
         if (error) throw error;
         label = "contacted";
+        undoUpdate = { table: "leads", values: { status: prior?.status ?? "new" } };
       } else if (t.kind === "pending_order_contact") {
+        const { data: prior } = await supabase
+          .from("orders").select("status, first_contacted_at").eq("id", t.refId).maybeSingle();
         const { error } = await supabase
           .from("orders")
-          .update({
-            status: "confirmed",
-            first_contacted_at: new Date().toISOString(),
-          })
+          .update({ status: "confirmed", first_contacted_at: new Date().toISOString() })
           .eq("id", t.refId);
         if (error) throw error;
         label = "confirmed";
+        undoUpdate = { table: "orders", values: {
+          status: prior?.status ?? "pending",
+          first_contacted_at: prior?.first_contacted_at ?? null,
+        }};
       } else if (t.kind === "stale_payment_transaction") {
+        const { data: prior } = await supabase
+          .from("payment_transactions").select("status").eq("id", t.refId).maybeSingle();
         const { error } = await supabase
-          .from("payment_transactions")
-          .update({ status: "verified" })
-          .eq("id", t.refId);
+          .from("payment_transactions").update({ status: "verified" }).eq("id", t.refId);
         if (error) throw error;
         label = "verified";
+        undoUpdate = { table: "payment_transactions", values: { status: prior?.status ?? "pending" } };
       } else {
-        // fallback — just close the task
         label = "done";
       }
 
-      await logAction(t, t.kind === "lead_followup" ? "status_change" : "approve", label);
+      // Insert audit log row and capture id so we can delete it on undo
+      const commType = t.kind === "lead_followup" ? "role_task" : "role_task";
+      const { data: logRow } = await supabase
+        .from("customer_communications")
+        .insert({
+          staff_user_id: user.id,
+          customer_user_id: t.customerUserId,
+          comm_type: commType,
+          is_done: true,
+          done_at: new Date().toISOString(),
+          note: `role-task:${t.id} · ${t.kind === "lead_followup" ? "status_change" : "approve"} · ${label} · ${t.title}`,
+        })
+        .select("id")
+        .single();
 
       setTasks((prev) => prev.filter((x) => x.id !== t.id));
+
+      const undo = async () => {
+        try {
+          if (undoUpdate) {
+            // Use a typed cast — table name is dynamic per kind but always one of our tables
+            await (supabase.from(undoUpdate.table as any) as any)
+              .update(undoUpdate.values)
+              .eq("id", t.refId);
+          }
+          if (logRow?.id) {
+            await supabase.from("customer_communications").delete().eq("id", logRow.id);
+          }
+          setTasks((prev) => (prev.some((x) => x.id === t.id) ? prev : [t, ...prev]));
+          toast({ title: "تم التراجع", description: "تمت إعادة فتح التذكير وإلغاء التغيير" });
+        } catch (err: any) {
+          toast({
+            title: "تعذر التراجع",
+            description: err?.message || "خطأ غير معروف",
+            variant: "destructive",
+          });
+        }
+      };
+
       toast({
         title: t.kind === "lead_followup" ? "تم تحويل الحالة" : "تم الاعتماد",
         description: `${t.title} → ${label}`,
+        duration: 5000,
+        action: (
+          <ToastAction altText="تراجع" onClick={undo}>
+            تراجع
+          </ToastAction>
+        ),
       });
     } catch (e: any) {
       toast({
