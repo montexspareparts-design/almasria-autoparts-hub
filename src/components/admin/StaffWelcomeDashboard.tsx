@@ -544,7 +544,7 @@ const STATUS_ITEMS: StatusItemConfig[] = [
     icon: UserX,
     active: "bg-violet-50 border-violet-300 text-violet-700 hover:bg-violet-100",
     empty: "bg-muted/30 border-border text-muted-foreground",
-    navTo: "customer-profile",
+    navTo: "customers",
   },
 ];
 
