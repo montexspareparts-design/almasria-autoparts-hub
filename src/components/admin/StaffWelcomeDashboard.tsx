@@ -56,7 +56,7 @@ interface StaffWelcomeDashboardProps {
 }
 
 export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashboardProps) {
-  const { user } = useAuth();
+  const { user, isAdmin, isModerator } = useAuth();
   const [stats, setStats] = useState<WelcomeStats | null>(null);
   const [statusCounters, setStatusCounters] = useState<StatusCounters>({
     critical: 0, slaBreached: 0, hotLeads: 0, noContact: 0,
@@ -65,6 +65,26 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
   const [pendingOrders, setPendingOrders] = useState<PendingOrder[]>([]);
   const [staffName, setStaffName] = useState<string>("");
   const [loading, setLoading] = useState(true);
+
+  // الأقسام المتاحة للموظف (Moderator). الأدمن يشوف كل حاجة.
+  // مرجع المسارات: MODERATOR_SECTIONS في src/pages/AdminDashboard.tsx
+  const MODERATOR_ALLOWED = new Set([
+    "daily-dashboard", "customer-intel", "analytics",
+    "customers", "orders", "leads", "account-settings",
+    "staff-performance", // متاح لأن لوحة المهام بتلينك ليه (الأدمن فقط لكن نسمح بالعرض)
+  ]);
+  const canAccess = (section: string): boolean => {
+    // الأدمن (سواء impersonating أو لا) يقدر يفتح أي قسم
+    if (isAdmin) return true;
+    // staff-performance حصراً للأدمن
+    if (section === "staff-performance") return false;
+    return MODERATOR_ALLOWED.has(section);
+  };
+  // wrapper آمن: لو القسم مش مسموح بيفلب لأقرب بديل بدل ما يضيع المستخدم في صفحة فاضية
+  const safeNavigate = (section: string, fallback = "daily-dashboard") => {
+    if (!onNavigate) return;
+    onNavigate(canAccess(section) ? section : fallback);
+  };
 
   useEffect(() => {
     if (user) fetchData();
