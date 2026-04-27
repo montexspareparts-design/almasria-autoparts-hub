@@ -456,3 +456,107 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
     </div>
   );
 }
+
+/* ============================================================
+   شريط مؤشرات الحالة — Critical / SLA / Hot Leads / بدون تواصل
+   كل مؤشر له لون واضح + عدّاد + nav للقسم المناسب
+   ============================================================ */
+type StatusKind = "critical" | "slaBreached" | "hotLeads" | "noContact";
+
+interface StatusItemConfig {
+  key: StatusKind;
+  label: string;
+  hint: string;
+  icon: React.ComponentType<{ className?: string }>;
+  /** Tailwind classes for active (count > 0) state */
+  active: string;
+  /** Tailwind classes for empty (count === 0) state */
+  empty: string;
+  pulse?: boolean;
+  navTo?: string;
+}
+
+const STATUS_ITEMS: StatusItemConfig[] = [
+  {
+    key: "critical",
+    label: "حرج",
+    hint: "طلبات > 30د بدون رد",
+    icon: AlertTriangle,
+    active: "bg-red-50 border-red-300 text-red-700 hover:bg-red-100",
+    empty: "bg-muted/30 border-border text-muted-foreground",
+    pulse: true,
+    navTo: "orders",
+  },
+  {
+    key: "slaBreached",
+    label: "SLA متجاوز",
+    hint: "طلبات > 60د بدون رد",
+    icon: TimerOff,
+    active: "bg-orange-50 border-orange-300 text-orange-700 hover:bg-orange-100",
+    empty: "bg-muted/30 border-border text-muted-foreground",
+    pulse: true,
+    navTo: "orders",
+  },
+  {
+    key: "hotLeads",
+    label: "Hot Leads",
+    hint: "ليدز جديدة (آخر 24س)",
+    icon: Flame,
+    active: "bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100",
+    empty: "bg-muted/30 border-border text-muted-foreground",
+    navTo: "leads",
+  },
+  {
+    key: "noContact",
+    label: "بدون تواصل",
+    hint: "عملاء مسندين > 7 أيام",
+    icon: UserX,
+    active: "bg-violet-50 border-violet-300 text-violet-700 hover:bg-violet-100",
+    empty: "bg-muted/30 border-border text-muted-foreground",
+    navTo: "customer-profile",
+  },
+];
+
+function StatusIndicatorsBar({
+  counters, onNavigate,
+}: {
+  counters: StatusCounters;
+  onNavigate?: (section: string) => void;
+}) {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+      {STATUS_ITEMS.map((item) => {
+        const count = counters[item.key];
+        const isActive = count > 0;
+        const Icon = item.icon;
+        return (
+          <button
+            key={item.key}
+            type="button"
+            onClick={() => item.navTo && onNavigate?.(item.navTo)}
+            disabled={!item.navTo}
+            className={`relative text-right rounded-xl border p-3 transition-all ${
+              isActive ? item.active : item.empty
+            } ${item.navTo ? "cursor-pointer hover:shadow-sm hover:-translate-y-0.5 active:scale-[0.98]" : "cursor-default"}`}
+            aria-label={`${item.label}: ${count}`}
+          >
+            <div className="flex items-center justify-between mb-1">
+              <Icon className={`w-4 h-4 ${isActive ? "" : "opacity-60"}`} />
+              {isActive && item.pulse && (
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-current opacity-60 animate-ping" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-current" />
+                </span>
+              )}
+            </div>
+            <p className={`text-2xl font-black leading-none tabular-nums ${isActive ? "" : "opacity-50"}`}>
+              {count.toLocaleString("ar-EG")}
+            </p>
+            <p className="text-[11px] font-bold mt-1">{item.label}</p>
+            <p className="text-[10px] opacity-70 mt-0.5">{item.hint}</p>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
