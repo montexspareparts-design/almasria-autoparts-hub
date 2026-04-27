@@ -42,6 +42,7 @@ import { useSessionPersistedState } from "@/hooks/useSessionPersistedState";
 import DailyReportTabCard from "@/components/staff/DailyReportTabCard";
 import StaffRemindersPanel from "@/components/staff/StaffRemindersPanel";
 import StaffAutoTasksPanel from "@/components/staff/StaffAutoTasksPanel";
+import StaffRoleTasksPanel from "@/components/staff/StaffRoleTasksPanel";
 import VisitorPipelineControl from "@/components/staff/VisitorPipelineControl";
 
 // Normalize a string for case-insensitive substring matching.
