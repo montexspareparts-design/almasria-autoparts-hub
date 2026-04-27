@@ -5,11 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import {
   MessageCircle, ShoppingCart, Clock, Loader2, ArrowLeft, UserCheck,
   PhoneCall, UserPlus, Search, Trophy, Star, Zap, Target,
   AlertTriangle, Flame, TimerOff, UserX,
-  LayoutDashboard, ListChecks,
+  LayoutDashboard, ListChecks, Settings, Eye, HelpCircle, TrendingUp,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
