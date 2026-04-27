@@ -222,6 +222,9 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
         </CardContent>
       </Card>
 
+      {/* مؤشرات الحالة — Critical / SLA / Hot Leads / بدون تواصل */}
+      <StatusIndicatorsBar counters={statusCounters} onNavigate={onNavigate} />
+
       {/* Role-based dynamic tasks (مهام موظف المبيعات) — visible immediately
           on the staff home so they don't need to click "كل المهام" first. */}
       <Suspense fallback={<div className="flex items-center justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>}>
