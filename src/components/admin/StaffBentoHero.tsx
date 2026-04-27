@@ -516,8 +516,8 @@ export default function StaffBentoHero({
           value={newVisitorsToday.toString()}
           hint="منذ منتصف الليل"
           tone="emerald"
-          onClick={() => onJumpToTab("yesterday")}
-          ctaLabel="عرض الزوار"
+          onClick={() => navigate("/admin/new-visitors")}
+          ctaLabel="عرض الزوار + حالة المتابعة"
         />
         <ShortcutTile
           icon={<AlertTriangle className="w-4 h-4" />}
