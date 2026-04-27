@@ -58,6 +58,9 @@ interface StaffWelcomeDashboardProps {
 export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashboardProps) {
   const { user } = useAuth();
   const [stats, setStats] = useState<WelcomeStats | null>(null);
+  const [statusCounters, setStatusCounters] = useState<StatusCounters>({
+    critical: 0, slaBreached: 0, hotLeads: 0, noContact: 0,
+  });
   const [conversations, setConversations] = useState<RecentConversation[]>([]);
   const [pendingOrders, setPendingOrders] = useState<PendingOrder[]>([]);
   const [staffName, setStaffName] = useState<string>("");
