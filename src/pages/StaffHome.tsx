@@ -38,6 +38,7 @@ import { isViewedUnderBasis as isViewedUnderBasisPure } from "@/lib/viewedUnderB
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useSessionPersistedState } from "@/hooks/useSessionPersistedState";
 import DailyReportTabCard from "@/components/staff/DailyReportTabCard";
 import StaffRemindersPanel from "@/components/staff/StaffRemindersPanel";
@@ -1252,7 +1253,7 @@ const StaffHome = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-        {/* Quick links: full tasks page + auto-generated daily brief */}
+        {/* Quick links: full tasks page + auto-generated daily brief — kept pinned for fast access */}
         <div className="flex items-center justify-end gap-2 flex-wrap">
           <Button
             size="sm"
@@ -1274,14 +1275,6 @@ const StaffHome = () => {
           </Button>
         </div>
 
-        {/* Role-based dynamic tasks (10 max) — admin gets supervisor tasks, moderator gets sales tasks */}
-        <StaffRoleTasksPanel limit={10} />
-
-        {/* Auto-generated daily tasks — derived from system state (quotes, orders, carts, applications) */}
-        <StaffAutoTasksPanel limit={6} />
-
-        {/* Reminders panel — top priority for staff workflow */}
-        <StaffRemindersPanel staffOnly={true} limit={5} />
 
         {/* KPI Cards */}
         <section>
@@ -1558,286 +1551,332 @@ const StaffHome = () => {
           </div>
         </section>
 
-        {/* Daily Report — compact tab card; clicking opens the dedicated page */}
-        <DailyReportTabCard />
-
-        {/* Calculation rules panel — explains how each KPI is computed
-            and shows raw (pre-staff-filter) vs filtered counts. */}
-        <section>
-          <Card className="overflow-hidden border-border/60">
-            <button
-              type="button"
-              onClick={() => setRulesOpen((v) => !v)}
-              className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/40 transition-colors"
-              aria-expanded={rulesOpen}
-              aria-controls="kpi-rules-panel"
-            >
-              <div className="flex items-center gap-2 text-sm font-semibold">
-                <Info className="w-4 h-4 text-primary" />
-                قواعد الحساب الحالية
-                <Badge variant="outline" className="text-[10px] font-normal">
-                  {range === "today" ? "اليوم" : "آخر 7 أيام"}
-                  {" · "}
-                  {includeStaff ? "يشمل الموظفين" : "بدون الموظفين"}
+        {/* Horizontal tabs — group secondary content so the page is no longer a long scroll.
+            KPIs above stay pinned as the page's shared context. */}
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="w-full justify-start h-auto p-1 bg-muted/60 overflow-x-auto flex-nowrap gap-1">
+            <TabsTrigger value="overview" className="gap-1.5 whitespace-nowrap data-[state=active]:bg-background">
+              <Activity className="w-3.5 h-3.5" />
+              نظرة سريعة
+            </TabsTrigger>
+            <TabsTrigger value="tasks" className="gap-1.5 whitespace-nowrap data-[state=active]:bg-background">
+              <ClipboardList className="w-3.5 h-3.5" />
+              مهامي
+              {!loading && hotLeadsCount > 0 && (
+                <Badge variant="secondary" className="text-[10px] h-4 px-1.5 ml-1">
+                  {hotLeadsCount}
                 </Badge>
-              </div>
-              <ChevronDown
-                className={cn(
-                  "w-4 h-4 text-muted-foreground transition-transform",
-                  rulesOpen && "rotate-180"
-                )}
-              />
-            </button>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="report" className="gap-1.5 whitespace-nowrap data-[state=active]:bg-background">
+              <CheckCheck className="w-3.5 h-3.5" />
+              التقرير اليومي
+            </TabsTrigger>
+            <TabsTrigger value="rules" className="gap-1.5 whitespace-nowrap data-[state=active]:bg-background">
+              <Info className="w-3.5 h-3.5" />
+              قواعد الحساب
+            </TabsTrigger>
+          </TabsList>
 
-            {rulesOpen && (
-              <div id="kpi-rules-panel" className="border-t border-border/60 p-4 space-y-3 bg-muted/20">
-                <div className="text-[11px] text-muted-foreground leading-relaxed">
-                  كل رقم يتم حسابه بنفس النطاق الزمني المختار في الأعلى (<b>{range === "today" ? "اليوم فقط" : "آخر 7 أيام"}</b>)،
-                  ثم تُستثنى صفوف الموظفين تلقائياً ما لم يكن فلتر "الكل" مفعّل.
-                  العمود <b>قبل</b> = ما قبل استثناء الموظفين، <b>بعد</b> = الرقم الظاهر في البطاقات.
-                </div>
-
-                {(() => {
-                  const rows: Array<{
-                    label: string;
-                    rule: string;
-                    raw: number;
-                    filtered: number;
-                  }> = [
-                    {
-                      label: "الزوار",
-                      rule: "كل صف من visitor_sessions ضمن النطاق (يستبعد ضوضاء lovable/preview/bots).",
-                      raw: kpisRaw.visitors,
-                      filtered: kpis.visitors,
-                    },
-                    {
-                      label: "زوار متفاعلين",
-                      rule: `زائر مدة جلسته ≥ ${Math.round(ENGAGED_DWELL_MS / 1000)}ث أو شاهد ≥2 صفحة.`,
-                      raw: kpisRaw.engagedVisitors,
-                      filtered: kpis.engagedVisitors,
-                    },
-                    {
-                      label: "تسجيلات جديدة",
-                      rule: "حسابات أُنشئت ضمن النطاق (created_at).",
-                      raw: kpisRaw.signups,
-                      filtered: kpis.signups,
-                    },
-                    {
-                      label: "أضافوا للسلة",
-                      rule: "عدد المستخدمين الفريدين الذين أضافوا للسلة (last_added ضمن النطاق).",
-                      raw: kpisRaw.addedToCart,
-                      filtered: kpis.addedToCart,
-                    },
-                    {
-                      label: "اشتروا",
-                      rule: "عدد المستخدمين الفريدين الذين أنشأوا طلباً ضمن النطاق (created_at).",
-                      raw: kpisRaw.purchased,
-                      filtered: kpis.purchased,
-                    },
-                    {
-                      label: "Leads ساخنة",
-                      rule: "Leads بآخر نشاط ضمن النطاق ودرجة ≥ عتبة hot/warm.",
-                      raw: kpisRaw.hotLeads,
-                      filtered: kpis.hotLeads,
-                    },
-                  ];
-                  return (
-                    <div className="overflow-x-auto rounded-lg border border-border/60 bg-background">
-                      <table className="w-full text-xs">
-                        <thead className="bg-muted/40 text-muted-foreground">
-                          <tr>
-                            <th className="text-right px-3 py-2 font-medium">المؤشر</th>
-                            <th className="text-right px-3 py-2 font-medium">قاعدة الحساب</th>
-                            <th className="text-center px-3 py-2 font-medium w-16">قبل</th>
-                            <th className="text-center px-3 py-2 font-medium w-16">بعد</th>
-                            <th className="text-center px-3 py-2 font-medium w-20">مستثنى</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {rows.map((r) => {
-                            const excluded = Math.max(0, r.raw - r.filtered);
-                            return (
-                              <tr key={r.label} className="border-t border-border/40">
-                                <td className="px-3 py-2 font-medium whitespace-nowrap">{r.label}</td>
-                                <td className="px-3 py-2 text-muted-foreground leading-relaxed">{r.rule}</td>
-                                <td className="px-3 py-2 text-center font-mono tabular-nums text-muted-foreground">
-                                  {r.raw}
-                                </td>
-                                <td className="px-3 py-2 text-center font-mono tabular-nums font-bold">
-                                  {r.filtered}
-                                </td>
-                                <td className="px-3 py-2 text-center">
-                                  {excluded > 0 ? (
-                                    <Badge variant="secondary" className="font-mono tabular-nums text-[10px]">
-                                      −{excluded}
-                                    </Badge>
-                                  ) : (
-                                    <span className="text-muted-foreground/50">—</span>
-                                  )}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  );
-                })()}
-
-                <div className="text-[11px] text-muted-foreground/80 flex items-start gap-1.5">
-                  <Info className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                  <span>
-                    "مستثنى" = عدد الصفوف التي حُذفت بسبب فلتر الموظفين فقط ضمن نفس النطاق.
-                    لمشاهدتهم ضمن الأرقام، بدّل الفلتر إلى "الكل".
-                  </span>
-                </div>
-              </div>
-            )}
-          </Card>
-        </section>
-
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
-              <Flame className="w-4 h-4 text-red-500" />
-              Leads محتاجة متابعة فورًا
-            </h2>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => navigate("/admin?section=customer-intel")}
-            >
-              عرض الكل
-              <ArrowLeft className="w-3 h-3 mr-1" />
-            </Button>
-          </div>
-
-          {loading ? (
-            <div className="grid gap-2">
-              {[...Array(4)].map((_, i) => (
-                <Skeleton key={i} className="h-20 w-full rounded-xl" />
-              ))}
-            </div>
-          ) : hotLeads.length === 0 ? (
-            <Card className="p-8 text-center text-muted-foreground">
-              <ClipboardList className="w-10 h-10 mx-auto mb-2 opacity-50" />
-              لا توجد Leads نشطة حالياً
-            </Card>
-          ) : (
-            <div className="grid gap-2">
-              {hotLeads.map((lead) => (
-                <Card
-                  key={lead.user_id}
-                  className={cn(
-                    "p-3 flex items-center justify-between gap-3 hover:shadow-md transition-all border",
-                    lead.tier === "hot" &&
-                      "border-red-200 bg-gradient-to-l from-red-50/50 to-transparent dark:from-red-950/20"
-                  )}
+          {/* === Overview tab === Hot Leads + Quick links to other sections */}
+          <TabsContent value="overview" className="mt-4 space-y-6">
+            <section>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                  <Flame className="w-4 h-4 text-red-500" />
+                  Leads محتاجة متابعة فورًا
+                </h2>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => navigate("/admin?section=customer-intel")}
                 >
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div
+                  عرض الكل
+                  <ArrowLeft className="w-3 h-3 mr-1" />
+                </Button>
+              </div>
+
+              {loading ? (
+                <div className="grid gap-2">
+                  {[...Array(4)].map((_, i) => (
+                    <Skeleton key={i} className="h-20 w-full rounded-xl" />
+                  ))}
+                </div>
+              ) : hotLeads.length === 0 ? (
+                <Card className="p-8 text-center text-muted-foreground">
+                  <ClipboardList className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                  لا توجد Leads نشطة حالياً
+                </Card>
+              ) : (
+                <div className="grid gap-2">
+                  {hotLeads.map((lead) => (
+                    <Card
+                      key={lead.user_id}
                       className={cn(
-                        "shrink-0 w-12 h-12 rounded-xl flex items-center justify-center font-bold text-sm",
-                        lead.tier === "hot"
-                          ? "bg-red-500 text-white"
-                          : lead.tier === "warm"
-                          ? "bg-amber-500 text-white"
-                          : "bg-muted text-muted-foreground"
+                        "p-3 flex items-center justify-between gap-3 hover:shadow-md transition-all border",
+                        lead.tier === "hot" &&
+                          "border-red-200 bg-gradient-to-l from-red-50/50 to-transparent dark:from-red-950/20"
                       )}
                     >
-                      {lead.score}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold truncate">
-                          {lead.full_name || "عميل بدون اسم"}
-                        </span>
-                        {tierBadge(lead.tier)}
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div
+                          className={cn(
+                            "shrink-0 w-12 h-12 rounded-xl flex items-center justify-center font-bold text-sm",
+                            lead.tier === "hot"
+                              ? "bg-red-500 text-white"
+                              : lead.tier === "warm"
+                              ? "bg-amber-500 text-white"
+                              : "bg-muted text-muted-foreground"
+                          )}
+                        >
+                          {lead.score}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-semibold truncate">
+                              {lead.full_name || "عميل بدون اسم"}
+                            </span>
+                            {tierBadge(lead.tier)}
+                          </div>
+                          <div className="text-xs text-muted-foreground truncate mt-0.5">
+                            {lead.reasons.join(" • ") || "نشاط متعدد"}
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-xs text-muted-foreground truncate mt-0.5">
-                        {lead.reasons.join(" • ") || "نشاط متعدد"}
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="w-8 h-8 text-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-900/30"
+                          onClick={() => callLead(lead.phone)}
+                          disabled={!lead.phone}
+                          title="اتصال"
+                        >
+                          <Phone className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="w-8 h-8 text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30"
+                          onClick={() => waLead(lead.phone, lead.full_name)}
+                          disabled={!lead.phone}
+                          title="واتساب"
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="w-8 h-8"
+                          onClick={() =>
+                            navigate(`/admin/visitor/${lead.user_id}`)
+                          }
+                          title="عرض التفاصيل"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
                       </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="w-8 h-8 text-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-900/30"
-                      onClick={() => callLead(lead.phone)}
-                      disabled={!lead.phone}
-                      title="اتصال"
-                    >
-                      <Phone className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="w-8 h-8 text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30"
-                      onClick={() => waLead(lead.phone, lead.full_name)}
-                      disabled={!lead.phone}
-                      title="واتساب"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="w-8 h-8"
-                      onClick={() =>
-                        navigate(`/admin/visitor/${lead.user_id}`)
-                      }
-                      title="عرض التفاصيل"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
-        </section>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </section>
 
-        {/* Quick links */}
-        <section>
-          <h2 className="text-sm font-semibold text-muted-foreground mb-3">
-            انتقال سريع
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            <Button
-              variant="outline"
-              className="h-auto py-3 justify-start"
-              onClick={() => navigate("/admin?section=orders")}
-            >
-              <ShoppingCart className="w-4 h-4 ml-2" />
-              الطلبات
-            </Button>
-            <Button
-              variant="outline"
-              className="h-auto py-3 justify-start"
-              onClick={() => navigate("/admin?section=customer-intel")}
-            >
-              <Users className="w-4 h-4 ml-2" />
-              ذكاء العملاء
-            </Button>
-            <Button
-              variant="outline"
-              className="h-auto py-3 justify-start"
-              onClick={() => navigate("/admin?section=leads")}
-            >
-              <Flame className="w-4 h-4 ml-2" />
-              Leads
-            </Button>
-            <Button
-              variant="outline"
-              className="h-auto py-3 justify-start"
-              onClick={() => navigate("/admin?section=analytics")}
-            >
-              <TrendingUp className="w-4 h-4 ml-2" />
-              التحليلات
-            </Button>
-          </div>
-        </section>
+            {/* Quick links */}
+            <section>
+              <h2 className="text-sm font-semibold text-muted-foreground mb-3">
+                انتقال سريع
+              </h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <Button
+                  variant="outline"
+                  className="h-auto py-3 justify-start"
+                  onClick={() => navigate("/admin?section=orders")}
+                >
+                  <ShoppingCart className="w-4 h-4 ml-2" />
+                  الطلبات
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-auto py-3 justify-start"
+                  onClick={() => navigate("/admin?section=customer-intel")}
+                >
+                  <Users className="w-4 h-4 ml-2" />
+                  ذكاء العملاء
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-auto py-3 justify-start"
+                  onClick={() => navigate("/admin?section=leads")}
+                >
+                  <Flame className="w-4 h-4 ml-2" />
+                  Leads
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-auto py-3 justify-start"
+                  onClick={() => navigate("/admin?section=analytics")}
+                >
+                  <TrendingUp className="w-4 h-4 ml-2" />
+                  التحليلات
+                </Button>
+              </div>
+            </section>
+          </TabsContent>
+
+          {/* === Tasks tab === Role tasks + auto tasks + reminders */}
+          <TabsContent value="tasks" className="mt-4 space-y-6">
+            {/* Role-based dynamic tasks (10 max) — admin gets supervisor tasks, moderator gets sales tasks */}
+            <StaffRoleTasksPanel limit={10} />
+
+            {/* Auto-generated daily tasks — derived from system state (quotes, orders, carts, applications) */}
+            <StaffAutoTasksPanel limit={6} />
+
+            {/* Reminders panel — top priority for staff workflow */}
+            <StaffRemindersPanel staffOnly={true} limit={5} />
+          </TabsContent>
+
+          {/* === Report tab === Daily report card */}
+          <TabsContent value="report" className="mt-4">
+            <DailyReportTabCard />
+          </TabsContent>
+
+          {/* === Rules tab === Calculation rules panel — explains how each KPI is computed */}
+          <TabsContent value="rules" className="mt-4">
+            <section>
+              <Card className="overflow-hidden border-border/60">
+                <button
+                  type="button"
+                  onClick={() => setRulesOpen((v) => !v)}
+                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/40 transition-colors"
+                  aria-expanded={rulesOpen}
+                  aria-controls="kpi-rules-panel"
+                >
+                  <div className="flex items-center gap-2 text-sm font-semibold">
+                    <Info className="w-4 h-4 text-primary" />
+                    قواعد الحساب الحالية
+                    <Badge variant="outline" className="text-[10px] font-normal">
+                      {range === "today" ? "اليوم" : "آخر 7 أيام"}
+                      {" · "}
+                      {includeStaff ? "يشمل الموظفين" : "بدون الموظفين"}
+                    </Badge>
+                  </div>
+                  <ChevronDown
+                    className={cn(
+                      "w-4 h-4 text-muted-foreground transition-transform",
+                      rulesOpen && "rotate-180"
+                    )}
+                  />
+                </button>
+
+                {rulesOpen && (
+                  <div id="kpi-rules-panel" className="border-t border-border/60 p-4 space-y-3 bg-muted/20">
+                    <div className="text-[11px] text-muted-foreground leading-relaxed">
+                      كل رقم يتم حسابه بنفس النطاق الزمني المختار في الأعلى (<b>{range === "today" ? "اليوم فقط" : "آخر 7 أيام"}</b>)،
+                      ثم تُستثنى صفوف الموظفين تلقائياً ما لم يكن فلتر "الكل" مفعّل.
+                      العمود <b>قبل</b> = ما قبل استثناء الموظفين، <b>بعد</b> = الرقم الظاهر في البطاقات.
+                    </div>
+
+                    {(() => {
+                      const rows: Array<{
+                        label: string;
+                        rule: string;
+                        raw: number;
+                        filtered: number;
+                      }> = [
+                        {
+                          label: "الزوار",
+                          rule: "كل صف من visitor_sessions ضمن النطاق (يستبعد ضوضاء lovable/preview/bots).",
+                          raw: kpisRaw.visitors,
+                          filtered: kpis.visitors,
+                        },
+                        {
+                          label: "زوار متفاعلين",
+                          rule: `زائر مدة جلسته ≥ ${Math.round(ENGAGED_DWELL_MS / 1000)}ث أو شاهد ≥2 صفحة.`,
+                          raw: kpisRaw.engagedVisitors,
+                          filtered: kpis.engagedVisitors,
+                        },
+                        {
+                          label: "تسجيلات جديدة",
+                          rule: "حسابات أُنشئت ضمن النطاق (created_at).",
+                          raw: kpisRaw.signups,
+                          filtered: kpis.signups,
+                        },
+                        {
+                          label: "أضافوا للسلة",
+                          rule: "عدد المستخدمين الفريدين الذين أضافوا للسلة (last_added ضمن النطاق).",
+                          raw: kpisRaw.addedToCart,
+                          filtered: kpis.addedToCart,
+                        },
+                        {
+                          label: "اشتروا",
+                          rule: "عدد المستخدمين الفريدين الذين أنشأوا طلباً ضمن النطاق (created_at).",
+                          raw: kpisRaw.purchased,
+                          filtered: kpis.purchased,
+                        },
+                        {
+                          label: "Leads ساخنة",
+                          rule: "Leads بآخر نشاط ضمن النطاق ودرجة ≥ عتبة hot/warm.",
+                          raw: kpisRaw.hotLeads,
+                          filtered: kpis.hotLeads,
+                        },
+                      ];
+                      return (
+                        <div className="overflow-x-auto rounded-lg border border-border/60 bg-background">
+                          <table className="w-full text-xs">
+                            <thead className="bg-muted/40 text-muted-foreground">
+                              <tr>
+                                <th className="text-right px-3 py-2 font-medium">المؤشر</th>
+                                <th className="text-right px-3 py-2 font-medium">قاعدة الحساب</th>
+                                <th className="text-center px-3 py-2 font-medium w-16">قبل</th>
+                                <th className="text-center px-3 py-2 font-medium w-16">بعد</th>
+                                <th className="text-center px-3 py-2 font-medium w-20">مستثنى</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {rows.map((r) => {
+                                const excluded = Math.max(0, r.raw - r.filtered);
+                                return (
+                                  <tr key={r.label} className="border-t border-border/40">
+                                    <td className="px-3 py-2 font-medium whitespace-nowrap">{r.label}</td>
+                                    <td className="px-3 py-2 text-muted-foreground leading-relaxed">{r.rule}</td>
+                                    <td className="px-3 py-2 text-center font-mono tabular-nums text-muted-foreground">
+                                      {r.raw}
+                                    </td>
+                                    <td className="px-3 py-2 text-center font-mono tabular-nums font-bold">
+                                      {r.filtered}
+                                    </td>
+                                    <td className="px-3 py-2 text-center">
+                                      {excluded > 0 ? (
+                                        <Badge variant="secondary" className="font-mono tabular-nums text-[10px]">
+                                          −{excluded}
+                                        </Badge>
+                                      ) : (
+                                        <span className="text-muted-foreground/50">—</span>
+                                      )}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      );
+                    })()}
+
+                    <div className="text-[11px] text-muted-foreground/80 flex items-start gap-1.5">
+                      <Info className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                      <span>
+                        "مستثنى" = عدد الصفوف التي حُذفت بسبب فلتر الموظفين فقط ضمن نفس النطاق.
+                        لمشاهدتهم ضمن الأرقام، بدّل الفلتر إلى "الكل".
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </Card>
+            </section>
+          </TabsContent>
+        </Tabs>
       </main>
 
       {/* New Signups Dialog */}
