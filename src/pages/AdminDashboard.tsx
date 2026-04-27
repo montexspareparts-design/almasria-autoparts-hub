@@ -53,6 +53,7 @@ const StaffAccountSettings = lazy(() => import("@/components/admin/StaffAccountS
 // AdminNewOrderAlert is now mounted globally in App.tsx
 const AdminSupportRequestAlert = lazy(() => import("@/components/admin/AdminSupportRequestAlert"));
 const AdminNotificationPhones = lazy(() => import("@/components/AdminNotificationPhones"));
+const ViewAsEmployeeDialog = lazy(() => import("@/components/admin/ViewAsEmployeeDialog"));
 const AdminWhatsAppDeliveryStatus = lazy(() => import("@/components/admin/AdminWhatsAppDeliveryStatus"));
 const AdminClientAccountAttempts = lazy(() => import("@/components/admin/AdminClientAccountAttempts"));
 const AdminTranslations = lazy(() => import("@/components/admin/AdminTranslations"));
