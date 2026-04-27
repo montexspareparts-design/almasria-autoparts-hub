@@ -245,6 +245,86 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
                 {stats?.totalStaff ? <span className="text-[10px] opacity-70">من {stats.totalStaff}</span> : null}
               </button>
             )}
+
+            {/* KPI settings popover — مرئي دائماً في رأس الصفحة الرئيسية للموظف */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-2.5 gap-1.5 text-xs border-primary/30 text-primary hover:bg-primary/10"
+                  title="إعدادات مؤشرات اليوم"
+                >
+                  <Settings className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">إعدادات KPI</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-72 p-4 space-y-4" dir="rtl">
+                <div className="flex items-center gap-2 pb-2 border-b">
+                  <TrendingUp className="w-4 h-4 text-primary" />
+                  <h4 className="text-sm font-bold">إعدادات مؤشرات اليوم</h4>
+                </div>
+
+                {/* Range */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-bold">نطاق KPI</Label>
+                    <HelpCircle className="w-3 h-3 text-muted-foreground" />
+                  </div>
+                  <RadioGroup value={kpiRange} onValueChange={(v) => setKpiRange(v as any)} className="flex gap-2">
+                    <div className="flex items-center gap-1.5 border rounded-md px-2 py-1 cursor-pointer hover:bg-muted/50 flex-1">
+                      <RadioGroupItem value="today" id="r-today" />
+                      <Label htmlFor="r-today" className="text-xs cursor-pointer">اليوم</Label>
+                    </div>
+                    <div className="flex items-center gap-1.5 border rounded-md px-2 py-1 cursor-pointer hover:bg-muted/50 flex-1">
+                      <RadioGroupItem value="7d" id="r-7d" />
+                      <Label htmlFor="r-7d" className="text-xs cursor-pointer">آخر 7 أيام</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                {/* Basis */}
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold flex items-center gap-1">
+                    <Eye className="w-3 h-3" />
+                    أساس "تمت المعاينة"
+                  </Label>
+                  <RadioGroup value={kpiBasis} onValueChange={(v) => setKpiBasis(v as any)} className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <RadioGroupItem value="event_day" id="b-event" />
+                      <Label htmlFor="b-event" className="text-xs cursor-pointer">يوم الزيارة</Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <RadioGroupItem value="range" id="b-range" />
+                      <Label htmlFor="b-range" className="text-xs cursor-pointer">داخل نطاق KPI</Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <RadioGroupItem value="all_time" id="b-all" />
+                      <Label htmlFor="b-all" className="text-xs cursor-pointer">أي وقت</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                {/* Anchor */}
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold">مرجع المعاينة</Label>
+                  <RadioGroup value={kpiAnchor} onValueChange={(v) => setKpiAnchor(v as any)} className="flex gap-2">
+                    <div className="flex items-center gap-1.5 border rounded-md px-2 py-1 cursor-pointer hover:bg-muted/50 flex-1">
+                      <RadioGroupItem value="first" id="a-first" />
+                      <Label htmlFor="a-first" className="text-xs cursor-pointer">أول معاينة</Label>
+                    </div>
+                    <div className="flex items-center gap-1.5 border rounded-md px-2 py-1 cursor-pointer hover:bg-muted/50 flex-1">
+                      <RadioGroupItem value="last" id="a-last" />
+                      <Label htmlFor="a-last" className="text-xs cursor-pointer">آخر معاينة</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <p className="text-[10px] text-muted-foreground leading-relaxed border-t pt-2">
+                  💡 الإعدادات محفوظة محلياً وتُستخدم لاحقاً مع KPI "الزوار اللي تمت معاينتهم".
+                </p>
+              </PopoverContent>
+            </Popover>
           </div>
         </CardContent>
       </Card>
