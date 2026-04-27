@@ -251,22 +251,51 @@ export default function VisitorPipelineControl({
       return false;
     }
     setSaving(true);
-    const payload = {
-      customer_user_id: userId,
-      visitor_session_key: userId ? null : sessionKey,
-      stage: nextStage,
-      notes: nextNotes || null,
-      updated_by: user.id,
-    };
-    // Upsert by the matching unique index (user_id or session_key).
-    const onConflict = userId ? "customer_user_id" : "visitor_session_key";
-    const { error } = await supabase
+
+    // Manual upsert: the unique indexes on this table are PARTIAL
+    // (filtered with WHERE clauses), so PostgREST's onConflict can't match
+    // them. We do find-then-update / insert ourselves to stay compatible.
+    const findQ = supabase
       .from("visitor_pipeline_status")
-      .upsert(payload, { onConflict });
+      .select("id")
+      .limit(1);
+    const { data: existing, error: findErr } = userId
+      ? await findQ.eq("customer_user_id", userId).maybeSingle()
+      : await findQ
+          .eq("visitor_session_key", sessionKey!)
+          .is("customer_user_id", null)
+          .maybeSingle();
+
+    if (findErr) {
+      console.error("[VisitorPipelineControl] lookup failed", findErr);
+      toast.error("فشل قراءة الحالة الحالية");
+      setSaving(false);
+      return false;
+    }
+
+    let error;
+    if (existing?.id) {
+      ({ error } = await supabase
+        .from("visitor_pipeline_status")
+        .update({
+          stage: nextStage,
+          notes: nextNotes || null,
+          updated_by: user.id,
+        })
+        .eq("id", existing.id));
+    } else {
+      ({ error } = await supabase.from("visitor_pipeline_status").insert({
+        customer_user_id: userId,
+        visitor_session_key: userId ? null : sessionKey,
+        stage: nextStage,
+        notes: nextNotes || null,
+        updated_by: user.id,
+      }));
+    }
     setSaving(false);
     if (error) {
       console.error("[VisitorPipelineControl] save failed", error);
-      toast.error("فشل حفظ الحالة");
+      toast.error(`فشل حفظ الحالة: ${error.message}`);
       return false;
     }
     return true;
