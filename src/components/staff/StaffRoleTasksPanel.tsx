@@ -512,10 +512,17 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
               {tasks.map((t) => {
                 const meta = KIND_META[t.kind];
                 const Icon = meta.icon;
+                const sla = computeSla(t.agedAtIso, meta.slaHours);
+                const slaStyle = SLA_STYLES[sla.status];
                 return (
                   <li
                     key={t.id}
-                    className="flex items-start gap-3 p-3 rounded-lg border bg-card hover:bg-accent/30 transition-colors"
+                    className={cn(
+                      "relative flex items-start gap-3 p-3 rounded-lg border-2 transition-colors hover:bg-accent/30",
+                      slaStyle.cardBorder,
+                      slaStyle.cardBg,
+                      slaStyle.pulse && "ring-2 ring-red-300/60 animate-pulse-slow"
+                    )}
                   >
                     <div className={cn("mt-0.5 shrink-0", meta.color)}>
                       <Icon className="w-5 h-5" />
@@ -526,8 +533,9 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
                           {meta.label}
                         </span>
                         {severityBadge(t.severity)}
+                        <SlaBadge sla={sla} />
                         <span className="text-[10px] text-muted-foreground">
-                          منذ {formatDistanceToNow(new Date(t.agedAtIso), { locale: ar, addSuffix: false })}
+                          منذ {formatDistanceToNow(new Date(t.agedAtIso), { locale: ar, addSuffix: false })} · {sla.remainingLabel}
                         </span>
                       </div>
                       <div className="font-medium text-sm mt-0.5 truncate">{t.title}</div>
