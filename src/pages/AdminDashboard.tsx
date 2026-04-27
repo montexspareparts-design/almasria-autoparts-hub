@@ -62,6 +62,7 @@ const AdminSEOPreview = lazy(() => import("@/components/admin/AdminSEOPreview"))
 const AdminResponsivePreview = lazy(() => import("@/components/admin/AdminResponsivePreview"));
 const AdminMobileErrorReport = lazy(() => import("@/components/admin/AdminMobileErrorReport"));
 const AdminPermissionRequests = lazy(() => import("@/components/admin/AdminPermissionRequests"));
+const AdminRolePermissions = lazy(() => import("@/components/admin/AdminRolePermissions"));
 const AdminDailyReports = lazy(() => import("@/components/admin/AdminDailyReports"));
 const AdminDailyReportEditor = lazy(() => import("@/components/admin/AdminDailyReportEditor"));
 
