@@ -57,6 +57,7 @@ const DevDealerPreview = lazy(() => import("./pages/DevDealerPreview"));
 const VisitorSessionSummary = lazy(() => import("./pages/VisitorSessionSummary"));
 const StaffHome = lazy(() => import("./pages/StaffHome"));
 const StaffDailyReportPage = lazy(() => import("./pages/StaffDailyReportPage"));
+const StaffDailyBriefPage = lazy(() => import("./pages/StaffDailyBriefPage"));
 const VisitorLeadsPage = lazy(() => import("./pages/VisitorLeadsPage"));
 const ActiveVisitorsPage = lazy(() => import("./pages/ActiveVisitorsPage"));
 const AdminWhatsAppLogsPage = lazy(() => import("./pages/AdminWhatsAppLogsPage"));
@@ -157,6 +158,8 @@ const App = () => (
                     <Route path="/admin/staff-home" element={<StaffHome />} />
                     <Route path="/admin/daily-report" element={<StaffDailyReportPage />} />
                     <Route path="/staff/daily-report" element={<StaffDailyReportPage />} />
+                    <Route path="/admin/daily-brief" element={<StaffDailyBriefPage />} />
+                    <Route path="/staff/daily-brief" element={<StaffDailyBriefPage />} />
                     <Route path="/admin/visitor-leads" element={<VisitorLeadsPage />} />
                     <Route path="/admin/active-visitors" element={<ActiveVisitorsPage />} />
                     <Route path="/admin/whatsapp-logs" element={<AdminWhatsAppLogsPage />} />

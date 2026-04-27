@@ -1252,6 +1252,19 @@ const StaffHome = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+        {/* Quick link to auto-generated daily brief (one-page printable KPI report) */}
+        <div className="flex items-center justify-end">
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1"
+            onClick={() => navigate("/admin/daily-brief")}
+          >
+            <ClipboardList className="w-4 h-4" />
+            تقرير يومي مختصر (PDF)
+          </Button>
+        </div>
+
         {/* Role-based dynamic tasks (10 max) — admin gets supervisor tasks, moderator gets sales tasks */}
         <StaffRoleTasksPanel limit={10} />
 
