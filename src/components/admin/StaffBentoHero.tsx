@@ -63,6 +63,7 @@ export default function StaffBentoHero({
   onJumpToTab,
 }: Props) {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   // جديد اليوم
   const [newOrders24h, setNewOrders24h] = useState(0);
