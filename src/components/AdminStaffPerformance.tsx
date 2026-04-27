@@ -291,13 +291,13 @@ export default function AdminStaffPerformance() {
         </div>
       </div>
 
-      {/* Top KPIs */}
+      {/* Top KPIs - clickable to drill down */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <KpiCard icon={Users} label="موظفين نشطين" value={fmtNum(staff.filter(s => s.total_actions > 0).length)} sub={`من ${staff.length}`} color="blue" />
-        <KpiCard icon={Activity} label="إجمالي الإجراءات" value={fmtNum(totalActions)} color="purple" />
-        <KpiCard icon={Phone} label="عملاء تم التواصل معهم" value={fmtNum(totalCustomers)} color="emerald" />
-        <KpiCard icon={MessageCircle} label="مكالمات + واتساب" value={fmtNum(totalCalls)} color="green" />
-        <KpiCard icon={Zap} label="متوسط سرعة الرد (SLA)" value={orgSla ? `${orgSla}د` : "—"} sub="على الطلبات الجديدة" color="amber" />
+        <KpiCard icon={Users} label="موظفين نشطين" value={fmtNum(staff.filter(s => s.total_actions > 0).length)} sub={`من ${staff.length}`} color="blue" onClick={() => setSelectedKpi("active")} />
+        <KpiCard icon={Activity} label="إجمالي الإجراءات" value={fmtNum(totalActions)} color="purple" onClick={() => setSelectedKpi("actions")} />
+        <KpiCard icon={Phone} label="عملاء تم التواصل معهم" value={fmtNum(totalCustomers)} color="emerald" onClick={() => setSelectedKpi("customers")} />
+        <KpiCard icon={MessageCircle} label="مكالمات + واتساب" value={fmtNum(totalCalls)} color="green" onClick={() => setSelectedKpi("calls")} />
+        <KpiCard icon={Zap} label="متوسط سرعة الرد (SLA)" value={orgSla ? `${orgSla}د` : "—"} sub="على الطلبات الجديدة" color="amber" onClick={() => setSelectedKpi("sla")} />
       </div>
 
       {/* Leaderboard Top 3 */}
