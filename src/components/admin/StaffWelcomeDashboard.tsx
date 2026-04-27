@@ -78,9 +78,17 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
     todayStart.setHours(0, 0, 0, 0);
     const todayIso = todayStart.toISOString();
 
+    // Status thresholds
+    const now = Date.now();
+    const critical30 = new Date(now - 30 * 60 * 1000).toISOString();   // طلب pending أكتر من 30د
+    const sla60 = new Date(now - 60 * 60 * 1000).toISOString();        // SLA متجاوز > 60د
+    const last24h = new Date(now - 24 * 60 * 60 * 1000).toISOString(); // hot leads
+    const days7Ago = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString(); // بدون تواصل > 7 أيام
+
     const [
       profileRes, assignedRes, unreadRes, pendingCountRes, recentConvRes, pendingOrdersRes,
       myCallsRes, myLeadsRes, myRatingsRes, allStaffRes, allCommsTodayRes,
+      criticalRes, slaBreachedRes, hotLeadsRes, myAssignmentsRes,
     ] = await Promise.all([
       supabase.from("profiles").select("full_name, email").eq("user_id", user.id).maybeSingle(),
       supabase.from("whatsapp_conversations").select("*", { count: "exact", head: true }).eq("assigned_to", user.id).eq("is_archived", false),
@@ -93,6 +101,23 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
       supabase.from("support_request_ratings").select("rating").eq("staff_user_id", user.id),
       supabase.from("user_roles").select("user_id").in("role", ["admin", "moderator"]),
       supabase.from("customer_communications").select("staff_user_id").gte("created_at", todayIso),
+      // Critical: طلبات pending أنشأت منذ أكتر من 30د بدون أول تواصل
+      supabase.from("orders").select("*", { count: "exact", head: true })
+        .in("status", ["pending", "awaiting_payment"])
+        .lte("created_at", critical30)
+        .is("first_contacted_at", null),
+      // SLA متجاوز: طلبات pending > 60د بدون أول تواصل
+      supabase.from("orders").select("*", { count: "exact", head: true })
+        .in("status", ["pending", "awaiting_payment"])
+        .lte("created_at", sla60)
+        .is("first_contacted_at", null),
+      // Hot Leads: leads جديدة آخر 24س
+      supabase.from("leads").select("*", { count: "exact", head: true })
+        .eq("status", "new")
+        .gte("created_at", last24h),
+      // عملاء مسندين لي بدون تواصل أبداً أو منذ > 7 أيام
+      supabase.from("customer_assignments").select("last_contacted_at")
+        .eq("assigned_staff_id", user.id),
     ]);
 
     setStaffName(profileRes.data?.full_name || profileRes.data?.email?.split("@")[0] || "");
