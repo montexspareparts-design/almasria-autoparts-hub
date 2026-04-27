@@ -281,7 +281,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setDealerAccount(null);
     setIsAdmin(false);
     setIsModerator(false);
+    // Always drop any impersonation when signing out so the next user
+    // doesn't inherit a stale "view as employee" state.
+    sessionStorage.removeItem(IMPERSONATE_KEY);
+    setImpersonation(null);
   };
+
+  // Effective role flags — when an admin is impersonating an employee, the UI
+  // should behave exactly like the employee. The underlying auth.uid() and
+  // RLS still belong to the admin (frontend-only switch).
+  const isImpersonating = !!impersonation && isAdmin;
+  const effectiveIsAdmin = isImpersonating ? false : isAdmin;
+  const effectiveIsModerator = isImpersonating ? true : isModerator;
+  const effectiveIsDealer = !!dealerAccount && !effectiveIsModerator && !effectiveIsAdmin;
 
   return (
     <AuthContext.Provider
@@ -290,10 +302,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         session,
         loading,
         dealerAccount,
-        isDealer: !!dealerAccount && !isModerator,
-        isAdmin,
-        isModerator,
+        isDealer: effectiveIsDealer,
+        isAdmin: effectiveIsAdmin,
+        isModerator: effectiveIsModerator,
         signOut,
+        isImpersonating,
+        impersonatedUserId: impersonation?.userId ?? null,
+        impersonatedName: impersonation?.name ?? null,
+        startImpersonation,
+        stopImpersonation,
       }}
     >
       {children}
