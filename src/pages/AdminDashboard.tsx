@@ -90,13 +90,17 @@ interface SidebarGroup {
 
 const sidebarGroups: SidebarGroup[] = [
   {
+    // الرئيسية = نقطة البداية اليومية للموظف.
+    // الترتيب يحاكي تسلسل عمله: ابدأ يومك → نفّذ المهام (طلبات/Leads/عملاء) → راجع الأداء.
     label: "الرئيسية",
     items: [
-      { id: "daily-dashboard", label: "لوحة المهام اليومية", icon: BarChart3 },
-      { id: "customer-intel", label: "ذكاء العملاء", icon: Eye },
-      { id: "staff-performance", label: "أداء الموظفين", icon: TrendingUp },
-      { id: "analytics", label: "التحليلات", icon: BarChart3 },
-      { id: "customers", label: "ملف العملاء", icon: Users },
+      { id: "daily-dashboard", label: "🏠 الرئيسية للموظف", icon: BarChart3 }, // نقطة البداية — مؤشرات + مهام اليوم
+      { id: "orders", label: "الطلبات", icon: ShoppingBag },                    // أهم تنفيذ يومي
+      { id: "leads", label: "Leads", icon: Users },                              // متابعة العملاء المحتملين
+      { id: "customers", label: "ملف العملاء", icon: Users },                   // البحث عن عميل / تسجيل تواصل
+      { id: "customer-intel", label: "ذكاء العملاء", icon: Eye },               // تحليلات السلوك
+      { id: "analytics", label: "التحليلات", icon: BarChart3 },                 // KPIs عامة
+      { id: "staff-performance", label: "أداء الموظفين", icon: TrendingUp },    // أدمن فقط — مراجعة فريق
     ],
   },
   {
@@ -105,7 +109,7 @@ const sidebarGroups: SidebarGroup[] = [
       { id: "products", label: "إدارة المنتجات", icon: Package },
       { id: "bulk-import", label: "استيراد جماعي", icon: ArrowLeftRight },
       { id: "year-coverage", label: "تغطية السنوات", icon: Clock },
-      { id: "orders", label: "إدارة الطلبات", icon: ShoppingBag },
+      // ملاحظة: "إدارة الطلبات" نُقلت إلى مجموعة "الرئيسية" لأنها مهمة الموظف اليومية الأساسية.
       { id: "coupons", label: "الكوبونات", icon: Tag },
       { id: "qty-discounts", label: "خصومات الكمية", icon: Layers },
       { id: "price-lists", label: "عروض الأسعار", icon: FileText },
@@ -208,7 +212,8 @@ const AdminDashboard = () => {
 
   const filteredSidebarSections = filteredSidebarGroups.flatMap(g => g.items);
 
-  const activeSection = searchParams.get("section") || (filteredSidebarSections[0]?.id || "analytics");
+  // نقطة البداية الموحّدة = "الرئيسية للموظف" (daily-dashboard) لكل من الأدمن والموظف.
+  const activeSection = searchParams.get("section") || (filteredSidebarSections[0]?.id || "daily-dashboard");
 
   const setActiveSection = (section: string) => {
     setSearchParams({ section });
