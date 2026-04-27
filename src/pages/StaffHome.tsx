@@ -1252,8 +1252,17 @@ const StaffHome = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-        {/* Quick link to auto-generated daily brief (one-page printable KPI report) */}
-        <div className="flex items-center justify-end">
+        {/* Quick links: full tasks page + auto-generated daily brief */}
+        <div className="flex items-center justify-end gap-2 flex-wrap">
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1"
+            onClick={() => navigate("/admin/tasks")}
+          >
+            <ClipboardList className="w-4 h-4" />
+            كل المهام
+          </Button>
           <Button
             size="sm"
             variant="outline"
