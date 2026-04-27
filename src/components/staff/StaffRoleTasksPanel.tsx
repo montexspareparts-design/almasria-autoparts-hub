@@ -418,6 +418,19 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
     return "";
   }, [role]);
 
+  // SLA roll-up — counts per status (recomputed each render so the live tick refreshes them)
+  const slaCounts = useMemo(() => {
+    let critical = 0, breached = 0, warning = 0;
+    for (const t of tasks) {
+      const meta = KIND_META[t.kind];
+      const s = computeSla(t.agedAtIso, meta.slaHours);
+      if (s.status === "critical") critical++;
+      else if (s.status === "breached") breached++;
+      else if (s.status === "warning") warning++;
+    }
+    return { critical, breached, warning };
+  }, [tasks]);
+
   if (!user || !role) return null;
 
   return (
