@@ -793,8 +793,13 @@ export default function StaffRoleTasksPanel({ limit = 10, searchQuery = "" }: Pr
 
   /** Filtered + auto-sorted tasks for rendering. */
   const visibleTasks = useMemo(() => {
-    const q = (searchQuery || "").trim().toLowerCase();
+    const rawQ = (searchQuery || "").trim();
+    const q = rawQ.toLowerCase();
     const qDigits = q.replace(/\D/g, "");
+    // Numeric fast-path: query contains digits and NO arabic/latin letters.
+    // Skip text scanning entirely — match only phone digits and digits inside
+    // the order/quote number embedded in the task title (e.g. "ORD-20250127-001").
+    const isNumericOnly = qDigits.length > 0 && !/[a-z\u0600-\u06ff]/i.test(rawQ);
     const enriched = tasks.map((t) => ({
       task: t,
       sla: computeSla(t.agedAtIso, KIND_META[t.kind].slaHours),
@@ -803,9 +808,21 @@ export default function StaffRoleTasksPanel({ limit = 10, searchQuery = "" }: Pr
       .filter(({ task, sla }) => matchesFilter(task, sla))
       .filter(({ task }) => {
         if (!q) return true;
+        if (isNumericOnly) {
+          // (1) Phone match — digits only
+          if (task.phone) {
+            const phoneDigits = task.phone.replace(/\D/g, "");
+            if (phoneDigits.includes(qDigits)) return true;
+          }
+          // (2) Order/quote number match — collapse all digits in the title
+          // so "20250127001" matches "ORD-20250127-001"
+          const titleDigits = task.title.replace(/\D/g, "");
+          if (titleDigits.includes(qDigits)) return true;
+          return false;
+        }
+        // Mixed/text query — full title + subtitle scan
         const hay = `${task.title} ${task.subtitle}`.toLowerCase();
         if (hay.includes(q)) return true;
-        // Phone: match against digits-only form so users can type with or without +20/0
         if (qDigits && task.phone) {
           const phoneDigits = task.phone.replace(/\D/g, "");
           if (phoneDigits.includes(qDigits)) return true;
