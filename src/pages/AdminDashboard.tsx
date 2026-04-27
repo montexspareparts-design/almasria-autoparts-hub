@@ -49,7 +49,7 @@ const AdminStaffRoles = lazy(() => import("@/components/AdminStaffRoles"));
 const AdminWhatsAppInbox = lazy(() => import("@/components/AdminWhatsAppInbox"));
 const StaffDailyDashboard = lazy(() => import("@/components/admin/StaffCRMCommandCenter"));
 const StaffWelcomeDashboard = lazy(() => import("@/components/admin/StaffWelcomeDashboard"));
-const StaffHome = lazy(() => import("@/pages/StaffHome"));
+// StaffHome merged into StaffWelcomeDashboard (daily-dashboard section).
 const StaffAccountSettings = lazy(() => import("@/components/admin/StaffAccountSettings"));
 // AdminNewOrderAlert is now mounted globally in App.tsx
 const AdminSupportRequestAlert = lazy(() => import("@/components/admin/AdminSupportRequestAlert"));
