@@ -252,6 +252,10 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [snoozeOpenFor, setSnoozeOpenFor] = useState<string | null>(null);
+  /** Active priority filter chip. `all` = no filter. */
+  const [filter, setFilter] = useState<
+    "all" | "urgent" | "hot_leads" | "no_contact" | "sla_breached"
+  >("all");
   // Live tick every 60s so SLA progress + remaining label refresh without a full refetch
   const [, setNowTick] = useState(0);
   useEffect(() => {
@@ -569,6 +573,77 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
     return { critical, breached, warning };
   }, [tasks]);
 
+  /** Predicates per filter chip. */
+  const matchesFilter = useCallback(
+    (t: RoleTask, sla: SlaInfo): boolean => {
+      switch (filter) {
+        case "all": return true;
+        case "urgent": return t.severity === "high" || sla.status === "critical";
+        case "hot_leads":
+          return t.kind === "lead_followup" || t.kind === "active_visitor_engage";
+        case "no_contact":
+          return t.kind === "pending_order_contact" || t.kind === "abandoned_cart";
+        case "sla_breached":
+          return sla.status === "breached" || sla.status === "critical";
+      }
+    },
+    [filter]
+  );
+
+  /**
+   * Composite priority score — higher = more important. Drives auto-sort.
+   * Combines SLA pressure, severity, and task kind weight.
+   */
+  const priorityScore = useCallback((t: RoleTask, sla: SlaInfo): number => {
+    const slaWeight =
+      sla.status === "critical" ? 1000 :
+      sla.status === "breached" ? 600 :
+      sla.status === "warning"  ? 200 : 0;
+    const sevWeight = t.severity === "high" ? 400 : t.severity === "medium" ? 150 : 0;
+    const kindWeight: Partial<Record<RoleTaskKind, number>> = {
+      review_high_value_order: 300,
+      stale_payment_transaction: 250,
+      erp_sync_alert: 220,
+      pending_order_contact: 200,
+      review_dealer_application: 180,
+      lead_followup: 160,
+      active_visitor_engage: 140,
+      quote_followup: 120,
+      abandoned_cart: 80,
+      staff_no_daily_report: 70,
+      stock_alert_pending: 50,
+    };
+    // Tie-breaker: older tasks win — bonus for age in hours (capped)
+    const ageBonus = Math.min(100, sla.ageHours);
+    return slaWeight + sevWeight + (kindWeight[t.kind] || 0) + ageBonus;
+  }, []);
+
+  /** Filtered + auto-sorted tasks for rendering. */
+  const visibleTasks = useMemo(() => {
+    const enriched = tasks.map((t) => ({
+      task: t,
+      sla: computeSla(t.agedAtIso, KIND_META[t.kind].slaHours),
+    }));
+    return enriched
+      .filter(({ task, sla }) => matchesFilter(task, sla))
+      .sort((a, b) => priorityScore(b.task, b.sla) - priorityScore(a.task, a.sla))
+      .map(({ task }) => task);
+  }, [tasks, matchesFilter, priorityScore]);
+
+  /** Counts per chip — shown as little badges inside the chips. */
+  const chipCounts = useMemo(() => {
+    let urgent = 0, hot = 0, noContact = 0, breached = 0;
+    for (const t of tasks) {
+      const sla = computeSla(t.agedAtIso, KIND_META[t.kind].slaHours);
+      if (t.severity === "high" || sla.status === "critical") urgent++;
+      if (t.kind === "lead_followup" || t.kind === "active_visitor_engage") hot++;
+      if (t.kind === "pending_order_contact" || t.kind === "abandoned_cart") noContact++;
+      if (sla.status === "breached" || sla.status === "critical") breached++;
+    }
+    return { urgent, hot, noContact, breached };
+  }, [tasks]);
+
+
   if (!user || !role) return null;
 
   return (
@@ -634,20 +709,62 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
 
       {!collapsed && (
         <>
+          {/* Priority filter chips — auto-sort by importance is always on */}
+          {tasks.length > 0 && !loading && (
+            <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+              {([
+                { key: "all", label: "الكل", count: tasks.length, cls: "bg-primary/10 text-primary border-primary/30", activeCls: "bg-primary text-primary-foreground border-primary" },
+                { key: "urgent", label: "🔥 عاجل", count: chipCounts.urgent, cls: "bg-red-50 text-red-700 border-red-200", activeCls: "bg-red-600 text-white border-red-600" },
+                { key: "hot_leads", label: "🎯 Hot Leads", count: chipCounts.hot, cls: "bg-rose-50 text-rose-700 border-rose-200", activeCls: "bg-rose-600 text-white border-rose-600" },
+                { key: "no_contact", label: "📞 بدون تواصل", count: chipCounts.noContact, cls: "bg-amber-50 text-amber-800 border-amber-200", activeCls: "bg-amber-600 text-white border-amber-600" },
+                { key: "sla_breached", label: "⛔ SLA متجاوز", count: chipCounts.breached, cls: "bg-orange-50 text-orange-700 border-orange-200", activeCls: "bg-orange-600 text-white border-orange-600" },
+              ] as const).map((chip) => {
+                const active = filter === chip.key;
+                const dim = chip.count === 0 && chip.key !== "all";
+                return (
+                  <button
+                    key={chip.key}
+                    onClick={() => setFilter(chip.key)}
+                    disabled={dim}
+                    className={cn(
+                      "inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-full border transition-all",
+                      active ? chip.activeCls : chip.cls,
+                      dim && "opacity-40 cursor-not-allowed",
+                      !active && !dim && "hover:scale-105"
+                    )}
+                  >
+                    <span>{chip.label}</span>
+                    <span className={cn(
+                      "min-w-[18px] text-center text-[10px] px-1 rounded-full",
+                      active ? "bg-white/25" : "bg-background/70 border border-border/50"
+                    )}>
+                      {chip.count}
+                    </span>
+                  </button>
+                );
+              })}
+              <span className="text-[10px] text-muted-foreground mr-auto">
+                مرتّبة تلقائياً حسب الأولوية
+              </span>
+            </div>
+          )}
+
           {loading ? (
             <div className="space-y-2">
               {Array.from({ length: 4 }).map((_, i) => (
                 <Skeleton key={i} className="h-16 w-full" />
               ))}
             </div>
-          ) : tasks.length === 0 ? (
+          ) : visibleTasks.length === 0 ? (
             <div className="py-8 text-center text-sm text-muted-foreground">
               <CheckCircle2 className="w-10 h-10 mx-auto mb-2 text-green-500" />
-              لا توجد مهام معلّقة الآن — أداء ممتاز! 🎉
+              {tasks.length === 0
+                ? "لا توجد مهام معلّقة الآن — أداء ممتاز! 🎉"
+                : "لا توجد مهام مطابقة للفلتر الحالي"}
             </div>
           ) : (
             <ul className="space-y-2">
-              {tasks.map((t) => {
+              {visibleTasks.map((t) => {
                 const meta = KIND_META[t.kind];
                 const Icon = meta.icon;
                 const sla = computeSla(t.agedAtIso, meta.slaHours);
