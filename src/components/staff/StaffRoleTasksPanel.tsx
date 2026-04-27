@@ -357,31 +357,85 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
     if (role) fetchTasks();
   }, [role, fetchTasks]);
 
+  /**
+   * Mark a task done with a 5-second Undo window.
+   *
+   * The comm row is inserted immediately and the card disappears, but a toast
+   * with an "تراجع" action lets the user reverse:
+   *   1. delete the comm row (so it stops hiding the task)
+   *   2. revert side-effects (e.g. clear first_contacted_at on orders)
+   *   3. restore the card locally so the reminder reappears instantly
+   */
   const handleDone = async (t: RoleTask) => {
     if (!user) return;
     setBusyId(t.id);
     try {
-      const { error } = await supabase.from("customer_communications").insert({
-        staff_user_id: user.id,
-        customer_user_id: t.customerUserId,
-        comm_type: "role_task",
-        is_done: true,
-        done_at: new Date().toISOString(),
-        note: `role-task:${t.id} · ${t.title}`,
-      });
+      const { data: inserted, error } = await supabase
+        .from("customer_communications")
+        .insert({
+          staff_user_id: user.id,
+          customer_user_id: t.customerUserId,
+          comm_type: "role_task",
+          is_done: true,
+          done_at: new Date().toISOString(),
+          note: `role-task:${t.id} · ${t.title}`,
+        })
+        .select("id")
+        .single();
       if (error) throw error;
 
-      // Side effect: mark order as first-contacted
+      // Side effect: mark order as first-contacted (capture prior value for undo)
+      let revertOrderContact = false;
       if (t.kind === "pending_order_contact") {
-        await supabase
+        const { data: prior } = await supabase
           .from("orders")
-          .update({ first_contacted_at: new Date().toISOString() })
+          .select("first_contacted_at")
           .eq("id", t.refId)
-          .is("first_contacted_at", null);
+          .maybeSingle();
+        if (!prior?.first_contacted_at) {
+          await supabase
+            .from("orders")
+            .update({ first_contacted_at: new Date().toISOString() })
+            .eq("id", t.refId);
+          revertOrderContact = true;
+        }
       }
 
       setTasks((prev) => prev.filter((x) => x.id !== t.id));
-      toast({ title: "تم إنجاز المهمة", description: t.title });
+
+      const undo = async () => {
+        try {
+          if (inserted?.id) {
+            await supabase.from("customer_communications").delete().eq("id", inserted.id);
+          }
+          if (revertOrderContact) {
+            await supabase
+              .from("orders")
+              .update({ first_contacted_at: null })
+              .eq("id", t.refId);
+          }
+          // Restore the card locally so the reminder reappears immediately
+          setTasks((prev) => (prev.some((x) => x.id === t.id) ? prev : [t, ...prev]));
+          toast({ title: "تم التراجع", description: "تمت إعادة فتح التذكير" });
+        } catch (err: any) {
+          toast({
+            title: "تعذر التراجع",
+            description: err?.message || "خطأ غير معروف",
+            variant: "destructive",
+          });
+        }
+      };
+
+      toast({
+        title: "تم إنجاز المهمة",
+        description: t.title,
+        duration: 5000,
+        action: (
+          <ToastAction altText="تراجع" onClick={undo}>
+            تراجع
+          </ToastAction>
+        ),
+      });
     } catch (e: any) {
       toast({ title: "تعذر التنفيذ", description: e.message || "خطأ غير معروف", variant: "destructive" });
     } finally {
