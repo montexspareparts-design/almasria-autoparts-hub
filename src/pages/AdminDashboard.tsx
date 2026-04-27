@@ -170,7 +170,10 @@ const SectionLoader = forwardRef<HTMLDivElement>((_props, ref) => (
 SectionLoader.displayName = "SectionLoader";
 
 const AdminDashboard = () => {
-  const { user, isAdmin, isModerator, isDealer, loading: authLoading, signOut } = useAuth();
+  const { user, isAdmin, isModerator, isDealer, loading: authLoading, signOut, isImpersonating } = useAuth();
+  // The real admin (even while impersonating) should still see the "View as employee" button.
+  const isRealAdmin = isAdmin || isImpersonating;
+  const [viewAsOpen, setViewAsOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
