@@ -67,25 +67,11 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
   const [staffName, setStaffName] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
-  // الأقسام المتاحة للموظف (Moderator). الأدمن يشوف كل حاجة.
-  // مرجع المسارات: MODERATOR_SECTIONS في src/pages/AdminDashboard.tsx
-  const MODERATOR_ALLOWED = new Set([
-    "daily-dashboard", "customer-intel", "analytics",
-    "customers", "orders", "leads", "account-settings",
-    "staff-performance", // متاح لأن لوحة المهام بتلينك ليه (الأدمن فقط لكن نسمح بالعرض)
-  ]);
-  const canAccess = (section: string): boolean => {
-    // الأدمن (سواء impersonating أو لا) يقدر يفتح أي قسم
-    if (isAdmin) return true;
-    // staff-performance حصراً للأدمن
-    if (section === "staff-performance") return false;
-    return MODERATOR_ALLOWED.has(section);
-  };
-  // wrapper آمن: لو القسم مش مسموح بيفلب لأقرب بديل بدل ما يضيع المستخدم في صفحة فاضية
-  const safeNavigate = (section: string, fallback = "daily-dashboard") => {
-    if (!onNavigate) return;
-    onNavigate(canAccess(section) ? section : fallback);
-  };
+  // Single source of truth for permissions — see src/lib/staffPermissions.ts.
+  // The "صلاحيات الأدوار" admin screen renders the exact same lists.
+  const roles = { isAdmin, isModerator };
+  const canAccess = (section: string) => canAccessSection(section, roles);
+  const safeNavigate = buildSafeNavigate(onNavigate, roles, "daily-dashboard");
 
   useEffect(() => {
     if (user) fetchData();
