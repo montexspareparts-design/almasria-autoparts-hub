@@ -289,24 +289,24 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
             3) المحادثات (آخر واتساب)
             4) الطلبات (بانتظار الرد)
           ============================================================ */}
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full h-auto p-1 bg-muted/50">
-          <TabsTrigger value="overview" className="gap-1.5 text-xs sm:text-sm py-2">
+      <Tabs defaultValue="overview" className="w-full flex flex-col lg:flex-row gap-4">
+        <TabsList className="flex lg:flex-col h-auto lg:h-fit lg:w-56 lg:sticky lg:top-4 p-1 bg-muted/50 overflow-x-auto lg:overflow-visible justify-start lg:justify-stretch shrink-0">
+          <TabsTrigger value="overview" className="gap-1.5 text-xs sm:text-sm py-2 lg:w-full lg:justify-start whitespace-nowrap">
             <LayoutDashboard className="w-3.5 h-3.5" />
             نظرة سريعة
           </TabsTrigger>
-          <TabsTrigger value="tasks" className="gap-1.5 text-xs sm:text-sm py-2">
+          <TabsTrigger value="tasks" className="gap-1.5 text-xs sm:text-sm py-2 lg:w-full lg:justify-start whitespace-nowrap">
             <ListChecks className="w-3.5 h-3.5" />
             مهامي
           </TabsTrigger>
-          <TabsTrigger value="conversations" className="gap-1.5 text-xs sm:text-sm py-2">
+          <TabsTrigger value="conversations" className="gap-1.5 text-xs sm:text-sm py-2 lg:w-full lg:justify-start whitespace-nowrap">
             <MessageCircle className="w-3.5 h-3.5" />
             المحادثات
             {stats?.unreadMessagesCount ? (
               <Badge className="bg-emerald-600 text-white text-[10px] h-4 min-w-4 px-1">{stats.unreadMessagesCount}</Badge>
             ) : null}
           </TabsTrigger>
-          <TabsTrigger value="orders" className="gap-1.5 text-xs sm:text-sm py-2">
+          <TabsTrigger value="orders" className="gap-1.5 text-xs sm:text-sm py-2 lg:w-full lg:justify-start whitespace-nowrap">
             <ShoppingCart className="w-3.5 h-3.5" />
             الطلبات
             {stats?.pendingOrdersCount ? (
@@ -314,6 +314,9 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
             ) : null}
           </TabsTrigger>
         </TabsList>
+        <div className="flex-1 min-w-0">
+
+
 
         {/* ----- Tab 1: نظرة سريعة (إنجازي اليوم + KPIs المختصرة) ----- */}
         <TabsContent value="overview" className="space-y-4 mt-4">
