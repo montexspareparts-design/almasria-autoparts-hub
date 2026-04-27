@@ -20,11 +20,21 @@ import StaffBentoHero from "./StaffBentoHero";
 
 // Heavy panels & dialogs — lazy-loaded to keep the initial bundle small.
 // They only render after the user interacts (opens a row, clicks a button, etc.).
-const WhatsAppQuickChat = lazy(() => import("./WhatsAppQuickChat"));
+const WhatsAppQuickChatLazy = lazy(() => import("./WhatsAppQuickChat"));
 const CustomerActivitySummary = lazy(() => import("./CustomerActivitySummary"));
 const SupportRequestAISummary = lazy(() => import("./SupportRequestAISummary"));
 const TransferToColleagueDialog = lazy(() => import("./TransferToColleagueDialog"));
 const PerfDashboard = lazy(() => import("./PerfDashboard"));
+
+// Thin wrapper so the 4 inline call-sites don't each need a Suspense boundary.
+// Fallback is a small ghost button matching the WhatsApp button size.
+function WhatsAppQuickChat(props: React.ComponentProps<typeof WhatsAppQuickChatLazy>) {
+  return (
+    <Suspense fallback={<div className="h-7 w-16 rounded-md bg-muted animate-pulse" />}>
+      <WhatsAppQuickChatLazy {...props} />
+    </Suspense>
+  );
+}
 
 // =================== Types ===================
 interface UrgentOrder {
