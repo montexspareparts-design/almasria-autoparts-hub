@@ -62,6 +62,7 @@ const AdminSEOPreview = lazy(() => import("@/components/admin/AdminSEOPreview"))
 const AdminResponsivePreview = lazy(() => import("@/components/admin/AdminResponsivePreview"));
 const AdminMobileErrorReport = lazy(() => import("@/components/admin/AdminMobileErrorReport"));
 const AdminPermissionRequests = lazy(() => import("@/components/admin/AdminPermissionRequests"));
+const AdminRolePermissions = lazy(() => import("@/components/admin/AdminRolePermissions"));
 const AdminDailyReports = lazy(() => import("@/components/admin/AdminDailyReports"));
 const AdminDailyReportEditor = lazy(() => import("@/components/admin/AdminDailyReportEditor"));
 
@@ -138,7 +139,8 @@ const sidebarGroups: SidebarGroup[] = [
         { id: "staff-roles", label: "إدارة الموظفين", icon: Users },
         { id: "audit-log", label: "سجل المراجعة", icon: Shield },
         { id: "account-attempts", label: "محاولات إنشاء/إعادة تعيين الحسابات", icon: KeyRound },
-        { id: "permission-requests", label: "طلبات الصلاحيات", icon: ShieldCheck },
+         { id: "permission-requests", label: "طلبات الصلاحيات", icon: ShieldCheck },
+        { id: "role-permissions", label: "صلاحيات الأدوار", icon: ShieldCheck },
         { id: "daily-reports", label: "التقارير اليومية للموظفين", icon: FileText },
         { id: "daily-report-editor", label: "محرر أسئلة التقرير اليومي", icon: HelpCircle },
         { id: "translations", label: "إدارة الترجمات (AR/EN)", icon: FileText },
@@ -155,19 +157,11 @@ const sidebarGroups: SidebarGroup[] = [
     },
 ];
 
-// Sections accessible by moderators (employees).
-// IMPORTANT: keep this list MINIMAL — only the 6 core sections requested by the team
-// (لوحة المهام اليومية / مركز قيادة المتابعة / مهام الموظف are all rendered inside
-// "daily-dashboard"). "account-settings" stays so staff can change their own password.
-const MODERATOR_SECTIONS = new Set([
-  "daily-dashboard", // لوحة المهام اليومية + مركز قيادة المتابعة + لوحة مهام الموظف + مركز قيادة الموظف
-  "customer-intel",  // ذكاء العملاء
-  "analytics",       // التحليلات
-  "customers",       // ملف العملاء
-  "orders",          // الطلبات
-  "leads",           // Leads
-  "account-settings",// إعدادات حسابي (ضرورية لتغيير كلمة المرور)
-]);
+// Sections accessible by moderators (employees) — single source of truth.
+// See src/lib/staffPermissions.ts. Mirrored by StaffWelcomeDashboard
+// (StatusIndicatorsBar / Quick Actions / safeNavigate) and the
+// "صلاحيات الأدوار" preview screen so they never drift apart.
+import { MODERATOR_SECTIONS } from "@/lib/staffPermissions";
 
 const sidebarSections = sidebarGroups.flatMap(g => g.items);
 
@@ -730,6 +724,8 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminClientAccountAttempts /></Suspense>;
       case "permission-requests":
         return <Suspense fallback={<SectionLoader />}><AdminPermissionRequests /></Suspense>;
+      case "role-permissions":
+        return isAdmin ? <Suspense fallback={<SectionLoader />}><AdminRolePermissions /></Suspense> : <Suspense fallback={<SectionLoader />}><AdminAnalytics /></Suspense>;
       case "daily-reports":
         return <Suspense fallback={<SectionLoader />}><AdminDailyReports /></Suspense>;
       case "daily-report-editor":
