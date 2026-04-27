@@ -242,9 +242,15 @@ function SlaBadge({ sla }: { sla: SlaInfo }) {
 interface Props {
   /** Maximum tasks rendered. Defaults to 10. */
   limit?: number;
+  /**
+   * Optional free-text query — matches against task title, subtitle and phone
+   * (which together already include customer name, order number, and shop/company name).
+   * Applied IN ADDITION to the active priority filter chip.
+   */
+  searchQuery?: string;
 }
 
-export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
+export default function StaffRoleTasksPanel({ limit = 10, searchQuery = "" }: Props) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [role, setRole] = useState<StaffRole | null>(null);
