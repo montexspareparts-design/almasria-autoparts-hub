@@ -242,9 +242,15 @@ function SlaBadge({ sla }: { sla: SlaInfo }) {
 interface Props {
   /** Maximum tasks rendered. Defaults to 10. */
   limit?: number;
+  /**
+   * Optional free-text query — matches against task title, subtitle and phone
+   * (which together already include customer name, order number, and shop/company name).
+   * Applied IN ADDITION to the active priority filter chip.
+   */
+  searchQuery?: string;
 }
 
-export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
+export default function StaffRoleTasksPanel({ limit = 10, searchQuery = "" }: Props) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [role, setRole] = useState<StaffRole | null>(null);
@@ -787,15 +793,28 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
 
   /** Filtered + auto-sorted tasks for rendering. */
   const visibleTasks = useMemo(() => {
+    const q = (searchQuery || "").trim().toLowerCase();
+    const qDigits = q.replace(/\D/g, "");
     const enriched = tasks.map((t) => ({
       task: t,
       sla: computeSla(t.agedAtIso, KIND_META[t.kind].slaHours),
     }));
     return enriched
       .filter(({ task, sla }) => matchesFilter(task, sla))
+      .filter(({ task }) => {
+        if (!q) return true;
+        const hay = `${task.title} ${task.subtitle}`.toLowerCase();
+        if (hay.includes(q)) return true;
+        // Phone: match against digits-only form so users can type with or without +20/0
+        if (qDigits && task.phone) {
+          const phoneDigits = task.phone.replace(/\D/g, "");
+          if (phoneDigits.includes(qDigits)) return true;
+        }
+        return false;
+      })
       .sort((a, b) => priorityScore(b.task, b.sla) - priorityScore(a.task, a.sla))
       .map(({ task }) => task);
-  }, [tasks, matchesFilter, priorityScore]);
+  }, [tasks, matchesFilter, priorityScore, searchQuery]);
 
   /** Counts per chip — shown as little badges inside the chips. */
   const chipCounts = useMemo(() => {
