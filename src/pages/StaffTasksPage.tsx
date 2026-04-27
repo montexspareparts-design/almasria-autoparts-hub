@@ -24,6 +24,8 @@ import StaffRoleTasksPanel from "@/components/staff/StaffRoleTasksPanel";
 export default function StaffTasksPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  // Numeric fast-path: query has digits and no letters → search only phone + order number.
+  const isNumericMode = /\d/.test(search) && !/[a-z\u0600-\u06ff]/i.test(search);
 
   return (
     <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 max-w-6xl" dir="rtl">
