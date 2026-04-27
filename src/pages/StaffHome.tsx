@@ -38,6 +38,7 @@ import { isViewedUnderBasis as isViewedUnderBasisPure } from "@/lib/viewedUnderB
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useSessionPersistedState } from "@/hooks/useSessionPersistedState";
 import DailyReportTabCard from "@/components/staff/DailyReportTabCard";
 import StaffRemindersPanel from "@/components/staff/StaffRemindersPanel";
