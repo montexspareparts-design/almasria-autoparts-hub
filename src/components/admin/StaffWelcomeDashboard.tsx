@@ -549,10 +549,11 @@ const STATUS_ITEMS: StatusItemConfig[] = [
 ];
 
 function StatusIndicatorsBar({
-  counters, onNavigate,
+  counters, onNavigate, canAccess,
 }: {
   counters: StatusCounters;
   onNavigate?: (section: string) => void;
+  canAccess?: (section: string) => boolean;
 }) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
@@ -560,15 +561,19 @@ function StatusIndicatorsBar({
         const count = counters[item.key];
         const isActive = count > 0;
         const Icon = item.icon;
+        // إذا كان للمؤشر مسار وغير مسموح للدور الحالي، نعطّل الزر
+        const allowed = item.navTo ? (canAccess ? canAccess(item.navTo) : true) : false;
+        const clickable = !!item.navTo && allowed;
         return (
           <button
             key={item.key}
             type="button"
-            onClick={() => item.navTo && onNavigate?.(item.navTo)}
-            disabled={!item.navTo}
+            onClick={() => clickable && item.navTo && onNavigate?.(item.navTo)}
+            disabled={!clickable}
+            title={!allowed && item.navTo ? "هذا القسم غير متاح لدورك" : undefined}
             className={`relative text-right rounded-xl border p-3 transition-all ${
               isActive ? item.active : item.empty
-            } ${item.navTo ? "cursor-pointer hover:shadow-sm hover:-translate-y-0.5 active:scale-[0.98]" : "cursor-default"}`}
+            } ${clickable ? "cursor-pointer hover:shadow-sm hover:-translate-y-0.5 active:scale-[0.98]" : "cursor-default"}`}
             aria-label={`${item.label}: ${count}`}
           >
             <div className="flex items-center justify-between mb-1">
