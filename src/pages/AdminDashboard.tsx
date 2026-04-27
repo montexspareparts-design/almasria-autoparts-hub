@@ -817,6 +817,21 @@ const AdminDashboard = () => {
               </Button>
             )}
 
+            {/* "View as employee" — only visible to the real admin (or the
+                admin currently impersonating, so they can switch employees). */}
+            {isRealAdmin && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setViewAsOpen(true)}
+                className="gap-1 text-[11px] font-bold text-amber-300 hover:bg-amber-500/10 rounded-lg h-8 px-2"
+                title="معاينة الواجهة كموظف"
+              >
+                <Eye className="w-3 h-3" />
+                <span className="hidden sm:inline">اعرض كموظف</span>
+              </Button>
+            )}
+
             <Button
               variant="ghost"
               size="icon"
@@ -828,6 +843,13 @@ const AdminDashboard = () => {
           </div>
         </div>
       </header>
+
+      {/* Lazy-mount the picker dialog only when the admin opens it */}
+      {isRealAdmin && viewAsOpen && (
+        <Suspense fallback={null}>
+          <ViewAsEmployeeDialog open={viewAsOpen} onOpenChange={setViewAsOpen} />
+        </Suspense>
+      )}
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
