@@ -835,6 +835,9 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
             <div className="flex items-center gap-1.5 mb-3 flex-wrap">
               {([
                 { key: "all", label: "الكل", count: tasks.length, cls: "bg-primary/10 text-primary border-primary/30", activeCls: "bg-primary text-primary-foreground border-primary" },
+                { key: "critical", label: "🚨 Critical", count: chipCounts.critical, cls: "bg-red-100 text-red-800 border-red-300", activeCls: "bg-red-700 text-white border-red-700" },
+                { key: "high", label: "⚡ High", count: chipCounts.high, cls: "bg-orange-50 text-orange-800 border-orange-200", activeCls: "bg-orange-600 text-white border-orange-600" },
+                { key: "today", label: "📅 Today", count: chipCounts.today, cls: "bg-sky-50 text-sky-700 border-sky-200", activeCls: "bg-sky-600 text-white border-sky-600" },
                 { key: "urgent", label: "🔥 عاجل", count: chipCounts.urgent, cls: "bg-red-50 text-red-700 border-red-200", activeCls: "bg-red-600 text-white border-red-600" },
                 { key: "hot_leads", label: "🎯 Hot Leads", count: chipCounts.hot, cls: "bg-rose-50 text-rose-700 border-rose-200", activeCls: "bg-rose-600 text-white border-rose-600" },
                 { key: "no_contact", label: "📞 بدون تواصل", count: chipCounts.noContact, cls: "bg-amber-50 text-amber-800 border-amber-200", activeCls: "bg-amber-600 text-white border-amber-600" },
