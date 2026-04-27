@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   MessageCircle, ShoppingCart, Clock, Loader2, ArrowLeft, UserCheck,
   PhoneCall, UserPlus, Search, Trophy, Star, Zap, Target,
+  AlertTriangle, Flame, TimerOff, UserX,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
