@@ -251,7 +251,7 @@ interface Props {
 }
 
 export default function StaffRoleTasksPanel({ limit = 10, searchQuery = "" }: Props) {
-  const { user } = useAuth();
+  const { user, isAdmin, isModerator } = useAuth();
   const navigate = useNavigate();
   const [role, setRole] = useState<StaffRole | null>(null);
   const [tasks, setTasks] = useState<RoleTask[]>([]);
@@ -271,26 +271,18 @@ export default function StaffRoleTasksPanel({ limit = 10, searchQuery = "" }: Pr
     return () => clearInterval(id);
   }, []);
 
-  // Load role first
+  // Derive role from AuthContext so impersonation ("View as employee") is respected.
+  // When an admin previews as an employee, isAdmin becomes false and isModerator becomes true,
+  // which means we render the moderator task list instead of the supervisor one.
   useEffect(() => {
-    if (!user) return;
-    let cancel = false;
-    (async () => {
-      const { data } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id);
-      if (cancel) return;
-      const roles = (data || []).map((r) => r.role);
-      // admin takes precedence over moderator
-      if (roles.includes("admin")) setRole("admin");
-      else if (roles.includes("moderator")) setRole("moderator");
-      else setRole(null);
-    })();
-    return () => {
-      cancel = true;
-    };
-  }, [user]);
+    if (!user) {
+      setRole(null);
+      return;
+    }
+    if (isAdmin) setRole("admin");
+    else if (isModerator) setRole("moderator");
+    else setRole(null);
+  }, [user, isAdmin, isModerator]);
 
   const fetchTasks = useCallback(async () => {
     if (!user || !role) return;
