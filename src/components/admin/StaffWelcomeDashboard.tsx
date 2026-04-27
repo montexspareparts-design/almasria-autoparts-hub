@@ -5,11 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import {
   MessageCircle, ShoppingCart, Clock, Loader2, ArrowLeft, UserCheck,
   PhoneCall, UserPlus, Search, Trophy, Star, Zap, Target,
   AlertTriangle, Flame, TimerOff, UserX,
-  LayoutDashboard, ListChecks,
+  LayoutDashboard, ListChecks, Settings, Eye, HelpCircle, TrendingUp,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -68,6 +71,21 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
   const [pendingOrders, setPendingOrders] = useState<PendingOrder[]>([]);
   const [staffName, setStaffName] = useState<string>("");
   const [loading, setLoading] = useState(true);
+
+  // KPI display preferences (cosmetic — persisted locally for the staff member).
+  // Will be wired into viewedUnderBasis logic when the "Viewed Visitors" KPI returns.
+  const [kpiRange, setKpiRange] = useState<"today" | "7d">(
+    () => (localStorage.getItem("kpi_range") as "today" | "7d") || "today"
+  );
+  const [kpiBasis, setKpiBasis] = useState<"event_day" | "range" | "all_time">(
+    () => (localStorage.getItem("kpi_basis") as "event_day" | "range" | "all_time") || "range"
+  );
+  const [kpiAnchor, setKpiAnchor] = useState<"first" | "last">(
+    () => (localStorage.getItem("kpi_anchor") as "first" | "last") || "last"
+  );
+  useEffect(() => { localStorage.setItem("kpi_range", kpiRange); }, [kpiRange]);
+  useEffect(() => { localStorage.setItem("kpi_basis", kpiBasis); }, [kpiBasis]);
+  useEffect(() => { localStorage.setItem("kpi_anchor", kpiAnchor); }, [kpiAnchor]);
 
   // Single source of truth for permissions — see src/lib/staffPermissions.ts.
   // The "صلاحيات الأدوار" admin screen renders the exact same lists.
@@ -322,6 +340,82 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
             الترتيب يطابق سؤال الموظف الأول صباحاً: "إيه اللي بيستنّاني؟"
             ثم: "إيه اللي عملته لحد دلوقتي؟" */}
         <TabsContent value="overview" className="space-y-4 mt-4">
+          {/* Section header — title + KPI settings popover (range / basis / anchor) */}
+          <div className="flex items-center justify-between gap-2 px-1">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-primary" />
+              <h3 className="text-sm font-bold text-foreground">مؤشرات اليوم</h3>
+            </div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 px-2 gap-1.5 text-xs text-muted-foreground hover:text-foreground">
+                  <Settings className="w-3.5 h-3.5" />
+                  إعدادات
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-72 p-4 space-y-4" dir="rtl">
+                {/* Range */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-bold">نطاق KPI</Label>
+                    <HelpCircle className="w-3 h-3 text-muted-foreground" />
+                  </div>
+                  <RadioGroup value={kpiRange} onValueChange={(v) => setKpiRange(v as any)} className="flex gap-2">
+                    <div className="flex items-center gap-1.5 border rounded-md px-2 py-1 cursor-pointer hover:bg-muted/50 flex-1">
+                      <RadioGroupItem value="today" id="r-today" />
+                      <Label htmlFor="r-today" className="text-xs cursor-pointer">اليوم</Label>
+                    </div>
+                    <div className="flex items-center gap-1.5 border rounded-md px-2 py-1 cursor-pointer hover:bg-muted/50 flex-1">
+                      <RadioGroupItem value="7d" id="r-7d" />
+                      <Label htmlFor="r-7d" className="text-xs cursor-pointer">آخر 7 أيام</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                {/* Basis */}
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold flex items-center gap-1">
+                    <Eye className="w-3 h-3" />
+                    أساس "تمت المعاينة"
+                  </Label>
+                  <RadioGroup value={kpiBasis} onValueChange={(v) => setKpiBasis(v as any)} className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <RadioGroupItem value="event_day" id="b-event" />
+                      <Label htmlFor="b-event" className="text-xs cursor-pointer">يوم الزيارة</Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <RadioGroupItem value="range" id="b-range" />
+                      <Label htmlFor="b-range" className="text-xs cursor-pointer">داخل نطاق KPI</Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <RadioGroupItem value="all_time" id="b-all" />
+                      <Label htmlFor="b-all" className="text-xs cursor-pointer">أي وقت</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                {/* Anchor */}
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold">مرجع المعاينة</Label>
+                  <RadioGroup value={kpiAnchor} onValueChange={(v) => setKpiAnchor(v as any)} className="flex gap-2">
+                    <div className="flex items-center gap-1.5 border rounded-md px-2 py-1 cursor-pointer hover:bg-muted/50 flex-1">
+                      <RadioGroupItem value="first" id="a-first" />
+                      <Label htmlFor="a-first" className="text-xs cursor-pointer">أول معاينة</Label>
+                    </div>
+                    <div className="flex items-center gap-1.5 border rounded-md px-2 py-1 cursor-pointer hover:bg-muted/50 flex-1">
+                      <RadioGroupItem value="last" id="a-last" />
+                      <Label htmlFor="a-last" className="text-xs cursor-pointer">آخر معاينة</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <p className="text-[10px] text-muted-foreground leading-relaxed border-t pt-2">
+                  💡 الإعدادات محفوظة محلياً وتُستخدم لاحقاً مع KPI "الزوار اللي تمت معاينتهم".
+                </p>
+              </PopoverContent>
+            </Popover>
+          </div>
+
           {/* 1) Inbox KPIs (compact strip) — what's waiting for me */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Card
