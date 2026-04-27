@@ -155,11 +155,18 @@ const sidebarGroups: SidebarGroup[] = [
     },
 ];
 
-// Sections accessible by moderators (employees)
+// Sections accessible by moderators (employees).
+// IMPORTANT: keep this list MINIMAL — only the 6 core sections requested by the team
+// (لوحة المهام اليومية / مركز قيادة المتابعة / مهام الموظف are all rendered inside
+// "daily-dashboard"). "account-settings" stays so staff can change their own password.
 const MODERATOR_SECTIONS = new Set([
-  "daily-dashboard", "orders", "leads", "customers", "customer-intel",
-  "price-lists", "dealers", "analytics", "product-insights", "whatsapp-inbox",
-  "account-settings",
+  "daily-dashboard", // لوحة المهام اليومية + مركز قيادة المتابعة + لوحة مهام الموظف + مركز قيادة الموظف
+  "customer-intel",  // ذكاء العملاء
+  "analytics",       // التحليلات
+  "customers",       // ملف العملاء
+  "orders",          // الطلبات
+  "leads",           // Leads
+  "account-settings",// إعدادات حسابي (ضرورية لتغيير كلمة المرور)
 ]);
 
 const sidebarSections = sidebarGroups.flatMap(g => g.items);
