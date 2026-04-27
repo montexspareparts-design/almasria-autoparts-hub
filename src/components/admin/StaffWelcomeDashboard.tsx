@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,10 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
+
+// Lazy-load the role tasks panel so the welcome dashboard renders fast
+// while the panel hydrates its own data in the background.
+const StaffRoleTasksPanel = lazy(() => import("@/components/staff/StaffRoleTasksPanel"));
 
 interface WelcomeStats {
   assignedConversations: number;
