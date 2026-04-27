@@ -1252,6 +1252,9 @@ const StaffHome = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+        {/* Role-based dynamic tasks (10 max) — admin gets supervisor tasks, moderator gets sales tasks */}
+        <StaffRoleTasksPanel limit={10} />
+
         {/* Auto-generated daily tasks — derived from system state (quotes, orders, carts, applications) */}
         <StaffAutoTasksPanel limit={6} />
 
