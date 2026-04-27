@@ -599,9 +599,12 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
         label = "done";
       }
 
-      // Insert audit log row and capture id so we can delete it on undo
+      // Insert audit log row and capture id so we can delete it on undo.
+      // Partial-failure handling: if logging fails we ROLL BACK the entity
+      // update we just performed, keep the task visible, and surface a clear
+      // toast so the staff member knows nothing was applied.
       const commType = t.kind === "lead_followup" ? "role_task" : "role_task";
-      const { data: logRow } = await supabase
+      const { data: logRow, error: logErr } = await supabase
         .from("customer_communications")
         .insert({
           staff_user_id: user.id,
@@ -613,6 +616,27 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
         })
         .select("id")
         .single();
+
+      if (logErr) {
+        // Roll back the entity change so the system stays consistent
+        let rollbackError: string | null = null;
+        if (undoUpdate) {
+          const { error: rbErr } = await (supabase.from(undoUpdate.table as any) as any)
+            .update(undoUpdate.values)
+            .eq("id", t.refId);
+          if (rbErr) rollbackError = rbErr.message;
+        }
+        toast({
+          title: "فشل جزئي — لم يتم اعتماد المهمة",
+          description: rollbackError
+            ? `تعذّر حفظ سجل الإجراء (${logErr.message}) وتعذّر التراجع تلقائياً (${rollbackError}). راجع السجلات يدوياً.`
+            : `تعذّر حفظ سجل الإجراء (${logErr.message}). تم التراجع عن التغيير والتذكير لا يزال مفتوحاً.`,
+          variant: "destructive",
+          duration: 8000,
+        });
+        // Important: do NOT remove the task from the list — keep the reminder visible
+        return;
+      }
 
       setTasks((prev) => prev.filter((x) => x.id !== t.id));
 
