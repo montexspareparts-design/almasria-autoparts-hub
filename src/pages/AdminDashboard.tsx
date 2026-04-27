@@ -49,6 +49,7 @@ const AdminStaffRoles = lazy(() => import("@/components/AdminStaffRoles"));
 const AdminWhatsAppInbox = lazy(() => import("@/components/AdminWhatsAppInbox"));
 const StaffDailyDashboard = lazy(() => import("@/components/admin/StaffCRMCommandCenter"));
 const StaffWelcomeDashboard = lazy(() => import("@/components/admin/StaffWelcomeDashboard"));
+const StaffHome = lazy(() => import("@/pages/StaffHome"));
 const StaffAccountSettings = lazy(() => import("@/components/admin/StaffAccountSettings"));
 // AdminNewOrderAlert is now mounted globally in App.tsx
 const AdminSupportRequestAlert = lazy(() => import("@/components/admin/AdminSupportRequestAlert"));
@@ -576,9 +577,16 @@ const AdminDashboard = () => {
   const renderActiveSection = () => {
     switch (activeSection) {
       case "daily-dashboard":
+        // الموظفون يشوفون مركز قيادة المتابعة الكامل (نفس واجهة /admin/staff-home)
+        if (isModerator && !isAdmin) {
+          return (
+            <Suspense fallback={<SectionLoader />}>
+              <StaffHome />
+            </Suspense>
+          );
+        }
         return (
           <Suspense fallback={<SectionLoader />}>
-            {isModerator && !isAdmin && <StaffWelcomeDashboard onNavigate={setActiveSection} />}
             <StaffDailyDashboard onNavigate={setActiveSection} />
           </Suspense>
         );
