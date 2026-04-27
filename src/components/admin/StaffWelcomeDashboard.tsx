@@ -243,7 +243,7 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
       </Card>
 
       {/* مؤشرات الحالة — Critical / SLA / Hot Leads / بدون تواصل */}
-      <StatusIndicatorsBar counters={statusCounters} onNavigate={onNavigate} />
+      <StatusIndicatorsBar counters={statusCounters} onNavigate={safeNavigate} canAccess={canAccess} />
 
       {/* Role-based dynamic tasks (مهام موظف المبيعات) — visible immediately
           on the staff home so they don't need to click "كل المهام" first. */}
