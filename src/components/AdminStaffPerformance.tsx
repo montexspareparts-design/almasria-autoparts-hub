@@ -449,7 +449,113 @@ export default function AdminStaffPerformance() {
         dateFrom={from}
         dateTo={to}
       />
+
+      {/* KPI breakdown dialog */}
+      <KpiBreakdownDialog
+        kpi={selectedKpi}
+        staff={staff}
+        rangeLabel={rangeLabel}
+        onClose={() => setSelectedKpi(null)}
+        onPickStaff={(id, name) => { setSelectedKpi(null); setSelectedStaff({ id, name }); }}
+      />
     </div>
+  );
+}
+
+function KpiBreakdownDialog({
+  kpi, staff, rangeLabel, onClose, onPickStaff,
+}: {
+  kpi: KpiKey | null;
+  staff: StaffMetric[];
+  rangeLabel: string;
+  onClose: () => void;
+  onPickStaff: (id: string, name: string) => void;
+}) {
+  const config: Record<KpiKey, KpiInfo> = {
+    active: {
+      key: "active", title: "موظفين نشطين",
+      description: "الموظفون اللي قاموا بأي إجراء (تواصل، تحديث، أو معالجة طلب).",
+      getValue: (s) => s.total_actions,
+      formatter: (v) => v ? `${fmtNum(v!)} إجراء` : "—",
+      emptyHint: "لا يوجد موظفون نشطون في هذه الفترة.",
+    },
+    actions: {
+      key: "actions", title: "إجمالي الإجراءات",
+      description: "كل إجراء سجّله الموظف (مكالمات، رسائل، ملاحظات، علامات تواصل).",
+      getValue: (s) => s.total_actions,
+      formatter: (v) => v ? fmtNum(v!) : "—",
+      emptyHint: "لم يتم تسجيل إجراءات.",
+    },
+    customers: {
+      key: "customers", title: "عملاء تم التواصل معهم",
+      description: "عدد العملاء الفريدين اللي تواصل معاهم الموظف.",
+      getValue: (s) => s.unique_customers_contacted,
+      formatter: (v) => v ? `${fmtNum(v!)} عميل` : "—",
+      emptyHint: "لا يوجد تواصل مسجّل.",
+    },
+    calls: {
+      key: "calls", title: "مكالمات + واتساب",
+      description: "إجمالي المكالمات الهاتفية ورسائل الواتساب الصادرة.",
+      getValue: (s) => s.phone_calls + s.whatsapp_msgs,
+      formatter: (v) => v ? `${fmtNum(v!)} رسالة/مكالمة` : "—",
+      emptyHint: "لا توجد اتصالات مسجّلة.",
+    },
+    sla: {
+      key: "sla", title: "متوسط سرعة الرد (SLA)",
+      description: "متوسط الوقت بين وصول الطلب وأول رد من الموظف عليه (بالدقائق).",
+      getValue: (s) => s.avg_response_minutes,
+      formatter: (v) => v != null ? `${v}د` : "لم يردّ بعد",
+      emptyHint: "لا توجد بيانات SLA — لم يستلم الموظفون طلبات جديدة.",
+    },
+  };
+
+  const info = kpi ? config[kpi] : null;
+  const rows = info
+    ? [...staff]
+        .map(s => ({ s, v: info.getValue(s) }))
+        .filter(({ v }) => kpi === "sla" ? v != null : (v ?? 0) > 0)
+        .sort((a, b) => {
+          const av = a.v ?? 0; const bv = b.v ?? 0;
+          return kpi === "sla" ? av - bv : bv - av; // SLA الأقل أفضل
+        })
+    : [];
+
+  return (
+    <Dialog open={!!kpi} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-lg" dir="rtl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Activity className="w-5 h-5 text-primary" />
+            {info?.title} — {rangeLabel}
+          </DialogTitle>
+          <DialogDescription>{info?.description}</DialogDescription>
+        </DialogHeader>
+        <div className="max-h-[60vh] overflow-y-auto space-y-1.5 mt-2">
+          {rows.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">{info?.emptyHint}</p>
+          ) : (
+            rows.map(({ s, v }, i) => (
+              <button
+                key={s.user_id}
+                onClick={() => onPickStaff(s.user_id, s.name)}
+                className="w-full flex items-center justify-between gap-3 p-3 rounded-lg border bg-card hover:bg-accent/40 hover:border-primary/40 transition-colors text-right"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <Badge variant="outline" className="shrink-0 font-bold">{i + 1}</Badge>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm truncate">{s.name}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">{s.role === "admin" ? "أدمن" : "موظف"}</p>
+                  </div>
+                </div>
+                <div className="shrink-0 text-left">
+                  <p className="font-black text-sm tabular-nums">{info!.formatter(v)}</p>
+                </div>
+              </button>
+            ))
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
