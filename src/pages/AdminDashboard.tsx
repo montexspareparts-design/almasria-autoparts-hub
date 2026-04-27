@@ -724,6 +724,8 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminClientAccountAttempts /></Suspense>;
       case "permission-requests":
         return <Suspense fallback={<SectionLoader />}><AdminPermissionRequests /></Suspense>;
+      case "role-permissions":
+        return isAdmin ? <Suspense fallback={<SectionLoader />}><AdminRolePermissions /></Suspense> : <Suspense fallback={<SectionLoader />}><AdminAnalytics /></Suspense>;
       case "daily-reports":
         return <Suspense fallback={<SectionLoader />}><AdminDailyReports /></Suspense>;
       case "daily-report-editor":
