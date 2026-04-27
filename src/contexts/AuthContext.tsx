@@ -62,6 +62,28 @@ function generateSessionId() {
   return crypto.randomUUID();
 }
 
+// sessionStorage key — impersonation is per-tab and never persists across browser restarts.
+const IMPERSONATE_KEY = "almasria_impersonate_v1";
+
+interface ImpersonationState {
+  userId: string;
+  name: string;
+}
+
+function readImpersonation(): ImpersonationState | null {
+  try {
+    const raw = sessionStorage.getItem(IMPERSONATE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed.userId === "string" && typeof parsed.name === "string") {
+      return parsed;
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -71,8 +93,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isModerator, setIsModerator] = useState(false);
   const [showCompleteProfile, setShowCompleteProfile] = useState(false);
   const [showRoleSelection, setShowRoleSelection] = useState(false);
+  const [impersonation, setImpersonation] = useState<ImpersonationState | null>(() => readImpersonation());
   const sessionCheckRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { toast } = useToast();
+
+  const startImpersonation = useCallback((target: { userId: string; name: string }) => {
+    const next: ImpersonationState = { userId: target.userId, name: target.name };
+    sessionStorage.setItem(IMPERSONATE_KEY, JSON.stringify(next));
+    setImpersonation(next);
+  }, []);
+
+  const stopImpersonation = useCallback(() => {
+    sessionStorage.removeItem(IMPERSONATE_KEY);
+    setImpersonation(null);
+  }, []);
+
 
   // Central cleanup for ALL auth-related localStorage keys
   const clearAllAuthStorage = useCallback(() => {
