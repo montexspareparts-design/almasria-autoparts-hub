@@ -174,6 +174,12 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
         </CardContent>
       </Card>
 
+      {/* Role-based dynamic tasks (مهام موظف المبيعات) — visible immediately
+          on the staff home so they don't need to click "كل المهام" first. */}
+      <Suspense fallback={<div className="flex items-center justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>}>
+        <StaffRoleTasksPanel limit={10} />
+      </Suspense>
+
       {/* Quick Actions Bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <Button
