@@ -584,11 +584,12 @@ const AdminDashboard = () => {
   const renderActiveSection = () => {
     switch (activeSection) {
       case "daily-dashboard":
-        // الموظفون يشوفون مركز قيادة المتابعة الكامل (نفس واجهة /admin/staff-home)
+        // الموظفون يشوفون نسخة مختصرة (KPIs + مهام + إنجاز اليوم + محادثات/طلبات معلقة)
+        // داخل صفحة واحدة بدل لوحة StaffHome الموسّعة.
         if (isModerator && !isAdmin) {
           return (
             <Suspense fallback={<SectionLoader />}>
-              <StaffHome />
+              <StaffWelcomeDashboard onNavigate={setActiveSection} />
             </Suspense>
           );
         }
