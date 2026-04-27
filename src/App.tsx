@@ -58,6 +58,7 @@ const VisitorSessionSummary = lazy(() => import("./pages/VisitorSessionSummary")
 const StaffHome = lazy(() => import("./pages/StaffHome"));
 const StaffDailyReportPage = lazy(() => import("./pages/StaffDailyReportPage"));
 const StaffDailyBriefPage = lazy(() => import("./pages/StaffDailyBriefPage"));
+const StaffTasksPage = lazy(() => import("./pages/StaffTasksPage"));
 const NewVisitorsWorkflowPage = lazy(() => import("./pages/NewVisitorsWorkflowPage"));
 const VisitorLeadsPage = lazy(() => import("./pages/VisitorLeadsPage"));
 const ActiveVisitorsPage = lazy(() => import("./pages/ActiveVisitorsPage"));
