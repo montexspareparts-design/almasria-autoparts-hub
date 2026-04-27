@@ -829,11 +829,11 @@ async function loadProfiles(
   if (!userIds.length) return {};
   const { data } = await supabase
     .from("profiles")
-    .select("id, full_name, phone")
-    .in("id", userIds);
+    .select("user_id, full_name, phone")
+    .in("user_id", userIds);
   const out: Record<string, { name: string | null; phone: string | null }> = {};
   for (const p of data || []) {
-    out[p.id] = { name: p.full_name, phone: p.phone };
+    out[p.user_id] = { name: p.full_name, phone: p.phone };
   }
   return out;
 }
