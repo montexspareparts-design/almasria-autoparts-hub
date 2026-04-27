@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,10 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
+
+// Lazy-load the role tasks panel so the welcome dashboard renders fast
+// while the panel hydrates its own data in the background.
+const StaffRoleTasksPanel = lazy(() => import("@/components/staff/StaffRoleTasksPanel"));
 
 interface WelcomeStats {
   assignedConversations: number;
@@ -169,6 +173,12 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
           </div>
         </CardContent>
       </Card>
+
+      {/* Role-based dynamic tasks (مهام موظف المبيعات) — visible immediately
+          on the staff home so they don't need to click "كل المهام" first. */}
+      <Suspense fallback={<div className="flex items-center justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>}>
+        <StaffRoleTasksPanel limit={10} />
+      </Suspense>
 
       {/* Quick Actions Bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
