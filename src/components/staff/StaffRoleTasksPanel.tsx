@@ -540,6 +540,13 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
                       </div>
                       <div className="font-medium text-sm mt-0.5 truncate">{t.title}</div>
                       <div className="text-xs text-muted-foreground truncate">{t.subtitle}</div>
+                      {/* SLA progress bar */}
+                      <div className="mt-1.5 h-1.5 w-full bg-muted rounded-full overflow-hidden" aria-label={`SLA ${Math.round(sla.progress * 100)}%`}>
+                        <div
+                          className={cn("h-full transition-all rounded-full", slaStyle.bar)}
+                          style={{ width: `${Math.max(4, Math.round(sla.progress * 100))}%` }}
+                        />
+                      </div>
                       <div className="flex items-center gap-2 mt-2 flex-wrap">
                         {t.href && (
                           <Button
