@@ -824,7 +824,7 @@ export default function StaffBentoHero({
               size="sm"
               variant="outline"
               className="h-8 text-[11px] gap-1"
-              onClick={() => onJumpToTab("yesterday")}
+              onClick={() => navigate("/admin/new-visitors")}
             >
               زوار أمس
               <ArrowLeft className="w-3 h-3" />
