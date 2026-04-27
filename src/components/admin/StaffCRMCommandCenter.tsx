@@ -674,19 +674,21 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
         </div>
       </div>
 
-      {/* Performance dashboard — قابل للطي */}
+      {/* Performance dashboard — قابل للطي (lazy) */}
       {perfPanelOpen && (
-        <PerfDashboard
-          live={{
-            mountMs: perf.mountMs,
-            renderCount: perf.renderCount,
-            badgeCount: perf.badgeCount,
-            avgTabSwitchMs: perf.avgTabSwitchMs,
-          }}
-          badgesEnabled={badgesEnabled}
-          onToggleBadges={setBadgesEnabled}
-          onSnapshot={perf.takeSnapshot}
-        />
+        <Suspense fallback={<Skeleton className="h-32 w-full rounded-lg" />}>
+          <PerfDashboard
+            live={{
+              mountMs: perf.mountMs,
+              renderCount: perf.renderCount,
+              badgeCount: perf.badgeCount,
+              avgTabSwitchMs: perf.avgTabSwitchMs,
+            }}
+            badgesEnabled={badgesEnabled}
+            onToggleBadges={setBadgesEnabled}
+            onSnapshot={perf.takeSnapshot}
+          />
+        </Suspense>
       )}
 
       {/* Bento Hero — daily command center */}
@@ -1224,32 +1226,35 @@ export default function StaffCRMCommandCenter({ onNavigate }: Props) {
         )}
       </Tabs>
 
-      {/* Activity Summary Drawer */}
-      <CustomerActivitySummary
-        open={!!summaryUser}
-        onOpenChange={(o) => { if (!o) setSummaryUser(null); }}
-        userId={summaryUser?.id || null}
-        customerName={summaryUser?.name}
-        customerPhone={summaryUser?.phone}
-        isDealer={summaryUser?.isDealer}
-      />
+      {/* Lazy-loaded dialogs — Suspense fallback is null since they're hidden until opened. */}
+      <Suspense fallback={null}>
+        {/* Activity Summary Drawer */}
+        <CustomerActivitySummary
+          open={!!summaryUser}
+          onOpenChange={(o) => { if (!o) setSummaryUser(null); }}
+          userId={summaryUser?.id || null}
+          customerName={summaryUser?.name}
+          customerPhone={summaryUser?.phone}
+          isDealer={summaryUser?.isDealer}
+        />
 
-      {/* AI Summary for chatbot conversations */}
-      <SupportRequestAISummary
-        open={!!aiSummaryReq}
-        onOpenChange={(o) => { if (!o) setAiSummaryReq(null); }}
-        requestId={aiSummaryReq?.id || null}
-        customerName={aiSummaryReq?.name}
-      />
+        {/* AI Summary for chatbot conversations */}
+        <SupportRequestAISummary
+          open={!!aiSummaryReq}
+          onOpenChange={(o) => { if (!o) setAiSummaryReq(null); }}
+          requestId={aiSummaryReq?.id || null}
+          customerName={aiSummaryReq?.name}
+        />
 
-      {/* Transfer to colleague dialog */}
-      <TransferToColleagueDialog
-        open={!!transferReq}
-        onOpenChange={(o) => { if (!o) setTransferReq(null); }}
-        requestId={transferReq?.id || null}
-        customerName={transferReq?.name}
-        onTransferred={() => fetchAll()}
-      />
+        {/* Transfer to colleague dialog */}
+        <TransferToColleagueDialog
+          open={!!transferReq}
+          onOpenChange={(o) => { if (!o) setTransferReq(null); }}
+          requestId={transferReq?.id || null}
+          customerName={transferReq?.name}
+          onTransferred={() => fetchAll()}
+        />
+      </Suspense>
     </div>
   );
 }
