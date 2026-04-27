@@ -27,6 +27,8 @@ import {
   TrendingDown,
   Users as UsersIcon,
   Bell,
+  ThumbsUp,
+  ArrowRightCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -406,6 +408,142 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
     }
   };
 
+  /**
+   * Logs a quick action against customer_communications so every interaction
+   * (call/whatsapp/approve/status-change) leaves an automatic audit trail.
+   * Returns true on success.
+   */
+  const logAction = async (
+    t: RoleTask,
+    action: "phone" | "whatsapp" | "approve" | "status_change" | "open",
+    extraNote?: string
+  ): Promise<boolean> => {
+    if (!user) return false;
+    try {
+      const commType =
+        action === "phone" ? "phone" :
+        action === "whatsapp" ? "whatsapp" :
+        "role_task";
+      const { error } = await supabase.from("customer_communications").insert({
+        staff_user_id: user.id,
+        customer_user_id: t.customerUserId,
+        comm_type: commType,
+        is_done: action === "approve" || action === "status_change",
+        done_at: (action === "approve" || action === "status_change")
+          ? new Date().toISOString()
+          : null,
+        note: `role-task:${t.id} · ${action}${extraNote ? ` · ${extraNote}` : ""} · ${t.title}`,
+      });
+      if (error) throw error;
+      return true;
+    } catch (e: any) {
+      console.error("[logAction]", e);
+      return false;
+    }
+  };
+
+  /** Phone / WhatsApp click — opens the link AND records it. */
+  const handleContact = async (t: RoleTask, channel: "phone" | "whatsapp") => {
+    await logAction(t, channel);
+    // refresh first_contacted_at side-effect for orders
+    if (t.kind === "pending_order_contact") {
+      await supabase
+        .from("orders")
+        .update({ first_contacted_at: new Date().toISOString() })
+        .eq("id", t.refId)
+        .is("first_contacted_at", null);
+    }
+  };
+
+  /**
+   * Approve / status-change quick action. Performs the appropriate DB update
+   * for the task kind, logs it, then removes the card.
+   */
+  const handleApprove = async (t: RoleTask) => {
+    if (!user) return;
+    setBusyId(t.id);
+    try {
+      let label = "";
+      if (t.kind === "review_dealer_application") {
+        const { error } = await supabase
+          .from("dealer_applications")
+          .update({
+            status: "approved",
+            reviewed_at: new Date().toISOString(),
+            reviewed_by: user.id,
+          })
+          .eq("id", t.refId);
+        if (error) throw error;
+        label = "approved";
+      } else if (t.kind === "review_high_value_order") {
+        const { error } = await supabase
+          .from("orders")
+          .update({ status: "confirmed" })
+          .eq("id", t.refId);
+        if (error) throw error;
+        label = "confirmed";
+      } else if (t.kind === "lead_followup") {
+        const { error } = await supabase
+          .from("leads")
+          .update({ status: "contacted" })
+          .eq("id", t.refId);
+        if (error) throw error;
+        label = "contacted";
+      } else if (t.kind === "pending_order_contact") {
+        const { error } = await supabase
+          .from("orders")
+          .update({
+            status: "confirmed",
+            first_contacted_at: new Date().toISOString(),
+          })
+          .eq("id", t.refId);
+        if (error) throw error;
+        label = "confirmed";
+      } else if (t.kind === "stale_payment_transaction") {
+        const { error } = await supabase
+          .from("payment_transactions")
+          .update({ status: "verified" })
+          .eq("id", t.refId);
+        if (error) throw error;
+        label = "verified";
+      } else {
+        // fallback — just close the task
+        label = "done";
+      }
+
+      await logAction(t, t.kind === "lead_followup" ? "status_change" : "approve", label);
+
+      setTasks((prev) => prev.filter((x) => x.id !== t.id));
+      toast({
+        title: t.kind === "lead_followup" ? "تم تحويل الحالة" : "تم الاعتماد",
+        description: `${t.title} → ${label}`,
+      });
+    } catch (e: any) {
+      toast({
+        title: "تعذر التنفيذ",
+        description: e.message || "خطأ غير معروف",
+        variant: "destructive",
+      });
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  /** Which task kinds support a one-click approve / status-change action. */
+  const approveMeta = (kind: RoleTaskKind):
+    | { label: string; icon: typeof ThumbsUp }
+    | null => {
+    switch (kind) {
+      case "review_dealer_application": return { label: "اعتماد", icon: ThumbsUp };
+      case "review_high_value_order":   return { label: "اعتماد الطلب", icon: ThumbsUp };
+      case "pending_order_contact":     return { label: "تأكيد الطلب", icon: ThumbsUp };
+      case "stale_payment_transaction": return { label: "تأكيد الدفع", icon: ThumbsUp };
+      case "lead_followup":             return { label: "تم التواصل", icon: ArrowRightCircle };
+      default: return null;
+    }
+  };
+
+
   const titleLabel = useMemo(() => {
     if (role === "admin") return "مهام المشرف";
     if (role === "moderator") return "مهام المندوب";
@@ -553,7 +691,10 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
                             size="sm"
                             variant="outline"
                             className="h-7 text-xs"
-                            onClick={() => navigate(t.href!)}
+                            onClick={async () => {
+                              await logAction(t, "open");
+                              navigate(t.href!);
+                            }}
                           >
                             <ExternalLink className="w-3 h-3 ml-1" />
                             فتح
@@ -561,7 +702,7 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
                         )}
                         {t.phone && (
                           <>
-                            <a href={`tel:${t.phone}`}>
+                            <a href={`tel:${t.phone}`} onClick={() => handleContact(t, "phone")}>
                               <Button size="sm" variant="outline" className="h-7 text-xs">
                                 <Phone className="w-3 h-3 ml-1" /> اتصال
                               </Button>
@@ -570,6 +711,7 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
                               href={`https://wa.me/${t.phone.replace(/\D/g, "")}`}
                               target="_blank"
                               rel="noreferrer"
+                              onClick={() => handleContact(t, "whatsapp")}
                             >
                               <Button size="sm" variant="outline" className="h-7 text-xs text-green-700">
                                 <MessageCircle className="w-3 h-3 ml-1" /> واتساب
@@ -577,6 +719,22 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
                             </a>
                           </>
                         )}
+                        {(() => {
+                          const ap = approveMeta(t.kind);
+                          if (!ap) return null;
+                          const ApIcon = ap.icon;
+                          return (
+                            <Button
+                              size="sm"
+                              className="h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                              disabled={busyId === t.id}
+                              onClick={() => handleApprove(t)}
+                            >
+                              <ApIcon className="w-3 h-3 ml-1" />
+                              {ap.label}
+                            </Button>
+                          );
+                        })()}
                         <Button
                           size="sm"
                           className="h-7 text-xs"
