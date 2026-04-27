@@ -463,6 +463,37 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
         </div>
       </div>
 
+      {/* SLA breach banner — admin-only summary of overdue work */}
+      {role === "admin" && (slaCounts.critical > 0 || slaCounts.breached > 0) && (
+        <div
+          className={cn(
+            "mb-3 flex items-center gap-3 px-3 py-2 rounded-lg border-2",
+            slaCounts.critical > 0
+              ? "border-red-500 bg-red-50 text-red-900"
+              : "border-amber-400 bg-amber-50 text-amber-900"
+          )}
+        >
+          <Bell className={cn("w-5 h-5 shrink-0", slaCounts.critical > 0 && "animate-pulse text-red-600")} />
+          <div className="flex-1 text-xs font-semibold leading-snug">
+            {slaCounts.critical > 0 && (
+              <span className="block">
+                🚨 {slaCounts.critical} مهمة متأخرة لأكثر من 24 ساعة — تحتاج تدخّل فوري
+              </span>
+            )}
+            {slaCounts.breached > 0 && (
+              <span className="block">
+                ⛔ {slaCounts.breached} مهمة تجاوزت SLA المحدّد لها
+              </span>
+            )}
+            {slaCounts.warning > 0 && (
+              <span className="block text-[11px] opacity-80">
+                ⚠️ {slaCounts.warning} مهمة قاربت على تجاوز SLA
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
       {!collapsed && (
         <>
           {loading ? (
