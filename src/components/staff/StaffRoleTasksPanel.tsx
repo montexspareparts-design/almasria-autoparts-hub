@@ -709,20 +709,62 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
 
       {!collapsed && (
         <>
+          {/* Priority filter chips — auto-sort by importance is always on */}
+          {tasks.length > 0 && !loading && (
+            <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+              {([
+                { key: "all", label: "الكل", count: tasks.length, cls: "bg-primary/10 text-primary border-primary/30", activeCls: "bg-primary text-primary-foreground border-primary" },
+                { key: "urgent", label: "🔥 عاجل", count: chipCounts.urgent, cls: "bg-red-50 text-red-700 border-red-200", activeCls: "bg-red-600 text-white border-red-600" },
+                { key: "hot_leads", label: "🎯 Hot Leads", count: chipCounts.hot, cls: "bg-rose-50 text-rose-700 border-rose-200", activeCls: "bg-rose-600 text-white border-rose-600" },
+                { key: "no_contact", label: "📞 بدون تواصل", count: chipCounts.noContact, cls: "bg-amber-50 text-amber-800 border-amber-200", activeCls: "bg-amber-600 text-white border-amber-600" },
+                { key: "sla_breached", label: "⛔ SLA متجاوز", count: chipCounts.breached, cls: "bg-orange-50 text-orange-700 border-orange-200", activeCls: "bg-orange-600 text-white border-orange-600" },
+              ] as const).map((chip) => {
+                const active = filter === chip.key;
+                const dim = chip.count === 0 && chip.key !== "all";
+                return (
+                  <button
+                    key={chip.key}
+                    onClick={() => setFilter(chip.key)}
+                    disabled={dim}
+                    className={cn(
+                      "inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-full border transition-all",
+                      active ? chip.activeCls : chip.cls,
+                      dim && "opacity-40 cursor-not-allowed",
+                      !active && !dim && "hover:scale-105"
+                    )}
+                  >
+                    <span>{chip.label}</span>
+                    <span className={cn(
+                      "min-w-[18px] text-center text-[10px] px-1 rounded-full",
+                      active ? "bg-white/25" : "bg-background/70 border border-border/50"
+                    )}>
+                      {chip.count}
+                    </span>
+                  </button>
+                );
+              })}
+              <span className="text-[10px] text-muted-foreground mr-auto">
+                مرتّبة تلقائياً حسب الأولوية
+              </span>
+            </div>
+          )}
+
           {loading ? (
             <div className="space-y-2">
               {Array.from({ length: 4 }).map((_, i) => (
                 <Skeleton key={i} className="h-16 w-full" />
               ))}
             </div>
-          ) : tasks.length === 0 ? (
+          ) : visibleTasks.length === 0 ? (
             <div className="py-8 text-center text-sm text-muted-foreground">
               <CheckCircle2 className="w-10 h-10 mx-auto mb-2 text-green-500" />
-              لا توجد مهام معلّقة الآن — أداء ممتاز! 🎉
+              {tasks.length === 0
+                ? "لا توجد مهام معلّقة الآن — أداء ممتاز! 🎉"
+                : "لا توجد مهام مطابقة للفلتر الحالي"}
             </div>
           ) : (
             <ul className="space-y-2">
-              {tasks.map((t) => {
+              {visibleTasks.map((t) => {
                 const meta = KIND_META[t.kind];
                 const Icon = meta.icon;
                 const sla = computeSla(t.agedAtIso, meta.slaHours);
