@@ -748,14 +748,20 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
   /** Counts per chip — shown as little badges inside the chips. */
   const chipCounts = useMemo(() => {
     let urgent = 0, hot = 0, noContact = 0, breached = 0;
+    let critical = 0, high = 0, today = 0;
+    const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
+    const startMs = startOfToday.getTime();
     for (const t of tasks) {
       const sla = computeSla(t.agedAtIso, KIND_META[t.kind].slaHours);
       if (t.severity === "high" || sla.status === "critical") urgent++;
       if (t.kind === "lead_followup" || t.kind === "active_visitor_engage") hot++;
       if (t.kind === "pending_order_contact" || t.kind === "abandoned_cart") noContact++;
       if (sla.status === "breached" || sla.status === "critical") breached++;
+      if (sla.status === "critical") critical++;
+      if (t.severity === "high") high++;
+      if (new Date(t.agedAtIso).getTime() >= startMs) today++;
     }
-    return { urgent, hot, noContact, breached };
+    return { urgent, hot, noContact, breached, critical, high, today };
   }, [tasks]);
 
 
