@@ -118,6 +118,9 @@ const App = () => (
                   <DealerRtlAuditor />
                 </Suspense>
               )}
+               <Suspense fallback={null}>
+                 <ImpersonationBanner />
+               </Suspense>
                <Suspense fallback={<PageLoader />}>
                   <Routes>
                     <Route path="/" element={<Index />} />
