@@ -573,6 +573,77 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
     return { critical, breached, warning };
   }, [tasks]);
 
+  /** Predicates per filter chip. */
+  const matchesFilter = useCallback(
+    (t: RoleTask, sla: SlaInfo): boolean => {
+      switch (filter) {
+        case "all": return true;
+        case "urgent": return t.severity === "high" || sla.status === "critical";
+        case "hot_leads":
+          return t.kind === "lead_followup" || t.kind === "active_visitor_engage";
+        case "no_contact":
+          return t.kind === "pending_order_contact" || t.kind === "abandoned_cart";
+        case "sla_breached":
+          return sla.status === "breached" || sla.status === "critical";
+      }
+    },
+    [filter]
+  );
+
+  /**
+   * Composite priority score — higher = more important. Drives auto-sort.
+   * Combines SLA pressure, severity, and task kind weight.
+   */
+  const priorityScore = useCallback((t: RoleTask, sla: SlaInfo): number => {
+    const slaWeight =
+      sla.status === "critical" ? 1000 :
+      sla.status === "breached" ? 600 :
+      sla.status === "warning"  ? 200 : 0;
+    const sevWeight = t.severity === "high" ? 400 : t.severity === "medium" ? 150 : 0;
+    const kindWeight: Partial<Record<RoleTaskKind, number>> = {
+      review_high_value_order: 300,
+      stale_payment_transaction: 250,
+      erp_sync_alert: 220,
+      pending_order_contact: 200,
+      review_dealer_application: 180,
+      lead_followup: 160,
+      active_visitor_engage: 140,
+      quote_followup: 120,
+      abandoned_cart: 80,
+      staff_no_daily_report: 70,
+      stock_alert_pending: 50,
+    };
+    // Tie-breaker: older tasks win — bonus for age in hours (capped)
+    const ageBonus = Math.min(100, sla.ageHours);
+    return slaWeight + sevWeight + (kindWeight[t.kind] || 0) + ageBonus;
+  }, []);
+
+  /** Filtered + auto-sorted tasks for rendering. */
+  const visibleTasks = useMemo(() => {
+    const enriched = tasks.map((t) => ({
+      task: t,
+      sla: computeSla(t.agedAtIso, KIND_META[t.kind].slaHours),
+    }));
+    return enriched
+      .filter(({ task, sla }) => matchesFilter(task, sla))
+      .sort((a, b) => priorityScore(b.task, b.sla) - priorityScore(a.task, a.sla))
+      .map(({ task }) => task);
+  }, [tasks, matchesFilter, priorityScore]);
+
+  /** Counts per chip — shown as little badges inside the chips. */
+  const chipCounts = useMemo(() => {
+    let urgent = 0, hot = 0, noContact = 0, breached = 0;
+    for (const t of tasks) {
+      const sla = computeSla(t.agedAtIso, KIND_META[t.kind].slaHours);
+      if (t.severity === "high" || sla.status === "critical") urgent++;
+      if (t.kind === "lead_followup" || t.kind === "active_visitor_engage") hot++;
+      if (t.kind === "pending_order_contact" || t.kind === "abandoned_cart") noContact++;
+      if (sla.status === "breached" || sla.status === "critical") breached++;
+    }
+    return { urgent, hot, noContact, breached };
+  }, [tasks]);
+
+
   if (!user || !role) return null;
 
   return (
