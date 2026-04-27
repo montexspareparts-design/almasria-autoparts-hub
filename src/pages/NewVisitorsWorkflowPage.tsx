@@ -373,10 +373,11 @@ export default function NewVisitorsWorkflowPage() {
                     {/* Pipeline control row — full inline workflow editor */}
                     <div className="mt-2 pt-2 border-t border-border/50">
                       <VisitorPipelineControl
-                        customerUserId={r.userId}
-                        customerName={r.name}
-                        customerPhone={r.phone}
-                        onStageChange={(s) => handleStageChanged(r.userId, s)}
+                        userId={r.userId}
+                        sessionKey={null}
+                        phone={r.phone}
+                        fullName={r.name}
+                        onChange={(s) => handleStageChanged(r.userId, s)}
                       />
                     </div>
                   </Card>
