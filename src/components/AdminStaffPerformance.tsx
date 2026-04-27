@@ -453,7 +453,7 @@ export default function AdminStaffPerformance() {
   );
 }
 
-function KpiCard({ icon: Icon, label, value, sub, color }: { icon: any; label: string; value: any; sub?: string; color: string }) {
+function KpiCard({ icon: Icon, label, value, sub, color, onClick }: { icon: any; label: string; value: any; sub?: string; color: string; onClick?: () => void }) {
   const colorMap: Record<string, string> = {
     blue: "from-blue-500/10 to-blue-500/5 border-blue-200 dark:border-blue-900",
     purple: "from-purple-500/10 to-purple-500/5 border-purple-200 dark:border-purple-900",
@@ -465,15 +465,22 @@ function KpiCard({ icon: Icon, label, value, sub, color }: { icon: any; label: s
     blue: "text-blue-600", purple: "text-purple-600", emerald: "text-emerald-600",
     green: "text-green-600", amber: "text-amber-600",
   };
+  const interactive = !!onClick;
   return (
-    <div className={`rounded-xl border bg-gradient-to-br ${colorMap[color]} p-3`}>
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={!interactive}
+      className={`text-right rounded-xl border bg-gradient-to-br ${colorMap[color]} p-3 transition-all ${interactive ? "cursor-pointer hover:shadow-md hover:-translate-y-0.5 hover:border-primary/40 active:scale-[0.98]" : "cursor-default"}`}
+    >
       <div className="flex items-center justify-between mb-1.5">
         <Icon className={`w-4 h-4 ${iconColor[color]}`} />
+        {interactive && <Eye className="w-3 h-3 text-muted-foreground/60" />}
       </div>
       <p className="text-2xl font-black leading-none">{value}</p>
       <p className="text-[10px] text-muted-foreground font-medium mt-1">{label}</p>
       {sub && <p className="text-[9px] text-muted-foreground mt-0.5">{sub}</p>}
-    </div>
+    </button>
   );
 }
 
