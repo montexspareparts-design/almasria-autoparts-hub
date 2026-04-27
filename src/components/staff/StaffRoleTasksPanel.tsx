@@ -255,7 +255,8 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
   const [snoozeOpenFor, setSnoozeOpenFor] = useState<string | null>(null);
   /** Active priority filter chip. `all` = no filter. */
   const [filter, setFilter] = useState<
-    "all" | "urgent" | "hot_leads" | "no_contact" | "sla_breached"
+    | "all" | "critical" | "high" | "today"
+    | "urgent" | "hot_leads" | "no_contact" | "sla_breached"
   >("all");
   // Live tick every 60s so SLA progress + remaining label refresh without a full refetch
   const [, setNowTick] = useState(0);
@@ -684,6 +685,14 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
     (t: RoleTask, sla: SlaInfo): boolean => {
       switch (filter) {
         case "all": return true;
+        case "critical": return sla.status === "critical";
+        case "high": return t.severity === "high";
+        case "today": {
+          // Created within the same calendar day as "now" (local time)
+          const now = new Date();
+          const start = new Date(now); start.setHours(0, 0, 0, 0);
+          return new Date(t.agedAtIso).getTime() >= start.getTime();
+        }
         case "urgent": return t.severity === "high" || sla.status === "critical";
         case "hot_leads":
           return t.kind === "lead_followup" || t.kind === "active_visitor_engage";
@@ -739,14 +748,20 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
   /** Counts per chip — shown as little badges inside the chips. */
   const chipCounts = useMemo(() => {
     let urgent = 0, hot = 0, noContact = 0, breached = 0;
+    let critical = 0, high = 0, today = 0;
+    const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
+    const startMs = startOfToday.getTime();
     for (const t of tasks) {
       const sla = computeSla(t.agedAtIso, KIND_META[t.kind].slaHours);
       if (t.severity === "high" || sla.status === "critical") urgent++;
       if (t.kind === "lead_followup" || t.kind === "active_visitor_engage") hot++;
       if (t.kind === "pending_order_contact" || t.kind === "abandoned_cart") noContact++;
       if (sla.status === "breached" || sla.status === "critical") breached++;
+      if (sla.status === "critical") critical++;
+      if (t.severity === "high") high++;
+      if (new Date(t.agedAtIso).getTime() >= startMs) today++;
     }
-    return { urgent, hot, noContact, breached };
+    return { urgent, hot, noContact, breached, critical, high, today };
   }, [tasks]);
 
 
@@ -820,6 +835,9 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
             <div className="flex items-center gap-1.5 mb-3 flex-wrap">
               {([
                 { key: "all", label: "الكل", count: tasks.length, cls: "bg-primary/10 text-primary border-primary/30", activeCls: "bg-primary text-primary-foreground border-primary" },
+                { key: "critical", label: "🚨 Critical", count: chipCounts.critical, cls: "bg-red-100 text-red-800 border-red-300", activeCls: "bg-red-700 text-white border-red-700" },
+                { key: "high", label: "⚡ High", count: chipCounts.high, cls: "bg-orange-50 text-orange-800 border-orange-200", activeCls: "bg-orange-600 text-white border-orange-600" },
+                { key: "today", label: "📅 Today", count: chipCounts.today, cls: "bg-sky-50 text-sky-700 border-sky-200", activeCls: "bg-sky-600 text-white border-sky-600" },
                 { key: "urgent", label: "🔥 عاجل", count: chipCounts.urgent, cls: "bg-red-50 text-red-700 border-red-200", activeCls: "bg-red-600 text-white border-red-600" },
                 { key: "hot_leads", label: "🎯 Hot Leads", count: chipCounts.hot, cls: "bg-rose-50 text-rose-700 border-rose-200", activeCls: "bg-rose-600 text-white border-rose-600" },
                 { key: "no_contact", label: "📞 بدون تواصل", count: chipCounts.noContact, cls: "bg-amber-50 text-amber-800 border-amber-200", activeCls: "bg-amber-600 text-white border-amber-600" },
