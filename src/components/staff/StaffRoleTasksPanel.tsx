@@ -502,16 +502,35 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
     }
   };
 
-  /** Phone / WhatsApp click — opens the link AND records it. */
+  /** Phone / WhatsApp click — opens the link AND records it.
+   * Partial-failure handling: if the audit log insert fails we keep the
+   * task visible (no UI removal here) and surface a clear toast so the
+   * staff member knows the contact wasn't logged automatically.
+   */
   const handleContact = async (t: RoleTask, channel: "phone" | "whatsapp") => {
-    await logAction(t, channel);
-    // refresh first_contacted_at side-effect for orders
+    const logged = await logAction(t, channel);
+    if (!logged) {
+      toast({
+        title: "تعذر تسجيل التواصل",
+        description: `تم فتح ${channel === "phone" ? "الاتصال" : "واتساب"} لكن لم يُسجَّل تلقائياً — التذكير لا يزال مفتوحاً. حاول مرة أخرى أو سجّله يدوياً.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    // refresh first_contacted_at side-effect for orders (only if log succeeded)
     if (t.kind === "pending_order_contact") {
-      await supabase
+      const { error: sideErr } = await supabase
         .from("orders")
         .update({ first_contacted_at: new Date().toISOString() })
         .eq("id", t.refId)
         .is("first_contacted_at", null);
+      if (sideErr) {
+        toast({
+          title: "تم التسجيل لكن تعذّر تحديث حالة الطلب",
+          description: sideErr.message,
+          variant: "destructive",
+        });
+      }
     }
   };
 
