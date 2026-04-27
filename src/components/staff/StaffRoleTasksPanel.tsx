@@ -226,7 +226,7 @@ function SlaBadge({ sla }: { sla: SlaInfo }) {
         "inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-md border",
         s.chip,
         s.chipText,
-        sla.pulse && "animate-pulse"
+        s.pulse && "animate-pulse"
       )}
       title={`${sla.remainingLabel} (SLA ${sla.slaHours}س)`}
     >
