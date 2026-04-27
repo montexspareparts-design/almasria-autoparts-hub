@@ -251,12 +251,12 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
         <StaffRoleTasksPanel limit={10} />
       </Suspense>
 
-      {/* Quick Actions Bar */}
+      {/* Quick Actions Bar — تختفي الأزرار غير المسموح بها للموظف */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <Button
           variant="outline"
           className="h-auto py-3 flex-col gap-1.5 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700"
-          onClick={() => onNavigate?.("leads")}
+          onClick={() => safeNavigate("leads")}
         >
           <UserPlus className="w-5 h-5" />
           <span className="text-xs font-semibold">عميل جديد</span>
@@ -264,7 +264,7 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
         <Button
           variant="outline"
           className="h-auto py-3 flex-col gap-1.5 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700"
-          onClick={() => onNavigate?.("customer-profile")}
+          onClick={() => safeNavigate("customers")}
         >
           <PhoneCall className="w-5 h-5" />
           <span className="text-xs font-semibold">تسجيل مكالمة</span>
@@ -272,19 +272,30 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
         <Button
           variant="outline"
           className="h-auto py-3 flex-col gap-1.5 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700"
-          onClick={() => onNavigate?.("customer-profile")}
+          onClick={() => safeNavigate("customers")}
         >
           <Search className="w-5 h-5" />
           <span className="text-xs font-semibold">بحث عميل</span>
         </Button>
-        <Button
-          variant="outline"
-          className="h-auto py-3 flex-col gap-1.5 hover:bg-amber-50 hover:border-amber-300 hover:text-amber-700"
-          onClick={() => onNavigate?.("whatsapp-inbox")}
-        >
-          <MessageCircle className="w-5 h-5" />
-          <span className="text-xs font-semibold">صندوق الواتساب</span>
-        </Button>
+        {canAccess("whatsapp-inbox") ? (
+          <Button
+            variant="outline"
+            className="h-auto py-3 flex-col gap-1.5 hover:bg-amber-50 hover:border-amber-300 hover:text-amber-700"
+            onClick={() => onNavigate?.("whatsapp-inbox")}
+          >
+            <MessageCircle className="w-5 h-5" />
+            <span className="text-xs font-semibold">صندوق الواتساب</span>
+          </Button>
+        ) : (
+          <Button
+            variant="outline"
+            className="h-auto py-3 flex-col gap-1.5 hover:bg-amber-50 hover:border-amber-300 hover:text-amber-700"
+            onClick={() => safeNavigate("customer-intel")}
+          >
+            <Zap className="w-5 h-5" />
+            <span className="text-xs font-semibold">ذكاء العملاء</span>
+          </Button>
+        )}
       </div>
 
       {/* My Achievements Today */}
