@@ -250,6 +250,12 @@ export default function StaffRoleTasksPanel({ limit = 10 }: Props) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [snoozeOpenFor, setSnoozeOpenFor] = useState<string | null>(null);
+  // Live tick every 60s so SLA progress + remaining label refresh without a full refetch
+  const [, setNowTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setNowTick((n) => n + 1), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   // Load role first
   useEffect(() => {
