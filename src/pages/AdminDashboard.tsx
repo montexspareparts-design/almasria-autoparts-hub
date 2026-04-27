@@ -581,6 +581,33 @@ const AdminDashboard = () => {
   };
 
   const renderActiveSection = () => {
+    // Graceful fallback: لو الـ section غير موجود في القائمة المسموحة للمستخدم،
+    // اعرض رسالة واضحة بدل ما نعرض تحليلات بصمت أو شاشة فاضية.
+    const sectionExists = filteredSidebarSections.some(s => s.id === activeSection);
+    if (!sectionExists && activeSection !== "daily-dashboard") {
+      return (
+        <div className="flex flex-col items-center justify-center py-16 px-6 text-center max-w-md mx-auto">
+          <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mb-4">
+            <span className="text-3xl">🔒</span>
+          </div>
+          <h2 className="text-xl font-bold text-foreground mb-2">القسم غير متاح</h2>
+          <p className="text-sm text-muted-foreground mb-1">
+            القسم <code className="px-1.5 py-0.5 rounded bg-muted text-xs font-mono">{activeSection}</code> غير موجود
+            أو ليس لديك صلاحية للوصول إليه.
+          </p>
+          <p className="text-xs text-muted-foreground mb-6">
+            راجع المسؤول لو تعتقد إن ده خطأ.
+          </p>
+          <button
+            onClick={() => setActiveSection("daily-dashboard")}
+            className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition"
+          >
+            العودة إلى الرئيسية
+          </button>
+        </div>
+      );
+    }
+
     switch (activeSection) {
       case "daily-dashboard":
         // الموظفون يشوفون نسخة مختصرة (KPIs + مهام + إنجاز اليوم + محادثات/طلبات معلقة)
@@ -752,7 +779,24 @@ const AdminDashboard = () => {
       case "mobile-error-report":
         return <Suspense fallback={<SectionLoader />}><AdminMobileErrorReport /></Suspense>;
       default:
-        return <Suspense fallback={<SectionLoader />}><AdminAnalytics /></Suspense>;
+        // غير معروف بالكلية — نعرض fallback واضح بدل توجيه صامت لـ AdminAnalytics.
+        return (
+          <div className="flex flex-col items-center justify-center py-16 px-6 text-center max-w-md mx-auto">
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+              <span className="text-3xl">❓</span>
+            </div>
+            <h2 className="text-xl font-bold text-foreground mb-2">صفحة غير معروفة</h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              القسم <code className="px-1.5 py-0.5 rounded bg-muted text-xs font-mono">{activeSection}</code> غير معرَّف في النظام.
+            </p>
+            <button
+              onClick={() => setActiveSection("daily-dashboard")}
+              className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition"
+            >
+              العودة إلى الرئيسية
+            </button>
+          </div>
+        );
     }
   };
 
