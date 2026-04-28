@@ -1147,7 +1147,8 @@ const SubmittedSuccessCard = ({
   const buildWhatsAppText = () => {
     const lines = [
       `📋 *تقرير يومي* — ${staffName || "موظف"}`,
-      `📅 ${submittedDate} — الساعة ${submittedTime}`,
+      `📅 يوم ${submittedDayName} — ${submittedDate}`,
+      `⏰ تم التقديم الساعة ${submittedTime}`,
       ``,
       `*ملخص KPIs*`,
       `• عملاء تم التواصل: ${report.customers_contacted ?? 0}`,
