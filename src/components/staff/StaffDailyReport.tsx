@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ClipboardList, CheckCircle2, AlertCircle, Save, Sparkles, Clock, HelpCircle, Users2, History as HistoryIcon, ChevronDown, ArrowRight, Eye, Loader2, MessageCircle, Download } from "lucide-react";
+import { ClipboardList, CheckCircle2, AlertCircle, Save, Sparkles, Clock, HelpCircle, Users2, History as HistoryIcon, ChevronDown, ArrowRight, Eye, Loader2, MessageCircle, Download, BarChart3, Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerFooter, DrawerClose } from "@/components/ui/drawer";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
