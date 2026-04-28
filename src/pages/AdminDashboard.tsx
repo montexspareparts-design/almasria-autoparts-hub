@@ -66,6 +66,7 @@ const AdminPermissionRequests = lazy(() => import("@/components/admin/AdminPermi
 const AdminRolePermissions = lazy(() => import("@/components/admin/AdminRolePermissions"));
 const AdminDailyReports = lazy(() => import("@/components/admin/AdminDailyReports"));
 const AdminDailyReportEditor = lazy(() => import("@/components/admin/AdminDailyReportEditor"));
+const MyDailyTasks = lazy(() => import("@/components/admin/MyDailyTasks"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];
