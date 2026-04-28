@@ -593,7 +593,7 @@ const AdminDashboard = () => {
     // Graceful fallback: لو الـ section غير موجود في القائمة المسموحة للمستخدم،
     // اعرض رسالة واضحة بدل ما نعرض تحليلات بصمت أو شاشة فاضية.
     const sectionExists = filteredSidebarSections.some(s => s.id === activeSection);
-    if (!sectionExists && activeSection !== "daily-dashboard") {
+    if (!sectionExists && activeSection !== "customer-intel" && activeSection !== "daily-dashboard") {
       return (
         <div className="flex flex-col items-center justify-center py-16 px-6 text-center max-w-md mx-auto">
           <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mb-4">
