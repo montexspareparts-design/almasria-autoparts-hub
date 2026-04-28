@@ -250,7 +250,7 @@ const AdminDashboard = () => {
       clearInterval(id);
       window.removeEventListener("focus", onFocus);
     };
-  }, [user?.id, activeSection]);
+  }, [user?.id]);
 
   // Toast توضيحي لمرة واحدة في اليوم لكل مرحلة (early/active) — يخزّن آخر مرحلة
   // أُظهرت في localStorage بمفتاح يحوي تاريخ اليوم لمنع التكرار.
