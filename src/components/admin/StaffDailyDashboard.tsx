@@ -21,6 +21,21 @@ interface DashboardStats {
   totalOrdersHandled: number;
   totalLeadsConverted: number;
   activeStaff: number;
+  todayVisitors: number;
+  todaySearches: number;
+}
+
+interface TopSearch {
+  query: string;
+  count: number;
+}
+
+interface SearchContact {
+  userId: string;
+  name: string;
+  phone: string | null;
+  lastQuery: string;
+  searchCount: number;
 }
 
 interface BehavioralAlert {
@@ -42,9 +57,13 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
   const [alerts, setAlerts] = useState<BehavioralAlert[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [topSearches, setTopSearches] = useState<TopSearch[]>([]);
+  const [searchContacts, setSearchContacts] = useState<SearchContact[]>([]);
+
   useEffect(() => {
     fetchStats();
     fetchBehavioralAlerts();
+    fetchTodaySearchInsights();
   }, []);
 
   const fetchStats = async () => {
@@ -63,6 +82,8 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
       { count: totalOrdersHandled },
       { count: totalLeadsConverted },
       { data: staffRoles },
+      { data: visitorRows },
+      { count: todaySearches },
     ] = await Promise.all([
       supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "pending"),
       supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "awaiting_payment"),
@@ -73,9 +94,17 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
       supabase.from("orders").select("*", { count: "exact", head: true }).in("status", ["processing", "ready", "shipped", "delivered"]),
       supabase.from("leads").select("*", { count: "exact", head: true }).eq("status", "converted"),
       supabase.from("user_roles").select("user_id, role").in("role", ["admin", "moderator"]),
+      supabase.from("page_visits").select("session_key, user_id").gte("visited_at", todayStart),
+      supabase.from("customer_search_logs").select("*", { count: "exact", head: true }).gte("created_at", todayStart),
     ]);
 
     const activeStaff = new Set((staffRoles || []).map((r: any) => r.user_id)).size;
+    // Distinct visitors today (by session_key, fallback to user_id)
+    const visitorKeys = new Set<string>();
+    (visitorRows || []).forEach((r: any) => {
+      const k = r.session_key || r.user_id;
+      if (k) visitorKeys.add(k);
+    });
 
     setStats({
       pendingOrders: pendingOrders || 0,
@@ -87,8 +116,73 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
       totalOrdersHandled: totalOrdersHandled || 0,
       totalLeadsConverted: totalLeadsConverted || 0,
       activeStaff,
+      todayVisitors: visitorKeys.size,
+      todaySearches: todaySearches || 0,
     });
     setLoading(false);
+  };
+
+  const fetchTodaySearchInsights = async () => {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const { data: logs } = await supabase
+      .from("customer_search_logs")
+      .select("search_query, user_id, created_at")
+      .gte("created_at", todayStart.toISOString())
+      .order("created_at", { ascending: false })
+      .limit(500);
+
+    if (!logs || logs.length === 0) {
+      setTopSearches([]);
+      setSearchContacts([]);
+      return;
+    }
+
+    // Top queries (case-insensitive, trimmed)
+    const queryCounts: Record<string, number> = {};
+    for (const l of logs) {
+      const q = (l.search_query || "").trim().toLowerCase();
+      if (!q) continue;
+      queryCounts[q] = (queryCounts[q] || 0) + 1;
+    }
+    const top = Object.entries(queryCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([query, count]) => ({ query, count }));
+    setTopSearches(top);
+
+    // Per-user search aggregation (only logged-in users)
+    const perUser: Record<string, { count: number; lastQuery: string }> = {};
+    for (const l of logs) {
+      if (!l.user_id) continue;
+      if (!perUser[l.user_id]) {
+        perUser[l.user_id] = { count: 0, lastQuery: l.search_query || "" };
+      }
+      perUser[l.user_id].count += 1;
+    }
+    const userIds = Object.keys(perUser).slice(0, 50);
+    if (userIds.length === 0) {
+      setSearchContacts([]);
+      return;
+    }
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("user_id, full_name, phone")
+      .in("user_id", userIds);
+
+    const contacts: SearchContact[] = (profiles || [])
+      .filter((p: any) => p.phone)
+      .map((p: any) => ({
+        userId: p.user_id,
+        name: p.full_name || "بدون اسم",
+        phone: p.phone,
+        lastQuery: perUser[p.user_id]?.lastQuery || "",
+        searchCount: perUser[p.user_id]?.count || 0,
+      }))
+      .sort((a, b) => b.searchCount - a.searchCount)
+      .slice(0, 10);
+    setSearchContacts(contacts);
   };
 
   const fetchBehavioralAlerts = async () => {
@@ -218,6 +312,101 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
         </h2>
         <p className="text-sm text-muted-foreground">ملخص اليوم وأولويات العمل</p>
       </div>
+
+      {/* Today's Visitor & Search KPIs */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <Card className="border-l-4 border-l-indigo-500">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
+              <Users className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-2xl font-bold">{stats.todayVisitors}</p>
+              <p className="text-xs text-muted-foreground">زائر اليوم</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-purple-500">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-purple-50 flex items-center justify-center shrink-0">
+              <Search className="w-5 h-5 text-purple-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-2xl font-bold">{stats.todaySearches}</p>
+              <p className="text-xs text-muted-foreground">عملية بحث اليوم</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-emerald-500">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
+              <CheckCircle className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-2xl font-bold">{stats.todayOrders}</p>
+              <p className="text-xs text-muted-foreground">طلب اليوم</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Top Searches Today */}
+      {topSearches.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Search className="w-4 h-4 text-purple-600" />
+              أهم عمليات البحث اليوم
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {topSearches.map((s, i) => (
+              <div key={i} className="flex items-center justify-between gap-2 p-2 rounded-lg bg-muted/40 hover:bg-muted/60 transition">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <span className="text-xs font-bold text-muted-foreground w-5">#{i + 1}</span>
+                  <span className="text-sm font-medium truncate">{s.query}</span>
+                </div>
+                <Badge variant="secondary" className="shrink-0">{s.count} مرة</Badge>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Search Contacts Today — phones to call */}
+      {searchContacts.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <MessageCircle className="w-4 h-4 text-emerald-600" />
+              أرقام تواصل (عملاء بحثوا اليوم)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {searchContacts.map((c) => (
+              <div key={c.userId} className="flex items-center gap-2 p-2 rounded-lg border bg-card hover:shadow-sm transition">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold truncate">{c.name}</p>
+                  <p className="text-[11px] text-muted-foreground truncate">
+                    آخر بحث: <span className="font-mono">{c.lastQuery}</span> · {c.searchCount} عملية
+                  </p>
+                  {c.phone && (
+                    <a href={`tel:${c.phone}`} className="text-xs text-primary hover:underline font-mono" dir="ltr">📞 {c.phone}</a>
+                  )}
+                </div>
+                {c.phone && (
+                  <div className="flex gap-1 shrink-0">
+                    <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => window.location.href = `tel:${c.phone}`}>
+                      اتصال
+                    </Button>
+                    <WhatsAppQuickChat phone={c.phone} customerName={c.name} context={`بحث عن: ${c.lastQuery}`} />
+                  </div>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Urgent Tasks */}
       {urgentTasks.length > 0 ? (
