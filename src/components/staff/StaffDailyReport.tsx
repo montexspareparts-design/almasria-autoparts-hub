@@ -1269,6 +1269,17 @@ const SubmittedSuccessCard = ({
               </DrawerDescription>
             </DrawerHeader>
             <div ref={reportRef} className="px-4 pb-2 overflow-y-auto space-y-4 bg-background">
+              {/* هيدر داخل الصورة المحفوظة: اسم الموظف + اليوم + التاريخ + الوقت */}
+              <div className="border-b border-border/40 pb-3 text-center space-y-1">
+                <div className="text-base font-extrabold text-primary">📋 تقرير يومي — {staffName || "موظف"}</div>
+                <div className="text-xs text-muted-foreground">
+                  <span className="font-semibold text-foreground">يوم {submittedDayName}</span>
+                  {" • "}
+                  {submittedDate}
+                  {" • "}
+                  الساعة {submittedTime}
+                </div>
+              </div>
               <section className="space-y-2">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                   ملخص KPIs
