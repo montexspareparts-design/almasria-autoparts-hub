@@ -1060,6 +1060,7 @@ const SubmittedSuccessCard = ({
   dynAnswers,
   userId,
 }: SubmittedSuccessCardProps) => {
+  const { toast } = useToast();
   const [showDetails, setShowDetails] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory] = useState<HistoryItem[] | null>(null);
