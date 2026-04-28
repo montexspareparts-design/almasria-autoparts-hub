@@ -92,17 +92,17 @@ interface SidebarGroup {
 const sidebarGroups: SidebarGroup[] = [
   {
     // الرئيسية = نقطة البداية اليومية للموظف.
-    // الترتيب يحاكي تسلسل عمله: ابدأ يومك → نفّذ المهام (طلبات/Leads/عملاء) → راجع الأداء.
+    // الترتيب حسب طلب المستخدم: رئيسية → ذكاء العملاء → ليدز الزوار → ملف العملاء → التحليلات → ليدز
     label: "الرئيسية",
     items: [
-      { id: "daily-dashboard", label: "🏠 الرئيسية للموظف", icon: BarChart3 }, // نقطة البداية — مؤشرات + مهام اليوم
-      { id: "orders", label: "الطلبات", icon: ShoppingBag },                    // أهم تنفيذ يومي
-      { id: "leads", label: "Leads", icon: Users },                              // متابعة العملاء المحتملين
-      { id: "visitor-leads", label: "ليدز الزوار (واتساب)", icon: MessageCircle }, // أرقام الزوار غير المسجلين
-      { id: "customers", label: "ملف العملاء", icon: Users },                   // البحث عن عميل / تسجيل تواصل
-      { id: "customer-intel", label: "ذكاء العملاء", icon: Eye },               // تحليلات السلوك
-      { id: "analytics", label: "التحليلات", icon: BarChart3 },                 // KPIs عامة
-      { id: "staff-performance", label: "أداء الموظفين", icon: TrendingUp },    // أدمن فقط — مراجعة فريق
+      { id: "daily-dashboard", label: "🏠 الرئيسية", icon: BarChart3 },              // 1) نقطة البداية
+      { id: "customer-intel", label: "ذكاء العملاء", icon: Eye },                    // 2) تحليلات سلوك العملاء
+      { id: "visitor-leads", label: "ليدز الزوار (واتساب)", icon: MessageCircle },   // 3) أرقام الزوار غير المسجلين
+      { id: "customers", label: "ملف العملاء", icon: Users },                        // 4) البحث عن عميل / تسجيل تواصل
+      { id: "analytics", label: "التحليلات", icon: BarChart3 },                      // 5) KPIs عامة
+      { id: "leads", label: "Leads", icon: Users },                                   // 6) متابعة العملاء المحتملين
+      { id: "orders", label: "الطلبات", icon: ShoppingBag },                          // تنفيذ يومي (يبقى متاح بعد الترتيب الأساسي)
+      { id: "staff-performance", label: "أداء الموظفين", icon: TrendingUp },         // أدمن فقط
     ],
   },
   {
