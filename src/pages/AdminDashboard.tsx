@@ -214,17 +214,17 @@ const AdminDashboard = () => {
 
   const filteredSidebarSections = filteredSidebarGroups.flatMap(g => g.items);
 
-  // نقطة البداية الموحّدة = "الرئيسية للموظف" (daily-dashboard) لكل من الأدمن والموظف.
-  const activeSection = searchParams.get("section") || "daily-dashboard";
+  // نقطة البداية الموحّدة = "ذكاء العملاء" (customer-intel) — أهم صفحة للموظف، تحوي مهام اليوم + قائمة العملاء + التحليلات.
+  const activeSection = searchParams.get("section") || "customer-intel";
 
   const setActiveSection = (section: string) => {
     setSearchParams({ section });
   };
 
-  // إعادة توجيه تلقائي: لو الموظف/الأدمن دخل /admin بدون ?section، نوجّهه لـ daily-dashboard (StaffDailyDashboard الجديدة)
+  // إعادة توجيه تلقائي: لو الموظف/الأدمن دخل /admin بدون ?section، نوجّهه لـ customer-intel (ذكاء العملاء)
   useEffect(() => {
     if (canAccess && !searchParams.get("section")) {
-      setSearchParams({ section: "daily-dashboard" }, { replace: true });
+      setSearchParams({ section: "customer-intel" }, { replace: true });
     }
   }, [canAccess, searchParams, setSearchParams]);
 
