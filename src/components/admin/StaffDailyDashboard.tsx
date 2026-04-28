@@ -437,7 +437,7 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
       </div>
 
       {/* ============ COLLAPSIBLE SECTIONS ============ */}
-      <Accordion type="multiple" defaultValue={[defaultOpen]} className="space-y-3">
+      <Accordion type="multiple" value={openSections} onValueChange={handleAccordionChange} className="space-y-3">
         {/* 1) Urgent tasks */}
         <AccordionItem value="urgent" className="border rounded-xl bg-card overflow-hidden">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/40">
