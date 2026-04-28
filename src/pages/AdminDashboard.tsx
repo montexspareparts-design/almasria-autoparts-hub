@@ -610,15 +610,7 @@ const AdminDashboard = () => {
 
     switch (activeSection) {
       case "daily-dashboard":
-        // الموظفون يشوفون نسخة مختصرة (KPIs + مهام + إنجاز اليوم + محادثات/طلبات معلقة)
-        // داخل صفحة واحدة بدل لوحة StaffHome الموسّعة.
-        if (isModerator && !isAdmin) {
-          return (
-            <Suspense fallback={<SectionLoader />}>
-              <StaffWelcomeDashboard onNavigate={setActiveSection} />
-            </Suspense>
-          );
-        }
+        // الموظف والأدمن يشوفون نفس اللوحة (StaffDailyDashboard) — نفس التحديثات لكليهما.
         return (
           <Suspense fallback={<SectionLoader />}>
             <StaffDailyDashboard onNavigate={setActiveSection} />
