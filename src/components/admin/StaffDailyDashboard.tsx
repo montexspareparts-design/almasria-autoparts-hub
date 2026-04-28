@@ -24,6 +24,9 @@ interface DashboardStats {
   activeStaff: number;
   todayVisitors: number;
   todaySearches: number;
+  // ===== Quick KPI strip (الرئيسية) =====
+  todayWhatsappLeads: number;  // زوار واتساب جدد اليوم (visitor_leads)
+  todayNewCustomers: number;   // عملاء (profiles) جدد اليوم
 }
 
 interface TopSearch {
