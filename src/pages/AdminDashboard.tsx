@@ -1043,7 +1043,9 @@ const AdminDashboard = () => {
                   {group.items.map((section) => {
                     const Icon = section.icon;
                     const isActive = activeSection === section.id;
-                    const isReportReminder = section.id === "daily-reports-dashboard" && reportPhase !== "off" && !isActive;
+                    // اللمعان والتذكير ينتقلوا لتبويب "مهامي اليومية" (لأنه فيه فورم التقديم)،
+                    // ويختفي اللمعان فور تقديم تقرير اليوم.
+                    const isReportReminder = section.id === "my-daily-tasks" && reportPhase !== "off" && !isActive && !hasSubmittedTodayReport;
                     const isReportEarly = isReportReminder && reportPhase === "early";
                     return (
                       <button
