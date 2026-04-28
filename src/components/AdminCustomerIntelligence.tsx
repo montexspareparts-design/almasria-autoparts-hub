@@ -3448,6 +3448,108 @@ const AdminCustomerIntelligence = () => {
                       const isSavingNote = savingQuickNote === profile.user_id;
                       return (
                         <>
+                          {/* ===== \u0645\u0644\u062e\u0635 \u0627\u0644\u0639\u0645\u064a\u0644 (Top Summary) ===== */}
+                          {(() => {
+                            const visitDays = visitsByUser[profile.user_id] || [];
+                            const totalVisits = visitDays.reduce((s, d) => s + d.count, 0);
+                            const distinctDays = visitDays.length;
+                            const firstVisit = visitDays.length ? visitDays[visitDays.length - 1].date : null;
+                            const lastVisitAt = lastVisitByUser[profile.user_id] || null;
+                            const sessionMinutes = lastVisitAt && firstVisit
+                              ? Math.max(1, Math.round((new Date(lastVisitAt).getTime() - new Date(firstVisit).getTime()) / 60000))
+                              : 0;
+                            const topSearchesSorted = [...searches].sort((a, b) => b.count - a.count).slice(0, 5);
+                            const purchasedCount = purchasedProducts ? viewedProducts.filter(pid => purchasedProducts.has(pid)).length : 0;
+                            const carInfo = (profile as any).car_model
+                              ? `${(profile as any).car_model}${(profile as any).car_year ? ` (${(profile as any).car_year})` : ""}`
+                              : null;
+                            let nextAction = "\u062a\u0648\u0627\u0635\u0644 \u062a\u0631\u062d\u064a\u0628\u064a";
+                            let nextActionTone = "bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/30";
+                            if (alerts.length > 0) { nextAction = "\u0645\u062a\u0627\u0628\u0639\u0629 \u0639\u0627\u062c\u0644\u0629"; nextActionTone = "bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/30"; }
+                            else if (topSearchesSorted.length >= 3 && !orders) { nextAction = "\u0627\u0639\u0631\u0636 \u0627\u0644\u0633\u0639\u0631 \u2014 \u062c\u0627\u0647\u0632 \u0644\u0644\u0634\u0631\u0627\u0621"; nextActionTone = "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30"; }
+                            else if (orders && orders.count > 0) { nextAction = "\u0627\u0642\u062a\u0631\u062d \u0625\u0639\u0627\u062f\u0629 \u0634\u0631\u0627\u0621"; nextActionTone = "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30"; }
+                            else if (viewedProducts.length > 0) { nextAction = "\u062a\u0627\u0628\u0639 \u0627\u0644\u0623\u0635\u0646\u0627\u0641 \u0627\u0644\u0644\u064a \u0634\u0627\u0641\u0647\u0627"; nextActionTone = "bg-violet-500/15 text-violet-700 dark:text-violet-400 border-violet-500/30"; }
+                            return (
+                              <div className="mb-4 rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 via-background to-emerald-500/5 p-4 shadow-sm">
+                                <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center"><Eye className="w-4 h-4 text-primary" /></div>
+                                    <div>
+                                      <p className="text-sm font-black text-foreground">\u0645\u0644\u062e\u0635 \u0627\u0644\u0639\u0645\u064a\u0644</p>
+                                      <p className="text-[10px] text-muted-foreground">\u0646\u0638\u0631\u0629 \u0633\u0631\u064a\u0639\u0629 \u0639\u0644\u0649 \u0646\u0634\u0627\u0637\u0647 \u0648\u0627\u062d\u062a\u064a\u0627\u062c\u0627\u062a\u0647</p>
+                                    </div>
+                                  </div>
+                                  <span className={cn("text-[11px] font-black px-2.5 py-1 rounded-lg border", nextActionTone)}>
+                                    \ud83d\udca1 {nextAction}
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+                                  <div className="rounded-xl bg-cyan-500/10 border border-cyan-500/20 p-2.5 text-center">
+                                    <p className="text-lg font-black text-cyan-700 dark:text-cyan-400">{searches.length}</p>
+                                    <p className="text-[10px] text-muted-foreground font-bold mt-0.5">\u0639\u0645\u0644\u064a\u0629 \u0628\u062d\u062b</p>
+                                  </div>
+                                  <div className="rounded-xl bg-violet-500/10 border border-violet-500/20 p-2.5 text-center">
+                                    <p className="text-lg font-black text-violet-700 dark:text-violet-400">{viewedProducts.length}</p>
+                                    <p className="text-[10px] text-muted-foreground font-bold mt-0.5">\u0635\u0646\u0641 \u0645\u0633\u0639\u0651\u0631</p>
+                                  </div>
+                                  <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-2.5 text-center">
+                                    <p className="text-lg font-black text-amber-700 dark:text-amber-400">{distinctDays}<span className="text-[10px] mr-0.5">\u064a</span></p>
+                                    <p className="text-[10px] text-muted-foreground font-bold mt-0.5">{totalVisits} \u0632\u064a\u0627\u0631\u0629 \u2022 {sessionMinutes >= 60 ? `${Math.round(sessionMinutes / 60)}\u0633` : `${sessionMinutes}\u062f`}</p>
+                                  </div>
+                                  <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-2.5 text-center">
+                                    <p className="text-lg font-black text-emerald-700 dark:text-emerald-400">{orders?.count || 0}</p>
+                                    <p className="text-[10px] text-muted-foreground font-bold mt-0.5">{orders ? `${orders.total.toLocaleString("ar-EG")} \u062c.\u0645` : "\u0628\u062f\u0648\u0646 \u0637\u0644\u0628\u0627\u062a"}</p>
+                                  </div>
+                                </div>
+                                {topSearchesSorted.length > 0 ? (
+                                  <div className="rounded-xl bg-background/70 border border-border/50 p-3 mb-2">
+                                    <p className="text-[11px] font-black text-foreground mb-2 flex items-center gap-1.5">
+                                      <Search className="w-3.5 h-3.5 text-primary" />
+                                      \u0623\u0643\u062b\u0631 \u0645\u0627 \u0628\u062d\u062b \u0639\u0646\u0647
+                                    </p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {topSearchesSorted.map((s, i) => (
+                                        <span key={i} className="inline-flex items-center gap-1 text-[11px] font-bold bg-primary/10 text-primary border border-primary/20 px-2 py-1 rounded-lg">
+                                          {s.query}
+                                          <span className="text-[9px] bg-primary/20 px-1 rounded">{s.count}\u00d7</span>
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="rounded-xl bg-muted/30 border border-dashed border-border/50 p-3 mb-2 text-center">
+                                    <p className="text-[11px] text-muted-foreground">\u0644\u0645 \u064a\u0628\u062d\u062b \u0639\u0646 \u0623\u064a \u0635\u0646\u0641 \u0628\u0639\u062f</p>
+                                  </div>
+                                )}
+                                <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                                  {carInfo && (
+                                    <span className="inline-flex items-center gap-1 bg-violet-500/10 text-violet-700 dark:text-violet-400 px-2 py-1 rounded-md font-bold border border-violet-500/20">
+                                      <Car className="w-3 h-3" /> {carInfo}
+                                    </span>
+                                  )}
+                                  {topBrands.length > 0 && (
+                                    <span className="inline-flex items-center gap-1 bg-blue-500/10 text-blue-700 dark:text-blue-400 px-2 py-1 rounded-md font-bold border border-blue-500/20">
+                                      \u2b50 \u064a\u0641\u0636\u0651\u0644: {topBrands.map(([b]) => b).join(" \u2022 ")}
+                                    </span>
+                                  )}
+                                  {purchasedCount > 0 && (
+                                    <span className="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 px-2 py-1 rounded-md font-bold border border-emerald-500/20">
+                                      <CheckCircle2 className="w-3 h-3" /> \u0627\u0634\u062a\u0631\u0649 {purchasedCount} \u0645\u0646 \u0627\u0644\u0644\u064a \u0634\u0627\u0641\u0647
+                                    </span>
+                                  )}
+                                  {lastComm ? (
+                                    <span className="inline-flex items-center gap-1 bg-muted text-muted-foreground px-2 py-1 rounded-md font-bold">
+                                      \u0622\u062e\u0631 \u062a\u0648\u0627\u0635\u0644 \u0645\u0646\u0630 {daysSince === 0 ? "\u0627\u0644\u064a\u0648\u0645" : `${daysSince}\u064a`}
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 bg-red-500/10 text-red-700 dark:text-red-400 px-2 py-1 rounded-md font-bold border border-red-500/20">
+                                      \u26a0\ufe0f \u0644\u0645 \u064a\u062a\u0645 \u0627\u0644\u062a\u0648\u0627\u0635\u0644 \u0628\u0639\u062f
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })()}
                           {/* ===== Quick Contact Panel — لوحة تواصل سريعة ===== */}
                           <div className="mb-4 rounded-2xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-emerald-500/5 to-blue-500/5 dark:from-primary/10 dark:via-emerald-950/15 dark:to-blue-950/15 p-3.5 shadow-sm">
                             <div className="flex items-center justify-between mb-3">
