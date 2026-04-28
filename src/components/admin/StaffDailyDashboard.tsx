@@ -433,7 +433,6 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
         />
       </div>
 
-      </div>
 
       {/* ============ COLLAPSIBLE SECTIONS ============ */}
       <Accordion type="single" collapsible value={openSection} onValueChange={handleAccordionChange} className="space-y-3">
