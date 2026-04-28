@@ -59,6 +59,7 @@ const VisitorLeadsPage = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
+  const [activeLead, setActiveLead] = useState<Lead | null>(null);
   const { toast } = useToast();
 
   const load = async () => {
