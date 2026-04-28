@@ -101,8 +101,9 @@ export default function ActiveVisitorsPage() {
   const [recentlyHandled, setRecentlyHandled] = useState<Set<string>>(new Set());
 
   const fetchActive = async () => {
-    // نجلب أوسع نافذة (24 ساعة) دفعة واحدة، والفلاتر تعمل عميل-جانب بدون refetch
-    const since = new Date(Date.now() - MAX_WINDOW_HOURS * 60 * 60 * 1000).toISOString();
+    // نافذة الجلب تتوسّع لو المستخدم اختار "كل الأيام" (حتى 90 يوم) عشان يشوف كل الزوار
+    const windowHours = hoursFilter === "all" ? 24 * 90 : MAX_WINDOW_HOURS;
+    const since = new Date(Date.now() - windowHours * 60 * 60 * 1000).toISOString();
 
     // 1) جلسات نشطة آخر 24 ساعة
     const { data: sessions, error } = await supabase
@@ -240,7 +241,7 @@ export default function ActiveVisitorsPage() {
     const interval = setInterval(fetchActive, 30_000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [hoursFilter]);
 
   // نطاق زمني [from, to] بناءً على الفلتر — يدعم "أمس" كنافذة محدودة وليس "آخر X"
   const range = useMemo(() => {
