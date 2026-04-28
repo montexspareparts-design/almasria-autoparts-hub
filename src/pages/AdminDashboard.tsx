@@ -637,6 +637,12 @@ const AdminDashboard = () => {
             <MyDailyTasks />
           </Suspense>
         );
+      case "daily-reports-dashboard":
+        return (
+          <Suspense fallback={<SectionLoader />}>
+            <AdminDailyReportsDashboard />
+          </Suspense>
+        );
       case "analytics":
       case "product-insights":
       case "leads-report":
