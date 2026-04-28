@@ -24,10 +24,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import {
   Users, Phone, MessageCircle, Eye, RefreshCw, Search,
-  Clock, MapPin, ArrowLeft, Activity, Loader2, AlertTriangle, Filter,
+  Clock, MapPin, ArrowLeft, Activity, Loader2, AlertTriangle, Filter, CheckCircle2, PenLine,
 } from "lucide-react";
 
 interface ActiveVisitor {
@@ -44,7 +48,8 @@ interface ActiveVisitor {
 }
 
 // أكبر نافذة زمنية ممكن نعرضها — نجلب البيانات لها مرة واحدة ونفلتر عميل-جانب.
-const MAX_WINDOW_HOURS = 24;
+// وُسّعت إلى 7 أيام لدعم فلاتر "أمس" و"آخر 7 أيام".
+const MAX_WINDOW_HOURS = 24 * 7;
 // عتبة "متأخر": زائر نشط ولم يُتواصل معه خلال آخر N ساعات (افتراضي 2 ساعة)
 const OVERDUE_HOURS = 2;
 
@@ -77,14 +82,23 @@ const normalizeEgyptianPhone = (raw: string | null | undefined) => {
 };
 
 export default function ActiveVisitorsPage() {
+  const { toast } = useToast();
   const [visitors, setVisitors] = useState<ActiveVisitor[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
-  // فلتر "خلال X ساعة" — يحدد نافذة آخر نشاط للزائر (30د، 1س، 3س، 6س، 24س)
-  const [hoursFilter, setHoursFilter] = useState<"30m" | "1h" | "3h" | "6h" | "24h">("30m");
+  // فلتر "خلال X" — يحدد نافذة آخر نشاط للزائر (30د، 1س، 3س، 6س، 24س، أمس، 7 أيام)
+  const [hoursFilter, setHoursFilter] = useState<"30m" | "1h" | "3h" | "6h" | "24h" | "yesterday" | "7d">("30m");
   // فلتر "متأخر" — يعرض فقط الزوار النشطين اللي مفيش معاهم تواصل في آخر OVERDUE_HOURS ساعة
   const [overdueOnly, setOverdueOnly] = useState(false);
+
+  // Dialog لتسجيل إجراء التواصل من نفس الكارت (يبدأ تأثير fade فور الحفظ)
+  const [actionFor, setActionFor] = useState<ActiveVisitor | null>(null);
+  const [actionType, setActionType] = useState<"phone" | "whatsapp" | "no_answer" | "visit" | "note">("phone");
+  const [actionNote, setActionNote] = useState("");
+  const [savingAction, setSavingAction] = useState(false);
+  // user_ids تم تسجيل إجراء لها للتو في هذه الجلسة — لإظهار تأثير "بهتان اللون"
+  const [recentlyHandled, setRecentlyHandled] = useState<Set<string>>(new Set());
 
   const fetchActive = async () => {
     // نجلب أوسع نافذة (24 ساعة) دفعة واحدة، والفلاتر تعمل عميل-جانب بدون refetch
@@ -206,8 +220,15 @@ export default function ActiveVisitorsPage() {
       };
     });
 
-    // ترتيب: الأحدث نشاطاً أولاً
-    merged.sort((a, b) => new Date(b.last_seen_at).getTime() - new Date(a.last_seen_at).getTime());
+    // ترتيب أولوي:
+    //   1) عنده رقم تليفون أولاً (سواء سجّل في الموقع أو ترك رقمه في popup)
+    //   2) ثم الأحدث نشاطاً
+    merged.sort((a, b) => {
+      const ap = a.phone ? 1 : 0;
+      const bp = b.phone ? 1 : 0;
+      if (ap !== bp) return bp - ap;
+      return new Date(b.last_seen_at).getTime() - new Date(a.last_seen_at).getTime();
+    });
 
     setVisitors(merged);
     setLoading(false);
@@ -221,14 +242,22 @@ export default function ActiveVisitorsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Window in ms for the "خلال X" filter
-  const hoursWindowMs = useMemo(() => {
+  // نطاق زمني [from, to] بناءً على الفلتر — يدعم "أمس" كنافذة محدودة وليس "آخر X"
+  const range = useMemo(() => {
+    const now = Date.now();
+    const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
     switch (hoursFilter) {
-      case "30m": return 30 * 60 * 1000;
-      case "1h": return 60 * 60 * 1000;
-      case "3h": return 3 * 60 * 60 * 1000;
-      case "6h": return 6 * 60 * 60 * 1000;
-      case "24h": return 24 * 60 * 60 * 1000;
+      case "30m": return { from: now - 30 * 60 * 1000, to: now };
+      case "1h": return { from: now - 60 * 60 * 1000, to: now };
+      case "3h": return { from: now - 3 * 60 * 60 * 1000, to: now };
+      case "6h": return { from: now - 6 * 60 * 60 * 1000, to: now };
+      case "24h": return { from: now - 24 * 60 * 60 * 1000, to: now };
+      case "yesterday": {
+        const endOfYesterday = startOfToday.getTime();
+        const startOfYesterday = endOfYesterday - 24 * 60 * 60 * 1000;
+        return { from: startOfYesterday, to: endOfYesterday };
+      }
+      case "7d": return { from: now - 7 * 24 * 60 * 60 * 1000, to: now };
     }
   }, [hoursFilter]);
 
@@ -239,15 +268,18 @@ export default function ActiveVisitorsPage() {
     return Date.now() - new Date(v.last_contacted_at).getTime() > OVERDUE_HOURS * 60 * 60 * 1000;
   };
 
+  const inRange = (iso: string) => {
+    const t = new Date(iso).getTime();
+    return t >= range.from && t <= range.to;
+  };
+
   // عداد الزوار المتأخرين داخل النافذة الزمنية الحالية — للبادج
   const overdueCount = useMemo(() => {
-    const cutoff = Date.now() - hoursWindowMs;
-    return visitors.filter((v) => new Date(v.last_seen_at).getTime() >= cutoff && isOverdue(v)).length;
-  }, [visitors, hoursWindowMs]);
+    return visitors.filter((v) => inRange(v.last_seen_at) && isOverdue(v)).length;
+  }, [visitors, range]);
 
   const filtered = useMemo(() => {
-    const cutoff = Date.now() - hoursWindowMs;
-    let list = visitors.filter((v) => new Date(v.last_seen_at).getTime() >= cutoff);
+    let list = visitors.filter((v) => inRange(v.last_seen_at));
     if (overdueOnly) list = list.filter(isOverdue);
     const q = search.trim().toLowerCase();
     if (q) {
@@ -258,7 +290,7 @@ export default function ActiveVisitorsPage() {
       );
     }
     return list;
-  }, [visitors, search, hoursWindowMs, overdueOnly]);
+  }, [visitors, search, range, overdueOnly]);
 
   const hoursLabel: Record<typeof hoursFilter, string> = {
     "30m": "30 دقيقة",
@@ -266,6 +298,50 @@ export default function ActiveVisitorsPage() {
     "3h": "3 ساعات",
     "6h": "6 ساعات",
     "24h": "24 ساعة",
+    "yesterday": "أمس",
+    "7d": "آخر 7 أيام",
+  };
+
+  // حفظ إجراء التواصل من نفس الكارت (يخفي الكارت تدريجياً ويسجل في customer_communications)
+  const saveAction = async () => {
+    if (!actionFor) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast({ title: "يجب تسجيل الدخول", variant: "destructive" });
+      return;
+    }
+    setSavingAction(true);
+    try {
+      const { error } = await supabase.from("customer_communications").insert({
+        customer_user_id: actionFor.user_id,
+        staff_user_id: user.id,
+        comm_type: actionType,
+        note: actionNote.trim() || null,
+      });
+      if (error) throw error;
+      // علّم الكارت كـ "تم التعامل" — يبدأ تأثير fade
+      setRecentlyHandled((prev) => {
+        const next = new Set(prev);
+        next.add(actionFor.user_id);
+        return next;
+      });
+      // حدّث last_contacted_at في الذاكرة فوراً (بدل ما ننتظر refetch)
+      setVisitors((prev) =>
+        prev.map((v) =>
+          v.user_id === actionFor.user_id
+            ? { ...v, last_contacted_at: new Date().toISOString() }
+            : v
+        )
+      );
+      toast({ title: "✅ تم تسجيل الإجراء", description: "الكارت سيختفي تدريجياً." });
+      setActionFor(null);
+      setActionNote("");
+      setActionType("phone");
+    } catch (e: any) {
+      toast({ title: "فشل الحفظ", description: e.message, variant: "destructive" });
+    } finally {
+      setSavingAction(false);
+    }
   };
 
   return (
@@ -322,8 +398,9 @@ export default function ActiveVisitorsPage() {
           <Filter className="w-3.5 h-3.5" />
           خلال:
         </span>
-        {(["30m", "1h", "3h", "6h", "24h"] as const).map((h) => {
+        {(["30m", "1h", "3h", "6h", "24h", "yesterday", "7d"] as const).map((h) => {
           const active = hoursFilter === h;
+          const isExtended = h === "yesterday" || h === "7d";
           return (
             <button
               key={h}
@@ -332,7 +409,9 @@ export default function ActiveVisitorsPage() {
                 "px-2.5 py-1 rounded-md text-[11px] font-bold border transition",
                 active
                   ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                  : "bg-background border-border text-foreground hover:bg-muted"
+                  : isExtended
+                    ? "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/40 text-amber-800 dark:text-amber-300 hover:bg-amber-100"
+                    : "bg-background border-border text-foreground hover:bg-muted"
               )}
             >
               {hoursLabel[h]}
@@ -396,8 +475,15 @@ export default function ActiveVisitorsPage() {
                 const wpUrl = phoneNorm
                   ? `https://wa.me/${phoneNorm}?text=${encodeURIComponent("السلام عليكم 👋 معك المصرية جروب — تحب نساعدك في إيه؟")}`
                   : null;
+                const handled = recentlyHandled.has(v.user_id);
                 return (
-                  <div key={v.user_id} className="p-4 hover:bg-muted/30 transition-colors">
+                  <div
+                    key={v.user_id}
+                    className={cn(
+                      "p-4 hover:bg-muted/30 transition-all duration-700",
+                      handled && "opacity-40 grayscale bg-muted/40"
+                    )}
+                  >
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       {/* User info */}
                       <div className="flex-1 min-w-[220px]">
@@ -419,6 +505,12 @@ export default function ActiveVisitorsPage() {
                             <Badge variant="secondary" className="text-[10px] h-5 gap-1 bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-300/40">
                               <Clock className="w-3 h-3" />
                               تذكير معلّق
+                            </Badge>
+                          )}
+                          {handled && (
+                            <Badge className="text-[10px] h-5 gap-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-300/40">
+                              <CheckCircle2 className="w-3 h-3" />
+                              تم التعامل
                             </Badge>
                           )}
                         </div>
@@ -491,6 +583,17 @@ export default function ActiveVisitorsPage() {
                             واتساب
                           </a>
                         )}
+                        <button
+                          onClick={() => { setActionFor(v); setActionType("phone"); setActionNote(""); }}
+                          className={cn(
+                            "inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-bold",
+                            "bg-amber-500 hover:bg-amber-600 text-white transition-colors"
+                          )}
+                          title="سجّل إجراء التواصل (يُخفي الكارت تدريجياً)"
+                        >
+                          <PenLine className="w-3.5 h-3.5" />
+                          سجّل إجراء
+                        </button>
                         <Link
                           to={`/admin/visitor/${v.user_id}`}
                           className={cn(
@@ -511,6 +614,52 @@ export default function ActiveVisitorsPage() {
           </ScrollArea>
         )}
       </Card>
+
+      {/* Dialog: تسجيل إجراء التواصل */}
+      <Dialog open={!!actionFor} onOpenChange={(o) => !o && setActionFor(null)}>
+        <DialogContent dir="rtl" className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-base">
+              تسجيل إجراء — {actionFor?.name || "زائر بدون اسم"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div>
+              <label className="text-xs font-bold text-muted-foreground mb-1 block">نوع الإجراء</label>
+              <Select value={actionType} onValueChange={(v: any) => setActionType(v)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="phone">📞 اتصال هاتفي</SelectItem>
+                  <SelectItem value="whatsapp">💬 واتساب</SelectItem>
+                  <SelectItem value="no_answer">🚫 لم يردّ</SelectItem>
+                  <SelectItem value="visit">🏬 زيارة فرع</SelectItem>
+                  <SelectItem value="note">📝 ملاحظة</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs font-bold text-muted-foreground mb-1 block">ملاحظات (اختياري)</label>
+              <Textarea
+                value={actionNote}
+                onChange={(e) => setActionNote(e.target.value)}
+                placeholder="مثال: طلب عرض سعر للفلتر — هرجعله بكرة"
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setActionFor(null)} disabled={savingAction}>
+              إلغاء
+            </Button>
+            <Button onClick={saveAction} disabled={savingAction} className="gap-1.5">
+              {savingAction ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+              حفظ الإجراء
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
