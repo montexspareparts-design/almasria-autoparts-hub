@@ -304,361 +304,397 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
   const highSearchAlerts = alerts.filter(a => a.type === "high_search");
   const inactiveAlerts = alerts.filter(a => a.type === "inactive");
 
+  const totalUrgent = urgentTasks.reduce((s, t) => s + t.count, 0);
+  const totalAlerts = highSearchAlerts.length + inactiveAlerts.length;
+
+  // Determine which accordion item should be open by default
+  const defaultOpen =
+    totalUrgent > 0 ? "urgent"
+    : searchContacts.length > 0 ? "contacts"
+    : totalAlerts > 0 ? "alerts"
+    : "performance";
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-bold flex items-center gap-2">
-          <ClipboardList className="w-5 h-5 text-primary" />
-          لوحة المهام اليومية
-        </h2>
-        <p className="text-sm text-muted-foreground">ملخص اليوم وأولويات العمل</p>
-      </div>
-
-      {/* Today's Visitor & Search KPIs */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <Card
-          className="border-l-4 border-l-indigo-500 cursor-pointer hover:shadow-md transition group"
-          onClick={() => (window.location.href = "/admin/active-visitors")}
-          title="افتح تقرير الزوار التفصيلي (بحث + مدة الجلسة)"
-        >
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0 group-hover:scale-105 transition">
-              <Users className="w-5 h-5 text-indigo-600" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-2xl font-bold">{stats.todayVisitors}</p>
-              <p className="text-xs text-muted-foreground">زائر اليوم</p>
-              <p className="text-[10px] text-indigo-600 mt-0.5">اضغط لعرض التقرير ←</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-purple-500">
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-purple-50 flex items-center justify-center shrink-0">
-              <Search className="w-5 h-5 text-purple-600" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-2xl font-bold">{stats.todaySearches}</p>
-              <p className="text-xs text-muted-foreground">عملية بحث اليوم</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-emerald-500">
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
-              <CheckCircle className="w-5 h-5 text-emerald-600" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-2xl font-bold">{stats.todayOrders}</p>
-              <p className="text-xs text-muted-foreground">طلب اليوم</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Top Searches Today */}
-      {topSearches.length > 0 && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Search className="w-4 h-4 text-purple-600" />
-              أهم عمليات البحث اليوم
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {topSearches.map((s, i) => (
-              <div key={i} className="flex items-center justify-between gap-2 p-2 rounded-lg bg-muted/40 hover:bg-muted/60 transition">
-                <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <span className="text-xs font-bold text-muted-foreground w-5">#{i + 1}</span>
-                  <span className="text-sm font-medium truncate">{s.query}</span>
-                </div>
-                <Badge variant="secondary" className="shrink-0">{s.count} مرة</Badge>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Search Contacts Today — phones to call */}
-      {searchContacts.length > 0 && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <MessageCircle className="w-4 h-4 text-emerald-600" />
-              أرقام تواصل (عملاء بحثوا اليوم)
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {searchContacts.map((c) => (
-              <div key={c.userId} className="flex items-center gap-2 p-2 rounded-lg border bg-card hover:shadow-sm transition">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold truncate">{c.name}</p>
-                  <p className="text-[11px] text-muted-foreground truncate">
-                    آخر بحث: <span className="font-mono">{c.lastQuery}</span> · {c.searchCount} عملية
-                  </p>
-                  {c.phone && (
-                    <a href={`tel:${c.phone}`} className="text-xs text-primary hover:underline font-mono" dir="ltr">📞 {c.phone}</a>
-                  )}
-                </div>
-                {c.phone && (
-                  <div className="flex gap-1 shrink-0">
-                    <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => window.location.href = `tel:${c.phone}`}>
-                      اتصال
-                    </Button>
-                    <WhatsAppQuickChat phone={c.phone} customerName={c.name} context={`بحث عن: ${c.lastQuery}`} />
-                  </div>
-                )}
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Urgent Tasks */}
-      {urgentTasks.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {urgentTasks.map((task, i) => (
-            <Card
-              key={i}
-              className="cursor-pointer hover:shadow-md transition-shadow border-l-4"
-              style={{ borderLeftColor: task.color.replace("text-", "").includes("red") ? "#dc2626" : task.color.includes("amber") ? "#d97706" : task.color.includes("blue") ? "#2563eb" : "#059669" }}
-              onClick={() => onNavigate?.(task.section)}
-            >
-              <CardContent className="p-4 flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-xl ${task.bg} flex items-center justify-center shrink-0`}>
-                  <task.icon className={`w-6 h-6 ${task.color}`} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-2xl font-bold text-foreground">{task.count}</p>
-                  <p className="text-sm text-muted-foreground">{task.label}</p>
-                </div>
-                <ArrowLeft className="w-4 h-4 text-muted-foreground" />
-              </CardContent>
-            </Card>
-          ))}
+      {/* ============ HEADER ============ */}
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <ClipboardList className="w-5 h-5 text-primary" />
+            لوحة المهام اليومية
+          </h2>
+          <p className="text-sm text-muted-foreground mt-0.5">ملخص اليوم وأولويات العمل</p>
         </div>
-      ) : (
-        <Card className="border-emerald-200 bg-emerald-50/50">
-          <CardContent className="p-6 text-center">
-            <CheckCircle className="w-10 h-10 text-emerald-500 mx-auto mb-2" />
-            <p className="font-bold text-emerald-700">ممتاز! لا توجد مهام عاجلة 🎉</p>
-            <p className="text-sm text-emerald-600">كل شيء تحت السيطرة</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Behavioral Alerts */}
-      {(highSearchAlerts.length > 0 || inactiveAlerts.length > 0) && (
-        <div className="space-y-4">
-          <h3 className="text-base font-bold flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-amber-500" />
-            تنبيهات سلوكية
-          </h3>
-
-          {/* High search, no orders */}
-          {highSearchAlerts.length > 0 && (
-            <Card className="border-orange-200">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-bold flex items-center gap-2 text-orange-700">
-                  <Search className="w-4 h-4" />
-                  بيبحث كتير ومش بيطلب ({highSearchAlerts.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {highSearchAlerts.slice(0, 5).map((alert, i) => (
-                  <div key={i} className="flex items-center justify-between gap-3 p-3 bg-orange-50/50 rounded-lg border border-orange-100 flex-wrap">
-                    <div className="flex-1 min-w-[180px]">
-                      <p className="font-semibold text-sm text-foreground truncate">{alert.name}</p>
-                      <p className="text-xs text-muted-foreground">{alert.detail}</p>
-                      {alert.phone ? (
-                        <a href={`tel:${alert.phone}`} className="text-xs text-primary hover:underline flex items-center gap-1 mt-0.5 font-mono" dir="ltr">
-                          📞 {alert.phone}
-                        </a>
-                      ) : (
-                        <p className="text-[11px] text-muted-foreground italic">لا يوجد رقم موبايل</p>
-                      )}
-                      {alert.email && <p className="text-xs text-muted-foreground truncate">{alert.email}</p>}
-                    </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {alert.phone && (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-7 gap-1 text-xs border-blue-300 text-blue-700 hover:bg-blue-50"
-                            onClick={() => window.location.href = `tel:${alert.phone}`}
-                          >
-                            <MessageCircle className="w-3 h-3" />
-                            اتصال
-                          </Button>
-                          <WhatsAppQuickChat
-                            phone={alert.phone}
-                            customerName={alert.name}
-                            context="لاحظنا اهتمامك بمنتجاتنا. هل نقدر نساعدك في إيجاد القطعة المناسبة؟"
-                            size="sm"
-                          />
-                        </>
-                      )}
-                      <Badge variant="outline" className="text-orange-600 border-orange-300 text-[10px]">
-                        فرصة تحويل
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-                {highSearchAlerts.length > 5 && (
-                  <p className="text-xs text-muted-foreground text-center">
-                    +{highSearchAlerts.length - 5} عميل آخر
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Inactive dealers */}
-          {inactiveAlerts.length > 0 && (
-            <Card className="border-red-200">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-bold flex items-center gap-2 text-red-700">
-                  <UserX className="w-4 h-4" />
-                  تاجر توقف من شهر ({inactiveAlerts.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {inactiveAlerts.slice(0, 5).map((alert, i) => (
-                  <div key={i} className="flex items-center justify-between gap-3 p-3 bg-red-50/50 rounded-lg border border-red-100 flex-wrap">
-                    <div className="flex-1 min-w-[180px]">
-                      <p className="font-semibold text-sm text-foreground truncate">{alert.name}</p>
-                      <p className="text-xs text-muted-foreground">{alert.detail}</p>
-                      {alert.phone ? (
-                        <a href={`tel:${alert.phone}`} className="text-xs text-primary hover:underline flex items-center gap-1 mt-0.5 font-mono" dir="ltr">
-                          📞 {alert.phone}
-                        </a>
-                      ) : (
-                        <p className="text-[11px] text-muted-foreground italic">لا يوجد رقم موبايل</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {alert.phone && (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-7 gap-1 text-xs border-blue-300 text-blue-700 hover:bg-blue-50"
-                            onClick={() => window.location.href = `tel:${alert.phone}`}
-                          >
-                            <MessageCircle className="w-3 h-3" />
-                            اتصال
-                          </Button>
-                          <WhatsAppQuickChat
-                            phone={alert.phone}
-                            customerName={alert.name}
-                            context="افتقدناك! نقدم لك عروض مميزة على قطع الغيار. تحب نوريك أحدث الكشوفات؟"
-                            size="sm"
-                          />
-                        </>
-                      )}
-                      <Badge variant="outline" className="text-red-600 border-red-300 text-[10px]">
-                        خامل
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-                {inactiveAlerts.length > 5 && (
-                  <p className="text-xs text-muted-foreground text-center">
-                    +{inactiveAlerts.length - 5} تاجر آخر
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      )}
-
-      {/* Performance Summary */}
-      <div>
-        <h3 className="text-base font-bold mb-3 flex items-center gap-2">
-          <TrendingUp className="w-4 h-4 text-primary" />
-          ملخص الأداء
-        </h3>
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-          <Card>
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-foreground">{stats.todayOrders}</p>
-              <p className="text-xs text-muted-foreground">طلبات اليوم</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-foreground">{stats.todayLeadsContacted}</p>
-              <p className="text-xs text-muted-foreground">عملاء تم التواصل معهم اليوم</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-primary">{stats.totalOrdersHandled}</p>
-              <p className="text-xs text-muted-foreground">إجمالي الطلبات المعالجة</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-primary">{stats.totalLeadsConverted}</p>
-              <p className="text-xs text-muted-foreground">عملاء تم تحويلهم لتجار</p>
-            </CardContent>
-          </Card>
-          <Card
-            className={isAdmin ? "cursor-pointer hover:shadow-md transition-shadow border-primary/30 bg-primary/5" : "border-primary/30 bg-primary/5"}
-            onClick={() => isAdmin && onNavigate?.("staff-roles")}
-          >
-            <CardContent className="p-4 text-center">
-              <Shield className="w-5 h-5 text-primary mx-auto mb-1" />
-              <p className="text-2xl font-bold text-primary">{stats.activeStaff}</p>
-              <p className="text-xs text-muted-foreground">الموظفين النشطين</p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Quick Navigation */}
-      <div>
-        <h3 className="text-base font-bold mb-3">وصول سريع</h3>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-2">
           {isAdmin && (
             <Button
               size="sm"
-              className="gap-1.5 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-md hover:shadow-lg"
+              className="gap-1.5 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground"
               onClick={() => onNavigate?.("staff-roles")}
             >
               <UserPlus className="w-4 h-4" />
-              إضافة موظف جديد
+              موظف
             </Button>
           )}
           <Button
             size="sm"
-            className="gap-1.5 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-md hover:shadow-lg"
+            className="gap-1.5 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white"
             onClick={() => onNavigate?.("leads")}
           >
             <UserPlus className="w-4 h-4" />
-            إضافة عميل جديد
+            عميل جديد
           </Button>
-          {[
-            { label: "الطلبات", section: "orders", icon: "🛒" },
-            { label: "إدخال العملاء", section: "leads", icon: "👥" },
-            { label: "ملف العملاء", section: "customers", icon: "📋" },
-            { label: "كشوف الأسعار", section: "price-lists", icon: "💰" },
-            { label: "ذكاء العملاء", section: "customer-intel", icon: "🧠" },
-          ].map(item => (
-            <Button
-              key={item.section}
-              variant="outline"
-              size="sm"
-              className="gap-1.5"
-              onClick={() => onNavigate?.(item.section)}
-            >
-              <span>{item.icon}</span>
-              {item.label}
-            </Button>
-          ))}
         </div>
+      </div>
+
+      {/* ============ HERO KPIs (4 cards, all clickable) ============ */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <KpiCard
+          icon={Users}
+          label="زائر اليوم"
+          value={stats.todayVisitors}
+          colorBar="bg-indigo-500"
+          colorBg="bg-indigo-50"
+          colorText="text-indigo-600"
+          hint="افتح تقرير الزوار"
+          onClick={() => (window.location.href = "/admin/active-visitors")}
+        />
+        <KpiCard
+          icon={Search}
+          label="عملية بحث اليوم"
+          value={stats.todaySearches}
+          colorBar="bg-purple-500"
+          colorBg="bg-purple-50"
+          colorText="text-purple-600"
+        />
+        <KpiCard
+          icon={ShoppingCart}
+          label="طلب اليوم"
+          value={stats.todayOrders}
+          colorBar="bg-emerald-500"
+          colorBg="bg-emerald-50"
+          colorText="text-emerald-600"
+          hint="افتح الطلبات"
+          onClick={() => onNavigate?.("orders")}
+        />
+        <KpiCard
+          icon={AlertTriangle}
+          label="مهام عاجلة"
+          value={totalUrgent}
+          colorBar={totalUrgent > 0 ? "bg-red-500" : "bg-gray-300"}
+          colorBg={totalUrgent > 0 ? "bg-red-50" : "bg-gray-50"}
+          colorText={totalUrgent > 0 ? "text-red-600" : "text-gray-500"}
+        />
+      </div>
+
+      {/* ============ QUICK NAV ============ */}
+      <div className="flex flex-wrap gap-2">
+        {[
+          { label: "الطلبات", section: "orders", icon: "🛒" },
+          { label: "العملاء المحتملين", section: "leads", icon: "👥" },
+          { label: "ملف العملاء", section: "customers", icon: "📋" },
+          { label: "كشوف الأسعار", section: "price-lists", icon: "💰" },
+          { label: "ذكاء العملاء", section: "customer-intel", icon: "🧠" },
+        ].map((item) => (
+          <Button
+            key={item.section}
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => onNavigate?.(item.section)}
+          >
+            <span>{item.icon}</span>
+            {item.label}
+          </Button>
+        ))}
+      </div>
+
+      {/* ============ COLLAPSIBLE SECTIONS ============ */}
+      <Accordion type="multiple" defaultValue={[defaultOpen]} className="space-y-3">
+        {/* 1) Urgent tasks */}
+        <AccordionItem value="urgent" className="border rounded-xl bg-card overflow-hidden">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/40">
+            <div className="flex items-center gap-2 flex-1">
+              <AlertTriangle className="w-4 h-4 text-red-600" />
+              <span className="font-bold text-sm">مهام عاجلة</span>
+              {totalUrgent > 0 ? (
+                <Badge className="bg-red-100 text-red-700 hover:bg-red-100">{totalUrgent}</Badge>
+              ) : (
+                <Badge variant="outline" className="text-emerald-600 border-emerald-300">لا يوجد</Badge>
+              )}
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            {urgentTasks.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {urgentTasks.map((task, i) => (
+                  <Card
+                    key={i}
+                    className="cursor-pointer hover:shadow-md transition-shadow border-l-4"
+                    style={{ borderLeftColor: task.color.includes("red") ? "#dc2626" : task.color.includes("amber") ? "#d97706" : task.color.includes("blue") ? "#2563eb" : "#059669" }}
+                    onClick={() => onNavigate?.(task.section)}
+                  >
+                    <CardContent className="p-4 flex items-center gap-3">
+                      <div className={`w-11 h-11 rounded-xl ${task.bg} flex items-center justify-center shrink-0`}>
+                        <task.icon className={`w-5 h-5 ${task.color}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-2xl font-bold">{task.count}</p>
+                        <p className="text-xs text-muted-foreground">{task.label}</p>
+                      </div>
+                      <ArrowLeft className="w-4 h-4 text-muted-foreground" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6">
+                <CheckCircle className="w-10 h-10 text-emerald-500 mx-auto mb-2" />
+                <p className="font-bold text-emerald-700">ممتاز! لا توجد مهام عاجلة 🎉</p>
+              </div>
+            )}
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* 2) Search contacts + top searches */}
+        <AccordionItem value="contacts" className="border rounded-xl bg-card overflow-hidden">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/40">
+            <div className="flex items-center gap-2 flex-1">
+              <Phone className="w-4 h-4 text-emerald-600" />
+              <span className="font-bold text-sm">عملاء بحثوا اليوم — جاهزين للتواصل</span>
+              {searchContacts.length > 0 && (
+                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">{searchContacts.length}</Badge>
+              )}
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4 space-y-4">
+            {/* Top searches strip */}
+            {topSearches.length > 0 && (
+              <div>
+                <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+                  <Search className="w-3 h-3" /> أكثر الكلمات بحثاً اليوم
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {topSearches.map((s, i) => (
+                    <Badge key={i} variant="secondary" className="gap-1 py-1">
+                      <span className="font-mono">#{i + 1}</span>
+                      <span>{s.query}</span>
+                      <span className="text-muted-foreground">·{s.count}</span>
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Contact list */}
+            {searchContacts.length > 0 ? (
+              <div className="space-y-2">
+                {searchContacts.map((c) => (
+                  <div key={c.userId} className="flex items-center gap-2 p-3 rounded-lg border bg-card hover:shadow-sm transition flex-wrap">
+                    <div className="flex-1 min-w-0 min-w-[180px]">
+                      <p className="text-sm font-bold truncate">{c.name}</p>
+                      <p className="text-[11px] text-muted-foreground truncate">
+                        آخر بحث: <span className="font-mono">{c.lastQuery}</span> · {c.searchCount} عملية
+                      </p>
+                      {c.phone && (
+                        <a href={`tel:${c.phone}`} className="text-xs text-primary hover:underline font-mono" dir="ltr">📞 {c.phone}</a>
+                      )}
+                    </div>
+                    {c.phone && (
+                      <div className="flex gap-1 shrink-0">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 px-2 gap-1"
+                          onClick={() => (window.location.href = `/admin/visitor/${c.userId}`)}
+                        >
+                          <Eye className="w-3 h-3" /> الملف
+                        </Button>
+                        <WhatsAppQuickChat phone={c.phone} customerName={c.name} context={`بحث عن: ${c.lastQuery}`} />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">لا يوجد عملاء بحثوا اليوم بأرقام مسجلة.</p>
+            )}
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* 3) Behavioral alerts */}
+        <AccordionItem value="alerts" className="border rounded-xl bg-card overflow-hidden">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/40">
+            <div className="flex items-center gap-2 flex-1">
+              <AlertTriangle className="w-4 h-4 text-amber-500" />
+              <span className="font-bold text-sm">تنبيهات سلوكية</span>
+              {totalAlerts > 0 && (
+                <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">{totalAlerts}</Badge>
+              )}
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4 space-y-4">
+            {highSearchAlerts.length > 0 && (
+              <AlertGroup
+                title={`بيبحث كتير ومش بيطلب (${highSearchAlerts.length})`}
+                icon={Search}
+                color="orange"
+                items={highSearchAlerts}
+                ctaContext="لاحظنا اهتمامك بمنتجاتنا. هل نقدر نساعدك في إيجاد القطعة المناسبة؟"
+                ctaBadge="فرصة تحويل"
+              />
+            )}
+            {inactiveAlerts.length > 0 && (
+              <AlertGroup
+                title={`تجار توقفوا من شهر (${inactiveAlerts.length})`}
+                icon={UserX}
+                color="red"
+                items={inactiveAlerts}
+                ctaContext="افتقدناك! نقدم لك عروض مميزة على قطع الغيار. تحب نوريك أحدث الكشوفات؟"
+                ctaBadge="خامل"
+              />
+            )}
+            {totalAlerts === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-4">لا توجد تنبيهات حالياً ✓</p>
+            )}
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* 4) Performance summary */}
+        <AccordionItem value="performance" className="border rounded-xl bg-card overflow-hidden">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/40">
+            <div className="flex items-center gap-2 flex-1">
+              <TrendingUp className="w-4 h-4 text-primary" />
+              <span className="font-bold text-sm">ملخص الأداء</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <MiniStat label="عملاء تم التواصل معهم اليوم" value={stats.todayLeadsContacted} />
+              <MiniStat label="إجمالي الطلبات المعالجة" value={stats.totalOrdersHandled} highlight />
+              <MiniStat label="عملاء تم تحويلهم لتجار" value={stats.totalLeadsConverted} highlight />
+              <MiniStat
+                label="الموظفين النشطين"
+                value={stats.activeStaff}
+                highlight
+                icon={Shield}
+                onClick={isAdmin ? () => onNavigate?.("staff-roles") : undefined}
+              />
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+    </div>
+  );
+}
+
+/* ============ Sub-components ============ */
+
+interface KpiCardProps {
+  icon: any;
+  label: string;
+  value: number;
+  colorBar: string;
+  colorBg: string;
+  colorText: string;
+  hint?: string;
+  onClick?: () => void;
+}
+function KpiCard({ icon: Icon, label, value, colorBar, colorBg, colorText, hint, onClick }: KpiCardProps) {
+  return (
+    <Card
+      className={`relative overflow-hidden ${onClick ? "cursor-pointer hover:shadow-md transition group" : ""}`}
+      onClick={onClick}
+    >
+      <div className={`absolute inset-y-0 right-0 w-1 ${colorBar}`} />
+      <CardContent className="p-4 flex items-center gap-3">
+        <div className={`w-11 h-11 rounded-xl ${colorBg} flex items-center justify-center shrink-0 ${onClick ? "group-hover:scale-105 transition" : ""}`}>
+          <Icon className={`w-5 h-5 ${colorText}`} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-2xl font-bold leading-tight">{value}</p>
+          <p className="text-xs text-muted-foreground">{label}</p>
+          {hint && onClick && <p className={`text-[10px] ${colorText} mt-0.5`}>{hint} ←</p>}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+interface MiniStatProps {
+  label: string;
+  value: number;
+  highlight?: boolean;
+  icon?: any;
+  onClick?: () => void;
+}
+function MiniStat({ label, value, highlight, icon: Icon, onClick }: MiniStatProps) {
+  return (
+    <Card
+      className={`${onClick ? "cursor-pointer hover:shadow-md transition" : ""} ${highlight ? "border-primary/30 bg-primary/5" : ""}`}
+      onClick={onClick}
+    >
+      <CardContent className="p-4 text-center">
+        {Icon && <Icon className="w-5 h-5 text-primary mx-auto mb-1" />}
+        <p className={`text-2xl font-bold ${highlight ? "text-primary" : "text-foreground"}`}>{value}</p>
+        <p className="text-xs text-muted-foreground">{label}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+interface AlertGroupProps {
+  title: string;
+  icon: any;
+  color: "orange" | "red";
+  items: BehavioralAlert[];
+  ctaContext: string;
+  ctaBadge: string;
+}
+function AlertGroup({ title, icon: Icon, color, items, ctaContext, ctaBadge }: AlertGroupProps) {
+  const styles = color === "orange"
+    ? { border: "border-orange-200", text: "text-orange-700", bg: "bg-orange-50/50", chip: "text-orange-600 border-orange-300" }
+    : { border: "border-red-200", text: "text-red-700", bg: "bg-red-50/50", chip: "text-red-600 border-red-300" };
+
+  return (
+    <div className={`rounded-lg border ${styles.border} overflow-hidden`}>
+      <div className={`px-3 py-2 ${styles.bg} flex items-center gap-2 border-b ${styles.border}`}>
+        <Icon className={`w-4 h-4 ${styles.text}`} />
+        <span className={`text-sm font-bold ${styles.text}`}>{title}</span>
+      </div>
+      <div className="p-2 space-y-2">
+        {items.slice(0, 5).map((alert, i) => (
+          <div key={i} className="flex items-center justify-between gap-3 p-2 rounded-lg border bg-card flex-wrap">
+            <div className="flex-1 min-w-[180px]">
+              <p className="font-semibold text-sm truncate">{alert.name}</p>
+              <p className="text-xs text-muted-foreground">{alert.detail}</p>
+              {alert.phone ? (
+                <a href={`tel:${alert.phone}`} className="text-xs text-primary hover:underline font-mono" dir="ltr">📞 {alert.phone}</a>
+              ) : (
+                <p className="text-[11px] text-muted-foreground italic">لا يوجد رقم موبايل</p>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {alert.phone && (
+                <>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 px-2 gap-1 text-xs"
+                    onClick={() => (window.location.href = `/admin/visitor/${alert.userId}`)}
+                  >
+                    <Eye className="w-3 h-3" /> الملف
+                  </Button>
+                  <WhatsAppQuickChat phone={alert.phone} customerName={alert.name} context={ctaContext} size="sm" />
+                </>
+              )}
+              <Badge variant="outline" className={`${styles.chip} text-[10px]`}>{ctaBadge}</Badge>
+            </div>
+          </div>
+        ))}
+        {items.length > 5 && (
+          <p className="text-xs text-muted-foreground text-center pt-1">+{items.length - 5} آخرين</p>
+        )}
       </div>
     </div>
   );
