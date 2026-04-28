@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, useRef, useCallback, ReactNode } from "react";
+import { useLocation } from "react-router-dom";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -85,6 +86,7 @@ function readImpersonation(): ImpersonationState | null {
 }
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const location = useLocation();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -223,10 +225,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               // Moderator-only: always go to admin, no role selection
               if (hasModerator && !hasAdmin && dealer) {
                 // Moderators don't get dealer access even if they have an account
-              } else if (dealer && hasAdmin) {
+               } else if (dealer && hasAdmin) {
                 const savedRole = localStorage.getItem("almasria_last_role");
                 const dismissed = localStorage.getItem("almasria_role_dismissed");
-                if (savedRole === "dealer" || savedRole === "admin" || dismissed === "1") {
+                 const isAlreadyOnAdminRoute = location.pathname.startsWith("/admin");
+                 if (savedRole === "dealer" || savedRole === "admin" || dismissed === "1" || isAlreadyOnAdminRoute) {
                   // Auto-redirect to saved role or dismissed — no dialog
                 } else {
                   setShowRoleSelection(true);
@@ -272,7 +275,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       subscription.unsubscribe();
       clearSessionCheck();
     };
-  }, []);
+  }, [clearAllAuthStorage, clearSessionCheck, location.pathname, registerDealerSession, startSessionMonitor, toast]);
 
   const signOut = async () => {
     clearSessionCheck();
