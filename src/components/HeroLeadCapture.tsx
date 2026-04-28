@@ -75,13 +75,13 @@ const HeroLeadCapture = () => {
     } catch {
       /* noop */
     }
-    const { error } = await supabase.from("visitor_leads").insert({
+    const { error } = await supabase.from("visitor_leads").upsert({
       phone: phoneVal,
       source: "whatsapp",
       first_path: pathname,
       referrer: typeof document !== "undefined" ? document.referrer : "",
       session_key: session_key || null,
-    });
+    }, { onConflict: "phone", ignoreDuplicates: true });
     if (!error) {
       try {
         localStorage.setItem(SUBMITTED_KEY, JSON.stringify({ at: Date.now(), via: "utm" }));
@@ -111,13 +111,13 @@ const HeroLeadCapture = () => {
     } catch {
       /* noop */
     }
-    const { error } = await supabase.from("visitor_leads").insert({
+    const { error } = await supabase.from("visitor_leads").upsert({
       phone: trimmed,
       source: detectSource(),
       first_path: pathname,
       referrer: typeof document !== "undefined" ? document.referrer : "",
       session_key: session_key || null,
-    });
+    }, { onConflict: "phone", ignoreDuplicates: true });
     setSubmitting(false);
     if (error) {
       toast({ title: "حدث خطأ", description: "حاول مرة أخرى بعد قليل", variant: "destructive" });

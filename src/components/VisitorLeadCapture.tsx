@@ -91,13 +91,13 @@ const VisitorLeadCapture = () => {
       session_key = sessionStorage.getItem("visitor_session_key") || localStorage.getItem("visitor_session_key") || "";
     } catch {}
 
-    const { error } = await supabase.from("visitor_leads").insert({
+    const { error } = await supabase.from("visitor_leads").upsert({
       phone: trimmed,
       source: meta.source,
       first_path: pathname,
       referrer: typeof document !== "undefined" ? document.referrer : "",
       session_key: session_key || null,
-    });
+    }, { onConflict: "phone", ignoreDuplicates: true });
 
     setSubmitting(false);
 
