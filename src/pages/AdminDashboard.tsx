@@ -202,15 +202,48 @@ const AdminDashboard = () => {
   const [fetchingApproveErpName, setFetchingApproveErpName] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  // تذكير التقرير اليومي: ابتداءً من 5م يبدأ بند "التقرير اليومي" يلمع.
-  // نحدّث كل دقيقة عشان الحالة تتغيّر تلقائياً عند الساعة 17:00 بدون reload.
-  const [reportReminderActive, setReportReminderActive] = useState(() => new Date().getHours() >= 17);
+  // تذكير التقرير اليومي:
+  //  - من 4:30م إلى 4:59م → "early": تنبيه مبكر (كهرماني فاتح + بادج "قريب")
+  //  - من 5:00م فصاعداً → "active": تذكير عاجل (كهرماني نابض + بادج "الآن")
+  // نحدّث كل دقيقة عشان الحالة تتغيّر تلقائياً بدون reload.
+  const computeReportPhase = (): "off" | "early" | "active" => {
+    const d = new Date();
+    const minutes = d.getHours() * 60 + d.getMinutes();
+    if (minutes >= 17 * 60) return "active";          // 17:00+
+    if (minutes >= 16 * 60 + 30) return "early";      // 16:30 → 16:59
+    return "off";
+  };
+  const [reportPhase, setReportPhase] = useState<"off" | "early" | "active">(() => computeReportPhase());
   useEffect(() => {
-    const tick = () => setReportReminderActive(new Date().getHours() >= 17);
+    const tick = () => setReportPhase(computeReportPhase());
     tick();
     const id = setInterval(tick, 60_000);
     return () => clearInterval(id);
   }, []);
+
+  // Toast توضيحي لمرة واحدة في اليوم لكل مرحلة (early/active) — يخزّن آخر مرحلة
+  // أُظهرت في localStorage بمفتاح يحوي تاريخ اليوم لمنع التكرار.
+  useEffect(() => {
+    if (reportPhase === "off") return;
+    if (!canAccess) return;
+    const todayKey = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const storageKey = `report-reminder-shown:${todayKey}:${reportPhase}`;
+    if (localStorage.getItem(storageKey)) return;
+    localStorage.setItem(storageKey, "1");
+    if (reportPhase === "early") {
+      toast({
+        title: "⏰ تذكير مبكر — التقرير اليومي",
+        description: "باقي 30 دقيقة على موعد التقرير اليومي (5م). جهّز أرقامك من دلوقتي عشان متتأخرش.",
+        duration: 8000,
+      });
+    } else {
+      toast({
+        title: "📋 وقت التقرير اليومي",
+        description: "افتح بند «التقرير اليومي» من الشريط الجانبي وقدّم تقرير اليوم قبل ما تطلع.",
+        duration: 8000,
+      });
+    }
+  }, [reportPhase, canAccess, toast]);
 
   const canAccess = isAdmin || isModerator;
 
