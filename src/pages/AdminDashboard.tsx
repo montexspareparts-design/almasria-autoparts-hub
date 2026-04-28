@@ -202,6 +202,8 @@ const AdminDashboard = () => {
   const [fetchingApproveErpName, setFetchingApproveErpName] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  const canAccess = isAdmin || isModerator;
+
   // تذكير التقرير اليومي:
   //  - من 4:30م إلى 4:59م → "early": تنبيه مبكر (كهرماني فاتح + بادج "قريب")
   //  - من 5:00م فصاعداً → "active": تذكير عاجل (كهرماني نابض + بادج "الآن")
