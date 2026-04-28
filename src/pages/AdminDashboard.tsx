@@ -68,6 +68,7 @@ const AdminDailyReports = lazy(() => import("@/components/admin/AdminDailyReport
 const AdminDailyReportEditor = lazy(() => import("@/components/admin/AdminDailyReportEditor"));
 const MyDailyTasks = lazy(() => import("@/components/admin/MyDailyTasks"));
 const AdminDailyReportsDashboard = lazy(() => import("@/components/admin/AdminDailyReportsDashboard"));
+const StaffDailyReport = lazy(() => import("@/components/staff/StaffDailyReport"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];
@@ -685,7 +686,7 @@ const AdminDashboard = () => {
       case "daily-reports-dashboard":
         return (
           <Suspense fallback={<SectionLoader />}>
-            <AdminDailyReportsDashboard />
+            {isAdmin ? <AdminDailyReportsDashboard /> : <StaffDailyReport />}
           </Suspense>
         );
       case "analytics":
