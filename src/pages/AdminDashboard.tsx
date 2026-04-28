@@ -222,12 +222,13 @@ const AdminDashboard = () => {
     setSearchParams({ section });
   };
 
-  // إعادة توجيه تلقائي لما يدخل /admin بدون ?section
+  // إعادة توجيه تلقائي فوري لما يدخل /admin بدون ?section → ?section=customer-intel
+  // يعمل قبل التحقق من الصلاحيات حتى يكون الرابط صريح دائمًا (الحماية تتم في useEffect أدناه)
   useEffect(() => {
-    if (canAccess && !searchParams.get("section")) {
+    if (!searchParams.get("section")) {
       setSearchParams({ section: defaultSection }, { replace: true });
     }
-  }, [canAccess, searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams]);
 
   useEffect(() => {
     if (!authLoading && !user) { navigate("/auth"); return; }
