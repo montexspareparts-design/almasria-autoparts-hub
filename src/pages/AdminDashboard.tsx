@@ -214,22 +214,20 @@ const AdminDashboard = () => {
 
   const filteredSidebarSections = filteredSidebarGroups.flatMap(g => g.items);
 
-  // نقطة البداية مفصولة حسب الدور:
-  // - الموظف (moderator فقط) → daily-dashboard (مهامه اليومية وشغله فقط)
-  // - الأدمن → customer-intel (نظرة شاملة على كل النظام)
-  const defaultSection = (isModerator && !isAdmin) ? "daily-dashboard" : "customer-intel";
+  // نقطة البداية الموحّدة = "ذكاء العملاء" (customer-intel) للموظف والأدمن
+  const defaultSection = "customer-intel";
   const activeSection = searchParams.get("section") || defaultSection;
 
   const setActiveSection = (section: string) => {
     setSearchParams({ section });
   };
 
-  // إعادة توجيه تلقائي حسب الدور لما يدخل /admin بدون ?section
+  // إعادة توجيه تلقائي لما يدخل /admin بدون ?section
   useEffect(() => {
     if (canAccess && !searchParams.get("section")) {
       setSearchParams({ section: defaultSection }, { replace: true });
     }
-  }, [canAccess, searchParams, setSearchParams, defaultSection]);
+  }, [canAccess, searchParams, setSearchParams]);
 
   useEffect(() => {
     if (!authLoading && !user) { navigate("/auth"); return; }
