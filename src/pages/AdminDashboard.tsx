@@ -257,24 +257,25 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (reportPhase === "off") return;
     if (!canAccess) return;
+    if (hasSubmittedTodayReport) return; // قدّم التقرير بالفعل → مفيش داعي للتذكير
     const todayKey = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
     const storageKey = `report-reminder-shown:${todayKey}:${reportPhase}`;
     if (localStorage.getItem(storageKey)) return;
     localStorage.setItem(storageKey, "1");
     if (reportPhase === "early") {
       toast({
-        title: "⏰ تذكير مبكر — التقرير اليومي",
-        description: "باقي 30 دقيقة على موعد التقرير اليومي (5م). جهّز أرقامك من دلوقتي عشان متتأخرش.",
+        title: "⏰ تذكير مبكر — تقرير اليوم",
+        description: "باقي 30 دقيقة على موعد التقرير اليومي (5م). افتح «مهامي اليومية وتقرير اليوم» وجهّز أرقامك.",
         duration: 8000,
       });
     } else {
       toast({
-        title: "📋 وقت التقرير اليومي",
-        description: "افتح بند «التقرير اليومي» من الشريط الجانبي وقدّم تقرير اليوم قبل ما تطلع.",
+        title: "📋 وقت تقرير اليوم",
+        description: "افتح «مهامي اليومية وتقرير اليوم» من الشريط الجانبي وقدّم تقرير اليوم قبل ما تطلع.",
         duration: 8000,
       });
     }
-  }, [reportPhase, canAccess, toast]);
+  }, [reportPhase, canAccess, toast, hasSubmittedTodayReport]);
 
   // (canAccess معرّف في الأعلى — قبل effects التذكير)
 
