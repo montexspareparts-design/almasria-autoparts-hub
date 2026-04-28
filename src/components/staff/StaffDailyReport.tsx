@@ -1089,6 +1089,11 @@ const SubmittedSuccessCard = ({
       }),
     [submittedAt]
   );
+  const submittedDayName = useMemo(
+    () =>
+      new Date(submittedAt).toLocaleDateString("ar-EG", { weekday: "long" }),
+    [submittedAt]
+  );
 
   const navigate = useNavigate();
   const handleBack = () => {
@@ -1257,6 +1262,8 @@ const SubmittedSuccessCard = ({
                 )}
               </DrawerTitle>
               <DrawerDescription className="text-xs">
+                <span className="font-semibold text-primary">يوم {submittedDayName}</span>
+                {" — "}
                 {submittedDate} — تم التقديم الساعة {submittedTime}
               </DrawerDescription>
             </DrawerHeader>
