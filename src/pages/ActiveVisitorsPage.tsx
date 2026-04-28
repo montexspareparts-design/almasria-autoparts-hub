@@ -220,8 +220,15 @@ export default function ActiveVisitorsPage() {
       };
     });
 
-    // ترتيب: الأحدث نشاطاً أولاً
-    merged.sort((a, b) => new Date(b.last_seen_at).getTime() - new Date(a.last_seen_at).getTime());
+    // ترتيب أولوي:
+    //   1) عنده رقم تليفون أولاً (سواء سجّل في الموقع أو ترك رقمه في popup)
+    //   2) ثم الأحدث نشاطاً
+    merged.sort((a, b) => {
+      const ap = a.phone ? 1 : 0;
+      const bp = b.phone ? 1 : 0;
+      if (ap !== bp) return bp - ap;
+      return new Date(b.last_seen_at).getTime() - new Date(a.last_seen_at).getTime();
+    });
 
     setVisitors(merged);
     setLoading(false);
