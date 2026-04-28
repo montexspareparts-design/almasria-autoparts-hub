@@ -256,6 +256,22 @@ const AdminDashboard = () => {
     };
   }, [user?.id]);
 
+  // تنبيه قبل قفل/تحديث التبويب: لو الموظف داخل وقت التقرير (active) ولم يُقدِّم بعد
+  // → المتصفح يظهر تأكيد "متأكد إنك عايز تقفل قبل ما تقدّم تقرير اليوم؟".
+  useEffect(() => {
+    if (!canAccess) return;
+    if (reportPhase !== "active") return;
+    if (hasSubmittedTodayReport) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      // الرسالة الفعلية تتحكم فيها المتصفحات، لكن المهم returnValue غير فاضي
+      e.returnValue = "لسه ما قدّمتش تقرير اليوم — متأكد إنك عايز تقفل الصفحة؟";
+      return e.returnValue;
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [canAccess, reportPhase, hasSubmittedTodayReport]);
+
   // Toast توضيحي لمرة واحدة في اليوم لكل مرحلة (early/active) — يخزّن آخر مرحلة
   // أُظهرت في localStorage بمفتاح يحوي تاريخ اليوم لمنع التكرار.
   useEffect(() => {
