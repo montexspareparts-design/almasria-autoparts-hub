@@ -224,6 +224,34 @@ const AdminDashboard = () => {
     return () => clearInterval(id);
   }, []);
 
+  // فحص: هل الموظف قدّم تقرير اليوم؟ لو أيوة → نوقف اللمعان والتذكير.
+  // نعيد الفحص كل دقيقتين + بعد ما يفتح "مهامي اليومية" (لو قدّم في الجلسة الحالية).
+  const [hasSubmittedTodayReport, setHasSubmittedTodayReport] = useState(false);
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    const check = async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const { data } = await supabase
+        .from("staff_daily_reports")
+        .select("id")
+        .eq("staff_user_id", user.id)
+        .eq("report_date", today)
+        .maybeSingle();
+      if (!cancelled) setHasSubmittedTodayReport(!!data);
+    };
+    check();
+    const id = setInterval(check, 120_000);
+    // أعد الفحص فوراً عند العودة لتبويب الصفحة (لو قدّم من جهاز آخر)
+    const onFocus = () => check();
+    window.addEventListener("focus", onFocus);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [user?.id, activeSection]);
+
   // Toast توضيحي لمرة واحدة في اليوم لكل مرحلة (early/active) — يخزّن آخر مرحلة
   // أُظهرت في localStorage بمفتاح يحوي تاريخ اليوم لمنع التكرار.
   useEffect(() => {
