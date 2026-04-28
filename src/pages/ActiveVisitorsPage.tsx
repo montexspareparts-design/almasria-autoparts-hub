@@ -82,14 +82,23 @@ const normalizeEgyptianPhone = (raw: string | null | undefined) => {
 };
 
 export default function ActiveVisitorsPage() {
+  const { toast } = useToast();
   const [visitors, setVisitors] = useState<ActiveVisitor[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
-  // فلتر "خلال X ساعة" — يحدد نافذة آخر نشاط للزائر (30د، 1س، 3س، 6س، 24س)
-  const [hoursFilter, setHoursFilter] = useState<"30m" | "1h" | "3h" | "6h" | "24h">("30m");
+  // فلتر "خلال X" — يحدد نافذة آخر نشاط للزائر (30د، 1س، 3س، 6س، 24س، أمس، 7 أيام)
+  const [hoursFilter, setHoursFilter] = useState<"30m" | "1h" | "3h" | "6h" | "24h" | "yesterday" | "7d">("30m");
   // فلتر "متأخر" — يعرض فقط الزوار النشطين اللي مفيش معاهم تواصل في آخر OVERDUE_HOURS ساعة
   const [overdueOnly, setOverdueOnly] = useState(false);
+
+  // Dialog لتسجيل إجراء التواصل من نفس الكارت (يبدأ تأثير fade فور الحفظ)
+  const [actionFor, setActionFor] = useState<ActiveVisitor | null>(null);
+  const [actionType, setActionType] = useState<"phone" | "whatsapp" | "no_answer" | "visit" | "note">("phone");
+  const [actionNote, setActionNote] = useState("");
+  const [savingAction, setSavingAction] = useState(false);
+  // user_ids تم تسجيل إجراء لها للتو في هذه الجلسة — لإظهار تأثير "بهتان اللون"
+  const [recentlyHandled, setRecentlyHandled] = useState<Set<string>>(new Set());
 
   const fetchActive = async () => {
     // نجلب أوسع نافذة (24 ساعة) دفعة واحدة، والفلاتر تعمل عميل-جانب بدون refetch
