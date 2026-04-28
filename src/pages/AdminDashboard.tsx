@@ -67,6 +67,7 @@ const AdminRolePermissions = lazy(() => import("@/components/admin/AdminRolePerm
 const AdminDailyReports = lazy(() => import("@/components/admin/AdminDailyReports"));
 const AdminDailyReportEditor = lazy(() => import("@/components/admin/AdminDailyReportEditor"));
 const MyDailyTasks = lazy(() => import("@/components/admin/MyDailyTasks"));
+const AdminDailyReportsDashboard = lazy(() => import("@/components/admin/AdminDailyReportsDashboard"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];
@@ -105,6 +106,7 @@ const sidebarGroups: SidebarGroup[] = [
       { id: "leads", label: "Leads", icon: Users },                                   // 6) متابعة العملاء المحتملين
       { id: "orders", label: "الطلبات", icon: ShoppingBag },                          // تنفيذ يومي (يبقى متاح بعد الترتيب الأساسي)
       { id: "staff-performance", label: "أداء الموظفين", icon: TrendingUp },         // أدمن فقط
+      { id: "daily-reports-dashboard", label: "تقارير الموظفين اليومية", icon: ClipboardList }, // أدمن: لوحة التقارير + KPI
     ],
   },
   {
@@ -633,6 +635,12 @@ const AdminDashboard = () => {
         return (
           <Suspense fallback={<SectionLoader />}>
             <MyDailyTasks />
+          </Suspense>
+        );
+      case "daily-reports-dashboard":
+        return (
+          <Suspense fallback={<SectionLoader />}>
+            <AdminDailyReportsDashboard />
           </Suspense>
         );
       case "analytics":
