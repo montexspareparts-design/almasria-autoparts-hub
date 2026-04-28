@@ -398,8 +398,9 @@ export default function ActiveVisitorsPage() {
           <Filter className="w-3.5 h-3.5" />
           خلال:
         </span>
-        {(["30m", "1h", "3h", "6h", "24h"] as const).map((h) => {
+        {(["30m", "1h", "3h", "6h", "24h", "yesterday", "7d"] as const).map((h) => {
           const active = hoursFilter === h;
+          const isExtended = h === "yesterday" || h === "7d";
           return (
             <button
               key={h}
@@ -408,7 +409,9 @@ export default function ActiveVisitorsPage() {
                 "px-2.5 py-1 rounded-md text-[11px] font-bold border transition",
                 active
                   ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                  : "bg-background border-border text-foreground hover:bg-muted"
+                  : isExtended
+                    ? "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/40 text-amber-800 dark:text-amber-300 hover:bg-amber-100"
+                    : "bg-background border-border text-foreground hover:bg-muted"
               )}
             >
               {hoursLabel[h]}
