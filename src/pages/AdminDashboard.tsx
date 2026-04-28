@@ -66,6 +66,7 @@ const AdminPermissionRequests = lazy(() => import("@/components/admin/AdminPermi
 const AdminRolePermissions = lazy(() => import("@/components/admin/AdminRolePermissions"));
 const AdminDailyReports = lazy(() => import("@/components/admin/AdminDailyReports"));
 const AdminDailyReportEditor = lazy(() => import("@/components/admin/AdminDailyReportEditor"));
+const MyDailyTasks = lazy(() => import("@/components/admin/MyDailyTasks"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];
@@ -96,6 +97,7 @@ const sidebarGroups: SidebarGroup[] = [
     label: "الرئيسية",
     items: [
       { id: "daily-dashboard", label: "🏠 الرئيسية", icon: BarChart3 },              // 1) نقطة البداية
+      { id: "my-daily-tasks", label: "مهامي اليومية", icon: ClipboardList },         // 1.5) Checklist + تقرير يومي
       { id: "customer-intel", label: "ذكاء العملاء", icon: Eye },                    // 2) تحليلات سلوك العملاء
       { id: "visitor-leads", label: "ليدز الزوار (واتساب)", icon: MessageCircle },   // 3) أرقام الزوار غير المسجلين
       { id: "customers", label: "ملف العملاء", icon: Users },                        // 4) البحث عن عميل / تسجيل تواصل
@@ -625,6 +627,12 @@ const AdminDashboard = () => {
         return (
           <Suspense fallback={<SectionLoader />}>
             <StaffDailyDashboard onNavigate={setActiveSection} />
+          </Suspense>
+        );
+      case "my-daily-tasks":
+        return (
+          <Suspense fallback={<SectionLoader />}>
+            <MyDailyTasks />
           </Suspense>
         );
       case "analytics":
