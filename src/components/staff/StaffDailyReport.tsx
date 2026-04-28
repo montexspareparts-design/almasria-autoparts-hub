@@ -1089,6 +1089,11 @@ const SubmittedSuccessCard = ({
       }),
     [submittedAt]
   );
+  const submittedDayName = useMemo(
+    () =>
+      new Date(submittedAt).toLocaleDateString("ar-EG", { weekday: "long" }),
+    [submittedAt]
+  );
 
   const navigate = useNavigate();
   const handleBack = () => {
