@@ -720,10 +720,24 @@ const AdminCustomerIntelligence = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id, name_ar, sku, brand");
+        .select("id, name_ar, sku, brand, category_id");
       if (error) throw error;
       const map: Record<string, any> = {};
       data?.forEach(p => { map[p.id] = p; });
+      return map;
+    },
+  });
+
+  // Categories map (id -> name_ar) for displaying customer interests by category
+  const { data: categoriesMap } = useQuery({
+    queryKey: ["admin_categories_map"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("product_categories")
+        .select("id, name_ar");
+      if (error) throw error;
+      const map: Record<string, string> = {};
+      data?.forEach((c: any) => { map[c.id] = c.name_ar; });
       return map;
     },
   });
@@ -3830,6 +3844,94 @@ const AdminCustomerIntelligence = () => {
                               <div className="bg-cyan-50/70 dark:bg-cyan-950/20 rounded-xl p-3"><div className="flex items-center gap-2 mb-1"><Search className="w-3.5 h-3.5 text-cyan-600" /><span className="text-[10px] font-bold text-cyan-700 dark:text-cyan-400">عمليات البحث</span></div><p className="text-lg font-black text-foreground">{searches.reduce((s, x) => s + x.count, 0)}</p><p className="text-[10px] text-muted-foreground">{searches.length} كلمة فريدة</p></div>
                               <div className="bg-amber-50/70 dark:bg-amber-950/20 rounded-xl p-3"><div className="flex items-center gap-2 mb-1"><RefreshCw className="w-3.5 h-3.5 text-amber-600" /><span className="text-[10px] font-bold text-amber-700 dark:text-amber-400">معدل العودة</span></div><p className="text-lg font-black text-foreground">{returnDays} يوم</p><p className="text-[10px] text-muted-foreground">{returnDays > 5 ? "عميل متكرر 🔥" : returnDays > 1 ? "عاد أكثر من مرة" : "زيارة واحدة"}</p></div>
                             </div>
+                            {/* آخر عمليات البحث + أهم SKU/التصنيفات — معاينة سريعة */}
+                            {(() => {
+                              const recentSearches = [...searches]
+                                .sort((a, b) => new Date(b.lastAt).getTime() - new Date(a.lastAt).getTime())
+                                .slice(0, 5);
+                              const topSkus = viewedProducts
+                                .map((pid) => productsMap?.[pid])
+                                .filter(Boolean)
+                                .slice(0, 5);
+                              const categoryCounts: Record<string, number> = {};
+                              viewedProducts.forEach((pid) => {
+                                const cid = productsMap?.[pid]?.category_id;
+                                const cname = cid ? categoriesMap?.[cid] : null;
+                                if (cname) categoryCounts[cname] = (categoryCounts[cname] || 0) + 1;
+                              });
+                              const topCategories = Object.entries(categoryCounts)
+                                .sort((a, b) => b[1] - a[1])
+                                .slice(0, 6);
+                              if (recentSearches.length === 0 && topSkus.length === 0 && topCategories.length === 0) return null;
+                              return (
+                                <div className="rounded-xl border border-cyan-200/40 dark:border-cyan-900/30 bg-gradient-to-l from-cyan-50/60 via-card to-card dark:from-cyan-950/15 p-3 space-y-3">
+                                  <div className="flex items-center justify-between">
+                                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                                      <Search className="w-3.5 h-3.5 text-cyan-600" />
+                                      اهتمامات العميل (آخر بحث + أهم الأصناف)
+                                    </p>
+                                    <span className="text-[10px] font-bold text-cyan-700 dark:text-cyan-400">
+                                      افتح تبويب «سجل التصفح» للتفاصيل
+                                    </span>
+                                  </div>
+
+                                  {recentSearches.length > 0 && (
+                                    <div>
+                                      <p className="text-[10px] font-bold text-muted-foreground mb-1.5">🔍 آخر عمليات بحث</p>
+                                      <div className="flex flex-wrap gap-1.5">
+                                        {recentSearches.map((s, i) => (
+                                          <span key={i} className="inline-flex items-center gap-1.5 text-[11px] font-semibold bg-cyan-100/70 dark:bg-cyan-900/30 text-cyan-800 dark:text-cyan-300 px-2 py-1 rounded-lg border border-cyan-200/50 dark:border-cyan-800/40">
+                                            <span className="truncate max-w-[140px]">{s.query}</span>
+                                            {s.count > 1 && (
+                                              <span className="text-[9px] font-bold bg-cyan-200/70 dark:bg-cyan-800/50 px-1 rounded">×{s.count}</span>
+                                            )}
+                                            <span className="text-[9px] text-cyan-600/80 dark:text-cyan-400/80">{format(new Date(s.lastAt), "dd/MM", { locale: ar })}</span>
+                                          </span>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {topSkus.length > 0 && (
+                                    <div>
+                                      <p className="text-[10px] font-bold text-muted-foreground mb-1.5">📦 أهم SKU طلبها العميل</p>
+                                      <div className="flex flex-wrap gap-1.5">
+                                        {topSkus.map((p: any) => {
+                                          const wasPurchased = purchasedProducts?.has(p.id);
+                                          return (
+                                            <span key={p.id} className={cn(
+                                              "inline-flex items-center gap-1.5 text-[11px] font-semibold px-2 py-1 rounded-lg border",
+                                              wasPurchased
+                                                ? "bg-emerald-100/70 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 border-emerald-200/50"
+                                                : "bg-muted/50 text-foreground border-border/50"
+                                            )}>
+                                              <span className="font-mono text-[10px] bg-background/60 px-1 rounded">{p.sku}</span>
+                                              <span className="truncate max-w-[150px]">{p.name_ar}</span>
+                                              {wasPurchased && <CheckCircle2 className="w-3 h-3 text-emerald-600" />}
+                                            </span>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {topCategories.length > 0 && (
+                                    <div>
+                                      <p className="text-[10px] font-bold text-muted-foreground mb-1.5">🏷️ التصنيفات المهتم بها</p>
+                                      <div className="flex flex-wrap gap-1.5">
+                                        {topCategories.map(([cname, cnt]) => (
+                                          <span key={cname} className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-violet-100/70 dark:bg-violet-900/30 text-violet-800 dark:text-violet-300 px-2 py-1 rounded-lg border border-violet-200/50">
+                                            {cname}
+                                            <span className="text-[9px] bg-violet-200/70 dark:bg-violet-800/50 px-1 rounded">{cnt}</span>
+                                          </span>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })()}
+
                             {comms.length === 0 ? (
                               <div className="rounded-xl border border-dashed border-border/50 bg-muted/10 p-3 flex items-center justify-between"><div className="flex items-center gap-2 text-[11px] text-muted-foreground"><FileText className="w-3.5 h-3.5" />لا يوجد سجل تواصل سابق مع هذا العميل</div><span className="text-[10px] text-muted-foreground italic">سجّل مكالمتك من ملف العميل</span></div>
                             ) : (
