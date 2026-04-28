@@ -2120,11 +2120,18 @@ export type Database = {
           customers_contacted: number
           customers_registered: number
           customers_with_invoices: number
+          follow_ups_count: number
           follow_ups_done: number
           general_notes: string | null
           hot_leads_count: number
           id: string
+          is_locked: boolean
+          locked_at: string | null
+          lost_customers_count: number
+          lost_reason: string | null
+          performance_rating: number | null
           problems_faced: string | null
+          quotes_count: number
           report_date: string
           staff_email: string | null
           staff_name: string | null
@@ -2140,11 +2147,18 @@ export type Database = {
           customers_contacted?: number
           customers_registered?: number
           customers_with_invoices?: number
+          follow_ups_count?: number
           follow_ups_done?: number
           general_notes?: string | null
           hot_leads_count?: number
           id?: string
+          is_locked?: boolean
+          locked_at?: string | null
+          lost_customers_count?: number
+          lost_reason?: string | null
+          performance_rating?: number | null
           problems_faced?: string | null
+          quotes_count?: number
           report_date?: string
           staff_email?: string | null
           staff_name?: string | null
@@ -2160,11 +2174,18 @@ export type Database = {
           customers_contacted?: number
           customers_registered?: number
           customers_with_invoices?: number
+          follow_ups_count?: number
           follow_ups_done?: number
           general_notes?: string | null
           hot_leads_count?: number
           id?: string
+          is_locked?: boolean
+          locked_at?: string | null
+          lost_customers_count?: number
+          lost_reason?: string | null
+          performance_rating?: number | null
           problems_faced?: string | null
+          quotes_count?: number
           report_date?: string
           staff_email?: string | null
           staff_name?: string | null
@@ -2828,6 +2849,93 @@ export type Database = {
           },
         ]
       }
+      staff_daily_reports_kpi: {
+        Row: {
+          activity_score: number | null
+          avg_order_value: number | null
+          best_deal_today: string | null
+          conversion_rate_pct: number | null
+          customers_contacted: number | null
+          customers_registered: number | null
+          customers_with_invoices: number | null
+          follow_ups_count: number | null
+          general_notes: string | null
+          hot_leads_count: number | null
+          id: string | null
+          is_locked: boolean | null
+          leads_to_orders_pct: number | null
+          locked_at: string | null
+          lost_customers_count: number | null
+          lost_reason: string | null
+          performance_rating: number | null
+          problems_faced: string | null
+          quotes_count: number | null
+          report_date: string | null
+          staff_email: string | null
+          staff_name: string | null
+          staff_user_id: string | null
+          submitted_at: string | null
+          tomorrow_plan: string | null
+          total_invoices_amount: number | null
+        }
+        Insert: {
+          activity_score?: never
+          avg_order_value?: never
+          best_deal_today?: string | null
+          conversion_rate_pct?: never
+          customers_contacted?: number | null
+          customers_registered?: number | null
+          customers_with_invoices?: number | null
+          follow_ups_count?: number | null
+          general_notes?: string | null
+          hot_leads_count?: number | null
+          id?: string | null
+          is_locked?: boolean | null
+          leads_to_orders_pct?: never
+          locked_at?: string | null
+          lost_customers_count?: number | null
+          lost_reason?: string | null
+          performance_rating?: number | null
+          problems_faced?: string | null
+          quotes_count?: number | null
+          report_date?: string | null
+          staff_email?: string | null
+          staff_name?: string | null
+          staff_user_id?: string | null
+          submitted_at?: string | null
+          tomorrow_plan?: string | null
+          total_invoices_amount?: number | null
+        }
+        Update: {
+          activity_score?: never
+          avg_order_value?: never
+          best_deal_today?: string | null
+          conversion_rate_pct?: never
+          customers_contacted?: number | null
+          customers_registered?: number | null
+          customers_with_invoices?: number | null
+          follow_ups_count?: number | null
+          general_notes?: string | null
+          hot_leads_count?: number | null
+          id?: string | null
+          is_locked?: boolean | null
+          leads_to_orders_pct?: never
+          locked_at?: string | null
+          lost_customers_count?: number | null
+          lost_reason?: string | null
+          performance_rating?: number | null
+          problems_faced?: string | null
+          quotes_count?: number | null
+          report_date?: string | null
+          staff_email?: string | null
+          staff_name?: string | null
+          staff_user_id?: string | null
+          submitted_at?: string | null
+          tomorrow_plan?: string | null
+          total_invoices_amount?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       bulk_import_products: { Args: { _items: Json }; Returns: Json }
@@ -2856,6 +2964,14 @@ export type Database = {
         Returns: string[]
       }
       get_daily_view_count: { Args: { _user_id: string }; Returns: number }
+      get_staff_auto_metrics: {
+        Args: { _date: string; _staff_user_id: string }
+        Returns: {
+          leads_count: number
+          orders_count: number
+          total_sales: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
