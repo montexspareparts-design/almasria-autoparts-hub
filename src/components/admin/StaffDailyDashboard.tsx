@@ -405,6 +405,8 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
           colorBar="bg-purple-500"
           colorBg="bg-purple-50"
           colorText="text-purple-600"
+          hint="عرض سجل البحث"
+          onClick={() => onNavigate?.("customer-intel")}
         />
         <KpiCard
           icon={ShoppingCart}
@@ -423,6 +425,11 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
           colorBar={totalUrgent > 0 ? "bg-red-500" : "bg-gray-300"}
           colorBg={totalUrgent > 0 ? "bg-red-50" : "bg-gray-50"}
           colorText={totalUrgent > 0 ? "text-red-600" : "text-gray-500"}
+          hint={totalUrgent > 0 ? "افتح المهام" : "كل شيء تمام"}
+          onClick={() => {
+            setOpenSection("urgent");
+            document.getElementById("urgent-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+          }}
         />
       </div>
 
@@ -451,7 +458,7 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
       {/* ============ COLLAPSIBLE SECTIONS ============ */}
       <Accordion type="single" collapsible value={openSection} onValueChange={handleAccordionChange} className="space-y-3">
         {/* 1) Urgent tasks */}
-        <AccordionItem value="urgent" className="border rounded-xl bg-card overflow-hidden">
+        <AccordionItem id="urgent-section" value="urgent" className="border rounded-xl bg-card overflow-hidden scroll-mt-20">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/40">
             <div className="flex items-center gap-2 flex-1">
               <AlertTriangle className="w-4 h-4 text-red-600" />
