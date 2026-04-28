@@ -1135,6 +1135,62 @@ const SubmittedSuccessCard = ({
     return a.text || "—";
   };
 
+  // ── Export & Share ────────────────────────────────────────────
+  const reportRef = useRef<HTMLDivElement>(null);
+  const [savingImage, setSavingImage] = useState(false);
+
+  const buildWhatsAppText = () => {
+    const lines = [
+      `📋 *تقرير يومي* — ${staffName || "موظف"}`,
+      `📅 ${submittedDate} — الساعة ${submittedTime}`,
+      ``,
+      `*ملخص KPIs*`,
+      `• عملاء تم التواصل: ${report.customers_contacted ?? 0}`,
+      `• عملاء سجّلوا: ${report.customers_registered ?? 0}`,
+      `• عملاء عملوا فاتورة: ${report.customers_with_invoices ?? 0}`,
+      `• إجمالي الفواتير: ${report.total_invoices_amount ?? 0} ج.م`,
+      `• Leads ساخنة: ${report.hot_leads_count ?? 0}`,
+      `• متابعات تمت: ${report.follow_ups_done ?? 0}`,
+    ];
+    if (report.best_deal_today) lines.push(``, `🏆 *أفضل صفقة:* ${report.best_deal_today}`);
+    if (report.problems_faced) lines.push(`⚠️ *مشاكل:* ${report.problems_faced}`);
+    if (report.tomorrow_plan) lines.push(`📌 *خطة بكرة:* ${report.tomorrow_plan}`);
+    if (report.general_notes) lines.push(`📝 *ملاحظات:* ${report.general_notes}`);
+    if (dynAnsweredList.length > 0) {
+      lines.push(``, `*الأسئلة الإضافية:*`);
+      dynAnsweredList.forEach(({ q, a }) => {
+        lines.push(`• ${q.question_text}: ${renderAnswerValue(q, a!)}`);
+      });
+    }
+    return lines.join("\n");
+  };
+
+  const sendToWhatsApp = () => {
+    const text = encodeURIComponent(buildWhatsAppText());
+    window.open(`https://wa.me/?text=${text}`, "_blank");
+  };
+
+  const saveAsImage = async () => {
+    if (!reportRef.current) return;
+    setSavingImage(true);
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const canvas = await html2canvas(reportRef.current, {
+        backgroundColor: "#ffffff",
+        scale: 2,
+        useCORS: true,
+      });
+      const link = document.createElement("a");
+      link.download = `daily-report-${staffName || "staff"}-${submittedDate}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    } catch (e) {
+      console.error("[saveAsImage]", e);
+    } finally {
+      setSavingImage(false);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.96 }}
