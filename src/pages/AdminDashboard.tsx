@@ -202,6 +202,16 @@ const AdminDashboard = () => {
   const [fetchingApproveErpName, setFetchingApproveErpName] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  // تذكير التقرير اليومي: ابتداءً من 5م يبدأ بند "التقرير اليومي" يلمع.
+  // نحدّث كل دقيقة عشان الحالة تتغيّر تلقائياً عند الساعة 17:00 بدون reload.
+  const [reportReminderActive, setReportReminderActive] = useState(() => new Date().getHours() >= 17);
+  useEffect(() => {
+    const tick = () => setReportReminderActive(new Date().getHours() >= 17);
+    tick();
+    const id = setInterval(tick, 60_000);
+    return () => clearInterval(id);
+  }, []);
+
   const canAccess = isAdmin || isModerator;
 
   // Filter sidebar for moderators
