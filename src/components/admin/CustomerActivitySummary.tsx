@@ -162,6 +162,30 @@ export default function CustomerActivitySummary({ open, onOpenChange, userId, cu
               </>
             ) : (
               <>
+                {/* Session summary card */}
+                {lastSessionStats && (
+                  <div className="rounded-xl p-3 bg-gradient-to-br from-primary/5 via-primary/10 to-transparent border border-primary/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Timer className="w-4 h-4 text-primary" />
+                      <h3 className="text-xs font-bold text-foreground">ملخص آخر جلسة</h3>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div>
+                        <p className="text-[10px] text-muted-foreground mb-0.5">المدة التقريبية</p>
+                        <p className="text-sm font-black text-primary">{fmtDuration(lastSessionStats.durationSec)}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-muted-foreground mb-0.5">صفحات الجلسة</p>
+                        <p className="text-sm font-black text-foreground">{lastSessionStats.pageCount}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-muted-foreground mb-0.5">آخر نشاط</p>
+                        <p className="text-sm font-black text-emerald-600 dark:text-emerald-400">{fmtDate(lastSessionStats.lastSeen)}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Quick stats */}
                 <div className="grid grid-cols-3 gap-2">
                   <StatCard icon={Search} label="بحث" value={searches.length} color="orange" />
