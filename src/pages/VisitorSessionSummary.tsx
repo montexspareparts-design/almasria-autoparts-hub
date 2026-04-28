@@ -1293,7 +1293,7 @@ export default function VisitorSessionSummary() {
                               <Clock className="w-3 h-3" />
                               <span className="font-mono">{fmtDateTime(s.created_at)}</span>
                               <span className="opacity-60">·</span>
-                              <span>{fmtRel(s.created_at)}</span>
+                              <span>{fmtRelativeShort(s.created_at)}</span>
                             </p>
                           </div>
                           <div className="flex flex-col gap-1.5 shrink-0">
