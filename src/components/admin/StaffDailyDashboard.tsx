@@ -315,14 +315,19 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
 
       {/* Today's Visitor & Search KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <Card className="border-l-4 border-l-indigo-500">
+        <Card
+          className="border-l-4 border-l-indigo-500 cursor-pointer hover:shadow-md transition group"
+          onClick={() => (window.location.href = "/admin/active-visitors")}
+          title="افتح تقرير الزوار التفصيلي (بحث + مدة الجلسة)"
+        >
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0 group-hover:scale-105 transition">
               <Users className="w-5 h-5 text-indigo-600" />
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="text-2xl font-bold">{stats.todayVisitors}</p>
               <p className="text-xs text-muted-foreground">زائر اليوم</p>
+              <p className="text-[10px] text-indigo-600 mt-0.5">اضغط لعرض التقرير ←</p>
             </div>
           </CardContent>
         </Card>
