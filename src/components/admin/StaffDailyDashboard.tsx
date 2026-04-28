@@ -62,13 +62,13 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
   const [searchContacts, setSearchContacts] = useState<SearchContact[]>([]);
 
   // Persisted accordion state — kept at top to satisfy Rules of Hooks
-  const STORAGE_KEY = "staff-dashboard-open-sections";
-  const [openSections, setOpenSections] = useState<string[]>(() => {
+  const STORAGE_KEY = "staff-dashboard-open-section";
+  const [openSection, setOpenSection] = useState<string>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) return JSON.parse(saved);
     } catch { /* ignore */ }
-    return ["urgent"];
+    return "urgent";
   });
 
   useEffect(() => {
@@ -326,14 +326,15 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
     : "performance";
 
   useEffect(() => {
+    if (loading) return;
     try {
       if (!localStorage.getItem(STORAGE_KEY)) {
-        setOpenSections([priorityOpen]);
+        setOpenSection(priorityOpen);
       }
     } catch {
       /* ignore */
     }
-  }, [priorityOpen, STORAGE_KEY]);
+  }, [loading, priorityOpen, STORAGE_KEY]);
 
   if (loading) {
     return (
@@ -345,10 +346,10 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
 
   if (!stats) return null;
 
-  const handleAccordionChange = (values: string[]) => {
-    setOpenSections(values);
+  const handleAccordionChange = (value: string) => {
+    setOpenSection(value);
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(values));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
     } catch { /* ignore quota */ }
   };
 
@@ -448,7 +449,7 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
       </div>
 
       {/* ============ COLLAPSIBLE SECTIONS ============ */}
-      <Accordion type="multiple" value={openSections} onValueChange={handleAccordionChange} className="space-y-3">
+      <Accordion type="single" collapsible value={openSection} onValueChange={handleAccordionChange} className="space-y-3">
         {/* 1) Urgent tasks */}
         <AccordionItem value="urgent" className="border rounded-xl bg-card overflow-hidden">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/40">

@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -25,19 +26,20 @@ function buildMessage(customerName?: string, context?: string): string {
   return msg;
 }
 
-export default function WhatsAppQuickChat({
+const WhatsAppQuickChat = forwardRef<HTMLButtonElement, WhatsAppQuickChatProps>(function WhatsAppQuickChat({
   phone,
   customerName,
   context,
   size = "icon",
   className = "",
-}: WhatsAppQuickChatProps) {
+}, ref) {
   const formatted = formatPhoneForWA(phone);
   const msg = buildMessage(customerName, context);
   const url = `https://wa.me/${formatted}?text=${encodeURIComponent(msg)}`;
 
   return (
     <Button
+      ref={ref}
       variant="ghost"
       size={size}
       className={`text-green-600 hover:text-green-700 hover:bg-green-50 ${size === "icon" ? "h-7 w-7" : "gap-1.5"} ${className}`}
@@ -48,6 +50,8 @@ export default function WhatsAppQuickChat({
       {size === "sm" && <span>واتساب</span>}
     </Button>
   );
-}
+});
+
+export default WhatsAppQuickChat;
 
 export { formatPhoneForWA, buildMessage };
