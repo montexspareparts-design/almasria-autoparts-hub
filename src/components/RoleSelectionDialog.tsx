@@ -1,4 +1,5 @@
-import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Briefcase, Shield, Users, Home } from "lucide-react";
 import { motion } from "framer-motion";
@@ -11,7 +12,15 @@ interface RoleSelectionDialogProps {
 
 const RoleSelectionDialog = ({ open, onOpenChange }: RoleSelectionDialogProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAdmin, isModerator } = useAuth();
+
+  useEffect(() => {
+    if (!open) return;
+    if (location.pathname.startsWith("/admin") || location.pathname.startsWith("/dealer")) {
+      onOpenChange(false);
+    }
+  }, [open, location.pathname, onOpenChange]);
 
   const handleSelect = (role: "dealer" | "admin") => {
     localStorage.setItem("almasria_last_role", role);
