@@ -325,14 +325,15 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
     : "performance";
 
   // Persisted accordion state — falls back to priority on first visit
-  const STORAGE_KEY = "staff-dashboard-open-sections";
-  const [openSections, setOpenSections] = useState<string[]>(() => {
+  // First-load: if user never picked anything, jump to today's priority
+  useEffect(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) return JSON.parse(saved);
+      if (!localStorage.getItem(STORAGE_KEY)) {
+        setOpenSections([priorityOpen]);
+      }
     } catch { /* ignore */ }
-    return [priorityOpen];
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [priorityOpen]);
 
   // First-load: if user never picked anything, jump to today's priority
   useEffect(() => {
