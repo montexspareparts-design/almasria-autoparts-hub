@@ -2908,8 +2908,26 @@ const AdminCustomerIntelligence = () => {
           score: number;
           reasons: { icon: string; label: string }[];
         };
+        // Build set of customers the CURRENT staff already acted on today
+        // → so they get hidden from the follow-up list once handled.
+        const actedTodayByMe = new Set<string>();
+        if (user?.id && communicationsData) {
+          const todayStr = new Date().toISOString().slice(0, 10);
+          communicationsData.forEach((c: any) => {
+            if (
+              c.staff_user_id === user.id &&
+              typeof c.created_at === "string" &&
+              c.created_at.slice(0, 10) === todayStr
+            ) {
+              actedTodayByMe.add(c.customer_user_id);
+            }
+          });
+        }
+
         const followUpList: FollowUpItem[] = [];
         filteredProfiles?.forEach((p) => {
+          // Skip customers I already handled today (action recorded with note)
+          if (actedTodayByMe.has(p.user_id)) return;
           const reasons: { icon: string; label: string }[] = [];
           let score = 0;
           const orders = ordersMap?.[p.user_id];
