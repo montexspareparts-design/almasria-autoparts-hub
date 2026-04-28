@@ -99,13 +99,13 @@ const sidebarGroups: SidebarGroup[] = [
     label: "الرئيسية",
     items: [
       { id: "daily-dashboard", label: "🏠 الرئيسية", icon: BarChart3 },              // 1) نقطة البداية
-      { id: "my-daily-tasks", label: "مهامي اليومية وتقرير اليوم", icon: ClipboardList },  // 1.5) مدمج: Checklist + تقرير اليوم — يلمع 5م ويختفي عند التقديم
       { id: "customer-intel", label: "ذكاء العملاء", icon: Eye },                    // 2) تحليلات سلوك العملاء
       { id: "visitor-leads", label: "ليدز الزوار (واتساب)", icon: MessageCircle },   // 3) أرقام الزوار غير المسجلين
       { id: "customers", label: "ملف العملاء", icon: Users },                        // 4) البحث عن عميل / تسجيل تواصل
       { id: "analytics", label: "التحليلات", icon: BarChart3 },                      // 5) KPIs عامة
       { id: "leads", label: "Leads", icon: Users },                                   // 6) متابعة العملاء المحتملين
-      { id: "orders", label: "الطلبات", icon: ShoppingBag },                          // تنفيذ يومي (يبقى متاح بعد الترتيب الأساسي)
+      { id: "orders", label: "الطلبات", icon: ShoppingBag },                          // تنفيذ يومي
+      { id: "my-daily-tasks", label: "مهامي اليومية وتقرير اليوم", icon: ClipboardList },  // ← أسفل الطلبات: مدمج (Checklist + تقرير اليوم) — يلمع طول ما لم يُقدَّم
       // ملاحظة: تبويب "التقرير اليومي" المنفصل اتدمج مع "مهامي اليومية" — للأدمن لوحة التقارير الجماعية موجودة في "التنبيهات والربط" → "التقارير اليومية للموظفين"
       { id: "staff-performance", label: "أداء الموظفين", icon: TrendingUp },         // أدمن فقط
     ],
@@ -255,6 +255,22 @@ const AdminDashboard = () => {
       window.removeEventListener("daily-report-submitted", onSubmitted);
     };
   }, [user?.id]);
+
+  // تنبيه قبل قفل/تحديث التبويب: لو الموظف داخل وقت التقرير (active) ولم يُقدِّم بعد
+  // → المتصفح يظهر تأكيد "متأكد إنك عايز تقفل قبل ما تقدّم تقرير اليوم؟".
+  useEffect(() => {
+    if (!canAccess) return;
+    if (reportPhase !== "active") return;
+    if (hasSubmittedTodayReport) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      // الرسالة الفعلية تتحكم فيها المتصفحات، لكن المهم returnValue غير فاضي
+      e.returnValue = "لسه ما قدّمتش تقرير اليوم — متأكد إنك عايز تقفل الصفحة؟";
+      return e.returnValue;
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [canAccess, reportPhase, hasSubmittedTodayReport]);
 
   // Toast توضيحي لمرة واحدة في اليوم لكل مرحلة (early/active) — يخزّن آخر مرحلة
   // أُظهرت في localStorage بمفتاح يحوي تاريخ اليوم لمنع التكرار.
