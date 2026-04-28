@@ -57,9 +57,13 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
   const [alerts, setAlerts] = useState<BehavioralAlert[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [topSearches, setTopSearches] = useState<TopSearch[]>([]);
+  const [searchContacts, setSearchContacts] = useState<SearchContact[]>([]);
+
   useEffect(() => {
     fetchStats();
     fetchBehavioralAlerts();
+    fetchTodaySearchInsights();
   }, []);
 
   const fetchStats = async () => {
@@ -78,6 +82,8 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
       { count: totalOrdersHandled },
       { count: totalLeadsConverted },
       { data: staffRoles },
+      { data: visitorRows },
+      { count: todaySearches },
     ] = await Promise.all([
       supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "pending"),
       supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "awaiting_payment"),
@@ -88,9 +94,17 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
       supabase.from("orders").select("*", { count: "exact", head: true }).in("status", ["processing", "ready", "shipped", "delivered"]),
       supabase.from("leads").select("*", { count: "exact", head: true }).eq("status", "converted"),
       supabase.from("user_roles").select("user_id, role").in("role", ["admin", "moderator"]),
+      supabase.from("page_visits").select("session_key, user_id").gte("visited_at", todayStart),
+      supabase.from("customer_search_logs").select("*", { count: "exact", head: true }).gte("created_at", todayStart),
     ]);
 
     const activeStaff = new Set((staffRoles || []).map((r: any) => r.user_id)).size;
+    // Distinct visitors today (by session_key, fallback to user_id)
+    const visitorKeys = new Set<string>();
+    (visitorRows || []).forEach((r: any) => {
+      const k = r.session_key || r.user_id;
+      if (k) visitorKeys.add(k);
+    });
 
     setStats({
       pendingOrders: pendingOrders || 0,
@@ -102,8 +116,73 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
       totalOrdersHandled: totalOrdersHandled || 0,
       totalLeadsConverted: totalLeadsConverted || 0,
       activeStaff,
+      todayVisitors: visitorKeys.size,
+      todaySearches: todaySearches || 0,
     });
     setLoading(false);
+  };
+
+  const fetchTodaySearchInsights = async () => {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const { data: logs } = await supabase
+      .from("customer_search_logs")
+      .select("search_query, user_id, created_at")
+      .gte("created_at", todayStart.toISOString())
+      .order("created_at", { ascending: false })
+      .limit(500);
+
+    if (!logs || logs.length === 0) {
+      setTopSearches([]);
+      setSearchContacts([]);
+      return;
+    }
+
+    // Top queries (case-insensitive, trimmed)
+    const queryCounts: Record<string, number> = {};
+    for (const l of logs) {
+      const q = (l.search_query || "").trim().toLowerCase();
+      if (!q) continue;
+      queryCounts[q] = (queryCounts[q] || 0) + 1;
+    }
+    const top = Object.entries(queryCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([query, count]) => ({ query, count }));
+    setTopSearches(top);
+
+    // Per-user search aggregation (only logged-in users)
+    const perUser: Record<string, { count: number; lastQuery: string }> = {};
+    for (const l of logs) {
+      if (!l.user_id) continue;
+      if (!perUser[l.user_id]) {
+        perUser[l.user_id] = { count: 0, lastQuery: l.search_query || "" };
+      }
+      perUser[l.user_id].count += 1;
+    }
+    const userIds = Object.keys(perUser).slice(0, 50);
+    if (userIds.length === 0) {
+      setSearchContacts([]);
+      return;
+    }
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("user_id, full_name, phone")
+      .in("user_id", userIds);
+
+    const contacts: SearchContact[] = (profiles || [])
+      .filter((p: any) => p.phone)
+      .map((p: any) => ({
+        userId: p.user_id,
+        name: p.full_name || "بدون اسم",
+        phone: p.phone,
+        lastQuery: perUser[p.user_id]?.lastQuery || "",
+        searchCount: perUser[p.user_id]?.count || 0,
+      }))
+      .sort((a, b) => b.searchCount - a.searchCount)
+      .slice(0, 10);
+    setSearchContacts(contacts);
   };
 
   const fetchBehavioralAlerts = async () => {
