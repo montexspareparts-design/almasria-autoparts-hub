@@ -202,17 +202,52 @@ const AdminDashboard = () => {
   const [fetchingApproveErpName, setFetchingApproveErpName] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  // تذكير التقرير اليومي: ابتداءً من 5م يبدأ بند "التقرير اليومي" يلمع.
-  // نحدّث كل دقيقة عشان الحالة تتغيّر تلقائياً عند الساعة 17:00 بدون reload.
-  const [reportReminderActive, setReportReminderActive] = useState(() => new Date().getHours() >= 17);
+  const canAccess = isAdmin || isModerator;
+
+  // تذكير التقرير اليومي:
+  //  - من 4:30م إلى 4:59م → "early": تنبيه مبكر (كهرماني فاتح + بادج "قريب")
+  //  - من 5:00م فصاعداً → "active": تذكير عاجل (كهرماني نابض + بادج "الآن")
+  // نحدّث كل دقيقة عشان الحالة تتغيّر تلقائياً بدون reload.
+  const computeReportPhase = (): "off" | "early" | "active" => {
+    const d = new Date();
+    const minutes = d.getHours() * 60 + d.getMinutes();
+    if (minutes >= 17 * 60) return "active";          // 17:00+
+    if (minutes >= 16 * 60 + 30) return "early";      // 16:30 → 16:59
+    return "off";
+  };
+  const [reportPhase, setReportPhase] = useState<"off" | "early" | "active">(() => computeReportPhase());
   useEffect(() => {
-    const tick = () => setReportReminderActive(new Date().getHours() >= 17);
+    const tick = () => setReportPhase(computeReportPhase());
     tick();
     const id = setInterval(tick, 60_000);
     return () => clearInterval(id);
   }, []);
 
-  const canAccess = isAdmin || isModerator;
+  // Toast توضيحي لمرة واحدة في اليوم لكل مرحلة (early/active) — يخزّن آخر مرحلة
+  // أُظهرت في localStorage بمفتاح يحوي تاريخ اليوم لمنع التكرار.
+  useEffect(() => {
+    if (reportPhase === "off") return;
+    if (!canAccess) return;
+    const todayKey = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const storageKey = `report-reminder-shown:${todayKey}:${reportPhase}`;
+    if (localStorage.getItem(storageKey)) return;
+    localStorage.setItem(storageKey, "1");
+    if (reportPhase === "early") {
+      toast({
+        title: "⏰ تذكير مبكر — التقرير اليومي",
+        description: "باقي 30 دقيقة على موعد التقرير اليومي (5م). جهّز أرقامك من دلوقتي عشان متتأخرش.",
+        duration: 8000,
+      });
+    } else {
+      toast({
+        title: "📋 وقت التقرير اليومي",
+        description: "افتح بند «التقرير اليومي» من الشريط الجانبي وقدّم تقرير اليوم قبل ما تطلع.",
+        duration: 8000,
+      });
+    }
+  }, [reportPhase, canAccess, toast]);
+
+  // (canAccess معرّف في الأعلى — قبل effects التذكير)
 
   // Filter sidebar for moderators
   const filteredSidebarGroups = canAccess
@@ -979,7 +1014,8 @@ const AdminDashboard = () => {
                   {group.items.map((section) => {
                     const Icon = section.icon;
                     const isActive = activeSection === section.id;
-                    const isReportReminder = section.id === "daily-reports-dashboard" && reportReminderActive && !isActive;
+                    const isReportReminder = section.id === "daily-reports-dashboard" && reportPhase !== "off" && !isActive;
+                    const isReportEarly = isReportReminder && reportPhase === "early";
                     return (
                       <button
                         key={section.id}
@@ -992,10 +1028,19 @@ const AdminDashboard = () => {
                           ${isActive
                             ? "bg-primary/10 text-primary font-bold shadow-sm shadow-primary/5"
                             : isReportReminder
-                              ? "bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 font-bold report-reminder-glow"
+                              ? isReportEarly
+                                ? "bg-amber-50/60 dark:bg-amber-950/20 text-amber-700 dark:text-amber-300 font-bold"
+                                : "bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 font-bold report-reminder-glow"
                               : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
                           }
                         `}
+                        title={
+                          isReportEarly
+                            ? "تذكير مبكر — باقي 30 دقيقة على موعد التقرير اليومي"
+                            : isReportReminder
+                              ? "موعد التقرير اليومي — قدّم تقريرك دلوقتي"
+                              : undefined
+                        }
                       >
                         {isActive && (
                           <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[2.5px] h-4 bg-primary rounded-l-full" />
@@ -1013,8 +1058,12 @@ const AdminDashboard = () => {
                         </div>
                         <span className="truncate">{section.label}</span>
                         {isReportReminder && (
-                          <span className="mr-auto text-[9px] font-extrabold bg-amber-500 text-white rounded-md px-1.5 py-0.5 animate-pulse">
-                            الآن
+                          <span className={`mr-auto text-[9px] font-extrabold rounded-md px-1.5 py-0.5 ${
+                            isReportEarly
+                              ? "bg-amber-200 text-amber-800 dark:bg-amber-800/60 dark:text-amber-100"
+                              : "bg-amber-500 text-white animate-pulse"
+                          }`}>
+                            {isReportEarly ? "قريب" : "الآن"}
                           </span>
                         )}
                         {section.id === "dealers" && pendingCount > 0 && (
