@@ -17,6 +17,7 @@ export const MODERATOR_SECTIONS_LIST: SectionMeta[] = [
   { id: "customers", label: "ملف العملاء", description: "البحث عن عميل، عرض ملفه، تسجيل تواصل" },
   { id: "orders", label: "الطلبات", description: "إدارة الطلبات، تحديث الحالة، رفع الإيصال" },
   { id: "leads", label: "Leads", description: "إدارة العملاء المحتملين والمتابعة" },
+  { id: "visitor-leads", label: "ليدز الزوار (واتساب)", description: "أرقام واتساب للزوار غير المسجلين من الـ popup" },
   { id: "account-settings", label: "إعدادات حسابي", description: "تغيير كلمة المرور والإعدادات الشخصية" },
 ];
 

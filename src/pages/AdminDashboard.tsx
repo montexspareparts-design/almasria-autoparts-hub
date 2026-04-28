@@ -17,6 +17,7 @@ import type { Database } from "@/integrations/supabase/types";
 
 // Lazy load admin sections
 const AdminOrders = lazy(() => import("@/components/AdminOrders"));
+const VisitorLeadsPage = lazy(() => import("@/pages/VisitorLeadsPage"));
 const AdminHeroVideo = lazy(() => import("@/components/AdminHeroVideo"));
 const AdminVideoSettings = lazy(() => import("@/components/AdminVideoSettings"));
 const AdminPriceLists = lazy(() => import("@/components/AdminPriceLists"));
@@ -97,6 +98,7 @@ const sidebarGroups: SidebarGroup[] = [
       { id: "daily-dashboard", label: "🏠 الرئيسية للموظف", icon: BarChart3 }, // نقطة البداية — مؤشرات + مهام اليوم
       { id: "orders", label: "الطلبات", icon: ShoppingBag },                    // أهم تنفيذ يومي
       { id: "leads", label: "Leads", icon: Users },                              // متابعة العملاء المحتملين
+      { id: "visitor-leads", label: "ليدز الزوار (واتساب)", icon: MessageCircle }, // أرقام الزوار غير المسجلين
       { id: "customers", label: "ملف العملاء", icon: Users },                   // البحث عن عميل / تسجيل تواصل
       { id: "customer-intel", label: "ذكاء العملاء", icon: Eye },               // تحليلات السلوك
       { id: "analytics", label: "التحليلات", icon: BarChart3 },                 // KPIs عامة
@@ -662,6 +664,12 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminStaffPerformance /></Suspense>;
       case "customer-intel":
         return <Suspense fallback={<SectionLoader />}><AdminCustomerIntelligence /></Suspense>;
+      case "visitor-leads":
+        return (
+          <Suspense fallback={<SectionLoader />}>
+            <VisitorLeadsPage />
+          </Suspense>
+        );
       case "customers":
       case "leads":
         return (
