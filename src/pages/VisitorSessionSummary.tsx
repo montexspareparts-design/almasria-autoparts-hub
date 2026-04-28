@@ -1186,7 +1186,7 @@ export default function VisitorSessionSummary() {
                   {lastSessionSearches.length > 0 && (
                     <>
                       <Separator />
-                      <div id="section-searches" className="scroll-mt-24 rounded-xl">
+                      <div className="scroll-mt-24 rounded-xl">
                         <SectionTitle icon={Search} title="عمليات البحث" count={lastSessionSearches.length} />
                         <div className="flex flex-wrap gap-1.5 mt-3">
                           {lastSessionSearches.map((s) => (
@@ -1236,6 +1236,95 @@ export default function VisitorSessionSummary() {
                   )}
                 </CardContent>
                 )}
+              </Card>
+            )}
+
+            {/* ALL Searches — full detailed log (every search query + date + results count) */}
+            {searches.length > 0 && (
+              <Card id="section-searches" className="border-orange-200/60 dark:border-orange-900/40 shadow-md overflow-hidden scroll-mt-24 rounded-2xl">
+                <CardHeader className="pb-3 bg-gradient-to-l from-orange-50 via-orange-50/50 to-transparent dark:from-orange-950/30 dark:via-orange-950/15 border-b border-orange-200/40 dark:border-orange-900/30">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <div className="w-9 h-9 rounded-xl bg-orange-100 dark:bg-orange-950/50 flex items-center justify-center">
+                      <Search className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span>كل عمليات البحث</span>
+                        <Badge variant="outline" className="bg-orange-100/60 text-orange-700 border-orange-300 dark:bg-orange-950/50 dark:text-orange-400 dark:border-orange-900">
+                          {searches.length}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground font-normal mt-0.5">
+                        السجل الكامل لكل كلمة بحث مع تاريخها وعدد النتائج
+                      </p>
+                    </div>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="divide-y divide-border max-h-[500px] overflow-y-auto">
+                    {searches.map((s, idx) => {
+                      const noResults = s.results_count === 0;
+                      return (
+                        <div
+                          key={s.id}
+                          className={`flex items-start gap-3 p-3.5 hover:bg-muted/40 transition ${
+                            noResults ? "bg-red-50/40 dark:bg-red-950/10" : ""
+                          }`}
+                        >
+                          <span className="w-7 h-7 rounded-lg bg-orange-100 dark:bg-orange-950/50 text-orange-700 dark:text-orange-400 flex items-center justify-center text-xs font-black shrink-0 mt-0.5">
+                            {idx + 1}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                              <p className="font-bold text-sm text-foreground break-words">
+                                "{s.search_query}"
+                              </p>
+                              {noResults ? (
+                                <Badge variant="destructive" className="text-[10px] h-5 gap-1">
+                                  ⚠️ بدون نتائج
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-[10px] h-5 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900">
+                                  {s.results_count} نتيجة
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 flex-wrap">
+                              <Clock className="w-3 h-3" />
+                              <span className="font-mono">{fmtDateTime(s.created_at)}</span>
+                              <span className="opacity-60">·</span>
+                              <span>{fmtRelativeShort(s.created_at)}</span>
+                            </p>
+                          </div>
+                          <div className="flex flex-col gap-1.5 shrink-0">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 gap-1 text-[11px] px-2"
+                              onClick={() => window.open(`/products?search=${encodeURIComponent(s.search_query)}`, "_blank")}
+                            >
+                              <Search className="w-3 h-3" />
+                              النتائج
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="h-7 gap-1 text-[11px] px-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+                              onClick={() => window.open(buildQuoteWhatsApp(s.search_query), "_blank")}
+                            >
+                              <Quote className="w-3 h-3" />
+                              عرض سعر
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {searches.length >= 50 && (
+                    <div className="p-3 text-center text-xs text-muted-foreground bg-muted/30 border-t">
+                      يتم عرض آخر 50 عملية بحث
+                    </div>
+                  )}
+                </CardContent>
               </Card>
             )}
 
