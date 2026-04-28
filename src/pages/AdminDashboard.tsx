@@ -105,6 +105,7 @@ const sidebarGroups: SidebarGroup[] = [
       { id: "leads", label: "Leads", icon: Users },                                   // 6) متابعة العملاء المحتملين
       { id: "orders", label: "الطلبات", icon: ShoppingBag },                          // تنفيذ يومي (يبقى متاح بعد الترتيب الأساسي)
       { id: "staff-performance", label: "أداء الموظفين", icon: TrendingUp },         // أدمن فقط
+      { id: "daily-reports-dashboard", label: "تقارير الموظفين اليومية", icon: ClipboardList }, // أدمن: لوحة التقارير + KPI
     ],
   },
   {
