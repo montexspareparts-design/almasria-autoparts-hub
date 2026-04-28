@@ -4,10 +4,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
   ClipboardList, ShoppingCart, Users, AlertTriangle,
   Clock, TrendingUp, CheckCircle, Loader2, ArrowLeft,
-  Search, UserX, MessageCircle, UserPlus, Shield
+  Search, UserX, MessageCircle, UserPlus, Shield, Eye, Phone
 } from "lucide-react";
 import WhatsAppQuickChat from "./WhatsAppQuickChat";
 
