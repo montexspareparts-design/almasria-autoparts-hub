@@ -1368,7 +1368,47 @@ const SubmittedSuccessCard = ({
             onClick={() => setShowDetails(true)}
           >
             <Eye className="w-4 h-4" />
-            عرض تفاصيل التقرير
+            عرض تقرير اليوم
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5 h-9 border-blue-500/40 text-blue-700 hover:bg-blue-50"
+            onClick={openYesterdayReport}
+            disabled={yesterdayLoading}
+          >
+            {yesterdayLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <HistoryIcon className="w-4 h-4" />}
+            تقرير أمس
+          </Button>
+          <Button
+            size="sm"
+            className="gap-1.5 h-9 bg-green-600 hover:bg-green-700 text-white"
+            onClick={async () => {
+              if (!showDetails) {
+                setShowDetails(true);
+                await new Promise((r) => setTimeout(r, 350));
+              }
+              sendToWhatsApp();
+            }}
+          >
+            <MessageCircle className="w-4 h-4" />
+            إرسال على واتساب
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5 h-9 border-emerald-500/40 text-emerald-700 hover:bg-emerald-50"
+            disabled={savingImage}
+            onClick={async () => {
+              if (!showDetails) {
+                setShowDetails(true);
+                await new Promise((r) => setTimeout(r, 400));
+              }
+              saveAsImage();
+            }}
+          >
+            {savingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            حفظ كصورة
           </Button>
           <Button
             size="sm"
