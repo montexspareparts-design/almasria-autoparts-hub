@@ -214,17 +214,17 @@ const AdminDashboard = () => {
 
   const filteredSidebarSections = filteredSidebarGroups.flatMap(g => g.items);
 
-  // نقطة البداية الموحّدة = "الرئيسية للموظف" (daily-dashboard) لكل من الأدمن والموظف.
-  const activeSection = searchParams.get("section") || "daily-dashboard";
+  // نقطة البداية الموحّدة = "ذكاء العملاء" (customer-intel) — أهم صفحة للموظف، تحوي مهام اليوم + قائمة العملاء + التحليلات.
+  const activeSection = searchParams.get("section") || "customer-intel";
 
   const setActiveSection = (section: string) => {
     setSearchParams({ section });
   };
 
-  // إعادة توجيه تلقائي: لو الموظف/الأدمن دخل /admin بدون ?section، نوجّهه لـ daily-dashboard (StaffDailyDashboard الجديدة)
+  // إعادة توجيه تلقائي: لو الموظف/الأدمن دخل /admin بدون ?section، نوجّهه لـ customer-intel (ذكاء العملاء)
   useEffect(() => {
     if (canAccess && !searchParams.get("section")) {
-      setSearchParams({ section: "daily-dashboard" }, { replace: true });
+      setSearchParams({ section: "customer-intel" }, { replace: true });
     }
   }, [canAccess, searchParams, setSearchParams]);
 
@@ -593,7 +593,7 @@ const AdminDashboard = () => {
     // Graceful fallback: لو الـ section غير موجود في القائمة المسموحة للمستخدم،
     // اعرض رسالة واضحة بدل ما نعرض تحليلات بصمت أو شاشة فاضية.
     const sectionExists = filteredSidebarSections.some(s => s.id === activeSection);
-    if (!sectionExists && activeSection !== "daily-dashboard") {
+    if (!sectionExists && activeSection !== "customer-intel" && activeSection !== "daily-dashboard") {
       return (
         <div className="flex flex-col items-center justify-center py-16 px-6 text-center max-w-md mx-auto">
           <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mb-4">
