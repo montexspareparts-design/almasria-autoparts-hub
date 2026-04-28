@@ -190,7 +190,11 @@ export default function StaffWelcomeDashboard({ onNavigate }: StaffWelcomeDashbo
 
     setConversations(recentConvRes.data || []);
     setPendingOrders(pendingOrdersRes.data || []);
-    setLoading(false);
+    } catch (err) {
+      console.error("[StaffWelcomeDashboard] fetchData failed", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const greeting = () => {
