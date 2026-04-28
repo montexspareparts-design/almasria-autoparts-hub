@@ -1262,6 +1262,8 @@ const SubmittedSuccessCard = ({
                 )}
               </DrawerTitle>
               <DrawerDescription className="text-xs">
+                <span className="font-semibold text-primary">يوم {submittedDayName}</span>
+                {" — "}
                 {submittedDate} — تم التقديم الساعة {submittedTime}
               </DrawerDescription>
             </DrawerHeader>
