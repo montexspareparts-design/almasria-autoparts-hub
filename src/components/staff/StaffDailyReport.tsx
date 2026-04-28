@@ -1318,8 +1318,14 @@ const SubmittedSuccessCard = ({
         scale: 2,
         useCORS: true,
       });
+      // اسم الملف: <اسم الموظف>_<YYYY-MM-DD>.png — مع تنظيف المسافات والمحارف غير الصالحة
+      const safeName = (staffName || "staff")
+        .trim()
+        .replace(/[\\/:*?"<>|]+/g, "")
+        .replace(/\s+/g, "_");
+      const isoDate = new Date(submittedAt).toISOString().slice(0, 10); // 2026-04-28
       const link = document.createElement("a");
-      link.download = `daily-report-${staffName || "staff"}-${submittedDate}.png`;
+      link.download = `${safeName}_${isoDate}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
     } catch (e) {
