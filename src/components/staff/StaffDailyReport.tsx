@@ -1353,6 +1353,24 @@ const SubmittedSuccessCard = ({
             <HistoryIcon className="w-4 h-4" />
             تاريخ آخر التقارير
           </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5 h-9 border-amber-500/40 text-amber-700 hover:bg-amber-50"
+            onClick={() => openAggregate("week")}
+          >
+            <BarChart3 className="w-4 h-4" />
+            تقرير الأسبوع
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5 h-9 border-purple-500/40 text-purple-700 hover:bg-purple-50"
+            onClick={() => openAggregate("month")}
+          >
+            <BarChart3 className="w-4 h-4" />
+            تقرير الشهر
+          </Button>
         </div>
 
         {/* Details Drawer (slides up from bottom) */}
