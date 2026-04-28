@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, Phone, MessageCircle, CheckCircle, Clock, Trash2, Search } from "lucide-react";
+import { ArrowRight, Phone, MessageCircle, CheckCircle, Clock, Trash2, Search, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import VisitorLeadActivitySheet from "@/components/admin/VisitorLeadActivitySheet";
 
 type Lead = {
   id: string;
@@ -14,6 +15,8 @@ type Lead = {
   source: string | null;
   first_path: string | null;
   referrer: string | null;
+  session_key: string | null;
+  user_id: string | null;
   status: string;
   staff_notes: string | null;
   contacted_by: string | null;
@@ -56,6 +59,7 @@ const VisitorLeadsPage = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
+  const [activeLead, setActiveLead] = useState<Lead | null>(null);
   const { toast } = useToast();
 
   const load = async () => {
@@ -215,6 +219,9 @@ const VisitorLeadsPage = () => {
                     </div>
 
                     <div className="flex items-center gap-2 flex-wrap">
+                      <Button size="sm" onClick={() => setActiveLead(lead)} variant="default" className="bg-primary hover:bg-primary/90">
+                        <Eye className="w-4 h-4 ml-1" /> ملخص الزيارة
+                      </Button>
                       <Button size="sm" onClick={() => whatsappPhone(lead.phone)} className="bg-green-600 hover:bg-green-700">
                         <MessageCircle className="w-4 h-4 ml-1" /> واتساب
                       </Button>
@@ -255,6 +262,12 @@ const VisitorLeadsPage = () => {
           </div>
         )}
       </main>
+
+      <VisitorLeadActivitySheet
+        open={!!activeLead}
+        onClose={() => setActiveLead(null)}
+        lead={activeLead}
+      />
     </div>
   );
 };
