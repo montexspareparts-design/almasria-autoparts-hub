@@ -3144,7 +3144,21 @@ const AdminCustomerIntelligence = () => {
                                 size="sm"
                                 variant="ghost"
                                 className="h-9 px-2 text-[11px]"
-                                onClick={() => setExpandedUser(p.user_id)}
+                                onClick={() => {
+                                  if (user?.id) {
+                                    supabase
+                                      .from("staff_customer_file_opens")
+                                      .insert({
+                                        staff_user_id: user.id,
+                                        customer_user_id: p.user_id,
+                                        source: "follow_up_list",
+                                      })
+                                      .then(({ error }) => {
+                                        if (error) console.warn("[file-open-track] failed:", error.message);
+                                      });
+                                  }
+                                  navigate(`/admin/visitor/${p.user_id}`);
+                                }}
                                 title="فتح ملف العميل"
                               >
                                 <Eye className="w-3.5 h-3.5" />
