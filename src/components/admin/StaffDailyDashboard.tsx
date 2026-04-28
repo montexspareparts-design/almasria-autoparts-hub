@@ -405,6 +405,8 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
           colorBar="bg-purple-500"
           colorBg="bg-purple-50"
           colorText="text-purple-600"
+          hint="عرض سجل البحث"
+          onClick={() => onNavigate?.("customer-intel")}
         />
         <KpiCard
           icon={ShoppingCart}
@@ -423,6 +425,11 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
           colorBar={totalUrgent > 0 ? "bg-red-500" : "bg-gray-300"}
           colorBg={totalUrgent > 0 ? "bg-red-50" : "bg-gray-50"}
           colorText={totalUrgent > 0 ? "text-red-600" : "text-gray-500"}
+          hint={totalUrgent > 0 ? "افتح المهام" : "كل شيء تمام"}
+          onClick={() => {
+            setOpenSections(["urgent"]);
+            document.getElementById("urgent-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+          }}
         />
       </div>
 
