@@ -61,6 +61,16 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
   const [topSearches, setTopSearches] = useState<TopSearch[]>([]);
   const [searchContacts, setSearchContacts] = useState<SearchContact[]>([]);
 
+  // Persisted accordion state — kept at top to satisfy Rules of Hooks
+  const STORAGE_KEY = "staff-dashboard-open-sections";
+  const [openSections, setOpenSections] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch { /* ignore */ }
+    return ["urgent"];
+  });
+
   useEffect(() => {
     fetchStats();
     fetchBehavioralAlerts();
