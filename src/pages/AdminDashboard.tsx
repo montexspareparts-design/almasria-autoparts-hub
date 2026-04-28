@@ -17,6 +17,7 @@ import type { Database } from "@/integrations/supabase/types";
 
 // Lazy load admin sections
 const AdminOrders = lazy(() => import("@/components/AdminOrders"));
+const VisitorLeadsPage = lazy(() => import("@/pages/VisitorLeadsPage"));
 const AdminHeroVideo = lazy(() => import("@/components/AdminHeroVideo"));
 const AdminVideoSettings = lazy(() => import("@/components/AdminVideoSettings"));
 const AdminPriceLists = lazy(() => import("@/components/AdminPriceLists"));
