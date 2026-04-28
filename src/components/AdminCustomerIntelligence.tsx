@@ -720,10 +720,24 @@ const AdminCustomerIntelligence = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id, name_ar, sku, brand");
+        .select("id, name_ar, sku, brand, category_id");
       if (error) throw error;
       const map: Record<string, any> = {};
       data?.forEach(p => { map[p.id] = p; });
+      return map;
+    },
+  });
+
+  // Categories map (id -> name_ar) for displaying customer interests by category
+  const { data: categoriesMap } = useQuery({
+    queryKey: ["admin_categories_map"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("product_categories")
+        .select("id, name_ar");
+      if (error) throw error;
+      const map: Record<string, string> = {};
+      data?.forEach((c: any) => { map[c.id] = c.name_ar; });
       return map;
     },
   });
