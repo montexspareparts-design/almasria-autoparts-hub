@@ -293,7 +293,25 @@ export default function CustomerActivitySummary({ open, onOpenChange, userId, cu
                   </Section>
                 )}
 
-                {searches.length === 0 && orders.length === 0 && favorites.length === 0 && priceViews.length === 0 && sessions.length === 0 && (
+                {/* Page visits log */}
+                {pageVisits.length > 0 && (
+                  <Section icon={FileText} title={`سجل الصفحات (${pageVisits.length})`} color="blue">
+                    <div className="space-y-1 max-h-64 overflow-y-auto pe-1">
+                      {pageVisits.slice(0, 30).map((v, i) => (
+                        <div key={i} className="flex items-center gap-2 text-xs p-2 rounded-md bg-muted/40 hover:bg-muted">
+                          <Clock className="w-3 h-3 text-muted-foreground shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            {v.page_title && <p className="font-medium text-foreground truncate">{v.page_title}</p>}
+                            <code className="text-[10px] text-muted-foreground truncate block" dir="ltr">{v.path}</code>
+                          </div>
+                          <span className="text-[10px] text-muted-foreground shrink-0">{fmtDate(v.visited_at)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </Section>
+                )}
+
+                {searches.length === 0 && orders.length === 0 && favorites.length === 0 && priceViews.length === 0 && sessions.length === 0 && pageVisits.length === 0 && (
                   <div className="text-center py-12 text-muted-foreground">
                     <Activity className="w-12 h-12 mx-auto mb-3 opacity-30" />
                     <p className="text-sm">لا يوجد نشاط مسجل لهذا العميل بعد</p>
