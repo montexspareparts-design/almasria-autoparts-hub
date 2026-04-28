@@ -46,6 +46,7 @@ export default function CustomerActivitySummary({ open, onOpenChange, userId, cu
   const [favorites, setFavorites] = useState<FavoriteEntry[]>([]);
   const [priceViews, setPriceViews] = useState<PriceViewEntry[]>([]);
   const [sessions, setSessions] = useState<{ session_date: string; page_views: number; last_seen_at: string }[]>([]);
+  const [pageVisits, setPageVisits] = useState<{ path: string; page_title: string | null; visited_at: string }[]>([]);
 
   useEffect(() => {
     if (!open || !userId) return;
@@ -53,12 +54,13 @@ export default function CustomerActivitySummary({ open, onOpenChange, userId, cu
     (async () => {
       setLoading(true);
       try {
-        const [searchRes, ordersRes, favRes, viewRes, sessRes] = await Promise.all([
+        const [searchRes, ordersRes, favRes, viewRes, sessRes, visitsRes] = await Promise.all([
           supabase.from("customer_search_logs").select("search_query, created_at, results_count").eq("user_id", userId).order("created_at", { ascending: false }).limit(20),
           supabase.from("orders").select("id, order_number, total_amount, status, created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(10),
           supabase.from("dealer_favorites").select("product_id, created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(15),
           supabase.from("dealer_price_views").select("product_id, viewed_at").eq("user_id", userId).order("viewed_at", { ascending: false }).limit(15),
           supabase.from("customer_sessions").select("session_date, page_views, last_seen_at").eq("user_id", userId).order("session_date", { ascending: false }).limit(7),
+          supabase.from("page_visits").select("path, page_title, visited_at").eq("user_id", userId).order("visited_at", { ascending: false }).limit(50),
         ]);
 
         if (cancelled) return;
@@ -77,12 +79,41 @@ export default function CustomerActivitySummary({ open, onOpenChange, userId, cu
         setFavorites((favRes.data || []).map((f: any) => ({ ...f, product_name: productMap.get(f.product_id)?.name, product_sku: productMap.get(f.product_id)?.sku })));
         setPriceViews((viewRes.data || []).map((v: any) => ({ ...v, product_name: productMap.get(v.product_id)?.name, product_sku: productMap.get(v.product_id)?.sku })));
         setSessions(sessRes.data || []);
+        setPageVisits(visitsRes.data || []);
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
     return () => { cancelled = true; };
   }, [open, userId]);
+
+  // Estimated last session duration: cluster recent visits within 30-min gaps
+  const lastSessionStats = (() => {
+    if (pageVisits.length === 0) return null;
+    const sorted = [...pageVisits].sort((a, b) => new Date(b.visited_at).getTime() - new Date(a.visited_at).getTime());
+    const lastTime = new Date(sorted[0].visited_at).getTime();
+    const GAP_MS = 30 * 60 * 1000; // 30 minutes
+    let firstInSession = sorted[0];
+    for (let i = 1; i < sorted.length; i++) {
+      const prev = new Date(sorted[i - 1].visited_at).getTime();
+      const cur = new Date(sorted[i].visited_at).getTime();
+      if (prev - cur > GAP_MS) break;
+      firstInSession = sorted[i];
+    }
+    const startTime = new Date(firstInSession.visited_at).getTime();
+    const durationSec = Math.max(0, Math.round((lastTime - startTime) / 1000));
+    const pageCount = sorted.filter(v => new Date(v.visited_at).getTime() >= startTime).length;
+    return { lastSeen: sorted[0].visited_at, durationSec, pageCount };
+  })();
+
+  const fmtDuration = (sec: number) => {
+    if (sec < 60) return `${sec} ثانية`;
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    if (m < 60) return s > 0 ? `${m} د ${s} ث` : `${m} دقيقة`;
+    const h = Math.floor(m / 60);
+    return `${h} س ${m % 60} د`;
+  };
 
   const topSearches = (() => {
     const map: Record<string, number> = {};
