@@ -660,9 +660,26 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <MiniStat label="عملاء تم التواصل معهم اليوم" value={stats.todayLeadsContacted} icon={Phone} />
-              <MiniStat label="إجمالي الطلبات المعالجة" value={stats.totalOrdersHandled} highlight icon={ShoppingCart} />
-              <MiniStat label="عملاء تم تحويلهم لتجار" value={stats.totalLeadsConverted} highlight icon={UserPlus} />
+              <MiniStat
+                label="عملاء تم التواصل معهم اليوم"
+                value={stats.todayLeadsContacted}
+                icon={Phone}
+                onClick={() => onNavigate?.("customers")}
+              />
+              <MiniStat
+                label="إجمالي الطلبات المعالجة"
+                value={stats.totalOrdersHandled}
+                highlight
+                icon={ShoppingCart}
+                onClick={() => onNavigate?.("orders")}
+              />
+              <MiniStat
+                label="عملاء تم تحويلهم لتجار"
+                value={stats.totalLeadsConverted}
+                highlight
+                icon={UserPlus}
+                onClick={() => onNavigate?.("leads")}
+              />
               <MiniStat
                 label="الموظفين النشطين"
                 value={stats.activeStaff}
