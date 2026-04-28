@@ -1134,6 +1134,31 @@ const SubmittedSuccessCard = ({
   // عرض تفاصيل تقرير سابق في drawer
   const [pastReport, setPastReport] = useState<HistoryItem | null>(null);
 
+  // فتح تقرير أمس مباشرة بضغطة واحدة
+  const [yesterdayLoading, setYesterdayLoading] = useState(false);
+  const openYesterdayReport = async () => {
+    if (!userId) return;
+    setYesterdayLoading(true);
+    try {
+      const y = new Date();
+      y.setDate(y.getDate() - 1);
+      const yStr = y.toISOString().slice(0, 10);
+      const { data } = await supabase
+        .from("staff_daily_reports")
+        .select("id, report_date, submitted_at, customers_contacted, customers_registered, customers_with_invoices, total_invoices_amount, hot_leads_count, follow_ups_done, best_deal_today, problems_faced, tomorrow_plan, general_notes")
+        .eq("staff_user_id", userId)
+        .eq("report_date", yStr)
+        .maybeSingle();
+      if (!data) {
+        toast({ title: "مفيش تقرير لأمس", description: "لم يتم تقديم تقرير في يوم أمس.", variant: "destructive" });
+      } else {
+        setPastReport(data as HistoryItem);
+      }
+    } finally {
+      setYesterdayLoading(false);
+    }
+  };
+
   // ── تقرير مجمّع (أسبوعي / شهري) ─────────────────────────────────
   type AggregatePeriod = "week" | "month";
   const [aggregateOpen, setAggregateOpen] = useState(false);
