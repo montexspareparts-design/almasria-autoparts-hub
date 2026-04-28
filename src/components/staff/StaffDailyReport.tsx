@@ -1056,6 +1056,21 @@ const SubmittedSuccessCard = ({
   const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory] = useState<HistoryItem[] | null>(null);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [staffName, setStaffName] = useState<string>("");
+
+  // جلب اسم الموظف لعرضه في ترويسة "تفاصيل تقرير اليوم"
+  useEffect(() => {
+    if (!userId) return;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("user_id", userId)
+        .maybeSingle();
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      setStaffName(data?.full_name || authUser?.email?.split("@")[0] || "موظف");
+    })();
+  }, [userId]);
 
   const submittedTime = useMemo(
     () =>
@@ -1179,6 +1194,11 @@ const SubmittedSuccessCard = ({
               <DrawerTitle className="flex items-center gap-2">
                 <ClipboardList className="w-5 h-5 text-primary" />
                 تفاصيل تقرير اليوم
+                {staffName && (
+                  <span className="text-xs font-normal text-muted-foreground">
+                    — {staffName}
+                  </span>
+                )}
               </DrawerTitle>
               <DrawerDescription className="text-xs">
                 {submittedDate} — تم التقديم الساعة {submittedTime}
