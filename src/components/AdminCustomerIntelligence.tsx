@@ -3935,6 +3935,7 @@ const AdminCustomerIntelligence = () => {
                               );
                             })()}
 
+                            {comms.length === 0 ? (
                               <div className="rounded-xl border border-dashed border-border/50 bg-muted/10 p-3 flex items-center justify-between"><div className="flex items-center gap-2 text-[11px] text-muted-foreground"><FileText className="w-3.5 h-3.5" />لا يوجد سجل تواصل سابق مع هذا العميل</div><span className="text-[10px] text-muted-foreground italic">سجّل مكالمتك من ملف العميل</span></div>
                             ) : (
                               <div className="rounded-xl border border-border/40 bg-card/50 overflow-hidden">
