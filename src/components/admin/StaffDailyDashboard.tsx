@@ -482,9 +482,9 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
 
         <button
           type="button"
-          onClick={() => onNavigate?.("customers")}
+          onClick={() => onNavigate?.("leads")}
           className="group relative overflow-hidden rounded-xl border bg-gradient-to-br from-sky-50 to-sky-100/50 hover:from-sky-100 hover:to-sky-200/60 dark:from-sky-950/40 dark:to-sky-900/30 p-3 text-right transition-all hover:shadow-md hover:-translate-y-0.5"
-          aria-label="افتح ملف العملاء"
+          aria-label="افتح تبويب إدخال عملاء جدد"
         >
           <div className="flex items-center justify-between gap-2">
             <Users className="w-5 h-5 text-sky-600 dark:text-sky-400 shrink-0" />
