@@ -294,6 +294,47 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
     setAlerts(behavioralAlerts);
   };
 
+  const resolvedStats = stats ?? {
+    pendingOrders: 0,
+    newLeads: 0,
+    pendingPayments: 0,
+    staleOrders: 0,
+    todayOrders: 0,
+    todayLeadsContacted: 0,
+    totalOrdersHandled: 0,
+    totalLeadsConverted: 0,
+    activeStaff: 0,
+    todayVisitors: 0,
+    todaySearches: 0,
+  };
+
+  const urgentTasks = [
+    { label: "طلبات جديدة بانتظار المراجعة", count: resolvedStats.pendingOrders, icon: ShoppingCart, color: "text-blue-600", bg: "bg-blue-50", section: "orders" },
+    { label: "طلبات بانتظار الدفع", count: resolvedStats.pendingPayments, icon: Clock, color: "text-amber-600", bg: "bg-amber-50", section: "orders" },
+    { label: "طلبات معلقة أكثر من 48 ساعة ⚠️", count: resolvedStats.staleOrders, icon: AlertTriangle, color: "text-red-600", bg: "bg-red-50", section: "orders" },
+    { label: "عملاء محتملين جدد", count: resolvedStats.newLeads, icon: Users, color: "text-emerald-600", bg: "bg-emerald-50", section: "leads" },
+  ].filter((task) => task.count > 0);
+
+  const highSearchAlerts = alerts.filter((alert) => alert.type === "high_search");
+  const inactiveAlerts = alerts.filter((alert) => alert.type === "inactive");
+  const totalUrgent = urgentTasks.reduce((sum, task) => sum + task.count, 0);
+  const totalAlerts = highSearchAlerts.length + inactiveAlerts.length;
+  const priorityOpen =
+    totalUrgent > 0 ? "urgent"
+    : searchContacts.length > 0 ? "contacts"
+    : totalAlerts > 0 ? "alerts"
+    : "performance";
+
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem(STORAGE_KEY)) {
+        setOpenSections([priorityOpen]);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [priorityOpen, STORAGE_KEY]);
+
   if (loading) {
     return (
       <div className="flex justify-center py-16">
@@ -303,47 +344,6 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
   }
 
   if (!stats) return null;
-
-  const urgentTasks = [
-    { label: "طلبات جديدة بانتظار المراجعة", count: stats.pendingOrders, icon: ShoppingCart, color: "text-blue-600", bg: "bg-blue-50", section: "orders" },
-    { label: "طلبات بانتظار الدفع", count: stats.pendingPayments, icon: Clock, color: "text-amber-600", bg: "bg-amber-50", section: "orders" },
-    { label: "طلبات معلقة أكثر من 48 ساعة ⚠️", count: stats.staleOrders, icon: AlertTriangle, color: "text-red-600", bg: "bg-red-50", section: "orders" },
-    { label: "عملاء محتملين جدد", count: stats.newLeads, icon: Users, color: "text-emerald-600", bg: "bg-emerald-50", section: "leads" },
-  ].filter(t => t.count > 0);
-
-  const highSearchAlerts = alerts.filter(a => a.type === "high_search");
-  const inactiveAlerts = alerts.filter(a => a.type === "inactive");
-
-  const totalUrgent = urgentTasks.reduce((s, t) => s + t.count, 0);
-  const totalAlerts = highSearchAlerts.length + inactiveAlerts.length;
-
-  // Highest-priority section (auto-open on first visit)
-  const priorityOpen =
-    totalUrgent > 0 ? "urgent"
-    : searchContacts.length > 0 ? "contacts"
-    : totalAlerts > 0 ? "alerts"
-    : "performance";
-
-  // Persisted accordion state — falls back to priority on first visit
-  // First-load: if user never picked anything, jump to today's priority
-  useEffect(() => {
-    try {
-      if (!localStorage.getItem(STORAGE_KEY)) {
-        setOpenSections([priorityOpen]);
-      }
-    } catch { /* ignore */ }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [priorityOpen]);
-
-  // First-load: if user never picked anything, jump to today's priority
-  useEffect(() => {
-    try {
-      if (!localStorage.getItem(STORAGE_KEY)) {
-        setOpenSections([priorityOpen]);
-      }
-    } catch { /* ignore */ }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [priorityOpen]);
 
   const handleAccordionChange = (values: string[]) => {
     setOpenSections(values);
