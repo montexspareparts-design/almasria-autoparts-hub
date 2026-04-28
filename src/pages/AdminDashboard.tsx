@@ -105,8 +105,8 @@ const sidebarGroups: SidebarGroup[] = [
       { id: "analytics", label: "التحليلات", icon: BarChart3 },                      // 5) KPIs عامة
       { id: "leads", label: "Leads", icon: Users },                                   // 6) متابعة العملاء المحتملين
       { id: "orders", label: "الطلبات", icon: ShoppingBag },                          // تنفيذ يومي (يبقى متاح بعد الترتيب الأساسي)
+      { id: "daily-reports-dashboard", label: "التقرير اليومي", icon: ClipboardList }, // مباشرة بعد الطلبات — يبدأ يلمع 5م
       { id: "staff-performance", label: "أداء الموظفين", icon: TrendingUp },         // أدمن فقط
-      { id: "daily-reports-dashboard", label: "تقارير الموظفين اليومية", icon: ClipboardList }, // أدمن: لوحة التقارير + KPI
     ],
   },
   {
