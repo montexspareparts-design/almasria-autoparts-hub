@@ -244,11 +244,15 @@ const AdminDashboard = () => {
     const id = setInterval(check, 120_000);
     // أعد الفحص فوراً عند العودة لتبويب الصفحة (لو قدّم من جهاز آخر)
     const onFocus = () => check();
+    // التقاط حدث التقديم الفوري من MyDailyTasks لإيقاف اللمعان بدون انتظار
+    const onSubmitted = () => setHasSubmittedTodayReport(true);
     window.addEventListener("focus", onFocus);
+    window.addEventListener("daily-report-submitted", onSubmitted);
     return () => {
       cancelled = true;
       clearInterval(id);
       window.removeEventListener("focus", onFocus);
+      window.removeEventListener("daily-report-submitted", onSubmitted);
     };
   }, [user?.id]);
 
