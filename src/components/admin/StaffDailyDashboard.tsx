@@ -313,6 +313,101 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
         <p className="text-sm text-muted-foreground">ملخص اليوم وأولويات العمل</p>
       </div>
 
+      {/* Today's Visitor & Search KPIs */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <Card className="border-l-4 border-l-indigo-500">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
+              <Users className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-2xl font-bold">{stats.todayVisitors}</p>
+              <p className="text-xs text-muted-foreground">زائر اليوم</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-purple-500">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-purple-50 flex items-center justify-center shrink-0">
+              <Search className="w-5 h-5 text-purple-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-2xl font-bold">{stats.todaySearches}</p>
+              <p className="text-xs text-muted-foreground">عملية بحث اليوم</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-emerald-500">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
+              <CheckCircle className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-2xl font-bold">{stats.todayOrders}</p>
+              <p className="text-xs text-muted-foreground">طلب اليوم</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Top Searches Today */}
+      {topSearches.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Search className="w-4 h-4 text-purple-600" />
+              أهم عمليات البحث اليوم
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {topSearches.map((s, i) => (
+              <div key={i} className="flex items-center justify-between gap-2 p-2 rounded-lg bg-muted/40 hover:bg-muted/60 transition">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <span className="text-xs font-bold text-muted-foreground w-5">#{i + 1}</span>
+                  <span className="text-sm font-medium truncate">{s.query}</span>
+                </div>
+                <Badge variant="secondary" className="shrink-0">{s.count} مرة</Badge>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Search Contacts Today — phones to call */}
+      {searchContacts.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <MessageCircle className="w-4 h-4 text-emerald-600" />
+              أرقام تواصل (عملاء بحثوا اليوم)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {searchContacts.map((c) => (
+              <div key={c.userId} className="flex items-center gap-2 p-2 rounded-lg border bg-card hover:shadow-sm transition">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold truncate">{c.name}</p>
+                  <p className="text-[11px] text-muted-foreground truncate">
+                    آخر بحث: <span className="font-mono">{c.lastQuery}</span> · {c.searchCount} عملية
+                  </p>
+                  {c.phone && (
+                    <a href={`tel:${c.phone}`} className="text-xs text-primary hover:underline font-mono" dir="ltr">📞 {c.phone}</a>
+                  )}
+                </div>
+                {c.phone && (
+                  <div className="flex gap-1 shrink-0">
+                    <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => window.location.href = `tel:${c.phone}`}>
+                      اتصال
+                    </Button>
+                    <WhatsAppQuickChat phone={c.phone} customerName={c.name} context={`بحث عن: ${c.lastQuery}`} />
+                  </div>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Urgent Tasks */}
       {urgentTasks.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
