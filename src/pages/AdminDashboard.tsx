@@ -663,6 +663,12 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminStaffPerformance /></Suspense>;
       case "customer-intel":
         return <Suspense fallback={<SectionLoader />}><AdminCustomerIntelligence /></Suspense>;
+      case "visitor-leads":
+        return (
+          <Suspense fallback={<SectionLoader />}>
+            <VisitorLeadsPage />
+          </Suspense>
+        );
       case "customers":
       case "leads":
         return (
