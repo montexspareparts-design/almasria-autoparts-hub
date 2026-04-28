@@ -24,6 +24,9 @@ interface DashboardStats {
   activeStaff: number;
   todayVisitors: number;
   todaySearches: number;
+  // ===== Quick KPI strip (الرئيسية) =====
+  todayWhatsappLeads: number;  // زوار واتساب جدد اليوم (visitor_leads)
+  todayNewCustomers: number;   // عملاء (profiles) جدد اليوم
 }
 
 interface TopSearch {
@@ -95,6 +98,8 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
       { data: staffRoles },
       { data: visitorRows },
       { count: todaySearches },
+      { count: todayWhatsappLeads },
+      { count: todayNewCustomers },
     ] = await Promise.all([
       supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "pending"),
       supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "awaiting_payment"),
@@ -107,6 +112,8 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
       supabase.from("user_roles").select("user_id, role").in("role", ["admin", "moderator"]),
       supabase.from("page_visits").select("session_key, user_id").gte("visited_at", todayStart),
       supabase.from("customer_search_logs").select("*", { count: "exact", head: true }).gte("created_at", todayStart),
+      supabase.from("visitor_leads" as any).select("*", { count: "exact", head: true }).gte("created_at", todayStart),
+      supabase.from("profiles").select("*", { count: "exact", head: true }).gte("created_at", todayStart),
     ]);
 
     const activeStaff = new Set((staffRoles || []).map((r: any) => r.user_id)).size;
@@ -129,6 +136,8 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
       activeStaff,
       todayVisitors: visitorKeys.size,
       todaySearches: todaySearches || 0,
+      todayWhatsappLeads: todayWhatsappLeads || 0,
+      todayNewCustomers: todayNewCustomers || 0,
     });
     setLoading(false);
   };
@@ -433,6 +442,62 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
         />
       </div>
 
+      {/* ============ QUICK KPI STRIP — ملخص يومي بنقرة واحدة ============ */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        <button
+          type="button"
+          onClick={() => onNavigate?.("visitor-leads")}
+          className="group relative overflow-hidden rounded-xl border bg-gradient-to-br from-emerald-50 to-emerald-100/50 hover:from-emerald-100 hover:to-emerald-200/60 dark:from-emerald-950/40 dark:to-emerald-900/30 p-3 text-right transition-all hover:shadow-md hover:-translate-y-0.5"
+          aria-label="افتح ليدز الزوار (واتساب)"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <MessageCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span className="text-[10px] sm:text-xs text-emerald-700 dark:text-emerald-300 font-medium">واتساب اليوم</span>
+          </div>
+          <div className="mt-1.5 flex items-baseline gap-1 justify-end">
+            <span className="text-2xl sm:text-3xl font-extrabold text-emerald-700 dark:text-emerald-300 tabular-nums">
+              {stats?.todayWhatsappLeads ?? 0}
+            </span>
+            <span className="text-[10px] text-emerald-600/70 dark:text-emerald-400/70">زائر</span>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onNavigate?.("leads")}
+          className="group relative overflow-hidden rounded-xl border bg-gradient-to-br from-amber-50 to-amber-100/50 hover:from-amber-100 hover:to-amber-200/60 dark:from-amber-950/40 dark:to-amber-900/30 p-3 text-right transition-all hover:shadow-md hover:-translate-y-0.5"
+          aria-label="افتح Leads"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <UserPlus className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span className="text-[10px] sm:text-xs text-amber-700 dark:text-amber-300 font-medium">ليدز جديدة</span>
+          </div>
+          <div className="mt-1.5 flex items-baseline gap-1 justify-end">
+            <span className="text-2xl sm:text-3xl font-extrabold text-amber-700 dark:text-amber-300 tabular-nums">
+              {stats?.newLeads ?? 0}
+            </span>
+            <span className="text-[10px] text-amber-600/70 dark:text-amber-400/70">للمتابعة</span>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onNavigate?.("customers")}
+          className="group relative overflow-hidden rounded-xl border bg-gradient-to-br from-sky-50 to-sky-100/50 hover:from-sky-100 hover:to-sky-200/60 dark:from-sky-950/40 dark:to-sky-900/30 p-3 text-right transition-all hover:shadow-md hover:-translate-y-0.5"
+          aria-label="افتح ملف العملاء"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <Users className="w-5 h-5 text-sky-600 dark:text-sky-400 shrink-0" />
+            <span className="text-[10px] sm:text-xs text-sky-700 dark:text-sky-300 font-medium">عملاء جدد اليوم</span>
+          </div>
+          <div className="mt-1.5 flex items-baseline gap-1 justify-end">
+            <span className="text-2xl sm:text-3xl font-extrabold text-sky-700 dark:text-sky-300 tabular-nums">
+              {stats?.todayNewCustomers ?? 0}
+            </span>
+            <span className="text-[10px] text-sky-600/70 dark:text-sky-400/70">تسجيل</span>
+          </div>
+        </button>
+      </div>
 
       {/* ============ COLLAPSIBLE SECTIONS ============ */}
       <Accordion type="single" collapsible value={openSection} onValueChange={handleAccordionChange} className="space-y-3">
