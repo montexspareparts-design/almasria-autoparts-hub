@@ -583,6 +583,17 @@ export default function ActiveVisitorsPage() {
                             واتساب
                           </a>
                         )}
+                        <button
+                          onClick={() => { setActionFor(v); setActionType("phone"); setActionNote(""); }}
+                          className={cn(
+                            "inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-bold",
+                            "bg-amber-500 hover:bg-amber-600 text-white transition-colors"
+                          )}
+                          title="سجّل إجراء التواصل (يُخفي الكارت تدريجياً)"
+                        >
+                          <PenLine className="w-3.5 h-3.5" />
+                          سجّل إجراء
+                        </button>
                         <Link
                           to={`/admin/visitor/${v.user_id}`}
                           className={cn(
@@ -603,6 +614,52 @@ export default function ActiveVisitorsPage() {
           </ScrollArea>
         )}
       </Card>
+
+      {/* Dialog: تسجيل إجراء التواصل */}
+      <Dialog open={!!actionFor} onOpenChange={(o) => !o && setActionFor(null)}>
+        <DialogContent dir="rtl" className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-base">
+              تسجيل إجراء — {actionFor?.name || "زائر بدون اسم"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div>
+              <label className="text-xs font-bold text-muted-foreground mb-1 block">نوع الإجراء</label>
+              <Select value={actionType} onValueChange={(v: any) => setActionType(v)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="phone">📞 اتصال هاتفي</SelectItem>
+                  <SelectItem value="whatsapp">💬 واتساب</SelectItem>
+                  <SelectItem value="no_answer">🚫 لم يردّ</SelectItem>
+                  <SelectItem value="visit">🏬 زيارة فرع</SelectItem>
+                  <SelectItem value="note">📝 ملاحظة</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs font-bold text-muted-foreground mb-1 block">ملاحظات (اختياري)</label>
+              <Textarea
+                value={actionNote}
+                onChange={(e) => setActionNote(e.target.value)}
+                placeholder="مثال: طلب عرض سعر للفلتر — هرجعله بكرة"
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setActionFor(null)} disabled={savingAction}>
+              إلغاء
+            </Button>
+            <Button onClick={saveAction} disabled={savingAction} className="gap-1.5">
+              {savingAction ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+              حفظ الإجراء
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
