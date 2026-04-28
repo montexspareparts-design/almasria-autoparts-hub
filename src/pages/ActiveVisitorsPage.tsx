@@ -242,14 +242,22 @@ export default function ActiveVisitorsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Window in ms for the "خلال X" filter
-  const hoursWindowMs = useMemo(() => {
+  // نطاق زمني [from, to] بناءً على الفلتر — يدعم "أمس" كنافذة محدودة وليس "آخر X"
+  const range = useMemo(() => {
+    const now = Date.now();
+    const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
     switch (hoursFilter) {
-      case "30m": return 30 * 60 * 1000;
-      case "1h": return 60 * 60 * 1000;
-      case "3h": return 3 * 60 * 60 * 1000;
-      case "6h": return 6 * 60 * 60 * 1000;
-      case "24h": return 24 * 60 * 60 * 1000;
+      case "30m": return { from: now - 30 * 60 * 1000, to: now };
+      case "1h": return { from: now - 60 * 60 * 1000, to: now };
+      case "3h": return { from: now - 3 * 60 * 60 * 1000, to: now };
+      case "6h": return { from: now - 6 * 60 * 60 * 1000, to: now };
+      case "24h": return { from: now - 24 * 60 * 60 * 1000, to: now };
+      case "yesterday": {
+        const endOfYesterday = startOfToday.getTime();
+        const startOfYesterday = endOfYesterday - 24 * 60 * 60 * 1000;
+        return { from: startOfYesterday, to: endOfYesterday };
+      }
+      case "7d": return { from: now - 7 * 24 * 60 * 60 * 1000, to: now };
     }
   }, [hoursFilter]);
 
@@ -260,15 +268,18 @@ export default function ActiveVisitorsPage() {
     return Date.now() - new Date(v.last_contacted_at).getTime() > OVERDUE_HOURS * 60 * 60 * 1000;
   };
 
+  const inRange = (iso: string) => {
+    const t = new Date(iso).getTime();
+    return t >= range.from && t <= range.to;
+  };
+
   // عداد الزوار المتأخرين داخل النافذة الزمنية الحالية — للبادج
   const overdueCount = useMemo(() => {
-    const cutoff = Date.now() - hoursWindowMs;
-    return visitors.filter((v) => new Date(v.last_seen_at).getTime() >= cutoff && isOverdue(v)).length;
-  }, [visitors, hoursWindowMs]);
+    return visitors.filter((v) => inRange(v.last_seen_at) && isOverdue(v)).length;
+  }, [visitors, range]);
 
   const filtered = useMemo(() => {
-    const cutoff = Date.now() - hoursWindowMs;
-    let list = visitors.filter((v) => new Date(v.last_seen_at).getTime() >= cutoff);
+    let list = visitors.filter((v) => inRange(v.last_seen_at));
     if (overdueOnly) list = list.filter(isOverdue);
     const q = search.trim().toLowerCase();
     if (q) {
@@ -279,7 +290,7 @@ export default function ActiveVisitorsPage() {
       );
     }
     return list;
-  }, [visitors, search, hoursWindowMs, overdueOnly]);
+  }, [visitors, search, range, overdueOnly]);
 
   const hoursLabel: Record<typeof hoursFilter, string> = {
     "30m": "30 دقيقة",
@@ -287,6 +298,50 @@ export default function ActiveVisitorsPage() {
     "3h": "3 ساعات",
     "6h": "6 ساعات",
     "24h": "24 ساعة",
+    "yesterday": "أمس",
+    "7d": "آخر 7 أيام",
+  };
+
+  // حفظ إجراء التواصل من نفس الكارت (يخفي الكارت تدريجياً ويسجل في customer_communications)
+  const saveAction = async () => {
+    if (!actionFor) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast({ title: "يجب تسجيل الدخول", variant: "destructive" });
+      return;
+    }
+    setSavingAction(true);
+    try {
+      const { error } = await supabase.from("customer_communications").insert({
+        customer_user_id: actionFor.user_id,
+        staff_user_id: user.id,
+        comm_type: actionType,
+        note: actionNote.trim() || null,
+      });
+      if (error) throw error;
+      // علّم الكارت كـ "تم التعامل" — يبدأ تأثير fade
+      setRecentlyHandled((prev) => {
+        const next = new Set(prev);
+        next.add(actionFor.user_id);
+        return next;
+      });
+      // حدّث last_contacted_at في الذاكرة فوراً (بدل ما ننتظر refetch)
+      setVisitors((prev) =>
+        prev.map((v) =>
+          v.user_id === actionFor.user_id
+            ? { ...v, last_contacted_at: new Date().toISOString() }
+            : v
+        )
+      );
+      toast({ title: "✅ تم تسجيل الإجراء", description: "الكارت سيختفي تدريجياً." });
+      setActionFor(null);
+      setActionNote("");
+      setActionType("phone");
+    } catch (e: any) {
+      toast({ title: "فشل الحفظ", description: e.message, variant: "destructive" });
+    } finally {
+      setSavingAction(false);
+    }
   };
 
   return (
