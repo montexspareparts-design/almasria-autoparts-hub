@@ -3870,12 +3870,9 @@ const AdminCustomerIntelligence = () => {
                                       <Search className="w-3.5 h-3.5 text-cyan-600" />
                                       اهتمامات العميل (آخر بحث + أهم الأصناف)
                                     </p>
-                                    <button
-                                      onClick={(e) => { e.stopPropagation(); setActiveTab(prev => ({ ...prev, [profile.user_id]: "activity" })); }}
-                                      className="text-[10px] font-bold text-cyan-700 dark:text-cyan-400 hover:underline"
-                                    >
-                                      عرض الكل ←
-                                    </button>
+                                    <span className="text-[10px] font-bold text-cyan-700 dark:text-cyan-400">
+                                      افتح تبويب «سجل التصفح» للتفاصيل
+                                    </span>
                                   </div>
 
                                   {recentSearches.length > 0 && (
