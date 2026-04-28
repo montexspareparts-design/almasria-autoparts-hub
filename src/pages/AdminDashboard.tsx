@@ -247,7 +247,7 @@ const AdminDashboard = () => {
     }
   }, [reportPhase, canAccess, toast]);
 
-  const canAccess = isAdmin || isModerator;
+  // (canAccess معرّف في الأعلى — قبل effects التذكير)
 
   // Filter sidebar for moderators
   const filteredSidebarGroups = canAccess
