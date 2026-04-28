@@ -88,7 +88,7 @@ export default function ActiveVisitorsPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
   // فلتر "خلال X" — يحدد نافذة آخر نشاط للزائر (30د، 1س، 3س، 6س، 24س، أمس، 7 أيام)
-  const [hoursFilter, setHoursFilter] = useState<"30m" | "1h" | "3h" | "6h" | "24h" | "yesterday" | "7d">("30m");
+  const [hoursFilter, setHoursFilter] = useState<"30m" | "1h" | "3h" | "6h" | "24h" | "yesterday" | "7d" | "all">("30m");
   // فلتر "متأخر" — يعرض فقط الزوار النشطين اللي مفيش معاهم تواصل في آخر OVERDUE_HOURS ساعة
   const [overdueOnly, setOverdueOnly] = useState(false);
 
@@ -258,6 +258,7 @@ export default function ActiveVisitorsPage() {
         return { from: startOfYesterday, to: endOfYesterday };
       }
       case "7d": return { from: now - 7 * 24 * 60 * 60 * 1000, to: now };
+      case "all": return { from: 0, to: now };
     }
   }, [hoursFilter]);
 
@@ -300,6 +301,7 @@ export default function ActiveVisitorsPage() {
     "24h": "24 ساعة",
     "yesterday": "أمس",
     "7d": "آخر 7 أيام",
+    "all": "كل الأيام",
   };
 
   // حفظ إجراء التواصل من نفس الكارت (يخفي الكارت تدريجياً ويسجل في customer_communications)
@@ -398,9 +400,9 @@ export default function ActiveVisitorsPage() {
           <Filter className="w-3.5 h-3.5" />
           خلال:
         </span>
-        {(["30m", "1h", "3h", "6h", "24h", "yesterday", "7d"] as const).map((h) => {
+        {(["30m", "1h", "3h", "6h", "24h", "yesterday", "7d", "all"] as const).map((h) => {
           const active = hoursFilter === h;
-          const isExtended = h === "yesterday" || h === "7d";
+          const isExtended = h === "yesterday" || h === "7d" || h === "all";
           return (
             <button
               key={h}
