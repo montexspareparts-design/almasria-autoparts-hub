@@ -21,6 +21,21 @@ interface DashboardStats {
   totalOrdersHandled: number;
   totalLeadsConverted: number;
   activeStaff: number;
+  todayVisitors: number;
+  todaySearches: number;
+}
+
+interface TopSearch {
+  query: string;
+  count: number;
+}
+
+interface SearchContact {
+  userId: string;
+  name: string;
+  phone: string | null;
+  lastQuery: string;
+  searchCount: number;
 }
 
 interface BehavioralAlert {
