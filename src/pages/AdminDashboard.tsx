@@ -99,14 +99,14 @@ const sidebarGroups: SidebarGroup[] = [
     label: "الرئيسية",
     items: [
       { id: "daily-dashboard", label: "🏠 الرئيسية", icon: BarChart3 },              // 1) نقطة البداية
-      { id: "my-daily-tasks", label: "مهامي اليومية", icon: ClipboardList },         // 1.5) Checklist + تقرير يومي
+      { id: "my-daily-tasks", label: "مهامي اليومية وتقرير اليوم", icon: ClipboardList },  // 1.5) مدمج: Checklist + تقرير اليوم — يلمع 5م ويختفي عند التقديم
       { id: "customer-intel", label: "ذكاء العملاء", icon: Eye },                    // 2) تحليلات سلوك العملاء
       { id: "visitor-leads", label: "ليدز الزوار (واتساب)", icon: MessageCircle },   // 3) أرقام الزوار غير المسجلين
       { id: "customers", label: "ملف العملاء", icon: Users },                        // 4) البحث عن عميل / تسجيل تواصل
       { id: "analytics", label: "التحليلات", icon: BarChart3 },                      // 5) KPIs عامة
       { id: "leads", label: "Leads", icon: Users },                                   // 6) متابعة العملاء المحتملين
       { id: "orders", label: "الطلبات", icon: ShoppingBag },                          // تنفيذ يومي (يبقى متاح بعد الترتيب الأساسي)
-      { id: "daily-reports-dashboard", label: "التقرير اليومي", icon: ClipboardList }, // مباشرة بعد الطلبات — يبدأ يلمع 5م
+      // ملاحظة: تبويب "التقرير اليومي" المنفصل اتدمج مع "مهامي اليومية" — للأدمن لوحة التقارير الجماعية موجودة في "التنبيهات والربط" → "التقارير اليومية للموظفين"
       { id: "staff-performance", label: "أداء الموظفين", icon: TrendingUp },         // أدمن فقط
     ],
   },
@@ -224,29 +224,62 @@ const AdminDashboard = () => {
     return () => clearInterval(id);
   }, []);
 
+  // فحص: هل الموظف قدّم تقرير اليوم؟ لو أيوة → نوقف اللمعان والتذكير.
+  // نعيد الفحص كل دقيقتين + بعد ما يفتح "مهامي اليومية" (لو قدّم في الجلسة الحالية).
+  const [hasSubmittedTodayReport, setHasSubmittedTodayReport] = useState(false);
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    const check = async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const { data } = await supabase
+        .from("staff_daily_reports")
+        .select("id")
+        .eq("staff_user_id", user.id)
+        .eq("report_date", today)
+        .maybeSingle();
+      if (!cancelled) setHasSubmittedTodayReport(!!data);
+    };
+    check();
+    const id = setInterval(check, 120_000);
+    // أعد الفحص فوراً عند العودة لتبويب الصفحة (لو قدّم من جهاز آخر)
+    const onFocus = () => check();
+    // التقاط حدث التقديم الفوري من MyDailyTasks لإيقاف اللمعان بدون انتظار
+    const onSubmitted = () => setHasSubmittedTodayReport(true);
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("daily-report-submitted", onSubmitted);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("daily-report-submitted", onSubmitted);
+    };
+  }, [user?.id]);
+
   // Toast توضيحي لمرة واحدة في اليوم لكل مرحلة (early/active) — يخزّن آخر مرحلة
   // أُظهرت في localStorage بمفتاح يحوي تاريخ اليوم لمنع التكرار.
   useEffect(() => {
     if (reportPhase === "off") return;
     if (!canAccess) return;
+    if (hasSubmittedTodayReport) return; // قدّم التقرير بالفعل → مفيش داعي للتذكير
     const todayKey = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
     const storageKey = `report-reminder-shown:${todayKey}:${reportPhase}`;
     if (localStorage.getItem(storageKey)) return;
     localStorage.setItem(storageKey, "1");
     if (reportPhase === "early") {
       toast({
-        title: "⏰ تذكير مبكر — التقرير اليومي",
-        description: "باقي 30 دقيقة على موعد التقرير اليومي (5م). جهّز أرقامك من دلوقتي عشان متتأخرش.",
+        title: "⏰ تذكير مبكر — تقرير اليوم",
+        description: "باقي 30 دقيقة على موعد التقرير اليومي (5م). افتح «مهامي اليومية وتقرير اليوم» وجهّز أرقامك.",
         duration: 8000,
       });
     } else {
       toast({
-        title: "📋 وقت التقرير اليومي",
-        description: "افتح بند «التقرير اليومي» من الشريط الجانبي وقدّم تقرير اليوم قبل ما تطلع.",
+        title: "📋 وقت تقرير اليوم",
+        description: "افتح «مهامي اليومية وتقرير اليوم» من الشريط الجانبي وقدّم تقرير اليوم قبل ما تطلع.",
         duration: 8000,
       });
     }
-  }, [reportPhase, canAccess, toast]);
+  }, [reportPhase, canAccess, toast, hasSubmittedTodayReport]);
 
   // (canAccess معرّف في الأعلى — قبل effects التذكير)
 
@@ -1015,7 +1048,9 @@ const AdminDashboard = () => {
                   {group.items.map((section) => {
                     const Icon = section.icon;
                     const isActive = activeSection === section.id;
-                    const isReportReminder = section.id === "daily-reports-dashboard" && reportPhase !== "off" && !isActive;
+                    // اللمعان والتذكير ينتقلوا لتبويب "مهامي اليومية" (لأنه فيه فورم التقديم)،
+                    // ويختفي اللمعان فور تقديم تقرير اليوم.
+                    const isReportReminder = section.id === "my-daily-tasks" && reportPhase !== "off" && !isActive && !hasSubmittedTodayReport;
                     const isReportEarly = isReportReminder && reportPhase === "early";
                     return (
                       <button

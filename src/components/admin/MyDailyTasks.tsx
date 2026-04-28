@@ -272,6 +272,11 @@ export default function MyDailyTasks() {
     // علامة "تم اليوم" عشان البوبأب اليومي ميظهرش تاني
     try { localStorage.setItem(`daily_report_done_${user.id}_${todayKey()}`, "1"); } catch {}
 
+    // أبلغ AdminDashboard فوراً عشان يوقّف لمعان التذكير على تبويب "مهامي اليومية"
+    if (lockNow) {
+      try { window.dispatchEvent(new CustomEvent("daily-report-submitted")); } catch {}
+    }
+
     toast({
       title: lockNow ? "🔒 تم إرسال التقرير وقفله" : "💾 تم الحفظ المؤقت",
       description: lockNow
