@@ -1042,7 +1042,15 @@ interface HistoryItem {
   report_date: string;
   submitted_at: string | null;
   customers_contacted: number | null;
+  customers_registered: number | null;
+  customers_with_invoices: number | null;
   total_invoices_amount: number | null;
+  hot_leads_count: number | null;
+  follow_ups_done: number | null;
+  best_deal_today: string | null;
+  problems_faced: string | null;
+  tomorrow_plan: string | null;
+  general_notes: string | null;
 }
 
 const SubmittedSuccessCard = ({
