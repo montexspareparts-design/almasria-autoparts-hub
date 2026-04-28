@@ -1186,7 +1186,7 @@ export default function VisitorSessionSummary() {
                   {lastSessionSearches.length > 0 && (
                     <>
                       <Separator />
-                      <div id="section-searches" className="scroll-mt-24 rounded-xl">
+                      <div className="scroll-mt-24 rounded-xl">
                         <SectionTitle icon={Search} title="عمليات البحث" count={lastSessionSearches.length} />
                         <div className="flex flex-wrap gap-1.5 mt-3">
                           {lastSessionSearches.map((s) => (
