@@ -98,6 +98,8 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
       { data: staffRoles },
       { data: visitorRows },
       { count: todaySearches },
+      { count: todayWhatsappLeads },
+      { count: todayNewCustomers },
     ] = await Promise.all([
       supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "pending"),
       supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "awaiting_payment"),
@@ -110,6 +112,8 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
       supabase.from("user_roles").select("user_id, role").in("role", ["admin", "moderator"]),
       supabase.from("page_visits").select("session_key, user_id").gte("visited_at", todayStart),
       supabase.from("customer_search_logs").select("*", { count: "exact", head: true }).gte("created_at", todayStart),
+      supabase.from("visitor_leads" as any).select("*", { count: "exact", head: true }).gte("created_at", todayStart),
+      supabase.from("profiles").select("*", { count: "exact", head: true }).gte("created_at", todayStart),
     ]);
 
     const activeStaff = new Set((staffRoles || []).map((r: any) => r.user_id)).size;
@@ -132,6 +136,8 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
       activeStaff,
       todayVisitors: visitorKeys.size,
       todaySearches: todaySearches || 0,
+      todayWhatsappLeads: todayWhatsappLeads || 0,
+      todayNewCustomers: todayNewCustomers || 0,
     });
     setLoading(false);
   };
