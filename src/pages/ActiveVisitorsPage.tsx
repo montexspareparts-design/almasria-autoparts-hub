@@ -475,8 +475,15 @@ export default function ActiveVisitorsPage() {
                 const wpUrl = phoneNorm
                   ? `https://wa.me/${phoneNorm}?text=${encodeURIComponent("السلام عليكم 👋 معك المصرية جروب — تحب نساعدك في إيه؟")}`
                   : null;
+                const handled = recentlyHandled.has(v.user_id);
                 return (
-                  <div key={v.user_id} className="p-4 hover:bg-muted/30 transition-colors">
+                  <div
+                    key={v.user_id}
+                    className={cn(
+                      "p-4 hover:bg-muted/30 transition-all duration-700",
+                      handled && "opacity-40 grayscale bg-muted/40"
+                    )}
+                  >
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       {/* User info */}
                       <div className="flex-1 min-w-[220px]">
