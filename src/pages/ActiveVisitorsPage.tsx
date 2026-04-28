@@ -507,6 +507,12 @@ export default function ActiveVisitorsPage() {
                               تذكير معلّق
                             </Badge>
                           )}
+                          {handled && (
+                            <Badge className="text-[10px] h-5 gap-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-300/40">
+                              <CheckCircle2 className="w-3 h-3" />
+                              تم التعامل
+                            </Badge>
+                          )}
                         </div>
 
                         {v.phone && (
