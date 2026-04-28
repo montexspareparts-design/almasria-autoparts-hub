@@ -1014,7 +1014,8 @@ const AdminDashboard = () => {
                   {group.items.map((section) => {
                     const Icon = section.icon;
                     const isActive = activeSection === section.id;
-                    const isReportReminder = section.id === "daily-reports-dashboard" && reportReminderActive && !isActive;
+                    const isReportReminder = section.id === "daily-reports-dashboard" && reportPhase !== "off" && !isActive;
+                    const isReportEarly = isReportReminder && reportPhase === "early";
                     return (
                       <button
                         key={section.id}
@@ -1027,10 +1028,19 @@ const AdminDashboard = () => {
                           ${isActive
                             ? "bg-primary/10 text-primary font-bold shadow-sm shadow-primary/5"
                             : isReportReminder
-                              ? "bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 font-bold report-reminder-glow"
+                              ? isReportEarly
+                                ? "bg-amber-50/60 dark:bg-amber-950/20 text-amber-700 dark:text-amber-300 font-bold"
+                                : "bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 font-bold report-reminder-glow"
                               : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
                           }
                         `}
+                        title={
+                          isReportEarly
+                            ? "تذكير مبكر — باقي 30 دقيقة على موعد التقرير اليومي"
+                            : isReportReminder
+                              ? "موعد التقرير اليومي — قدّم تقريرك دلوقتي"
+                              : undefined
+                        }
                       >
                         {isActive && (
                           <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[2.5px] h-4 bg-primary rounded-l-full" />
@@ -1048,8 +1058,12 @@ const AdminDashboard = () => {
                         </div>
                         <span className="truncate">{section.label}</span>
                         {isReportReminder && (
-                          <span className="mr-auto text-[9px] font-extrabold bg-amber-500 text-white rounded-md px-1.5 py-0.5 animate-pulse">
-                            الآن
+                          <span className={`mr-auto text-[9px] font-extrabold rounded-md px-1.5 py-0.5 ${
+                            isReportEarly
+                              ? "bg-amber-200 text-amber-800 dark:bg-amber-800/60 dark:text-amber-100"
+                              : "bg-amber-500 text-white animate-pulse"
+                          }`}>
+                            {isReportEarly ? "قريب" : "الآن"}
                           </span>
                         )}
                         {section.id === "dealers" && pendingCount > 0 && (
