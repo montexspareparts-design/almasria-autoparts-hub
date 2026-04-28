@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Search, ShoppingBag, Eye, Heart, Package, Clock, Phone, MessageCircle, Activity } from "lucide-react";
+import { Search, ShoppingBag, Eye, Heart, Package, Clock, Phone, MessageCircle, Activity, FileText, Timer } from "lucide-react";
 import WhatsAppQuickChat from "./WhatsAppQuickChat";
 
 interface Props {
@@ -46,6 +46,7 @@ export default function CustomerActivitySummary({ open, onOpenChange, userId, cu
   const [favorites, setFavorites] = useState<FavoriteEntry[]>([]);
   const [priceViews, setPriceViews] = useState<PriceViewEntry[]>([]);
   const [sessions, setSessions] = useState<{ session_date: string; page_views: number; last_seen_at: string }[]>([]);
+  const [pageVisits, setPageVisits] = useState<{ path: string; page_title: string | null; visited_at: string }[]>([]);
 
   useEffect(() => {
     if (!open || !userId) return;
@@ -53,12 +54,13 @@ export default function CustomerActivitySummary({ open, onOpenChange, userId, cu
     (async () => {
       setLoading(true);
       try {
-        const [searchRes, ordersRes, favRes, viewRes, sessRes] = await Promise.all([
+        const [searchRes, ordersRes, favRes, viewRes, sessRes, visitsRes] = await Promise.all([
           supabase.from("customer_search_logs").select("search_query, created_at, results_count").eq("user_id", userId).order("created_at", { ascending: false }).limit(20),
           supabase.from("orders").select("id, order_number, total_amount, status, created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(10),
           supabase.from("dealer_favorites").select("product_id, created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(15),
           supabase.from("dealer_price_views").select("product_id, viewed_at").eq("user_id", userId).order("viewed_at", { ascending: false }).limit(15),
           supabase.from("customer_sessions").select("session_date, page_views, last_seen_at").eq("user_id", userId).order("session_date", { ascending: false }).limit(7),
+          supabase.from("page_visits").select("path, page_title, visited_at").eq("user_id", userId).order("visited_at", { ascending: false }).limit(50),
         ]);
 
         if (cancelled) return;
@@ -77,12 +79,41 @@ export default function CustomerActivitySummary({ open, onOpenChange, userId, cu
         setFavorites((favRes.data || []).map((f: any) => ({ ...f, product_name: productMap.get(f.product_id)?.name, product_sku: productMap.get(f.product_id)?.sku })));
         setPriceViews((viewRes.data || []).map((v: any) => ({ ...v, product_name: productMap.get(v.product_id)?.name, product_sku: productMap.get(v.product_id)?.sku })));
         setSessions(sessRes.data || []);
+        setPageVisits(visitsRes.data || []);
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
     return () => { cancelled = true; };
   }, [open, userId]);
+
+  // Estimated last session duration: cluster recent visits within 30-min gaps
+  const lastSessionStats = (() => {
+    if (pageVisits.length === 0) return null;
+    const sorted = [...pageVisits].sort((a, b) => new Date(b.visited_at).getTime() - new Date(a.visited_at).getTime());
+    const lastTime = new Date(sorted[0].visited_at).getTime();
+    const GAP_MS = 30 * 60 * 1000; // 30 minutes
+    let firstInSession = sorted[0];
+    for (let i = 1; i < sorted.length; i++) {
+      const prev = new Date(sorted[i - 1].visited_at).getTime();
+      const cur = new Date(sorted[i].visited_at).getTime();
+      if (prev - cur > GAP_MS) break;
+      firstInSession = sorted[i];
+    }
+    const startTime = new Date(firstInSession.visited_at).getTime();
+    const durationSec = Math.max(0, Math.round((lastTime - startTime) / 1000));
+    const pageCount = sorted.filter(v => new Date(v.visited_at).getTime() >= startTime).length;
+    return { lastSeen: sorted[0].visited_at, durationSec, pageCount };
+  })();
+
+  const fmtDuration = (sec: number) => {
+    if (sec < 60) return `${sec} ثانية`;
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    if (m < 60) return s > 0 ? `${m} د ${s} ث` : `${m} دقيقة`;
+    const h = Math.floor(m / 60);
+    return `${h} س ${m % 60} د`;
+  };
 
   const topSearches = (() => {
     const map: Record<string, number> = {};
@@ -131,6 +162,30 @@ export default function CustomerActivitySummary({ open, onOpenChange, userId, cu
               </>
             ) : (
               <>
+                {/* Session summary card */}
+                {lastSessionStats && (
+                  <div className="rounded-xl p-3 bg-gradient-to-br from-primary/5 via-primary/10 to-transparent border border-primary/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Timer className="w-4 h-4 text-primary" />
+                      <h3 className="text-xs font-bold text-foreground">ملخص آخر جلسة</h3>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div>
+                        <p className="text-[10px] text-muted-foreground mb-0.5">المدة التقريبية</p>
+                        <p className="text-sm font-black text-primary">{fmtDuration(lastSessionStats.durationSec)}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-muted-foreground mb-0.5">صفحات الجلسة</p>
+                        <p className="text-sm font-black text-foreground">{lastSessionStats.pageCount}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-muted-foreground mb-0.5">آخر نشاط</p>
+                        <p className="text-sm font-black text-emerald-600 dark:text-emerald-400">{fmtDate(lastSessionStats.lastSeen)}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Quick stats */}
                 <div className="grid grid-cols-3 gap-2">
                   <StatCard icon={Search} label="بحث" value={searches.length} color="orange" />
@@ -238,7 +293,25 @@ export default function CustomerActivitySummary({ open, onOpenChange, userId, cu
                   </Section>
                 )}
 
-                {searches.length === 0 && orders.length === 0 && favorites.length === 0 && priceViews.length === 0 && sessions.length === 0 && (
+                {/* Page visits log */}
+                {pageVisits.length > 0 && (
+                  <Section icon={FileText} title={`سجل الصفحات (${pageVisits.length})`} color="blue">
+                    <div className="space-y-1 max-h-64 overflow-y-auto pe-1">
+                      {pageVisits.slice(0, 30).map((v, i) => (
+                        <div key={i} className="flex items-center gap-2 text-xs p-2 rounded-md bg-muted/40 hover:bg-muted">
+                          <Clock className="w-3 h-3 text-muted-foreground shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            {v.page_title && <p className="font-medium text-foreground truncate">{v.page_title}</p>}
+                            <code className="text-[10px] text-muted-foreground truncate block" dir="ltr">{v.path}</code>
+                          </div>
+                          <span className="text-[10px] text-muted-foreground shrink-0">{fmtDate(v.visited_at)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </Section>
+                )}
+
+                {searches.length === 0 && orders.length === 0 && favorites.length === 0 && priceViews.length === 0 && sessions.length === 0 && pageVisits.length === 0 && (
                   <div className="text-center py-12 text-muted-foreground">
                     <Activity className="w-12 h-12 mx-auto mb-3 opacity-30" />
                     <p className="text-sm">لا يوجد نشاط مسجل لهذا العميل بعد</p>
