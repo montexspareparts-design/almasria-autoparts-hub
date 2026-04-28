@@ -1120,15 +1120,113 @@ const SubmittedSuccessCard = ({
     }
     setHistoryLoading(true);
     setShowHistory(true);
-    const client: any = supabase;
-    const res = await client
+    // ⚠️ كان فيه bug: العمود الصحيح هو staff_user_id (مش user_id)
+    const res = await supabase
       .from("staff_daily_reports")
-      .select("id, report_date, submitted_at, customers_contacted, total_invoices_amount")
-      .eq("user_id", userId)
+      .select("id, report_date, submitted_at, customers_contacted, customers_registered, customers_with_invoices, total_invoices_amount, hot_leads_count, follow_ups_done, best_deal_today, problems_faced, tomorrow_plan, general_notes")
+      .eq("staff_user_id", userId)
       .order("report_date", { ascending: false })
-      .limit(7);
+      .limit(30);
     setHistory((res?.data as HistoryItem[]) ?? []);
     setHistoryLoading(false);
+  };
+
+  // عرض تفاصيل تقرير سابق في drawer
+  const [pastReport, setPastReport] = useState<HistoryItem | null>(null);
+
+  // ── تقرير مجمّع (أسبوعي / شهري) ─────────────────────────────────
+  type AggregatePeriod = "week" | "month";
+  const [aggregateOpen, setAggregateOpen] = useState(false);
+  const [aggregatePeriod, setAggregatePeriod] = useState<AggregatePeriod>("week");
+  const [aggregateLoading, setAggregateLoading] = useState(false);
+  const [aggregateData, setAggregateData] = useState<{
+    from: string; to: string; count: number;
+    customers_contacted: number; customers_registered: number; customers_with_invoices: number;
+    total_invoices_amount: number; hot_leads_count: number; follow_ups_done: number;
+    best_deals: string[]; problems: string[];
+  } | null>(null);
+
+  const openAggregate = async (period: AggregatePeriod) => {
+    if (!userId) return;
+    setAggregatePeriod(period);
+    setAggregateOpen(true);
+    setAggregateLoading(true);
+    setAggregateData(null);
+    const now = new Date();
+    const fromDate = new Date(now);
+    if (period === "week") fromDate.setDate(now.getDate() - 6);
+    else fromDate.setDate(1);
+    const fromStr = fromDate.toISOString().slice(0, 10);
+    const toStr = now.toISOString().slice(0, 10);
+    const { data } = await supabase
+      .from("staff_daily_reports")
+      .select("report_date, customers_contacted, customers_registered, customers_with_invoices, total_invoices_amount, hot_leads_count, follow_ups_done, best_deal_today, problems_faced")
+      .eq("staff_user_id", userId)
+      .gte("report_date", fromStr)
+      .lte("report_date", toStr);
+    const rows = (data ?? []) as any[];
+    setAggregateData({
+      from: fromStr, to: toStr, count: rows.length,
+      customers_contacted: rows.reduce((s, r) => s + (r.customers_contacted || 0), 0),
+      customers_registered: rows.reduce((s, r) => s + (r.customers_registered || 0), 0),
+      customers_with_invoices: rows.reduce((s, r) => s + (r.customers_with_invoices || 0), 0),
+      total_invoices_amount: rows.reduce((s, r) => s + Number(r.total_invoices_amount || 0), 0),
+      hot_leads_count: rows.reduce((s, r) => s + (r.hot_leads_count || 0), 0),
+      follow_ups_done: rows.reduce((s, r) => s + (r.follow_ups_done || 0), 0),
+      best_deals: rows.map((r) => r.best_deal_today).filter(Boolean),
+      problems: rows.map((r) => r.problems_faced).filter(Boolean),
+    });
+    setAggregateLoading(false);
+  };
+
+  const buildAggregateText = () => {
+    if (!aggregateData) return "";
+    const periodLabel = aggregatePeriod === "week" ? "أسبوعي" : "شهري";
+    const fromAr = new Date(aggregateData.from).toLocaleDateString("ar-EG", { day: "numeric", month: "long" });
+    const toAr = new Date(aggregateData.to).toLocaleDateString("ar-EG", { day: "numeric", month: "long" });
+    const lines = [
+      `📊 *تقرير ${periodLabel} مجمّع* — ${staffName || "موظف"}`,
+      `🗓️ من ${fromAr} إلى ${toAr}`,
+      `📅 عدد أيام التقارير: ${aggregateData.count}`,
+      ``,
+      `*الإجماليات*`,
+      `• عملاء تم التواصل: ${aggregateData.customers_contacted}`,
+      `• عملاء سجّلوا: ${aggregateData.customers_registered}`,
+      `• عملاء عملوا فاتورة: ${aggregateData.customers_with_invoices}`,
+      `• إجمالي الفواتير: ${aggregateData.total_invoices_amount.toLocaleString("ar-EG")} ج.م`,
+      `• Leads ساخنة: ${aggregateData.hot_leads_count}`,
+      `• متابعات تمت: ${aggregateData.follow_ups_done}`,
+    ];
+    if (aggregateData.best_deals.length) {
+      lines.push(``, `🏆 *أفضل صفقات الفترة:*`);
+      aggregateData.best_deals.slice(0, 5).forEach((d) => lines.push(`• ${d}`));
+    }
+    if (aggregateData.problems.length) {
+      lines.push(``, `⚠️ *مشاكل واجهت الموظف:*`);
+      aggregateData.problems.slice(0, 5).forEach((p) => lines.push(`• ${p}`));
+    }
+    return lines.join("\n");
+  };
+
+  const sendAggregateToAdmin = async () => {
+    const text = buildAggregateText();
+    if (!text) return;
+    const { data: phones } = await supabase
+      .from("admin_notification_phones")
+      .select("phone")
+      .eq("is_active", true);
+    const list = ((phones ?? []) as any[]).map((p) => p.phone).filter(Boolean);
+    if (list.length === 0) {
+      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+      return;
+    }
+    list.forEach((p, i) => {
+      const normalized = String(p).replace(/\D/g, "");
+      const wa = normalized.startsWith("0") ? "20" + normalized.slice(1) : normalized;
+      setTimeout(() => {
+        window.open(`https://wa.me/${wa}?text=${encodeURIComponent(text)}`, "_blank");
+      }, i * 400);
+    });
   };
 
   const dynAnsweredList = dynQuestions
