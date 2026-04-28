@@ -219,6 +219,9 @@ const VisitorLeadsPage = () => {
                     </div>
 
                     <div className="flex items-center gap-2 flex-wrap">
+                      <Button size="sm" onClick={() => setActiveLead(lead)} variant="default" className="bg-primary hover:bg-primary/90">
+                        <Eye className="w-4 h-4 ml-1" /> ملخص الزيارة
+                      </Button>
                       <Button size="sm" onClick={() => whatsappPhone(lead.phone)} className="bg-green-600 hover:bg-green-700">
                         <MessageCircle className="w-4 h-4 ml-1" /> واتساب
                       </Button>
