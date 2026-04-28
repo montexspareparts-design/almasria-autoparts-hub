@@ -433,26 +433,6 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
         />
       </div>
 
-      {/* ============ QUICK NAV ============ */}
-      <div className="flex flex-wrap gap-2">
-        {[
-          { label: "الطلبات", section: "orders", icon: "🛒" },
-          { label: "العملاء المحتملين", section: "leads", icon: "👥" },
-          { label: "ملف العملاء", section: "customers", icon: "📋" },
-          { label: "كشوف الأسعار", section: "price-lists", icon: "💰" },
-          { label: "ذكاء العملاء", section: "customer-intel", icon: "🧠" },
-        ].map((item) => (
-          <Button
-            key={item.section}
-            variant="outline"
-            size="sm"
-            className="gap-1.5"
-            onClick={() => onNavigate?.(item.section)}
-          >
-            <span>{item.icon}</span>
-            {item.label}
-          </Button>
-        ))}
       </div>
 
       {/* ============ COLLAPSIBLE SECTIONS ============ */}
