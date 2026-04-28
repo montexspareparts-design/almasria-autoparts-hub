@@ -105,8 +105,8 @@ const sidebarGroups: SidebarGroup[] = [
       { id: "analytics", label: "التحليلات", icon: BarChart3 },                      // 5) KPIs عامة
       { id: "leads", label: "Leads", icon: Users },                                   // 6) متابعة العملاء المحتملين
       { id: "orders", label: "الطلبات", icon: ShoppingBag },                          // تنفيذ يومي (يبقى متاح بعد الترتيب الأساسي)
+      { id: "daily-reports-dashboard", label: "التقرير اليومي", icon: ClipboardList }, // مباشرة بعد الطلبات — يبدأ يلمع 5م
       { id: "staff-performance", label: "أداء الموظفين", icon: TrendingUp },         // أدمن فقط
-      { id: "daily-reports-dashboard", label: "تقارير الموظفين اليومية", icon: ClipboardList }, // أدمن: لوحة التقارير + KPI
     ],
   },
   {
@@ -201,6 +201,16 @@ const AdminDashboard = () => {
   const [isNewCustomer, setIsNewCustomer] = useState(false);
   const [fetchingApproveErpName, setFetchingApproveErpName] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // تذكير التقرير اليومي: ابتداءً من 5م يبدأ بند "التقرير اليومي" يلمع.
+  // نحدّث كل دقيقة عشان الحالة تتغيّر تلقائياً عند الساعة 17:00 بدون reload.
+  const [reportReminderActive, setReportReminderActive] = useState(() => new Date().getHours() >= 17);
+  useEffect(() => {
+    const tick = () => setReportReminderActive(new Date().getHours() >= 17);
+    tick();
+    const id = setInterval(tick, 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   const canAccess = isAdmin || isModerator;
 
@@ -969,6 +979,7 @@ const AdminDashboard = () => {
                   {group.items.map((section) => {
                     const Icon = section.icon;
                     const isActive = activeSection === section.id;
+                    const isReportReminder = section.id === "daily-reports-dashboard" && reportReminderActive && !isActive;
                     return (
                       <button
                         key={section.id}
@@ -980,7 +991,9 @@ const AdminDashboard = () => {
                           w-full flex items-center gap-2 px-2.5 py-[7px] rounded-lg text-[12.5px] font-medium transition-all duration-150 relative group
                           ${isActive
                             ? "bg-primary/10 text-primary font-bold shadow-sm shadow-primary/5"
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                            : isReportReminder
+                              ? "bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 font-bold report-reminder-glow"
+                              : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
                           }
                         `}
                       >
@@ -991,12 +1004,19 @@ const AdminDashboard = () => {
                           w-6 h-6 rounded-md flex items-center justify-center shrink-0 transition-colors
                           ${isActive
                             ? "bg-primary/15 text-primary"
-                            : "text-muted-foreground/60 group-hover:text-foreground/60"
+                            : isReportReminder
+                              ? "bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-300"
+                              : "text-muted-foreground/60 group-hover:text-foreground/60"
                           }
                         `}>
                           <Icon className="w-3.5 h-3.5" />
                         </div>
                         <span className="truncate">{section.label}</span>
+                        {isReportReminder && (
+                          <span className="mr-auto text-[9px] font-extrabold bg-amber-500 text-white rounded-md px-1.5 py-0.5 animate-pulse">
+                            الآن
+                          </span>
+                        )}
                         {section.id === "dealers" && pendingCount > 0 && (
                           <span className="mr-auto bg-destructive text-destructive-foreground text-[9px] font-bold rounded-md min-w-[18px] h-4.5 flex items-center justify-center px-1">
                             {pendingCount}
