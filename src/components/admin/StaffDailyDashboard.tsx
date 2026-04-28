@@ -427,7 +427,7 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
           colorText={totalUrgent > 0 ? "text-red-600" : "text-gray-500"}
           hint={totalUrgent > 0 ? "افتح المهام" : "كل شيء تمام"}
           onClick={() => {
-            setOpenSections(["urgent"]);
+            setOpenSection("urgent");
             document.getElementById("urgent-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
           }}
         />
