@@ -16,6 +16,8 @@ export const MODERATOR_SECTIONS_LIST: SectionMeta[] = [
   { id: "analytics", label: "التحليلات", description: "KPIs عامة، خرائط حرارية، ولوحات الأداء" },
   { id: "customers", label: "ملف العملاء", description: "البحث عن عميل، عرض ملفه، تسجيل تواصل" },
   { id: "orders", label: "الطلبات", description: "إدارة الطلبات، تحديث الحالة، رفع الإيصال" },
+  { id: "daily-reports-dashboard", label: "التقرير اليومي", description: "تقرير الموظف اليومي — يلمع تذكيراً بعد 5م" },
+  { id: "my-daily-tasks", label: "مهامي اليومية", description: "Checklist + تقرير يومي للموظف" },
   { id: "leads", label: "Leads", description: "إدارة العملاء المحتملين والمتابعة" },
   { id: "visitor-leads", label: "ليدز الزوار (واتساب)", description: "أرقام واتساب للزوار غير المسجلين من الـ popup" },
   { id: "account-settings", label: "إعدادات حسابي", description: "تغيير كلمة المرور والإعدادات الشخصية" },
