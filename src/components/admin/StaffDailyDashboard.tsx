@@ -307,12 +307,39 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
   const totalUrgent = urgentTasks.reduce((s, t) => s + t.count, 0);
   const totalAlerts = highSearchAlerts.length + inactiveAlerts.length;
 
-  // Determine which accordion item should be open by default
-  const defaultOpen =
+  // Highest-priority section (auto-open on first visit)
+  const priorityOpen =
     totalUrgent > 0 ? "urgent"
     : searchContacts.length > 0 ? "contacts"
     : totalAlerts > 0 ? "alerts"
     : "performance";
+
+  // Persisted accordion state — falls back to priority on first visit
+  const STORAGE_KEY = "staff-dashboard-open-sections";
+  const [openSections, setOpenSections] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch { /* ignore */ }
+    return [priorityOpen];
+  });
+
+  // First-load: if user never picked anything, jump to today's priority
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem(STORAGE_KEY)) {
+        setOpenSections([priorityOpen]);
+      }
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [priorityOpen]);
+
+  const handleAccordionChange = (values: string[]) => {
+    setOpenSections(values);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(values));
+    } catch { /* ignore quota */ }
+  };
 
   return (
     <div className="space-y-6">
@@ -410,7 +437,7 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
       </div>
 
       {/* ============ COLLAPSIBLE SECTIONS ============ */}
-      <Accordion type="multiple" defaultValue={[defaultOpen]} className="space-y-3">
+      <Accordion type="multiple" value={openSections} onValueChange={handleAccordionChange} className="space-y-3">
         {/* 1) Urgent tasks */}
         <AccordionItem value="urgent" className="border rounded-xl bg-card overflow-hidden">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/40">
