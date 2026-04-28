@@ -166,9 +166,9 @@ export default function ActiveVisitorsPage() {
     // 3) بيانات الملف الشخصي (اسم + موبايل)
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("id, full_name, phone")
-      .in("id", userIds);
-    const profMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+      .select("user_id, full_name, phone")
+      .in("user_id", userIds);
+    const profMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
 
     // 4) fallback لأرقام التجار من dealer_applications
     const missingPhone = userIds.filter((uid) => !profMap.get(uid)?.phone);
