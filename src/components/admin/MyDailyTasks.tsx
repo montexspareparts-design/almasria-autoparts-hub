@@ -287,17 +287,8 @@ export default function MyDailyTasks() {
 
   return (
     <div className="space-y-6 pb-20" dir="rtl">
-      {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold">
-            <ClipboardList className="h-7 w-7 text-primary" />
-            مهامي اليومية
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            قائمة مختصرة بكل اللي المفروض تخلصه النهاردة + تقرير نهاية اليوم.
-          </p>
-        </div>
+      {/* Header — تم حذف العنوان المكرر (موجود فعلياً في breadcrumb الصفحة بأعلى) */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-end">
 
         <div className="flex items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm">
           <div className="relative h-12 w-12">
