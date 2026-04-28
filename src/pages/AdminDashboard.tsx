@@ -47,7 +47,7 @@ const AdminLeads = lazy(() => import("@/components/AdminLeads"));
 const AdminLeadsReport = lazy(() => import("@/components/admin/AdminLeadsReport"));
 const AdminStaffRoles = lazy(() => import("@/components/AdminStaffRoles"));
 const AdminWhatsAppInbox = lazy(() => import("@/components/AdminWhatsAppInbox"));
-const StaffDailyDashboard = lazy(() => import("@/components/admin/StaffCRMCommandCenter"));
+const StaffDailyDashboard = lazy(() => import("@/components/admin/StaffDailyDashboard"));
 const StaffWelcomeDashboard = lazy(() => import("@/components/admin/StaffWelcomeDashboard"));
 // StaffHome merged into StaffWelcomeDashboard (daily-dashboard section).
 const StaffAccountSettings = lazy(() => import("@/components/admin/StaffAccountSettings"));
