@@ -629,6 +629,12 @@ const AdminDashboard = () => {
             <StaffDailyDashboard onNavigate={setActiveSection} />
           </Suspense>
         );
+      case "my-daily-tasks":
+        return (
+          <Suspense fallback={<SectionLoader />}>
+            <MyDailyTasks />
+          </Suspense>
+        );
       case "analytics":
       case "product-insights":
       case "leads-report":
