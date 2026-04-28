@@ -24,10 +24,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import {
   Users, Phone, MessageCircle, Eye, RefreshCw, Search,
-  Clock, MapPin, ArrowLeft, Activity, Loader2, AlertTriangle, Filter,
+  Clock, MapPin, ArrowLeft, Activity, Loader2, AlertTriangle, Filter, CheckCircle2, PenLine,
 } from "lucide-react";
 
 interface ActiveVisitor {
