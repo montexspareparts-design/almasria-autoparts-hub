@@ -262,6 +262,12 @@ const VisitorLeadsPage = () => {
           </div>
         )}
       </main>
+
+      <VisitorLeadActivitySheet
+        open={!!activeLead}
+        onClose={() => setActiveLead(null)}
+        lead={activeLead}
+      />
     </div>
   );
 };
