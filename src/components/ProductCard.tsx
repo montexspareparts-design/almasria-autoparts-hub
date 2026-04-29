@@ -511,43 +511,59 @@ const PriceSection = ({
     return compact ? (
       <button
         onClick={onLoginRequired}
-        className="group relative w-full sm:w-auto h-8 px-3 rounded-xl overflow-hidden
-          bg-gradient-to-l from-[hsl(220_60%_15%)] via-[hsl(220_55%_22%)] to-[hsl(220_60%_15%)]
-          text-white font-bold text-[10px] sm:text-xs
-          ring-1 ring-[hsl(43_74%_55%)]/40 hover:ring-[hsl(43_74%_55%)]/80
-          shadow-[0_4px_14px_-4px_hsl(220_60%_15%/0.5)]
-          hover:shadow-[0_8px_24px_-6px_hsl(43_74%_55%/0.5)]
-          active:scale-[0.97] transition-all duration-300
-          flex flex-row-reverse items-center justify-center gap-1.5"
+        className="group relative w-full sm:w-auto h-9 px-4 rounded-full overflow-hidden
+          bg-white text-[hsl(210_11%_12%)] font-bold text-[10px] sm:text-xs
+          ring-1 ring-[hsl(210_11%_12%)]/15 hover:ring-[hsl(40_80%_55%)]/70
+          shadow-[0_1px_2px_rgba(15,23,42,0.06)]
+          hover:shadow-[0_8px_22px_-8px_hsl(40_80%_55%/0.5)]
+          hover:-translate-y-px active:translate-y-0
+          transition-all duration-300
+          flex flex-row-reverse items-center justify-center gap-2"
         aria-label="سجل لعرض السعر"
       >
-        <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-[hsl(43_74%_75%)]/30 to-transparent" />
-        <Lock className="w-3 h-3 relative z-10 text-[hsl(43_74%_70%)]" />
+        <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-[900ms] ease-out bg-gradient-to-r from-transparent via-[hsl(40_80%_55%)]/15 to-transparent" />
+        <span className="relative z-10 inline-flex items-center justify-center w-4 h-4 rounded-full bg-[hsl(40_80%_55%)]/15 ring-1 ring-[hsl(40_80%_55%)]/40">
+          <Lock className="w-2.5 h-2.5 text-[hsl(35_75%_38%)]" strokeWidth={2.5} />
+        </span>
         <span className="relative z-10">اعرض السعر</span>
       </button>
     ) : (
       <button
         onClick={onLoginRequired}
-        className="group relative w-full h-11 rounded-xl overflow-hidden
-          bg-gradient-to-l from-[hsl(220_60%_13%)] via-[hsl(220_55%_20%)] to-[hsl(220_60%_13%)]
-          ring-1 ring-[hsl(43_74%_55%)]/40 hover:ring-[hsl(43_74%_55%)]/90
-          shadow-[0_6px_20px_-6px_hsl(220_60%_15%/0.55)]
-          hover:shadow-[0_12px_32px_-8px_hsl(43_74%_55%/0.55)]
-          active:scale-[0.98] transition-all duration-500
-          flex flex-row-reverse items-center justify-center gap-2.5"
+        className="group relative w-full h-12 rounded-2xl overflow-hidden
+          bg-gradient-to-b from-white to-[hsl(40_30%_97%)]
+          ring-1 ring-[hsl(210_11%_12%)]/12 hover:ring-[hsl(40_80%_55%)]/80
+          shadow-[0_1px_3px_rgba(15,23,42,0.05),inset_0_1px_0_rgba(255,255,255,0.9)]
+          hover:shadow-[0_14px_34px_-12px_hsl(40_80%_55%/0.55)]
+          hover:-translate-y-0.5 active:translate-y-0
+          transition-all duration-400 ease-out
+          flex flex-row-reverse items-center justify-between px-4"
         aria-label="سجل دخولك لعرض السعر"
       >
-        {/* shimmer sweep */}
-        <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-[1100ms] ease-out bg-gradient-to-r from-transparent via-[hsl(43_74%_75%)]/25 to-transparent" />
-        {/* subtle gold hairline at bottom */}
-        <span className="absolute bottom-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-[hsl(43_74%_60%)]/60 to-transparent" />
-        {/* gold lock badge */}
-        <span className="relative z-10 flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-[hsl(43_74%_65%)] to-[hsl(38_70%_45%)] shadow-[0_2px_8px_hsl(43_74%_55%/0.4)] ring-1 ring-[hsl(43_74%_80%)]/40">
-          <Lock className="w-3 h-3 text-[hsl(220_60%_15%)]" strokeWidth={2.8} />
+        {/* gold shimmer sweep */}
+        <span aria-hidden className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-[1200ms] ease-out bg-gradient-to-r from-transparent via-[hsl(40_80%_55%)]/18 to-transparent" />
+        {/* gold accent rail on the inline-start (right in RTL) */}
+        <span aria-hidden className="absolute top-2 bottom-2 right-0 w-[3px] rounded-full bg-gradient-to-b from-transparent via-[hsl(40_80%_55%)] to-transparent opacity-70 group-hover:opacity-100 transition-opacity" />
+
+        {/* right cluster: lock + label */}
+        <span className="relative z-10 flex flex-row-reverse items-center gap-2.5">
+          <span className="inline-flex items-center justify-center w-7 h-7 rounded-full
+            bg-gradient-to-br from-[hsl(40_80%_60%)] to-[hsl(35_75%_42%)]
+            shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_2px_6px_hsl(40_80%_45%/0.35)]">
+            <Lock className="w-3.5 h-3.5 text-white" strokeWidth={2.6} />
+          </span>
+          <span className="flex flex-col items-end leading-none gap-1">
+            <span className="text-[12px] sm:text-[13px] font-extrabold text-[hsl(210_11%_12%)] tracking-tight">سجل دخولك لعرض السعر</span>
+            <span className="text-[9px] font-semibold text-[hsl(35_60%_38%)] tracking-wide">حصري للعملاء المسجلين</span>
+          </span>
         </span>
-        <span className="relative z-10 flex flex-col items-end leading-none gap-0.5">
-          <span className="text-[11px] sm:text-xs font-extrabold text-white tracking-tight">سجل دخولك لعرض السعر</span>
-          <span className="text-[9px] font-semibold text-[hsl(43_74%_72%)]/90 tracking-wide">سعر خاص للعملاء فقط</span>
+
+        {/* left arrow indicator */}
+        <span className="relative z-10 inline-flex items-center justify-center w-6 h-6 rounded-full bg-[hsl(210_11%_12%)]/5 text-[hsl(210_11%_12%)]/60
+          group-hover:bg-[hsl(210_11%_12%)] group-hover:text-white group-hover:-translate-x-0.5 transition-all duration-300">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
         </span>
       </button>
     );
