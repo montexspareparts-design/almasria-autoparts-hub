@@ -83,7 +83,7 @@ export default function ReporterDailyForm() {
           .select("full_name, email")
           .eq("user_id", user.id)
           .maybeSingle();
-        setStaffName(prof?.full_name || prof?.email || profile?.full_name || "—");
+        setStaffName(prof?.full_name || prof?.email || user?.email || "—");
 
         // Existing report
         const { data: row } = await supabase
@@ -115,7 +115,7 @@ export default function ReporterDailyForm() {
         setLoading(false);
       }
     })();
-  }, [user, profile]);
+  }, [user]);
 
   const locked = data.is_submitted;
 
