@@ -924,7 +924,16 @@ const AdminOrders = () => {
                                 const phoneRaw = (order.profile?.phone || "").replace(/\D/g, "");
                                 const waPhone = phoneRaw.startsWith("0") ? "20" + phoneRaw.slice(1) : phoneRaw.startsWith("20") ? phoneRaw : phoneRaw;
                                 return (
-                                  <div className="mt-3 px-3">
+                                  <div className="mt-3 px-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="w-full gap-2 border-primary text-primary hover:bg-primary/5"
+                                      onClick={() => setInvoicePreview(order)}
+                                    >
+                                      <Eye className="w-4 h-4" />
+                                      معاينة الفاتورة (PDF / صورة)
+                                    </Button>
                                     <Button
                                       size="sm"
                                       className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white"
@@ -935,7 +944,7 @@ const AdminOrders = () => {
                                         window.open(url, "_blank");
                                       }}
                                     >
-                                      📤 إرسال تفاصيل الفاتورة على الواتساب
+                                      📤 إرسال على واتساب
                                     </Button>
                                   </div>
                                 );
