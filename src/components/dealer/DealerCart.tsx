@@ -145,8 +145,8 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
   };
 
   const subtotal = items.reduce((sum, item) => sum + getPrice(item) * item.quantity, 0);
-  const vat = subtotal * 0.14;
-  const total = subtotal + vat;
+  const vat = 0;
+  const total = subtotal;
 
   // Compute max allowed per item
   const maxAllowedMap = useMemo(() => {
@@ -635,8 +635,8 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
               <span className="text-muted-foreground">المجموع الفرعي ({items.length} صنف)</span>
               <span className="font-bold">{subtotal.toLocaleString("ar-EG")} ج.م</span>
             </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">ضريبة القيمة المضافة 14%</span>
+            <div className="flex items-center justify-between text-sm" style={{ display: 'none' }}>
+              <span className="text-muted-foreground">ضريبة القيمة المضافة</span>
               <span className="font-bold">{vat.toLocaleString("ar-EG")} ج.م</span>
             </div>
             <div className="border-t border-border/50 pt-2 flex items-center justify-between">

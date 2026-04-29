@@ -536,10 +536,6 @@ const CheckoutPage = () => {
                       </div>
                     )}
                     <div className="flex justify-between items-center">
-                      <span className="text-muted-foreground">الضريبة (14%)</span>
-                      <span className="font-bold">{vat.toLocaleString("ar-EG")} ج.م</span>
-                    </div>
-                    <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">الشحن</span>
                       <span className="font-bold">{selectedShipping.cost === 0 ? "مجاني ✨" : `${selectedShipping.cost} ج.م`}</span>
                     </div>
