@@ -16,8 +16,9 @@ import {
   Trophy, Medal, Award, Calendar as CalIcon, Loader2, Eye, FileText,
   Phone, MessageCircle, FileCheck, RefreshCw, XCircle, Users, UserPlus,
   Target, AlertTriangle, FileSpreadsheet, ShoppingBag, Receipt, DollarSign,
-  TrendingUp,
+  TrendingUp, Heart,
 } from "lucide-react";
+import ShoutoutsLog from "./ShoutoutsLog";
 import { cn } from "@/lib/utils";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -33,7 +34,7 @@ const fmt = (d: Date) => d.toISOString().slice(0, 10);
 type RangeKey = "today" | "yesterday" | "week" | "month" | "custom";
 
 export default function AdminReporterReports() {
-  const [tab, setTab] = useState<"all" | "leaderboard" | "individual">("all");
+  const [tab, setTab] = useState<"all" | "leaderboard" | "individual" | "shoutouts">("all");
   const [rangeKey, setRangeKey] = useState<RangeKey>("week");
   const [customFrom, setCustomFrom] = useState<Date>(subDays(new Date(), 7));
   const [customTo, setCustomTo] = useState<Date>(new Date());
@@ -103,10 +104,11 @@ export default function AdminReporterReports() {
       </Card>
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
-        <TabsList className="grid grid-cols-3 w-full max-w-2xl">
+        <TabsList className="grid grid-cols-4 w-full max-w-3xl">
           <TabsTrigger value="all" className="gap-1.5"><FileText className="w-4 h-4" />كل التقارير</TabsTrigger>
           <TabsTrigger value="leaderboard" className="gap-1.5"><Trophy className="w-4 h-4" />الترتيب</TabsTrigger>
           <TabsTrigger value="individual" className="gap-1.5"><Users className="w-4 h-4" />تقرير كل موظف</TabsTrigger>
+          <TabsTrigger value="shoutouts" className="gap-1.5"><Heart className="w-4 h-4" />سجل الشكر</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="mt-3">
@@ -119,6 +121,10 @@ export default function AdminReporterReports() {
 
         <TabsContent value="individual" className="mt-3">
           <IndividualReports from={from} to={to} />
+        </TabsContent>
+
+        <TabsContent value="shoutouts" className="mt-3">
+          <ShoutoutsLog from={from} to={to} label={label} />
         </TabsContent>
       </Tabs>
     </motion.div>
