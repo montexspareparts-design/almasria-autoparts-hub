@@ -236,10 +236,25 @@ const CategoryBrowseSlider = ({ onCategorySelect, activeCategoryId, pendingCateg
         >
           <button
             onClick={() => {
-              const searchInput = document.querySelector<HTMLInputElement>('input[placeholder*="ابحث"]');
+              // Try multiple selectors — placeholder may be animating, so don't rely on it
+              const searchInput =
+                document.querySelector<HTMLInputElement>('input[name="product-search"]') ||
+                document.querySelector<HTMLInputElement>('input[type="search"]') ||
+                document.querySelector<HTMLInputElement>('input[aria-label*="بحث"]') ||
+                document.querySelector<HTMLInputElement>('input[placeholder*="ابحث"]') ||
+                // Fallback: first text input inside the products listing area
+                document.querySelector<HTMLInputElement>('main input[type="text"], section input[type="text"]');
+
               if (searchInput) {
                 searchInput.scrollIntoView({ behavior: "smooth", block: "center" });
-                setTimeout(() => searchInput.focus(), 500);
+                setTimeout(() => {
+                  searchInput.focus({ preventScroll: true });
+                  searchInput.click();
+                }, 450);
+              } else {
+                // Last resort: scroll to category strip below
+                const strip = document.getElementById("category-browse-strip");
+                strip?.scrollIntoView({ behavior: "smooth", block: "start" });
               }
             }}
             className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-full bg-primary/10 border border-primary/25 text-primary text-base md:text-lg font-bold mb-3 hover:bg-primary/20 hover:scale-[1.03] transition-all duration-300 cursor-pointer"
