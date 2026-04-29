@@ -1,0 +1,346 @@
+import { useEffect, useMemo, useState } from "react";
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays } from "date-fns";
+import { ar } from "date-fns/locale";
+import { motion } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
+  Trophy, Medal, Award, Calendar as CalIcon, Loader2, Eye, FileText,
+  Phone, MessageCircle, FileCheck, RefreshCw, XCircle, Users, UserPlus,
+  Target, AlertTriangle, FileSpreadsheet, ShoppingBag, Receipt, DollarSign,
+  TrendingUp,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+
+const PROBLEM_LABEL: Record<string, string> = {
+  price: "السعر", unavailable: "عدم التوافر", delay: "التأخير",
+  no_response: "العميل لم يرد", system_issue: "مشكلة في السيستم",
+};
+
+const fmt = (d: Date) => d.toISOString().slice(0, 10);
+
+type RangeKey = "today" | "yesterday" | "week" | "month" | "custom";
+
+export default function AdminReporterReports() {
+  const [tab, setTab] = useState<"leaderboard" | "individual">("leaderboard");
+  const [rangeKey, setRangeKey] = useState<RangeKey>("week");
+  const [customFrom, setCustomFrom] = useState<Date>(subDays(new Date(), 7));
+  const [customTo, setCustomTo] = useState<Date>(new Date());
+
+  const { from, to, label } = useMemo(() => {
+    const today = new Date();
+    switch (rangeKey) {
+      case "today":
+        return { from: fmt(today), to: fmt(today), label: "اليوم" };
+      case "yesterday": {
+        const y = subDays(today, 1);
+        return { from: fmt(y), to: fmt(y), label: "أمس" };
+      }
+      case "week":
+        return {
+          from: fmt(startOfWeek(today, { weekStartsOn: 6 })),
+          to: fmt(endOfWeek(today, { weekStartsOn: 6 })),
+          label: "الأسبوع",
+        };
+      case "month":
+        return {
+          from: fmt(startOfMonth(today)),
+          to: fmt(endOfMonth(today)),
+          label: "الشهر",
+        };
+      case "custom":
+        return { from: fmt(customFrom), to: fmt(customTo), label: "فترة مخصصة" };
+    }
+  }, [rangeKey, customFrom, customTo]);
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+      <Card className="p-4 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20 border-indigo-200 dark:border-indigo-900">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/15 grid place-items-center">
+              <FileText className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div>
+              <h2 className="text-lg font-extrabold">تقارير موظفي الفيصل</h2>
+              <p className="text-xs text-muted-foreground">أداء الفريق + تقرير كل موظف بالتفصيل</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <Select value={rangeKey} onValueChange={(v) => setRangeKey(v as RangeKey)}>
+              <SelectTrigger className="w-[140px] h-9"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="today">اليوم</SelectItem>
+                <SelectItem value="yesterday">أمس</SelectItem>
+                <SelectItem value="week">هذا الأسبوع</SelectItem>
+                <SelectItem value="month">هذا الشهر</SelectItem>
+                <SelectItem value="custom">مخصص</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {rangeKey === "custom" && (
+              <>
+                <DatePick date={customFrom} onChange={setCustomFrom} />
+                <span className="text-xs text-muted-foreground">→</span>
+                <DatePick date={customTo} onChange={setCustomTo} />
+              </>
+            )}
+            <Badge variant="outline" className="text-[10px]">{from} → {to}</Badge>
+          </div>
+        </div>
+      </Card>
+
+      <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
+        <TabsList className="grid grid-cols-2 w-full max-w-md">
+          <TabsTrigger value="leaderboard" className="gap-1.5"><Trophy className="w-4 h-4" />الترتيب</TabsTrigger>
+          <TabsTrigger value="individual" className="gap-1.5"><Users className="w-4 h-4" />تقرير كل موظف</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="leaderboard" className="mt-3">
+          <Leaderboard from={from} to={to} label={label} />
+        </TabsContent>
+
+        <TabsContent value="individual" className="mt-3">
+          <IndividualReports from={from} to={to} />
+        </TabsContent>
+      </Tabs>
+    </motion.div>
+  );
+}
+
+function DatePick({ date, onChange }: { date: Date; onChange: (d: Date) => void }) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="sm" className="gap-1.5 h-9">
+          <CalIcon className="w-3.5 h-3.5" />
+          {format(date, "dd/MM", { locale: ar })}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar mode="single" selected={date} onSelect={(d) => d && onChange(d)} initialFocus className={cn("p-3 pointer-events-auto")} />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function Leaderboard({ from, to, label }: { from: string; to: string; label: string }) {
+  const [rows, setRows] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      try {
+        const { data } = await supabase.rpc("get_reporter_leaderboard", { _from: from, _to: to });
+        setRows((data as any[]) || []);
+      } finally { setLoading(false); }
+    })();
+  }, [from, to]);
+
+  if (loading) return <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
+  if (rows.length === 0) return <Card className="p-8 text-center text-sm text-muted-foreground">لا توجد تقارير في {label}</Card>;
+
+  const max = Math.max(...rows.map((r) => Number(r.performance_score)), 1);
+  const medals = ["🥇", "🥈", "🥉"];
+
+  return (
+    <Card className="p-4">
+      <h3 className="font-bold mb-3 flex items-center gap-2"><Trophy className="w-4 h-4 text-amber-500" />ترتيب الأداء — {label}</h3>
+      <div className="space-y-2">
+        {rows.map((r, i) => {
+          const pct = (Number(r.performance_score) / max) * 100;
+          return (
+            <motion.div
+              key={r.user_id}
+              initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.03 }}
+              className={cn(
+                "p-3 rounded-xl border relative overflow-hidden",
+                i === 0 ? "bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/30 dark:to-yellow-950/30 border-amber-300" :
+                i === 1 ? "bg-gradient-to-r from-slate-50 to-gray-50 dark:from-slate-900/50 dark:to-gray-900/50 border-slate-300" :
+                i === 2 ? "bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20 border-orange-200" :
+                "bg-card"
+              )}
+            >
+              <div className="flex items-center justify-between gap-3 relative z-10">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="text-2xl shrink-0 w-10 text-center">
+                    {i < 3 ? medals[i] : <span className="text-base font-bold text-muted-foreground">#{i + 1}</span>}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="font-bold truncate">{r.staff_name}</div>
+                    <div className="text-[10px] text-muted-foreground truncate">{r.staff_email}</div>
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="text-2xl font-black text-primary">{Number(r.performance_score).toLocaleString("ar-EG")}</div>
+                  <div className="text-[10px] text-muted-foreground">درجة الأداء</div>
+                </div>
+              </div>
+              <div className="mt-2 grid grid-cols-4 gap-2 text-[10px] relative z-10">
+                <Stat label="تقارير" value={r.reports_count} />
+                <Stat label="عروض" value={r.quotations_total} />
+                <Stat label="مكالمات" value={r.calls_total} />
+                <Stat label="محولة" value={r.converted_total} />
+              </div>
+              <div className="absolute inset-y-0 right-0 bg-primary/5 transition-all" style={{ width: `${pct}%` }} />
+            </motion.div>
+          );
+        })}
+      </div>
+    </Card>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: any }) {
+  return (
+    <div className="text-center p-1.5 rounded bg-card/60 border">
+      <div className="font-bold">{Number(value).toLocaleString("ar-EG")}</div>
+      <div className="text-muted-foreground">{label}</div>
+    </div>
+  );
+}
+
+function IndividualReports({ from, to }: { from: string; to: string }) {
+  const [reporters, setReporters] = useState<any[]>([]);
+  const [selected, setSelected] = useState<string>("");
+  const [reports, setReports] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [openReport, setOpenReport] = useState<any | null>(null);
+
+  // Load reporter list
+  useEffect(() => {
+    (async () => {
+      const { data: roles } = await supabase
+        .from("user_roles").select("user_id").eq("role", "reporter");
+      const ids = (roles || []).map((r) => r.user_id);
+      if (ids.length === 0) { setReporters([]); return; }
+      const { data: profs } = await supabase
+        .from("profiles").select("user_id, full_name, email").in("user_id", ids);
+      setReporters(profs || []);
+      if (!selected && profs?.[0]) setSelected(profs[0].user_id);
+    })();
+  }, []);
+
+  // Load reports for selected staff in range
+  useEffect(() => {
+    if (!selected) return;
+    (async () => {
+      setLoading(true);
+      try {
+        const { data } = await supabase
+          .from("reporter_daily_reports").select("*")
+          .eq("user_id", selected)
+          .gte("report_date", from).lte("report_date", to)
+          .order("report_date", { ascending: false });
+        setReports(data || []);
+      } finally { setLoading(false); }
+    })();
+  }, [selected, from, to]);
+
+  return (
+    <Card className="p-4">
+      <div className="flex items-center justify-between mb-3 flex-wrap gap-3">
+        <h3 className="font-bold flex items-center gap-2"><Users className="w-4 h-4 text-primary" />تقارير كل موظف</h3>
+        <Select value={selected} onValueChange={setSelected}>
+          <SelectTrigger className="w-[260px] h-9"><SelectValue placeholder="اختر موظف..." /></SelectTrigger>
+          <SelectContent>
+            {reporters.map((r) => (
+              <SelectItem key={r.user_id} value={r.user_id}>
+                {r.full_name || r.email}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+      ) : reports.length === 0 ? (
+        <div className="text-center py-10 text-sm text-muted-foreground">لا توجد تقارير في هذه الفترة</div>
+      ) : (
+        <div className="space-y-2">
+          {reports.map((r) => (
+            <button
+              key={r.id} onClick={() => setOpenReport(r)}
+              className="w-full text-right p-3 rounded-lg border hover:border-primary hover:bg-primary/5 transition flex items-center justify-between gap-3"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <CalIcon className="w-4 h-4 text-muted-foreground shrink-0" />
+                <div className="min-w-0">
+                  <div className="font-bold text-sm">{r.report_date}</div>
+                  <div className="text-[10px] text-muted-foreground">
+                    عروض: {r.quotations_count} • مكالمات: {r.calls_count} • محولة: {r.offers_converted_count}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <Badge className={r.is_submitted ? "bg-emerald-500/15 text-emerald-700 border-emerald-500/40" : "bg-amber-500/15 text-amber-700 border-amber-500/40"}>
+                  {r.is_submitted ? "✓ مُسلَّم" : "مسودة"}
+                </Badge>
+                <Eye className="w-4 h-4 text-muted-foreground" />
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+
+      <Dialog open={!!openReport} onOpenChange={(v) => !v && setOpenReport(null)}>
+        <DialogContent className="max-w-lg" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><FileText className="w-5 h-5 text-primary" />تقرير {openReport?.report_date}</DialogTitle>
+          </DialogHeader>
+          {openReport && <FullReportView r={openReport} />}
+        </DialogContent>
+      </Dialog>
+    </Card>
+  );
+}
+
+function FullReportView({ r }: { r: any }) {
+  const Row = ({ icon, label, value }: any) => (
+    <div className="flex items-center justify-between py-2 border-b border-dashed last:border-0">
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">{icon}<span>{label}</span></div>
+      <span className="text-sm font-bold">{value}</span>
+    </div>
+  );
+  return (
+    <div className="space-y-3 max-h-[65vh] overflow-y-auto pr-1">
+      <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900">
+        <div className="text-[10px] font-bold text-blue-700 mb-1">تلقائي من السيستم</div>
+        <Row icon={<ShoppingBag className="w-3.5 h-3.5" />} label="الطلبات" value={r.auto_orders_count ?? 0} />
+        <Row icon={<Receipt className="w-3.5 h-3.5" />} label="الفواتير" value={r.auto_invoices_count ?? 0} />
+        <Row icon={<DollarSign className="w-3.5 h-3.5" />} label="إجمالي المبيعات" value={`${Number(r.auto_total_sales || 0).toLocaleString("ar-EG")} ج.م`} />
+      </div>
+      <div className="p-3 rounded-lg border">
+        <Row icon={<FileSpreadsheet className="w-3.5 h-3.5" />} label="عروض الأسعار" value={r.quotations_count} />
+        <Row icon={<Phone className="w-3.5 h-3.5" />} label="مكالمات" value={r.calls_count} />
+        <Row icon={<MessageCircle className="w-3.5 h-3.5" />} label="عملاء واتساب" value={r.whatsapp_count} />
+        <Row icon={<FileCheck className="w-3.5 h-3.5" />} label="عروض/كشوف مرسلة" value={r.offers_sent_count} />
+        <Row icon={<RefreshCw className="w-3.5 h-3.5" />} label="عروض تحوّلت لطلبات" value={r.offers_converted_count} />
+        <Row icon={<XCircle className="w-3.5 h-3.5" />} label="طلبات لم تكتمل" value={r.incomplete_orders_count} />
+        <Row icon={<Users className="w-3.5 h-3.5" />} label="عملاء تمت متابعتهم" value={r.followups_count} />
+        <Row icon={<UserPlus className="w-3.5 h-3.5" />} label="عملاء جدد" value={r.new_customers_count} />
+        <Row icon={<Target className="w-3.5 h-3.5" />} label="مهتمين بدون إغلاق" value={r.lost_opportunities_count} />
+        <Row icon={<AlertTriangle className="w-3.5 h-3.5" />} label="أكبر مشكلة" value={PROBLEM_LABEL[r.main_problem || ""] || "—"} />
+      </div>
+      {r.submitted_at && (
+        <div className="text-[10px] text-muted-foreground text-center">
+          تم التسليم: {new Date(r.submitted_at).toLocaleString("ar-EG")}
+        </div>
+      )}
+    </div>
+  );
+}

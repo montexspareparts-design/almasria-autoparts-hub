@@ -2040,6 +2040,9 @@ export type Database = {
       }
       reporter_daily_reports: {
         Row: {
+          auto_invoices_count: number
+          auto_orders_count: number
+          auto_total_sales: number
           calls_count: number
           created_at: string
           followups_count: number
@@ -2061,6 +2064,9 @@ export type Database = {
           whatsapp_count: number
         }
         Insert: {
+          auto_invoices_count?: number
+          auto_orders_count?: number
+          auto_total_sales?: number
           calls_count?: number
           created_at?: string
           followups_count?: number
@@ -2082,6 +2088,9 @@ export type Database = {
           whatsapp_count?: number
         }
         Update: {
+          auto_invoices_count?: number
+          auto_orders_count?: number
+          auto_total_sales?: number
           calls_count?: number
           created_at?: string
           followups_count?: number
@@ -3125,6 +3134,39 @@ export type Database = {
         Returns: string[]
       }
       get_daily_view_count: { Args: { _user_id: string }; Returns: number }
+      get_reporter_aggregate: {
+        Args: { _from: string; _to: string; _user_id: string }
+        Returns: {
+          auto_invoices_count: number
+          auto_orders_count: number
+          auto_total_sales: number
+          calls_count: number
+          followups_count: number
+          incomplete_orders_count: number
+          lost_opportunities_count: number
+          new_customers_count: number
+          offers_converted_count: number
+          offers_sent_count: number
+          performance_score: number
+          quotations_count: number
+          reports_count: number
+          whatsapp_count: number
+        }[]
+      }
+      get_reporter_leaderboard: {
+        Args: { _from: string; _to: string }
+        Returns: {
+          calls_total: number
+          converted_total: number
+          new_customers_total: number
+          performance_score: number
+          quotations_total: number
+          reports_count: number
+          staff_email: string
+          staff_name: string
+          user_id: string
+        }[]
+      }
       get_staff_auto_metrics: {
         Args: { _date: string; _staff_user_id: string }
         Returns: {
