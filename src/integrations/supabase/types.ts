@@ -2101,6 +2101,101 @@ export type Database = {
         }
         Relationships: []
       }
+      reporter_report_fields: {
+        Row: {
+          created_at: string
+          field_key: string
+          field_type: string
+          id: string
+          is_active: boolean
+          is_auto: boolean
+          is_required: boolean
+          label_ar: string
+          options: Json
+          placeholder: string | null
+          section_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          field_key: string
+          field_type?: string
+          id?: string
+          is_active?: boolean
+          is_auto?: boolean
+          is_required?: boolean
+          label_ar: string
+          options?: Json
+          placeholder?: string | null
+          section_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          field_key?: string
+          field_type?: string
+          id?: string
+          is_active?: boolean
+          is_auto?: boolean
+          is_required?: boolean
+          label_ar?: string
+          options?: Json
+          placeholder?: string | null
+          section_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reporter_report_fields_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "reporter_report_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reporter_report_sections: {
+        Row: {
+          created_at: string
+          description_ar: string | null
+          icon: string | null
+          id: string
+          is_active: boolean
+          is_auto: boolean
+          key: string
+          sort_order: number
+          title_ar: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description_ar?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          is_auto?: boolean
+          key: string
+          sort_order?: number
+          title_ar: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description_ar?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          is_auto?: boolean
+          key?: string
+          sort_order?: number
+          title_ar?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           id: string

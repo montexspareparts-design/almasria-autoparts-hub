@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowRight, ClipboardList, LogOut } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { ArrowRight, ClipboardList, LogOut, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,7 +18,9 @@ import ReporterDailyForm from "@/components/staff/ReporterDailyForm";
  */
 export default function StaffDailyReportPage() {
   const navigate = useNavigate();
-  const { user, loading, isReporterOnly, signOut } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { user, loading, isReporterOnly, isAdmin, signOut } = useAuth();
+  const editMode = searchParams.get("edit") === "1" && isAdmin;
 
   // Guard: only staff (admin/moderator/reporter) can access this page
   useEffect(() => {
@@ -62,30 +64,45 @@ export default function StaffDailyReportPage() {
             </div>
           </div>
 
-          {isReporterOnly ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={async () => {
-                await signOut();
-                navigate("/auth", { replace: true });
-              }}
-              className="shrink-0 gap-1.5 text-destructive hover:text-destructive"
-            >
-              <LogOut className="w-4 h-4" />
-              خروج
-            </Button>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate("/admin/staff-home")}
-              className="shrink-0 gap-1.5"
-            >
-              <ArrowRight className="w-4 h-4" />
-              رجوع
-            </Button>
-          )}
+          <div className="flex items-center gap-2 shrink-0">
+            {editMode && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/admin/reporter-sections-editor")}
+                className="gap-1.5 text-amber-600 border-amber-500/40 hover:bg-amber-500/10"
+                title="تعديل أقسام تقرير موظف الفيصل"
+              >
+                <Settings2 className="w-4 h-4" />
+                <span className="hidden sm:inline">تعديل الأقسام</span>
+              </Button>
+            )}
+
+            {isReporterOnly ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  await signOut();
+                  navigate("/auth", { replace: true });
+                }}
+                className="gap-1.5 text-destructive hover:text-destructive"
+              >
+                <LogOut className="w-4 h-4" />
+                خروج
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/admin/staff-home")}
+                className="gap-1.5"
+              >
+                <ArrowRight className="w-4 h-4" />
+                رجوع
+              </Button>
+            )}
+          </div>
         </div>
       </header>
 
