@@ -435,6 +435,9 @@ function AllReports({ from, to, label }: { from: string; to: string; label: stri
 
   return (
     <div className="space-y-4">
+      {/* Day off panel */}
+      <DayOffPanel profilesMap={profilesMap} />
+
       {/* Aggregates */}
       <div className="grid md:grid-cols-2 gap-3">
         <AggCard title="ملخص الأسبوع" subtitle={`${weekFrom} → ${weekTo}`} agg={weekAgg} color="emerald" />
