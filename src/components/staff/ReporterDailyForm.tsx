@@ -314,6 +314,14 @@ export default function ReporterDailyForm() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Thank-you screen after submission */}
+      <ThankYouDialog
+        open={thankYouOpen}
+        onClose={() => setThankYouOpen(false)}
+        data={data}
+        staffName={staffName}
+      />
     </motion.div>
   );
 }
