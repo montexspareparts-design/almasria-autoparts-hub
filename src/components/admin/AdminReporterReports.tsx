@@ -524,7 +524,7 @@ function AllReports({ from, to, label }: { from: string; to: string; label: stri
                         <div className="text-[10px] text-muted-foreground">{p?.email || "—"}</div>
                       </td>
                       <td className="p-2 font-mono text-xs">{r.report_date}</td>
-                      <td className="p-2"><Badge variant="outline" className="text-[10px]">{dayName(r.report_date)}</Badge></td>
+                      <td className="p-2"><Badge variant="outline" className="text-[10px]">{dayName}</Badge></td>
                       <td className="p-2 text-center">{r.quotations_count}</td>
                       <td className="p-2 text-center">{r.calls_count}</td>
                       <td className="p-2 text-center font-bold text-emerald-600">{r.offers_converted_count}</td>
