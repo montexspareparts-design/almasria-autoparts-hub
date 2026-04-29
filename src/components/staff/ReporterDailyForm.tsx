@@ -348,6 +348,48 @@ function TodayForm({
             </SelectContent>
           </Select>
         </div>
+
+        {/* تقييم ذاتي */}
+        <div className="mt-5 pt-5 border-t">
+          <Label className="text-xs font-bold mb-2 flex items-center gap-1.5 text-foreground">
+            ⭐ قيّم نفسك النهاردة (من 10)<span className="text-rose-500">*</span>
+          </Label>
+          <div className="flex flex-wrap gap-1.5">
+            {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => {
+              const active = data.self_rating === n;
+              const color =
+                n <= 3 ? "from-rose-500 to-red-600" :
+                n <= 6 ? "from-amber-500 to-orange-600" :
+                n <= 8 ? "from-sky-500 to-blue-600" :
+                "from-emerald-500 to-green-600";
+              return (
+                <button
+                  key={n}
+                  type="button"
+                  disabled={locked}
+                  onClick={() => setData((d: any) => ({ ...d, self_rating: n }))}
+                  className={`w-10 h-10 rounded-xl font-bold text-sm transition-all border-2 ${
+                    active
+                      ? `bg-gradient-to-br ${color} text-white border-transparent shadow-md scale-110`
+                      : "bg-card border-border text-muted-foreground hover:border-primary/40 hover:scale-105"
+                  } ${locked ? "opacity-60 cursor-not-allowed" : ""}`}
+                >
+                  {n}
+                </button>
+              );
+            })}
+          </div>
+          {data.self_rating ? (
+            <p className="text-xs text-muted-foreground mt-2">
+              {data.self_rating >= 9 ? "🔥 يومك نار، خليه عادة!" :
+               data.self_rating >= 7 ? "👏 يوم محترم، فيه مساحة لتحسين بسيط." :
+               data.self_rating >= 5 ? "💪 يوم متوسط، بكره أحسن بإذن الله." :
+               "❤️ مفيش مشكلة، كل يوم فرصة جديدة."}
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground mt-2">اضغط رقم من 1 لـ 10 يعبّر عن إحساسك بأدائك النهاردة.</p>
+          )}
+        </div>
       </Card>
 
       <Card className="p-5 sticky bottom-3 bg-card/95 backdrop-blur-md border-2 border-primary/30 shadow-lg mt-3">
