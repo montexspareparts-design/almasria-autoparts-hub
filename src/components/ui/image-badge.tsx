@@ -96,8 +96,12 @@ const imageBadgeVariants = cva(
 // ─────────────────────────────────────────────────────────────────────
 function stockBackground(stockAvailable: boolean) {
   return stockAvailable
-    ? "bg-emerald-600/95 shadow-[0_2px_10px_rgba(16,185,129,0.35)] font-bold"
-    : "bg-red-600/95 shadow-[0_2px_10px_rgba(239,68,68,0.35)] font-bold";
+    ? "bg-gradient-to-b from-emerald-500/95 to-emerald-700/95 " +
+      "shadow-[0_4px_14px_-3px_rgba(16,185,129,0.55),inset_0_1px_0_rgba(255,255,255,0.3)] " +
+      "ring-[hsl(40_80%_65%)]/45 font-bold"
+    : "bg-gradient-to-b from-[hsl(355_85%_55%)]/95 to-[hsl(355_90%_42%)]/95 " +
+      "shadow-[0_4px_14px_-3px_hsl(355_85%_45%/0.55),inset_0_1px_0_rgba(255,255,255,0.3)] " +
+      "ring-[hsl(40_80%_65%)]/45 font-bold";
 }
 
 // ─────────────────────────────────────────────────────────────────────
