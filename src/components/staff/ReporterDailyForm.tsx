@@ -239,7 +239,22 @@ export default function ReporterDailyForm() {
         </div>
       </Card>
 
-      {/* 🔹 القسم 1: الإنتاج (Auto + Display only) */}
+      {/* 🔹 القسم 1: عروض الأسعار (يدوي) */}
+      <SectionCard
+        icon={<FileSpreadsheet className="w-4 h-4 text-indigo-600" />}
+        iconBg="bg-indigo-500/10"
+        title="عروض الأسعار"
+        number={1}
+      >
+        <NumField
+          label="عدد عروض الأسعار اليوم"
+          value={data.quotations_count}
+          onChange={setNum("quotations_count")}
+          disabled={locked}
+        />
+      </SectionCard>
+
+      {/* 🔹 القسم 2: الإنتاج (Auto + Display only) */}
       <Card className="p-5">
         <div className="flex items-center gap-2 mb-4">
           <div className="w-8 h-8 rounded-lg bg-blue-500/10 grid place-items-center">
