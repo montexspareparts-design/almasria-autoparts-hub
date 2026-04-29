@@ -117,16 +117,16 @@ const ImageBadge = forwardRef<HTMLSpanElement, ImageBadgeProps>(
     return (
       <span ref={ref} className={cn(imageBadgeVariants({ tone, size }), stateful, className)} {...rest}>
         {tone === "stock" && (
-          // Colored pulse dot on dark base — green=in stock, red=out
+          // Colored pulse dot on dark base — green=in stock (rhythmic pulse), red=out
           <span aria-hidden className="relative inline-flex w-1.5 h-1.5 sm:w-2 sm:h-2 mr-0.5">
             <span className={cn(
-              "absolute inset-0 rounded-full animate-ping",
-              stockAvailable ? "bg-emerald-400/70" : "bg-[hsl(355_85%_60%)]/70"
+              "absolute inset-0 rounded-full",
+              stockAvailable ? "bg-emerald-400/70 animate-ping" : "bg-[hsl(355_85%_60%)]/70"
             )} />
             <span className={cn(
               "relative inline-flex w-full h-full rounded-full ring-[1.5px] ring-white/30",
               stockAvailable
-                ? "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.9)]"
+                ? "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.9)] animate-stock-pulse"
                 : "bg-[hsl(355_85%_60%)] shadow-[0_0_6px_hsl(355_85%_55%/0.9)]"
             )} />
           </span>
