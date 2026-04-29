@@ -84,7 +84,7 @@ export default function InvoicePreviewDialog({ open, onOpenChange, order }: Invo
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `فاتورة-${order.order_number}.png`;
+        a.download = `عرض-سعر-${order.order_number}.png`;
         a.click();
         URL.revokeObjectURL(url);
       }, "image/png");
