@@ -240,10 +240,6 @@ const CartPage = () => {
                       </motion.div>
                     )}
                     <div className="flex justify-between items-center">
-                      <span className="text-muted-foreground">ضريبة القيمة المضافة (14%)</span>
-                      <span className="font-bold">{vat.toLocaleString("ar-EG")} ج.م</span>
-                    </div>
-                    <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">الشحن</span>
                       <span className="font-bold">{shippingCost > 0 ? `${shippingCost.toLocaleString("ar-EG")} ج.م` : "يحدد لاحقاً"}</span>
                     </div>
