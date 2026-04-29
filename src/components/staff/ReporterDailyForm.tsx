@@ -6,19 +6,54 @@ import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Send, Lock, Phone, MessageCircle, FileText, RefreshCw, TrendingUp, AlertTriangle, Target, Loader2, CheckCircle2, User, Calendar, ShoppingBag, Receipt, DollarSign, FileSpreadsheet } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Send,
+  Lock,
+  FileText,
+  Loader2,
+  CheckCircle2,
+  Calendar,
+  ClipboardList,
+  FileSpreadsheet,
+  ShoppingBag,
+  Receipt,
+  DollarSign,
+  Phone,
+  MessageCircle,
+  FileCheck,
+  RefreshCw,
+  XCircle,
+  Users,
+  UserPlus,
+  AlertTriangle,
+  Target,
+} from "lucide-react";
 
 const PROBLEM_OPTIONS = [
   { value: "price", label: "السعر" },
   { value: "unavailable", label: "عدم التوافر" },
   { value: "delay", label: "التأخير" },
   { value: "no_response", label: "العميل لم يرد" },
-  { value: "system_issue", label: "مشكلة سيستم" },
+  { value: "system_issue", label: "مشكلة في السيستم" },
 ];
 
 interface ReportData {
@@ -69,17 +104,21 @@ export default function ReporterDailyForm() {
   const [autoStats, setAutoStats] = useState({ orders: 0, invoices: 0, sales: 0 });
 
   const dateLabel = useMemo(
-    () => new Date().toLocaleDateString("ar-EG", { weekday: "long", year: "numeric", month: "long", day: "numeric" }),
+    () =>
+      new Date().toLocaleDateString("ar-EG", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
     []
   );
 
-  // Load name + today's report + auto production stats
   useEffect(() => {
     if (!user) return;
     (async () => {
       setLoading(true);
       try {
-        // Staff name
         const { data: prof } = await supabase
           .from("profiles")
           .select("full_name, email")
@@ -87,7 +126,6 @@ export default function ReporterDailyForm() {
           .maybeSingle();
         setStaffName(prof?.full_name || prof?.email || user?.email || "—");
 
-        // Existing report
         const { data: row } = await supabase
           .from("reporter_daily_reports")
           .select("*")
@@ -96,9 +134,6 @@ export default function ReporterDailyForm() {
           .maybeSingle();
         if (row) setData(row as ReportData);
 
-        // Auto production: today's orders for this staff (created_by/handled_by not present → use orders linked to assigned customers)
-        // Simpler heuristic: count today's orders system-wide that this staff handled via order_communications/assignments fallback.
-        // For now, fetch orders created today and count those + invoices + sales sum.
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
         const { data: orders } = await supabase
@@ -127,30 +162,31 @@ export default function ReporterDailyForm() {
     setData((d) => ({ ...d, [k]: n }));
   };
 
+  const buildPayload = (submit: boolean) => ({
+    user_id: user!.id,
+    report_date: today(),
+    quotations_count: data.quotations_count,
+    calls_count: data.calls_count,
+    whatsapp_count: data.whatsapp_count,
+    offers_sent_count: data.offers_sent_count,
+    offers_count: data.offers_count,
+    offers_converted_count: data.offers_converted_count,
+    incomplete_orders_count: data.incomplete_orders_count,
+    followups_count: data.followups_count,
+    new_customers_count: data.new_customers_count,
+    main_problem: data.main_problem || null,
+    problem_notes: data.problem_notes || null,
+    lost_opportunities_count: data.lost_opportunities_count,
+    is_submitted: submit,
+  });
+
   const saveDraft = async () => {
     if (!user || locked) return;
     setSaving(true);
     try {
-      const payload = {
-        user_id: user.id,
-        report_date: today(),
-        quotations_count: data.quotations_count,
-        calls_count: data.calls_count,
-        whatsapp_count: data.whatsapp_count,
-        offers_sent_count: data.offers_sent_count,
-        offers_count: data.offers_count,
-        offers_converted_count: data.offers_converted_count,
-        incomplete_orders_count: data.incomplete_orders_count,
-        followups_count: data.followups_count,
-        new_customers_count: data.new_customers_count,
-        main_problem: data.main_problem || null,
-        problem_notes: data.problem_notes || null,
-        lost_opportunities_count: data.lost_opportunities_count,
-        is_submitted: false,
-      };
       const { error } = await supabase
         .from("reporter_daily_reports")
-        .upsert(payload, { onConflict: "user_id,report_date" });
+        .upsert(buildPayload(false), { onConflict: "user_id,report_date" });
       if (error) throw error;
       toast({ title: "تم الحفظ", description: "تم حفظ المسودة، تقدر تكملها بعدين" });
     } catch (e: any) {
@@ -164,26 +200,9 @@ export default function ReporterDailyForm() {
     if (!user || locked) return;
     setSaving(true);
     try {
-      const payload = {
-        user_id: user.id,
-        report_date: today(),
-        quotations_count: data.quotations_count,
-        calls_count: data.calls_count,
-        whatsapp_count: data.whatsapp_count,
-        offers_sent_count: data.offers_sent_count,
-        offers_count: data.offers_count,
-        offers_converted_count: data.offers_converted_count,
-        incomplete_orders_count: data.incomplete_orders_count,
-        followups_count: data.followups_count,
-        new_customers_count: data.new_customers_count,
-        main_problem: data.main_problem || null,
-        problem_notes: data.problem_notes || null,
-        lost_opportunities_count: data.lost_opportunities_count,
-        is_submitted: true,
-      };
       const { data: saved, error } = await supabase
         .from("reporter_daily_reports")
-        .upsert(payload, { onConflict: "user_id,report_date" })
+        .upsert(buildPayload(true), { onConflict: "user_id,report_date" })
         .select()
         .maybeSingle();
       if (error) throw error;
@@ -212,26 +231,32 @@ export default function ReporterDailyForm() {
       transition={{ duration: 0.3 }}
       className="space-y-4"
     >
-      {/* 🟦 Header */}
-      <Card className="p-5 bg-gradient-to-br from-primary/10 via-card to-card border-primary/20">
+      {/* 🟦 Dark Header */}
+      <Card className="p-5 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-slate-700 text-white">
         <div className="flex items-start justify-between gap-3 flex-wrap">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-foreground">
-              📋 التقرير اليومي للمبيعات
-            </h2>
-            <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground flex-wrap">
-              <span className="flex items-center gap-1.5">
-                <User className="w-4 h-4" />
-                <strong className="text-foreground">{staffName}</strong>
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Calendar className="w-4 h-4" />
+          <div className="flex items-start gap-3">
+            <div className="w-12 h-12 rounded-xl bg-rose-500/20 grid place-items-center border border-rose-500/30">
+              <ClipboardList className="w-6 h-6 text-rose-400" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl sm:text-2xl font-extrabold">
+                  📋 التقرير اليومي للمبيعات
+                </h2>
+                <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/40 text-[10px]">
+                  إلزامي
+                </Badge>
+              </div>
+              <div className="flex items-center gap-1.5 mt-1.5 text-xs text-slate-400">
+                <Calendar className="w-3.5 h-3.5" />
                 {dateLabel}
-              </span>
+                <span className="mx-1">•</span>
+                <span className="text-slate-300">{staffName}</span>
+              </div>
             </div>
           </div>
           {locked && (
-            <Badge className="gap-1.5 bg-emerald-500/15 text-emerald-600 border-emerald-500/30 text-sm py-1.5 px-3">
+            <Badge className="gap-1.5 bg-emerald-500/20 text-emerald-300 border-emerald-500/40 text-sm py-1.5 px-3">
               <Lock className="w-3.5 h-3.5" />
               تم تسليم التقرير
             </Badge>
@@ -239,146 +264,144 @@ export default function ReporterDailyForm() {
         </div>
       </Card>
 
-      {/* 🔹 القسم 1: عروض الأسعار (يدوي) */}
-      <SectionCard
-        icon={<FileSpreadsheet className="w-4 h-4 text-indigo-600" />}
-        iconBg="bg-indigo-500/10"
-        title="عروض الأسعار"
-        number={1}
-      >
-        <NumField
-          label="عدد عروض الأسعار اليوم"
-          value={data.quotations_count}
-          onChange={setNum("quotations_count")}
-          disabled={locked}
-        />
-      </SectionCard>
-
-      {/* 🔹 القسم 2: الإنتاج (Auto + Display only) */}
-      <Card className="p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-8 rounded-lg bg-blue-500/10 grid place-items-center">
-            <TrendingUp className="w-4 h-4 text-blue-600" />
-          </div>
-          <h3 className="font-bold text-base">الإنتاج</h3>
-          <Badge variant="outline" className="text-[10px]">تلقائي من السيستم</Badge>
+      {/* 🔹 Auto Stats (Display only) */}
+      <Card className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200 dark:border-blue-900">
+        <div className="flex items-center gap-2 mb-3">
+          <Badge variant="outline" className="text-[10px] bg-card">
+            تلقائي من السيستم
+          </Badge>
+          <span className="text-xs text-muted-foreground">
+            بيانات الإنتاج اليوم بتتسحب أوتوماتيك ولا تحتاج تعبئة
+          </span>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/20 text-center">
-            <ShoppingBag className="w-5 h-5 text-blue-600 mx-auto mb-1.5" />
-            <div className="text-2xl font-extrabold text-blue-700">{autoStats.orders}</div>
-            <div className="text-xs text-muted-foreground mt-1">عدد الطلبات</div>
-          </div>
-          <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 text-center">
-            <Receipt className="w-5 h-5 text-emerald-600 mx-auto mb-1.5" />
-            <div className="text-2xl font-extrabold text-emerald-700">{autoStats.invoices}</div>
-            <div className="text-xs text-muted-foreground mt-1">عدد الفواتير</div>
-          </div>
-          <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 text-center">
-            <DollarSign className="w-5 h-5 text-amber-600 mx-auto mb-1.5" />
-            <div className="text-2xl font-extrabold text-amber-700">
-              {autoStats.sales.toLocaleString("ar-EG")}
-            </div>
-            <div className="text-xs text-muted-foreground mt-1">إجمالي المبيعات (ج.م)</div>
-          </div>
+        <div className="grid grid-cols-3 gap-3">
+          <AutoStat
+            icon={<ShoppingBag className="w-4 h-4" />}
+            label="عدد الطلبات"
+            value={autoStats.orders.toString()}
+            color="blue"
+          />
+          <AutoStat
+            icon={<Receipt className="w-4 h-4" />}
+            label="عدد الفواتير"
+            value={autoStats.invoices.toString()}
+            color="emerald"
+          />
+          <AutoStat
+            icon={<DollarSign className="w-4 h-4" />}
+            label="إجمالي المبيعات (ج.م)"
+            value={autoStats.sales.toLocaleString("ar-EG")}
+            color="amber"
+          />
         </div>
       </Card>
 
-      {/* 🔹 القسم 2: التواصل */}
-      <SectionCard
-        icon={<Phone className="w-4 h-4 text-purple-600" />}
-        iconBg="bg-purple-500/10"
-        title="التواصل"
-        number={2}
-      >
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <NumField label="عدد المكالمات" value={data.calls_count} onChange={setNum("calls_count")} disabled={locked} />
-          <NumField label="عدد واتساب" value={data.whatsapp_count} onChange={setNum("whatsapp_count")} disabled={locked} />
-          <NumField label="عملاء أُرسل لهم عروض" value={data.offers_sent_count} onChange={setNum("offers_sent_count")} disabled={locked} />
+      {/* 🔹 Manual Questions Grid */}
+      <Card className="p-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-4">
+          <NumField
+            icon={<FileSpreadsheet className="w-3.5 h-3.5 text-indigo-600" />}
+            label="عدد عروض الأسعار اليوم"
+            required
+            value={data.quotations_count}
+            onChange={setNum("quotations_count")}
+            disabled={locked}
+          />
+          <NumField
+            icon={<Phone className="w-3.5 h-3.5 text-purple-600" />}
+            label="عدد المكالمات"
+            required
+            value={data.calls_count}
+            onChange={setNum("calls_count")}
+            disabled={locked}
+          />
+          <NumField
+            icon={<MessageCircle className="w-3.5 h-3.5 text-green-600" />}
+            label="عملاء واتساب"
+            required
+            value={data.whatsapp_count}
+            onChange={setNum("whatsapp_count")}
+            disabled={locked}
+          />
+          <NumField
+            icon={<FileCheck className="w-3.5 h-3.5 text-cyan-600" />}
+            label="عملاء أُرسل لهم عروض/كشوف"
+            required
+            value={data.offers_sent_count}
+            onChange={setNum("offers_sent_count")}
+            disabled={locked}
+          />
+          <NumField
+            icon={<RefreshCw className="w-3.5 h-3.5 text-blue-600" />}
+            label="عروض اتحولت لطلبات"
+            required
+            value={data.offers_converted_count}
+            onChange={setNum("offers_converted_count")}
+            disabled={locked}
+          />
+          <NumField
+            icon={<XCircle className="w-3.5 h-3.5 text-rose-600" />}
+            label="طلبات لم تكتمل"
+            required
+            value={data.incomplete_orders_count}
+            onChange={setNum("incomplete_orders_count")}
+            disabled={locked}
+          />
+          <NumField
+            icon={<Users className="w-3.5 h-3.5 text-teal-600" />}
+            label="عملاء تمت متابعتهم"
+            required
+            value={data.followups_count}
+            onChange={setNum("followups_count")}
+            disabled={locked}
+          />
+          <NumField
+            icon={<UserPlus className="w-3.5 h-3.5 text-emerald-600" />}
+            label="عملاء جدد تم إضافتهم"
+            required
+            value={data.new_customers_count}
+            onChange={setNum("new_customers_count")}
+            disabled={locked}
+          />
+          <NumField
+            icon={<Target className="w-3.5 h-3.5 text-orange-600" />}
+            label="مهتمين ولم يتم إغلاقهم"
+            required
+            value={data.lost_opportunities_count}
+            onChange={setNum("lost_opportunities_count")}
+            disabled={locked}
+          />
         </div>
-      </SectionCard>
 
-      {/* 🔹 القسم 3: التحويل */}
-      <SectionCard
-        icon={<RefreshCw className="w-4 h-4 text-cyan-600" />}
-        iconBg="bg-cyan-500/10"
-        title="التحويل"
-        number={3}
-      >
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <NumField label="عدد العروض" value={data.offers_count} onChange={setNum("offers_count")} disabled={locked} />
-          <NumField label="العروض اللي اتحولت لطلبات" value={data.offers_converted_count} onChange={setNum("offers_converted_count")} disabled={locked} />
-          <NumField label="الطلبات غير المكتملة" value={data.incomplete_orders_count} onChange={setNum("incomplete_orders_count")} disabled={locked} />
+        {/* Problem dropdown spanning full width */}
+        <div className="mt-5 pt-5 border-t">
+          <Label className="text-xs font-bold mb-1.5 flex items-center gap-1.5 text-foreground">
+            <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+            أكثر مشكلة واجهتك اليوم
+            <span className="text-rose-500">*</span>
+          </Label>
+          <Select
+            value={data.main_problem}
+            onValueChange={(v) =>
+              !locked && setData((d) => ({ ...d, main_problem: v }))
+            }
+            disabled={locked}
+          >
+            <SelectTrigger className="h-11">
+              <SelectValue placeholder="اختر المشكلة..." />
+            </SelectTrigger>
+            <SelectContent>
+              {PROBLEM_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-      </SectionCard>
+      </Card>
 
-      {/* 🔹 القسم 4: المتابعة والنمو */}
-      <SectionCard
-        icon={<Target className="w-4 h-4 text-emerald-600" />}
-        iconBg="bg-emerald-500/10"
-        title="المتابعة والنمو"
-        number={4}
-      >
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <NumField label="عدد المتابعات" value={data.followups_count} onChange={setNum("followups_count")} disabled={locked} />
-          <NumField label="عدد العملاء الجدد" value={data.new_customers_count} onChange={setNum("new_customers_count")} disabled={locked} />
-        </div>
-      </SectionCard>
-
-      {/* 🔹 القسم 5: المشاكل */}
-      <SectionCard
-        icon={<AlertTriangle className="w-4 h-4 text-rose-600" />}
-        iconBg="bg-rose-500/10"
-        title="المشاكل"
-        number={5}
-      >
-        <div className="space-y-3">
-          <div>
-            <Label className="text-sm font-semibold mb-1.5 block">أكبر مشكلة قابلتك اليوم</Label>
-            <Select
-              value={data.main_problem}
-              onValueChange={(v) => !locked && setData((d) => ({ ...d, main_problem: v }))}
-              disabled={locked}
-            >
-              <SelectTrigger className="h-11">
-                <SelectValue placeholder="اختر المشكلة..." />
-              </SelectTrigger>
-              <SelectContent>
-                {PROBLEM_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label className="text-sm font-semibold mb-1.5 block">تفاصيل إضافية (اختياري)</Label>
-            <Textarea
-              value={data.problem_notes}
-              onChange={(e) => !locked && setData((d) => ({ ...d, problem_notes: e.target.value }))}
-              placeholder="اكتب أي تفاصيل عن المشكلة..."
-              rows={3}
-              disabled={locked}
-            />
-          </div>
-        </div>
-      </SectionCard>
-
-      {/* 🔹 القسم 6: الفرص الضايعة */}
-      <SectionCard
-        icon={<MessageCircle className="w-4 h-4 text-orange-600" />}
-        iconBg="bg-orange-500/10"
-        title="الفرص الضايعة"
-        number={6}
-      >
-        <NumField
-          label="عملاء مهتمين ولم يتم إغلاقهم"
-          value={data.lost_opportunities_count}
-          onChange={setNum("lost_opportunities_count")}
-          disabled={locked}
-        />
-      </SectionCard>
-
-      {/* 🔹 زر الإرسال */}
+      {/* 🔹 Submit */}
       <Card className="p-5 sticky bottom-3 bg-card/95 backdrop-blur-md border-2 border-primary/30 shadow-lg">
         {locked ? (
           <div className="flex items-center justify-center gap-2 text-emerald-600 font-bold py-2">
@@ -394,7 +417,11 @@ export default function ReporterDailyForm() {
               disabled={saving}
               className="flex-1 sm:flex-none gap-2"
             >
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+              {saving ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <FileText className="w-4 h-4" />
+              )}
               حفظ مسودة
             </Button>
             <Button
@@ -420,7 +447,11 @@ export default function ReporterDailyForm() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={saving}>إلغاء</AlertDialogCancel>
-            <AlertDialogAction onClick={submitReport} disabled={saving} className="gap-2">
+            <AlertDialogAction
+              onClick={submitReport}
+              disabled={saving}
+              className="gap-2"
+            >
               {saving && <Loader2 className="w-4 h-4 animate-spin" />}
               نعم، أرسل
             </AlertDialogAction>
@@ -431,38 +462,66 @@ export default function ReporterDailyForm() {
   );
 }
 
-function SectionCard({
-  icon, iconBg, title, number, children,
+function NumField({
+  icon,
+  label,
+  required,
+  value,
+  onChange,
+  disabled,
 }: {
-  icon: React.ReactNode; iconBg: string; title: string; number: number; children: React.ReactNode;
+  icon?: React.ReactNode;
+  label: string;
+  required?: boolean;
+  value: number;
+  onChange: (v: string) => void;
+  disabled?: boolean;
 }) {
   return (
-    <Card className="p-5">
-      <div className="flex items-center gap-2 mb-4">
-        <div className={`w-8 h-8 rounded-lg grid place-items-center ${iconBg}`}>{icon}</div>
-        <h3 className="font-bold text-base flex-1">
-          <span className="text-muted-foreground text-sm">القسم {number}:</span> {title}
-        </h3>
-      </div>
-      {children}
-    </Card>
+    <div>
+      <Label className="text-xs font-bold mb-1.5 flex items-center gap-1.5 text-foreground">
+        {icon}
+        <span>{label}</span>
+        {required && <span className="text-rose-500">*</span>}
+      </Label>
+      <Input
+        type="number"
+        inputMode="numeric"
+        min={0}
+        value={value || ""}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
+        placeholder="—"
+        className="h-11 text-center font-bold text-base"
+      />
+    </div>
   );
 }
 
-function NumField({
-  label, value, onChange, disabled,
-}: { label: string; value: number; onChange: (v: string) => void; disabled?: boolean }) {
+function AutoStat({
+  icon,
+  label,
+  value,
+  color,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  color: "blue" | "emerald" | "amber";
+}) {
+  const colors = {
+    blue: "bg-blue-500/10 border-blue-500/30 text-blue-700 dark:text-blue-400",
+    emerald:
+      "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400",
+    amber: "bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-400",
+  };
   return (
-    <div>
-      <Label className="text-xs font-semibold mb-1.5 block text-muted-foreground">{label}</Label>
-      <Input
-        type="number"
-        min={0}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        disabled={disabled}
-        className="h-11 text-center text-lg font-bold"
-      />
+    <div className={`p-3 rounded-xl border text-center ${colors[color]}`}>
+      <div className="flex items-center justify-center gap-1.5 mb-1">
+        {icon}
+        <span className="text-[10px] font-semibold opacity-80">{label}</span>
+      </div>
+      <div className="text-xl font-extrabold">{value}</div>
     </div>
   );
 }
