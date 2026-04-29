@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Send, Lock, Phone, MessageCircle, FileText, RefreshCw, TrendingUp, AlertTriangle, Target, Loader2, CheckCircle2, User, Calendar, ShoppingBag, Receipt, DollarSign } from "lucide-react";
+import { Send, Lock, Phone, MessageCircle, FileText, RefreshCw, TrendingUp, AlertTriangle, Target, Loader2, CheckCircle2, User, Calendar, ShoppingBag, Receipt, DollarSign, FileSpreadsheet } from "lucide-react";
 
 const PROBLEM_OPTIONS = [
   { value: "price", label: "السعر" },
