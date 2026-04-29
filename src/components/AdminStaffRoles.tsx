@@ -119,8 +119,9 @@ const AdminStaffRoles = () => {
   const [newName, setNewName] = useState("");
   const [newPhone, setNewPhone] = useState("");
   const [newCustomPassword, setNewCustomPassword] = useState("");
+  const [newRole, setNewRole] = useState<"moderator" | "reporter">("moderator");
   const [adding, setAdding] = useState(false);
-  const [createdCredentials, setCreatedCredentials] = useState<{ email: string; password: string; whatsappSent: boolean; emailSent: boolean } | null>(null);
+  const [createdCredentials, setCreatedCredentials] = useState<{ email: string; password: string; whatsappSent: boolean; emailSent: boolean; role: string } | null>(null);
   const [resetTarget, setResetTarget] = useState<StaffMember | null>(null);
   const [resetPassword, setResetPassword] = useState("");
   const [resetting, setResetting] = useState(false);
