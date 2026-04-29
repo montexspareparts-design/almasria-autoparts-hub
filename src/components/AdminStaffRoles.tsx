@@ -145,7 +145,7 @@ const AdminStaffRoles = () => {
     const { data: roles, error } = await supabase
       .from("user_roles")
       .select("*")
-      .eq("role", "moderator");
+      .in("role", ["moderator", "reporter"] as any);
 
     if (error) {
       toast({ title: "خطأ في تحميل الموظفين", variant: "destructive" });
