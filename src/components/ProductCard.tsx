@@ -414,23 +414,9 @@ const ProductCard = memo(({
           />
         </div>
 
-        {/* Add to cart — premium navy button with gold hover ring */}
+        {/* Add to cart — premium navy button with gold hover ring + burst on click */}
         {stockAvailable && canSeePrice && (
-          <Button
-            size="sm"
-            className="group/cta relative w-full flex-row-reverse gap-2 text-[10px] sm:text-xs h-9 sm:h-11 rounded-xl font-extrabold mt-2.5 sm:mt-3 overflow-hidden
-              bg-[hsl(210_11%_12%)] text-white hover:bg-[hsl(210_11%_8%)]
-              ring-1 ring-[hsl(210_11%_12%)] hover:ring-[hsl(40_80%_55%/0.7)]
-              shadow-[0_4px_14px_-3px_rgba(15,23,42,0.35)]
-              hover:shadow-[0_10px_28px_-6px_rgba(40,80,55,0.45)]
-              active:scale-[0.97] transition-all duration-400 ease-out"
-            onClick={() => onAddToCart(product)}
-          >
-            {/* gold shimmer sweep on hover */}
-            <span aria-hidden className="absolute inset-0 -translate-x-full group-hover/cta:translate-x-full transition-transform duration-[1100ms] ease-out bg-gradient-to-r from-transparent via-[hsl(40_80%_75%/0.25)] to-transparent" />
-            <ShoppingCart className="w-4 h-4 relative z-10" />
-            <span className="relative z-10">أضف للسلة</span>
-          </Button>
+          <AddToCartButton onAdd={() => onAddToCart(product)} />
         )}
 
         {/* Alert button for out-of-stock — dealers only */}
