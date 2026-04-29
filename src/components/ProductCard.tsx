@@ -9,12 +9,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 const brandRouteMap: Record<string, { label: string; color: string; path: string }> = {
-  toyota_genuine: { label: "تويوتا أصلي", color: "bg-red-600 text-white", path: "/products/toyota-genuine" },
-  toyota_oils: { label: "زيوت تويوتا", color: "bg-amber-600 text-white", path: "/products/toyota-oils" },
-  mtx_aftermarket: { label: "MTX", color: "bg-blue-600 text-white", path: "/products/mtx" },
-  denso: { label: "DENSO", color: "bg-emerald-600 text-white", path: "/products/denso" },
-  aisin: { label: "AISIN", color: "bg-purple-600 text-white", path: "/products/aisin" },
-  fbk: { label: "FBK", color: "bg-orange-600 text-white", path: "/products/fbk" },
+  toyota_genuine: { label: "تويوتا أصلي", color: "bg-gradient-to-b from-[hsl(355_85%_52%)] to-[hsl(355_90%_38%)] text-white", path: "/products/toyota-genuine" },
+  toyota_oils: { label: "زيوت تويوتا", color: "bg-gradient-to-b from-amber-500 to-amber-700 text-white", path: "/products/toyota-oils" },
+  mtx_aftermarket: { label: "MTX", color: "bg-gradient-to-b from-blue-500 to-blue-700 text-white", path: "/products/mtx" },
+  denso: { label: "DENSO", color: "bg-gradient-to-b from-emerald-500 to-emerald-700 text-white", path: "/products/denso" },
+  aisin: { label: "AISIN", color: "bg-gradient-to-b from-purple-500 to-purple-700 text-white", path: "/products/aisin" },
+  fbk: { label: "FBK", color: "bg-gradient-to-b from-orange-500 to-orange-700 text-white", path: "/products/fbk" },
 };
 
 interface ProductCardProps {
