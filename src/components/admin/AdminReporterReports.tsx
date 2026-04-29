@@ -33,7 +33,7 @@ const fmt = (d: Date) => d.toISOString().slice(0, 10);
 type RangeKey = "today" | "yesterday" | "week" | "month" | "custom";
 
 export default function AdminReporterReports() {
-  const [tab, setTab] = useState<"leaderboard" | "individual">("leaderboard");
+  const [tab, setTab] = useState<"all" | "leaderboard" | "individual">("all");
   const [rangeKey, setRangeKey] = useState<RangeKey>("week");
   const [customFrom, setCustomFrom] = useState<Date>(subDays(new Date(), 7));
   const [customTo, setCustomTo] = useState<Date>(new Date());
