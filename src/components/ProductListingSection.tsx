@@ -395,38 +395,37 @@ const ProductListingSection = memo(({
                 <div className="relative">
                   {/* Product Grid */}
                   <div className={viewMode === "grid" ? "grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5" : "space-y-3"}>
-                    <AnimatePresence mode="popLayout">
-                      {visibleProducts.map((product, idx) => (
-                        <motion.div
-                          key={product.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.2, delay: idx < initialItemCount ? Math.min(idx * 0.02, 0.3) : 0 }}
-                        >
-                          <ProductCard
-                            product={product}
-                            index={idx}
-                            viewMode={viewMode}
-                            user={user}
-                            isDealer={isDealer}
-                            isRetailTier={isRetailTier}
-                            viewedProductIds={viewedProductIds}
-                            limitReached={limitReached}
-                            dailyViewCount={dailyViewCount}
-                            dailyLimit={dailyLimit}
-                            searchYear={(() => {
-                              const m = (filters.search || "").match(/\b(19|20)\d{2}\b/);
-                              return m ? parseInt(m[0]) : null;
-                            })()}
-                            getProductPrice={getProductPrice}
-                            onProductClick={setSelectedProduct}
-                            onAddToCart={handleAddToCart}
-                            onRecordView={recordView}
-                            onLoginRequired={handleLoginRequired}
-                          />
-                        </motion.div>
-                      ))}
-                    </AnimatePresence>
+                    {visibleProducts.map((product, idx) => (
+                      <div
+                        key={product.id}
+                        className="animate-card-enter"
+                        style={{
+                          animationDelay: idx < initialItemCount ? `${Math.min(idx * 50, 350)}ms` : "0ms",
+                        }}
+                      >
+                        <ProductCard
+                          product={product}
+                          index={idx}
+                          viewMode={viewMode}
+                          user={user}
+                          isDealer={isDealer}
+                          isRetailTier={isRetailTier}
+                          viewedProductIds={viewedProductIds}
+                          limitReached={limitReached}
+                          dailyViewCount={dailyViewCount}
+                          dailyLimit={dailyLimit}
+                          searchYear={(() => {
+                            const m = (filters.search || "").match(/\b(19|20)\d{2}\b/);
+                            return m ? parseInt(m[0]) : null;
+                          })()}
+                          getProductPrice={getProductPrice}
+                          onProductClick={setSelectedProduct}
+                          onAddToCart={handleAddToCart}
+                          onRecordView={recordView}
+                          onLoginRequired={handleLoginRequired}
+                        />
+                      </div>
+                    ))}
                   </div>
 
                   {/* Show More Button with fade overlay */}

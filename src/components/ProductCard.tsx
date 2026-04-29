@@ -1,4 +1,4 @@
-import { memo, useState, useCallback } from "react";
+import { memo, useState, useCallback, useRef } from "react";
 import { Package, Lock, Eye, ShoppingCart, Check, Sparkles, Bell, BellOff } from "lucide-react";
 import { LazyImage } from "@/components/ui/lazy-image";
 import { Link } from "react-router-dom";
@@ -218,16 +218,39 @@ const ProductCard = memo(({
   // luxury automotive print catalogs (Lexus / Aston Martin) — the
   // product is the hero, every element around it whispers.
   // ═══════════════════════════════════════════════════════════════
+  // 3D tilt handlers (Apple-style) — driven by CSS variables on pointermove
+  const tiltRef = useRef<HTMLDivElement>(null);
+  const handleTiltMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    const el = tiltRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width;  // 0..1
+    const py = (e.clientY - rect.top) / rect.height;  // 0..1
+    const max = 5; // degrees
+    const ry = (px - 0.5) * (max * 2);
+    const rx = (0.5 - py) * (max * 2);
+    el.style.setProperty("--tilt-x", `${rx.toFixed(2)}deg`);
+    el.style.setProperty("--tilt-y", `${ry.toFixed(2)}deg`);
+  }, []);
+  const handleTiltLeave = useCallback(() => {
+    const el = tiltRef.current;
+    if (!el) return;
+    el.style.setProperty("--tilt-x", "0deg");
+    el.style.setProperty("--tilt-y", "0deg");
+  }, []);
+
   return (
     <div
+      ref={tiltRef}
       dir="rtl"
-      className="group relative bg-card cursor-pointer flex flex-col rounded-[22px] overflow-hidden
+      onPointerMove={handleTiltMove}
+      onPointerLeave={handleTiltLeave}
+      className="card-tilt group relative bg-card cursor-pointer flex flex-col rounded-[22px] overflow-hidden
         ring-1 ring-border/40
         shadow-[0_1px_2px_rgba(15,23,42,0.04),0_4px_18px_-8px_rgba(15,23,42,0.08)]
-        hover:ring-[hsl(40_80%_55%/0.45)]
-        hover:shadow-[0_24px_50px_-20px_rgba(15,23,42,0.22),0_10px_22px_-12px_rgba(40,30,10,0.12)]
-        hover:-translate-y-1
-        transition-[transform,box-shadow,border-color] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]
+        hover:ring-[hsl(40_80%_55%/0.55)]
+        hover:shadow-[0_28px_55px_-20px_rgba(15,23,42,0.28),0_12px_24px_-12px_rgba(40,30,10,0.18),0_0_0_1px_hsl(40_80%_55%/0.15)]
+        transition-[box-shadow,border-color] duration-500
         will-change-transform"
       onClick={() => onProductClick(product)}
     >
@@ -291,7 +314,7 @@ const ProductCard = memo(({
             <Link
               to={brandRouteMap[product.brand].path}
               onClick={(e) => e.stopPropagation()}
-              className="hover:opacity-90 transition-opacity max-w-full"
+              className="hover:opacity-90 transition-opacity max-w-full animate-brand-slide-in"
             >
               <ImageBadge
                 tone="brand"
@@ -357,15 +380,16 @@ const ProductCard = memo(({
           {product.name_ar}
         </h3>
 
-        {/* Year coverage badge — refined */}
+        {/* Year coverage badge — refined + gold shimmer sweep */}
         {coverage && (
           <div className="mb-2 flex justify-end">
-            <span className={`inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded-md leading-none ring-1 ${
+            <span className={`relative inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded-md leading-none ring-1 overflow-hidden ${
               coverage.isAlternative
                 ? "bg-amber-50/80 text-amber-800 ring-amber-300/70 dark:bg-amber-950/40 dark:text-amber-200 dark:ring-amber-700/40"
                 : "bg-emerald-50/80 text-emerald-800 ring-emerald-300/70 dark:bg-emerald-950/40 dark:text-emerald-200 dark:ring-emerald-700/40"
             }`}>
-              {coverage.text}
+              <span aria-hidden className="absolute inset-0 coverage-shimmer-bg animate-coverage-shimmer pointer-events-none" />
+              <span className="relative">{coverage.text}</span>
             </span>
           </div>
         )}
@@ -390,23 +414,9 @@ const ProductCard = memo(({
           />
         </div>
 
-        {/* Add to cart — premium navy button with gold hover ring */}
+        {/* Add to cart — premium navy button with gold hover ring + burst on click */}
         {stockAvailable && canSeePrice && (
-          <Button
-            size="sm"
-            className="group/cta relative w-full flex-row-reverse gap-2 text-[10px] sm:text-xs h-9 sm:h-11 rounded-xl font-extrabold mt-2.5 sm:mt-3 overflow-hidden
-              bg-[hsl(210_11%_12%)] text-white hover:bg-[hsl(210_11%_8%)]
-              ring-1 ring-[hsl(210_11%_12%)] hover:ring-[hsl(40_80%_55%/0.7)]
-              shadow-[0_4px_14px_-3px_rgba(15,23,42,0.35)]
-              hover:shadow-[0_10px_28px_-6px_rgba(40,80,55,0.45)]
-              active:scale-[0.97] transition-all duration-400 ease-out"
-            onClick={() => onAddToCart(product)}
-          >
-            {/* gold shimmer sweep on hover */}
-            <span aria-hidden className="absolute inset-0 -translate-x-full group-hover/cta:translate-x-full transition-transform duration-[1100ms] ease-out bg-gradient-to-r from-transparent via-[hsl(40_80%_75%/0.25)] to-transparent" />
-            <ShoppingCart className="w-4 h-4 relative z-10" />
-            <span className="relative z-10">أضف للسلة</span>
-          </Button>
+          <AddToCartButton onAdd={() => onAddToCart(product)} />
         )}
 
         {/* Alert button for out-of-stock — dealers only */}
@@ -419,6 +429,88 @@ const ProductCard = memo(({
 });
 
 ProductCard.displayName = "ProductCard";
+
+/* ── AddToCartButton — premium with magnetic hover, cart bounce, success burst ── */
+const AddToCartButton = ({ onAdd }: { onAdd: () => void }) => {
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const [success, setSuccess] = useState(false);
+
+  // Magnetic hover effect
+  const handleMove = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
+    const el = btnRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const x = (e.clientX - r.left - r.width / 2) * 0.18;
+    const y = (e.clientY - r.top - r.height / 2) * 0.25;
+    el.style.setProperty("--mag-x", `${x.toFixed(1)}px`);
+    el.style.setProperty("--mag-y", `${y.toFixed(1)}px`);
+  }, []);
+  const handleLeave = useCallback(() => {
+    const el = btnRef.current;
+    if (!el) return;
+    el.style.setProperty("--mag-x", "0px");
+    el.style.setProperty("--mag-y", "0px");
+  }, []);
+
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onAdd();
+    setSuccess(true);
+    window.setTimeout(() => setSuccess(false), 900);
+  }, [onAdd]);
+
+  // 8 burst particles distributed in a circle
+  const particles = Array.from({ length: 8 }).map((_, i) => {
+    const angle = (i / 8) * Math.PI * 2;
+    const dx = Math.cos(angle) * 28;
+    const dy = Math.sin(angle) * 28;
+    return { dx, dy, i };
+  });
+
+  return (
+    <button
+      ref={btnRef}
+      onClick={handleClick}
+      onPointerMove={handleMove}
+      onPointerLeave={handleLeave}
+      className="btn-magnetic group/cta relative w-full flex flex-row-reverse items-center justify-center gap-2 text-[10px] sm:text-xs h-9 sm:h-11 rounded-xl font-extrabold mt-2.5 sm:mt-3 overflow-hidden
+        bg-[hsl(210_11%_12%)] text-white hover:bg-[hsl(210_11%_8%)]
+        ring-1 ring-[hsl(210_11%_12%)] hover:ring-[hsl(40_80%_55%/0.7)]
+        shadow-[0_4px_14px_-3px_rgba(15,23,42,0.35)]
+        hover:shadow-[0_10px_28px_-6px_rgba(40,80,55,0.45)]
+        active:scale-[0.97]"
+      aria-label="أضف للسلة"
+    >
+      {/* gold shimmer sweep on hover */}
+      <span aria-hidden className="absolute inset-0 -translate-x-full group-hover/cta:translate-x-full transition-transform duration-[1100ms] ease-out bg-gradient-to-r from-transparent via-[hsl(40_80%_75%/0.25)] to-transparent" />
+
+      {/* Success burst particles */}
+      {success && (
+        <span aria-hidden className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+          {particles.map(p => (
+            <span
+              key={p.i}
+              className="absolute w-1 h-1 rounded-full bg-[hsl(40_90%_65%)] shadow-[0_0_8px_hsl(40_90%_60%)] animate-burst-particle"
+              style={{ ['--burst-end' as any]: `translate(${p.dx}px, ${p.dy}px)` }}
+            />
+          ))}
+        </span>
+      )}
+
+      {success ? (
+        <span className="relative z-10 flex items-center gap-1.5 animate-checkmark-pop">
+          <Check className="w-4 h-4 text-emerald-300" strokeWidth={3} />
+          <span>تمت الإضافة</span>
+        </span>
+      ) : (
+        <>
+          <ShoppingCart className="w-4 h-4 relative z-10 group-hover/cta:animate-cart-bounce" />
+          <span className="relative z-10">أضف للسلة</span>
+        </>
+      )}
+    </button>
+  );
+};
 
 /* ── Stock Alert Button ── */
 const StockAlertButton = ({ productId, userId, productName }: { productId: string; userId: string; productName: string }) => {
@@ -581,7 +673,10 @@ const PriceSection = ({
   if (price !== null) {
     return (
       <div className={compact ? "flex flex-wrap items-baseline justify-start gap-1.5 text-right" : "space-y-1 py-1 text-right"}>
-        <div className="inline-flex items-baseline gap-1 text-primary font-black text-lg sm:text-xl tracking-tight leading-tight">
+        <div
+          key={`price-${productId}-${price}`}
+          className="inline-flex items-baseline gap-1 text-primary font-black text-lg sm:text-xl tracking-tight leading-tight animate-price-glow"
+        >
           <span>{price.toLocaleString("ar-EG")}</span>
           <span className="text-[10px] sm:text-xs font-bold text-primary/50">ج.م</span>
         </div>

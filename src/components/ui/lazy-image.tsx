@@ -214,12 +214,12 @@ export const LazyImage = ({
           }}
           onError={() => setErrored(true)}
           className={cn(
-            // No opacity transition on the image: we snap from 0→1 in a
-            // single frame once decode() resolves. The skeleton above
-            // handles the smooth visual fade. Result: no luminance hump,
-            // no cross-fade overshoot, no flicker.
-            "relative z-[1]",
-            loaded ? "opacity-100" : "opacity-0",
+            // Blur-to-sharp on first decode: image starts blurred and
+            // crisps in 600ms once the file is decoded. Skeleton above
+            // still handles the opacity fade.
+            "relative z-[1] img-blur-load",
+            loaded && "loaded opacity-100",
+            !loaded && "opacity-0",
             className
           )}
           {...rest}

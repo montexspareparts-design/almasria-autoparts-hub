@@ -384,3 +384,87 @@ html.hc-mode a:not(.no-hc-underline) {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   ProductCard Premium Animations — Phase 2
+   3D Tilt + Magnetic + Burst particles + Coverage shimmer surface
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* 3D Tilt helper — driven by CSS variables set via JS pointermove */
+.card-tilt {
+  transform: perspective(900px)
+    rotateX(var(--tilt-x, 0deg))
+    rotateY(var(--tilt-y, 0deg))
+    translateY(var(--tilt-lift, 0px));
+  transform-style: preserve-3d;
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.card-tilt:hover {
+  --tilt-lift: -6px;
+}
+@media (hover: none) {
+  .card-tilt {
+    transform: none !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card-tilt {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* Coverage shimmer overlay — gold sweep every 3s */
+.coverage-shimmer-bg {
+  background-image: linear-gradient(
+    100deg,
+    transparent 30%,
+    hsl(40 90% 60% / 0.35) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+}
+
+/* Magnetic button — driven by CSS variables on pointermove */
+.btn-magnetic {
+  transform: translate(var(--mag-x, 0px), var(--mag-y, 0px));
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+/* Image blur-to-sharp on load */
+.img-blur-load {
+  filter: blur(8px);
+  transition: filter 600ms ease-out;
+}
+.img-blur-load.loaded {
+  filter: blur(0);
+}
+
+/* Sidebar active rail (right vertical bar) */
+.sidebar-rail {
+  position: absolute;
+  right: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  border-radius: 999px 0 0 999px;
+  background: hsl(var(--primary));
+  transform-origin: center;
+  animation: sidebar-indicator 0.25s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-card-enter,
+  .animate-stock-pulse,
+  .animate-brand-slide-in,
+  .animate-coverage-shimmer,
+  .animate-price-glow,
+  .animate-cart-bounce,
+  .animate-burst-particle,
+  .animate-checkmark-pop {
+    animation: none !important;
+  }
+}
