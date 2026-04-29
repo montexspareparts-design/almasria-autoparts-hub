@@ -65,7 +65,7 @@ export default function InvoicePreviewDialog({ open, onOpenChange, order }: Invo
       const pageWidth = pdf.internal.pageSize.getWidth();
       const imgHeight = (canvas.height * pageWidth) / canvas.width;
       pdf.addImage(imgData, "PNG", 0, 0, pageWidth, imgHeight);
-      pdf.save(`فاتورة-${order.order_number}.pdf`);
+      pdf.save(`عرض-سعر-${order.order_number}.pdf`);
       toast({ title: "تم تحميل الـ PDF ✓" });
     } catch (e) {
       toast({ title: "فشل التحميل", variant: "destructive" });
@@ -84,7 +84,7 @@ export default function InvoicePreviewDialog({ open, onOpenChange, order }: Invo
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `فاتورة-${order.order_number}.png`;
+        a.download = `عرض-سعر-${order.order_number}.png`;
         a.click();
         URL.revokeObjectURL(url);
       }, "image/png");
@@ -98,7 +98,7 @@ export default function InvoicePreviewDialog({ open, onOpenChange, order }: Invo
 
   const handleWhatsApp = () => {
     const lines = [
-      `🧾 *فاتورة طلبك من المصرية لقطع غيار السيارات*`,
+      `📄 *عرض سعر من المصرية لقطع غيار السيارات*`,
       `رقم الطلب: *${order.order_number}*`,
       `التاريخ: ${dateStr}`,
       ``,
@@ -128,7 +128,7 @@ export default function InvoicePreviewDialog({ open, onOpenChange, order }: Invo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0">
         <DialogHeader className="px-6 pt-6 pb-2">
-          <DialogTitle>معاينة الفاتورة — {order.order_number}</DialogTitle>
+          <DialogTitle>معاينة عرض السعر — {order.order_number}</DialogTitle>
         </DialogHeader>
 
         {/* Action buttons */}
@@ -168,7 +168,7 @@ export default function InvoicePreviewDialog({ open, onOpenChange, order }: Invo
               </div>
               <div className="text-left">
                 <div className="inline-block bg-gray-900 text-white px-4 py-2 rounded">
-                  <p className="text-xs opacity-80">فاتورة</p>
+                  <p className="text-xs opacity-80">عرض سعر</p>
                   <p className="text-base font-bold">{order.order_number}</p>
                 </div>
                 <p className="text-xs text-gray-600 mt-2">{dateStr}</p>
