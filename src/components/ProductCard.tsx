@@ -314,7 +314,7 @@ const ProductCard = memo(({
             <Link
               to={brandRouteMap[product.brand].path}
               onClick={(e) => e.stopPropagation()}
-              className="hover:opacity-90 transition-opacity max-w-full"
+              className="hover:opacity-90 transition-opacity max-w-full animate-brand-slide-in"
             >
               <ImageBadge
                 tone="brand"
