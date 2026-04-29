@@ -430,6 +430,88 @@ const ProductCard = memo(({
 
 ProductCard.displayName = "ProductCard";
 
+/* ── AddToCartButton — premium with magnetic hover, cart bounce, success burst ── */
+const AddToCartButton = ({ onAdd }: { onAdd: () => void }) => {
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const [success, setSuccess] = useState(false);
+
+  // Magnetic hover effect
+  const handleMove = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
+    const el = btnRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const x = (e.clientX - r.left - r.width / 2) * 0.18;
+    const y = (e.clientY - r.top - r.height / 2) * 0.25;
+    el.style.setProperty("--mag-x", `${x.toFixed(1)}px`);
+    el.style.setProperty("--mag-y", `${y.toFixed(1)}px`);
+  }, []);
+  const handleLeave = useCallback(() => {
+    const el = btnRef.current;
+    if (!el) return;
+    el.style.setProperty("--mag-x", "0px");
+    el.style.setProperty("--mag-y", "0px");
+  }, []);
+
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onAdd();
+    setSuccess(true);
+    window.setTimeout(() => setSuccess(false), 900);
+  }, [onAdd]);
+
+  // 8 burst particles distributed in a circle
+  const particles = Array.from({ length: 8 }).map((_, i) => {
+    const angle = (i / 8) * Math.PI * 2;
+    const dx = Math.cos(angle) * 28;
+    const dy = Math.sin(angle) * 28;
+    return { dx, dy, i };
+  });
+
+  return (
+    <button
+      ref={btnRef}
+      onClick={handleClick}
+      onPointerMove={handleMove}
+      onPointerLeave={handleLeave}
+      className="btn-magnetic group/cta relative w-full flex flex-row-reverse items-center justify-center gap-2 text-[10px] sm:text-xs h-9 sm:h-11 rounded-xl font-extrabold mt-2.5 sm:mt-3 overflow-hidden
+        bg-[hsl(210_11%_12%)] text-white hover:bg-[hsl(210_11%_8%)]
+        ring-1 ring-[hsl(210_11%_12%)] hover:ring-[hsl(40_80%_55%/0.7)]
+        shadow-[0_4px_14px_-3px_rgba(15,23,42,0.35)]
+        hover:shadow-[0_10px_28px_-6px_rgba(40,80,55,0.45)]
+        active:scale-[0.97]"
+      aria-label="أضف للسلة"
+    >
+      {/* gold shimmer sweep on hover */}
+      <span aria-hidden className="absolute inset-0 -translate-x-full group-hover/cta:translate-x-full transition-transform duration-[1100ms] ease-out bg-gradient-to-r from-transparent via-[hsl(40_80%_75%/0.25)] to-transparent" />
+
+      {/* Success burst particles */}
+      {success && (
+        <span aria-hidden className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+          {particles.map(p => (
+            <span
+              key={p.i}
+              className="absolute w-1 h-1 rounded-full bg-[hsl(40_90%_65%)] shadow-[0_0_8px_hsl(40_90%_60%)] animate-burst-particle"
+              style={{ ['--burst-end' as any]: `translate(${p.dx}px, ${p.dy}px)` }}
+            />
+          ))}
+        </span>
+      )}
+
+      {success ? (
+        <span className="relative z-10 flex items-center gap-1.5 animate-checkmark-pop">
+          <Check className="w-4 h-4 text-emerald-300" strokeWidth={3} />
+          <span>تمت الإضافة</span>
+        </span>
+      ) : (
+        <>
+          <ShoppingCart className="w-4 h-4 relative z-10 group-hover/cta:animate-cart-bounce" />
+          <span className="relative z-10">أضف للسلة</span>
+        </>
+      )}
+    </button>
+  );
+};
+
 /* ── Stock Alert Button ── */
 const StockAlertButton = ({ productId, userId, productName }: { productId: string; userId: string; productName: string }) => {
   const [subscribed, setSubscribed] = useState(false);
