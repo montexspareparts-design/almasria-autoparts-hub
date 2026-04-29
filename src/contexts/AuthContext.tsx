@@ -294,6 +294,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setDealerAccount(null);
     setIsAdmin(false);
     setIsModerator(false);
+    setIsReporter(false);
     // Always drop any impersonation when signing out so the next user
     // doesn't inherit a stale "view as employee" state.
     sessionStorage.removeItem(IMPERSONATE_KEY);
