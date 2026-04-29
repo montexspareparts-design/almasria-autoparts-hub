@@ -204,7 +204,12 @@ Deno.serve(async (req) => {
     }
 
     // Send notifications (only for new users with a fresh password)
-    const loginUrl = "https://www.almasriaautoparts.com/dealer-login";
+    // Reporter accounts log in via /auth (regular email login) — they're routed
+    // to /admin/daily-report automatically by AuthContext.
+    const loginUrl = targetRole === "reporter"
+      ? "https://www.almasriaautoparts.com/auth"
+      : "https://www.almasriaautoparts.com/dealer-login";
+    const roleLabel = targetRole === "reporter" ? "موظف تقارير الفيصل" : "موظف";
     let whatsappSent = false;
     let emailSent = false;
 
@@ -212,7 +217,10 @@ Deno.serve(async (req) => {
     let emailReason = "";
 
     if (isNewUser) {
-      const waMsg = `🎉 أهلاً ${fullName}!\n\nتم إنشاء حساب موظف لك في المصرية جروب ✅\n\n🔐 بيانات الدخول:\nالبريد: ${cleanEmail}\nكلمة السر المؤقتة: ${tempPassword}\n\n🔗 رابط الدخول:\n${loginUrl}\n\n⚠️ يرجى تغيير كلمة السر بعد أول تسجيل دخول من "إعدادات حسابي".\n\nالمصرية جروب 🚗`;
+      const reporterNote = targetRole === "reporter"
+        ? `\n\n📋 ملاحظة: حسابك مخصص لرفع التقرير اليومي فقط — هتدخل على صفحة التقرير مباشرة بعد تسجيل الدخول.`
+        : "";
+      const waMsg = `🎉 أهلاً ${fullName}!\n\nتم إنشاء حساب ${roleLabel} لك في المصرية جروب ✅\n\n🔐 بيانات الدخول:\nالبريد: ${cleanEmail}\nكلمة السر المؤقتة: ${tempPassword}\n\n🔗 رابط الدخول:\n${loginUrl}${reporterNote}\n\n⚠️ يرجى تغيير كلمة السر بعد أول تسجيل دخول.\n\nالمصرية جروب 🚗`;
 
       console.log(`[create-staff] Sending notifications for new user: ${cleanEmail}, phone: ${phone || "(none)"}`);
 
