@@ -51,6 +51,8 @@ const AuthContext = createContext<AuthContextType>({
   isDealer: false,
   isAdmin: false,
   isModerator: false,
+  isReporter: false,
+  isReporterOnly: false,
   signOut: async () => {},
   isImpersonating: false,
   impersonatedUserId: null,
