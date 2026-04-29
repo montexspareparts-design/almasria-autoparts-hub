@@ -177,9 +177,9 @@ export default function ReporterDailyForm() {
         .select().maybeSingle();
       if (error) throw error;
       if (saved) setData(saved as ReportData);
-      toast({ title: "تم الإرسال ✅", description: "تم تسليم تقرير اليوم وإشعار الإدارة على الواتساب" });
       setConfirmOpen(false);
       setPreviewOpen(false);
+      setThankYouOpen(true); // اعرض شاشة الشكر بدل الـ toast
     } catch (e: any) {
       toast({ title: "خطأ في الإرسال", description: e.message, variant: "destructive" });
     } finally { setSaving(false); }
