@@ -165,9 +165,16 @@ export default function InvoicePreviewDialog({ open, onOpenChange, order }: Invo
             {busy === "pdf" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
             تحميل PDF
           </Button>
-          <Button size="sm" variant="outline" className="gap-2" disabled={busy === "img"} onClick={handleDownloadImage}>
+          <Button
+            size="icon"
+            variant="outline"
+            className="h-9 w-9 text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
+            disabled={busy === "img"}
+            onClick={handleDownloadImage}
+            title="إرسال صورة على واتساب"
+            aria-label="إرسال صورة على واتساب"
+          >
             {busy === "img" ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageIcon className="w-4 h-4" />}
-            حفظ صورة (للواتساب)
           </Button>
           <Button size="sm" variant="outline" className="gap-2" onClick={handlePrint}>
             <Printer className="w-4 h-4" />
