@@ -155,9 +155,11 @@ const ProductCard = memo(({
             {brandRouteMap[product.brand] && (
               <Link
                 to={brandRouteMap[product.brand].path}
-                className={`text-[7px] sm:text-[9px] font-bold px-1.5 sm:px-2 py-0.5 rounded-md hover:opacity-80 transition-opacity shadow-sm whitespace-nowrap ${brandRouteMap[product.brand].color}`}
+                className="inline-flex items-center gap-1 text-[7px] sm:text-[9px] font-bold px-1.5 sm:px-2 py-0.5 rounded-md hover:opacity-80 transition-opacity shadow-sm whitespace-nowrap bg-gradient-to-b from-[hsl(220_25%_14%)] to-[hsl(220_30%_7%)] text-white ring-1"
+                style={{ ['--accent' as any]: brandRouteMap[product.brand].accent, boxShadow: `inset 0 0 0 1px ${brandRouteMap[product.brand].accent}55` }}
                 onClick={(e) => e.stopPropagation()}
               >
+                <span aria-hidden className="w-1 h-1 rounded-full" style={{ background: brandRouteMap[product.brand].accent, boxShadow: `0 0 4px ${brandRouteMap[product.brand].accent}` }} />
                 {brandRouteMap[product.brand].label}
               </Link>
             )}
