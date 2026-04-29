@@ -2038,6 +2038,69 @@ export type Database = {
         }
         Relationships: []
       }
+      reporter_daily_reports: {
+        Row: {
+          calls_count: number
+          created_at: string
+          followups_count: number
+          id: string
+          incomplete_orders_count: number
+          is_submitted: boolean
+          lost_opportunities_count: number
+          main_problem: string | null
+          new_customers_count: number
+          offers_converted_count: number
+          offers_count: number
+          offers_sent_count: number
+          problem_notes: string | null
+          report_date: string
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+          whatsapp_count: number
+        }
+        Insert: {
+          calls_count?: number
+          created_at?: string
+          followups_count?: number
+          id?: string
+          incomplete_orders_count?: number
+          is_submitted?: boolean
+          lost_opportunities_count?: number
+          main_problem?: string | null
+          new_customers_count?: number
+          offers_converted_count?: number
+          offers_count?: number
+          offers_sent_count?: number
+          problem_notes?: string | null
+          report_date?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id: string
+          whatsapp_count?: number
+        }
+        Update: {
+          calls_count?: number
+          created_at?: string
+          followups_count?: number
+          id?: string
+          incomplete_orders_count?: number
+          is_submitted?: boolean
+          lost_opportunities_count?: number
+          main_problem?: string | null
+          new_customers_count?: number
+          offers_converted_count?: number
+          offers_count?: number
+          offers_sent_count?: number
+          problem_notes?: string | null
+          report_date?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
+          whatsapp_count?: number
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           id: string
