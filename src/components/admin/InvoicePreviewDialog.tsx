@@ -128,7 +128,7 @@ export default function InvoicePreviewDialog({ open, onOpenChange, order }: Invo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0">
         <DialogHeader className="px-6 pt-6 pb-2">
-          <DialogTitle>معاينة الفاتورة — {order.order_number}</DialogTitle>
+          <DialogTitle>معاينة عرض السعر — {order.order_number}</DialogTitle>
         </DialogHeader>
 
         {/* Action buttons */}
