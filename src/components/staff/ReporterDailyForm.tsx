@@ -23,6 +23,7 @@ const PROBLEM_OPTIONS = [
 
 interface ReportData {
   id?: string;
+  quotations_count: number;
   calls_count: number;
   whatsapp_count: number;
   offers_sent_count: number;
@@ -39,6 +40,7 @@ interface ReportData {
 }
 
 const EMPTY: ReportData = {
+  quotations_count: 0,
   calls_count: 0,
   whatsapp_count: 0,
   offers_sent_count: 0,
