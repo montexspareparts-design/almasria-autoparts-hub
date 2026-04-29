@@ -262,6 +262,7 @@ Deno.serve(async (req) => {
       isNewUser,
       userId,
       email: cleanEmail,
+      role: targetRole,
       tempPassword: isNewUser ? tempPassword : null,
       whatsappSent,
       whatsappReason,
