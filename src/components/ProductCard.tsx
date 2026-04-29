@@ -293,7 +293,20 @@ const ProductCard = memo(({
               onClick={(e) => e.stopPropagation()}
               className="hover:opacity-90 transition-opacity max-w-full"
             >
-              <ImageBadge tone="brand" size="sm">
+              <ImageBadge
+                tone="brand"
+                size="sm"
+                className="!ring-[color:var(--brand-accent)]/70 gap-1"
+                style={{ ['--brand-accent' as any]: brandRouteMap[product.brand].accent }}
+              >
+                <span
+                  aria-hidden
+                  className="w-1.5 h-1.5 rounded-full shrink-0"
+                  style={{
+                    background: brandRouteMap[product.brand].accent,
+                    boxShadow: `0 0 6px ${brandRouteMap[product.brand].accent}`,
+                  }}
+                />
                 {brandRouteMap[product.brand].label}
               </ImageBadge>
             </Link>
