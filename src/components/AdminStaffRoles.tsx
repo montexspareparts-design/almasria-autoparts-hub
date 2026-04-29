@@ -482,10 +482,12 @@ const AdminStaffRoles = () => {
             </div>
             <Button onClick={handleAddModerator} disabled={adding || !newEmail.trim() || !newName.trim()} className="gap-2 w-full sm:w-auto">
               {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
-              إنشاء حساب وإرسال البيانات
+              {newRole === "reporter" ? "إنشاء حساب موظف فيصل (تقرير فقط)" : "إنشاء حساب موظف وإرسال البيانات"}
             </Button>
             <p className="text-xs text-muted-foreground">
-              سيتم إنشاء حساب جديد بكلمة مرور مؤقتة وإرسال بيانات الدخول على واتساب والإيميل تلقائياً. لو المستخدم مسجل بالفعل، سيتم منحه صلاحية موظف فقط.
+              {newRole === "reporter"
+                ? "📋 الحساب ده هيدخل /admin/daily-report مباشرة بعد اللوجين، ومش هيشوف أي تاب أو قسم تاني في النظام."
+                : "سيتم إنشاء حساب جديد بكلمة مرور مؤقتة وإرسال بيانات الدخول على واتساب والإيميل تلقائياً. لو المستخدم مسجل بالفعل، سيتم منحه صلاحية موظف فقط."}
             </p>
 
             {createdCredentials && (
