@@ -260,6 +260,7 @@ export default function ReporterDailyForm() {
           <MotivationalCard userId={user!.id} />
           <TomorrowOffCard userId={user!.id} />
           <TodayForm
+            userId={user!.id}
             data={data} setData={setData} setNum={setNum} locked={locked}
             saving={saving} autoStats={autoStats}
             onSaveDraft={saveDraft}
@@ -342,10 +343,12 @@ export default function ReporterDailyForm() {
 
 /* ------------------------ Today form ------------------------ */
 function TodayForm({
-  data, setData, setNum, locked, saving, autoStats, onSaveDraft, onPreview,
+  userId, data, setData, setNum, locked, saving, autoStats, onSaveDraft, onPreview,
 }: any) {
+  const todayScore = performanceScore(data);
   return (
     <>
+      <PersonalCompareCard userId={userId} todayScore={todayScore} />
       <Card className="p-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-4">
           <NumField icon={<FileSpreadsheet className="w-3.5 h-3.5 text-indigo-600" />} label="عدد عروض الأسعار اليوم" required value={data.quotations_count} onChange={setNum("quotations_count")} disabled={locked} />
