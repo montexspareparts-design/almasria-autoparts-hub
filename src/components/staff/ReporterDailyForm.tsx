@@ -62,13 +62,14 @@ interface ReportData {
   auto_invoices_count?: number;
   auto_total_sales?: number;
   report_date?: string;
+  self_rating?: number | null;
 }
 
 const EMPTY: ReportData = {
   quotations_count: 0, calls_count: 0, whatsapp_count: 0, offers_sent_count: 0,
   offers_count: 0, offers_converted_count: 0, incomplete_orders_count: 0,
   followups_count: 0, new_customers_count: 0, main_problem: "", problem_notes: "",
-  lost_opportunities_count: 0, is_submitted: false, submitted_at: null,
+  lost_opportunities_count: 0, is_submitted: false, submitted_at: null, self_rating: null,
 };
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
