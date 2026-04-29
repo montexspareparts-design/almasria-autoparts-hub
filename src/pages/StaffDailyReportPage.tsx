@@ -89,9 +89,9 @@ export default function StaffDailyReportPage() {
         </div>
       </header>
 
-      {/* Content */}
-      <main className="max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
-        <StaffDailyReport />
+      {/* Content — reporters get the simplified Q&A form, admins/moderators get full KPI report */}
+      <main className="max-w-3xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
+        {isReporterOnly ? <ReporterDailyForm /> : <StaffDailyReport />}
       </main>
     </div>
   );
