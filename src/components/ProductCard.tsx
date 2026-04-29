@@ -380,15 +380,16 @@ const ProductCard = memo(({
           {product.name_ar}
         </h3>
 
-        {/* Year coverage badge — refined */}
+        {/* Year coverage badge — refined + gold shimmer sweep */}
         {coverage && (
           <div className="mb-2 flex justify-end">
-            <span className={`inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded-md leading-none ring-1 ${
+            <span className={`relative inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded-md leading-none ring-1 overflow-hidden ${
               coverage.isAlternative
                 ? "bg-amber-50/80 text-amber-800 ring-amber-300/70 dark:bg-amber-950/40 dark:text-amber-200 dark:ring-amber-700/40"
                 : "bg-emerald-50/80 text-emerald-800 ring-emerald-300/70 dark:bg-emerald-950/40 dark:text-emerald-200 dark:ring-emerald-700/40"
             }`}>
-              {coverage.text}
+              <span aria-hidden className="absolute inset-0 coverage-shimmer-bg animate-coverage-shimmer pointer-events-none" />
+              <span className="relative">{coverage.text}</span>
             </span>
           </div>
         )}
