@@ -418,6 +418,14 @@ function TodayForm({
         </div>
       </Card>
 
+      <MoodShoutoutSection
+        data={data}
+        setData={setData}
+        locked={locked}
+        currentUserId={userId}
+        todayScore={todayScore}
+      />
+
       <Card className="p-5 sticky bottom-3 bg-card/95 backdrop-blur-md border-2 border-primary/30 shadow-lg mt-3">
         {locked ? (
           <div className="flex items-center justify-center gap-2 text-emerald-600 font-bold py-2">
