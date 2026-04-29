@@ -514,7 +514,8 @@ function AllReports({ from, to, label }: { from: string; to: string; label: stri
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => {
+                {filteredRows.map((r) => {
+                  const dayName = format(new Date(r.report_date), "EEEE", { locale: ar });
                   const p = profilesMap[r.user_id];
                   return (
                     <tr key={r.id} className="border-b last:border-0 hover:bg-muted/40 transition">
