@@ -989,6 +989,17 @@ const AdminDashboard = () => {
               <span className="hidden sm:inline">الرئيسية للموظف</span>
             </Button>
 
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => window.open("/admin/daily-report", "_blank", "noopener")}
+              className="gap-1 text-[11px] font-bold text-amber-500 hover:bg-amber-500/10 rounded-lg h-8 px-2"
+              title="معاينة شاشة موظف الفيصل (التقرير اليومي)"
+            >
+              <span className="text-sm leading-none">📋</span>
+              <span className="hidden sm:inline">معاينة شاشة الفيصل</span>
+            </Button>
+
             {isDealer && (
               <Button
                 variant="ghost"
