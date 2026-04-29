@@ -824,3 +824,128 @@ function TomorrowOffCard({ userId }: { userId: string }) {
     </>
   );
 }
+
+/* ------------------------ Thank-you Dialog ------------------------ */
+function ThankYouDialog({
+  open, onClose, data, staffName,
+}: { open: boolean; onClose: () => void; data: ReportData; staffName: string }) {
+  const firstName = (staffName || "").trim().split(" ")[0] || "بطلنا";
+
+  // نقاط الأداء — نفس معادلة edge function
+  const score = Math.max(
+    0,
+    (Number(data.offers_converted_count) || 0) * 3 +
+      (Number(data.new_customers_count) || 0) * 2 +
+      (Number(data.calls_count) || 0) +
+      (Number(data.followups_count) || 0) -
+      (Number(data.incomplete_orders_count) || 0)
+  );
+
+  const tier: "excellent" | "good" | "average" | "low" =
+    score >= 80 ? "excellent" : score >= 50 ? "good" : score >= 25 ? "average" : "low";
+
+  // كلمات شكر متنوعة لكل تصنيف — تختار رسالة مختلفة كل يوم
+  const THANKS: Record<string, string[]> = {
+    excellent: [
+      `🔥 مفيش كلام يا ${firstName}! يومك ده هيتكتب في كتب التاريخ. يستاهل قهوتين مش واحدة ☕☕`,
+      `🏆 يا ${firstName} انت دلوقتي في المنطقة الذهبية. شكراً على الجهد ده، فعلاً بتفرّق!`,
+      `👑 شكراً يا ${firstName} — لما الواحد بيشتغل بضمير زيك بنحس إن الشركة في إيدين أمينة 💛`,
+      `⭐ تم التسليم بقوة! يومك زي السوبرمان، بس لابس قميص شركة 😄 شكراً يا ${firstName}!`,
+    ],
+    good: [
+      `👏 برافو يا ${firstName} — يوم محترم وتقرير زي الفل. شكراً على الالتزام!`,
+      `✨ شكراً يا ${firstName}! خطوة ورا خطوة وانت بتقرّب من القمة 🚀`,
+      `💪 يا ${firstName} ده نص الطريق للممتاز، بكره نخلّيه كامل بإذن الله. شكراً!`,
+      `🎯 تقرير وصل بسلامة! انت من النوع اللي ميخلّيش فجوة في الفريق. شكراً يا ${firstName}.`,
+    ],
+    average: [
+      `🙏 شكراً يا ${firstName} على التسليم في وقته. بكره نلوّعها أكتر، انت قدها وقدود!`,
+      `☕ يوم عدّى بسلام يا ${firstName} — قهوة وراحة، وبكره صفحة جديدة 💪`,
+      `👍 شكراً يا ${firstName}! المهم انك بتسجّل، والباقي بيتظبط مع الوقت.`,
+      `💡 شكراً على الجهد يا ${firstName} — بكره خلينا نركّز على المكالمات بدري، النتيجة هتفرق.`,
+    ],
+    low: [
+      `❤️ شكراً يا ${firstName} على الصدق في التسجيل — ده أصعب جزء، والباقي يتعدّل بكره.`,
+      `🌅 شكراً يا ${firstName}! كل بطل عنده يوم هادي… بكره الجمهور بيهتف من تاني 🎤`,
+      `🤝 شكراً يا ${firstName}، إحنا فريق واحد. لو محتاج مساعدة قول وإحنا معاك.`,
+      `💎 شكراً على التسليم. الألماظ بيلمع تحت الضغط — وانت قريب 🔥`,
+    ],
+  };
+
+  const list = THANKS[tier];
+  // اختيار حتمي حسب اليوم + اسم الموظف عشان تتغير كل يوم لكل موظف
+  const seed = (() => {
+    const s = firstName + new Date().toISOString().slice(0, 10);
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = (h << 5) - h + s.charCodeAt(i);
+    return Math.abs(h) % list.length;
+  })();
+  const thankMsg = list[seed];
+
+  const tierMeta: Record<string, { label: string; gradient: string; emoji: string }> = {
+    excellent: { label: "أداء ممتاز", gradient: "from-emerald-500 via-green-500 to-teal-500", emoji: "🏆" },
+    good: { label: "أداء كويس", gradient: "from-sky-500 via-blue-500 to-indigo-500", emoji: "👏" },
+    average: { label: "أداء متوسط", gradient: "from-amber-500 via-orange-500 to-yellow-500", emoji: "💪" },
+    low: { label: "محتاج شوية push", gradient: "from-rose-500 via-red-500 to-pink-500", emoji: "❤️" },
+  };
+  const meta = tierMeta[tier];
+
+  const Stat = ({ label, value, icon }: { label: string; value: any; icon: string }) => (
+    <div className="bg-card/60 border rounded-xl p-2.5 flex items-center justify-between">
+      <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+        <span>{icon}</span>{label}
+      </span>
+      <span className="text-sm font-extrabold text-foreground">{value}</span>
+    </div>
+  );
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-md p-0 overflow-hidden" dir="rtl">
+        <div className={`relative bg-gradient-to-br ${meta.gradient} text-white p-5 text-center overflow-hidden`}>
+          <motion.div
+            initial={{ scale: 0, rotate: -30 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: "spring", stiffness: 200, damping: 14 }}
+            className="text-6xl mb-2 inline-block"
+          >
+            {meta.emoji}
+          </motion.div>
+          <h2 className="text-2xl font-extrabold mb-1">تم تسليم التقرير ✅</h2>
+          <p className="text-sm opacity-95">{meta.label}</p>
+          <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-white/10 blur-xl" />
+          <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full bg-white/10 blur-xl" />
+        </div>
+
+        <div className="p-5 space-y-4">
+          <motion.div
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+            className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-3.5 text-center"
+          >
+            <p className="text-sm font-bold text-foreground leading-relaxed">{thankMsg}</p>
+          </motion.div>
+
+          <div>
+            <h3 className="text-xs font-extrabold mb-2 text-muted-foreground flex items-center gap-1.5">
+              📊 ملخص أداءك النهاردة
+            </h3>
+            <div className="grid grid-cols-2 gap-2">
+              <Stat icon="📞" label="مكالمات" value={data.calls_count} />
+              <Stat icon="💬" label="واتساب" value={data.whatsapp_count} />
+              <Stat icon="📄" label="عروض الأسعار" value={data.quotations_count} />
+              <Stat icon="🔁" label="عروض محوّلة" value={data.offers_converted_count} />
+              <Stat icon="🆕" label="عملاء جدد" value={data.new_customers_count} />
+              <Stat icon="👥" label="متابعات" value={data.followups_count} />
+              <Stat icon="⭐" label="تقييم ذاتي" value={data.self_rating ? `${data.self_rating}/10` : "—"} />
+              <Stat icon="🎯" label="إجمالي النقاط" value={score} />
+            </div>
+          </div>
+
+          <Button onClick={onClose} className={`w-full h-11 bg-gradient-to-r ${meta.gradient} text-white font-bold`}>
+            تمام، شكراً 💪
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
