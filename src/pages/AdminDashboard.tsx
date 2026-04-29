@@ -313,21 +313,22 @@ const AdminDashboard = () => {
 
   const filteredSidebarSections = filteredSidebarGroups.flatMap(g => g.items);
 
-  // نقطة البداية الموحّدة = "ذكاء العملاء" (customer-intel) للموظف والأدمن
-  const defaultSection = "customer-intel";
+  // الأدمن يبدأ من "ذكاء العملاء"، والموظف يبدأ من "مهامي اليومية وتقرير اليوم"
+  // حتى يرى مباشرة الواجهة الجديدة بدل لوحة staff-home القديمة.
+  const defaultSection = isModerator && !isAdmin ? "my-daily-tasks" : "customer-intel";
   const activeSection = searchParams.get("section") || defaultSection;
 
   const setActiveSection = (section: string) => {
     setSearchParams({ section });
   };
 
-  // إعادة توجيه تلقائي فوري لما يدخل /admin بدون ?section → ?section=customer-intel
+  // إعادة توجيه تلقائي فوري لما يدخل /admin بدون ?section → القسم الافتراضي حسب الدور
   // يعمل قبل التحقق من الصلاحيات حتى يكون الرابط صريح دائمًا (الحماية تتم في useEffect أدناه)
   useEffect(() => {
     if (!searchParams.get("section")) {
       setSearchParams({ section: defaultSection }, { replace: true });
     }
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, defaultSection]);
 
   useEffect(() => {
     if (!authLoading && !user) { navigate("/auth"); return; }
