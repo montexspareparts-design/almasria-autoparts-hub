@@ -207,93 +207,80 @@ const ProductCard = memo(({
     );
   }
 
-  // ═══════════════════════════════════════════════
-  // Grid mode — Ultra Premium Card
-  // ═══════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════
+  // Grid mode — Editorial Luxury Card
+  // ───────────────────────────────────────────────────────────────
+  // Design language: Navy + Gold hairline + bone-white photo stage,
+  // refined typography rhythm, generous breathing room. Inspired by
+  // luxury automotive print catalogs (Lexus / Aston Martin) — the
+  // product is the hero, every element around it whispers.
+  // ═══════════════════════════════════════════════════════════════
   return (
     <div
       dir="rtl"
-      className="group relative bg-card rounded-[20px] overflow-hidden cursor-pointer flex flex-col
-        border border-border/20
-        shadow-[0_2px_12px_rgba(0,0,0,0.03),0_1px_3px_rgba(0,0,0,0.02)]
-        hover:border-primary/20
-        hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15),0_8px_24px_-8px_rgba(0,0,0,0.08)]
-        hover:-translate-y-1.5
-        transition-all duration-600 ease-[cubic-bezier(0.23,1,0.32,1)]"
+      className="group relative bg-card cursor-pointer flex flex-col rounded-[22px] overflow-hidden
+        ring-1 ring-border/40
+        shadow-[0_1px_2px_rgba(15,23,42,0.04),0_4px_18px_-8px_rgba(15,23,42,0.08)]
+        hover:ring-[hsl(40_80%_55%/0.45)]
+        hover:shadow-[0_24px_50px_-20px_rgba(15,23,42,0.22),0_10px_22px_-12px_rgba(40,30,10,0.12)]
+        hover:-translate-y-1
+        transition-[transform,box-shadow,border-color] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]
+        will-change-transform"
       onClick={() => onProductClick(product)}
     >
-      {/* ── Ambient glow on hover ── */}
-      <div className="absolute -inset-[1px] rounded-[20px] bg-gradient-to-b from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none z-0" />
+      {/* ── Top gold hairline (reveals on hover — signature accent) ── */}
+      <span
+        aria-hidden
+        className="absolute top-0 left-6 right-6 h-px z-30 pointer-events-none
+          bg-gradient-to-r from-transparent via-[hsl(40_80%_55%)] to-transparent
+          opacity-0 group-hover:opacity-90 transition-opacity duration-700"
+      />
 
-      {/* ── Image Section ── unified 1:1 frame, identical inner padding everywhere.
-          `badges-static` opts the inner badge-glass layers out of backdrop-filter
-          while idle (image is static) — blur is re-enabled on hover/focus only.
-
+      {/* ── Image Stage — pristine bone-white frame with corner accents ──
           Z-INDEX LADDER (grid mode) — single source of truth, do not deviate:
             z-0  : Skeleton shimmer (inside <LazyImage> wrapper)
             z-1  : The decoded <img> tag itself
             z-10 : Decorative overlays (vignette, bottom fade, hover sweep)
+            z-20 : Corner registration marks (gold)
             z-30 : Informational badges (Brand on top-start, Stock on top-end)
             z-40 : Promotional / state badges (Sale, Priced)
-          The skeleton is *always* the lowest layer so badges stay perfectly
-          anchored from first paint, even before the image bytes arrive. */}
+      */}
       <div className="badges-static relative aspect-square bg-white overflow-hidden z-[1]">
-        {/* Subtle vignette */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_60%,rgba(0,0,0,0.02)_100%)] z-10 pointer-events-none" />
+        {/* Soft radial vignette — subtle depth */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_40%,transparent_55%,rgba(15,23,42,0.045)_100%)] z-10 pointer-events-none" />
 
-        {/* Bottom fade for seamless transition into the content section */}
-        <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-card to-transparent z-10 pointer-events-none" />
+        {/* Bottom fade for seamless transition into content section */}
+        <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-card via-card/70 to-transparent z-10 pointer-events-none" />
 
-        {/* Luxury shimmer sweep */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-[200%] group-hover:translate-x-[200%] transition-transform duration-[1.4s] ease-in-out z-10 pointer-events-none" />
+        {/* Luxury shimmer sweep on hover */}
+        <div className="absolute inset-0 -translate-x-[150%] group-hover:translate-x-[150%]
+          bg-gradient-to-r from-transparent via-white/55 to-transparent
+          transition-transform duration-[1500ms] ease-[cubic-bezier(0.22,1,0.36,1)] z-10 pointer-events-none" />
 
-        {/*
-          Reserved padded inner box ensures every product image — regardless of its
-          natural dimensions — fits inside the SAME usable area, so cards stay
-          perfectly aligned across the grid on every screen size.
-        */}
-        <div className="absolute inset-0 p-4 sm:p-5 flex items-center justify-center">
+        {/* Corner registration marks — like a fine catalog */}
+        <span aria-hidden className="absolute top-2.5 left-2.5 w-3 h-3 z-20 pointer-events-none border-t border-l border-[hsl(40_80%_55%/0.55)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <span aria-hidden className="absolute top-2.5 right-2.5 w-3 h-3 z-20 pointer-events-none border-t border-r border-[hsl(40_80%_55%/0.55)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <span aria-hidden className="absolute bottom-2.5 left-2.5 w-3 h-3 z-20 pointer-events-none border-b border-l border-[hsl(40_80%_55%/0.55)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <span aria-hidden className="absolute bottom-2.5 right-2.5 w-3 h-3 z-20 pointer-events-none border-b border-r border-[hsl(40_80%_55%/0.55)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+        {/* Reserved padded inner box — ensures every product image fits the same usable area */}
+        <div className="absolute inset-0 p-5 sm:p-6 flex items-center justify-center">
           {product.image_url ? (
             <LazyImage
               src={product.image_url}
               alt={product.name_ar}
               wrapperClassName="w-full h-full flex items-center justify-center"
-              className="max-w-full max-h-full w-auto h-auto object-contain mix-blend-multiply group-hover:scale-[1.06] transition-transform duration-[800ms] ease-[cubic-bezier(0.23,1,0.32,1)]"
+              className="max-w-full max-h-full w-auto h-auto object-contain mix-blend-multiply
+                group-hover:scale-[1.07] transition-transform duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
               optimizeWidth={400}
               placeholderIcon={
-                <Package
-                  className="w-14 h-14 text-muted-foreground/25"
-                  strokeWidth={1.25}
-                />
+                <Package className="w-14 h-14 text-muted-foreground/25" strokeWidth={1.25} />
               }
             />
           ) : (
-            // Same icon, same color, same stroke as the LazyImage placeholder
-            // → cards without an image visually match cards still loading.
-            <Package
-              className="w-14 h-14 text-muted-foreground/25"
-              strokeWidth={1.25}
-            />
+            <Package className="w-14 h-14 text-muted-foreground/25" strokeWidth={1.25} />
           )}
         </div>
-
-        {/*
-          Image overlays — deterministic stacking system
-          ──────────────────────────────────────────────
-          Every floating badge here is rendered through the unified
-          <ImageBadge /> primitive (src/components/ui/image-badge.tsx).
-          That component owns the entire auto-contrast recipe — frosted
-          backdrop fallback, white halo ring, drop shadow, text-shadow,
-          responsive sizing, RTL-aware corner anchoring — so all card
-          surfaces (grid, list, dialog, admin QA) stay pixel-consistent.
-          To tweak how badges look on photos, edit ImageBadge — never
-          re-derive these classes inline here.
-
-          STACK ORDER (top → bottom inside each corner column):
-            ▸ TOP-START  : Brand     — z-30
-            ▸ TOP-END    : Stock → Sale — z-30
-            ▸ BOTTOM-END : Priced    — z-40 (sits above corner shadow)
-        */}
 
         {/* TOP-START : Brand */}
         {brandRouteMap[product.brand] && (
@@ -315,7 +302,6 @@ const ProductCard = memo(({
           <ImageBadge tone="stock" size="sm" stockAvailable={stockAvailable}>
             {stockAvailable ? "متوفر" : "غير متوفر"}
           </ImageBadge>
-
           {product.is_on_sale && (
             <ImageBadge tone="sale" size="sm" icon={<Sparkles />}>
               تخفيض
@@ -333,50 +319,54 @@ const ProductCard = memo(({
         )}
       </div>
 
-      {/* ── Content Section ── (separate stacking context above image overlays) */}
-      <div className="relative flex-1 flex flex-col p-2.5 sm:p-4 z-[2] text-right" onClick={(e) => e.stopPropagation()}>
+      {/* ── Content Section ── refined editorial typography */}
+      <div className="relative flex-1 flex flex-col p-3.5 sm:p-5 z-[2] text-right" onClick={(e) => e.stopPropagation()}>
 
-        {/* Name */}
-        <h3 className="font-bold text-card-foreground text-[11px] sm:text-[13px] leading-[1.5] line-clamp-2 min-h-[2.4em] mb-1 text-right
-          group-hover:text-primary transition-colors duration-400">
-          {product.name_ar}
-        </h3>
-
-        {/* SKU — single line, RTL-safe (LTR digits stay readable but block aligns to start in RTL) */}
-        <div className="mb-2 w-full overflow-hidden text-start">
+        {/* SKU strip — monospaced, quietly elegant, sits above the title like a reference number */}
+        <div className="mb-1.5 flex items-center justify-end gap-2">
           <bdi
             title={product.sku}
-            className="inline-block max-w-full truncate align-middle text-[8px] sm:text-[9px] font-mono text-muted-foreground/50 tracking-[0.1em] leading-none whitespace-nowrap select-all"
+            className="inline-block max-w-[70%] truncate align-middle text-[9px] sm:text-[10px] font-mono
+              text-[hsl(210_8%_45%)] tracking-[0.18em] leading-none whitespace-nowrap select-all
+              uppercase"
           >
             {product.sku}
           </bdi>
+          <span aria-hidden className="h-px flex-1 bg-gradient-to-l from-transparent via-border/60 to-transparent" />
         </div>
 
-        {/* Year coverage badge — shows "fits 2008 ✓" when user searched by year */}
+        {/* Product name — serif-weight headline, tight tracking */}
+        <h3 className="font-extrabold text-card-foreground text-[12.5px] sm:text-[14px] leading-[1.45] line-clamp-2 min-h-[2.5em] mb-2 text-right tracking-tight
+          group-hover:text-primary transition-colors duration-500">
+          {product.name_ar}
+        </h3>
+
+        {/* Year coverage badge — refined */}
         {coverage && (
-          <div className="mb-1.5 flex justify-end">
-            <span className={`inline-flex items-center gap-1 text-[8px] sm:text-[10px] font-bold px-2 py-1 rounded-md leading-none border ${
+          <div className="mb-2 flex justify-end">
+            <span className={`inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded-md leading-none ring-1 ${
               coverage.isAlternative
-                ? "bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-700/50"
-                : "bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-700/50"
+                ? "bg-amber-50/80 text-amber-800 ring-amber-300/70 dark:bg-amber-950/40 dark:text-amber-200 dark:ring-amber-700/40"
+                : "bg-emerald-50/80 text-emerald-800 ring-emerald-300/70 dark:bg-emerald-950/40 dark:text-emerald-200 dark:ring-emerald-700/40"
             }`}>
               {coverage.text}
             </span>
           </div>
         )}
 
-        {/* Category */}
+        {/* Category — whisper-quiet meta line */}
         {product.product_categories && (
-          <p className="text-[8px] sm:text-[10px] text-muted-foreground/40 leading-none truncate mb-2.5 text-right">
+          <p className="text-[9px] sm:text-[10px] text-muted-foreground/55 leading-none truncate mb-3 text-right tracking-wide">
             {(product.product_categories as any).name_ar}
           </p>
         )}
 
-        {/* Spacer */}
+        {/* Spacer — pushes price/CTA to the bottom for grid alignment */}
         <div className="flex-1" />
 
-        {/* Price / Action — separated with subtle line */}
-        <div className="pt-2.5 border-t border-border/10">
+        {/* Price / CTA — separated by a gold-tinted hairline (signature) */}
+        <div className="relative pt-3">
+          <span aria-hidden className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[hsl(40_80%_55%/0.35)] to-transparent" />
           <PriceSection
             user={user} isDealer={isDealer} price={price} hasViewed={hasViewed}
             limitReached={limitReached} dailyViewCount={dailyViewCount} dailyLimit={dailyLimit}
@@ -384,20 +374,22 @@ const ProductCard = memo(({
           />
         </div>
 
-        {/* Add to cart — premium button */}
+        {/* Add to cart — premium navy button with gold hover ring */}
         {stockAvailable && canSeePrice && (
           <Button
             size="sm"
-            className="w-full flex-row-reverse gap-1.5 text-[9px] sm:text-xs h-8 sm:h-10 rounded-xl font-extrabold mt-2 sm:mt-3
-              bg-primary hover:bg-primary/90
-              shadow-[0_4px_14px_-3px_hsl(var(--primary)/0.4)]
-              hover:shadow-[0_6px_20px_-3px_hsl(var(--primary)/0.5)]
-              active:scale-[0.97] active:shadow-[0_2px_8px_-2px_hsl(var(--primary)/0.3)]
-              transition-all duration-300 ease-out"
+            className="group/cta relative w-full flex-row-reverse gap-2 text-[10px] sm:text-xs h-9 sm:h-11 rounded-xl font-extrabold mt-2.5 sm:mt-3 overflow-hidden
+              bg-[hsl(210_11%_12%)] text-white hover:bg-[hsl(210_11%_8%)]
+              ring-1 ring-[hsl(210_11%_12%)] hover:ring-[hsl(40_80%_55%/0.7)]
+              shadow-[0_4px_14px_-3px_rgba(15,23,42,0.35)]
+              hover:shadow-[0_10px_28px_-6px_rgba(40,80,55,0.45)]
+              active:scale-[0.97] transition-all duration-400 ease-out"
             onClick={() => onAddToCart(product)}
           >
-            <ShoppingCart className="w-4 h-4" />
-            أضف للسلة
+            {/* gold shimmer sweep on hover */}
+            <span aria-hidden className="absolute inset-0 -translate-x-full group-hover/cta:translate-x-full transition-transform duration-[1100ms] ease-out bg-gradient-to-r from-transparent via-[hsl(40_80%_75%/0.25)] to-transparent" />
+            <ShoppingCart className="w-4 h-4 relative z-10" />
+            <span className="relative z-10">أضف للسلة</span>
           </Button>
         )}
 
