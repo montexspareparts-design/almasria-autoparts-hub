@@ -242,6 +242,7 @@ const AdminStaffRoles = () => {
           email: newEmail.trim().toLowerCase(),
           phone: newPhone.trim() || null,
           password: newCustomPassword.trim() || undefined,
+          role: newRole,
         },
       });
 
@@ -252,27 +253,30 @@ const AdminStaffRoles = () => {
           variant: "destructive",
         });
       } else {
+        const roleLabel = data.role === "reporter" ? "موظف فيصل (تقرير فقط)" : "موظف";
         if (data.isNewUser && data.tempPassword) {
           setCreatedCredentials({
             email: data.email,
             password: data.tempPassword,
             whatsappSent: data.whatsappSent,
             emailSent: data.emailSent,
+            role: data.role,
           });
           toast({
-            title: "✅ تم إنشاء حساب الموظف",
+            title: `✅ تم إنشاء حساب ${roleLabel}`,
             description: `${data.whatsappSent ? "📱 تم إرسال البيانات على واتساب. " : ""}${data.emailSent ? "📧 تم إرسال البيانات على الإيميل." : ""}`,
           });
         } else {
           toast({
-            title: "✅ تم منح صلاحية الموظف",
-            description: "تم تحويل المستخدم القائم لموظف",
+            title: `✅ تم منح صلاحية ${roleLabel}`,
+            description: "تم تحويل المستخدم القائم",
           });
         }
         setNewEmail("");
         setNewName("");
         setNewPhone("");
         setNewCustomPassword("");
+        setNewRole("moderator");
         fetchStaff();
       }
     } catch (err: any) {
