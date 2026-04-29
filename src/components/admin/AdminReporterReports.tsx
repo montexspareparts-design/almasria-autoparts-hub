@@ -588,3 +588,88 @@ function AggCard({ title, subtitle, agg, color }: { title: string; subtitle: str
     </Card>
   );
 }
+
+/* ------------------------ Day Off Panel (admin) ------------------------ */
+function DayOffPanel({ profilesMap }: { profilesMap: Record<string, any> }) {
+  const [rows, setRows] = useState<Array<{ id: string; user_id: string; off_date: string; reason: string | null }>>([]);
+  const [loading, setLoading] = useState(true);
+
+  const todayStr2 = new Date().toISOString().slice(0, 10);
+  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr2 = tomorrow.toISOString().slice(0, 10);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from("reporter_day_off" as any)
+        .select("id, user_id, off_date, reason")
+        .in("off_date", [todayStr2, tomorrowStr2])
+        .order("off_date");
+      if (!cancelled) {
+        setRows((data as any) || []);
+        setLoading(false);
+      }
+    })();
+    // realtime
+    const ch = supabase
+      .channel("day-off-admin")
+      .on("postgres_changes", { event: "*", schema: "public", table: "reporter_day_off" }, async () => {
+        const { data } = await supabase
+          .from("reporter_day_off" as any)
+          .select("id, user_id, off_date, reason")
+          .in("off_date", [todayStr2, tomorrowStr2])
+          .order("off_date");
+        setRows((data as any) || []);
+      })
+      .subscribe();
+    return () => { cancelled = true; supabase.removeChannel(ch); };
+  }, [todayStr2, tomorrowStr2]);
+
+  if (loading) return null;
+  if (rows.length === 0) {
+    return (
+      <Card className="p-3 bg-muted/30 border-dashed text-xs text-muted-foreground flex items-center gap-2">
+        🌴 مفيش أجازات مسجّلة لليوم أو بكرة
+      </Card>
+    );
+  }
+
+  const todayList = rows.filter(r => r.off_date === todayStr2);
+  const tomorrowList = rows.filter(r => r.off_date === tomorrowStr2);
+
+  const Pill = ({ r }: { r: typeof rows[0] }) => {
+    const p = profilesMap[r.user_id];
+    const name = p?.full_name || p?.email || "موظف";
+    return (
+      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-xs">
+        <span>🌴</span>
+        <span className="font-bold text-emerald-700 dark:text-emerald-300">{name}</span>
+        {r.reason && <span className="text-muted-foreground">— {r.reason}</span>}
+      </div>
+    );
+  };
+
+  return (
+    <Card className="p-4 bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border-emerald-500/30">
+      <div className="text-xs font-bold text-emerald-700 dark:text-emerald-300 mb-2 flex items-center gap-1.5">
+        🌴 الإجازات
+      </div>
+      <div className="space-y-2">
+        {todayList.length > 0 && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[10px] font-semibold text-muted-foreground">النهاردة:</span>
+            {todayList.map(r => <Pill key={r.id} r={r} />)}
+          </div>
+        )}
+        {tomorrowList.length > 0 && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[10px] font-semibold text-muted-foreground">بكرة:</span>
+            {tomorrowList.map(r => <Pill key={r.id} r={r} />)}
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+}
