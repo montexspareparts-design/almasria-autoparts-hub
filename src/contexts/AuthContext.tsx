@@ -99,6 +99,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [dealerAccount, setDealerAccount] = useState<DealerAccount | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isModerator, setIsModerator] = useState(false);
+  const [isReporter, setIsReporter] = useState(false);
   const [showCompleteProfile, setShowCompleteProfile] = useState(false);
   const [showRoleSelection, setShowRoleSelection] = useState(false);
   const [impersonation, setImpersonation] = useState<ImpersonationState | null>(() => readImpersonation());
