@@ -529,8 +529,18 @@ const AdminStaffRoles = () => {
                     return (
                     <TableRow key={member.id}>
                       <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           {member.full_name || "—"}
+                          {member.role === "reporter" && (
+                            <Badge variant="outline" className="gap-1 text-[10px] border-blue-500/40 text-blue-600 bg-blue-500/10">
+                              📋 موظف فيصل (تقرير فقط)
+                            </Badge>
+                          )}
+                          {member.role === "moderator" && (
+                            <Badge variant="outline" className="text-[10px] border-emerald-500/40 text-emerald-700 bg-emerald-500/10">
+                              موظف عام
+                            </Badge>
+                          )}
                           {isProtected && (
                             <Badge variant="outline" className="gap-1 text-[10px] border-amber-500/40 text-amber-600">
                               <Crown className="w-3 h-3" />
