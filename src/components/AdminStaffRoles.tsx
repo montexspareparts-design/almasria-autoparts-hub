@@ -410,6 +410,32 @@ const AdminStaffRoles = () => {
 
       {/* Tab 1: Manage Staff */}
       <TabsContent value="manage" className="space-y-6">
+        {/* Reporter (Al-Faisal staff) preview */}
+        <Card className="border-amber-300 bg-gradient-to-l from-amber-50 to-white">
+          <CardContent className="p-4 flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 grid place-items-center shrink-0">
+                <ClipboardList className="w-5 h-5 text-amber-700" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-bold text-amber-900">معاينة شاشة موظف الفيصل (reporter)</div>
+                <div className="text-xs text-amber-800/80 mt-0.5">
+                  افتح الصفحة الوحيدة اللي بيشوفوها — تقرير يومي فقط، بدون أي قسم تاني.
+                </div>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-amber-400 text-amber-900 hover:bg-amber-100 gap-2"
+              onClick={() => window.open("/admin/daily-report", "_blank", "noopener")}
+            >
+              <Eye className="w-4 h-4" />
+              معاينة الآن
+            </Button>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
