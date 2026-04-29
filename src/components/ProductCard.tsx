@@ -218,16 +218,39 @@ const ProductCard = memo(({
   // luxury automotive print catalogs (Lexus / Aston Martin) — the
   // product is the hero, every element around it whispers.
   // ═══════════════════════════════════════════════════════════════
+  // 3D tilt handlers (Apple-style) — driven by CSS variables on pointermove
+  const tiltRef = useRef<HTMLDivElement>(null);
+  const handleTiltMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    const el = tiltRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width;  // 0..1
+    const py = (e.clientY - rect.top) / rect.height;  // 0..1
+    const max = 5; // degrees
+    const ry = (px - 0.5) * (max * 2);
+    const rx = (0.5 - py) * (max * 2);
+    el.style.setProperty("--tilt-x", `${rx.toFixed(2)}deg`);
+    el.style.setProperty("--tilt-y", `${ry.toFixed(2)}deg`);
+  }, []);
+  const handleTiltLeave = useCallback(() => {
+    const el = tiltRef.current;
+    if (!el) return;
+    el.style.setProperty("--tilt-x", "0deg");
+    el.style.setProperty("--tilt-y", "0deg");
+  }, []);
+
   return (
     <div
+      ref={tiltRef}
       dir="rtl"
-      className="group relative bg-card cursor-pointer flex flex-col rounded-[22px] overflow-hidden
+      onPointerMove={handleTiltMove}
+      onPointerLeave={handleTiltLeave}
+      className="card-tilt group relative bg-card cursor-pointer flex flex-col rounded-[22px] overflow-hidden
         ring-1 ring-border/40
         shadow-[0_1px_2px_rgba(15,23,42,0.04),0_4px_18px_-8px_rgba(15,23,42,0.08)]
-        hover:ring-[hsl(40_80%_55%/0.45)]
-        hover:shadow-[0_24px_50px_-20px_rgba(15,23,42,0.22),0_10px_22px_-12px_rgba(40,30,10,0.12)]
-        hover:-translate-y-1
-        transition-[transform,box-shadow,border-color] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]
+        hover:ring-[hsl(40_80%_55%/0.55)]
+        hover:shadow-[0_28px_55px_-20px_rgba(15,23,42,0.28),0_12px_24px_-12px_rgba(40,30,10,0.18),0_0_0_1px_hsl(40_80%_55%/0.15)]
+        transition-[box-shadow,border-color] duration-500
         will-change-transform"
       onClick={() => onProductClick(product)}
     >
