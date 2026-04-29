@@ -29,44 +29,29 @@ import { cn } from "@/lib/utils";
 // Tone variants — semantic, not raw colors
 // ─────────────────────────────────────────────────────────────────────
 const imageBadgeVariants = cva(
-  // Base — luxury editorial badge:
-  // - frosted glassmorphism with subtle inner highlight
-  // - hairline border + soft tone-tinted glow
-  // - crisp text shadow for readability over photographs
+  // Base — Dark Premium: onyx background, hairline gold ring, soft glow
   "pointer-events-auto inline-flex items-center max-w-full truncate " +
-    "rounded-full leading-none whitespace-nowrap font-semibold " +
-    "backdrop-blur-xl backdrop-saturate-150 " +
-    "ring-1 transition-all duration-300 " +
-    "[text-shadow:0_1px_2px_rgba(0,0,0,0.25)] " +
-    "before:content-[''] before:absolute before:inset-x-2 before:top-0 before:h-px " +
-    "before:bg-gradient-to-r before:from-transparent before:via-white/60 before:to-transparent " +
-    "relative overflow-hidden",
+    "rounded-md leading-none whitespace-nowrap font-bold " +
+    "bg-gradient-to-b from-[hsl(220_25%_14%)] to-[hsl(220_30%_7%)] " +
+    "ring-1 ring-[hsl(40_75%_55%)]/55 " +
+    "shadow-[0_4px_14px_-4px_rgba(0,0,0,0.55),inset_0_1px_0_hsl(40_80%_70%/0.18)] " +
+    "[text-shadow:0_1px_2px_rgba(0,0,0,0.6)] " +
+    "transition-all duration-300",
   {
     variants: {
       tone: {
-        // Live stock indicator — emerald glass when in stock, ruby otherwise
-        stock: "text-white ring-white/40",
-        // Promotional flag (e.g. تخفيض) — ruby red w/ gold hairline
+        // Stock: same dark base, only the dot changes color (green/red)
+        stock: "text-white",
+        // Sale: keep destructive red but with gold hairline & dark depth
         sale:
-          "bg-gradient-to-b from-[hsl(355_85%_52%)] to-[hsl(355_90%_42%)] text-white " +
-          "ring-[hsl(40_80%_65%)]/50 " +
-          "shadow-[0_4px_16px_-4px_hsl(355_85%_45%/0.6),inset_0_1px_0_hsl(40_80%_75%/0.4)] " +
-          "font-black tracking-wider uppercase",
-        // "Already viewed/priced" indicator — emerald with gold hairline
-        priced:
-          "bg-gradient-to-b from-emerald-500 to-emerald-700 text-white " +
-          "ring-[hsl(40_80%_65%)]/40 " +
-          "shadow-[0_4px_14px_-3px_rgba(16,185,129,0.55),inset_0_1px_0_rgba(255,255,255,0.25)] " +
-          "font-bold",
-        // Brand chip (Toyota Genuine, MTX, ...) — luxury onyx w/ gold hairline
-        brand:
-          "text-white ring-[hsl(40_80%_60%)]/55 " +
-          "shadow-[0_4px_14px_-3px_rgba(0,0,0,0.45),inset_0_1px_0_hsl(40_80%_75%/0.35)] " +
-          "font-extrabold tracking-wide",
-        // Catch-all for ad-hoc informational badges
-        neutral:
-          "bg-gradient-to-b from-[hsl(210_15%_22%)] to-[hsl(210_18%_12%)] text-white " +
-          "ring-white/20 shadow-[0_4px_12px_-3px_rgba(0,0,0,0.4)] font-bold",
+          "!bg-gradient-to-b !from-[hsl(355_75%_42%)] !to-[hsl(355_85%_28%)] text-white " +
+          "!ring-[hsl(40_80%_60%)]/65 font-black tracking-wider uppercase",
+        // Priced: dark with emerald accent text
+        priced: "text-emerald-300",
+        // Brand: dark onyx + gold ring (signature look)
+        brand: "text-white tracking-wide",
+        // Neutral
+        neutral: "text-white",
       },
       size: {
         // Responsive sizing matches the card breakpoints exactly so the
