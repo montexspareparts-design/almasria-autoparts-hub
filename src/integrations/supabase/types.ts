@@ -3253,6 +3253,13 @@ export type Database = {
       }
       is_reporter_only: { Args: { _user_id: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      list_staff_colleagues: {
+        Args: never
+        Returns: {
+          full_name: string
+          user_id: string
+        }[]
+      }
       normalize_eg_phone: { Args: { raw: string }; Returns: string }
       phone_already_registered: { Args: { _phone: string }; Returns: boolean }
       recompute_product_year_coverage: { Args: never; Returns: undefined }
