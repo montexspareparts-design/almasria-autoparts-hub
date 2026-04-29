@@ -117,10 +117,18 @@ const ImageBadge = forwardRef<HTMLSpanElement, ImageBadgeProps>(
     return (
       <span ref={ref} className={cn(imageBadgeVariants({ tone, size }), stateful, className)} {...rest}>
         {tone === "stock" && (
-          // Premium dual-ring pulse dot — animated halo + solid core
-          <span aria-hidden className="relative inline-flex w-2 h-2 sm:w-2.5 sm:h-2.5 mr-0.5">
-            <span className="absolute inset-0 rounded-full bg-white/70 animate-ping" />
-            <span className="relative inline-flex w-full h-full rounded-full bg-white shadow-[0_0_6px_rgba(255,255,255,0.9),inset_0_0_2px_rgba(0,0,0,0.1)] ring-[1.5px] ring-white/40" />
+          // Colored pulse dot on dark base — green=in stock, red=out
+          <span aria-hidden className="relative inline-flex w-1.5 h-1.5 sm:w-2 sm:h-2 mr-0.5">
+            <span className={cn(
+              "absolute inset-0 rounded-full animate-ping",
+              stockAvailable ? "bg-emerald-400/70" : "bg-[hsl(355_85%_60%)]/70"
+            )} />
+            <span className={cn(
+              "relative inline-flex w-full h-full rounded-full ring-[1.5px] ring-white/30",
+              stockAvailable
+                ? "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.9)]"
+                : "bg-[hsl(355_85%_60%)] shadow-[0_0_6px_hsl(355_85%_55%/0.9)]"
+            )} />
           </span>
         )}
         {icon && (
