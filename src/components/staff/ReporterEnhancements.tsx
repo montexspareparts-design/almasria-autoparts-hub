@@ -32,6 +32,137 @@ const fmtDateAr = (s: string) =>
   new Date(s).toLocaleDateString("ar-EG", { weekday: "short", day: "numeric", month: "short" });
 
 // ============================================================
+// Sparkline — مخطط اتجاه صغير لآخر 7 أيام (SVG بسيط بدون مكتبة)
+// ============================================================
+function SparklineChart({
+  points,
+  avg,
+  todayScore,
+}: {
+  points: { date: string; score: number }[];
+  avg: number;
+  todayScore: number | null;
+}) {
+  // ندمج "النهاردة" مع التاريخ لو فيه قيمة، عشان نوضّح فين الأداء الحالي
+  const series = todayScore != null
+    ? [...points, { date: "today", score: todayScore }]
+    : points;
+
+  if (series.length < 2) return null;
+
+  const W = 280;
+  const H = 70;
+  const PAD_X = 12;
+  const PAD_Y = 12;
+  const maxScore = Math.max(...series.map((p) => p.score), avg, 10);
+  const minScore = 0;
+  const stepX = (W - PAD_X * 2) / (series.length - 1);
+  const yFor = (v: number) =>
+    H - PAD_Y - ((v - minScore) / Math.max(1, maxScore - minScore)) * (H - PAD_Y * 2);
+
+  const coords = series.map((p, i) => ({
+    x: PAD_X + i * stepX,
+    y: yFor(p.score),
+    score: p.score,
+    date: p.date,
+    isToday: p.date === "today",
+  }));
+
+  const linePath = coords.map((c, i) => `${i === 0 ? "M" : "L"} ${c.x.toFixed(1)} ${c.y.toFixed(1)}`).join(" ");
+  const areaPath = `${linePath} L ${coords[coords.length - 1].x.toFixed(1)} ${H - PAD_Y} L ${coords[0].x.toFixed(1)} ${H - PAD_Y} Z`;
+  const avgY = yFor(avg);
+
+  // أول قيمة vs آخر قيمة (اتجاه عام)
+  const trendUp = series[series.length - 1].score >= series[0].score;
+  const lineColor = trendUp ? "hsl(160 84% 39%)" : "hsl(346 87% 50%)"; // emerald / rose
+  const areaColor = trendUp ? "hsl(160 84% 39% / 0.18)" : "hsl(346 87% 50% / 0.18)";
+
+  return (
+    <div className="mt-3 p-2.5 rounded-lg bg-white/70 dark:bg-slate-900/50 border border-white/80 dark:border-slate-700/50">
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-[10px] font-semibold text-muted-foreground">📈 اتجاه أدائك</span>
+        <span className="text-[9px] text-muted-foreground">
+          آخر {points.length} يوم{todayScore != null ? " + النهاردة" : ""}
+        </span>
+      </div>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full h-[70px] block"
+        preserveAspectRatio="none"
+        role="img"
+        aria-label="مخطط أداء آخر 7 أيام"
+      >
+        {/* خط المتوسط (مرجع متقطع) */}
+        <line
+          x1={PAD_X} x2={W - PAD_X} y1={avgY} y2={avgY}
+          stroke="hsl(var(--muted-foreground))"
+          strokeOpacity={0.35}
+          strokeDasharray="3 3"
+          strokeWidth={1}
+        />
+        <text
+          x={W - PAD_X - 2}
+          y={avgY - 3}
+          textAnchor="end"
+          fontSize="8"
+          fill="hsl(var(--muted-foreground))"
+          opacity={0.7}
+        >
+          متوسط {avg}
+        </text>
+
+        {/* المساحة تحت المنحنى */}
+        <path d={areaPath} fill={areaColor} />
+
+        {/* الخط نفسه */}
+        <path
+          d={linePath}
+          fill="none"
+          stroke={lineColor}
+          strokeWidth={2}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+
+        {/* النقاط */}
+        {coords.map((c, i) => (
+          <g key={i}>
+            <circle
+              cx={c.x}
+              cy={c.y}
+              r={c.isToday ? 4 : 2.5}
+              fill={c.isToday ? "hsl(217 91% 60%)" : lineColor}
+              stroke={c.isToday ? "white" : "none"}
+              strokeWidth={c.isToday ? 2 : 0}
+            />
+            {c.isToday && (
+              <text
+                x={c.x}
+                y={c.y - 8}
+                textAnchor="middle"
+                fontSize="9"
+                fontWeight="bold"
+                fill="hsl(217 91% 50%)"
+              >
+                النهاردة
+              </text>
+            )}
+          </g>
+        ))}
+      </svg>
+      <div className="flex items-center justify-between mt-1 text-[9px] text-muted-foreground">
+        <span>{fmtDateAr(points[0].date)}</span>
+        <span className={trendUp ? "text-emerald-600 font-bold" : "text-rose-600 font-bold"}>
+          {trendUp ? "📈 اتجاه صاعد" : "📉 اتجاه نازل"}
+        </span>
+        <span>{fmtDateAr(points[points.length - 1].date)}</span>
+      </div>
+    </div>
+  );
+}
+
+
+// ============================================================
 // 1) كارت المقارنة الشخصية (آخر 7 أيام)
 // ============================================================
 export function PersonalCompareCard({
