@@ -15,6 +15,8 @@ import {
   ChevronRight, ChevronLeft, Search, CreditCard, MessageCircle, AlertTriangle
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import InvoicePreviewDialog from "@/components/admin/InvoicePreviewDialog";
+import { Eye } from "lucide-react";
 
 // SLA threshold for first contact (minutes)
 const SLA_MINUTES = 15;
