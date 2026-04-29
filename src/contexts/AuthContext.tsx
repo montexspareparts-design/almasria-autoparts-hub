@@ -308,6 +308,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const effectiveIsAdmin = isImpersonating ? false : isAdmin;
   const effectiveIsModerator = isImpersonating ? true : isModerator;
   const effectiveIsDealer = !!dealerAccount && !effectiveIsModerator && !effectiveIsAdmin;
+  // Reporter-only = has reporter role but no admin/moderator. UI is locked to /admin/daily-report.
+  const isReporterOnly = isReporter && !isAdmin && !isModerator;
 
   return (
     <AuthContext.Provider
@@ -319,6 +321,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isDealer: effectiveIsDealer,
         isAdmin: effectiveIsAdmin,
         isModerator: effectiveIsModerator,
+        isReporter,
+        isReporterOnly,
         signOut,
         isImpersonating,
         impersonatedUserId: impersonation?.userId ?? null,
