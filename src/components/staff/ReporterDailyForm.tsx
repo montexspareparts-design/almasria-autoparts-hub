@@ -595,3 +595,177 @@ function AutoStat({ icon, label, value, color }: { icon: React.ReactNode; label:
     </div>
   );
 }
+
+/* ------------------------ Motivational Card ------------------------ */
+function MotivationalCard({ userId }: { userId: string }) {
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState<string>("");
+  const [tier, setTier] = useState<string>("");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("reporter-motivational-message", { body: {} });
+        if (cancelled) return;
+        if (error) throw error;
+        setMessage(data?.message || "صباح الفل! يلا نبدأ يوم جديد 💪");
+        setTier(data?.tier || "");
+      } catch (e) {
+        if (!cancelled) setMessage("صباح الفل! النهاردة يوم جديد، يلا نخليه نار 🔥");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [userId]);
+
+  const tierStyle: Record<string, string> = {
+    excellent: "from-amber-400/30 to-orange-500/20 border-amber-500/40",
+    good: "from-emerald-400/25 to-teal-500/15 border-emerald-500/40",
+    average: "from-sky-400/25 to-indigo-500/15 border-sky-500/40",
+    low: "from-rose-400/25 to-rose-500/15 border-rose-500/40",
+    new: "from-violet-400/25 to-purple-500/15 border-violet-500/40",
+  };
+  const cls = tierStyle[tier] || tierStyle.new;
+
+  return (
+    <Card className={cn("p-4 bg-gradient-to-br border-2 relative overflow-hidden", cls)}>
+      <div className="absolute -top-4 -right-4 w-20 h-20 bg-white/10 rounded-full blur-2xl" />
+      <div className="flex items-start gap-3 relative z-10">
+        <div className="w-10 h-10 rounded-xl bg-white/30 backdrop-blur-sm grid place-items-center border border-white/40 shrink-0">
+          <Sparkles className="w-5 h-5 text-amber-700" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-[10px] font-bold text-foreground/60 mb-1 tracking-wide">رسالة اليوم 🌟</div>
+          {loading ? (
+            <div className="h-5 w-3/4 bg-white/40 rounded animate-pulse" />
+          ) : (
+            <div className="text-sm sm:text-base font-bold text-foreground leading-relaxed">{message}</div>
+          )}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+/* ------------------------ Tomorrow Off Card ------------------------ */
+function TomorrowOffCard({ userId }: { userId: string }) {
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [hasOff, setHasOff] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [reason, setReason] = useState("");
+
+  const tomorrowStr = useMemo(() => {
+    const d = new Date(); d.setDate(d.getDate() + 1);
+    return d.toISOString().slice(0, 10);
+  }, []);
+  const tomorrowLabel = useMemo(() => {
+    const d = new Date(); d.setDate(d.getDate() + 1);
+    return d.toLocaleDateString("ar-EG", { weekday: "long", day: "numeric", month: "long" });
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from("reporter_day_off" as any)
+        .select("id")
+        .eq("user_id", userId)
+        .eq("off_date", tomorrowStr)
+        .maybeSingle();
+      setHasOff(!!data);
+      setLoading(false);
+    })();
+  }, [userId, tomorrowStr]);
+
+  const submitOff = async () => {
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("reporter_day_off" as any).insert({
+        user_id: userId,
+        off_date: tomorrowStr,
+        reason: reason || null,
+      });
+      if (error) throw error;
+      setHasOff(true);
+      setConfirmOpen(false);
+      toast({ title: "🌴 أجازة سعيدة!", description: "تم تسجيل أجازتك بكرة وإشعار الإدارة." });
+    } catch (e: any) {
+      toast({ title: "خطأ", description: e.message, variant: "destructive" });
+    } finally { setSaving(false); }
+  };
+
+  const cancelOff = async () => {
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("reporter_day_off" as any)
+        .delete().eq("user_id", userId).eq("off_date", tomorrowStr);
+      if (error) throw error;
+      setHasOff(false);
+      toast({ title: "تم الإلغاء", description: "أجازة بكرة اتلغت — هتقدر تسجّل التقرير عادي." });
+    } catch (e: any) {
+      toast({ title: "خطأ", description: e.message, variant: "destructive" });
+    } finally { setSaving(false); }
+  };
+
+  if (loading) return null;
+
+  if (hasOff) {
+    return (
+      <Card className="p-4 bg-gradient-to-r from-emerald-500/15 to-teal-500/10 border-2 border-emerald-500/40">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 grid place-items-center text-2xl">🌴</div>
+            <div>
+              <div className="font-extrabold text-emerald-700 dark:text-emerald-300">أجازة سعيدة بكرة!</div>
+              <div className="text-xs text-muted-foreground">{tomorrowLabel} — مش هنطلب منك تقرير</div>
+            </div>
+          </div>
+          <Button size="sm" variant="ghost" onClick={cancelOff} disabled={saving} className="gap-1 text-rose-600 hover:bg-rose-500/10">
+            <Trash2 className="w-3.5 h-3.5" />إلغاء الأجازة
+          </Button>
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <>
+      <Card className="p-3 bg-card border-dashed flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Palmtree className="w-4 h-4 text-emerald-600" />
+          <span>هتاخد أجازة بكرة ({tomorrowLabel})؟</span>
+        </div>
+        <Button size="sm" variant="outline" onClick={() => setConfirmOpen(true)} className="gap-1.5 border-emerald-500/40 text-emerald-700 hover:bg-emerald-500/10">
+          <Palmtree className="w-3.5 h-3.5" />سجّل أجازة بكرة
+        </Button>
+      </Card>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>🌴 تأكيد أجازة بكرة</AlertDialogTitle>
+            <AlertDialogDescription>
+              هتسجّل أجازة يوم <strong>{tomorrowLabel}</strong>. الإدارة هتاخد إشعار فوري ومش هيتطلب منك تقرير في اليوم ده.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="my-2">
+            <Label className="text-xs">السبب (اختياري)</Label>
+            <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="مثال: ظرف عائلي، تعبان…" className="mt-1" />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={saving}>تراجع</AlertDialogCancel>
+            <AlertDialogAction onClick={submitOff} disabled={saving} className="gap-2 bg-emerald-600 hover:bg-emerald-700">
+              {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+              نعم، أجازة بكرة 🌴
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
