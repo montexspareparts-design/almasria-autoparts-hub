@@ -140,10 +140,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
   const subtotal = items.reduce((sum, i) => sum + i.unit_price * i.quantity, 0);
-  const vatRate = 0.14;
+  const vatRate = 0;
   const totalDiscount = discount + couponDiscount;
-  const vat = (subtotal - totalDiscount) * vatRate;
-  const total = subtotal - totalDiscount + vat + shippingCost;
+  const vat = 0;
+  const total = subtotal - totalDiscount + shippingCost;
 
   return (
     <CartContext.Provider
