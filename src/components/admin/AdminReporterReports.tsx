@@ -33,7 +33,7 @@ const fmt = (d: Date) => d.toISOString().slice(0, 10);
 type RangeKey = "today" | "yesterday" | "week" | "month" | "custom";
 
 export default function AdminReporterReports() {
-  const [tab, setTab] = useState<"leaderboard" | "individual">("leaderboard");
+  const [tab, setTab] = useState<"all" | "leaderboard" | "individual">("all");
   const [rangeKey, setRangeKey] = useState<RangeKey>("week");
   const [customFrom, setCustomFrom] = useState<Date>(subDays(new Date(), 7));
   const [customTo, setCustomTo] = useState<Date>(new Date());
@@ -103,10 +103,15 @@ export default function AdminReporterReports() {
       </Card>
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
-        <TabsList className="grid grid-cols-2 w-full max-w-md">
+        <TabsList className="grid grid-cols-3 w-full max-w-2xl">
+          <TabsTrigger value="all" className="gap-1.5"><FileText className="w-4 h-4" />كل التقارير</TabsTrigger>
           <TabsTrigger value="leaderboard" className="gap-1.5"><Trophy className="w-4 h-4" />الترتيب</TabsTrigger>
           <TabsTrigger value="individual" className="gap-1.5"><Users className="w-4 h-4" />تقرير كل موظف</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="all" className="mt-3">
+          <AllReports from={from} to={to} label={label} />
+        </TabsContent>
 
         <TabsContent value="leaderboard" className="mt-3">
           <Leaderboard from={from} to={to} label={label} />
@@ -342,5 +347,191 @@ function FullReportView({ r }: { r: any }) {
         </div>
       )}
     </div>
+  );
+}
+
+function AllReports({ from, to, label }: { from: string; to: string; label: string }) {
+  const [rows, setRows] = useState<any[]>([]);
+  const [profilesMap, setProfilesMap] = useState<Record<string, any>>({});
+  const [loading, setLoading] = useState(true);
+  const [openReport, setOpenReport] = useState<any | null>(null);
+
+  // Weekly + Monthly aggregates (always shown alongside the current range)
+  const today = new Date();
+  const weekFrom = fmt(startOfWeek(today, { weekStartsOn: 6 }));
+  const weekTo = fmt(endOfWeek(today, { weekStartsOn: 6 }));
+  const monthFrom = fmt(startOfMonth(today));
+  const monthTo = fmt(endOfMonth(today));
+
+  const [weekAgg, setWeekAgg] = useState<any>(null);
+  const [monthAgg, setMonthAgg] = useState<any>(null);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      try {
+        const { data: reports } = await supabase
+          .from("reporter_daily_reports").select("*")
+          .gte("report_date", from).lte("report_date", to)
+          .order("report_date", { ascending: false })
+          .order("submitted_at", { ascending: false });
+        const list = reports || [];
+        setRows(list);
+
+        const ids = Array.from(new Set(list.map((r: any) => r.user_id)));
+        if (ids.length) {
+          const { data: profs } = await supabase
+            .from("profiles").select("user_id, full_name, email").in("user_id", ids);
+          const map: Record<string, any> = {};
+          (profs || []).forEach((p: any) => { map[p.user_id] = p; });
+          setProfilesMap(map);
+        }
+      } finally { setLoading(false); }
+    })();
+  }, [from, to]);
+
+  // Fetch weekly + monthly aggregates
+  useEffect(() => {
+    (async () => {
+      const sumRange = async (f: string, t: string) => {
+        const { data } = await supabase
+          .from("reporter_daily_reports").select("*")
+          .gte("report_date", f).lte("report_date", t);
+        const list = data || [];
+        const sum = (k: string) => list.reduce((a: number, r: any) => a + Number(r[k] || 0), 0);
+        return {
+          reports_count: list.length,
+          quotations: sum("quotations_count"),
+          calls: sum("calls_count"),
+          whatsapp: sum("whatsapp_count"),
+          converted: sum("offers_converted_count"),
+          new_customers: sum("new_customers_count"),
+          incomplete: sum("incomplete_orders_count"),
+          sales: sum("auto_total_sales"),
+        };
+      };
+      setWeekAgg(await sumRange(weekFrom, weekTo));
+      setMonthAgg(await sumRange(monthFrom, monthTo));
+    })();
+  }, [weekFrom, weekTo, monthFrom, monthTo]);
+
+  const dayName = (d: string) => format(new Date(d), "EEEE", { locale: ar });
+
+  return (
+    <div className="space-y-4">
+      {/* Aggregates */}
+      <div className="grid md:grid-cols-2 gap-3">
+        <AggCard title="ملخص الأسبوع" subtitle={`${weekFrom} → ${weekTo}`} agg={weekAgg} color="emerald" />
+        <AggCard title="ملخص الشهر" subtitle={`${monthFrom} → ${monthTo}`} agg={monthAgg} color="indigo" />
+      </div>
+
+      {/* All reports table */}
+      <Card className="p-4">
+        <h3 className="font-bold mb-3 flex items-center gap-2">
+          <FileText className="w-4 h-4 text-primary" />
+          كل تقارير الموظفين — {label}
+          <Badge variant="outline" className="text-[10px]">{rows.length}</Badge>
+        </h3>
+
+        {loading ? (
+          <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+        ) : rows.length === 0 ? (
+          <div className="text-center py-10 text-sm text-muted-foreground">لا توجد تقارير في هذه الفترة</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-[11px] text-muted-foreground border-b">
+                <tr className="text-right">
+                  <th className="p-2">الموظف</th>
+                  <th className="p-2">التاريخ</th>
+                  <th className="p-2">اليوم</th>
+                  <th className="p-2 text-center">عروض</th>
+                  <th className="p-2 text-center">مكالمات</th>
+                  <th className="p-2 text-center">محولة</th>
+                  <th className="p-2 text-center">جدد</th>
+                  <th className="p-2 text-center">الحالة</th>
+                  <th className="p-2"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r) => {
+                  const p = profilesMap[r.user_id];
+                  return (
+                    <tr key={r.id} className="border-b last:border-0 hover:bg-muted/40 transition">
+                      <td className="p-2">
+                        <div className="font-bold">{p?.full_name || "موظف"}</div>
+                        <div className="text-[10px] text-muted-foreground">{p?.email || "—"}</div>
+                      </td>
+                      <td className="p-2 font-mono text-xs">{r.report_date}</td>
+                      <td className="p-2"><Badge variant="outline" className="text-[10px]">{dayName(r.report_date)}</Badge></td>
+                      <td className="p-2 text-center">{r.quotations_count}</td>
+                      <td className="p-2 text-center">{r.calls_count}</td>
+                      <td className="p-2 text-center font-bold text-emerald-600">{r.offers_converted_count}</td>
+                      <td className="p-2 text-center font-bold text-blue-600">{r.new_customers_count}</td>
+                      <td className="p-2 text-center">
+                        <Badge className={r.is_submitted ? "bg-emerald-500/15 text-emerald-700 border-emerald-500/40" : "bg-amber-500/15 text-amber-700 border-amber-500/40"}>
+                          {r.is_submitted ? "✓ مُسلَّم" : "مسودة"}
+                        </Badge>
+                      </td>
+                      <td className="p-2">
+                        <Button size="sm" variant="ghost" onClick={() => setOpenReport({ ...r, _profile: p })}>
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
+
+      <Dialog open={!!openReport} onOpenChange={(v) => !v && setOpenReport(null)}>
+        <DialogContent className="max-w-lg" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-primary" />
+              {openReport?._profile?.full_name || "تقرير"} — {openReport?.report_date}
+            </DialogTitle>
+          </DialogHeader>
+          {openReport && <FullReportView r={openReport} />}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function AggCard({ title, subtitle, agg, color }: { title: string; subtitle: string; agg: any; color: "emerald" | "indigo" }) {
+  const colorMap = {
+    emerald: "from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 border-emerald-200 dark:border-emerald-900 text-emerald-700",
+    indigo: "from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 border-indigo-200 dark:border-indigo-900 text-indigo-700",
+  };
+  return (
+    <Card className={cn("p-4 bg-gradient-to-br border", colorMap[color])}>
+      <div className="flex items-center justify-between mb-2">
+        <div>
+          <div className="font-bold flex items-center gap-1.5"><TrendingUp className="w-4 h-4" />{title}</div>
+          <div className="text-[10px] text-muted-foreground font-mono">{subtitle}</div>
+        </div>
+        <Badge variant="outline" className="text-[10px]">{agg?.reports_count ?? 0} تقرير</Badge>
+      </div>
+      {!agg ? (
+        <div className="flex justify-center py-4"><Loader2 className="w-4 h-4 animate-spin" /></div>
+      ) : (
+        <div className="grid grid-cols-4 gap-2 text-[11px]">
+          <Stat label="عروض" value={agg.quotations} />
+          <Stat label="مكالمات" value={agg.calls} />
+          <Stat label="واتساب" value={agg.whatsapp} />
+          <Stat label="محولة" value={agg.converted} />
+          <Stat label="جدد" value={agg.new_customers} />
+          <Stat label="غير مكتملة" value={agg.incomplete} />
+          <div className="col-span-2 text-center p-1.5 rounded bg-card/60 border">
+            <div className="font-bold">{Number(agg.sales).toLocaleString("ar-EG")} ج.م</div>
+            <div className="text-muted-foreground">إجمالي مبيعات</div>
+          </div>
+        </div>
+      )}
+    </Card>
   );
 }
