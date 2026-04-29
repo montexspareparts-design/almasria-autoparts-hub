@@ -602,6 +602,7 @@ function ReportSummaryCard({ report }: { report: ReportData }) {
         <Row label="عملاء جدد" value={report.new_customers_count} />
         <Row label="مهتمين بدون إغلاق" value={report.lost_opportunities_count} />
         <Row label="أكبر مشكلة" value={PROBLEM_LABEL_MAP[report.main_problem || ""] || "—"} />
+        <Row label="⭐ تقييم ذاتي" value={report.self_rating ? `${report.self_rating} / 10` : "—"} />
       </div>
     </div>
   );
