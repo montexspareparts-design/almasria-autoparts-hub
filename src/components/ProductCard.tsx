@@ -177,12 +177,26 @@ const ProductCard = memo(({
             {product.name_ar}
           </h3>
           {coverage && (
-            <span className={`inline-flex items-center gap-1 self-end text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-md leading-none border ${
-              coverage.isAlternative
-                ? "bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-700/50"
-                : "bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-700/50"
-            }`}>
-              {coverage.text}
+            <span
+              className={`group/cov relative inline-flex items-center gap-1.5 self-end text-[9px] sm:text-[10px] font-semibold px-2 py-0.5 rounded-full leading-none backdrop-blur-sm transition-all duration-300 hover:scale-[1.03] ${
+                coverage.isAlternative
+                  ? "bg-amber-500/8 text-amber-700 dark:text-amber-300"
+                  : "bg-emerald-500/8 text-emerald-700 dark:text-emerald-300"
+              }`}
+            >
+              <span
+                aria-hidden
+                className={`relative flex h-1.5 w-1.5 rounded-full ${
+                  coverage.isAlternative ? "bg-amber-500" : "bg-emerald-500"
+                }`}
+              >
+                <span
+                  className={`absolute inset-0 rounded-full animate-ping opacity-60 ${
+                    coverage.isAlternative ? "bg-amber-500" : "bg-emerald-500"
+                  }`}
+                />
+              </span>
+              <span className="tracking-wide">{coverage.text}</span>
             </span>
           )}
           {product.product_categories && (
@@ -380,16 +394,30 @@ const ProductCard = memo(({
           {product.name_ar}
         </h3>
 
-        {/* Year coverage badge — refined + gold shimmer sweep */}
+        {/* Year coverage badge — minimal, refined, with pulsing dot + shimmer sweep */}
         {coverage && (
           <div className="mb-2 flex justify-end">
-            <span className={`relative inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded-md leading-none ring-1 overflow-hidden ${
-              coverage.isAlternative
-                ? "bg-amber-50/80 text-amber-800 ring-amber-300/70 dark:bg-amber-950/40 dark:text-amber-200 dark:ring-amber-700/40"
-                : "bg-emerald-50/80 text-emerald-800 ring-emerald-300/70 dark:bg-emerald-950/40 dark:text-emerald-200 dark:ring-emerald-700/40"
-            }`}>
-              <span aria-hidden className="absolute inset-0 coverage-shimmer-bg animate-coverage-shimmer pointer-events-none" />
-              <span className="relative">{coverage.text}</span>
+            <span
+              className={`group/cov relative inline-flex items-center gap-1.5 text-[9px] sm:text-[10px] font-semibold px-2.5 py-1 rounded-full leading-none backdrop-blur-sm overflow-hidden transition-all duration-300 hover:scale-[1.04] ${
+                coverage.isAlternative
+                  ? "bg-amber-500/8 text-amber-700 dark:text-amber-300"
+                  : "bg-emerald-500/8 text-emerald-700 dark:text-emerald-300"
+              }`}
+            >
+              <span aria-hidden className="absolute inset-0 coverage-shimmer-bg animate-coverage-shimmer pointer-events-none opacity-70" />
+              <span
+                aria-hidden
+                className={`relative flex h-1.5 w-1.5 rounded-full ${
+                  coverage.isAlternative ? "bg-amber-500" : "bg-emerald-500"
+                }`}
+              >
+                <span
+                  className={`absolute inset-0 rounded-full animate-ping opacity-60 ${
+                    coverage.isAlternative ? "bg-amber-500" : "bg-emerald-500"
+                  }`}
+                />
+              </span>
+              <span className="relative tracking-wide">{coverage.text}</span>
             </span>
           </div>
         )}
