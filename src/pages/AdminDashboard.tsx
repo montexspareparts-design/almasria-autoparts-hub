@@ -332,6 +332,8 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     if (!authLoading && !user) { navigate("/auth"); return; }
+    // Reporter-only accounts (Al-Faisal staff): UI is locked to /admin/daily-report.
+    if (!authLoading && isReporterOnly) { navigate("/admin/daily-report", { replace: true }); return; }
     if (!authLoading && !canAccess) { navigate("/dealer"); return; }
     if (canAccess) {
       fetchApplications();
