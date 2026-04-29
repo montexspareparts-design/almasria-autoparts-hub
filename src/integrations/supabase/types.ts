@@ -2053,6 +2053,7 @@ export type Database = {
           offers_count: number
           offers_sent_count: number
           problem_notes: string | null
+          quotations_count: number
           report_date: string
           submitted_at: string | null
           updated_at: string
@@ -2073,6 +2074,7 @@ export type Database = {
           offers_count?: number
           offers_sent_count?: number
           problem_notes?: string | null
+          quotations_count?: number
           report_date?: string
           submitted_at?: string | null
           updated_at?: string
@@ -2093,6 +2095,7 @@ export type Database = {
           offers_count?: number
           offers_sent_count?: number
           problem_notes?: string | null
+          quotations_count?: number
           report_date?: string
           submitted_at?: string | null
           updated_at?: string

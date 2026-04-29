@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Send, Lock, Phone, MessageCircle, FileText, RefreshCw, TrendingUp, AlertTriangle, Target, Loader2, CheckCircle2, User, Calendar, ShoppingBag, Receipt, DollarSign } from "lucide-react";
+import { Send, Lock, Phone, MessageCircle, FileText, RefreshCw, TrendingUp, AlertTriangle, Target, Loader2, CheckCircle2, User, Calendar, ShoppingBag, Receipt, DollarSign, FileSpreadsheet } from "lucide-react";
 
 const PROBLEM_OPTIONS = [
   { value: "price", label: "السعر" },
@@ -23,6 +23,7 @@ const PROBLEM_OPTIONS = [
 
 interface ReportData {
   id?: string;
+  quotations_count: number;
   calls_count: number;
   whatsapp_count: number;
   offers_sent_count: number;
@@ -39,6 +40,7 @@ interface ReportData {
 }
 
 const EMPTY: ReportData = {
+  quotations_count: 0,
   calls_count: 0,
   whatsapp_count: 0,
   offers_sent_count: 0,
@@ -132,6 +134,7 @@ export default function ReporterDailyForm() {
       const payload = {
         user_id: user.id,
         report_date: today(),
+        quotations_count: data.quotations_count,
         calls_count: data.calls_count,
         whatsapp_count: data.whatsapp_count,
         offers_sent_count: data.offers_sent_count,
@@ -164,6 +167,7 @@ export default function ReporterDailyForm() {
       const payload = {
         user_id: user.id,
         report_date: today(),
+        quotations_count: data.quotations_count,
         calls_count: data.calls_count,
         whatsapp_count: data.whatsapp_count,
         offers_sent_count: data.offers_sent_count,
@@ -235,7 +239,22 @@ export default function ReporterDailyForm() {
         </div>
       </Card>
 
-      {/* 🔹 القسم 1: الإنتاج (Auto + Display only) */}
+      {/* 🔹 القسم 1: عروض الأسعار (يدوي) */}
+      <SectionCard
+        icon={<FileSpreadsheet className="w-4 h-4 text-indigo-600" />}
+        iconBg="bg-indigo-500/10"
+        title="عروض الأسعار"
+        number={1}
+      >
+        <NumField
+          label="عدد عروض الأسعار اليوم"
+          value={data.quotations_count}
+          onChange={setNum("quotations_count")}
+          disabled={locked}
+        />
+      </SectionCard>
+
+      {/* 🔹 القسم 2: الإنتاج (Auto + Display only) */}
       <Card className="p-5">
         <div className="flex items-center gap-2 mb-4">
           <div className="w-8 h-8 rounded-lg bg-blue-500/10 grid place-items-center">
