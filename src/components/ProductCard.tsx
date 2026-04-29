@@ -8,13 +8,14 @@ import { ImageBadge, ImageBadgeColumn } from "@/components/ui/image-badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
-const brandRouteMap: Record<string, { label: string; color: string; path: string }> = {
-  toyota_genuine: { label: "تويوتا أصلي", color: "bg-gradient-to-b from-[hsl(355_85%_52%)] to-[hsl(355_90%_38%)] text-white", path: "/products/toyota-genuine" },
-  toyota_oils: { label: "زيوت تويوتا", color: "bg-gradient-to-b from-amber-500 to-amber-700 text-white", path: "/products/toyota-oils" },
-  mtx_aftermarket: { label: "MTX", color: "bg-gradient-to-b from-blue-500 to-blue-700 text-white", path: "/products/mtx" },
-  denso: { label: "DENSO", color: "bg-gradient-to-b from-emerald-500 to-emerald-700 text-white", path: "/products/denso" },
-  aisin: { label: "AISIN", color: "bg-gradient-to-b from-purple-500 to-purple-700 text-white", path: "/products/aisin" },
-  fbk: { label: "FBK", color: "bg-gradient-to-b from-orange-500 to-orange-700 text-white", path: "/products/fbk" },
+// accent = اللون المميز للبراند (يستخدم في ring + dot على base أسود فاخر موحد)
+const brandRouteMap: Record<string, { label: string; accent: string; path: string }> = {
+  toyota_genuine: { label: "تويوتا أصلي", accent: "hsl(355 85% 58%)", path: "/products/toyota-genuine" },   // أحمر تويوتا
+  toyota_oils:    { label: "زيوت تويوتا", accent: "hsl(40 90% 58%)",  path: "/products/toyota-oils" },     // ذهبي
+  mtx_aftermarket:{ label: "MTX",        accent: "hsl(210 90% 60%)", path: "/products/mtx" },              // أزرق
+  denso:          { label: "DENSO",      accent: "hsl(160 75% 50%)", path: "/products/denso" },            // أخضر زمردي
+  aisin:          { label: "AISIN",      accent: "hsl(270 70% 65%)", path: "/products/aisin" },            // بنفسجي
+  fbk:            { label: "FBK",        accent: "hsl(25 90% 58%)",  path: "/products/fbk" },              // برتقالي
 };
 
 interface ProductCardProps {
