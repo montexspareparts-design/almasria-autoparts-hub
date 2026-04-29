@@ -90,6 +90,7 @@ const AdminOrders = () => {
   const [shippingInfo, setShippingInfo] = useState<Record<string, { tracking_number: string; shipping_company: string }>>({});
   const [editingShipping, setEditingShipping] = useState<string | null>(null);
   const [savingShipping, setSavingShipping] = useState(false);
+  const [invoicePreview, setInvoicePreview] = useState<OrderWithItems | null>(null);
   // Force re-render every minute to update SLA timers
   const [, setNowTick] = useState(0);
   useEffect(() => {
