@@ -15,6 +15,8 @@ import {
   ChevronRight, ChevronLeft, Search, CreditCard, MessageCircle, AlertTriangle
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import InvoicePreviewDialog from "@/components/admin/InvoicePreviewDialog";
+import { Eye } from "lucide-react";
 
 // SLA threshold for first contact (minutes)
 const SLA_MINUTES = 15;
@@ -88,6 +90,7 @@ const AdminOrders = () => {
   const [shippingInfo, setShippingInfo] = useState<Record<string, { tracking_number: string; shipping_company: string }>>({});
   const [editingShipping, setEditingShipping] = useState<string | null>(null);
   const [savingShipping, setSavingShipping] = useState(false);
+  const [invoicePreview, setInvoicePreview] = useState<OrderWithItems | null>(null);
   // Force re-render every minute to update SLA timers
   const [, setNowTick] = useState(0);
   useEffect(() => {
@@ -921,7 +924,16 @@ const AdminOrders = () => {
                                 const phoneRaw = (order.profile?.phone || "").replace(/\D/g, "");
                                 const waPhone = phoneRaw.startsWith("0") ? "20" + phoneRaw.slice(1) : phoneRaw.startsWith("20") ? phoneRaw : phoneRaw;
                                 return (
-                                  <div className="mt-3 px-3">
+                                  <div className="mt-3 px-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="w-full gap-2 border-primary text-primary hover:bg-primary/5"
+                                      onClick={() => setInvoicePreview(order)}
+                                    >
+                                      <Eye className="w-4 h-4" />
+                                      معاينة الفاتورة (PDF / صورة)
+                                    </Button>
                                     <Button
                                       size="sm"
                                       className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white"
@@ -932,7 +944,7 @@ const AdminOrders = () => {
                                         window.open(url, "_blank");
                                       }}
                                     >
-                                      📤 إرسال تفاصيل الفاتورة على الواتساب
+                                      📤 إرسال على واتساب
                                     </Button>
                                   </div>
                                 );
@@ -1192,6 +1204,32 @@ const AdminOrders = () => {
           )}
         </CardContent>
       </Card>
+
+      {invoicePreview && (
+        <InvoicePreviewDialog
+          open={!!invoicePreview}
+          onOpenChange={(o) => !o && setInvoicePreview(null)}
+          order={{
+            order_number: invoicePreview.order_number,
+            created_at: invoicePreview.created_at,
+            total_amount: Number(invoicePreview.total_amount),
+            coupon_discount: Number(invoicePreview.coupon_discount || 0),
+            shipping_address: invoicePreview.shipping_address,
+            shipping_governorate: invoicePreview.shipping_governorate,
+            pickup_branch: invoicePreview.pickup_branch,
+            payment_method: invoicePreview.payment_method,
+            customer_name: invoicePreview.profile?.full_name || undefined,
+            customer_phone: invoicePreview.profile?.phone || undefined,
+            items: (invoicePreview.items || []).map(it => ({
+              name_ar: it.product?.name_ar,
+              sku: it.product?.sku,
+              quantity: it.quantity,
+              unit_price: Number(it.unit_price),
+              total_price: Number(it.total_price),
+            })),
+          }}
+        />
+      )}
     </div>
   );
 };
