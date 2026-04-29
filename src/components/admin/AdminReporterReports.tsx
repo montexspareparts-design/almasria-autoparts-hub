@@ -355,6 +355,8 @@ function AllReports({ from, to, label }: { from: string; to: string; label: stri
   const [profilesMap, setProfilesMap] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [openReport, setOpenReport] = useState<any | null>(null);
+  const [filterStaff, setFilterStaff] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<"all" | "submitted" | "draft">("all");
 
   // Weekly + Monthly aggregates (always shown alongside the current range)
   const today = new Date();
@@ -415,7 +417,28 @@ function AllReports({ from, to, label }: { from: string; to: string; label: stri
     })();
   }, [weekFrom, weekTo, monthFrom, monthTo]);
 
-  const dayName = (d: string) => format(new Date(d), "EEEE", { locale: ar });
+  const staffOptions = useMemo(() => {
+    const seen = new Set<string>();
+    const list: { id: string; name: string }[] = [];
+    rows.forEach((r) => {
+      if (seen.has(r.user_id)) return;
+      seen.add(r.user_id);
+      const p = profilesMap[r.user_id];
+      list.push({ id: r.user_id, name: p?.full_name || p?.email || "موظف" });
+    });
+    return list.sort((a, b) => a.name.localeCompare(b.name, "ar"));
+  }, [rows, profilesMap]);
+
+  const filteredRows = useMemo(() => {
+    return rows.filter((r) => {
+      if (filterStaff !== "all" && r.user_id !== filterStaff) return false;
+      if (filterStatus === "submitted" && !r.is_submitted) return false;
+      if (filterStatus === "draft" && r.is_submitted) return false;
+      return true;
+    });
+  }, [rows, filterStaff, filterStatus]);
+
+  const hasActiveFilter = filterStaff !== "all" || filterStatus !== "all";
 
   return (
     <div className="space-y-4">
@@ -427,16 +450,53 @@ function AllReports({ from, to, label }: { from: string; to: string; label: stri
 
       {/* All reports table */}
       <Card className="p-4">
-        <h3 className="font-bold mb-3 flex items-center gap-2">
-          <FileText className="w-4 h-4 text-primary" />
-          كل تقارير الموظفين — {label}
-          <Badge variant="outline" className="text-[10px]">{rows.length}</Badge>
-        </h3>
+        <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
+          <h3 className="font-bold flex items-center gap-2">
+            <FileText className="w-4 h-4 text-primary" />
+            كل تقارير الموظفين — {label}
+            <Badge variant="outline" className="text-[10px]">
+              {filteredRows.length}{hasActiveFilter ? ` / ${rows.length}` : ""}
+            </Badge>
+          </h3>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Select value={filterStaff} onValueChange={setFilterStaff}>
+              <SelectTrigger className="w-[180px] h-9">
+                <SelectValue placeholder="كل الموظفين" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل الموظفين</SelectItem>
+                {staffOptions.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as any)}>
+              <SelectTrigger className="w-[140px] h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل الحالات</SelectItem>
+                <SelectItem value="submitted">✓ مُسلَّم فقط</SelectItem>
+                <SelectItem value="draft">مسودة فقط</SelectItem>
+              </SelectContent>
+            </Select>
+            {hasActiveFilter && (
+              <Button
+                variant="ghost" size="sm" className="h-9 gap-1 text-xs"
+                onClick={() => { setFilterStaff("all"); setFilterStatus("all"); }}
+              >
+                <XCircle className="w-3.5 h-3.5" />مسح الفلتر
+              </Button>
+            )}
+          </div>
+        </div>
 
         {loading ? (
           <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
-        ) : rows.length === 0 ? (
-          <div className="text-center py-10 text-sm text-muted-foreground">لا توجد تقارير في هذه الفترة</div>
+        ) : filteredRows.length === 0 ? (
+          <div className="text-center py-10 text-sm text-muted-foreground">
+            {hasActiveFilter ? "لا توجد تقارير مطابقة للفلتر" : "لا توجد تقارير في هذه الفترة"}
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -454,7 +514,8 @@ function AllReports({ from, to, label }: { from: string; to: string; label: stri
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => {
+                {filteredRows.map((r) => {
+                  const dayName = format(new Date(r.report_date), "EEEE", { locale: ar });
                   const p = profilesMap[r.user_id];
                   return (
                     <tr key={r.id} className="border-b last:border-0 hover:bg-muted/40 transition">
@@ -463,7 +524,7 @@ function AllReports({ from, to, label }: { from: string; to: string; label: stri
                         <div className="text-[10px] text-muted-foreground">{p?.email || "—"}</div>
                       </td>
                       <td className="p-2 font-mono text-xs">{r.report_date}</td>
-                      <td className="p-2"><Badge variant="outline" className="text-[10px]">{dayName(r.report_date)}</Badge></td>
+                      <td className="p-2"><Badge variant="outline" className="text-[10px]">{dayName}</Badge></td>
                       <td className="p-2 text-center">{r.quotations_count}</td>
                       <td className="p-2 text-center">{r.calls_count}</td>
                       <td className="p-2 text-center font-bold text-emerald-600">{r.offers_converted_count}</td>
