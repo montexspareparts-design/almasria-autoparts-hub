@@ -1,0 +1,1 @@
+ALTER TABLE public.reporter_daily_reports ADD COLUMN IF NOT EXISTS self_rating SMALLINT CHECK (self_rating IS NULL OR (self_rating BETWEEN 1 AND 10));

@@ -334,6 +334,7 @@ function FullReportView({ r }: { r: any }) {
         <Row icon={<UserPlus className="w-3.5 h-3.5" />} label="عملاء جدد" value={r.new_customers_count} />
         <Row icon={<Target className="w-3.5 h-3.5" />} label="مهتمين بدون إغلاق" value={r.lost_opportunities_count} />
         <Row icon={<AlertTriangle className="w-3.5 h-3.5" />} label="أكبر مشكلة" value={PROBLEM_LABEL[r.main_problem || ""] || "—"} />
+        <Row label="⭐ تقييم الموظف لنفسه" value={r.self_rating ? `${r.self_rating} / 10` : "—"} />
       </div>
       {r.submitted_at && (
         <div className="text-[10px] text-muted-foreground text-center">
