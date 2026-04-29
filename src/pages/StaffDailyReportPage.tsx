@@ -18,7 +18,9 @@ import ReporterDailyForm from "@/components/staff/ReporterDailyForm";
  */
 export default function StaffDailyReportPage() {
   const navigate = useNavigate();
-  const { user, loading, isReporterOnly, signOut } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { user, loading, isReporterOnly, isAdmin, signOut } = useAuth();
+  const editMode = searchParams.get("edit") === "1" && isAdmin;
 
   // Guard: only staff (admin/moderator/reporter) can access this page
   useEffect(() => {
