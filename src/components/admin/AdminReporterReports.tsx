@@ -103,10 +103,15 @@ export default function AdminReporterReports() {
       </Card>
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
-        <TabsList className="grid grid-cols-2 w-full max-w-md">
+        <TabsList className="grid grid-cols-3 w-full max-w-2xl">
+          <TabsTrigger value="all" className="gap-1.5"><FileText className="w-4 h-4" />كل التقارير</TabsTrigger>
           <TabsTrigger value="leaderboard" className="gap-1.5"><Trophy className="w-4 h-4" />الترتيب</TabsTrigger>
           <TabsTrigger value="individual" className="gap-1.5"><Users className="w-4 h-4" />تقرير كل موظف</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="all" className="mt-3">
+          <AllReports from={from} to={to} label={label} />
+        </TabsContent>
 
         <TabsContent value="leaderboard" className="mt-3">
           <Leaderboard from={from} to={to} label={label} />
