@@ -145,6 +145,7 @@ export default function ReporterDailyForm() {
     problem_notes: data.problem_notes || null,
     lost_opportunities_count: data.lost_opportunities_count,
     is_submitted: submit,
+    self_rating: data.self_rating ?? null,
     // Snapshot the auto stats so admin sees the same numbers later
     auto_orders_count: autoStats.orders,
     auto_invoices_count: autoStats.invoices,
