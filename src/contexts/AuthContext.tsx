@@ -24,6 +24,10 @@ interface AuthContextType {
   isDealer: boolean;
   isAdmin: boolean;
   isModerator: boolean;
+  /** True if the user has the `reporter` role (Al-Faisal staff who only fill daily report). */
+  isReporter: boolean;
+  /** True if the user is reporter-only (no admin/moderator role) — UI is locked to /admin/daily-report. */
+  isReporterOnly: boolean;
   signOut: () => Promise<void>;
   /**
    * Impersonation — Admin-only "View as employee" mode.
