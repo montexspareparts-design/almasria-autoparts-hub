@@ -1204,6 +1204,32 @@ const AdminOrders = () => {
           )}
         </CardContent>
       </Card>
+
+      {invoicePreview && (
+        <InvoicePreviewDialog
+          open={!!invoicePreview}
+          onOpenChange={(o) => !o && setInvoicePreview(null)}
+          order={{
+            order_number: invoicePreview.order_number,
+            created_at: invoicePreview.created_at,
+            total_amount: Number(invoicePreview.total_amount),
+            coupon_discount: Number(invoicePreview.coupon_discount || 0),
+            shipping_address: invoicePreview.shipping_address,
+            shipping_governorate: invoicePreview.shipping_governorate,
+            pickup_branch: invoicePreview.pickup_branch,
+            payment_method: invoicePreview.payment_method,
+            customer_name: invoicePreview.profile?.full_name || undefined,
+            customer_phone: invoicePreview.profile?.phone || undefined,
+            items: (invoicePreview.items || []).map(it => ({
+              name_ar: it.product?.name_ar,
+              sku: it.product?.sku,
+              quantity: it.quantity,
+              unit_price: Number(it.unit_price),
+              total_price: Number(it.total_price),
+            })),
+          }}
+        />
+      )}
     </div>
   );
 };
