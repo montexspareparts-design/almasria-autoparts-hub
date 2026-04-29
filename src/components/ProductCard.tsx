@@ -514,16 +514,50 @@ const PriceSection = ({
   onRecordView, onLoginRequired, compact,
 }: PriceSectionProps) => {
   if (!user) {
+    // Luxury "Unlock Price" CTA — navy base + gold shimmer sweep, designed to make
+    // the user *want* to log in. Includes a subtle "wholesale price" tease.
     return compact ? (
-      <Button variant="outline" size="sm" className="w-full sm:w-auto flex-row-reverse gap-1.5 text-[10px] sm:text-xs h-8 sm:h-8 rounded-xl border-border/50 font-bold" onClick={onLoginRequired}>
-        <Lock className="w-3 h-3" />
-        سجل لعرض السعر
-      </Button>
+      <button
+        onClick={onLoginRequired}
+        className="group relative w-full sm:w-auto h-8 px-3 rounded-xl overflow-hidden
+          bg-gradient-to-l from-[hsl(220_60%_15%)] via-[hsl(220_55%_22%)] to-[hsl(220_60%_15%)]
+          text-white font-bold text-[10px] sm:text-xs
+          ring-1 ring-[hsl(43_74%_55%)]/40 hover:ring-[hsl(43_74%_55%)]/80
+          shadow-[0_4px_14px_-4px_hsl(220_60%_15%/0.5)]
+          hover:shadow-[0_8px_24px_-6px_hsl(43_74%_55%/0.5)]
+          active:scale-[0.97] transition-all duration-300
+          flex flex-row-reverse items-center justify-center gap-1.5"
+        aria-label="سجل لعرض السعر"
+      >
+        <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-[hsl(43_74%_75%)]/30 to-transparent" />
+        <Lock className="w-3 h-3 relative z-10 text-[hsl(43_74%_70%)]" />
+        <span className="relative z-10">اعرض السعر</span>
+      </button>
     ) : (
-      <Button variant="outline" size="sm" className="w-full flex-row-reverse gap-2 text-[10px] sm:text-xs h-9 rounded-xl border-border/40 font-bold hover:bg-primary/5 hover:border-primary/25 transition-all duration-300" onClick={onLoginRequired}>
-        <Lock className="w-3.5 h-3.5 text-muted-foreground/60" />
-        سجل دخولك لعرض السعر
-      </Button>
+      <button
+        onClick={onLoginRequired}
+        className="group relative w-full h-11 rounded-xl overflow-hidden
+          bg-gradient-to-l from-[hsl(220_60%_13%)] via-[hsl(220_55%_20%)] to-[hsl(220_60%_13%)]
+          ring-1 ring-[hsl(43_74%_55%)]/40 hover:ring-[hsl(43_74%_55%)]/90
+          shadow-[0_6px_20px_-6px_hsl(220_60%_15%/0.55)]
+          hover:shadow-[0_12px_32px_-8px_hsl(43_74%_55%/0.55)]
+          active:scale-[0.98] transition-all duration-500
+          flex flex-row-reverse items-center justify-center gap-2.5"
+        aria-label="سجل دخولك لعرض السعر"
+      >
+        {/* shimmer sweep */}
+        <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-[1100ms] ease-out bg-gradient-to-r from-transparent via-[hsl(43_74%_75%)]/25 to-transparent" />
+        {/* subtle gold hairline at bottom */}
+        <span className="absolute bottom-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-[hsl(43_74%_60%)]/60 to-transparent" />
+        {/* gold lock badge */}
+        <span className="relative z-10 flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-[hsl(43_74%_65%)] to-[hsl(38_70%_45%)] shadow-[0_2px_8px_hsl(43_74%_55%/0.4)] ring-1 ring-[hsl(43_74%_80%)]/40">
+          <Lock className="w-3 h-3 text-[hsl(220_60%_15%)]" strokeWidth={2.8} />
+        </span>
+        <span className="relative z-10 flex flex-col items-end leading-none gap-0.5">
+          <span className="text-[11px] sm:text-xs font-extrabold text-white tracking-tight">سجل دخولك لعرض السعر</span>
+          <span className="text-[9px] font-semibold text-[hsl(43_74%_72%)]/90 tracking-wide">سعر خاص للعملاء فقط</span>
+        </span>
+      </button>
     );
   }
 

@@ -339,16 +339,29 @@ const ProductDetailDialog = ({
           <Separator />
 
           {/* Price Section */}
-          <div className="bg-muted/50 rounded-xl sm:rounded-lg p-3 sm:p-4">
+          <div className={!isLoggedIn ? "" : "bg-muted/50 rounded-xl sm:rounded-lg p-3 sm:p-4"}>
             {!isLoggedIn ? (
-              <Button
-                variant="outline"
-                className="w-full gap-2"
+              <button
                 onClick={onLoginPrompt}
+                className="group relative w-full h-14 rounded-2xl overflow-hidden
+                  bg-gradient-to-l from-[hsl(220_60%_12%)] via-[hsl(220_55%_19%)] to-[hsl(220_60%_12%)]
+                  ring-1 ring-[hsl(43_74%_55%)]/45 hover:ring-[hsl(43_74%_55%)]/90
+                  shadow-[0_10px_30px_-10px_hsl(220_60%_15%/0.6)]
+                  hover:shadow-[0_18px_40px_-10px_hsl(43_74%_55%/0.55)]
+                  active:scale-[0.985] transition-all duration-500
+                  flex flex-row-reverse items-center justify-center gap-3"
+                aria-label="سجل دخولك لعرض السعر"
               >
-                <Lock className="w-4 h-4" />
-                سجل دخولك لعرض السعر
-              </Button>
+                <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-[1200ms] ease-out bg-gradient-to-r from-transparent via-[hsl(43_74%_75%)]/25 to-transparent" />
+                <span className="absolute bottom-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-[hsl(43_74%_60%)]/70 to-transparent" />
+                <span className="relative z-10 flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-[hsl(43_74%_65%)] to-[hsl(38_70%_45%)] shadow-[0_3px_10px_hsl(43_74%_55%/0.45)] ring-1 ring-[hsl(43_74%_82%)]/45">
+                  <Lock className="w-4 h-4 text-[hsl(220_60%_15%)]" strokeWidth={2.8} />
+                </span>
+                <span className="relative z-10 flex flex-col items-end leading-none gap-1">
+                  <span className="text-sm font-extrabold text-white tracking-tight">سجل دخولك لعرض السعر</span>
+                  <span className="text-[10px] font-semibold text-[hsl(43_74%_72%)]/95 tracking-wide">سعر خاص للعملاء المسجلين فقط</span>
+                </span>
+              </button>
             ) : price !== null ? (
               <div>
                 {product.is_on_sale && product.sale_price && !isDealer && (
