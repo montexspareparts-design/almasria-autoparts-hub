@@ -956,7 +956,7 @@ const AdminOrders = () => {
                                       onClick={() => setInvoicePreview(order)}
                                     >
                                       <Eye className="w-4 h-4" />
-                                      معاينة الفاتورة (PDF / صورة)
+                                      معاينة عرض السعر (PDF / صورة)
                                     </Button>
                                     <Button
                                       size="sm"
