@@ -100,12 +100,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { fullName, email, phone, password: customPassword } = await req.json();
+    const { fullName, email, phone, password: customPassword, role: requestedRole } = await req.json();
     if (!fullName || !email) {
       return new Response(JSON.stringify({ error: "الاسم والبريد الإلكتروني مطلوبان" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    // role can be "moderator" (default) or "reporter" (Al-Faisal staff — daily report only)
+    const targetRole: "moderator" | "reporter" =
+      requestedRole === "reporter" ? "reporter" : "moderator";
 
     const cleanEmail = String(email).trim().toLowerCase();
 
