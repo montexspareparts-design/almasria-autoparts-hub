@@ -2058,6 +2058,7 @@ export type Database = {
           problem_notes: string | null
           quotations_count: number
           report_date: string
+          self_rating: number | null
           submitted_at: string | null
           updated_at: string
           user_id: string
@@ -2082,6 +2083,7 @@ export type Database = {
           problem_notes?: string | null
           quotations_count?: number
           report_date?: string
+          self_rating?: number | null
           submitted_at?: string | null
           updated_at?: string
           user_id: string
@@ -2106,6 +2108,7 @@ export type Database = {
           problem_notes?: string | null
           quotations_count?: number
           report_date?: string
+          self_rating?: number | null
           submitted_at?: string | null
           updated_at?: string
           user_id?: string
