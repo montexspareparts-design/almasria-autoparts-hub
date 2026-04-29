@@ -164,30 +164,34 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Check if already a moderator/admin
-    const { data: existingRole } = await adminClient
+    // Check if already a staff member with any of admin/moderator/reporter
+    const { data: existingRoles } = await adminClient
       .from("user_roles")
       .select("role")
       .eq("user_id", userId)
-      .in("role", ["admin", "moderator"])
-      .maybeSingle();
+      .in("role", ["admin", "moderator", "reporter"]);
 
-    if (existingRole?.role === "admin") {
+    const existingRoleSet = new Set((existingRoles ?? []).map((r: any) => r.role));
+
+    if (existingRoleSet.has("admin")) {
       return new Response(JSON.stringify({ error: "هذا المستخدم أدمن بالفعل" }), {
         status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    if (existingRoleSet.has(targetRole)) {
+      return new Response(JSON.stringify({ error: `هذا المستخدم لديه دور ${targetRole} بالفعل` }), {
+        status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    if (!existingRole) {
-      const { error: roleErr } = await adminClient
-        .from("user_roles")
-        .insert({ user_id: userId, role: "moderator" });
-      if (roleErr) {
-        console.error("Role insert error:", roleErr);
-        return new Response(JSON.stringify({ error: "فشل منح الصلاحية: " + roleErr.message }), {
-          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+    const { error: roleErr } = await adminClient
+      .from("user_roles")
+      .insert({ user_id: userId, role: targetRole });
+    if (roleErr) {
+      console.error("Role insert error:", roleErr);
+      return new Response(JSON.stringify({ error: "فشل منح الصلاحية: " + roleErr.message }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Save password to staff_passwords for admin retrieval (only for new users)
