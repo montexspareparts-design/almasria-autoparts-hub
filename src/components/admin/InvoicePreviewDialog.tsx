@@ -98,7 +98,7 @@ export default function InvoicePreviewDialog({ open, onOpenChange, order }: Invo
 
   const handleWhatsApp = () => {
     const lines = [
-      `🧾 *فاتورة طلبك من المصرية لقطع غيار السيارات*`,
+      `📄 *عرض سعر من المصرية لقطع غيار السيارات*`,
       `رقم الطلب: *${order.order_number}*`,
       `التاريخ: ${dateStr}`,
       ``,
