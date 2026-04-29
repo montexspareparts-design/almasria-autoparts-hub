@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import StaffDailyReport from "@/components/staff/StaffDailyReport";
+import ReporterDailyForm from "@/components/staff/ReporterDailyForm";
 
 /**
  * Dedicated page for filling out the daily staff report.
