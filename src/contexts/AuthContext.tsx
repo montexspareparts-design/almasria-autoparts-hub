@@ -210,8 +210,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
               const hasAdmin = roles?.some((r) => r.role === "admin") ?? false;
               const hasModerator = roles?.some((r) => r.role === "moderator") ?? false;
+              const hasReporter = roles?.some((r) => (r.role as string) === "reporter") ?? false;
               setIsAdmin(hasAdmin);
               setIsModerator(hasModerator);
+              setIsReporter(hasReporter);
 
               // If dealer (and not staff), register session and start monitoring
               if (dealer && !hasModerator && !hasAdmin) {
