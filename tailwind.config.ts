@@ -144,6 +144,16 @@ export default {
           "0%": { transform: "scaleY(0)", opacity: "0" },
           "100%": { transform: "scaleY(1)", opacity: "1" },
         },
+        "digit-flip": {
+          "0%": { transform: "rotateX(-90deg)", opacity: "0" },
+          "55%": { transform: "rotateX(15deg)", opacity: "1" },
+          "100%": { transform: "rotateX(0deg)", opacity: "1" },
+        },
+        "price-highlight": {
+          "0%": { backgroundPosition: "200% 0", opacity: "0" },
+          "20%": { opacity: "1" },
+          "100%": { backgroundPosition: "-200% 0", opacity: "0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -163,6 +173,8 @@ export default {
         "burst-particle": "burst-particle 0.7s ease-out forwards",
         "checkmark-pop": "checkmark-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both",
         "sidebar-indicator": "sidebar-indicator 0.25s ease-out both",
+        "digit-flip": "digit-flip 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both",
+        "price-highlight": "price-highlight 1.1s ease-out both",
       },
     },
   },

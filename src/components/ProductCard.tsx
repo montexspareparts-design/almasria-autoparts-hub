@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ImageBadge, ImageBadgeColumn } from "@/components/ui/image-badge";
+import AnimatedPrice from "@/components/ui/animated-price";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -701,13 +702,14 @@ const PriceSection = ({
   if (price !== null) {
     return (
       <div className={compact ? "flex flex-wrap items-baseline justify-start gap-1.5 text-right" : "space-y-1 py-1 text-right"}>
-        <div
+        <AnimatedPrice
           key={`price-${productId}-${price}`}
-          className="inline-flex items-baseline gap-1 text-primary font-black text-lg sm:text-xl tracking-tight leading-tight animate-price-glow"
-        >
-          <span>{price.toLocaleString("ar-EG")}</span>
-          <span className="text-[10px] sm:text-xs font-bold text-primary/50">ج.م</span>
-        </div>
+          value={price}
+          duration={900}
+          flip
+          className="text-primary font-black text-lg sm:text-xl tracking-tight leading-tight"
+          currencyClassName="text-[10px] sm:text-xs font-bold text-primary/50 ms-1"
+        />
         <p className={`w-full text-[8px] sm:text-[10px] font-semibold leading-none ${
           isDealer && hasViewed ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground/40"
         }`}>

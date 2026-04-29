@@ -427,6 +427,33 @@ html.hc-mode a:not(.no-hc-underline) {
   background-repeat: no-repeat;
 }
 
+/* Price highlight glow — red shimmer sweep on reveal */
+.price-glow-active {
+  position: relative;
+  isolation: isolate;
+}
+.price-glow-active::before {
+  content: "";
+  position: absolute;
+  inset: -6px -10px;
+  border-radius: 10px;
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    hsl(0 85% 55% / 0.28) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  z-index: -1;
+  pointer-events: none;
+  animation: price-highlight 1.1s ease-out both;
+}
+.price-glow-active > span {
+  text-shadow: 0 0 14px hsl(0 85% 55% / 0.45);
+  transition: text-shadow 800ms ease-out;
+}
+
 /* Magnetic button — driven by CSS variables on pointermove */
 .btn-magnetic {
   transform: translate(var(--mag-x, 0px), var(--mag-y, 0px));
