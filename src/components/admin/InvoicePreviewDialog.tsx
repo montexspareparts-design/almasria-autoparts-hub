@@ -121,27 +121,8 @@ export default function InvoicePreviewDialog({ open, onOpenChange, order }: Invo
   };
 
   const handleWhatsApp = () => {
-    const lines = [
-      `📄 *عرض سعر من المصرية لقطع غيار السيارات*`,
-      `رقم الطلب: *${order.order_number}*`,
-      `التاريخ: ${dateStr}`,
-      ``,
-      `*المنتجات:*`,
-      ...order.items.map(it => `• ${it.name_ar || "منتج"}\n   ${it.quantity} × ${fmt(it.unit_price)} = ${fmt(it.total_price)} ج.م`),
-      ``,
-      `المنتجات: ${fmt(itemsTotal)} ج.م`,
-      shipping > 0 ? `الشحن: ${fmt(shipping)} ج.م` : `الاستلام: من الفرع`,
-      discount > 0 ? `الخصم: -${fmt(discount)} ج.م` : "",
-      `━━━━━━━━━━━━`,
-      `💰 *الإجمالي: ${fmt(order.total_amount)} ج.م*`,
-      ``,
-      order.shipping_address ? `📍 العنوان: ${order.shipping_address}` : "",
-      `شكراً لتعاملك معنا 🌹`,
-    ].filter(Boolean).join("\n");
-    const phoneRaw = (order.customer_phone || "").replace(/\D/g, "");
-    const waPhone = phoneRaw.startsWith("0") ? "20" + phoneRaw.slice(1) : phoneRaw.startsWith("20") ? phoneRaw : phoneRaw;
-    const url = waPhone ? `https://wa.me/${waPhone}?text=${encodeURIComponent(lines)}` : `https://wa.me/?text=${encodeURIComponent(lines)}`;
-    window.open(url, "_blank");
+    // Now sends the image (same as image button) instead of text
+    handleDownloadImage();
   };
 
   const handlePrint = () => {
