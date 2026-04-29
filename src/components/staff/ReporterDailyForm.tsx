@@ -82,6 +82,7 @@ export default function ReporterDailyForm() {
   const [saving, setSaving] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [thankYouOpen, setThankYouOpen] = useState(false);
   const [data, setData] = useState<ReportData>(EMPTY);
   const [staffName, setStaffName] = useState("");
   const [autoStats, setAutoStats] = useState({ orders: 0, invoices: 0, sales: 0 });
