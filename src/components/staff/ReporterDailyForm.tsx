@@ -31,6 +31,11 @@ import {
   Sparkles, Palmtree, Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  PersonalCompareCard,
+  MoodShoutoutSection,
+  performanceScore,
+} from "./ReporterEnhancements";
 
 const PROBLEM_OPTIONS = [
   { value: "price", label: "السعر" },
@@ -63,6 +68,10 @@ interface ReportData {
   auto_total_sales?: number;
   report_date?: string;
   self_rating?: number | null;
+  mood?: string | null;
+  shoutout_user_id?: string | null;
+  shoutout_reason?: string | null;
+  why_good_day?: string | null;
 }
 
 const EMPTY: ReportData = {
@@ -70,6 +79,7 @@ const EMPTY: ReportData = {
   offers_count: 0, offers_converted_count: 0, incomplete_orders_count: 0,
   followups_count: 0, new_customers_count: 0, main_problem: "", problem_notes: "",
   lost_opportunities_count: 0, is_submitted: false, submitted_at: null, self_rating: null,
+  mood: null, shoutout_user_id: null, shoutout_reason: null, why_good_day: null,
 };
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
@@ -147,6 +157,10 @@ export default function ReporterDailyForm() {
     lost_opportunities_count: data.lost_opportunities_count,
     is_submitted: submit,
     self_rating: data.self_rating ?? null,
+    mood: data.mood || null,
+    shoutout_user_id: data.shoutout_user_id || null,
+    shoutout_reason: data.shoutout_reason || null,
+    why_good_day: data.why_good_day || null,
     // Snapshot the auto stats so admin sees the same numbers later
     auto_orders_count: autoStats.orders,
     auto_invoices_count: autoStats.invoices,
@@ -246,6 +260,7 @@ export default function ReporterDailyForm() {
           <MotivationalCard userId={user!.id} />
           <TomorrowOffCard userId={user!.id} />
           <TodayForm
+            userId={user!.id}
             data={data} setData={setData} setNum={setNum} locked={locked}
             saving={saving} autoStats={autoStats}
             onSaveDraft={saveDraft}
@@ -328,10 +343,12 @@ export default function ReporterDailyForm() {
 
 /* ------------------------ Today form ------------------------ */
 function TodayForm({
-  data, setData, setNum, locked, saving, autoStats, onSaveDraft, onPreview,
+  userId, data, setData, setNum, locked, saving, autoStats, onSaveDraft, onPreview,
 }: any) {
+  const todayScore = performanceScore(data);
   return (
     <>
+      <PersonalCompareCard userId={userId} todayScore={todayScore} />
       <Card className="p-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-4">
           <NumField icon={<FileSpreadsheet className="w-3.5 h-3.5 text-indigo-600" />} label="عدد عروض الأسعار اليوم" required value={data.quotations_count} onChange={setNum("quotations_count")} disabled={locked} />
@@ -400,6 +417,14 @@ function TodayForm({
           )}
         </div>
       </Card>
+
+      <MoodShoutoutSection
+        data={data}
+        setData={setData}
+        locked={locked}
+        currentUserId={userId}
+        todayScore={todayScore}
+      />
 
       <Card className="p-5 sticky bottom-3 bg-card/95 backdrop-blur-md border-2 border-primary/30 shadow-lg mt-3">
         {locked ? (

@@ -2051,6 +2051,7 @@ export type Database = {
           is_submitted: boolean
           lost_opportunities_count: number
           main_problem: string | null
+          mood: string | null
           new_customers_count: number
           offers_converted_count: number
           offers_count: number
@@ -2059,10 +2060,13 @@ export type Database = {
           quotations_count: number
           report_date: string
           self_rating: number | null
+          shoutout_reason: string | null
+          shoutout_user_id: string | null
           submitted_at: string | null
           updated_at: string
           user_id: string
           whatsapp_count: number
+          why_good_day: string | null
         }
         Insert: {
           auto_invoices_count?: number
@@ -2076,6 +2080,7 @@ export type Database = {
           is_submitted?: boolean
           lost_opportunities_count?: number
           main_problem?: string | null
+          mood?: string | null
           new_customers_count?: number
           offers_converted_count?: number
           offers_count?: number
@@ -2084,10 +2089,13 @@ export type Database = {
           quotations_count?: number
           report_date?: string
           self_rating?: number | null
+          shoutout_reason?: string | null
+          shoutout_user_id?: string | null
           submitted_at?: string | null
           updated_at?: string
           user_id: string
           whatsapp_count?: number
+          why_good_day?: string | null
         }
         Update: {
           auto_invoices_count?: number
@@ -2101,6 +2109,7 @@ export type Database = {
           is_submitted?: boolean
           lost_opportunities_count?: number
           main_problem?: string | null
+          mood?: string | null
           new_customers_count?: number
           offers_converted_count?: number
           offers_count?: number
@@ -2109,10 +2118,13 @@ export type Database = {
           quotations_count?: number
           report_date?: string
           self_rating?: number | null
+          shoutout_reason?: string | null
+          shoutout_user_id?: string | null
           submitted_at?: string | null
           updated_at?: string
           user_id?: string
           whatsapp_count?: number
+          why_good_day?: string | null
         }
         Relationships: []
       }
