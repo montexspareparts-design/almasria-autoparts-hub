@@ -239,7 +239,9 @@ export default function ReporterDailyForm() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="today" className="mt-3">
+        <TabsContent value="today" className="mt-3 space-y-3">
+          <MotivationalCard userId={user!.id} />
+          <TomorrowOffCard userId={user!.id} />
           <TodayForm
             data={data} setData={setData} setNum={setNum} locked={locked}
             saving={saving} autoStats={autoStats}
