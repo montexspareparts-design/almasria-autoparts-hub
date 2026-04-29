@@ -24,6 +24,10 @@ interface AuthContextType {
   isDealer: boolean;
   isAdmin: boolean;
   isModerator: boolean;
+  /** True if the user has the `reporter` role (Al-Faisal staff who only fill daily report). */
+  isReporter: boolean;
+  /** True if the user is reporter-only (no admin/moderator role) — UI is locked to /admin/daily-report. */
+  isReporterOnly: boolean;
   signOut: () => Promise<void>;
   /**
    * Impersonation — Admin-only "View as employee" mode.
@@ -47,6 +51,8 @@ const AuthContext = createContext<AuthContextType>({
   isDealer: false,
   isAdmin: false,
   isModerator: false,
+  isReporter: false,
+  isReporterOnly: false,
   signOut: async () => {},
   isImpersonating: false,
   impersonatedUserId: null,
@@ -93,6 +99,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [dealerAccount, setDealerAccount] = useState<DealerAccount | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isModerator, setIsModerator] = useState(false);
+  const [isReporter, setIsReporter] = useState(false);
   const [showCompleteProfile, setShowCompleteProfile] = useState(false);
   const [showRoleSelection, setShowRoleSelection] = useState(false);
   const [impersonation, setImpersonation] = useState<ImpersonationState | null>(() => readImpersonation());
@@ -203,8 +210,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
               const hasAdmin = roles?.some((r) => r.role === "admin") ?? false;
               const hasModerator = roles?.some((r) => r.role === "moderator") ?? false;
+              const hasReporter = roles?.some((r) => (r.role as string) === "reporter") ?? false;
               setIsAdmin(hasAdmin);
               setIsModerator(hasModerator);
+              setIsReporter(hasReporter);
 
               // If dealer (and not staff), register session and start monitoring
               if (dealer && !hasModerator && !hasAdmin) {
@@ -260,6 +269,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setDealerAccount(null);
           setIsAdmin(false);
           setIsModerator(false);
+          setIsReporter(false);
           clearSessionCheck();
           clearAllAuthStorage();
           setLoading(false);
@@ -284,6 +294,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setDealerAccount(null);
     setIsAdmin(false);
     setIsModerator(false);
+    setIsReporter(false);
     // Always drop any impersonation when signing out so the next user
     // doesn't inherit a stale "view as employee" state.
     sessionStorage.removeItem(IMPERSONATE_KEY);
@@ -297,6 +308,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const effectiveIsAdmin = isImpersonating ? false : isAdmin;
   const effectiveIsModerator = isImpersonating ? true : isModerator;
   const effectiveIsDealer = !!dealerAccount && !effectiveIsModerator && !effectiveIsAdmin;
+  // Reporter-only = has reporter role but no admin/moderator. UI is locked to /admin/daily-report.
+  const isReporterOnly = isReporter && !isAdmin && !isModerator;
 
   return (
     <AuthContext.Provider
@@ -308,6 +321,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isDealer: effectiveIsDealer,
         isAdmin: effectiveIsAdmin,
         isModerator: effectiveIsModerator,
+        isReporter,
+        isReporterOnly,
         signOut,
         isImpersonating,
         impersonatedUserId: impersonation?.userId ?? null,

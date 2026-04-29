@@ -184,7 +184,7 @@ const SectionLoader = forwardRef<HTMLDivElement>((_props, ref) => (
 SectionLoader.displayName = "SectionLoader";
 
 const AdminDashboard = () => {
-  const { user, isAdmin, isModerator, isDealer, loading: authLoading, signOut, isImpersonating } = useAuth();
+  const { user, isAdmin, isModerator, isDealer, isReporterOnly, loading: authLoading, signOut, isImpersonating } = useAuth();
   // The real admin (even while impersonating) should still see the "View as employee" button.
   const isRealAdmin = isAdmin || isImpersonating;
   const [viewAsOpen, setViewAsOpen] = useState(false);
@@ -332,6 +332,8 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     if (!authLoading && !user) { navigate("/auth"); return; }
+    // Reporter-only accounts (Al-Faisal staff): UI is locked to /admin/daily-report.
+    if (!authLoading && isReporterOnly) { navigate("/admin/daily-report", { replace: true }); return; }
     if (!authLoading && !canAccess) { navigate("/dealer"); return; }
     if (canAccess) {
       fetchApplications();

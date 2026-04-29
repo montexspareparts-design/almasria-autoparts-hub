@@ -119,8 +119,9 @@ const AdminStaffRoles = () => {
   const [newName, setNewName] = useState("");
   const [newPhone, setNewPhone] = useState("");
   const [newCustomPassword, setNewCustomPassword] = useState("");
+  const [newRole, setNewRole] = useState<"moderator" | "reporter">("moderator");
   const [adding, setAdding] = useState(false);
-  const [createdCredentials, setCreatedCredentials] = useState<{ email: string; password: string; whatsappSent: boolean; emailSent: boolean } | null>(null);
+  const [createdCredentials, setCreatedCredentials] = useState<{ email: string; password: string; whatsappSent: boolean; emailSent: boolean; role: string } | null>(null);
   const [resetTarget, setResetTarget] = useState<StaffMember | null>(null);
   const [resetPassword, setResetPassword] = useState("");
   const [resetting, setResetting] = useState(false);
@@ -144,7 +145,7 @@ const AdminStaffRoles = () => {
     const { data: roles, error } = await supabase
       .from("user_roles")
       .select("*")
-      .eq("role", "moderator");
+      .in("role", ["moderator", "reporter"] as any);
 
     if (error) {
       toast({ title: "خطأ في تحميل الموظفين", variant: "destructive" });
@@ -241,6 +242,7 @@ const AdminStaffRoles = () => {
           email: newEmail.trim().toLowerCase(),
           phone: newPhone.trim() || null,
           password: newCustomPassword.trim() || undefined,
+          role: newRole,
         },
       });
 
@@ -251,27 +253,30 @@ const AdminStaffRoles = () => {
           variant: "destructive",
         });
       } else {
+        const roleLabel = data.role === "reporter" ? "موظف فيصل (تقرير فقط)" : "موظف";
         if (data.isNewUser && data.tempPassword) {
           setCreatedCredentials({
             email: data.email,
             password: data.tempPassword,
             whatsappSent: data.whatsappSent,
             emailSent: data.emailSent,
+            role: data.role,
           });
           toast({
-            title: "✅ تم إنشاء حساب الموظف",
+            title: `✅ تم إنشاء حساب ${roleLabel}`,
             description: `${data.whatsappSent ? "📱 تم إرسال البيانات على واتساب. " : ""}${data.emailSent ? "📧 تم إرسال البيانات على الإيميل." : ""}`,
           });
         } else {
           toast({
-            title: "✅ تم منح صلاحية الموظف",
-            description: "تم تحويل المستخدم القائم لموظف",
+            title: `✅ تم منح صلاحية ${roleLabel}`,
+            description: "تم تحويل المستخدم القائم",
           });
         }
         setNewEmail("");
         setNewName("");
         setNewPhone("");
         setNewCustomPassword("");
+        setNewRole("moderator");
         fetchStaff();
       }
     } catch (err: any) {
@@ -414,6 +419,27 @@ const AdminStaffRoles = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="sm:col-span-2">
+                <label className="text-sm font-medium text-muted-foreground mb-1.5 block">نوع الموظف *</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setNewRole("moderator")}
+                    className={`text-right p-3 rounded-lg border-2 transition-all ${newRole === "moderator" ? "border-emerald-500 bg-emerald-500/10" : "border-border hover:border-muted-foreground/40"}`}
+                  >
+                    <div className="font-bold text-sm">👤 موظف عام (Moderator)</div>
+                    <div className="text-xs text-muted-foreground mt-1">يدخل لوحة /admin كاملة (CRM، طلبات، عملاء، تقارير…)</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewRole("reporter")}
+                    className={`text-right p-3 rounded-lg border-2 transition-all ${newRole === "reporter" ? "border-blue-500 bg-blue-500/10" : "border-border hover:border-muted-foreground/40"}`}
+                  >
+                    <div className="font-bold text-sm">📋 موظف فيصل (Reporter)</div>
+                    <div className="text-xs text-muted-foreground mt-1">يدخل صفحة التقرير اليومي فقط — مفيش Sidebar ولا أي قسم تاني</div>
+                  </button>
+                </div>
+              </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground mb-1.5 block">الاسم الكامل *</label>
                 <Input
@@ -456,10 +482,12 @@ const AdminStaffRoles = () => {
             </div>
             <Button onClick={handleAddModerator} disabled={adding || !newEmail.trim() || !newName.trim()} className="gap-2 w-full sm:w-auto">
               {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
-              إنشاء حساب وإرسال البيانات
+              {newRole === "reporter" ? "إنشاء حساب موظف فيصل (تقرير فقط)" : "إنشاء حساب موظف وإرسال البيانات"}
             </Button>
             <p className="text-xs text-muted-foreground">
-              سيتم إنشاء حساب جديد بكلمة مرور مؤقتة وإرسال بيانات الدخول على واتساب والإيميل تلقائياً. لو المستخدم مسجل بالفعل، سيتم منحه صلاحية موظف فقط.
+              {newRole === "reporter"
+                ? "📋 الحساب ده هيدخل /admin/daily-report مباشرة بعد اللوجين، ومش هيشوف أي تاب أو قسم تاني في النظام."
+                : "سيتم إنشاء حساب جديد بكلمة مرور مؤقتة وإرسال بيانات الدخول على واتساب والإيميل تلقائياً. لو المستخدم مسجل بالفعل، سيتم منحه صلاحية موظف فقط."}
             </p>
 
             {createdCredentials && (
@@ -524,8 +552,18 @@ const AdminStaffRoles = () => {
                     return (
                     <TableRow key={member.id}>
                       <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           {member.full_name || "—"}
+                          {member.role === "reporter" && (
+                            <Badge variant="outline" className="gap-1 text-[10px] border-blue-500/40 text-blue-600 bg-blue-500/10">
+                              📋 موظف فيصل (تقرير فقط)
+                            </Badge>
+                          )}
+                          {member.role === "moderator" && (
+                            <Badge variant="outline" className="text-[10px] border-emerald-500/40 text-emerald-700 bg-emerald-500/10">
+                              موظف عام
+                            </Badge>
+                          )}
                           {isProtected && (
                             <Badge variant="outline" className="gap-1 text-[10px] border-amber-500/40 text-amber-600">
                               <Crown className="w-3 h-3" />

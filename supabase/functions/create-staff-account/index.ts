@@ -100,12 +100,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { fullName, email, phone, password: customPassword } = await req.json();
+    const { fullName, email, phone, password: customPassword, role: requestedRole } = await req.json();
     if (!fullName || !email) {
       return new Response(JSON.stringify({ error: "الاسم والبريد الإلكتروني مطلوبان" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    // role can be "moderator" (default) or "reporter" (Al-Faisal staff — daily report only)
+    const targetRole: "moderator" | "reporter" =
+      requestedRole === "reporter" ? "reporter" : "moderator";
 
     const cleanEmail = String(email).trim().toLowerCase();
 
@@ -161,30 +164,34 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Check if already a moderator/admin
-    const { data: existingRole } = await adminClient
+    // Check if already a staff member with any of admin/moderator/reporter
+    const { data: existingRoles } = await adminClient
       .from("user_roles")
       .select("role")
       .eq("user_id", userId)
-      .in("role", ["admin", "moderator"])
-      .maybeSingle();
+      .in("role", ["admin", "moderator", "reporter"]);
 
-    if (existingRole?.role === "admin") {
+    const existingRoleSet = new Set((existingRoles ?? []).map((r: any) => r.role));
+
+    if (existingRoleSet.has("admin")) {
       return new Response(JSON.stringify({ error: "هذا المستخدم أدمن بالفعل" }), {
         status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    if (existingRoleSet.has(targetRole)) {
+      return new Response(JSON.stringify({ error: `هذا المستخدم لديه دور ${targetRole} بالفعل` }), {
+        status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    if (!existingRole) {
-      const { error: roleErr } = await adminClient
-        .from("user_roles")
-        .insert({ user_id: userId, role: "moderator" });
-      if (roleErr) {
-        console.error("Role insert error:", roleErr);
-        return new Response(JSON.stringify({ error: "فشل منح الصلاحية: " + roleErr.message }), {
-          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+    const { error: roleErr } = await adminClient
+      .from("user_roles")
+      .insert({ user_id: userId, role: targetRole });
+    if (roleErr) {
+      console.error("Role insert error:", roleErr);
+      return new Response(JSON.stringify({ error: "فشل منح الصلاحية: " + roleErr.message }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Save password to staff_passwords for admin retrieval (only for new users)
@@ -197,7 +204,12 @@ Deno.serve(async (req) => {
     }
 
     // Send notifications (only for new users with a fresh password)
-    const loginUrl = "https://www.almasriaautoparts.com/dealer-login";
+    // Reporter accounts log in via /auth (regular email login) — they're routed
+    // to /admin/daily-report automatically by AuthContext.
+    const loginUrl = targetRole === "reporter"
+      ? "https://www.almasriaautoparts.com/auth"
+      : "https://www.almasriaautoparts.com/dealer-login";
+    const roleLabel = targetRole === "reporter" ? "موظف تقارير الفيصل" : "موظف";
     let whatsappSent = false;
     let emailSent = false;
 
@@ -205,7 +217,10 @@ Deno.serve(async (req) => {
     let emailReason = "";
 
     if (isNewUser) {
-      const waMsg = `🎉 أهلاً ${fullName}!\n\nتم إنشاء حساب موظف لك في المصرية جروب ✅\n\n🔐 بيانات الدخول:\nالبريد: ${cleanEmail}\nكلمة السر المؤقتة: ${tempPassword}\n\n🔗 رابط الدخول:\n${loginUrl}\n\n⚠️ يرجى تغيير كلمة السر بعد أول تسجيل دخول من "إعدادات حسابي".\n\nالمصرية جروب 🚗`;
+      const reporterNote = targetRole === "reporter"
+        ? `\n\n📋 ملاحظة: حسابك مخصص لرفع التقرير اليومي فقط — هتدخل على صفحة التقرير مباشرة بعد تسجيل الدخول.`
+        : "";
+      const waMsg = `🎉 أهلاً ${fullName}!\n\nتم إنشاء حساب ${roleLabel} لك في المصرية جروب ✅\n\n🔐 بيانات الدخول:\nالبريد: ${cleanEmail}\nكلمة السر المؤقتة: ${tempPassword}\n\n🔗 رابط الدخول:\n${loginUrl}${reporterNote}\n\n⚠️ يرجى تغيير كلمة السر بعد أول تسجيل دخول.\n\nالمصرية جروب 🚗`;
 
       console.log(`[create-staff] Sending notifications for new user: ${cleanEmail}, phone: ${phone || "(none)"}`);
 
@@ -247,6 +262,7 @@ Deno.serve(async (req) => {
       isNewUser,
       userId,
       email: cleanEmail,
+      role: targetRole,
       tempPassword: isNewUser ? tempPassword : null,
       whatsappSent,
       whatsappReason,
