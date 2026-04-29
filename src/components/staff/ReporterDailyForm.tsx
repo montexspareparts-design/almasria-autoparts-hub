@@ -57,7 +57,7 @@ const EMPTY: ReportData = {
 const today = () => new Date().toISOString().slice(0, 10);
 
 export default function ReporterDailyForm() {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
