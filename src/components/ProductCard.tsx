@@ -8,13 +8,14 @@ import { ImageBadge, ImageBadgeColumn } from "@/components/ui/image-badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
-const brandRouteMap: Record<string, { label: string; color: string; path: string }> = {
-  toyota_genuine: { label: "تويوتا أصلي", color: "bg-gradient-to-b from-[hsl(355_85%_52%)] to-[hsl(355_90%_38%)] text-white", path: "/products/toyota-genuine" },
-  toyota_oils: { label: "زيوت تويوتا", color: "bg-gradient-to-b from-amber-500 to-amber-700 text-white", path: "/products/toyota-oils" },
-  mtx_aftermarket: { label: "MTX", color: "bg-gradient-to-b from-blue-500 to-blue-700 text-white", path: "/products/mtx" },
-  denso: { label: "DENSO", color: "bg-gradient-to-b from-emerald-500 to-emerald-700 text-white", path: "/products/denso" },
-  aisin: { label: "AISIN", color: "bg-gradient-to-b from-purple-500 to-purple-700 text-white", path: "/products/aisin" },
-  fbk: { label: "FBK", color: "bg-gradient-to-b from-orange-500 to-orange-700 text-white", path: "/products/fbk" },
+// accent = اللون المميز للبراند (يستخدم في ring + dot على base أسود فاخر موحد)
+const brandRouteMap: Record<string, { label: string; accent: string; path: string }> = {
+  toyota_genuine: { label: "تويوتا أصلي", accent: "hsl(355 85% 58%)", path: "/products/toyota-genuine" },   // أحمر تويوتا
+  toyota_oils:    { label: "زيوت تويوتا", accent: "hsl(40 90% 58%)",  path: "/products/toyota-oils" },     // ذهبي
+  mtx_aftermarket:{ label: "MTX",        accent: "hsl(210 90% 60%)", path: "/products/mtx" },              // أزرق
+  denso:          { label: "DENSO",      accent: "hsl(160 75% 50%)", path: "/products/denso" },            // أخضر زمردي
+  aisin:          { label: "AISIN",      accent: "hsl(270 70% 65%)", path: "/products/aisin" },            // بنفسجي
+  fbk:            { label: "FBK",        accent: "hsl(25 90% 58%)",  path: "/products/fbk" },              // برتقالي
 };
 
 interface ProductCardProps {
@@ -154,9 +155,11 @@ const ProductCard = memo(({
             {brandRouteMap[product.brand] && (
               <Link
                 to={brandRouteMap[product.brand].path}
-                className={`text-[7px] sm:text-[9px] font-bold px-1.5 sm:px-2 py-0.5 rounded-md hover:opacity-80 transition-opacity shadow-sm whitespace-nowrap ${brandRouteMap[product.brand].color}`}
+                className="inline-flex items-center gap-1 text-[7px] sm:text-[9px] font-bold px-1.5 sm:px-2 py-0.5 rounded-md hover:opacity-80 transition-opacity shadow-sm whitespace-nowrap bg-gradient-to-b from-[hsl(220_25%_14%)] to-[hsl(220_30%_7%)] text-white ring-1"
+                style={{ ['--accent' as any]: brandRouteMap[product.brand].accent, boxShadow: `inset 0 0 0 1px ${brandRouteMap[product.brand].accent}55` }}
                 onClick={(e) => e.stopPropagation()}
               >
+                <span aria-hidden className="w-1 h-1 rounded-full" style={{ background: brandRouteMap[product.brand].accent, boxShadow: `0 0 4px ${brandRouteMap[product.brand].accent}` }} />
                 {brandRouteMap[product.brand].label}
               </Link>
             )}
@@ -290,7 +293,20 @@ const ProductCard = memo(({
               onClick={(e) => e.stopPropagation()}
               className="hover:opacity-90 transition-opacity max-w-full"
             >
-              <ImageBadge tone="brand" size="sm">
+              <ImageBadge
+                tone="brand"
+                size="sm"
+                className="!ring-[color:var(--brand-accent)]/70 gap-1"
+                style={{ ['--brand-accent' as any]: brandRouteMap[product.brand].accent }}
+              >
+                <span
+                  aria-hidden
+                  className="w-1.5 h-1.5 rounded-full shrink-0"
+                  style={{
+                    background: brandRouteMap[product.brand].accent,
+                    boxShadow: `0 0 6px ${brandRouteMap[product.brand].accent}`,
+                  }}
+                />
                 {brandRouteMap[product.brand].label}
               </ImageBadge>
             </Link>
