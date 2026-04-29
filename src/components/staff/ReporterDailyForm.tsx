@@ -31,6 +31,11 @@ import {
   Sparkles, Palmtree, Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  PersonalCompareCard,
+  MoodShoutoutSection,
+  performanceScore,
+} from "./ReporterEnhancements";
 
 const PROBLEM_OPTIONS = [
   { value: "price", label: "السعر" },
@@ -63,6 +68,10 @@ interface ReportData {
   auto_total_sales?: number;
   report_date?: string;
   self_rating?: number | null;
+  mood?: string | null;
+  shoutout_user_id?: string | null;
+  shoutout_reason?: string | null;
+  why_good_day?: string | null;
 }
 
 const EMPTY: ReportData = {
@@ -70,6 +79,7 @@ const EMPTY: ReportData = {
   offers_count: 0, offers_converted_count: 0, incomplete_orders_count: 0,
   followups_count: 0, new_customers_count: 0, main_problem: "", problem_notes: "",
   lost_opportunities_count: 0, is_submitted: false, submitted_at: null, self_rating: null,
+  mood: null, shoutout_user_id: null, shoutout_reason: null, why_good_day: null,
 };
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
@@ -147,6 +157,10 @@ export default function ReporterDailyForm() {
     lost_opportunities_count: data.lost_opportunities_count,
     is_submitted: submit,
     self_rating: data.self_rating ?? null,
+    mood: data.mood || null,
+    shoutout_user_id: data.shoutout_user_id || null,
+    shoutout_reason: data.shoutout_reason || null,
+    why_good_day: data.why_good_day || null,
     // Snapshot the auto stats so admin sees the same numbers later
     auto_orders_count: autoStats.orders,
     auto_invoices_count: autoStats.invoices,
