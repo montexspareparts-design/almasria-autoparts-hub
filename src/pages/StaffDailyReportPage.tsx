@@ -21,6 +21,10 @@ export default function StaffDailyReportPage() {
   const [searchParams] = useSearchParams();
   const { user, loading, isReporterOnly, isAdmin, signOut } = useAuth();
   const editMode = searchParams.get("edit") === "1" && isAdmin;
+  // Force the Al-Faisal (Reporter) form when ?as=reporter is present (admin preview)
+  const forceReporter = searchParams.get("as") === "reporter" && isAdmin;
+  // Distinct flag: does this user actually hold the reporter role (even if also admin/moderator)?
+  const [hasReporterRole, setHasReporterRole] = useState(false);
 
   // Guard: only staff (admin/moderator/reporter) can access this page
   useEffect(() => {
@@ -40,8 +44,14 @@ export default function StaffDailyReportPage() {
         roles.includes("moderator") ||
         roles.includes("reporter");
       if (!isStaff) navigate("/", { replace: true });
+      setHasReporterRole(roles.includes("reporter"));
     })();
   }, [user, loading, navigate]);
+
+  // Show the Al-Faisal 13-question form whenever the user holds the reporter role,
+  // OR when an admin previews via ?as=reporter. Pure-admin/moderator (no reporter
+  // role) still gets the legacy general KPI report.
+  const showReporterForm = hasReporterRole || isReporterOnly || forceReporter;
 
   return (
     <div dir="rtl" className="min-h-screen bg-background">
