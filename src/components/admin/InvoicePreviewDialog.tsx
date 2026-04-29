@@ -65,7 +65,7 @@ export default function InvoicePreviewDialog({ open, onOpenChange, order }: Invo
       const pageWidth = pdf.internal.pageSize.getWidth();
       const imgHeight = (canvas.height * pageWidth) / canvas.width;
       pdf.addImage(imgData, "PNG", 0, 0, pageWidth, imgHeight);
-      pdf.save(`فاتورة-${order.order_number}.pdf`);
+      pdf.save(`عرض-سعر-${order.order_number}.pdf`);
       toast({ title: "تم تحميل الـ PDF ✓" });
     } catch (e) {
       toast({ title: "فشل التحميل", variant: "destructive" });
