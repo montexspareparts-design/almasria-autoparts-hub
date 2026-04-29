@@ -673,7 +673,10 @@ const PriceSection = ({
   if (price !== null) {
     return (
       <div className={compact ? "flex flex-wrap items-baseline justify-start gap-1.5 text-right" : "space-y-1 py-1 text-right"}>
-        <div className="inline-flex items-baseline gap-1 text-primary font-black text-lg sm:text-xl tracking-tight leading-tight">
+        <div
+          key={`price-${productId}-${price}`}
+          className="inline-flex items-baseline gap-1 text-primary font-black text-lg sm:text-xl tracking-tight leading-tight animate-price-glow"
+        >
           <span>{price.toLocaleString("ar-EG")}</span>
           <span className="text-[10px] sm:text-xs font-bold text-primary/50">ج.م</span>
         </div>
