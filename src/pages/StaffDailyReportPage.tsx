@@ -69,6 +69,8 @@ export default function StaffDailyReportPage() {
               <p className="text-[10px] sm:text-xs text-muted-foreground leading-none mt-0.5">
                 {isReporterOnly
                   ? "املأ الإجابات وقدّمها — هذه الصفحة الوحيدة المتاحة لحسابك"
+                  : showReporterForm
+                  ? "تقرير موظف الفيصل (13 سؤال) — املأ الإجابات قبل نهاية اليوم"
                   : "املأ الإجابات وقدّمها قبل نهاية اليوم"}
               </p>
             </div>
