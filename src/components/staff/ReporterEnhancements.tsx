@@ -72,7 +72,9 @@ export function PersonalCompareCard({
     const avg = scores.reduce((a, b) => a + b.score, 0) / scores.length;
     const best = scores.reduce((a, b) => (b.score > a.score ? b : a), scores[0]);
     const yesterday = scores[0];
-    return { avg: Math.round(avg), best, yesterday, count: scores.length };
+    // chronological for the chart (oldest → newest)
+    const chrono = [...scores].reverse();
+    return { avg: Math.round(avg), best, yesterday, count: scores.length, chrono };
   }, [history]);
 
   if (loading || !stats) return null;
