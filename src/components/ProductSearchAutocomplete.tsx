@@ -280,6 +280,9 @@ const ProductSearchAutocomplete = ({
         </div>
         <Input
           ref={inputRef}
+          name="product-search"
+          type="search"
+          aria-label="بحث المنتجات"
           placeholder={value ? placeholder : (typingPlaceholder || "🔍  ابحث عن قطعة، رقم، أو موديل...")}
           value={value}
           onChange={(e) => onChange(e.target.value)}
