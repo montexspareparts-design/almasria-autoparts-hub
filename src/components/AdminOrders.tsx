@@ -892,12 +892,52 @@ const AdminOrders = () => {
                           )}
 
                           {!isEditing && (
-                            <div className="flex justify-between items-center mt-2 px-3">
-                              <span className="text-sm font-semibold text-foreground">الإجمالي</span>
-                              <span className="text-lg font-bold text-primary">
-                                {Number(order.total_amount).toLocaleString("ar-EG")} ج.م
-                              </span>
-                            </div>
+                            <>
+                              <div className="flex justify-between items-center mt-2 px-3">
+                                <span className="text-sm font-semibold text-foreground">الإجمالي</span>
+                                <span className="text-lg font-bold text-primary">
+                                  {Number(order.total_amount).toLocaleString("ar-EG")} ج.م
+                                </span>
+                              </div>
+                              {(() => {
+                                const itemsTotal = (order.items || []).reduce((s, it) => s + Number(it.total_price || 0), 0);
+                                const shipping = Math.max(0, Number(order.total_amount) - itemsTotal + Number(order.coupon_discount || 0));
+                                const lines = [
+                                  `🧾 *فاتورة طلبك من المصرية لقطع غيار السيارات*`,
+                                  `رقم الطلب: *${order.order_number}*`,
+                                  ``,
+                                  `*المنتجات:*`,
+                                  ...(order.items || []).map(it => `• ${it.product?.name_ar || "منتج"}\n   ${it.quantity} × ${Number(it.unit_price).toLocaleString("ar-EG")} = ${Number(it.total_price).toLocaleString("ar-EG")} ج.م`),
+                                  ``,
+                                  `المنتجات: ${itemsTotal.toLocaleString("ar-EG")} ج.م`,
+                                  shipping > 0 ? `الشحن: ${shipping.toLocaleString("ar-EG")} ج.م` : `الاستلام: من الفرع`,
+                                  Number(order.coupon_discount || 0) > 0 ? `الخصم: -${Number(order.coupon_discount).toLocaleString("ar-EG")} ج.م` : "",
+                                  `━━━━━━━━━━━━`,
+                                  `💰 *الإجمالي: ${Number(order.total_amount).toLocaleString("ar-EG")} ج.م*`,
+                                  ``,
+                                  order.shipping_address ? `📍 العنوان: ${order.shipping_address}` : "",
+                                  `شكراً لتعاملك معنا 🌹`,
+                                ].filter(Boolean).join("\n");
+                                const phoneRaw = (order.profile?.phone || "").replace(/\D/g, "");
+                                const waPhone = phoneRaw.startsWith("0") ? "20" + phoneRaw.slice(1) : phoneRaw.startsWith("20") ? phoneRaw : phoneRaw;
+                                return (
+                                  <div className="mt-3 px-3">
+                                    <Button
+                                      size="sm"
+                                      className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white"
+                                      onClick={() => {
+                                        const url = waPhone
+                                          ? `https://wa.me/${waPhone}?text=${encodeURIComponent(lines)}`
+                                          : `https://wa.me/?text=${encodeURIComponent(lines)}`;
+                                        window.open(url, "_blank");
+                                      }}
+                                    >
+                                      📤 إرسال تفاصيل الفاتورة على الواتساب
+                                    </Button>
+                                  </div>
+                                );
+                              })()}
+                            </>
                           )}
                         </div>
 
