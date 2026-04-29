@@ -103,6 +103,47 @@ export default {
         "skeleton-shimmer": {
           "100%": { transform: "translateX(100%)" },
         },
+        // === ProductCard new animations ===
+        "card-enter": {
+          "0%": { opacity: "0", transform: "translateY(18px) scale(0.96)" },
+          "60%": { opacity: "1" },
+          "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
+        },
+        "stock-pulse": {
+          "0%, 100%": { transform: "scale(1)", opacity: "1" },
+          "50%": { transform: "scale(1.35)", opacity: "0.85" },
+        },
+        "brand-slide-in": {
+          "0%": { opacity: "0", transform: "translateX(-12px)" },
+          "100%": { opacity: "1", transform: "translateX(0)" },
+        },
+        "coverage-shimmer": {
+          "0%": { backgroundPosition: "200% 0" },
+          "60%, 100%": { backgroundPosition: "-200% 0" },
+        },
+        "price-glow": {
+          "0%": { opacity: "0", transform: "translateY(6px) scale(0.92)", filter: "blur(4px)" },
+          "60%": { textShadow: "0 0 18px hsl(var(--primary) / 0.55)" },
+          "100%": { opacity: "1", transform: "translateY(0) scale(1)", filter: "blur(0)", textShadow: "0 0 0 transparent" },
+        },
+        "cart-bounce": {
+          "0%, 100%": { transform: "translateY(0) rotate(0deg)" },
+          "30%": { transform: "translateY(-3px) rotate(-8deg)" },
+          "60%": { transform: "translateY(0) rotate(6deg)" },
+        },
+        "burst-particle": {
+          "0%": { opacity: "1", transform: "translate(0,0) scale(1)" },
+          "100%": { opacity: "0", transform: "var(--burst-end, translate(0,-22px)) scale(0.4)" },
+        },
+        "checkmark-pop": {
+          "0%": { opacity: "0", transform: "scale(0.3) rotate(-25deg)" },
+          "60%": { opacity: "1", transform: "scale(1.15) rotate(0deg)" },
+          "100%": { opacity: "1", transform: "scale(1) rotate(0deg)" },
+        },
+        "sidebar-indicator": {
+          "0%": { transform: "scaleY(0)", opacity: "0" },
+          "100%": { transform: "scaleY(1)", opacity: "1" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -113,6 +154,15 @@ export default {
         "fade-in": "fade-in 0.3s ease-out",
         "section-enter": "section-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both",
         "skeleton-shimmer": "skeleton-shimmer 1.6s infinite",
+        "card-enter": "card-enter 0.55s cubic-bezier(0.22, 1, 0.36, 1) both",
+        "stock-pulse": "stock-pulse 1.6s ease-in-out infinite",
+        "brand-slide-in": "brand-slide-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both",
+        "coverage-shimmer": "coverage-shimmer 3s ease-in-out infinite",
+        "price-glow": "price-glow 0.5s cubic-bezier(0.22, 1, 0.36, 1) both",
+        "cart-bounce": "cart-bounce 0.6s ease-in-out",
+        "burst-particle": "burst-particle 0.7s ease-out forwards",
+        "checkmark-pop": "checkmark-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both",
+        "sidebar-indicator": "sidebar-indicator 0.25s ease-out both",
       },
     },
   },
