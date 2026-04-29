@@ -706,7 +706,6 @@ const PriceSection = ({
           key={`price-${productId}-${price}`}
           value={price}
           duration={900}
-          flip
           className="text-primary font-black text-lg sm:text-xl tracking-tight leading-tight"
           currencyClassName="text-[10px] sm:text-xs font-bold text-primary/50 ms-1"
         />
