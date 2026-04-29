@@ -145,8 +145,8 @@ const DealerCart = ({ onNavigateToOrders, onNavigateToPayment, sharedCart }: Dea
   };
 
   const subtotal = items.reduce((sum, item) => sum + getPrice(item) * item.quantity, 0);
-  const vat = subtotal * 0.14;
-  const total = subtotal + vat;
+  const vat = 0;
+  const total = subtotal;
 
   // Compute max allowed per item
   const maxAllowedMap = useMemo(() => {
