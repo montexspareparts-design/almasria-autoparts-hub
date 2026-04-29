@@ -134,6 +134,7 @@ export default function ReporterDailyForm() {
       const payload = {
         user_id: user.id,
         report_date: today(),
+        quotations_count: data.quotations_count,
         calls_count: data.calls_count,
         whatsapp_count: data.whatsapp_count,
         offers_sent_count: data.offers_sent_count,
