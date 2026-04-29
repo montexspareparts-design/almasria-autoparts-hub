@@ -305,6 +305,30 @@ const AdminOrders = () => {
         }
       }
       if (order && notifData) await notifyCustomerWhatsApp(order, notifData.title, notifData.message);
+
+      // Auto-send full invoice to customer when moving to awaiting_payment or processing
+      if (newStatus === "awaiting_payment" || newStatus === "processing") {
+        try {
+          const { data: invRes, error: invErr } = await supabase.functions.invoke("send-invoice-whatsapp", {
+            body: { orderId, statusContext: newStatus },
+          });
+          if (invErr || !invRes?.success) {
+            toast({
+              title: "تعذّر إرسال الفاتورة على واتساب",
+              description: invRes?.error || invErr?.message || (invRes?.requiresTemplate ? "نافذة الـ24 ساعة منتهية — يلزم قالب." : "حاول مجدداً"),
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "✅ تم إرسال الفاتورة على واتساب",
+              description: `للعميل على الرقم ${invRes.formattedPhone || ""}`,
+            });
+          }
+        } catch (e: any) {
+          toast({ title: "فشل إرسال الفاتورة على واتساب", description: e?.message, variant: "destructive" });
+        }
+      }
+
       toast({ title: `تم تحديث حالة الطلب إلى: ${statusConfig[newStatus]?.label || newStatus}` });
       fetchOrders();
       fetchStats();
