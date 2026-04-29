@@ -144,6 +144,16 @@ export default {
           "0%": { transform: "scaleY(0)", opacity: "0" },
           "100%": { transform: "scaleY(1)", opacity: "1" },
         },
+        "digit-flip": {
+          "0%": { transform: "rotateX(-90deg)", opacity: "0" },
+          "55%": { transform: "rotateX(15deg)", opacity: "1" },
+          "100%": { transform: "rotateX(0deg)", opacity: "1" },
+        },
+        "price-highlight": {
+          "0%": { backgroundPosition: "200% 0", opacity: "0" },
+          "20%": { opacity: "1" },
+          "100%": { backgroundPosition: "-200% 0", opacity: "0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
