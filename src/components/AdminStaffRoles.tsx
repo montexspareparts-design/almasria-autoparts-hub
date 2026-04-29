@@ -419,6 +419,27 @@ const AdminStaffRoles = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="sm:col-span-2">
+                <label className="text-sm font-medium text-muted-foreground mb-1.5 block">نوع الموظف *</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setNewRole("moderator")}
+                    className={`text-right p-3 rounded-lg border-2 transition-all ${newRole === "moderator" ? "border-emerald-500 bg-emerald-500/10" : "border-border hover:border-muted-foreground/40"}`}
+                  >
+                    <div className="font-bold text-sm">👤 موظف عام (Moderator)</div>
+                    <div className="text-xs text-muted-foreground mt-1">يدخل لوحة /admin كاملة (CRM، طلبات، عملاء، تقارير…)</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewRole("reporter")}
+                    className={`text-right p-3 rounded-lg border-2 transition-all ${newRole === "reporter" ? "border-blue-500 bg-blue-500/10" : "border-border hover:border-muted-foreground/40"}`}
+                  >
+                    <div className="font-bold text-sm">📋 موظف فيصل (Reporter)</div>
+                    <div className="text-xs text-muted-foreground mt-1">يدخل صفحة التقرير اليومي فقط — مفيش Sidebar ولا أي قسم تاني</div>
+                  </button>
+                </div>
+              </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground mb-1.5 block">الاسم الكامل *</label>
                 <Input
