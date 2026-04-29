@@ -565,6 +565,7 @@ function ReportPreview({ data, autoStats, staffName, dateLabel }: any) {
         <Row label="عملاء جدد" value={data.new_customers_count} />
         <Row label="مهتمين بدون إغلاق" value={data.lost_opportunities_count} />
         <Row label="أكبر مشكلة" value={PROBLEM_LABEL_MAP[data.main_problem] || "—"} />
+        <Row label="⭐ تقييم ذاتي" value={data.self_rating ? `${data.self_rating} / 10` : "—"} />
       </div>
     </div>
   );
