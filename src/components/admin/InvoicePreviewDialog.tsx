@@ -79,18 +79,42 @@ export default function InvoicePreviewDialog({ open, onOpenChange, order }: Invo
     try {
       const canvas = await renderCanvas();
       if (!canvas) return;
-      canvas.toBlob((blob) => {
+      const phoneRaw = (order.customer_phone || "").replace(/\D/g, "");
+      const waPhone = phoneRaw.startsWith("0") ? "20" + phoneRaw.slice(1) : phoneRaw.startsWith("20") ? phoneRaw : phoneRaw;
+      const caption = `📄 عرض سعر — ${order.order_number}\nالإجمالي: ${fmt(order.total_amount)} ج.م`;
+
+      canvas.toBlob(async (blob) => {
         if (!blob) return;
+        const file = new File([blob], `عرض-سعر-${order.order_number}.png`, { type: "image/png" });
+
+        // Try native share with image (mobile)
+        const navAny = navigator as any;
+        if (navAny.canShare && navAny.canShare({ files: [file] })) {
+          try {
+            await navAny.share({ files: [file], text: caption, title: "عرض سعر" });
+            toast({ title: "تم فتح المشاركة ✓" });
+            return;
+          } catch {
+            // user cancelled — fall through to download
+          }
+        }
+
+        // Desktop fallback: download image + open WhatsApp chat
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
         a.download = `عرض-سعر-${order.order_number}.png`;
         a.click();
         URL.revokeObjectURL(url);
+
+        const waUrl = waPhone
+          ? `https://wa.me/${waPhone}?text=${encodeURIComponent(caption)}`
+          : `https://wa.me/?text=${encodeURIComponent(caption)}`;
+        window.open(waUrl, "_blank");
+        toast({ title: "تم حفظ الصورة ✓ — ارفعها في شات الواتساب المفتوح" });
       }, "image/png");
-      toast({ title: "تم حفظ الصورة ✓ — ارفعها على الواتساب" });
     } catch (e) {
-      toast({ title: "فشل الحفظ", variant: "destructive" });
+      toast({ title: "فشل الإرسال", variant: "destructive" });
     } finally {
       setBusy(null);
     }
