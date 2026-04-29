@@ -506,64 +506,58 @@ const PriceSection = ({
   onRecordView, onLoginRequired, compact,
 }: PriceSectionProps) => {
   if (!user) {
-    // "Sealed Price Tag" — يحاكي بطاقة سعر فاخرة مختومة. إطار أحمر مقطع
-    // (لون البراند) + ختم قفل أحمر + نقطة ثقب على الجنب. يلفت النظر فوراً
-    // ويشعر العميل إن في "حاجة محجوبة" مستنية فتحها.
+    // Modern Minimal — خلفية بيضاء نظيفة، حد رفيع، أيقونة قفل دائرية،
+    // hover ناعم بدون ألوان صارخة. مريح للعين ومودرن.
     return compact ? (
       <button
         onClick={onLoginRequired}
-        className="group relative w-full sm:w-auto h-9 px-4 rounded-lg overflow-hidden
-          bg-[hsl(355_90%_98%)] text-[hsl(355_75%_38%)] font-extrabold text-[10px] sm:text-xs
-          border-2 border-dashed border-[hsl(355_75%_45%)]/50
-          hover:border-[hsl(355_90%_48%)] hover:bg-[hsl(355_90%_96%)]
-          hover:shadow-[0_6px_18px_-6px_hsl(355_90%_48%/0.4)]
+        className="group relative w-full sm:w-auto h-9 px-4 rounded-full
+          bg-white text-foreground font-bold text-[10px] sm:text-xs
+          border border-border/70 hover:border-foreground/40
+          hover:bg-foreground hover:text-background
           active:scale-[0.97] transition-all duration-300
           flex flex-row-reverse items-center justify-center gap-1.5"
         aria-label="سجل لعرض السعر"
       >
-        <Lock className="w-3 h-3 group-hover:rotate-12 transition-transform duration-300" />
+        <Lock className="w-3 h-3" strokeWidth={2.25} />
         <span>اعرض السعر</span>
       </button>
     ) : (
       <button
         onClick={onLoginRequired}
-        className="group relative w-full overflow-hidden
-          flex flex-row-reverse items-stretch
-          rounded-xl
-          bg-[hsl(355_90%_98%)]
-          ring-2 ring-dashed ring-[hsl(355_75%_45%)]/45
-          hover:ring-[hsl(355_90%_48%)]
-          shadow-[0_2px_6px_-2px_hsl(355_90%_48%/0.15)]
-          hover:shadow-[0_14px_30px_-10px_hsl(355_90%_48%/0.45)]
-          hover:-translate-y-0.5 active:translate-y-0
-          transition-all duration-400 ease-out"
+        className="group relative w-full
+          flex flex-row-reverse items-center gap-3
+          rounded-2xl px-3.5 py-2.5
+          bg-white
+          border border-border/70
+          hover:border-foreground/30
+          hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.18)]
+          hover:-translate-y-px active:translate-y-0
+          transition-all duration-300 ease-out"
         aria-label="سجل دخولك لعرض السعر"
       >
-        {/* الجزء الأيمن: ختم القفل الأحمر */}
-        <span className="relative flex items-center justify-center w-14 shrink-0
-          bg-gradient-to-br from-[hsl(355_90%_48%)] to-[hsl(355_85%_38%)]
-          rounded-r-[10px]
-          shadow-[inset_-1px_0_0_rgba(0,0,0,0.08)]">
-          {/* خط perforation عمودي بين الختم والمحتوى */}
-          <span aria-hidden className="absolute top-1.5 bottom-1.5 -left-px w-px
-            bg-[repeating-linear-gradient(to_bottom,hsl(355_90%_98%)_0_3px,transparent_3px_6px)]" />
-          {/* ثقب علوي وسفلي يحاكي بطاقة السعر */}
-          <span aria-hidden className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-card ring-1 ring-[hsl(355_75%_45%)]/30" />
-          <Lock className="w-5 h-5 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)] group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-400" strokeWidth={2.5} />
+        {/* أيقونة قفل دائرية */}
+        <span className="relative flex items-center justify-center w-9 h-9 shrink-0
+          rounded-full bg-foreground/[0.04]
+          group-hover:bg-foreground group-hover:text-background
+          transition-colors duration-300">
+          <Lock className="w-4 h-4 text-foreground/70 group-hover:text-background transition-colors duration-300" strokeWidth={2.25} />
         </span>
 
-        {/* الجزء المتني: النص */}
-        <span className="relative flex-1 flex flex-col items-end justify-center py-2.5 pr-4 pl-3 gap-0.5 text-right">
-          <span className="text-[12px] sm:text-[13px] font-extrabold text-[hsl(355_75%_32%)] tracking-tight leading-none">
+        {/* النص */}
+        <span className="flex-1 flex flex-col items-end justify-center gap-0.5 text-right">
+          <span className="text-[13px] font-bold text-foreground tracking-tight leading-tight">
             سجل دخولك لعرض السعر
           </span>
-          <span className="text-[9px] sm:text-[10px] font-bold text-[hsl(355_60%_45%)]/80 tracking-wide leading-none">
-            افتح سعرك الخاص الآن →
+          <span className="text-[10px] font-medium text-muted-foreground tracking-wide leading-tight">
+            اضغط للمتابعة
           </span>
         </span>
 
-        {/* تأثير لمعة خفيفة عند الـ hover */}
-        <span aria-hidden className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-[1100ms] ease-out bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none" />
+        {/* سهم خفيف */}
+        <span aria-hidden className="text-muted-foreground/60 group-hover:text-foreground group-hover:-translate-x-0.5 transition-all duration-300 text-base font-light">
+          ←
+        </span>
       </button>
     );
   }
