@@ -66,6 +66,7 @@ const VisitorLeadsPage = lazy(() => import("./pages/VisitorLeadsPage"));
 const ActiveVisitorsPage = lazy(() => import("./pages/ActiveVisitorsPage"));
 const AdminWhatsAppLogsPage = lazy(() => import("./pages/AdminWhatsAppLogsPage"));
 import PageVisitTracker from "./components/PageVisitTracker";
+import ReporterOnlyGuard from "./components/ReporterOnlyGuard";
 const DealerRtlAuditor = import.meta.env.DEV
   ? lazy(() => import("./components/dealer/DealerRtlAuditor"))
   : null;
@@ -105,6 +106,7 @@ const App = () => (
               <PermissionRequestProvider>
               <SEOHead />
               <PageVisitTracker />
+              <ReporterOnlyGuard />
               <DeferredComponent delay={2000}><InstallBannerLazy /></DeferredComponent>
               <DeferredComponent delay={4000}><AIChatBot /></DeferredComponent>
               <DeferredComponent delay={2500}><WhatsAppFloat /></DeferredComponent>
