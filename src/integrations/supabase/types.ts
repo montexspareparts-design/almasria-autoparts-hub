@@ -2113,6 +2113,60 @@ export type Database = {
         }
         Relationships: []
       }
+      reporter_day_off: {
+        Row: {
+          created_at: string
+          id: string
+          off_date: string
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          off_date: string
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          off_date?: string
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reporter_motivational_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          message_date: string
+          performance_tier: string | null
+          source: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          message_date?: string
+          performance_tier?: string | null
+          source?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          message_date?: string
+          performance_tier?: string | null
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       reporter_report_fields: {
         Row: {
           created_at: string
