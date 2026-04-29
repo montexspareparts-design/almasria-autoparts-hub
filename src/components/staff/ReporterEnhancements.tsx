@@ -130,6 +130,13 @@ export function PersonalCompareCard({
           </div>
         </div>
 
+        {/* Sparkline trend chart */}
+        <SparklineChart
+          points={stats.chrono}
+          avg={stats.avg}
+          todayScore={todayScore > 0 ? todayScore : null}
+        />
+
         {todayScore > 0 && (
           <div className="mt-3 p-2.5 rounded-lg bg-white/70 dark:bg-slate-900/50 border border-white/80 dark:border-slate-700/50 text-xs">
             <div className="flex items-center justify-between flex-wrap gap-1">
