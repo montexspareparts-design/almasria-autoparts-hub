@@ -29,39 +29,44 @@ import { cn } from "@/lib/utils";
 // Tone variants — semantic, not raw colors
 // ─────────────────────────────────────────────────────────────────────
 const imageBadgeVariants = cva(
-  // Base — applied to EVERY badge regardless of tone/size:
-  // - inline-flex with min-content so it never grows past its content
-  // - badge-glass: progressive frosted backdrop (see index.css)
-  // - ring + drop shadow: white halo + tone-tinted glow
-  // - text-shadow: keeps glyphs crisp on busy/photographic backgrounds
-  // - whitespace-nowrap so it never wraps inside a corner stack
+  // Base — luxury editorial badge:
+  // - frosted glassmorphism with subtle inner highlight
+  // - hairline border + soft tone-tinted glow
+  // - crisp text shadow for readability over photographs
   "pointer-events-auto inline-flex items-center max-w-full truncate " +
-    "rounded-md leading-none whitespace-nowrap " +
-    "badge-glass ring-1 " +
-    "[text-shadow:0_1px_2px_rgba(0,0,0,0.35)]",
+    "rounded-full leading-none whitespace-nowrap font-semibold " +
+    "backdrop-blur-xl backdrop-saturate-150 " +
+    "ring-1 transition-all duration-300 " +
+    "[text-shadow:0_1px_2px_rgba(0,0,0,0.25)] " +
+    "before:content-[''] before:absolute before:inset-x-2 before:top-0 before:h-px " +
+    "before:bg-gradient-to-r before:from-transparent before:via-white/60 before:to-transparent " +
+    "relative overflow-hidden",
   {
     variants: {
       tone: {
-        // Live stock indicator — green when in stock, red otherwise.
-        // Use `stockAvailable` prop on the wrapper to flip it.
-        stock: "text-white ring-white/30",
-        // Promotional flag (e.g. تخفيض) — destructive red, strong glow
+        // Live stock indicator — emerald glass when in stock, ruby otherwise
+        stock: "text-white ring-white/40",
+        // Promotional flag (e.g. تخفيض) — ruby red w/ gold hairline
         sale:
-          "bg-destructive/95 text-destructive-foreground ring-white/25 " +
-          "shadow-[0_2px_10px_rgba(220,38,38,0.4)] font-black tracking-wide",
-        // "Already viewed/priced" indicator — emerald success
+          "bg-gradient-to-b from-[hsl(355_85%_52%)] to-[hsl(355_90%_42%)] text-white " +
+          "ring-[hsl(40_80%_65%)]/50 " +
+          "shadow-[0_4px_16px_-4px_hsl(355_85%_45%/0.6),inset_0_1px_0_hsl(40_80%_75%/0.4)] " +
+          "font-black tracking-wider uppercase",
+        // "Already viewed/priced" indicator — emerald with gold hairline
         priced:
-          "bg-emerald-600/95 text-white ring-white/30 " +
-          "shadow-[0_2px_10px_rgba(16,185,129,0.35)] font-bold",
-        // Brand chip (Toyota Genuine, MTX, ...). Uses a dark default so
-        // legibility is guaranteed on white product photos; consumers
-        // can override with the `colorClass` prop for brand-specific
-        // colored chips.
+          "bg-gradient-to-b from-emerald-500 to-emerald-700 text-white " +
+          "ring-[hsl(40_80%_65%)]/40 " +
+          "shadow-[0_4px_14px_-3px_rgba(16,185,129,0.55),inset_0_1px_0_rgba(255,255,255,0.25)] " +
+          "font-bold",
+        // Brand chip (Toyota Genuine, MTX, ...) — luxury onyx w/ gold hairline
         brand:
-          "text-white ring-white/30 " +
-          "shadow-[0_2px_8px_rgba(0,0,0,0.25)] font-extrabold",
+          "text-white ring-[hsl(40_80%_60%)]/55 " +
+          "shadow-[0_4px_14px_-3px_rgba(0,0,0,0.45),inset_0_1px_0_hsl(40_80%_75%/0.35)] " +
+          "font-extrabold tracking-wide",
         // Catch-all for ad-hoc informational badges
-        neutral: "text-white ring-white/30 shadow-[0_2px_8px_rgba(0,0,0,0.3)] font-bold",
+        neutral:
+          "bg-gradient-to-b from-[hsl(210_15%_22%)] to-[hsl(210_18%_12%)] text-white " +
+          "ring-white/20 shadow-[0_4px_12px_-3px_rgba(0,0,0,0.4)] font-bold",
       },
       size: {
         // Responsive sizing matches the card breakpoints exactly so the
