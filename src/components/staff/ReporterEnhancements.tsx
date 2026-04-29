@@ -318,19 +318,12 @@ export function MoodShoutoutSection({
 
   useEffect(() => {
     (async () => {
-      const { data: roles } = await supabase
-        .from("user_roles")
-        .select("user_id")
-        .in("role", ["reporter", "admin", "moderator"]);
-      const ids = (roles || []).map((r) => r.user_id).filter((id) => id !== currentUserId);
-      if (ids.length === 0) return;
-      const { data: profs } = await supabase
-        .from("profiles")
-        .select("user_id, full_name, email")
-        .in("user_id", ids);
+      const { data: list, error } = await (supabase as any).rpc("list_staff_colleagues");
+      if (error || !list) return;
       setColleagues(
-        (profs || [])
-          .map((p) => ({ user_id: p.user_id, name: p.full_name || p.email?.split("@")[0] || "زميل" }))
+        (list as any[])
+          .filter((p) => p.user_id !== currentUserId)
+          .map((p) => ({ user_id: p.user_id, name: p.full_name || "زميل" }))
           .sort((a, b) => a.name.localeCompare(b.name, "ar"))
       );
     })();
