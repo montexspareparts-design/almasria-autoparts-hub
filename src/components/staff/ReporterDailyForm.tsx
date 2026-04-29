@@ -318,19 +318,6 @@ function TodayForm({
 }: any) {
   return (
     <>
-      {/* Auto stats */}
-      <Card className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200 dark:border-blue-900 mb-3">
-        <div className="flex items-center gap-2 mb-3">
-          <Badge variant="outline" className="text-[10px] bg-card">تلقائي من السيستم</Badge>
-          <span className="text-xs text-muted-foreground">بيتم حفظها مع التقرير</span>
-        </div>
-        <div className="grid grid-cols-3 gap-3">
-          <AutoStat icon={<ShoppingBag className="w-4 h-4" />} label="عدد الطلبات" value={autoStats.orders.toString()} color="blue" />
-          <AutoStat icon={<Receipt className="w-4 h-4" />} label="عدد الفواتير" value={autoStats.invoices.toString()} color="emerald" />
-          <AutoStat icon={<DollarSign className="w-4 h-4" />} label="إجمالي المبيعات (ج.م)" value={autoStats.sales.toLocaleString("ar-EG")} color="amber" />
-        </div>
-      </Card>
-
       <Card className="p-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-4">
           <NumField icon={<FileSpreadsheet className="w-3.5 h-3.5 text-indigo-600" />} label="عدد عروض الأسعار اليوم" required value={data.quotations_count} onChange={setNum("quotations_count")} disabled={locked} />
@@ -501,11 +488,6 @@ function RangeSummary({ userId, from, to, label }: { userId: string; from: strin
             {Number(agg.performance_score).toLocaleString("ar-EG")}
           </div>
         </div>
-        <div className="mt-3 pt-3 border-t border-amber-200 dark:border-amber-800/50 grid grid-cols-2 gap-2 text-xs">
-          <div>إجمالي الطلبات (تلقائي): <strong>{agg.auto_orders_count}</strong></div>
-          <div>إجمالي الفواتير: <strong>{agg.auto_invoices_count}</strong></div>
-          <div className="col-span-2">إجمالي المبيعات: <strong>{Number(agg.auto_total_sales).toLocaleString("ar-EG")} ج.م</strong></div>
-        </div>
       </div>
     </Card>
   );
@@ -524,12 +506,6 @@ function ReportPreview({ data, autoStats, staffName, dateLabel }: any) {
       <div className="p-3 rounded-lg bg-muted/40 border">
         <Row label="الموظف" value={staffName} />
         <Row label="التاريخ" value={dateLabel} />
-      </div>
-      <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900">
-        <div className="text-[10px] font-bold text-blue-700 dark:text-blue-400 mb-1">تلقائي من السيستم</div>
-        <Row label="عدد الطلبات" value={autoStats.orders} />
-        <Row label="عدد الفواتير" value={autoStats.invoices} />
-        <Row label="إجمالي المبيعات" value={`${autoStats.sales.toLocaleString("ar-EG")} ج.م`} />
       </div>
       <div className="p-3 rounded-lg border">
         <Row label="عروض الأسعار" value={data.quotations_count} />
@@ -566,11 +542,6 @@ function ReportSummaryCard({ report }: { report: ReportData }) {
             {new Date(report.submitted_at).toLocaleString("ar-EG")}
           </span>
         )}
-      </div>
-      <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900">
-        <Row label="عدد الطلبات" value={report.auto_orders_count ?? 0} />
-        <Row label="عدد الفواتير" value={report.auto_invoices_count ?? 0} />
-        <Row label="إجمالي المبيعات" value={`${Number(report.auto_total_sales || 0).toLocaleString("ar-EG")} ج.م`} />
       </div>
       <div className="p-3 rounded-lg border">
         <Row label="عروض الأسعار" value={report.quotations_count} />

@@ -323,12 +323,6 @@ function FullReportView({ r }: { r: any }) {
   );
   return (
     <div className="space-y-3 max-h-[65vh] overflow-y-auto pr-1">
-      <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900">
-        <div className="text-[10px] font-bold text-blue-700 mb-1">تلقائي من السيستم</div>
-        <Row icon={<ShoppingBag className="w-3.5 h-3.5" />} label="الطلبات" value={r.auto_orders_count ?? 0} />
-        <Row icon={<Receipt className="w-3.5 h-3.5" />} label="الفواتير" value={r.auto_invoices_count ?? 0} />
-        <Row icon={<DollarSign className="w-3.5 h-3.5" />} label="إجمالي المبيعات" value={`${Number(r.auto_total_sales || 0).toLocaleString("ar-EG")} ج.م`} />
-      </div>
       <div className="p-3 rounded-lg border">
         <Row icon={<FileSpreadsheet className="w-3.5 h-3.5" />} label="عروض الأسعار" value={r.quotations_count} />
         <Row icon={<Phone className="w-3.5 h-3.5" />} label="مكالمات" value={r.calls_count} />
@@ -409,7 +403,6 @@ function AllReports({ from, to, label }: { from: string; to: string; label: stri
           converted: sum("offers_converted_count"),
           new_customers: sum("new_customers_count"),
           incomplete: sum("incomplete_orders_count"),
-          sales: sum("auto_total_sales"),
         };
       };
       setWeekAgg(await sumRange(weekFrom, weekTo));
@@ -587,10 +580,6 @@ function AggCard({ title, subtitle, agg, color }: { title: string; subtitle: str
           <Stat label="محولة" value={agg.converted} />
           <Stat label="جدد" value={agg.new_customers} />
           <Stat label="غير مكتملة" value={agg.incomplete} />
-          <div className="col-span-2 text-center p-1.5 rounded bg-card/60 border">
-            <div className="font-bold">{Number(agg.sales).toLocaleString("ar-EG")} ج.م</div>
-            <div className="text-muted-foreground">إجمالي مبيعات</div>
-          </div>
         </div>
       )}
     </Card>
