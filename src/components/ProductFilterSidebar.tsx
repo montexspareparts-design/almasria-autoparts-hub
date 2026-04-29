@@ -181,10 +181,11 @@ const ProductFilterSidebar = ({
                           <button
                             key={b.value}
                             onClick={() => updateFilter("brandKey", isActive ? null : b.value)}
-                            className={`w-full flex items-center gap-2.5 text-right px-3 py-2.5 rounded-xl text-sm transition-all ${
+                            className={`relative w-full flex items-center gap-2.5 text-right px-3 py-2.5 rounded-xl text-sm transition-all ${
                               isActive ? "bg-primary/10 text-primary font-bold border border-primary/20" : "text-muted-foreground hover:bg-muted"
                             }`}
                           >
+                            {isActive && <span aria-hidden className="sidebar-rail" />}
                             <div className={`w-7 h-7 rounded-lg ${isActive ? "bg-primary/15" : brandIcon.bg} flex items-center justify-center shrink-0 transition-colors`}>
                               {brandIcon.icon}
                             </div>
