@@ -254,12 +254,13 @@ const ProductFilterSidebar = ({
                           <button
                             key={cat.id}
                             onClick={() => handleFilterChange("categoryId", isActive ? null : cat.id)}
-                            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm transition-all duration-300 group ${
+                            className={`relative w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm transition-all duration-300 group ${
                               isActive
                                 ? "bg-primary/10 text-primary font-bold border border-primary/20 shadow-sm"
                                 : "text-muted-foreground hover:bg-muted/80 hover:text-foreground hover:translate-x-[-4px] hover:shadow-sm"
                             }`}
                           >
+                            {isActive && <span aria-hidden className="sidebar-rail" />}
                             <div className="flex items-center gap-2.5">
                               <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-hover:shadow-md ${
                                 isActive ? "bg-primary/15 scale-110 shadow-md" : (catIcon?.bg || "bg-muted")
