@@ -168,7 +168,7 @@ export default function InvoicePreviewDialog({ open, onOpenChange, order }: Invo
               </div>
               <div className="text-left">
                 <div className="inline-block bg-gray-900 text-white px-4 py-2 rounded">
-                  <p className="text-xs opacity-80">فاتورة</p>
+                  <p className="text-xs opacity-80">عرض سعر</p>
                   <p className="text-base font-bold">{order.order_number}</p>
                 </div>
                 <p className="text-xs text-gray-600 mt-2">{dateStr}</p>
