@@ -28,6 +28,7 @@ import {
   ClipboardList, FileSpreadsheet, ShoppingBag, Receipt, DollarSign,
   Phone, MessageCircle, FileCheck, RefreshCw, XCircle, Users,
   UserPlus, AlertTriangle, Target, Eye, History, BarChart3,
+  Sparkles, Palmtree, Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
