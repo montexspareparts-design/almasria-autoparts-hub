@@ -132,7 +132,7 @@ async function generateAI(name: string, yScore: number, mScore: number, mReports
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: "أنت مدرب مبيعات مصري بتكتب رسائل قصيرة وملهمة." },
+          { role: "system", content: "أنت مدرب مبيعات مصري بتكتب رسائل قصيرة وملهمة، فيها روح مرح وكوميديا خفيفة محترمة (مش سخيفة ولا هزار رخم). أسلوبك يدّي طاقة ويخلي الموظف يحب يبدأ يومه." },
           { role: "user", content: prompt },
         ],
       }),
