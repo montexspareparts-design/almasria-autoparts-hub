@@ -133,6 +133,30 @@ export default function StaffShortageRequests() {
     return rows.filter(r => r.status === activeTab);
   }, [rows, activeTab]);
 
+  // الأصناف المتوفرة حديثاً (آخر 14 يوم) — تظهر في بانر بارز فوق
+  const recentlyFulfilled = useMemo(() => {
+    const cutoff = Date.now() - 14 * 24 * 60 * 60 * 1000;
+    return rows
+      .filter(r => r.status === "fulfilled" && r.reviewed_at && new Date(r.reviewed_at).getTime() >= cutoff)
+      .sort((a, b) => new Date(b.reviewed_at!).getTime() - new Date(a.reviewed_at!).getTime());
+  }, [rows]);
+
+  // الأصناف المتوفرة الجديدة اللي الموظف لسه ما شافهاش (تتسجل في localStorage)
+  const seenKey = user ? `shortage_seen_fulfilled_${user.id}` : "shortage_seen_fulfilled";
+  const newlyFulfilled = useMemo(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const seen = new Set(JSON.parse(localStorage.getItem(seenKey) || "[]"));
+      return recentlyFulfilled.filter(r => !seen.has(r.id));
+    } catch { return recentlyFulfilled; }
+  }, [recentlyFulfilled, seenKey]);
+
+  const markAllSeen = useCallback(() => {
+    if (typeof window === "undefined") return;
+    const ids = recentlyFulfilled.map(r => r.id);
+    localStorage.setItem(seenKey, JSON.stringify(ids));
+  }, [recentlyFulfilled, seenKey]);
+
   const resetForm = () => {
     setMode("catalog"); setSearch(""); setChosen(null); setSuggestions([]);
     setManualSku(""); setManualName(""); setQty(1); setCustomerNote("");
