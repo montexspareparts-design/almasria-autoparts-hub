@@ -198,7 +198,7 @@ Deno.serve(async (req) => {
     if (compareSample) {
       let prodQuery = admin
         .from("products")
-        .select("id, name_ar, sku, erp_item_code, stock_quantity, safety_stock, base_price")
+        .select("id, name_ar, sku, erp_item_code, stock_quantity, safety_stock, base_price, updated_at")
         .eq("is_active", true)
         .not("erp_item_code", "is", null);
 
@@ -245,6 +245,8 @@ Deno.serve(async (req) => {
         return Math.abs(Number(a) - Number(b)) < 0.01;
       };
 
+      const erpSyncedAt = meta?.last_synced_at ? new Date(meta.last_synced_at).getTime() : 0;
+
       const comparison = pool.map((p: any) => {
         const erp = erpMap.get(String(p.erp_item_code)) || null;
         const siteWholesaleRaw = tierMap.get(p.id) ?? null;
@@ -258,6 +260,39 @@ Deno.serve(async (req) => {
         // Site stock = ERP raw - safety_stock (after applying safety reserve). Compare against this.
         const erpStockAvailable = erpStockRaw != null ? Math.max(0, erpStockRaw - safety) : null;
         const stockMatch = erpStockAvailable != null && erpStockAvailable === siteStock;
+
+        // ===== Stock mismatch reason diagnosis =====
+        let reasonCode: string | null = null;
+        let reasonText: string | null = null;
+        if (!erp) {
+          reasonCode = "mapping_missing";
+          reasonText = `كود ERP "${p.erp_item_code}" غير موجود في كتالوج الفيصل — مشكلة mapping`;
+        } else if (stockMatch) {
+          reasonCode = "ok";
+          reasonText = "مطابق ✓";
+        } else {
+          const diffVal = (erpStockAvailable ?? 0) - siteStock;
+          const siteUpdatedAt = p.updated_at ? new Date(p.updated_at).getTime() : 0;
+          const stale = siteUpdatedAt > 0 && erpSyncedAt > 0 && siteUpdatedAt < erpSyncedAt - 60_000;
+          // Heuristics:
+          if (siteStock > (erpStockRaw ?? 0)) {
+            // Site has MORE stock than Faisal raw → impossible unless site wasn't decremented after Faisal sales
+            reasonCode = "stale_site_stock";
+            reasonText = `رصيد الموقع (${siteStock}) أعلى من الفيصل الخام (${erpStockRaw}) — لم يُحدَّث منذ آخر بيع في الفيصل`;
+          } else if (safety > 0 && siteStock + safety === erpStockRaw) {
+            reasonCode = "safety_stock_applied";
+            reasonText = `الفرق = احتياطي الأمان (${safety}) — حساب طبيعي`;
+          } else if (stale) {
+            reasonCode = "stale_sync";
+            reasonText = `آخر تحديث للموقع: ${new Date(siteUpdatedAt).toLocaleDateString("ar-EG")} — أقدم من آخر مزامنة فيصل`;
+          } else if (Math.abs(diffVal) <= 2) {
+            reasonCode = "minor_drift";
+            reasonText = `فرق بسيط (${diffVal > 0 ? "+" : ""}${diffVal}) — حركة بيع/استلام بعد المزامنة`;
+          } else {
+            reasonCode = "data_drift";
+            reasonText = `اختلاف ${diffVal > 0 ? "+" : ""}${diffVal} — يحتاج مزامنة يدوية`;
+          }
+        }
 
         return {
           product_id: p.id,
@@ -274,6 +309,9 @@ Deno.serve(async (req) => {
             diff: erpStockAvailable != null ? erpStockAvailable - siteStock : null,
             match: stockMatch,
             note: safety > 0 ? `الفيصل ${erpStockRaw} − احتياطي ${safety} = ${erpStockAvailable}` : null,
+            reason_code: reasonCode,
+            reason_text: reasonText,
+            site_updated_at: p.updated_at,
           },
           retail_price: { site: siteRetail, erp: erpRetail, diff: diff(erpRetail, siteRetail), match: priceMatch(siteRetail, erpRetail) },
           wholesale_price: { site: siteWholesale, erp: erpWholesale, diff: diff(erpWholesale, siteWholesale), match: priceMatch(siteWholesale, erpWholesale) },
