@@ -66,6 +66,7 @@ const AdminPermissionRequests = lazy(() => import("@/components/admin/AdminPermi
 const AdminRolePermissions = lazy(() => import("@/components/admin/AdminRolePermissions"));
 const AdminDailyReports = lazy(() => import("@/components/admin/AdminDailyReports"));
 const AdminReporterReports = lazy(() => import("@/components/admin/AdminReporterReports"));
+const AdminShortageRequests = lazy(() => import("@/components/admin/AdminShortageRequests"));
 const AdminDailyReportEditor = lazy(() => import("@/components/admin/AdminDailyReportEditor"));
 const MyDailyTasks = lazy(() => import("@/components/admin/MyDailyTasks"));
 const AdminDailyReportsDashboard = lazy(() => import("@/components/admin/AdminDailyReportsDashboard"));
