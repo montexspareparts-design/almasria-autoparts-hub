@@ -13,7 +13,11 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, PackageX, Flame, Users, BarChart3, RefreshCw, Eye, ArrowUpDown } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Loader2, PackageX, Flame, Users, BarChart3, RefreshCw, Eye, ArrowUpDown, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { ar } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
 type StatusKey = "open" | "sourcing" | "fulfilled" | "rejected";
