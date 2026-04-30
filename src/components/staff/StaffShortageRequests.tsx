@@ -71,6 +71,7 @@ export default function StaffShortageRequests() {
   const [rows, setRows] = useState<ShortageRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<StatusKey | "all">("open");
+  const [todayOnly, setTodayOnly] = useState(false);
 
   // Add dialog state
   const [open, setOpen] = useState(false);
