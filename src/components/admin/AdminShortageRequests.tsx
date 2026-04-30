@@ -13,7 +13,11 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, PackageX, Flame, Users, BarChart3, RefreshCw, Eye, ArrowUpDown } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Loader2, PackageX, Flame, Users, BarChart3, RefreshCw, Eye, ArrowUpDown, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { ar } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
 type StatusKey = "open" | "sourcing" | "fulfilled" | "rejected";
@@ -61,7 +65,11 @@ export default function AdminShortageRequests() {
   const [priority, setPriority] = useState<PriorityRow[]>([]);
   const [details, setDetails] = useState<DetailRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [days, setDays] = useState(30);
+  type RangePreset = "7" | "30" | "90" | "365" | "custom";
+  const [preset, setPreset] = useState<RangePreset>("30");
+  const today = useMemo(() => { const d = new Date(); d.setHours(23,59,59,999); return d; }, []);
+  const [fromDate, setFromDate] = useState<Date>(() => { const d = new Date(); d.setDate(d.getDate() - 30); d.setHours(0,0,0,0); return d; });
+  const [toDate, setToDate] = useState<Date>(() => { const d = new Date(); d.setHours(23,59,59,999); return d; });
   const [statusFilter, setStatusFilter] = useState<StatusKey | "all">("all");
 
   // Detail dialog
@@ -74,16 +82,17 @@ export default function AdminShortageRequests() {
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    const fromDate = new Date();
-    fromDate.setDate(fromDate.getDate() - days);
     const fromStr = fromDate.toISOString().slice(0, 10);
-    const toStr = new Date().toISOString().slice(0, 10);
+    const toStr = toDate.toISOString().slice(0, 10);
+    // include the whole "to" day
+    const toEndStr = new Date(toDate.getTime() + 24 * 3600 * 1000).toISOString().slice(0, 10);
 
     const [{ data: p }, { data: d }] = await Promise.all([
       supabase.rpc("get_shortage_priority_report" as any, { _from: fromStr, _to: toStr }),
       supabase.from("stock_shortage_requests" as any)
         .select("id,staff_user_id,product_id,manual_sku,manual_name,requested_quantity,customer_note,status,admin_response,created_at")
         .gte("created_at", fromStr)
+        .lt("created_at", toEndStr)
         .order("created_at", { ascending: false })
         .limit(500),
     ]);
@@ -100,14 +109,26 @@ export default function AdminShortageRequests() {
     });
     setPriority(sorted as any);
 
-    // Resolve staff names via RPC
-    const staffIds = Array.from(new Set(((d as any) || []).map((r: any) => r.staff_user_id)));
     const { data: colleagues } = await (supabase as any).rpc("list_staff_colleagues");
     const nameMap = new Map<string, string>();
     (colleagues || []).forEach((c: any) => nameMap.set(c.user_id, c.full_name));
     setDetails(((d as any) || []).map((r: any) => ({ ...r, staff_name: nameMap.get(r.staff_user_id) || "موظف" })));
     setLoading(false);
-  }, [days]);
+  }, [fromDate, toDate]);
+
+  // تطبيق preset سريع
+  const applyPreset = (p: RangePreset) => {
+    setPreset(p);
+    if (p === "custom") return;
+    const days = Number(p);
+    const from = new Date();
+    from.setDate(from.getDate() - days);
+    from.setHours(0, 0, 0, 0);
+    const to = new Date();
+    to.setHours(23, 59, 59, 999);
+    setFromDate(from);
+    setToDate(to);
+  };
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
@@ -186,17 +207,63 @@ export default function AdminShortageRequests() {
             <p className="text-xs text-muted-foreground">الموظفون بلّغوا عن الأصناف دي ومحتاجين توفيرها — مرتّبة بالأهمية</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Select value={String(days)} onValueChange={(v) => setDays(Number(v))}>
-            <SelectTrigger className="w-32 h-9"><SelectValue /></SelectTrigger>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Select value={preset} onValueChange={(v) => applyPreset(v as RangePreset)}>
+            <SelectTrigger className="w-36 h-9"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="7">آخر 7 أيام</SelectItem>
-              <SelectItem value="30">آخر 30 يوم</SelectItem>
-              <SelectItem value="90">آخر 90 يوم</SelectItem>
+              <SelectItem value="7">آخر أسبوع</SelectItem>
+              <SelectItem value="30">آخر شهر</SelectItem>
+              <SelectItem value="90">آخر 3 شهور</SelectItem>
               <SelectItem value="365">آخر سنة</SelectItem>
+              <SelectItem value="custom">📅 فترة مخصصة</SelectItem>
             </SelectContent>
           </Select>
-          <Button size="sm" variant="outline" onClick={fetchAll} className="gap-1.5">
+
+          {preset === "custom" && (
+            <>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-9 gap-1.5 font-normal">
+                    <CalendarIcon className="w-3.5 h-3.5" />
+                    من: {format(fromDate, "dd MMM yyyy", { locale: ar })}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={fromDate}
+                    onSelect={(d) => d && setFromDate(d)}
+                    disabled={(d) => d > toDate || d > new Date()}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-9 gap-1.5 font-normal">
+                    <CalendarIcon className="w-3.5 h-3.5" />
+                    إلى: {format(toDate, "dd MMM yyyy", { locale: ar })}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={toDate}
+                    onSelect={(d) => d && setToDate(d)}
+                    disabled={(d) => d < fromDate || d > new Date()}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </>
+          )}
+
+          <Badge variant="outline" className="text-[11px] h-7 px-2">
+            {Math.max(1, Math.ceil((toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24)))} يوم
+          </Badge>
+          <Button size="sm" variant="outline" onClick={fetchAll} className="gap-1.5 h-9">
             <RefreshCw className="w-3.5 h-3.5" />
             تحديث
           </Button>
