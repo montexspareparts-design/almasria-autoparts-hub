@@ -560,6 +560,34 @@ export default function StaffShortageRequests() {
         </motion.div>
       )}
 
+      {/* Today-only filter toggle */}
+      <div className="flex items-center justify-between gap-2 -mb-1">
+        <button
+          type="button"
+          onClick={() => setTodayOnly(v => !v)}
+          className={cn(
+            "inline-flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full border transition-all",
+            todayOnly
+              ? "bg-primary text-primary-foreground border-primary shadow-sm"
+              : "bg-muted/40 text-muted-foreground border-border hover:bg-muted"
+          )}
+          aria-pressed={todayOnly}
+        >
+          <Clock className="w-3.5 h-3.5" />
+          {todayOnly ? "بلاغات النهاردة فقط" : "اعرض بلاغات النهاردة فقط"}
+          <Badge variant="secondary" className="text-[10px] h-4 px-1.5">{todayCount}</Badge>
+        </button>
+        {todayOnly && (
+          <button
+            type="button"
+            onClick={() => setTodayOnly(false)}
+            className="text-[11px] text-muted-foreground hover:text-foreground underline"
+          >
+            عرض الكل
+          </button>
+        )}
+      </div>
+
       {/* Tabs by status */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
         <TabsList className="w-full grid grid-cols-5 h-auto">
