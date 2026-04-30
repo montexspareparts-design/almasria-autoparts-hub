@@ -2584,12 +2584,6 @@ const AdminERPSync = () => {
             </div>
             );
           })()}
-
-              <p className="text-xs text-muted-foreground text-center">
-                ⏱️ تم التوليد: {new Date(stockPreview.generatedAt).toLocaleString("ar-EG")} — لم يتم كتابة أي شيء بعد
-              </p>
-            </div>
-          )}
         </DialogContent>
       </Dialog>
     </div>
