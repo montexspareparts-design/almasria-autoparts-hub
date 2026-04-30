@@ -156,6 +156,7 @@ const sidebarGroups: SidebarGroup[] = [
         { id: "role-permissions", label: "صلاحيات الأدوار", icon: ShieldCheck },
         { id: "daily-reports", label: "التقارير اليومية للموظفين", icon: FileText },
         { id: "reporter-reports", label: "📋 تقارير موظفي الفيصل", icon: FileText },
+        { id: "shortage-requests", label: "🚨 الأصناف الناقصة المطلوبة", icon: FileText },
         { id: "daily-report-editor", label: "محرر أسئلة التقرير اليومي", icon: HelpCircle },
         { id: "translations", label: "إدارة الترجمات (AR/EN)", icon: FileText },
         { id: "seo-preview", label: "معاينة SEO قبل النشر", icon: Eye },
