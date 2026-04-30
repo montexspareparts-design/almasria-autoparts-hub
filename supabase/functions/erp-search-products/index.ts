@@ -173,20 +173,60 @@ Deno.serve(async (req) => {
     const isStale = !lastSync || Date.now() - lastSync > CACHE_TTL_MS;
 
     let refreshed = false;
-    if (forceRefresh || isStale) {
+    let refreshError: string | null = null;
+    if (forceRefresh || isStale || healthOnly) {
       try {
         const r = await refreshCacheFromErp(admin, baseUrl);
         refreshed = true;
         console.log(`[erp-search] refreshed cache: ${r.total} items`);
       } catch (e: any) {
-        console.error("[erp-search] refresh failed:", e.message);
+        refreshError = String(e.message);
+        console.error("[erp-search] refresh failed:", refreshError);
         await admin
           .from("erp_full_catalog_meta")
-          .update({ last_error: String(e.message).substring(0, 500) })
+          .update({ last_error: refreshError.substring(0, 500) })
           .eq("id", 1);
-        // Continue with stale cache if available
-        if (!lastSync) throw e;
+        if (!lastSync && !healthOnly) throw e;
       }
+    }
+
+    // Health mode: return sync diagnostics + Faisal vs site comparison
+    if (healthOnly) {
+      const [{ count: faisalTotal }, { count: faisalRetail }, { count: faisalWholesale }, { count: siteTotal }, { count: siteInStock }, { data: metaNow }] = await Promise.all([
+        admin.from("erp_full_catalog_cache").select("*", { count: "exact", head: true }),
+        admin.from("erp_full_catalog_cache").select("*", { count: "exact", head: true }).gt("retail_price", 0),
+        admin.from("erp_full_catalog_cache").select("*", { count: "exact", head: true }).gt("wholesale_price", 0),
+        admin.from("products").select("*", { count: "exact", head: true }),
+        admin.from("products").select("*", { count: "exact", head: true }).gt("stock_quantity", 0),
+        admin.from("erp_full_catalog_meta").select("last_synced_at, total_items, last_error").eq("id", 1).maybeSingle(),
+      ]);
+
+      // Quick recent sync activity
+      const { data: recentSyncs } = await admin
+        .from("erp_sync_logs")
+        .select("sync_type, status, created_at, error_message")
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      return new Response(JSON.stringify({
+        success: true,
+        health: {
+          base_url: baseUrl,
+          refreshed,
+          refresh_error: refreshError,
+          faisal: {
+            total: faisalTotal || 0,
+            with_retail_price: faisalRetail || 0,
+            with_wholesale_price: faisalWholesale || 0,
+          },
+          site: {
+            total: siteTotal || 0,
+            in_stock: siteInStock || 0,
+          },
+          meta: metaNow,
+          recent_syncs: recentSyncs || [],
+        },
+      }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Search via RPC (uses caller's auth context for RLS-style role check)
