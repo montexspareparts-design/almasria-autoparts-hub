@@ -164,6 +164,11 @@ const AdminERPSync = () => {
   } | null>(null);
   const [showPricePreview, setShowPricePreview] = useState(false);
   const [showStockPreview, setShowStockPreview] = useState(false);
+  // Filters for preview dialogs
+  const [priceSearch, setPriceSearch] = useState("");
+  const [priceFilter, setPriceFilter] = useState<"all" | "increase" | "decrease" | "big" | "wholesale" | "wholesale_new" | "wholesale_inc" | "wholesale_dec">("all");
+  const [stockSearch, setStockSearch] = useState("");
+  const [stockFilter, setStockFilter] = useState<"all" | "increase" | "decrease" | "back" | "out">("all");
   const [importProgress, setImportProgress] = useState<{
     phase: string;
     currentBatch: number;
@@ -2210,49 +2215,92 @@ const AdminERPSync = () => {
               <Badge variant="outline" className="ms-2">Dry-Run</Badge>
             </DialogTitle>
           </DialogHeader>
-          {pricePreview && (
+          {pricePreview && (() => {
+            const q = priceSearch.trim().toLowerCase();
+            const matchesSearch = (c: any) =>
+              !q || String(c.erp_id).toLowerCase().includes(q) || String(c.name || "").toLowerCase().includes(q);
+            const filteredRetail = pricePreview.changes.filter((c) => {
+              if (!matchesSearch(c)) return false;
+              if (priceFilter === "increase") return c.delta > 0;
+              if (priceFilter === "decrease") return c.delta < 0;
+              if (priceFilter === "big") return Math.abs(c.pct) >= 10;
+              if (priceFilter === "wholesale" || priceFilter === "wholesale_new" || priceFilter === "wholesale_inc" || priceFilter === "wholesale_dec") return false;
+              return true;
+            });
+            const filteredWholesale = pricePreview.wholesaleChanges.filter((c) => {
+              if (!matchesSearch(c)) return false;
+              if (priceFilter === "wholesale_new") return c.status === "new";
+              if (priceFilter === "wholesale_inc") return c.delta > 0 && c.status !== "new";
+              if (priceFilter === "wholesale_dec") return c.delta < 0;
+              if (priceFilter === "wholesale") return true;
+              if (priceFilter === "increase" || priceFilter === "decrease" || priceFilter === "big") return false;
+              return true;
+            });
+            const showRetailTable = priceFilter === "all" || priceFilter === "increase" || priceFilter === "decrease" || priceFilter === "big";
+            const showWholesaleTable = priceFilter === "all" || priceFilter === "wholesale" || priceFilter === "wholesale_new" || priceFilter === "wholesale_inc" || priceFilter === "wholesale_dec";
+            const chip = (key: typeof priceFilter, count: number, label: string, color: string) => (
+              <button
+                type="button"
+                onClick={() => setPriceFilter(priceFilter === key ? "all" : key)}
+                className={`rounded p-2 text-center border transition-all ${color} ${priceFilter === key ? "ring-2 ring-primary scale-[1.02]" : "hover:scale-[1.01]"}`}
+              >
+                <p className="font-bold text-foreground">{count}</p>
+                <p className="text-muted-foreground text-[11px]">{label}</p>
+              </button>
+            );
+            return (
             <div className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
-                <div className="bg-muted rounded p-2 text-center">
+                <button
+                  type="button"
+                  onClick={() => { setPriceFilter("all"); setPriceSearch(""); }}
+                  className={`bg-muted rounded p-2 text-center border transition-all ${priceFilter === "all" && !q ? "ring-2 ring-primary scale-[1.02]" : "hover:scale-[1.01]"}`}
+                >
                   <p className="font-bold text-foreground">{pricePreview.matched}</p>
-                  <p className="text-muted-foreground">صنف مطابق</p>
-                </div>
+                  <p className="text-muted-foreground text-[11px]">صنف مطابق</p>
+                </button>
                 <div className="bg-amber-500/10 rounded p-2 text-center border border-amber-500/30">
                   <p className="font-bold text-foreground">{pricePreview.changesCount}</p>
-                  <p className="text-muted-foreground">سيتم تعديله</p>
+                  <p className="text-muted-foreground text-[11px]">سيتم تعديله</p>
                 </div>
-                <div className="bg-emerald-500/10 rounded p-2 text-center">
-                  <p className="font-bold text-foreground">{pricePreview.increases}</p>
-                  <p className="text-muted-foreground">ارتفاع ⬆️</p>
-                </div>
-                <div className="bg-rose-500/10 rounded p-2 text-center">
-                  <p className="font-bold text-foreground">{pricePreview.decreases}</p>
-                  <p className="text-muted-foreground">انخفاض ⬇️</p>
-                </div>
-                <div className="bg-orange-500/10 rounded p-2 text-center border border-orange-500/30">
-                  <p className="font-bold text-foreground">{pricePreview.bigChanges}</p>
-                  <p className="text-muted-foreground">تغيير ≥ 10%</p>
-                </div>
+                {chip("increase", pricePreview.increases, "ارتفاع ⬆️", "bg-emerald-500/10 border-emerald-500/30")}
+                {chip("decrease", pricePreview.decreases, "انخفاض ⬇️", "bg-rose-500/10 border-rose-500/30")}
+                {chip("big", pricePreview.bigChanges, "تغيير ≥ 10%", "bg-orange-500/10 border-orange-500/30")}
               </div>
 
-              {/* Wholesale stats row */}
+              {/* Wholesale stats row — clickable */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                <div className="bg-blue-500/10 rounded p-2 text-center border border-blue-500/30">
-                  <p className="font-bold text-foreground">{pricePreview.wholesaleChangesCount}</p>
-                  <p className="text-muted-foreground">سعر جملة سيتغيّر</p>
-                </div>
-                <div className="bg-emerald-500/10 rounded p-2 text-center">
-                  <p className="font-bold text-foreground">{pricePreview.wholesaleIncreases}</p>
-                  <p className="text-muted-foreground">جملة ⬆️</p>
-                </div>
-                <div className="bg-rose-500/10 rounded p-2 text-center">
-                  <p className="font-bold text-foreground">{pricePreview.wholesaleDecreases}</p>
-                  <p className="text-muted-foreground">جملة ⬇️</p>
-                </div>
-                <div className="bg-violet-500/10 rounded p-2 text-center border border-violet-500/30">
-                  <p className="font-bold text-foreground">{pricePreview.wholesaleNew}</p>
-                  <p className="text-muted-foreground">جملة جديدة 🆕</p>
-                </div>
+                {chip("wholesale", pricePreview.wholesaleChangesCount, "سعر جملة سيتغيّر", "bg-blue-500/10 border-blue-500/30")}
+                {chip("wholesale_inc", pricePreview.wholesaleIncreases, "جملة ⬆️", "bg-emerald-500/10 border-emerald-500/30")}
+                {chip("wholesale_dec", pricePreview.wholesaleDecreases, "جملة ⬇️", "bg-rose-500/10 border-rose-500/30")}
+                {chip("wholesale_new", pricePreview.wholesaleNew, "جملة جديدة 🆕", "bg-violet-500/10 border-violet-500/30")}
+              </div>
+
+              {/* Search + active filter chip */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <Input
+                  placeholder="🔍 بحث بالكود أو اسم الصنف..."
+                  value={priceSearch}
+                  onChange={(e) => setPriceSearch(e.target.value)}
+                  className="max-w-sm h-9 text-sm"
+                />
+                {priceFilter !== "all" && (
+                  <Badge variant="secondary" className="gap-1 cursor-pointer" onClick={() => setPriceFilter("all")}>
+                    فلتر: {priceFilter} ✕
+                  </Badge>
+                )}
+                {(priceSearch || priceFilter !== "all") && (
+                  <button
+                    type="button"
+                    onClick={() => { setPriceSearch(""); setPriceFilter("all"); }}
+                    className="text-xs text-muted-foreground hover:text-foreground underline"
+                  >
+                    مسح الفلاتر
+                  </button>
+                )}
+                <span className="text-xs text-muted-foreground ms-auto">
+                  ظاهر: {filteredRetail.length + filteredWholesale.length}
+                </span>
               </div>
 
               <div className="flex flex-wrap gap-2">
@@ -2269,99 +2317,113 @@ const AdminERPSync = () => {
                 </Button>
               </div>
 
-              {pricePreview.changes.length === 0 ? (
-                <div className="p-6 rounded-lg bg-muted/50 text-center text-sm text-muted-foreground">
-                  ✅ لا توجد تغييرات أسعار — كل الأصناف المطابقة بنفس السعر بين موقعنا والفيصل
-                </div>
-              ) : (
-                <div className="border rounded-lg overflow-hidden">
-                  <table className="w-full text-xs">
-                    <thead className="bg-muted sticky top-0">
-                      <tr>
-                        <th className="p-2 text-right">كود</th>
-                        <th className="p-2 text-right">الصنف</th>
-                        <th className="p-2 text-right">السعر الحالي</th>
-                        <th className="p-2 text-right">السعر الجديد</th>
-                        <th className="p-2 text-right">الفرق</th>
-                        <th className="p-2 text-right">النسبة</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {pricePreview.changes.map((c, i) => (
-                        <tr key={i} className="border-t hover:bg-muted/30">
-                          <td className="p-2 font-mono">{c.erp_id}</td>
-                          <td className="p-2 max-w-[200px] truncate" title={c.name}>{c.name || "—"}</td>
-                          <td className="p-2 text-muted-foreground line-through">{c.old_price.toLocaleString("ar-EG")}</td>
-                          <td className="p-2 font-bold">{c.new_price.toLocaleString("ar-EG")}</td>
-                          <td className={`p-2 font-medium ${c.delta > 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                            {c.delta > 0 ? "+" : ""}{c.delta.toLocaleString("ar-EG")}
-                          </td>
-                          <td className="p-2">
-                            <Badge variant={Math.abs(c.pct) >= 10 ? "destructive" : "secondary"} className="text-[10px]">
-                              {c.pct > 0 ? "+" : ""}{c.pct}%
-                            </Badge>
-                          </td>
+              {showRetailTable && (
+                filteredRetail.length === 0 ? (
+                  <div className="p-6 rounded-lg bg-muted/50 text-center text-sm text-muted-foreground">
+                    {pricePreview.changes.length === 0
+                      ? "✅ لا توجد تغييرات أسعار قطاعي"
+                      : "🔍 لا توجد نتائج مطابقة للفلتر/البحث في تغييرات القطاعي"}
+                  </div>
+                ) : (
+                  <div className="border rounded-lg overflow-hidden">
+                    <div className="bg-muted/50 p-2 text-xs font-semibold text-foreground">
+                      🛒 تغييرات أسعار القطاعي — {filteredRetail.length} صنف
+                    </div>
+                    <table className="w-full text-xs">
+                      <thead className="bg-muted sticky top-0">
+                        <tr>
+                          <th className="p-2 text-right">كود</th>
+                          <th className="p-2 text-right">الصنف</th>
+                          <th className="p-2 text-right">السعر الحالي</th>
+                          <th className="p-2 text-right">السعر الجديد</th>
+                          <th className="p-2 text-right">الفرق</th>
+                          <th className="p-2 text-right">النسبة</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  {pricePreview.changesCount > pricePreview.changes.length && (
-                    <p className="p-2 text-center text-xs text-muted-foreground bg-muted">
-                      عرض أول {pricePreview.changes.length} من {pricePreview.changesCount} — حمّل CSV للقائمة الكاملة
-                    </p>
-                  )}
-                </div>
+                      </thead>
+                      <tbody>
+                        {filteredRetail.map((c, i) => (
+                          <tr key={i} className="border-t hover:bg-muted/30">
+                            <td className="p-2 font-mono">{c.erp_id}</td>
+                            <td className="p-2 max-w-[200px] truncate" title={c.name}>{c.name || "—"}</td>
+                            <td className="p-2 text-muted-foreground line-through">{c.old_price.toLocaleString("ar-EG")}</td>
+                            <td className="p-2 font-bold">{c.new_price.toLocaleString("ar-EG")}</td>
+                            <td className={`p-2 font-medium ${c.delta > 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                              {c.delta > 0 ? "+" : ""}{c.delta.toLocaleString("ar-EG")}
+                            </td>
+                            <td className="p-2">
+                              <Badge variant={Math.abs(c.pct) >= 10 ? "destructive" : "secondary"} className="text-[10px]">
+                                {c.pct > 0 ? "+" : ""}{c.pct}%
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {!q && priceFilter === "all" && pricePreview.changesCount > pricePreview.changes.length && (
+                      <p className="p-2 text-center text-xs text-muted-foreground bg-muted">
+                        عرض أول {pricePreview.changes.length} من {pricePreview.changesCount} — حمّل CSV للقائمة الكاملة
+                      </p>
+                    )}
+                  </div>
+                )
               )}
 
               {/* Wholesale changes table */}
-              {pricePreview.wholesaleChanges.length > 0 && (
-                <div className="border rounded-lg overflow-hidden border-blue-500/30">
-                  <div className="bg-blue-500/10 p-2 text-xs font-semibold text-foreground">
-                    📋 تغييرات أسعار الجملة (wholesale_tier1) — {pricePreview.wholesaleChangesCount} صنف
+              {showWholesaleTable && pricePreview.wholesaleChanges.length > 0 && (
+                filteredWholesale.length === 0 ? (
+                  <div className="p-6 rounded-lg bg-muted/50 text-center text-sm text-muted-foreground border border-blue-500/30">
+                    🔍 لا توجد نتائج مطابقة للفلتر/البحث في تغييرات الجملة
                   </div>
-                  <table className="w-full text-xs">
-                    <thead className="bg-muted sticky top-0">
-                      <tr>
-                        <th className="p-2 text-right">كود</th>
-                        <th className="p-2 text-right">الصنف</th>
-                        <th className="p-2 text-right">السعر الحالي</th>
-                        <th className="p-2 text-right">السعر الجديد</th>
-                        <th className="p-2 text-right">الفرق</th>
-                        <th className="p-2 text-right">النسبة</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {pricePreview.wholesaleChanges.map((c, i) => (
-                        <tr key={i} className="border-t hover:bg-muted/30">
-                          <td className="p-2 font-mono">{c.erp_id}</td>
-                          <td className="p-2 max-w-[200px] truncate" title={c.name}>{c.name || "—"}</td>
-                          <td className="p-2 text-muted-foreground line-through">{c.old_price.toLocaleString("ar-EG")}</td>
-                          <td className="p-2 font-bold">{c.new_price.toLocaleString("ar-EG")}</td>
-                          <td className={`p-2 font-medium ${c.delta > 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                            {c.delta > 0 ? "+" : ""}{c.delta.toLocaleString("ar-EG")}
-                          </td>
-                          <td className="p-2">
-                            <Badge variant={c.status === "new" ? "default" : (Math.abs(c.pct) >= 10 ? "destructive" : "secondary")} className="text-[10px]">
-                              {c.status === "new" ? "جديد 🆕" : `${c.pct > 0 ? "+" : ""}${c.pct}%`}
-                            </Badge>
-                          </td>
+                ) : (
+                  <div className="border rounded-lg overflow-hidden border-blue-500/30">
+                    <div className="bg-blue-500/10 p-2 text-xs font-semibold text-foreground">
+                      📋 تغييرات أسعار الجملة (wholesale_tier1) — {filteredWholesale.length} صنف
+                    </div>
+                    <table className="w-full text-xs">
+                      <thead className="bg-muted sticky top-0">
+                        <tr>
+                          <th className="p-2 text-right">كود</th>
+                          <th className="p-2 text-right">الصنف</th>
+                          <th className="p-2 text-right">السعر الحالي</th>
+                          <th className="p-2 text-right">السعر الجديد</th>
+                          <th className="p-2 text-right">الفرق</th>
+                          <th className="p-2 text-right">النسبة</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  {pricePreview.wholesaleChangesCount > pricePreview.wholesaleChanges.length && (
-                    <p className="p-2 text-center text-xs text-muted-foreground bg-muted">
-                      عرض أول {pricePreview.wholesaleChanges.length} من {pricePreview.wholesaleChangesCount}
-                    </p>
-                  )}
-                </div>
+                      </thead>
+                      <tbody>
+                        {filteredWholesale.map((c, i) => (
+                          <tr key={i} className="border-t hover:bg-muted/30">
+                            <td className="p-2 font-mono">{c.erp_id}</td>
+                            <td className="p-2 max-w-[200px] truncate" title={c.name}>{c.name || "—"}</td>
+                            <td className="p-2 text-muted-foreground line-through">{c.old_price.toLocaleString("ar-EG")}</td>
+                            <td className="p-2 font-bold">{c.new_price.toLocaleString("ar-EG")}</td>
+                            <td className={`p-2 font-medium ${c.delta > 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                              {c.delta > 0 ? "+" : ""}{c.delta.toLocaleString("ar-EG")}
+                            </td>
+                            <td className="p-2">
+                              <Badge variant={c.status === "new" ? "default" : (Math.abs(c.pct) >= 10 ? "destructive" : "secondary")} className="text-[10px]">
+                                {c.status === "new" ? "جديد 🆕" : `${c.pct > 0 ? "+" : ""}${c.pct}%`}
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {!q && priceFilter === "all" && pricePreview.wholesaleChangesCount > pricePreview.wholesaleChanges.length && (
+                      <p className="p-2 text-center text-xs text-muted-foreground bg-muted">
+                        عرض أول {pricePreview.wholesaleChanges.length} من {pricePreview.wholesaleChangesCount}
+                      </p>
+                    )}
+                  </div>
+                )
               )}
 
               <p className="text-xs text-muted-foreground text-center">
                 ⏱️ تم التوليد: {new Date(pricePreview.generatedAt).toLocaleString("ar-EG")} — لم يتم كتابة أي شيء بعد
               </p>
             </div>
-          )}
+            );
+          })()}
         </DialogContent>
       </Dialog>
 
@@ -2375,29 +2437,78 @@ const AdminERPSync = () => {
               <Badge variant="outline" className="ms-2">Dry-Run</Badge>
             </DialogTitle>
           </DialogHeader>
-          {stockPreview && (
+          {stockPreview && (() => {
+            const q = stockSearch.trim().toLowerCase();
+            const matchesSearch = (c: any) =>
+              !q || String(c.erp_id).toLowerCase().includes(q) || String(c.name || "").toLowerCase().includes(q);
+            const filtered = stockPreview.changes.filter((c) => {
+              if (!matchesSearch(c)) return false;
+              if (stockFilter === "increase") return c.status === "increase";
+              if (stockFilter === "decrease") return c.status === "decrease";
+              if (stockFilter === "back") return c.status === "back_in_stock";
+              if (stockFilter === "out") return c.status === "out_of_stock";
+              return true;
+            });
+            const chip = (key: typeof stockFilter, count: number, label: string, color: string) => (
+              <button
+                type="button"
+                onClick={() => setStockFilter(stockFilter === key ? "all" : key)}
+                className={`rounded p-2 text-center border transition-all ${color} ${stockFilter === key ? "ring-2 ring-primary scale-[1.02]" : "hover:scale-[1.01]"}`}
+              >
+                <p className="font-bold text-foreground">{count}</p>
+                <p className="text-muted-foreground text-[11px]">{label}</p>
+              </button>
+            );
+            return (
             <div className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
-                <div className="bg-muted rounded p-2 text-center">
+                <button
+                  type="button"
+                  onClick={() => { setStockFilter("all"); setStockSearch(""); }}
+                  className={`bg-muted rounded p-2 text-center border transition-all ${stockFilter === "all" && !q ? "ring-2 ring-primary scale-[1.02]" : "hover:scale-[1.01]"}`}
+                >
                   <p className="font-bold text-foreground">{stockPreview.matched}</p>
-                  <p className="text-muted-foreground">صنف مطابق</p>
-                </div>
+                  <p className="text-muted-foreground text-[11px]">صنف مطابق</p>
+                </button>
                 <div className="bg-cyan-500/10 rounded p-2 text-center border border-cyan-500/30">
                   <p className="font-bold text-foreground">{stockPreview.changesCount}</p>
-                  <p className="text-muted-foreground">سيتم تعديله</p>
+                  <p className="text-muted-foreground text-[11px]">سيتم تعديله</p>
                 </div>
-                <div className="bg-emerald-500/10 rounded p-2 text-center">
-                  <p className="font-bold text-foreground">{stockPreview.backInStock}</p>
-                  <p className="text-muted-foreground">يعود متوفر ✅</p>
-                </div>
-                <div className="bg-rose-500/10 rounded p-2 text-center">
-                  <p className="font-bold text-foreground">{stockPreview.outOfStock}</p>
-                  <p className="text-muted-foreground">سينفد ⚠️</p>
-                </div>
-                <div className="bg-blue-500/10 rounded p-2 text-center">
+                {chip("back", stockPreview.backInStock, "يعود متوفر ✅", "bg-emerald-500/10 border-emerald-500/30")}
+                {chip("out", stockPreview.outOfStock, "سينفد ⚠️", "bg-rose-500/10 border-rose-500/30")}
+                <button
+                  type="button"
+                  onClick={() => setStockFilter(stockFilter === "increase" ? "all" : "increase")}
+                  className={`bg-blue-500/10 rounded p-2 text-center border border-blue-500/30 transition-all ${stockFilter === "increase" ? "ring-2 ring-primary scale-[1.02]" : "hover:scale-[1.01]"}`}
+                >
                   <p className="font-bold text-foreground">{stockPreview.increases + stockPreview.decreases}</p>
-                  <p className="text-muted-foreground">تعديل كمية</p>
-                </div>
+                  <p className="text-muted-foreground text-[11px]">تعديل كمية</p>
+                </button>
+              </div>
+
+              {/* Search */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <Input
+                  placeholder="🔍 بحث بالكود أو اسم الصنف..."
+                  value={stockSearch}
+                  onChange={(e) => setStockSearch(e.target.value)}
+                  className="max-w-sm h-9 text-sm"
+                />
+                {stockFilter !== "all" && (
+                  <Badge variant="secondary" className="gap-1 cursor-pointer" onClick={() => setStockFilter("all")}>
+                    فلتر: {stockFilter} ✕
+                  </Badge>
+                )}
+                {(stockSearch || stockFilter !== "all") && (
+                  <button
+                    type="button"
+                    onClick={() => { setStockSearch(""); setStockFilter("all"); }}
+                    className="text-xs text-muted-foreground hover:text-foreground underline"
+                  >
+                    مسح الفلاتر
+                  </button>
+                )}
+                <span className="text-xs text-muted-foreground ms-auto">ظاهر: {filtered.length}</span>
               </div>
 
               <div className="flex flex-wrap gap-2">
@@ -2414,9 +2525,11 @@ const AdminERPSync = () => {
                 </Button>
               </div>
 
-              {stockPreview.changes.length === 0 ? (
+              {filtered.length === 0 ? (
                 <div className="p-6 rounded-lg bg-muted/50 text-center text-sm text-muted-foreground">
-                  ✅ لا توجد تغييرات أرصدة — كل الأصناف المطابقة بنفس الكمية
+                  {stockPreview.changes.length === 0
+                    ? "✅ لا توجد تغييرات أرصدة — كل الأصناف المطابقة بنفس الكمية"
+                    : "🔍 لا توجد نتائج مطابقة للفلتر/البحث"}
                 </div>
               ) : (
                 <div className="border rounded-lg overflow-hidden">
@@ -2432,7 +2545,7 @@ const AdminERPSync = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {stockPreview.changes.map((c, i) => {
+                      {filtered.map((c, i) => {
                         const labelMap: Record<string, { text: string; cls: string }> = {
                           increase: { text: "زيادة ⬆️", cls: "bg-emerald-600 text-white" },
                           decrease: { text: "نقصان ⬇️", cls: "bg-amber-600 text-white" },
@@ -2457,7 +2570,7 @@ const AdminERPSync = () => {
                       })}
                     </tbody>
                   </table>
-                  {stockPreview.changesCount > stockPreview.changes.length && (
+                  {!q && stockFilter === "all" && stockPreview.changesCount > stockPreview.changes.length && (
                     <p className="p-2 text-center text-xs text-muted-foreground bg-muted">
                       عرض أول {stockPreview.changes.length} من {stockPreview.changesCount} — حمّل CSV للقائمة الكاملة
                     </p>
@@ -2469,7 +2582,8 @@ const AdminERPSync = () => {
                 ⏱️ تم التوليد: {new Date(stockPreview.generatedAt).toLocaleString("ar-EG")} — لم يتم كتابة أي شيء بعد
               </p>
             </div>
-          )}
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </div>
