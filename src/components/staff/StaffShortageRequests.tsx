@@ -165,10 +165,18 @@ export default function StaffShortageRequests() {
   const totalRequestedQty = useMemo(() => rows.reduce((s, r) => s + (r.requested_quantity || 0), 0), [rows]);
   const openQty = useMemo(() => rows.filter(r => r.status === "open" || r.status === "sourcing").reduce((s, r) => s + r.requested_quantity, 0), [rows]);
 
+  // فلترة بتاريخ النهاردة (محلياً) لو اتفعّلت
+  const todayKey = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD محلي
+  const isToday = (iso: string) => new Date(iso).toLocaleDateString("en-CA") === todayKey;
+
+  const todayCount = useMemo(() => rows.filter(r => isToday(r.created_at)).length, [rows, todayKey]);
+
   const filtered = useMemo(() => {
-    if (activeTab === "all") return rows;
-    return rows.filter(r => r.status === activeTab);
-  }, [rows, activeTab]);
+    let list = rows;
+    if (todayOnly) list = list.filter(r => isToday(r.created_at));
+    if (activeTab === "all") return list;
+    return list.filter(r => r.status === activeTab);
+  }, [rows, activeTab, todayOnly, todayKey]);
 
   // الأصناف المتوفرة حديثاً (آخر 14 يوم) — تظهر في بانر بارز فوق
   const recentlyFulfilled = useMemo(() => {
