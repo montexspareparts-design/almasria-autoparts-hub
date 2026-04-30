@@ -65,7 +65,11 @@ export default function AdminShortageRequests() {
   const [priority, setPriority] = useState<PriorityRow[]>([]);
   const [details, setDetails] = useState<DetailRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [days, setDays] = useState(30);
+  type RangePreset = "7" | "30" | "90" | "365" | "custom";
+  const [preset, setPreset] = useState<RangePreset>("30");
+  const today = useMemo(() => { const d = new Date(); d.setHours(23,59,59,999); return d; }, []);
+  const [fromDate, setFromDate] = useState<Date>(() => { const d = new Date(); d.setDate(d.getDate() - 30); d.setHours(0,0,0,0); return d; });
+  const [toDate, setToDate] = useState<Date>(() => { const d = new Date(); d.setHours(23,59,59,999); return d; });
   const [statusFilter, setStatusFilter] = useState<StatusKey | "all">("all");
 
   // Detail dialog
