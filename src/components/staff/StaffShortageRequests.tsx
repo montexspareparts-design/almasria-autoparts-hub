@@ -112,15 +112,26 @@ export default function StaffShortageRequests() {
     return () => { supabase.removeChannel(ch); };
   }, [user, fetchRows]);
 
-  // Search products (debounced)
+  // Search products (debounced) — يبحث بالتوازي في:
+  //   1) أصناف السيستم (الـ 422 المعروضين للتجار) عبر RPC
+  //   2) كل أصناف الفيصل (~12 ألف) عبر edge function مع كاش ساعة
   useEffect(() => {
-    if (mode !== "catalog" || search.trim().length < 2) { setSuggestions([]); return; }
+    if (mode !== "catalog" || search.trim().length < 2) {
+      setSuggestions([]); setErpSuggestions([]); setSearchingErp(false);
+      return;
+    }
     const t = setTimeout(async () => {
       const q = search.trim();
-      // البحث في كل الأصناف بالنظام (المتوفرة + النافدة + المعطّلة) عبر RPC SECURITY DEFINER
-      const { data, error } = await supabase.rpc("search_all_products_for_shortage" as any, { _q: q });
-      if (error) {
-        // fallback للبحث المباشر لو حصلت مشكلة
+      setSearchingErp(true);
+
+      // بحث متوازي: السيستم + الفيصل
+      const [systemRes, erpRes] = await Promise.all([
+        supabase.rpc("search_all_products_for_shortage" as any, { _q: q }),
+        supabase.functions.invoke("erp-search-products", { body: { q } }),
+      ]);
+
+      // أصناف السيستم
+      if (systemRes.error) {
         const { data: fb } = await supabase
           .from("products")
           .select("id,sku,name_ar,stock_quantity")
@@ -128,9 +139,19 @@ export default function StaffShortageRequests() {
           .limit(15);
         setSuggestions((fb as any) || []);
       } else {
-        setSuggestions((data as any) || []);
+        setSuggestions((systemRes.data as any) || []);
       }
-    }, 250);
+
+      // أصناف الفيصل — استبعاد اللي موجودين بالفعل في السيستم (لتفادي التكرار)
+      if (erpRes.data?.success) {
+        const all = (erpRes.data.results || []) as ErpSuggest[];
+        setErpSuggestions(all.filter(r => !r.in_our_system));
+        setErpCacheInfo(erpRes.data.cache || null);
+      } else {
+        setErpSuggestions([]);
+      }
+      setSearchingErp(false);
+    }, 350);
     return () => clearTimeout(t);
   }, [search, mode]);
 
