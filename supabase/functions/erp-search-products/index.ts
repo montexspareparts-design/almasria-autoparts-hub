@@ -153,7 +153,8 @@ Deno.serve(async (req) => {
     const forceRefresh: boolean = !!body.refresh;
     const healthOnly: boolean = !!body.health;
     const compareSample: boolean = !!body.compareSample;
-    const sampleSize: number = Math.min(20, Math.max(1, Number(body.sampleSize) || 5));
+    const applyStockSync: boolean = !!body.applyStockSync;
+    const sampleSize: number = Math.min(50, Math.max(1, Number(body.sampleSize) || 5));
     const sampleProductIds: string[] = Array.isArray(body.productIds) ? body.productIds : [];
 
     // Read base URL from erp_config (single source of truth across all ERP edge functions)
@@ -289,12 +290,28 @@ Deno.serve(async (req) => {
         wholesale_price_mismatches: comparison.filter((c) => c.found_in_erp && !c.wholesale_price.match).length,
       };
 
+      // Optionally apply stock sync: update site stock to match Faisal (after safety_stock reserve)
+      let applied: { updated: number; errors: number } | null = null;
+      if (applyStockSync) {
+        let updated = 0, errors = 0;
+        for (const c of comparison) {
+          if (!c.found_in_erp || c.stock.match || c.stock.erp == null) continue;
+          const { error: upErr } = await admin
+            .from("products")
+            .update({ stock_quantity: c.stock.erp })
+            .eq("id", c.product_id);
+          if (upErr) errors++; else updated++;
+        }
+        applied = { updated, errors };
+      }
+
       return new Response(JSON.stringify({
         success: true,
         refreshed,
         refresh_error: refreshError,
         summary,
         comparison,
+        applied,
       }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
