@@ -2437,29 +2437,78 @@ const AdminERPSync = () => {
               <Badge variant="outline" className="ms-2">Dry-Run</Badge>
             </DialogTitle>
           </DialogHeader>
-          {stockPreview && (
+          {stockPreview && (() => {
+            const q = stockSearch.trim().toLowerCase();
+            const matchesSearch = (c: any) =>
+              !q || String(c.erp_id).toLowerCase().includes(q) || String(c.name || "").toLowerCase().includes(q);
+            const filtered = stockPreview.changes.filter((c) => {
+              if (!matchesSearch(c)) return false;
+              if (stockFilter === "increase") return c.status === "increase";
+              if (stockFilter === "decrease") return c.status === "decrease";
+              if (stockFilter === "back") return c.status === "back_in_stock";
+              if (stockFilter === "out") return c.status === "out_of_stock";
+              return true;
+            });
+            const chip = (key: typeof stockFilter, count: number, label: string, color: string) => (
+              <button
+                type="button"
+                onClick={() => setStockFilter(stockFilter === key ? "all" : key)}
+                className={`rounded p-2 text-center border transition-all ${color} ${stockFilter === key ? "ring-2 ring-primary scale-[1.02]" : "hover:scale-[1.01]"}`}
+              >
+                <p className="font-bold text-foreground">{count}</p>
+                <p className="text-muted-foreground text-[11px]">{label}</p>
+              </button>
+            );
+            return (
             <div className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
-                <div className="bg-muted rounded p-2 text-center">
+                <button
+                  type="button"
+                  onClick={() => { setStockFilter("all"); setStockSearch(""); }}
+                  className={`bg-muted rounded p-2 text-center border transition-all ${stockFilter === "all" && !q ? "ring-2 ring-primary scale-[1.02]" : "hover:scale-[1.01]"}`}
+                >
                   <p className="font-bold text-foreground">{stockPreview.matched}</p>
-                  <p className="text-muted-foreground">صنف مطابق</p>
-                </div>
+                  <p className="text-muted-foreground text-[11px]">صنف مطابق</p>
+                </button>
                 <div className="bg-cyan-500/10 rounded p-2 text-center border border-cyan-500/30">
                   <p className="font-bold text-foreground">{stockPreview.changesCount}</p>
-                  <p className="text-muted-foreground">سيتم تعديله</p>
+                  <p className="text-muted-foreground text-[11px]">سيتم تعديله</p>
                 </div>
-                <div className="bg-emerald-500/10 rounded p-2 text-center">
-                  <p className="font-bold text-foreground">{stockPreview.backInStock}</p>
-                  <p className="text-muted-foreground">يعود متوفر ✅</p>
-                </div>
-                <div className="bg-rose-500/10 rounded p-2 text-center">
-                  <p className="font-bold text-foreground">{stockPreview.outOfStock}</p>
-                  <p className="text-muted-foreground">سينفد ⚠️</p>
-                </div>
-                <div className="bg-blue-500/10 rounded p-2 text-center">
+                {chip("back", stockPreview.backInStock, "يعود متوفر ✅", "bg-emerald-500/10 border-emerald-500/30")}
+                {chip("out", stockPreview.outOfStock, "سينفد ⚠️", "bg-rose-500/10 border-rose-500/30")}
+                <button
+                  type="button"
+                  onClick={() => setStockFilter(stockFilter === "increase" ? "all" : "increase")}
+                  className={`bg-blue-500/10 rounded p-2 text-center border border-blue-500/30 transition-all ${stockFilter === "increase" ? "ring-2 ring-primary scale-[1.02]" : "hover:scale-[1.01]"}`}
+                >
                   <p className="font-bold text-foreground">{stockPreview.increases + stockPreview.decreases}</p>
-                  <p className="text-muted-foreground">تعديل كمية</p>
-                </div>
+                  <p className="text-muted-foreground text-[11px]">تعديل كمية</p>
+                </button>
+              </div>
+
+              {/* Search */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <Input
+                  placeholder="🔍 بحث بالكود أو اسم الصنف..."
+                  value={stockSearch}
+                  onChange={(e) => setStockSearch(e.target.value)}
+                  className="max-w-sm h-9 text-sm"
+                />
+                {stockFilter !== "all" && (
+                  <Badge variant="secondary" className="gap-1 cursor-pointer" onClick={() => setStockFilter("all")}>
+                    فلتر: {stockFilter} ✕
+                  </Badge>
+                )}
+                {(stockSearch || stockFilter !== "all") && (
+                  <button
+                    type="button"
+                    onClick={() => { setStockSearch(""); setStockFilter("all"); }}
+                    className="text-xs text-muted-foreground hover:text-foreground underline"
+                  >
+                    مسح الفلاتر
+                  </button>
+                )}
+                <span className="text-xs text-muted-foreground ms-auto">ظاهر: {filtered.length}</span>
               </div>
 
               <div className="flex flex-wrap gap-2">
@@ -2476,9 +2525,11 @@ const AdminERPSync = () => {
                 </Button>
               </div>
 
-              {stockPreview.changes.length === 0 ? (
+              {filtered.length === 0 ? (
                 <div className="p-6 rounded-lg bg-muted/50 text-center text-sm text-muted-foreground">
-                  ✅ لا توجد تغييرات أرصدة — كل الأصناف المطابقة بنفس الكمية
+                  {stockPreview.changes.length === 0
+                    ? "✅ لا توجد تغييرات أرصدة — كل الأصناف المطابقة بنفس الكمية"
+                    : "🔍 لا توجد نتائج مطابقة للفلتر/البحث"}
                 </div>
               ) : (
                 <div className="border rounded-lg overflow-hidden">
@@ -2494,7 +2545,7 @@ const AdminERPSync = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {stockPreview.changes.map((c, i) => {
+                      {filtered.map((c, i) => {
                         const labelMap: Record<string, { text: string; cls: string }> = {
                           increase: { text: "زيادة ⬆️", cls: "bg-emerald-600 text-white" },
                           decrease: { text: "نقصان ⬇️", cls: "bg-amber-600 text-white" },
@@ -2519,13 +2570,20 @@ const AdminERPSync = () => {
                       })}
                     </tbody>
                   </table>
-                  {stockPreview.changesCount > stockPreview.changes.length && (
+                  {!q && stockFilter === "all" && stockPreview.changesCount > stockPreview.changes.length && (
                     <p className="p-2 text-center text-xs text-muted-foreground bg-muted">
                       عرض أول {stockPreview.changes.length} من {stockPreview.changesCount} — حمّل CSV للقائمة الكاملة
                     </p>
                   )}
                 </div>
               )}
+
+              <p className="text-xs text-muted-foreground text-center">
+                ⏱️ تم التوليد: {new Date(stockPreview.generatedAt).toLocaleString("ar-EG")} — لم يتم كتابة أي شيء بعد
+              </p>
+            </div>
+            );
+          })()}
 
               <p className="text-xs text-muted-foreground text-center">
                 ⏱️ تم التوليد: {new Date(stockPreview.generatedAt).toLocaleString("ar-EG")} — لم يتم كتابة أي شيء بعد
