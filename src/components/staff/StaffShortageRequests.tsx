@@ -47,6 +47,17 @@ interface ProductSuggest {
   stock_quantity: number;
 }
 
+// نتيجة بحث من كتالوج الفيصل الكامل (12 ألف صنف)
+interface ErpSuggest {
+  erp_id: string;
+  name: string;
+  qty: number;
+  retail_price: number | null;
+  wholesale_price: number | null;
+  in_our_system: boolean;
+  our_product_id: string | null;
+}
+
 const STATUS_META: Record<StatusKey, { label: string; color: string; icon: typeof Clock }> = {
   open:      { label: "مفتوح",       color: "bg-amber-100 text-amber-700 border-amber-300",    icon: Clock },
   sourcing:  { label: "جارٍ التوفير", color: "bg-sky-100 text-sky-700 border-sky-300",          icon: RefreshCw },
