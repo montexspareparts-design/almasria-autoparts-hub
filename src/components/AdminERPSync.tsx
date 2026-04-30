@@ -2215,49 +2215,92 @@ const AdminERPSync = () => {
               <Badge variant="outline" className="ms-2">Dry-Run</Badge>
             </DialogTitle>
           </DialogHeader>
-          {pricePreview && (
+          {pricePreview && (() => {
+            const q = priceSearch.trim().toLowerCase();
+            const matchesSearch = (c: any) =>
+              !q || String(c.erp_id).toLowerCase().includes(q) || String(c.name || "").toLowerCase().includes(q);
+            const filteredRetail = pricePreview.changes.filter((c) => {
+              if (!matchesSearch(c)) return false;
+              if (priceFilter === "increase") return c.delta > 0;
+              if (priceFilter === "decrease") return c.delta < 0;
+              if (priceFilter === "big") return Math.abs(c.pct) >= 10;
+              if (priceFilter === "wholesale" || priceFilter === "wholesale_new" || priceFilter === "wholesale_inc" || priceFilter === "wholesale_dec") return false;
+              return true;
+            });
+            const filteredWholesale = pricePreview.wholesaleChanges.filter((c) => {
+              if (!matchesSearch(c)) return false;
+              if (priceFilter === "wholesale_new") return c.status === "new";
+              if (priceFilter === "wholesale_inc") return c.delta > 0 && c.status !== "new";
+              if (priceFilter === "wholesale_dec") return c.delta < 0;
+              if (priceFilter === "wholesale") return true;
+              if (priceFilter === "increase" || priceFilter === "decrease" || priceFilter === "big") return false;
+              return true;
+            });
+            const showRetailTable = priceFilter === "all" || priceFilter === "increase" || priceFilter === "decrease" || priceFilter === "big";
+            const showWholesaleTable = priceFilter === "all" || priceFilter === "wholesale" || priceFilter === "wholesale_new" || priceFilter === "wholesale_inc" || priceFilter === "wholesale_dec";
+            const chip = (key: typeof priceFilter, count: number, label: string, color: string) => (
+              <button
+                type="button"
+                onClick={() => setPriceFilter(priceFilter === key ? "all" : key)}
+                className={`rounded p-2 text-center border transition-all ${color} ${priceFilter === key ? "ring-2 ring-primary scale-[1.02]" : "hover:scale-[1.01]"}`}
+              >
+                <p className="font-bold text-foreground">{count}</p>
+                <p className="text-muted-foreground text-[11px]">{label}</p>
+              </button>
+            );
+            return (
             <div className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
-                <div className="bg-muted rounded p-2 text-center">
+                <button
+                  type="button"
+                  onClick={() => { setPriceFilter("all"); setPriceSearch(""); }}
+                  className={`bg-muted rounded p-2 text-center border transition-all ${priceFilter === "all" && !q ? "ring-2 ring-primary scale-[1.02]" : "hover:scale-[1.01]"}`}
+                >
                   <p className="font-bold text-foreground">{pricePreview.matched}</p>
-                  <p className="text-muted-foreground">صنف مطابق</p>
-                </div>
+                  <p className="text-muted-foreground text-[11px]">صنف مطابق</p>
+                </button>
                 <div className="bg-amber-500/10 rounded p-2 text-center border border-amber-500/30">
                   <p className="font-bold text-foreground">{pricePreview.changesCount}</p>
-                  <p className="text-muted-foreground">سيتم تعديله</p>
+                  <p className="text-muted-foreground text-[11px]">سيتم تعديله</p>
                 </div>
-                <div className="bg-emerald-500/10 rounded p-2 text-center">
-                  <p className="font-bold text-foreground">{pricePreview.increases}</p>
-                  <p className="text-muted-foreground">ارتفاع ⬆️</p>
-                </div>
-                <div className="bg-rose-500/10 rounded p-2 text-center">
-                  <p className="font-bold text-foreground">{pricePreview.decreases}</p>
-                  <p className="text-muted-foreground">انخفاض ⬇️</p>
-                </div>
-                <div className="bg-orange-500/10 rounded p-2 text-center border border-orange-500/30">
-                  <p className="font-bold text-foreground">{pricePreview.bigChanges}</p>
-                  <p className="text-muted-foreground">تغيير ≥ 10%</p>
-                </div>
+                {chip("increase", pricePreview.increases, "ارتفاع ⬆️", "bg-emerald-500/10 border-emerald-500/30")}
+                {chip("decrease", pricePreview.decreases, "انخفاض ⬇️", "bg-rose-500/10 border-rose-500/30")}
+                {chip("big", pricePreview.bigChanges, "تغيير ≥ 10%", "bg-orange-500/10 border-orange-500/30")}
               </div>
 
-              {/* Wholesale stats row */}
+              {/* Wholesale stats row — clickable */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                <div className="bg-blue-500/10 rounded p-2 text-center border border-blue-500/30">
-                  <p className="font-bold text-foreground">{pricePreview.wholesaleChangesCount}</p>
-                  <p className="text-muted-foreground">سعر جملة سيتغيّر</p>
-                </div>
-                <div className="bg-emerald-500/10 rounded p-2 text-center">
-                  <p className="font-bold text-foreground">{pricePreview.wholesaleIncreases}</p>
-                  <p className="text-muted-foreground">جملة ⬆️</p>
-                </div>
-                <div className="bg-rose-500/10 rounded p-2 text-center">
-                  <p className="font-bold text-foreground">{pricePreview.wholesaleDecreases}</p>
-                  <p className="text-muted-foreground">جملة ⬇️</p>
-                </div>
-                <div className="bg-violet-500/10 rounded p-2 text-center border border-violet-500/30">
-                  <p className="font-bold text-foreground">{pricePreview.wholesaleNew}</p>
-                  <p className="text-muted-foreground">جملة جديدة 🆕</p>
-                </div>
+                {chip("wholesale", pricePreview.wholesaleChangesCount, "سعر جملة سيتغيّر", "bg-blue-500/10 border-blue-500/30")}
+                {chip("wholesale_inc", pricePreview.wholesaleIncreases, "جملة ⬆️", "bg-emerald-500/10 border-emerald-500/30")}
+                {chip("wholesale_dec", pricePreview.wholesaleDecreases, "جملة ⬇️", "bg-rose-500/10 border-rose-500/30")}
+                {chip("wholesale_new", pricePreview.wholesaleNew, "جملة جديدة 🆕", "bg-violet-500/10 border-violet-500/30")}
+              </div>
+
+              {/* Search + active filter chip */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <Input
+                  placeholder="🔍 بحث بالكود أو اسم الصنف..."
+                  value={priceSearch}
+                  onChange={(e) => setPriceSearch(e.target.value)}
+                  className="max-w-sm h-9 text-sm"
+                />
+                {priceFilter !== "all" && (
+                  <Badge variant="secondary" className="gap-1 cursor-pointer" onClick={() => setPriceFilter("all")}>
+                    فلتر: {priceFilter} ✕
+                  </Badge>
+                )}
+                {(priceSearch || priceFilter !== "all") && (
+                  <button
+                    type="button"
+                    onClick={() => { setPriceSearch(""); setPriceFilter("all"); }}
+                    className="text-xs text-muted-foreground hover:text-foreground underline"
+                  >
+                    مسح الفلاتر
+                  </button>
+                )}
+                <span className="text-xs text-muted-foreground ms-auto">
+                  ظاهر: {filteredRetail.length + filteredWholesale.length}
+                </span>
               </div>
 
               <div className="flex flex-wrap gap-2">
