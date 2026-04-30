@@ -267,7 +267,7 @@ interface SampleRow {
   erp_item_code: string;
   found_in_erp: boolean;
   erp_name: string | null;
-  stock: { site: number; erp: number | null; erp_raw?: number | null; safety_stock?: number; diff: number | null; match: boolean; note?: string | null };
+  stock: { site: number; erp: number | null; erp_raw?: number | null; safety_stock?: number; diff: number | null; match: boolean; note?: string | null; reason_code?: string | null; reason_text?: string | null; site_updated_at?: string | null };
   retail_price: { site: number | null; erp: number | null; diff: number | null; match: boolean };
   wholesale_price: { site: number | null; erp: number | null; diff: number | null; match: boolean };
   fetched_at: string | null;
@@ -380,6 +380,7 @@ const SampleComparisonCard = () => {
                   <th className="text-right p-2 border">الصنف</th>
                   <th className="text-center p-2 border">كود الفيصل</th>
                   <th className="text-center p-2 border" colSpan={3}>الرصيد</th>
+                  <th className="text-center p-2 border">سبب اختلاف المخزون</th>
                   <th className="text-center p-2 border" colSpan={3}>سعر القطاعي</th>
                   <th className="text-center p-2 border" colSpan={3}>سعر الجملة</th>
                 </tr>
@@ -389,6 +390,7 @@ const SampleComparisonCard = () => {
                   <th className="p-1 border">عندنا</th>
                   <th className="p-1 border">الفيصل</th>
                   <th className="p-1 border">الحالة</th>
+                  <th className="p-1 border"></th>
                   <th className="p-1 border">عندنا</th>
                   <th className="p-1 border">الفيصل</th>
                   <th className="p-1 border">الحالة</th>
@@ -413,6 +415,37 @@ const SampleComparisonCard = () => {
                       )}
                     </td>
                     <td className="text-center p-2 border">{matchBadge(r.stock.match, r.found_in_erp)}</td>
+                    <td className="p-2 border max-w-[220px]">
+                      {r.stock.reason_code && (() => {
+                        const code = r.stock.reason_code;
+                        const palette: Record<string, string> = {
+                          ok: "bg-emerald-100 text-emerald-700 border-emerald-200",
+                          mapping_missing: "bg-red-100 text-red-700 border-red-200",
+                          stale_site_stock: "bg-orange-100 text-orange-700 border-orange-200",
+                          stale_sync: "bg-amber-100 text-amber-700 border-amber-200",
+                          safety_stock_applied: "bg-blue-100 text-blue-700 border-blue-200",
+                          minor_drift: "bg-slate-100 text-slate-700 border-slate-200",
+                          data_drift: "bg-rose-100 text-rose-700 border-rose-200",
+                        };
+                        const labels: Record<string, string> = {
+                          ok: "✓ مطابق",
+                          mapping_missing: "🔗 Mapping ناقص",
+                          stale_site_stock: "⚠️ موقع لم يُحدَّث",
+                          stale_sync: "🕐 مزامنة قديمة",
+                          safety_stock_applied: "🛡️ احتياطي أمان",
+                          minor_drift: "↔️ فرق بسيط",
+                          data_drift: "🔴 يحتاج مزامنة",
+                        };
+                        return (
+                          <div className="space-y-1">
+                            <Badge variant="outline" className={`text-[10px] ${palette[code] || ""}`}>
+                              {labels[code] || code}
+                            </Badge>
+                            <div className="text-[10px] text-muted-foreground leading-tight">{r.stock.reason_text}</div>
+                          </div>
+                        );
+                      })()}
+                    </td>
                     <td className="text-center p-2 border">{fmtPrice(r.retail_price.site)}</td>
                     <td className="text-center p-2 border">{fmtPrice(r.retail_price.erp)}</td>
                     <td className="text-center p-2 border">{matchBadge(r.retail_price.match, r.found_in_erp)}</td>
