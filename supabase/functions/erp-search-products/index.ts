@@ -290,9 +290,10 @@ Deno.serve(async (req) => {
           const stale = siteUpdatedAt > 0 && erpSyncedAt > 0 && siteUpdatedAt < erpSyncedAt - 60_000;
           // Heuristics:
           if (siteStock > (erpStockRaw ?? 0)) {
-            // Site has MORE stock than Faisal raw → impossible unless site wasn't decremented after Faisal sales
+            // Site has MORE stock than Faisal raw → Faisal had sales (branch/showroom) not synced back
             reasonCode = "stale_site_stock";
-            reasonText = `رصيد الموقع (${siteStock}) أعلى من الفيصل الخام (${erpStockRaw}) — لم يُحدَّث منذ آخر بيع في الفيصل`;
+            const hoursStr = hoursSinceRealSync != null ? ` (آخر مزامنة فعلية من ${hoursSinceRealSync} ساعة)` : "";
+            reasonText = `الموقع ${siteStock} > الفيصل ${erpStockRaw} — بيع ${siteStock - (erpStockRaw ?? 0)} قطعة في الفرع/المعرض لم تُزامَن${hoursStr}`;
           } else if (safety > 0 && siteStock + safety === erpStockRaw) {
             reasonCode = "safety_stock_applied";
             reasonText = `الفرق = احتياطي الأمان (${safety}) — حساب طبيعي`;
