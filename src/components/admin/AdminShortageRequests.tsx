@@ -285,12 +285,6 @@ export default function AdminShortageRequests() {
                 </div>
               );
             })
-                  <div className="mt-2 h-1 rounded-full bg-muted overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-amber-500 to-rose-500 transition-all" style={{ width: `${intensity}%` }} />
-                  </div>
-                </div>
-              );
-            })
           )}
         </TabsContent>
 
