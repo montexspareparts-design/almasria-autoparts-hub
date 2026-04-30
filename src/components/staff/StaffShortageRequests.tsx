@@ -665,6 +665,22 @@ export default function StaffShortageRequests() {
                               </AlertDialogContent>
                             </AlertDialog>
                           )}
+                          {row.status === "rejected" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={resubmittingId === row.id}
+                              onClick={() => handleResubmit(row)}
+                              className="h-7 text-[11px] gap-1 border-amber-400 text-amber-700 hover:bg-amber-50 hover:text-amber-800"
+                            >
+                              {resubmittingId === row.id ? (
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                              ) : (
+                                <RefreshCw className="w-3 h-3" />
+                              )}
+                              إعادة طلب
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </motion.div>
