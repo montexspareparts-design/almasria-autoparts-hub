@@ -102,13 +102,19 @@ export default function StaffShortageRequests() {
     if (mode !== "catalog" || search.trim().length < 2) { setSuggestions([]); return; }
     const t = setTimeout(async () => {
       const q = search.trim();
-      const { data } = await supabase
-        .from("products")
-        .select("id,sku,name_ar,stock_quantity")
-        .or(`sku.ilike.%${q}%,name_ar.ilike.%${q}%`)
-        .eq("is_active", true)
-        .limit(8);
-      setSuggestions((data as any) || []);
+      // البحث في كل الأصناف بالنظام (المتوفرة + النافدة + المعطّلة) عبر RPC SECURITY DEFINER
+      const { data, error } = await supabase.rpc("search_all_products_for_shortage" as any, { _q: q });
+      if (error) {
+        // fallback للبحث المباشر لو حصلت مشكلة
+        const { data: fb } = await supabase
+          .from("products")
+          .select("id,sku,name_ar,stock_quantity")
+          .or(`sku.ilike.%${q}%,name_ar.ilike.%${q}%`)
+          .limit(15);
+        setSuggestions((fb as any) || []);
+      } else {
+        setSuggestions((data as any) || []);
+      }
     }, 250);
     return () => clearTimeout(t);
   }, [search, mode]);
