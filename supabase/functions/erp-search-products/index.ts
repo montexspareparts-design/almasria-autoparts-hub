@@ -15,8 +15,22 @@ const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 let cachedToken: string | null = null;
 let tokenExpiry = 0;
 
+function isValidJwt(s: string | null): boolean {
+  if (!s) return false;
+  const t = s.trim();
+  // Reject HTML/error pages and ensure JWT-like 3-part dot-separated structure
+  if (t.startsWith("<") || /<\/?html|<!doctype/i.test(t)) return false;
+  const parts = t.split(".");
+  if (parts.length < 2) return false;
+  // Header chars must be safe for HTTP header value (no CR/LF, no spaces inside)
+  if (/[\r\n\s]/.test(t)) return false;
+  return t.length > 40 && t.length < 4096;
+}
+
 async function getErpToken(baseUrl: string): Promise<string> {
-  if (cachedToken && Date.now() < tokenExpiry - 300_000) return cachedToken;
+  if (cachedToken && isValidJwt(cachedToken) && Date.now() < tokenExpiry - 300_000) return cachedToken;
+  // Invalidate any previously bad cached value
+  cachedToken = null;
 
   const username = Deno.env.get("ERP_FAISAL_USERNAME");
   const password = Deno.env.get("ERP_FAISAL_PASSWORD");
@@ -35,9 +49,11 @@ async function getErpToken(baseUrl: string): Promise<string> {
     else jwt = data.JwtToken || data.jwtToken || data.token || data.access_token || null;
   } catch {
     const trimmed = text.trim().replace(/^"|"$/g, "");
-    if (trimmed.length > 20 && trimmed.split(".").length >= 2) jwt = trimmed;
+    if (isValidJwt(trimmed)) jwt = trimmed;
   }
-  if (!res.ok || !jwt) throw new Error(`ERP auth failed [${res.status}]: ${text.substring(0, 200)}`);
+  if (!res.ok || !isValidJwt(jwt)) {
+    throw new Error(`ERP auth failed [${res.status}] at ${baseUrl}: ${text.substring(0, 200)}`);
+  }
   cachedToken = jwt;
   tokenExpiry = Date.now() + 24 * 60 * 60 * 1000;
   return cachedToken!;
@@ -135,8 +151,16 @@ Deno.serve(async (req) => {
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
     const query: string = String(body.q ?? body.query ?? "").trim();
     const forceRefresh: boolean = !!body.refresh;
+    const healthOnly: boolean = !!body.health;
 
-    const baseUrl = Deno.env.get("ERP_FAISAL_BASE_URL") || "http://api.alfaisalauto.com";
+    // Read base URL from erp_config (single source of truth across all ERP edge functions)
+    const { data: cfgRow } = await admin
+      .from("erp_config")
+      .select("value")
+      .eq("key", "erp_base_url")
+      .maybeSingle();
+    let baseUrl = (cfgRow?.value || Deno.env.get("ERP_FAISAL_BASE_URL") || "https://api.alfaysalerp.com").trim();
+    baseUrl = baseUrl.replace(/\/+$/, ""); // strip trailing slash
 
     // Check cache freshness
     const { data: meta } = await admin
