@@ -36,6 +36,7 @@ import {
   MoodShoutoutSection,
   performanceScore,
 } from "./ReporterEnhancements";
+import StaffShortageRequests from "./StaffShortageRequests";
 
 const PROBLEM_OPTIONS = [
   { value: "price", label: "السعر" },
@@ -425,6 +426,8 @@ function TodayForm({
         currentUserId={userId}
         todayScore={todayScore}
       />
+
+      <StaffShortageRequests />
 
       <Card className="p-5 sticky bottom-3 bg-card/95 backdrop-blur-md border-2 border-primary/30 shadow-lg mt-3">
         {locked ? (

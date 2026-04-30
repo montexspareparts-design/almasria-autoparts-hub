@@ -66,6 +66,7 @@ const AdminPermissionRequests = lazy(() => import("@/components/admin/AdminPermi
 const AdminRolePermissions = lazy(() => import("@/components/admin/AdminRolePermissions"));
 const AdminDailyReports = lazy(() => import("@/components/admin/AdminDailyReports"));
 const AdminReporterReports = lazy(() => import("@/components/admin/AdminReporterReports"));
+const AdminShortageRequests = lazy(() => import("@/components/admin/AdminShortageRequests"));
 const AdminDailyReportEditor = lazy(() => import("@/components/admin/AdminDailyReportEditor"));
 const MyDailyTasks = lazy(() => import("@/components/admin/MyDailyTasks"));
 const AdminDailyReportsDashboard = lazy(() => import("@/components/admin/AdminDailyReportsDashboard"));
@@ -155,6 +156,7 @@ const sidebarGroups: SidebarGroup[] = [
         { id: "role-permissions", label: "صلاحيات الأدوار", icon: ShieldCheck },
         { id: "daily-reports", label: "التقارير اليومية للموظفين", icon: FileText },
         { id: "reporter-reports", label: "📋 تقارير موظفي الفيصل", icon: FileText },
+        { id: "shortage-requests", label: "🚨 الأصناف الناقصة المطلوبة", icon: FileText },
         { id: "daily-report-editor", label: "محرر أسئلة التقرير اليومي", icon: HelpCircle },
         { id: "translations", label: "إدارة الترجمات (AR/EN)", icon: FileText },
         { id: "seo-preview", label: "معاينة SEO قبل النشر", icon: Eye },
@@ -887,6 +889,8 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminDailyReports /></Suspense>;
       case "reporter-reports":
         return <Suspense fallback={<SectionLoader />}><AdminReporterReports /></Suspense>;
+      case "shortage-requests":
+        return <Suspense fallback={<SectionLoader />}><AdminShortageRequests /></Suspense>;
       case "daily-report-editor":
         return <Suspense fallback={<SectionLoader />}><AdminDailyReportEditor /></Suspense>;
       case "whatsapp-inbox":
