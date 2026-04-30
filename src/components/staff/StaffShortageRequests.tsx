@@ -194,14 +194,15 @@ export default function StaffShortageRequests() {
   }, [recentlyFulfilled, seenKey]);
 
   const resetForm = () => {
-    setMode("catalog"); setSearch(""); setChosen(null); setSuggestions([]);
+    setMode("catalog"); setSearch(""); setChosen(null); setChosenErp(null);
+    setSuggestions([]); setErpSuggestions([]);
     setManualSku(""); setManualName(""); setQty(1); setCustomerNote("");
   };
 
   const handleSubmit = async () => {
     if (!user) return;
-    if (mode === "catalog" && !chosen) {
-      toast({ title: "اختر صنف من الكتالوج أولاً", variant: "destructive" });
+    if (mode === "catalog" && !chosen && !chosenErp) {
+      toast({ title: "اختر صنف من الكتالوج أو من الفيصل أولاً", variant: "destructive" });
       return;
     }
     if (mode === "manual" && (!manualSku.trim() || !manualName.trim())) {
@@ -217,7 +218,12 @@ export default function StaffShortageRequests() {
       customer_note: customerNote.trim() || null,
     };
     if (mode === "catalog" && chosen) {
+      // صنف موجود في السيستم
       payload.product_id = chosen.id;
+    } else if (mode === "catalog" && chosenErp) {
+      // صنف من الفيصل (مش موجود في السيستم) — نسجّله كـ manual بكوده واسمه
+      payload.manual_sku = chosenErp.erp_id;
+      payload.manual_name = chosenErp.name;
     } else {
       payload.manual_sku = manualSku.trim();
       payload.manual_name = manualName.trim();
