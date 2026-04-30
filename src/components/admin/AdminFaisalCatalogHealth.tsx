@@ -267,7 +267,7 @@ interface SampleRow {
   erp_item_code: string;
   found_in_erp: boolean;
   erp_name: string | null;
-  stock: { site: number; erp: number | null; diff: number | null; match: boolean };
+  stock: { site: number; erp: number | null; erp_raw?: number | null; safety_stock?: number; diff: number | null; match: boolean; note?: string | null };
   retail_price: { site: number | null; erp: number | null; diff: number | null; match: boolean };
   wholesale_price: { site: number | null; erp: number | null; diff: number | null; match: boolean };
   fetched_at: string | null;
@@ -392,7 +392,12 @@ const SampleComparisonCard = () => {
                     </td>
                     <td className="text-center p-2 border font-mono">{r.erp_item_code}</td>
                     <td className="text-center p-2 border">{r.stock.site}</td>
-                    <td className="text-center p-2 border">{r.stock.erp ?? "—"}</td>
+                    <td className="text-center p-2 border">
+                      <div>{r.stock.erp ?? "—"}</div>
+                      {r.stock.note && (
+                        <div className="text-[10px] text-muted-foreground mt-0.5">{r.stock.note}</div>
+                      )}
+                    </td>
                     <td className="text-center p-2 border">{matchBadge(r.stock.match, r.found_in_erp)}</td>
                     <td className="text-center p-2 border">{fmtPrice(r.retail_price.site)}</td>
                     <td className="text-center p-2 border">{fmtPrice(r.retail_price.erp)}</td>

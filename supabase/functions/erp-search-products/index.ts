@@ -197,7 +197,7 @@ Deno.serve(async (req) => {
     if (compareSample) {
       let prodQuery = admin
         .from("products")
-        .select("id, name_ar, sku, erp_item_code, stock_quantity, base_price")
+        .select("id, name_ar, sku, erp_item_code, stock_quantity, safety_stock, base_price")
         .eq("is_active", true)
         .not("erp_item_code", "is", null);
 
@@ -250,9 +250,13 @@ Deno.serve(async (req) => {
         const siteWholesale = siteWholesaleRaw != null ? round(siteWholesaleRaw) : null;
         const siteRetail = round(p.base_price);
         const siteStock = Number(p.stock_quantity ?? 0);
+        const safety = Number(p.safety_stock ?? 0);
         const erpRetail = erp ? round(erp.retail_price) : null;
         const erpWholesale = erp ? round(erp.wholesale_price) : null;
-        const erpStock = erp ? Number(erp.qty ?? 0) : null;
+        const erpStockRaw = erp ? Number(erp.qty ?? 0) : null;
+        // Site stock = ERP raw - safety_stock (after applying safety reserve). Compare against this.
+        const erpStockAvailable = erpStockRaw != null ? Math.max(0, erpStockRaw - safety) : null;
+        const stockMatch = erpStockAvailable != null && erpStockAvailable === siteStock;
 
         return {
           product_id: p.id,
@@ -261,7 +265,15 @@ Deno.serve(async (req) => {
           erp_item_code: p.erp_item_code,
           found_in_erp: !!erp,
           erp_name: erp?.name || null,
-          stock: { site: siteStock, erp: erpStock, diff: erpStock != null ? erpStock - siteStock : null, match: erpStock === siteStock },
+          stock: {
+            site: siteStock,
+            erp: erpStockAvailable,
+            erp_raw: erpStockRaw,
+            safety_stock: safety,
+            diff: erpStockAvailable != null ? erpStockAvailable - siteStock : null,
+            match: stockMatch,
+            note: safety > 0 ? `الفيصل ${erpStockRaw} − احتياطي ${safety} = ${erpStockAvailable}` : null,
+          },
           retail_price: { site: siteRetail, erp: erpRetail, diff: diff(erpRetail, siteRetail), match: priceMatch(siteRetail, erpRetail) },
           wholesale_price: { site: siteWholesale, erp: erpWholesale, diff: diff(erpWholesale, siteWholesale), match: priceMatch(siteWholesale, erpWholesale) },
           fetched_at: erp?.fetched_at || null,
