@@ -3341,6 +3341,16 @@ export type Database = {
       normalize_eg_phone: { Args: { raw: string }; Returns: string }
       phone_already_registered: { Args: { _phone: string }; Returns: boolean }
       recompute_product_year_coverage: { Args: never; Returns: undefined }
+      search_all_products_for_shortage: {
+        Args: { _q: string }
+        Returns: {
+          id: string
+          is_active: boolean
+          name_ar: string
+          sku: string
+          stock_quantity: number
+        }[]
+      }
       search_products_by_year: {
         Args: { p_model?: string; p_query?: string; p_year?: number }
         Returns: {
