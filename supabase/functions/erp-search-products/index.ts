@@ -15,8 +15,22 @@ const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 let cachedToken: string | null = null;
 let tokenExpiry = 0;
 
+function isValidJwt(s: string | null): boolean {
+  if (!s) return false;
+  const t = s.trim();
+  // Reject HTML/error pages and ensure JWT-like 3-part dot-separated structure
+  if (t.startsWith("<") || /<\/?html|<!doctype/i.test(t)) return false;
+  const parts = t.split(".");
+  if (parts.length < 2) return false;
+  // Header chars must be safe for HTTP header value (no CR/LF, no spaces inside)
+  if (/[\r\n\s]/.test(t)) return false;
+  return t.length > 40 && t.length < 4096;
+}
+
 async function getErpToken(baseUrl: string): Promise<string> {
-  if (cachedToken && Date.now() < tokenExpiry - 300_000) return cachedToken;
+  if (cachedToken && isValidJwt(cachedToken) && Date.now() < tokenExpiry - 300_000) return cachedToken;
+  // Invalidate any previously bad cached value
+  cachedToken = null;
 
   const username = Deno.env.get("ERP_FAISAL_USERNAME");
   const password = Deno.env.get("ERP_FAISAL_PASSWORD");
@@ -35,9 +49,11 @@ async function getErpToken(baseUrl: string): Promise<string> {
     else jwt = data.JwtToken || data.jwtToken || data.token || data.access_token || null;
   } catch {
     const trimmed = text.trim().replace(/^"|"$/g, "");
-    if (trimmed.length > 20 && trimmed.split(".").length >= 2) jwt = trimmed;
+    if (isValidJwt(trimmed)) jwt = trimmed;
   }
-  if (!res.ok || !jwt) throw new Error(`ERP auth failed [${res.status}]: ${text.substring(0, 200)}`);
+  if (!res.ok || !isValidJwt(jwt)) {
+    throw new Error(`ERP auth failed [${res.status}] at ${baseUrl}: ${text.substring(0, 200)}`);
+  }
   cachedToken = jwt;
   tokenExpiry = Date.now() + 24 * 60 * 60 * 1000;
   return cachedToken!;
@@ -135,8 +151,16 @@ Deno.serve(async (req) => {
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
     const query: string = String(body.q ?? body.query ?? "").trim();
     const forceRefresh: boolean = !!body.refresh;
+    const healthOnly: boolean = !!body.health;
 
-    const baseUrl = Deno.env.get("ERP_FAISAL_BASE_URL") || "http://api.alfaisalauto.com";
+    // Read base URL from erp_config (single source of truth across all ERP edge functions)
+    const { data: cfgRow } = await admin
+      .from("erp_config")
+      .select("value")
+      .eq("key", "erp_base_url")
+      .maybeSingle();
+    let baseUrl = (cfgRow?.value || Deno.env.get("ERP_FAISAL_BASE_URL") || "https://api.alfaysalerp.com").trim();
+    baseUrl = baseUrl.replace(/\/+$/, ""); // strip trailing slash
 
     // Check cache freshness
     const { data: meta } = await admin
@@ -149,20 +173,60 @@ Deno.serve(async (req) => {
     const isStale = !lastSync || Date.now() - lastSync > CACHE_TTL_MS;
 
     let refreshed = false;
-    if (forceRefresh || isStale) {
+    let refreshError: string | null = null;
+    if (forceRefresh || isStale || healthOnly) {
       try {
         const r = await refreshCacheFromErp(admin, baseUrl);
         refreshed = true;
         console.log(`[erp-search] refreshed cache: ${r.total} items`);
       } catch (e: any) {
-        console.error("[erp-search] refresh failed:", e.message);
+        refreshError = String(e.message);
+        console.error("[erp-search] refresh failed:", refreshError);
         await admin
           .from("erp_full_catalog_meta")
-          .update({ last_error: String(e.message).substring(0, 500) })
+          .update({ last_error: refreshError.substring(0, 500) })
           .eq("id", 1);
-        // Continue with stale cache if available
-        if (!lastSync) throw e;
+        if (!lastSync && !healthOnly) throw e;
       }
+    }
+
+    // Health mode: return sync diagnostics + Faisal vs site comparison
+    if (healthOnly) {
+      const [{ count: faisalTotal }, { count: faisalRetail }, { count: faisalWholesale }, { count: siteTotal }, { count: siteInStock }, { data: metaNow }] = await Promise.all([
+        admin.from("erp_full_catalog_cache").select("*", { count: "exact", head: true }),
+        admin.from("erp_full_catalog_cache").select("*", { count: "exact", head: true }).gt("retail_price", 0),
+        admin.from("erp_full_catalog_cache").select("*", { count: "exact", head: true }).gt("wholesale_price", 0),
+        admin.from("products").select("*", { count: "exact", head: true }),
+        admin.from("products").select("*", { count: "exact", head: true }).gt("stock_quantity", 0),
+        admin.from("erp_full_catalog_meta").select("last_synced_at, total_items, last_error").eq("id", 1).maybeSingle(),
+      ]);
+
+      // Quick recent sync activity
+      const { data: recentSyncs } = await admin
+        .from("erp_sync_logs")
+        .select("sync_type, status, created_at, error_message")
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      return new Response(JSON.stringify({
+        success: true,
+        health: {
+          base_url: baseUrl,
+          refreshed,
+          refresh_error: refreshError,
+          faisal: {
+            total: faisalTotal || 0,
+            with_retail_price: faisalRetail || 0,
+            with_wholesale_price: faisalWholesale || 0,
+          },
+          site: {
+            total: siteTotal || 0,
+            in_stock: siteInStock || 0,
+          },
+          meta: metaNow,
+          recent_syncs: recentSyncs || [],
+        },
+      }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Search via RPC (uses caller's auth context for RLS-style role check)
