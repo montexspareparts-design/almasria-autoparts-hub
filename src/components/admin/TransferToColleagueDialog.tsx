@@ -1,16 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ArrowRightLeft, History, User } from "lucide-react";
+import { Loader2, ArrowRightLeft, History, User, Search, Check, X } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 interface Staff {
   user_id: string;
@@ -45,11 +46,38 @@ export default function TransferToColleagueDialog({
   const [history, setHistory] = useState<TransferRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "moderator" | "reporter">("all");
+
+  const filteredStaff = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return staff.filter((s) => {
+      if (roleFilter !== "all" && s.role !== roleFilter) return false;
+      if (!q) return true;
+      return s.name.toLowerCase().includes(q);
+    });
+  }, [staff, search, roleFilter]);
+
+  const selectedObj = useMemo(
+    () => staff.find((s) => s.user_id === selectedStaff) || null,
+    [staff, selectedStaff]
+  );
+
+  const roleLabel = (r: string) =>
+    r === "admin" ? "أدمن" : r === "reporter" ? "مندوب" : "موظف";
+  const roleBadgeClass = (r: string) =>
+    r === "admin"
+      ? "bg-amber-100 text-amber-800 border-amber-200"
+      : r === "reporter"
+      ? "bg-violet-100 text-violet-800 border-violet-200"
+      : "bg-sky-100 text-sky-800 border-sky-200";
 
   useEffect(() => {
     if (!open || !requestId) return;
     setSelectedStaff("");
     setNote("");
+    setSearch("");
+    setRoleFilter("all");
     fetchData();
   }, [open, requestId]);
 
@@ -166,30 +194,115 @@ export default function TransferToColleagueDialog({
         ) : (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>اختر الزميل</Label>
-              <Select value={selectedStaff} onValueChange={setSelectedStaff}>
-                <SelectTrigger>
-                  <SelectValue placeholder="اختر موظف..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {staff.length === 0 && (
-                    <div className="px-3 py-2 text-sm text-muted-foreground">لا يوجد زملاء آخرون</div>
-                  )}
-                  {staff.map((s) => (
-                    <SelectItem key={s.user_id} value={s.user_id}>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="w-6 h-6">
-                          <AvatarFallback className="text-xs">{s.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <span>{s.name}</span>
-                        <Badge variant="outline" className="text-[10px] h-4">
-                          {s.role === "admin" ? "أدمن" : "موظف"}
-                        </Badge>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center justify-between gap-2">
+                <Label>اختر الزميل</Label>
+                <span className="text-[11px] text-muted-foreground">
+                  {filteredStaff.length} من {staff.length}
+                </span>
+              </div>
+
+              {/* Search input */}
+              <div className="relative">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="ابحث باسم الموظف..."
+                  className="pr-9 pl-9"
+                  dir="rtl"
+                />
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => setSearch("")}
+                    aria-label="مسح البحث"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-muted text-muted-foreground"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Role filter chips */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {([
+                  { v: "all", label: "الكل" },
+                  { v: "admin", label: "أدمن" },
+                  { v: "moderator", label: "موظف" },
+                  { v: "reporter", label: "مندوب" },
+                ] as const).map((opt) => {
+                  const active = roleFilter === opt.v;
+                  const count =
+                    opt.v === "all"
+                      ? staff.length
+                      : staff.filter((s) => s.role === opt.v).length;
+                  return (
+                    <button
+                      key={opt.v}
+                      type="button"
+                      onClick={() => setRoleFilter(opt.v)}
+                      className={cn(
+                        "text-[11px] px-2 py-0.5 rounded-full border transition-colors",
+                        active
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-muted/40 text-muted-foreground border-transparent hover:bg-muted"
+                      )}
+                    >
+                      {opt.label} ({count})
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Staff list */}
+              <ScrollArea className="h-56 rounded-md border bg-background">
+                {filteredStaff.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full py-8 text-center text-sm text-muted-foreground gap-1">
+                    <Search className="w-5 h-5 opacity-50" />
+                    <span>لا يوجد زملاء يطابقون البحث</span>
+                  </div>
+                ) : (
+                  <div className="p-1.5 space-y-0.5">
+                    {filteredStaff.map((s) => {
+                      const active = s.user_id === selectedStaff;
+                      return (
+                        <button
+                          key={s.user_id}
+                          type="button"
+                          onClick={() => setSelectedStaff(s.user_id)}
+                          className={cn(
+                            "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-right transition-colors",
+                            active
+                              ? "bg-primary/10 ring-1 ring-primary/40"
+                              : "hover:bg-muted/60"
+                          )}
+                        >
+                          <Avatar className="w-7 h-7 shrink-0">
+                            <AvatarFallback className="text-xs">
+                              {s.name.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="flex-1 truncate font-medium">{s.name}</span>
+                          <Badge
+                            variant="outline"
+                            className={cn("text-[10px] h-4 shrink-0", roleBadgeClass(s.role))}
+                          >
+                            {roleLabel(s.role)}
+                          </Badge>
+                          {active && <Check className="w-4 h-4 text-primary shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </ScrollArea>
+
+              {selectedObj && (
+                <div className="text-xs text-muted-foreground flex items-center gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                  تم اختيار: <span className="font-semibold text-foreground">{selectedObj.name}</span>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
