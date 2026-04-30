@@ -1684,6 +1684,7 @@ Deno.serve(async (req) => {
       const stockItems: { id: string; qty: number }[] = [];
       const retailItems: { id: string; price: number }[] = [];
       const wholesaleItems: { id: string; wholesalePrice: number }[] = [];
+      const nameItems: { id: string; name: string }[] = [];
 
       // 4) Detect NEW genuine items (qty > threshold AND not in our catalog)
       const newGenuineCandidates: any[] = [];
@@ -1698,10 +1699,11 @@ Deno.serve(async (req) => {
         const name = String(p.name || "").trim();
 
         if (ourCodeSet.has(erpId)) {
-          // Existing -> sync
+          // Existing -> sync stock + prices + name
           stockItems.push({ id: erpId, qty });
           if (retailPrice > 0) retailItems.push({ id: erpId, price: retailPrice });
           if (wholesalePrice > 0) wholesaleItems.push({ id: erpId, wholesalePrice });
+          if (name) nameItems.push({ id: erpId, name });
         } else if (qty > stockThreshold && name) {
           // New candidate: high-stock genuine item not in our catalog
           newGenuineCandidates.push({
