@@ -1838,6 +1838,7 @@ Deno.serve(async (req) => {
           stock_updated: stockUpdated,
           retail_updated: retailUpdated,
           wholesale_updated: wholesaleUpdated,
+          name_updated: nameUpdated,
           stock_disabled: isStockSyncDisabled,
           price_disabled: isPriceSyncDisabled,
         },
