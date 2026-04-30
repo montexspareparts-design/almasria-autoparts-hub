@@ -152,6 +152,9 @@ Deno.serve(async (req) => {
     const query: string = String(body.q ?? body.query ?? "").trim();
     const forceRefresh: boolean = !!body.refresh;
     const healthOnly: boolean = !!body.health;
+    const compareSample: boolean = !!body.compareSample;
+    const sampleSize: number = Math.min(20, Math.max(1, Number(body.sampleSize) || 5));
+    const sampleProductIds: string[] = Array.isArray(body.productIds) ? body.productIds : [];
 
     // Read base URL from erp_config (single source of truth across all ERP edge functions)
     const { data: cfgRow } = await admin
