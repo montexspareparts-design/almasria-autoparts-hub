@@ -88,7 +88,17 @@ export default function AdminShortageRequests() {
         .limit(500),
     ]);
 
-    setPriority((p as any) || []);
+    // ترتيب الأهمية أساساً بعدد الموظفين اللي بلّغوا، وباقي العوامل tiebreakers
+    const sorted = ((p as any[]) || []).slice().sort((a, b) => {
+      const sd = Number(b.unique_staff_count) - Number(a.unique_staff_count);
+      if (sd !== 0) return sd;
+      const cd = Number(b.unique_customers_count) - Number(a.unique_customers_count);
+      if (cd !== 0) return cd;
+      const rd = Number(b.reports_count) - Number(a.reports_count);
+      if (rd !== 0) return rd;
+      return Number(b.total_quantity) - Number(a.total_quantity);
+    });
+    setPriority(sorted as any);
 
     // Resolve staff names via RPC
     const staffIds = Array.from(new Set(((d as any) || []).map((r: any) => r.staff_user_id)));
