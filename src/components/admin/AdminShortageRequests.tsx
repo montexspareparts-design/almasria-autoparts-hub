@@ -207,17 +207,63 @@ export default function AdminShortageRequests() {
             <p className="text-xs text-muted-foreground">الموظفون بلّغوا عن الأصناف دي ومحتاجين توفيرها — مرتّبة بالأهمية</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Select value={String(days)} onValueChange={(v) => setDays(Number(v))}>
-            <SelectTrigger className="w-32 h-9"><SelectValue /></SelectTrigger>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Select value={preset} onValueChange={(v) => applyPreset(v as RangePreset)}>
+            <SelectTrigger className="w-36 h-9"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="7">آخر 7 أيام</SelectItem>
-              <SelectItem value="30">آخر 30 يوم</SelectItem>
-              <SelectItem value="90">آخر 90 يوم</SelectItem>
+              <SelectItem value="7">آخر أسبوع</SelectItem>
+              <SelectItem value="30">آخر شهر</SelectItem>
+              <SelectItem value="90">آخر 3 شهور</SelectItem>
               <SelectItem value="365">آخر سنة</SelectItem>
+              <SelectItem value="custom">📅 فترة مخصصة</SelectItem>
             </SelectContent>
           </Select>
-          <Button size="sm" variant="outline" onClick={fetchAll} className="gap-1.5">
+
+          {preset === "custom" && (
+            <>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-9 gap-1.5 font-normal">
+                    <CalendarIcon className="w-3.5 h-3.5" />
+                    من: {format(fromDate, "dd MMM yyyy", { locale: ar })}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={fromDate}
+                    onSelect={(d) => d && setFromDate(d)}
+                    disabled={(d) => d > toDate || d > new Date()}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-9 gap-1.5 font-normal">
+                    <CalendarIcon className="w-3.5 h-3.5" />
+                    إلى: {format(toDate, "dd MMM yyyy", { locale: ar })}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={toDate}
+                    onSelect={(d) => d && setToDate(d)}
+                    disabled={(d) => d < fromDate || d > new Date()}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </>
+          )}
+
+          <Badge variant="outline" className="text-[11px] h-7 px-2">
+            {Math.max(1, Math.ceil((toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24)))} يوم
+          </Badge>
+          <Button size="sm" variant="outline" onClick={fetchAll} className="gap-1.5 h-9">
             <RefreshCw className="w-3.5 h-3.5" />
             تحديث
           </Button>
