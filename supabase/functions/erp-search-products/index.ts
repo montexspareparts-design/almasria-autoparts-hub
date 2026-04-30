@@ -177,7 +177,7 @@ Deno.serve(async (req) => {
 
     let refreshed = false;
     let refreshError: string | null = null;
-    if (forceRefresh || isStale || healthOnly) {
+    if (forceRefresh || isStale || healthOnly || compareSample) {
       try {
         const r = await refreshCacheFromErp(admin, baseUrl);
         refreshed = true;
