@@ -889,6 +889,8 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminDailyReports /></Suspense>;
       case "reporter-reports":
         return <Suspense fallback={<SectionLoader />}><AdminReporterReports /></Suspense>;
+      case "shortage-requests":
+        return <Suspense fallback={<SectionLoader />}><AdminShortageRequests /></Suspense>;
       case "daily-report-editor":
         return <Suspense fallback={<SectionLoader />}><AdminDailyReportEditor /></Suspense>;
       case "whatsapp-inbox":
