@@ -56,32 +56,28 @@ export default function TransferToColleagueDialog({
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch all staff (admins + moderators) excluding self
+      // Fetch all staff via SECURITY DEFINER RPC (bypasses profiles RLS)
+      const { data: colleagues } = await (supabase as any).rpc("list_staff_colleagues");
       const { data: roles } = await supabase
         .from("user_roles")
         .select("user_id, role")
-        .in("role", ["admin", "moderator"]);
-
-      const ids = [...new Set((roles || []).map((r: any) => r.user_id).filter((id) => id !== user?.id))];
-      if (ids.length > 0) {
-        const { data: profs } = await supabase
-          .from("profiles")
-          .select("user_id, full_name, email")
-          .in("user_id", ids);
-        const profMap = new Map((profs || []).map((p: any) => [p.user_id, p]));
-        const list: Staff[] = ids.map((id) => {
-          const p: any = profMap.get(id);
-          const r: any = (roles || []).find((x: any) => x.user_id === id);
-          return {
-            user_id: id,
-            name: p?.full_name || p?.email || "موظف",
-            role: r?.role || "moderator",
-          };
-        });
-        setStaff(list);
-      } else {
-        setStaff([]);
-      }
+        .in("role", ["admin", "moderator", "reporter"]);
+      const roleMap = new Map<string, string>();
+      (roles || []).forEach((r: any) => {
+        // prefer admin > moderator > reporter when user has multiple
+        const prev = roleMap.get(r.user_id);
+        const rank = (x: string) => (x === "admin" ? 3 : x === "moderator" ? 2 : 1);
+        if (!prev || rank(r.role) > rank(prev)) roleMap.set(r.user_id, r.role);
+      });
+      const list: Staff[] = (colleagues || [])
+        .filter((c: any) => c.user_id !== user?.id)
+        .map((c: any) => ({
+          user_id: c.user_id,
+          name: c.full_name || "موظف",
+          role: roleMap.get(c.user_id) || "moderator",
+        }))
+        .sort((a: Staff, b: Staff) => a.name.localeCompare(b.name, "ar"));
+      setStaff(list);
 
       // Fetch transfer history for this request
       const { data: transfers } = await (supabase as any)
