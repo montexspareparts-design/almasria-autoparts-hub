@@ -31,6 +31,49 @@ const AdminFaisalCatalogHealth = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [data, setData] = useState<HealthData | null>(null);
+  const [fullSyncRunning, setFullSyncRunning] = useState(false);
+  const [fullSyncResult, setFullSyncResult] = useState<{
+    matched: number;
+    changes: number;
+    increases: number;
+    decreases: number;
+    backInStock: number;
+    outOfStock: number;
+    at: string;
+  } | null>(null);
+
+  const runFullStockSync = async () => {
+    setFullSyncRunning(true);
+    setFullSyncResult(null);
+    const t = toast.loading("⚡ جارٍ تشغيل المزامنة الكاملة للمخزون من الفيصل...");
+    try {
+      const { data: res, error } = await supabase.functions.invoke("erp-sync-outbound", {
+        body: { action: "sync_stock", dry_run: false, data: { dry_run: false } },
+      });
+      if (error) throw error;
+      if (res?.success === false) throw new Error(res?.message || "فشل التنفيذ");
+      const result = {
+        matched: res?.matched || 0,
+        changes: res?.changes_count || 0,
+        increases: res?.increases || 0,
+        decreases: res?.decreases || 0,
+        backInStock: res?.back_in_stock || 0,
+        outOfStock: res?.out_of_stock || 0,
+        at: new Date().toISOString(),
+      };
+      setFullSyncResult(result);
+      toast.success(
+        `✅ تمت المزامنة الكاملة — ${result.changes} رصيد تم تحديثه (↑${result.increases} / ↓${result.decreases})`,
+        { id: t, duration: 6000 }
+      );
+      // Refresh health data
+      fetchHealth(false);
+    } catch (e: any) {
+      toast.error("❌ فشل تشغيل المزامنة: " + (e?.message || "خطأ غير معروف"), { id: t });
+    } finally {
+      setFullSyncRunning(false);
+    }
+  };
 
   const fetchHealth = async (forceRefresh = false) => {
     if (forceRefresh) setRefreshing(true); else setLoading(true);
