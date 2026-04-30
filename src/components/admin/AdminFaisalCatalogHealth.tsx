@@ -267,7 +267,7 @@ interface SampleRow {
   erp_item_code: string;
   found_in_erp: boolean;
   erp_name: string | null;
-  stock: { site: number; erp: number | null; diff: number | null; match: boolean };
+  stock: { site: number; erp: number | null; erp_raw?: number | null; safety_stock?: number; diff: number | null; match: boolean; note?: string | null };
   retail_price: { site: number | null; erp: number | null; diff: number | null; match: boolean };
   wholesale_price: { site: number | null; erp: number | null; diff: number | null; match: boolean };
   fetched_at: string | null;
