@@ -396,11 +396,11 @@ export default function StaffShortageRequests() {
                         </>
                       )}
 
-                      {/* قسم 2: أصناف من الفيصل (مش على الموقع) */}
+                      {/* قسم 2: أصناف من كتالوج الفيصل بالكامل */}
                       {erpSuggestions.length > 0 && (
                         <>
                           <div className="px-2 py-1 text-[10px] font-bold text-blue-700 bg-blue-50 rounded sticky top-0 mt-2">
-                            🔵 من كتالوج الفيصل — مش معروض على الموقع ({erpSuggestions.length})
+                            🔵 من كتالوج الفيصل بالكامل ({erpSuggestions.length})
                           </div>
                           {erpSuggestions.map(s => (
                             <button
@@ -415,6 +415,12 @@ export default function StaffShortageRequests() {
                                 <span className={s.qty > 0 ? "text-emerald-600" : "text-rose-600 font-semibold"}>
                                   {s.qty > 0 ? `متاح بالفيصل: ${s.qty}` : "غير متوفر بالفيصل"}
                                 </span>
+                                {s.in_our_system && (
+                                  <>
+                                    <span>•</span>
+                                    <span className="text-emerald-700 font-semibold">موجود كمان على الموقع</span>
+                                  </>
+                                )}
                               </div>
                             </button>
                           ))}
@@ -422,6 +428,8 @@ export default function StaffShortageRequests() {
                       )}
                     </div>
                   </ScrollArea>
+                ) : erpSearchError ? (
+                  <p className="text-xs text-rose-600 text-center py-3">{erpSearchError}</p>
                 ) : search.trim().length >= 2 && !searchingErp ? (
                   <p className="text-xs text-muted-foreground text-center py-3">مفيش نتائج لا في السيستم ولا في الفيصل — جرّب الإدخال اليدوي</p>
                 ) : null}
