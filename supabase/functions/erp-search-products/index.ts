@@ -247,6 +247,20 @@ Deno.serve(async (req) => {
 
       const erpSyncedAt = meta?.last_synced_at ? new Date(meta.last_synced_at).getTime() : 0;
 
+      // Get last SUCCESSFUL real (non-dry-run) stock sync to detect "stale sync" pattern
+      const { data: lastRealSync } = await admin
+        .from("erp_sync_logs")
+        .select("created_at, response")
+        .eq("sync_type", "stock_update")
+        .eq("direction", "inbound")
+        .eq("status", "success")
+        .not("response->updated", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const lastRealSyncAt = lastRealSync?.created_at ? new Date(lastRealSync.created_at).getTime() : 0;
+      const hoursSinceRealSync = lastRealSyncAt > 0 ? Math.round((Date.now() - lastRealSyncAt) / 3_600_000) : null;
+
       const comparison = pool.map((p: any) => {
         const erp = erpMap.get(String(p.erp_item_code)) || null;
         const siteWholesaleRaw = tierMap.get(p.id) ?? null;
