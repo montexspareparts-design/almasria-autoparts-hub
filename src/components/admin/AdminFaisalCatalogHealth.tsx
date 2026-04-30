@@ -279,17 +279,21 @@ const SampleComparisonCard = () => {
   const [rows, setRows] = useState<SampleRow[] | null>(null);
   const [summary, setSummary] = useState<any>(null);
 
-  const runTest = async () => {
+  const runTest = async (apply = false) => {
     setRunning(true);
     try {
       const { data: res, error } = await supabase.functions.invoke("erp-search-products", {
-        body: { compareSample: true, sampleSize },
+        body: { compareSample: true, sampleSize, applyStockSync: apply },
       });
       if (error) throw error;
       if (!res?.success) throw new Error(res?.error || "فشل الاختبار");
       setRows(res.comparison);
       setSummary(res.summary);
-      toast.success(`تم اختبار ${res.summary.sampled} صنف`);
+      if (apply && res.applied) {
+        toast.success(`تم تحديث رصيد ${res.applied.updated} صنف من الفيصل${res.applied.errors ? ` (${res.applied.errors} خطأ)` : ""}`);
+      } else {
+        toast.success(`تم اختبار ${res.summary.sampled} صنف`);
+      }
     } catch (e: any) {
       toast.error(e?.message || "فشل الاختبار");
     } finally {
@@ -325,12 +329,22 @@ const SampleComparisonCard = () => {
             onChange={(e) => setSampleSize(Number(e.target.value))}
             disabled={running}
           >
-            {[5, 10, 15, 20].map((n) => <option key={n} value={n}>{n} أصناف</option>)}
+            {[5, 10, 15, 20, 50].map((n) => <option key={n} value={n}>{n} أصناف</option>)}
           </select>
-          <Button onClick={runTest} disabled={running} size="sm">
+          <Button onClick={() => runTest(false)} disabled={running} size="sm">
             {running ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <RefreshCw className="h-4 w-4 ml-2" />}
             تشغيل الاختبار
           </Button>
+          {summary && summary.stock_mismatches > 0 && (
+            <Button
+              onClick={() => runTest(true)}
+              disabled={running}
+              size="sm"
+              variant="destructive"
+            >
+              طبّق رصيد الفيصل على {summary.stock_mismatches} صنف
+            </Button>
+          )}
         </div>
 
         {summary && (
