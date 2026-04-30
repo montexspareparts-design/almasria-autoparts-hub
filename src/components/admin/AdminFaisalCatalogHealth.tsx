@@ -143,11 +143,110 @@ const AdminFaisalCatalogHealth = () => {
             عرض كامل لأصناف الفيصل (جملة/قطاعي) ومقارنتها بأصناف الموقع
           </p>
         </div>
-        <Button onClick={() => fetchHealth(true)} disabled={refreshing} size="lg">
-          {refreshing ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <RefreshCw className="ml-2 h-4 w-4" />}
-          {refreshing ? "جارٍ المزامنة الآن..." : "مزامنة فورية من الفيصل"}
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button onClick={() => fetchHealth(true)} disabled={refreshing || fullSyncRunning} size="lg" variant="outline">
+            {refreshing ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : <RefreshCw className="ml-2 h-4 w-4" />}
+            {refreshing ? "جارٍ تحديث الكاش..." : "تحديث كاش الفيصل"}
+          </Button>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                disabled={fullSyncRunning || refreshing}
+                size="lg"
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                {fullSyncRunning
+                  ? <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                  : <Zap className="ml-2 h-4 w-4" />}
+                {fullSyncRunning ? "جارٍ التنفيذ الفعلي..." : "مزامنة كاملة فورية للمخزون (بدون معاينة)"}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent dir="rtl">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-red-700 flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5" />
+                  تأكيد المزامنة الكاملة الفورية
+                </AlertDialogTitle>
+                <AlertDialogDescription className="space-y-2 text-right">
+                  <span className="block">
+                    هذا الإجراء سيقوم <strong>فوراً وبدون معاينة (dry-run)</strong> بـ:
+                  </span>
+                  <ul className="list-disc pr-5 space-y-1 text-sm">
+                    <li>سحب رصيد كل صنف من الفيصل ERP مباشرة</li>
+                    <li>الكتابة فوق رصيد المنتجات المعروضة في الموقع</li>
+                    <li>تحديث الأصناف "نفد المخزون / متاح" تلقائياً</li>
+                  </ul>
+                  <span className="block text-amber-700 bg-amber-50 p-2 rounded text-sm mt-2">
+                    ⚠️ التغييرات تتم على قاعدة البيانات الحية ولا يمكن التراجع عنها إلا بمزامنة عكسية لاحقاً.
+                  </span>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={runFullStockSync}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  نعم، نفّذ المزامنة الكاملة الآن
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </div>
+
+      {/* Full sync execution status */}
+      {fullSyncRunning && (
+        <Card className="border-blue-300 bg-blue-50/50">
+          <CardContent className="py-4 flex items-center gap-3">
+            <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+            <div className="text-sm">
+              <div className="font-semibold text-blue-900">⚡ المزامنة الكاملة قيد التنفيذ الآن...</div>
+              <div className="text-blue-700">يتم سحب رصيد كل الأصناف من الفيصل وتحديث الموقع — قد يستغرق دقيقة أو أكثر.</div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {fullSyncResult && !fullSyncRunning && (
+        <Card className="border-emerald-300 bg-emerald-50/50">
+          <CardContent className="py-4">
+            <div className="flex items-center gap-2 mb-2">
+              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+              <div className="font-semibold text-emerald-900">
+                ✅ تمت المزامنة الكاملة بنجاح — {new Date(fullSyncResult.at).toLocaleString("ar-EG")}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-center text-xs">
+              <div className="bg-white rounded p-2">
+                <div className="text-muted-foreground">أصناف متطابقة</div>
+                <div className="text-lg font-bold">{fullSyncResult.matched.toLocaleString("ar-EG")}</div>
+              </div>
+              <div className="bg-white rounded p-2">
+                <div className="text-muted-foreground">إجمالي التغييرات</div>
+                <div className="text-lg font-bold text-blue-600">{fullSyncResult.changes.toLocaleString("ar-EG")}</div>
+              </div>
+              <div className="bg-white rounded p-2">
+                <div className="text-muted-foreground">↑ زيادة رصيد</div>
+                <div className="text-lg font-bold text-emerald-600">{fullSyncResult.increases.toLocaleString("ar-EG")}</div>
+              </div>
+              <div className="bg-white rounded p-2">
+                <div className="text-muted-foreground">↓ نقص رصيد</div>
+                <div className="text-lg font-bold text-orange-600">{fullSyncResult.decreases.toLocaleString("ar-EG")}</div>
+              </div>
+              <div className="bg-white rounded p-2">
+                <div className="text-muted-foreground">رجع متاح / نفد</div>
+                <div className="text-sm font-bold">
+                  <span className="text-emerald-600">+{fullSyncResult.backInStock}</span>
+                  {" / "}
+                  <span className="text-red-600">-{fullSyncResult.outOfStock}</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Status banner */}
       <Card className={isHealthy ? "border-emerald-300 bg-emerald-50/50" : "border-red-300 bg-red-50/50"}>
