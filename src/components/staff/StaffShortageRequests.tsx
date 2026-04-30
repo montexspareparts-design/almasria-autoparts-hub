@@ -250,6 +250,32 @@ export default function StaffShortageRequests() {
     }
   };
 
+  // إعادة طلب صنف مرفوض — يُنشئ بلاغ جديد بنفس بيانات القديم
+  const [resubmittingId, setResubmittingId] = useState<string | null>(null);
+  const handleResubmit = async (row: ShortageRow) => {
+    if (!user) return;
+    setResubmittingId(row.id);
+    const payload: any = {
+      staff_user_id: user.id,
+      requested_quantity: row.requested_quantity,
+      customer_note: row.customer_note,
+    };
+    if (row.product_id) {
+      payload.product_id = row.product_id;
+    } else {
+      payload.manual_sku = row.manual_sku;
+      payload.manual_name = row.manual_name;
+    }
+    const { error } = await supabase.from("stock_shortage_requests" as any).insert(payload);
+    setResubmittingId(null);
+    if (error) {
+      toast({ title: "تعذّر إعادة الطلب", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "✅ تم إعادة الطلب — هيتراجع من جديد" });
+      fetchRows();
+    }
+  };
+
   return (
     <Card className="p-5 space-y-5 bg-gradient-to-br from-background to-muted/30 border-2">
       {/* Header */}
@@ -638,6 +664,22 @@ export default function StaffShortageRequests() {
                                 </AlertDialogFooter>
                               </AlertDialogContent>
                             </AlertDialog>
+                          )}
+                          {row.status === "rejected" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={resubmittingId === row.id}
+                              onClick={() => handleResubmit(row)}
+                              className="h-7 text-[11px] gap-1 border-amber-400 text-amber-700 hover:bg-amber-50 hover:text-amber-800"
+                            >
+                              {resubmittingId === row.id ? (
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                              ) : (
+                                <RefreshCw className="w-3 h-3" />
+                              )}
+                              إعادة طلب
+                            </Button>
                           )}
                         </div>
                       </div>
