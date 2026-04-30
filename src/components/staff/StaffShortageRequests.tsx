@@ -364,7 +364,10 @@ export default function StaffShortageRequests() {
                     <div className="min-w-0">
                       <p className="font-semibold text-sm text-blue-900 truncate">{chosenErp.name}</p>
                       <p className="text-xs text-blue-700 font-mono" dir="ltr">{chosenErp.erp_id}</p>
-                      <p className="text-[11px] text-blue-700 mt-0.5">من الفيصل • رصيد: {chosenErp.qty} • مش معروض على الموقع</p>
+                      <p className="text-[11px] text-blue-700 mt-0.5">
+                        من الفيصل • رصيد: {chosenErp.qty}
+                        {chosenErp.in_our_system ? " • مربوط بصنف موجود على الموقع" : " • غير معروض على الموقع"}
+                      </p>
                     </div>
                     <Button size="sm" variant="ghost" onClick={() => { setChosenErp(null); setSearch(""); }}>تغيير</Button>
                   </div>
