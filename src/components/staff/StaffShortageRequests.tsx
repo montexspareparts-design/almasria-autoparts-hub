@@ -71,6 +71,7 @@ export default function StaffShortageRequests() {
   const [rows, setRows] = useState<ShortageRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<StatusKey | "all">("open");
+  const [todayOnly, setTodayOnly] = useState(false);
 
   // Add dialog state
   const [open, setOpen] = useState(false);
@@ -164,10 +165,18 @@ export default function StaffShortageRequests() {
   const totalRequestedQty = useMemo(() => rows.reduce((s, r) => s + (r.requested_quantity || 0), 0), [rows]);
   const openQty = useMemo(() => rows.filter(r => r.status === "open" || r.status === "sourcing").reduce((s, r) => s + r.requested_quantity, 0), [rows]);
 
+  // فلترة بتاريخ النهاردة (محلياً) لو اتفعّلت
+  const todayKey = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD محلي
+  const isToday = (iso: string) => new Date(iso).toLocaleDateString("en-CA") === todayKey;
+
+  const todayCount = useMemo(() => rows.filter(r => isToday(r.created_at)).length, [rows, todayKey]);
+
   const filtered = useMemo(() => {
-    if (activeTab === "all") return rows;
-    return rows.filter(r => r.status === activeTab);
-  }, [rows, activeTab]);
+    let list = rows;
+    if (todayOnly) list = list.filter(r => isToday(r.created_at));
+    if (activeTab === "all") return list;
+    return list.filter(r => r.status === activeTab);
+  }, [rows, activeTab, todayOnly, todayKey]);
 
   // الأصناف المتوفرة حديثاً (آخر 14 يوم) — تظهر في بانر بارز فوق
   const recentlyFulfilled = useMemo(() => {
@@ -550,6 +559,34 @@ export default function StaffShortageRequests() {
           </ScrollArea>
         </motion.div>
       )}
+
+      {/* Today-only filter toggle */}
+      <div className="flex items-center justify-between gap-2 -mb-1">
+        <button
+          type="button"
+          onClick={() => setTodayOnly(v => !v)}
+          className={cn(
+            "inline-flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full border transition-all",
+            todayOnly
+              ? "bg-primary text-primary-foreground border-primary shadow-sm"
+              : "bg-muted/40 text-muted-foreground border-border hover:bg-muted"
+          )}
+          aria-pressed={todayOnly}
+        >
+          <Clock className="w-3.5 h-3.5" />
+          {todayOnly ? "بلاغات النهاردة فقط" : "اعرض بلاغات النهاردة فقط"}
+          <Badge variant="secondary" className="text-[10px] h-4 px-1.5">{todayCount}</Badge>
+        </button>
+        {todayOnly && (
+          <button
+            type="button"
+            onClick={() => setTodayOnly(false)}
+            className="text-[11px] text-muted-foreground hover:text-foreground underline"
+          >
+            عرض الكل
+          </button>
+        )}
+      </div>
 
       {/* Tabs by status */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
