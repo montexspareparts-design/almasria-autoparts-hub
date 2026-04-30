@@ -77,7 +77,11 @@ export default function StaffShortageRequests() {
   const [mode, setMode] = useState<"catalog" | "manual">("catalog");
   const [search, setSearch] = useState("");
   const [suggestions, setSuggestions] = useState<ProductSuggest[]>([]);
+  const [erpSuggestions, setErpSuggestions] = useState<ErpSuggest[]>([]);
+  const [searchingErp, setSearchingErp] = useState(false);
+  const [erpCacheInfo, setErpCacheInfo] = useState<{ last_synced_at?: string; total_items?: number } | null>(null);
   const [chosen, setChosen] = useState<ProductSuggest | null>(null);
+  const [chosenErp, setChosenErp] = useState<ErpSuggest | null>(null);
   const [manualSku, setManualSku] = useState("");
   const [manualName, setManualName] = useState("");
   const [qty, setQty] = useState(1);
