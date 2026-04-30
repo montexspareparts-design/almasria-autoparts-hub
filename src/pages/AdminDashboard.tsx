@@ -26,6 +26,7 @@ const AdminProductImages = lazy(() => import("@/components/AdminProductImages"))
 const AdminImageVerifier = lazy(() => import("@/components/AdminImageVerifier"));
 const AdminERPSync = lazy(() => import("@/components/AdminERPSync"));
 const AdminERPSyncStatus = lazy(() => import("@/components/AdminERPSyncStatus"));
+const AdminFaisalCatalogHealth = lazy(() => import("@/components/admin/AdminFaisalCatalogHealth"));
 const AdminPushNotifications = lazy(() => import("@/components/AdminPushNotifications"));
 const AdminProducts = lazy(() => import("@/components/AdminProducts"));
 const AdminYearCoverage = lazy(() => import("@/components/admin/AdminYearCoverage"));
@@ -145,6 +146,7 @@ const sidebarGroups: SidebarGroup[] = [
         { id: "push-notifications", label: "إشعارات Push", icon: Bell },
         { id: "notification-phones", label: "أرقام تنبيه الطلبات", icon: Phone },
         { id: "erp-status", label: "حالة مزامنة ERP", icon: Activity },
+        { id: "faisal-health", label: "🩺 صحة كتالوج الفيصل", icon: Database },
         { id: "erp", label: "ربط ERP", icon: Zap },
         { id: "erp-customers", label: "ربط عملاء الفيصل", icon: Users },
         { id: "paymob", label: "إعدادات Paymob", icon: Briefcase },
@@ -867,6 +869,8 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminNotificationPhones /></Suspense>;
       case "erp-status":
         return <Suspense fallback={<SectionLoader />}><AdminERPSyncStatus /></Suspense>;
+      case "faisal-health":
+        return <Suspense fallback={<SectionLoader />}><AdminFaisalCatalogHealth /></Suspense>;
       case "erp":
         return <Suspense fallback={<SectionLoader />}><AdminERPSync /></Suspense>;
       case "erp-customers":
