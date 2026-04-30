@@ -3285,6 +3285,7 @@ export type Database = {
     }
     Functions: {
       bulk_import_products: { Args: { _items: Json }; Returns: Json }
+      bulk_sync_names: { Args: { _items: Json }; Returns: Json }
       bulk_sync_stock: { Args: { _items: Json }; Returns: Json }
       bulk_update_product_prices: { Args: { _items: Json }; Returns: Json }
       bulk_upsert_wholesale_prices: { Args: { _items: Json }; Returns: Json }
