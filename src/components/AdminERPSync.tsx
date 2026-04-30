@@ -2317,93 +2317,113 @@ const AdminERPSync = () => {
                 </Button>
               </div>
 
-              {pricePreview.changes.length === 0 ? (
-                <div className="p-6 rounded-lg bg-muted/50 text-center text-sm text-muted-foreground">
-                  ✅ لا توجد تغييرات أسعار — كل الأصناف المطابقة بنفس السعر بين موقعنا والفيصل
-                </div>
-              ) : (
-                <div className="border rounded-lg overflow-hidden">
-                  <table className="w-full text-xs">
-                    <thead className="bg-muted sticky top-0">
-                      <tr>
-                        <th className="p-2 text-right">كود</th>
-                        <th className="p-2 text-right">الصنف</th>
-                        <th className="p-2 text-right">السعر الحالي</th>
-                        <th className="p-2 text-right">السعر الجديد</th>
-                        <th className="p-2 text-right">الفرق</th>
-                        <th className="p-2 text-right">النسبة</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {pricePreview.changes.map((c, i) => (
-                        <tr key={i} className="border-t hover:bg-muted/30">
-                          <td className="p-2 font-mono">{c.erp_id}</td>
-                          <td className="p-2 max-w-[200px] truncate" title={c.name}>{c.name || "—"}</td>
-                          <td className="p-2 text-muted-foreground line-through">{c.old_price.toLocaleString("ar-EG")}</td>
-                          <td className="p-2 font-bold">{c.new_price.toLocaleString("ar-EG")}</td>
-                          <td className={`p-2 font-medium ${c.delta > 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                            {c.delta > 0 ? "+" : ""}{c.delta.toLocaleString("ar-EG")}
-                          </td>
-                          <td className="p-2">
-                            <Badge variant={Math.abs(c.pct) >= 10 ? "destructive" : "secondary"} className="text-[10px]">
-                              {c.pct > 0 ? "+" : ""}{c.pct}%
-                            </Badge>
-                          </td>
+              {showRetailTable && (
+                filteredRetail.length === 0 ? (
+                  <div className="p-6 rounded-lg bg-muted/50 text-center text-sm text-muted-foreground">
+                    {pricePreview.changes.length === 0
+                      ? "✅ لا توجد تغييرات أسعار قطاعي"
+                      : "🔍 لا توجد نتائج مطابقة للفلتر/البحث في تغييرات القطاعي"}
+                  </div>
+                ) : (
+                  <div className="border rounded-lg overflow-hidden">
+                    <div className="bg-muted/50 p-2 text-xs font-semibold text-foreground">
+                      🛒 تغييرات أسعار القطاعي — {filteredRetail.length} صنف
+                    </div>
+                    <table className="w-full text-xs">
+                      <thead className="bg-muted sticky top-0">
+                        <tr>
+                          <th className="p-2 text-right">كود</th>
+                          <th className="p-2 text-right">الصنف</th>
+                          <th className="p-2 text-right">السعر الحالي</th>
+                          <th className="p-2 text-right">السعر الجديد</th>
+                          <th className="p-2 text-right">الفرق</th>
+                          <th className="p-2 text-right">النسبة</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  {pricePreview.changesCount > pricePreview.changes.length && (
-                    <p className="p-2 text-center text-xs text-muted-foreground bg-muted">
-                      عرض أول {pricePreview.changes.length} من {pricePreview.changesCount} — حمّل CSV للقائمة الكاملة
-                    </p>
-                  )}
-                </div>
+                      </thead>
+                      <tbody>
+                        {filteredRetail.map((c, i) => (
+                          <tr key={i} className="border-t hover:bg-muted/30">
+                            <td className="p-2 font-mono">{c.erp_id}</td>
+                            <td className="p-2 max-w-[200px] truncate" title={c.name}>{c.name || "—"}</td>
+                            <td className="p-2 text-muted-foreground line-through">{c.old_price.toLocaleString("ar-EG")}</td>
+                            <td className="p-2 font-bold">{c.new_price.toLocaleString("ar-EG")}</td>
+                            <td className={`p-2 font-medium ${c.delta > 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                              {c.delta > 0 ? "+" : ""}{c.delta.toLocaleString("ar-EG")}
+                            </td>
+                            <td className="p-2">
+                              <Badge variant={Math.abs(c.pct) >= 10 ? "destructive" : "secondary"} className="text-[10px]">
+                                {c.pct > 0 ? "+" : ""}{c.pct}%
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {!q && priceFilter === "all" && pricePreview.changesCount > pricePreview.changes.length && (
+                      <p className="p-2 text-center text-xs text-muted-foreground bg-muted">
+                        عرض أول {pricePreview.changes.length} من {pricePreview.changesCount} — حمّل CSV للقائمة الكاملة
+                      </p>
+                    )}
+                  </div>
+                )
               )}
 
               {/* Wholesale changes table */}
-              {pricePreview.wholesaleChanges.length > 0 && (
-                <div className="border rounded-lg overflow-hidden border-blue-500/30">
-                  <div className="bg-blue-500/10 p-2 text-xs font-semibold text-foreground">
-                    📋 تغييرات أسعار الجملة (wholesale_tier1) — {pricePreview.wholesaleChangesCount} صنف
+              {showWholesaleTable && pricePreview.wholesaleChanges.length > 0 && (
+                filteredWholesale.length === 0 ? (
+                  <div className="p-6 rounded-lg bg-muted/50 text-center text-sm text-muted-foreground border border-blue-500/30">
+                    🔍 لا توجد نتائج مطابقة للفلتر/البحث في تغييرات الجملة
                   </div>
-                  <table className="w-full text-xs">
-                    <thead className="bg-muted sticky top-0">
-                      <tr>
-                        <th className="p-2 text-right">كود</th>
-                        <th className="p-2 text-right">الصنف</th>
-                        <th className="p-2 text-right">السعر الحالي</th>
-                        <th className="p-2 text-right">السعر الجديد</th>
-                        <th className="p-2 text-right">الفرق</th>
-                        <th className="p-2 text-right">النسبة</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {pricePreview.wholesaleChanges.map((c, i) => (
-                        <tr key={i} className="border-t hover:bg-muted/30">
-                          <td className="p-2 font-mono">{c.erp_id}</td>
-                          <td className="p-2 max-w-[200px] truncate" title={c.name}>{c.name || "—"}</td>
-                          <td className="p-2 text-muted-foreground line-through">{c.old_price.toLocaleString("ar-EG")}</td>
-                          <td className="p-2 font-bold">{c.new_price.toLocaleString("ar-EG")}</td>
-                          <td className={`p-2 font-medium ${c.delta > 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                            {c.delta > 0 ? "+" : ""}{c.delta.toLocaleString("ar-EG")}
-                          </td>
-                          <td className="p-2">
-                            <Badge variant={c.status === "new" ? "default" : (Math.abs(c.pct) >= 10 ? "destructive" : "secondary")} className="text-[10px]">
-                              {c.status === "new" ? "جديد 🆕" : `${c.pct > 0 ? "+" : ""}${c.pct}%`}
-                            </Badge>
-                          </td>
+                ) : (
+                  <div className="border rounded-lg overflow-hidden border-blue-500/30">
+                    <div className="bg-blue-500/10 p-2 text-xs font-semibold text-foreground">
+                      📋 تغييرات أسعار الجملة (wholesale_tier1) — {filteredWholesale.length} صنف
+                    </div>
+                    <table className="w-full text-xs">
+                      <thead className="bg-muted sticky top-0">
+                        <tr>
+                          <th className="p-2 text-right">كود</th>
+                          <th className="p-2 text-right">الصنف</th>
+                          <th className="p-2 text-right">السعر الحالي</th>
+                          <th className="p-2 text-right">السعر الجديد</th>
+                          <th className="p-2 text-right">الفرق</th>
+                          <th className="p-2 text-right">النسبة</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  {pricePreview.wholesaleChangesCount > pricePreview.wholesaleChanges.length && (
-                    <p className="p-2 text-center text-xs text-muted-foreground bg-muted">
-                      عرض أول {pricePreview.wholesaleChanges.length} من {pricePreview.wholesaleChangesCount}
-                    </p>
-                  )}
-                </div>
+                      </thead>
+                      <tbody>
+                        {filteredWholesale.map((c, i) => (
+                          <tr key={i} className="border-t hover:bg-muted/30">
+                            <td className="p-2 font-mono">{c.erp_id}</td>
+                            <td className="p-2 max-w-[200px] truncate" title={c.name}>{c.name || "—"}</td>
+                            <td className="p-2 text-muted-foreground line-through">{c.old_price.toLocaleString("ar-EG")}</td>
+                            <td className="p-2 font-bold">{c.new_price.toLocaleString("ar-EG")}</td>
+                            <td className={`p-2 font-medium ${c.delta > 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                              {c.delta > 0 ? "+" : ""}{c.delta.toLocaleString("ar-EG")}
+                            </td>
+                            <td className="p-2">
+                              <Badge variant={c.status === "new" ? "default" : (Math.abs(c.pct) >= 10 ? "destructive" : "secondary")} className="text-[10px]">
+                                {c.status === "new" ? "جديد 🆕" : `${c.pct > 0 ? "+" : ""}${c.pct}%`}
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {!q && priceFilter === "all" && pricePreview.wholesaleChangesCount > pricePreview.wholesaleChanges.length && (
+                      <p className="p-2 text-center text-xs text-muted-foreground bg-muted">
+                        عرض أول {pricePreview.wholesaleChanges.length} من {pricePreview.wholesaleChangesCount}
+                      </p>
+                    )}
+                  </div>
+                )
               )}
+
+              <p className="text-xs text-muted-foreground text-center">
+                ⏱️ تم التوليد: {new Date(pricePreview.generatedAt).toLocaleString("ar-EG")} — لم يتم كتابة أي شيء بعد
+              </p>
+            </div>
+            );
+          })()}
 
               <p className="text-xs text-muted-foreground text-center">
                 ⏱️ تم التوليد: {new Date(pricePreview.generatedAt).toLocaleString("ar-EG")} — لم يتم كتابة أي شيء بعد
