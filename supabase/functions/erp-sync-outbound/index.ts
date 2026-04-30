@@ -1716,10 +1716,11 @@ Deno.serve(async (req) => {
         }
       }
 
-      // 5) Apply price + stock sync (only when sync is enabled, default true)
+      // 5) Apply price + stock + name sync (only when sync is enabled, default true)
       let stockUpdated = 0;
       let retailUpdated = 0;
       let wholesaleUpdated = 0;
+      let nameUpdated = 0;
 
       if (!isStockSyncDisabled && stockItems.length > 0) {
         const { data: r } = await supabase.rpc("bulk_sync_stock", { _items: stockItems });
@@ -1732,6 +1733,11 @@ Deno.serve(async (req) => {
       if (!isPriceSyncDisabled && wholesaleItems.length > 0) {
         const { data: r } = await supabase.rpc("bulk_upsert_wholesale_prices", { _items: wholesaleItems });
         wholesaleUpdated = r?.updated || 0;
+      }
+      // Names always sync (no toggle) — only updates EXISTING products, never inserts
+      if (nameItems.length > 0) {
+        const { data: r } = await supabase.rpc("bulk_sync_names", { _items: nameItems });
+        nameUpdated = r?.updated || 0;
       }
 
       // 6) Auto-insert new genuine items (active, brand=toyota_genuine)
