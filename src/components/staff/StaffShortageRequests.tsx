@@ -20,7 +20,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Plus, Search, Package, Loader2, AlertTriangle, CheckCircle2, Clock,
-  XCircle, RefreshCw, Trash2, PackageX,
+  XCircle, RefreshCw, Trash2, PackageX, Sparkles, PartyPopper,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -132,6 +132,30 @@ export default function StaffShortageRequests() {
     if (activeTab === "all") return rows;
     return rows.filter(r => r.status === activeTab);
   }, [rows, activeTab]);
+
+  // الأصناف المتوفرة حديثاً (آخر 14 يوم) — تظهر في بانر بارز فوق
+  const recentlyFulfilled = useMemo(() => {
+    const cutoff = Date.now() - 14 * 24 * 60 * 60 * 1000;
+    return rows
+      .filter(r => r.status === "fulfilled" && r.reviewed_at && new Date(r.reviewed_at).getTime() >= cutoff)
+      .sort((a, b) => new Date(b.reviewed_at!).getTime() - new Date(a.reviewed_at!).getTime());
+  }, [rows]);
+
+  // الأصناف المتوفرة الجديدة اللي الموظف لسه ما شافهاش (تتسجل في localStorage)
+  const seenKey = user ? `shortage_seen_fulfilled_${user.id}` : "shortage_seen_fulfilled";
+  const newlyFulfilled = useMemo(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const seen = new Set(JSON.parse(localStorage.getItem(seenKey) || "[]"));
+      return recentlyFulfilled.filter(r => !seen.has(r.id));
+    } catch { return recentlyFulfilled; }
+  }, [recentlyFulfilled, seenKey]);
+
+  const markAllSeen = useCallback(() => {
+    if (typeof window === "undefined") return;
+    const ids = recentlyFulfilled.map(r => r.id);
+    localStorage.setItem(seenKey, JSON.stringify(ids));
+  }, [recentlyFulfilled, seenKey]);
 
   const resetForm = () => {
     setMode("catalog"); setSearch(""); setChosen(null); setSuggestions([]);
@@ -308,6 +332,104 @@ export default function StaffShortageRequests() {
         <StatChip label="كميات مفتوحة" value={openQty} color="from-rose-500 to-red-600" />
       </div>
 
+      {/* 🎉 بانر الأصناف اللي تم توفيرها حديثاً (آخر 14 يوم) — يظهر بشكل بارز فوق التبويبات */}
+      {recentlyFulfilled.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden rounded-2xl border-2 border-emerald-300 bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 p-4 shadow-sm"
+        >
+          {/* Decoration */}
+          <div className="absolute -top-8 -right-8 w-32 h-32 bg-emerald-300/20 rounded-full blur-2xl" />
+          <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-teal-300/20 rounded-full blur-2xl" />
+
+          <div className="relative flex items-start justify-between gap-3 mb-3 flex-wrap">
+            <div className="flex items-center gap-3">
+              <motion.div
+                animate={{ rotate: [0, -10, 10, -10, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3 }}
+                className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-md"
+              >
+                <PartyPopper className="w-5 h-5 text-white" />
+              </motion.div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h4 className="font-bold text-emerald-900">أصناف تم توفيرها على الفيصل</h4>
+                  {newlyFulfilled.length > 0 && (
+                    <motion.span
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ duration: 1.2, repeat: Infinity }}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-bold shadow-sm"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      {newlyFulfilled.length} جديد
+                    </motion.span>
+                  )}
+                </div>
+                <p className="text-[11px] text-emerald-700 mt-0.5">
+                  المزامنة مع الفيصل كل ساعة — اتصل بالعميل وبشّره
+                </p>
+              </div>
+            </div>
+            {newlyFulfilled.length > 0 && (
+              <Button
+                size="sm" variant="outline"
+                onClick={markAllSeen}
+                className="h-7 text-xs border-emerald-300 text-emerald-700 hover:bg-emerald-100"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5 ml-1" />
+                علّم كمشاهد
+              </Button>
+            )}
+          </div>
+
+          <ScrollArea className="relative max-h-[200px]">
+            <div className="space-y-1.5 pr-1">
+              {recentlyFulfilled.slice(0, 10).map((row) => {
+                const isNew = newlyFulfilled.some(n => n.id === row.id);
+                const name = row.product?.name_ar || row.manual_name || "—";
+                const sku = row.product?.sku || row.manual_sku || "—";
+                return (
+                  <motion.div
+                    key={row.id}
+                    initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}
+                    className={cn(
+                      "flex items-center justify-between gap-2 p-2 rounded-lg border bg-white/70 backdrop-blur-sm",
+                      isNew ? "border-emerald-400 ring-2 ring-emerald-200" : "border-emerald-200"
+                    )}
+                  >
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-foreground truncate">{name}</p>
+                        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                          <span dir="ltr" className="font-mono">{sku}</span>
+                          <span>•</span>
+                          <span>كمية: {row.requested_quantity}</span>
+                          {row.customer_note && (<><span>•</span><span className="truncate">{row.customer_note}</span></>)}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      {isNew && (
+                        <Badge className="text-[9px] h-4 px-1.5 bg-rose-500 text-white border-0">جديد</Badge>
+                      )}
+                      <span className="text-[10px] text-emerald-700">
+                        {row.reviewed_at ? new Date(row.reviewed_at).toLocaleDateString("ar-EG", { day: "numeric", month: "short" }) : ""}
+                      </span>
+                    </div>
+                  </motion.div>
+                );
+              })}
+              {recentlyFulfilled.length > 10 && (
+                <p className="text-center text-[11px] text-emerald-700 pt-1">
+                  و{recentlyFulfilled.length - 10} صنف تاني — شوف تبويب "تم التوفير" تحت
+                </p>
+              )}
+            </div>
+          </ScrollArea>
+        </motion.div>
+      )}
+
       {/* Tabs by status */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
         <TabsList className="w-full grid grid-cols-5 h-auto">
@@ -317,10 +439,37 @@ export default function StaffShortageRequests() {
           </TabsTrigger>
           {(["open", "sourcing", "fulfilled", "rejected"] as StatusKey[]).map(k => {
             const M = STATUS_META[k]; const Icon = M.icon;
+            const isFulfilled = k === "fulfilled";
+            const hasNew = isFulfilled && newlyFulfilled.length > 0;
             return (
-              <TabsTrigger key={k} value={k} className="flex-col gap-0.5 py-2">
-                <span className="flex items-center gap-1 text-xs"><Icon className="w-3 h-3" />{M.label}</span>
-                <Badge variant="secondary" className="text-[10px] h-4 px-1.5">{counts[k]}</Badge>
+              <TabsTrigger
+                key={k}
+                value={k}
+                className={cn(
+                  "flex-col gap-0.5 py-2 relative",
+                  isFulfilled && "data-[state=active]:bg-emerald-100 data-[state=active]:text-emerald-900"
+                )}
+              >
+                <span className="flex items-center gap-1 text-xs">
+                  <Icon className={cn("w-3 h-3", isFulfilled && "text-emerald-600")} />
+                  {M.label}
+                </span>
+                <Badge
+                  variant="secondary"
+                  className={cn(
+                    "text-[10px] h-4 px-1.5",
+                    isFulfilled && counts[k] > 0 && "bg-emerald-200 text-emerald-900"
+                  )}
+                >
+                  {counts[k]}
+                </Badge>
+                {hasNew && (
+                  <motion.span
+                    animate={{ scale: [1, 1.3, 1] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                    className="absolute -top-1 -left-1 w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-white"
+                  />
+                )}
               </TabsTrigger>
             );
           })}
