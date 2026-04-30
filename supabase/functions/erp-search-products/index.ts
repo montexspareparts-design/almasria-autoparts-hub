@@ -237,10 +237,17 @@ Deno.serve(async (req) => {
         if (a == null || b == null) return null;
         return round(Number(a) - Number(b));
       };
+      // Tolerance: prices within 1 piaster (0.01 EGP) considered identical (rounding/float noise)
+      const priceMatch = (a: number | null, b: number | null) => {
+        if (a == null && b == null) return true;
+        if (a == null || b == null) return false;
+        return Math.abs(Number(a) - Number(b)) < 0.01;
+      };
 
       const comparison = pool.map((p: any) => {
         const erp = erpMap.get(String(p.erp_item_code)) || null;
-        const siteWholesale = tierMap.get(p.id) ?? null;
+        const siteWholesaleRaw = tierMap.get(p.id) ?? null;
+        const siteWholesale = siteWholesaleRaw != null ? round(siteWholesaleRaw) : null;
         const siteRetail = round(p.base_price);
         const siteStock = Number(p.stock_quantity ?? 0);
         const erpRetail = erp ? round(erp.retail_price) : null;
@@ -255,8 +262,8 @@ Deno.serve(async (req) => {
           found_in_erp: !!erp,
           erp_name: erp?.name || null,
           stock: { site: siteStock, erp: erpStock, diff: erpStock != null ? erpStock - siteStock : null, match: erpStock === siteStock },
-          retail_price: { site: siteRetail, erp: erpRetail, diff: diff(erpRetail, siteRetail), match: erpRetail === siteRetail },
-          wholesale_price: { site: siteWholesale, erp: erpWholesale, diff: diff(erpWholesale, siteWholesale), match: erpWholesale === siteWholesale },
+          retail_price: { site: siteRetail, erp: erpRetail, diff: diff(erpRetail, siteRetail), match: priceMatch(siteRetail, erpRetail) },
+          wholesale_price: { site: siteWholesale, erp: erpWholesale, diff: diff(erpWholesale, siteWholesale), match: priceMatch(siteWholesale, erpWholesale) },
           fetched_at: erp?.fetched_at || null,
         };
       });
