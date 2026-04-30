@@ -46,6 +46,31 @@ export default function TransferToColleagueDialog({
   const [history, setHistory] = useState<TransferRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "moderator" | "reporter">("all");
+
+  const filteredStaff = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return staff.filter((s) => {
+      if (roleFilter !== "all" && s.role !== roleFilter) return false;
+      if (!q) return true;
+      return s.name.toLowerCase().includes(q);
+    });
+  }, [staff, search, roleFilter]);
+
+  const selectedObj = useMemo(
+    () => staff.find((s) => s.user_id === selectedStaff) || null,
+    [staff, selectedStaff]
+  );
+
+  const roleLabel = (r: string) =>
+    r === "admin" ? "أدمن" : r === "reporter" ? "مندوب" : "موظف";
+  const roleBadgeClass = (r: string) =>
+    r === "admin"
+      ? "bg-amber-100 text-amber-800 border-amber-200"
+      : r === "reporter"
+      ? "bg-violet-100 text-violet-800 border-violet-200"
+      : "bg-sky-100 text-sky-800 border-sky-200";
 
   useEffect(() => {
     if (!open || !requestId) return;
