@@ -47,6 +47,17 @@ interface ProductSuggest {
   stock_quantity: number;
 }
 
+// نتيجة بحث من كتالوج الفيصل الكامل (12 ألف صنف)
+interface ErpSuggest {
+  erp_id: string;
+  name: string;
+  qty: number;
+  retail_price: number | null;
+  wholesale_price: number | null;
+  in_our_system: boolean;
+  our_product_id: string | null;
+}
+
 const STATUS_META: Record<StatusKey, { label: string; color: string; icon: typeof Clock }> = {
   open:      { label: "مفتوح",       color: "bg-amber-100 text-amber-700 border-amber-300",    icon: Clock },
   sourcing:  { label: "جارٍ التوفير", color: "bg-sky-100 text-sky-700 border-sky-300",          icon: RefreshCw },
@@ -66,7 +77,11 @@ export default function StaffShortageRequests() {
   const [mode, setMode] = useState<"catalog" | "manual">("catalog");
   const [search, setSearch] = useState("");
   const [suggestions, setSuggestions] = useState<ProductSuggest[]>([]);
+  const [erpSuggestions, setErpSuggestions] = useState<ErpSuggest[]>([]);
+  const [searchingErp, setSearchingErp] = useState(false);
+  const [erpCacheInfo, setErpCacheInfo] = useState<{ last_synced_at?: string; total_items?: number } | null>(null);
   const [chosen, setChosen] = useState<ProductSuggest | null>(null);
+  const [chosenErp, setChosenErp] = useState<ErpSuggest | null>(null);
   const [manualSku, setManualSku] = useState("");
   const [manualName, setManualName] = useState("");
   const [qty, setQty] = useState(1);
@@ -97,15 +112,26 @@ export default function StaffShortageRequests() {
     return () => { supabase.removeChannel(ch); };
   }, [user, fetchRows]);
 
-  // Search products (debounced)
+  // Search products (debounced) — يبحث بالتوازي في:
+  //   1) أصناف السيستم (الـ 422 المعروضين للتجار) عبر RPC
+  //   2) كل أصناف الفيصل (~12 ألف) عبر edge function مع كاش ساعة
   useEffect(() => {
-    if (mode !== "catalog" || search.trim().length < 2) { setSuggestions([]); return; }
+    if (mode !== "catalog" || search.trim().length < 2) {
+      setSuggestions([]); setErpSuggestions([]); setSearchingErp(false);
+      return;
+    }
     const t = setTimeout(async () => {
       const q = search.trim();
-      // البحث في كل الأصناف بالنظام (المتوفرة + النافدة + المعطّلة) عبر RPC SECURITY DEFINER
-      const { data, error } = await supabase.rpc("search_all_products_for_shortage" as any, { _q: q });
-      if (error) {
-        // fallback للبحث المباشر لو حصلت مشكلة
+      setSearchingErp(true);
+
+      // بحث متوازي: السيستم + الفيصل
+      const [systemRes, erpRes] = await Promise.all([
+        supabase.rpc("search_all_products_for_shortage" as any, { _q: q }),
+        supabase.functions.invoke("erp-search-products", { body: { q } }),
+      ]);
+
+      // أصناف السيستم
+      if (systemRes.error) {
         const { data: fb } = await supabase
           .from("products")
           .select("id,sku,name_ar,stock_quantity")
@@ -113,9 +139,19 @@ export default function StaffShortageRequests() {
           .limit(15);
         setSuggestions((fb as any) || []);
       } else {
-        setSuggestions((data as any) || []);
+        setSuggestions((systemRes.data as any) || []);
       }
-    }, 250);
+
+      // أصناف الفيصل — استبعاد اللي موجودين بالفعل في السيستم (لتفادي التكرار)
+      if (erpRes.data?.success) {
+        const all = (erpRes.data.results || []) as ErpSuggest[];
+        setErpSuggestions(all.filter(r => !r.in_our_system));
+        setErpCacheInfo(erpRes.data.cache || null);
+      } else {
+        setErpSuggestions([]);
+      }
+      setSearchingErp(false);
+    }, 350);
     return () => clearTimeout(t);
   }, [search, mode]);
 
@@ -158,14 +194,15 @@ export default function StaffShortageRequests() {
   }, [recentlyFulfilled, seenKey]);
 
   const resetForm = () => {
-    setMode("catalog"); setSearch(""); setChosen(null); setSuggestions([]);
+    setMode("catalog"); setSearch(""); setChosen(null); setChosenErp(null);
+    setSuggestions([]); setErpSuggestions([]);
     setManualSku(""); setManualName(""); setQty(1); setCustomerNote("");
   };
 
   const handleSubmit = async () => {
     if (!user) return;
-    if (mode === "catalog" && !chosen) {
-      toast({ title: "اختر صنف من الكتالوج أولاً", variant: "destructive" });
+    if (mode === "catalog" && !chosen && !chosenErp) {
+      toast({ title: "اختر صنف من الكتالوج أو من الفيصل أولاً", variant: "destructive" });
       return;
     }
     if (mode === "manual" && (!manualSku.trim() || !manualName.trim())) {
@@ -181,7 +218,12 @@ export default function StaffShortageRequests() {
       customer_note: customerNote.trim() || null,
     };
     if (mode === "catalog" && chosen) {
+      // صنف موجود في السيستم
       payload.product_id = chosen.id;
+    } else if (mode === "catalog" && chosenErp) {
+      // صنف من الفيصل (مش موجود في السيستم) — نسجّله كـ manual بكوده واسمه
+      payload.manual_sku = chosenErp.erp_id;
+      payload.manual_name = chosenErp.name;
     } else {
       payload.manual_sku = manualSku.trim();
       payload.manual_name = manualName.trim();
@@ -243,50 +285,103 @@ export default function StaffShortageRequests() {
 
               <TabsContent value="catalog" className="space-y-3 pt-3">
                 <div className="space-y-1.5">
-                  <Label>ابحث بالاسم أو رقم القطعة</Label>
+                  <div className="flex items-center justify-between">
+                    <Label>ابحث في كل أصناف الفيصل (~12 ألف صنف)</Label>
+                    {erpCacheInfo?.total_items ? (
+                      <span className="text-[10px] text-muted-foreground">
+                        كاش: {erpCacheInfo.total_items.toLocaleString("ar-EG")} صنف
+                      </span>
+                    ) : null}
+                  </div>
                   <div className="relative">
                     <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       value={search}
-                      onChange={(e) => { setSearch(e.target.value); setChosen(null); }}
+                      onChange={(e) => { setSearch(e.target.value); setChosen(null); setChosenErp(null); }}
                       placeholder="مثال: فلتر زيت أو 90915..."
                       className="pr-9"
                       dir="rtl"
                     />
+                    {searchingErp && (
+                      <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
+                    )}
                   </div>
                 </div>
+
                 {chosen ? (
                   <div className="border-2 border-emerald-300 bg-emerald-50 rounded-lg p-3 flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="font-semibold text-sm text-emerald-900 truncate">{chosen.name_ar}</p>
                       <p className="text-xs text-emerald-700 font-mono" dir="ltr">{chosen.sku}</p>
-                      <p className="text-[11px] text-emerald-700 mt-0.5">رصيد حالي: {chosen.stock_quantity}</p>
+                      <p className="text-[11px] text-emerald-700 mt-0.5">رصيد حالي: {chosen.stock_quantity} • صنف على الموقع</p>
                     </div>
                     <Button size="sm" variant="ghost" onClick={() => { setChosen(null); setSearch(""); }}>تغيير</Button>
                   </div>
-                ) : suggestions.length > 0 ? (
-                  <ScrollArea className="h-48 border rounded-lg">
+                ) : chosenErp ? (
+                  <div className="border-2 border-blue-300 bg-blue-50 rounded-lg p-3 flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm text-blue-900 truncate">{chosenErp.name}</p>
+                      <p className="text-xs text-blue-700 font-mono" dir="ltr">{chosenErp.erp_id}</p>
+                      <p className="text-[11px] text-blue-700 mt-0.5">من الفيصل • رصيد: {chosenErp.qty} • مش معروض على الموقع</p>
+                    </div>
+                    <Button size="sm" variant="ghost" onClick={() => { setChosenErp(null); setSearch(""); }}>تغيير</Button>
+                  </div>
+                ) : (suggestions.length > 0 || erpSuggestions.length > 0) ? (
+                  <ScrollArea className="h-64 border rounded-lg">
                     <div className="p-1 space-y-1">
-                      {suggestions.map(s => (
-                        <button
-                          key={s.id}
-                          onClick={() => { setChosen(s); setSearch(s.name_ar); setSuggestions([]); }}
-                          className="w-full text-right p-2 rounded hover:bg-muted transition-colors"
-                        >
-                          <p className="text-sm font-medium text-foreground truncate">{s.name_ar}</p>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <span dir="ltr" className="font-mono">{s.sku}</span>
-                            <span>•</span>
-                            <span className={s.stock_quantity > 0 ? "text-emerald-600" : "text-rose-600 font-semibold"}>
-                              {s.stock_quantity > 0 ? `متاح: ${s.stock_quantity}` : "غير متوفر"}
-                            </span>
+                      {/* قسم 1: أصناف معروضة على الموقع */}
+                      {suggestions.length > 0 && (
+                        <>
+                          <div className="px-2 py-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 rounded sticky top-0">
+                            🟢 أصناف معروضة على الموقع ({suggestions.length})
                           </div>
-                        </button>
-                      ))}
+                          {suggestions.map(s => (
+                            <button
+                              key={s.id}
+                              onClick={() => { setChosen(s); setChosenErp(null); setSearch(s.name_ar); setSuggestions([]); setErpSuggestions([]); }}
+                              className="w-full text-right p-2 rounded hover:bg-emerald-50 transition-colors"
+                            >
+                              <p className="text-sm font-medium text-foreground truncate">{s.name_ar}</p>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <span dir="ltr" className="font-mono">{s.sku}</span>
+                                <span>•</span>
+                                <span className={s.stock_quantity > 0 ? "text-emerald-600" : "text-rose-600 font-semibold"}>
+                                  {s.stock_quantity > 0 ? `متاح: ${s.stock_quantity}` : "غير متوفر"}
+                                </span>
+                              </div>
+                            </button>
+                          ))}
+                        </>
+                      )}
+
+                      {/* قسم 2: أصناف من الفيصل (مش على الموقع) */}
+                      {erpSuggestions.length > 0 && (
+                        <>
+                          <div className="px-2 py-1 text-[10px] font-bold text-blue-700 bg-blue-50 rounded sticky top-0 mt-2">
+                            🔵 من كتالوج الفيصل — مش معروض على الموقع ({erpSuggestions.length})
+                          </div>
+                          {erpSuggestions.map(s => (
+                            <button
+                              key={s.erp_id}
+                              onClick={() => { setChosenErp(s); setChosen(null); setSearch(s.name); setSuggestions([]); setErpSuggestions([]); }}
+                              className="w-full text-right p-2 rounded hover:bg-blue-50 transition-colors"
+                            >
+                              <p className="text-sm font-medium text-foreground truncate">{s.name}</p>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <span dir="ltr" className="font-mono">{s.erp_id}</span>
+                                <span>•</span>
+                                <span className={s.qty > 0 ? "text-emerald-600" : "text-rose-600 font-semibold"}>
+                                  {s.qty > 0 ? `متاح بالفيصل: ${s.qty}` : "غير متوفر بالفيصل"}
+                                </span>
+                              </div>
+                            </button>
+                          ))}
+                        </>
+                      )}
                     </div>
                   </ScrollArea>
-                ) : search.trim().length >= 2 ? (
-                  <p className="text-xs text-muted-foreground text-center py-3">مفيش نتائج — جرّب الإدخال اليدوي</p>
+                ) : search.trim().length >= 2 && !searchingErp ? (
+                  <p className="text-xs text-muted-foreground text-center py-3">مفيش نتائج لا في السيستم ولا في الفيصل — جرّب الإدخال اليدوي</p>
                 ) : null}
               </TabsContent>
 

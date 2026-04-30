@@ -1060,6 +1060,54 @@ export type Database = {
         }
         Relationships: []
       }
+      erp_full_catalog_cache: {
+        Row: {
+          erp_id: string
+          fetched_at: string
+          name: string
+          qty: number
+          retail_price: number | null
+          wholesale_price: number | null
+        }
+        Insert: {
+          erp_id: string
+          fetched_at?: string
+          name: string
+          qty?: number
+          retail_price?: number | null
+          wholesale_price?: number | null
+        }
+        Update: {
+          erp_id?: string
+          fetched_at?: string
+          name?: string
+          qty?: number
+          retail_price?: number | null
+          wholesale_price?: number | null
+        }
+        Relationships: []
+      }
+      erp_full_catalog_meta: {
+        Row: {
+          id: number
+          last_error: string | null
+          last_synced_at: string | null
+          total_items: number | null
+        }
+        Insert: {
+          id?: number
+          last_error?: string | null
+          last_synced_at?: string | null
+          total_items?: number | null
+        }
+        Update: {
+          id?: number
+          last_error?: string | null
+          last_synced_at?: string | null
+          total_items?: number | null
+        }
+        Relationships: []
+      }
       erp_sync_alerts: {
         Row: {
           alert_key: string
@@ -3349,6 +3397,19 @@ export type Database = {
           name_ar: string
           sku: string
           stock_quantity: number
+        }[]
+      }
+      search_erp_full_catalog: {
+        Args: { _q: string }
+        Returns: {
+          erp_id: string
+          fetched_at: string
+          in_our_system: boolean
+          name: string
+          our_product_id: string
+          qty: number
+          retail_price: number
+          wholesale_price: number
         }[]
       }
       search_products_by_year: {
