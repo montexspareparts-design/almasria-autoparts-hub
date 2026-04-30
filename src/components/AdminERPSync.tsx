@@ -164,6 +164,11 @@ const AdminERPSync = () => {
   } | null>(null);
   const [showPricePreview, setShowPricePreview] = useState(false);
   const [showStockPreview, setShowStockPreview] = useState(false);
+  // Filters for preview dialogs
+  const [priceSearch, setPriceSearch] = useState("");
+  const [priceFilter, setPriceFilter] = useState<"all" | "increase" | "decrease" | "big" | "wholesale" | "wholesale_new" | "wholesale_inc" | "wholesale_dec">("all");
+  const [stockSearch, setStockSearch] = useState("");
+  const [stockFilter, setStockFilter] = useState<"all" | "increase" | "decrease" | "back" | "out">("all");
   const [importProgress, setImportProgress] = useState<{
     phase: string;
     currentBatch: number;
