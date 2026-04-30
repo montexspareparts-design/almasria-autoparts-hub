@@ -80,6 +80,7 @@ export default function StaffShortageRequests() {
   const [suggestions, setSuggestions] = useState<ProductSuggest[]>([]);
   const [erpSuggestions, setErpSuggestions] = useState<ErpSuggest[]>([]);
   const [searchingErp, setSearchingErp] = useState(false);
+  const [erpSearchError, setErpSearchError] = useState<string | null>(null);
   const [erpCacheInfo, setErpCacheInfo] = useState<{ last_synced_at?: string; total_items?: number } | null>(null);
   const [chosen, setChosen] = useState<ProductSuggest | null>(null);
   const [chosenErp, setChosenErp] = useState<ErpSuggest | null>(null);
@@ -117,13 +118,14 @@ export default function StaffShortageRequests() {
   //   1) أصناف السيستم (الـ 422 المعروضين للتجار) عبر RPC
   //   2) كل أصناف الفيصل (~12 ألف) عبر edge function مع كاش ساعة
   useEffect(() => {
-    if (mode !== "catalog" || search.trim().length < 2) {
-      setSuggestions([]); setErpSuggestions([]); setSearchingErp(false);
+    if (!user || mode !== "catalog" || search.trim().length < 2) {
+      setSuggestions([]); setErpSuggestions([]); setSearchingErp(false); setErpSearchError(null);
       return;
     }
     const t = setTimeout(async () => {
       const q = search.trim();
       setSearchingErp(true);
+      setErpSearchError(null);
 
       // بحث متوازي: السيستم + الفيصل
       const [systemRes, erpRes] = await Promise.all([
@@ -143,18 +145,19 @@ export default function StaffShortageRequests() {
         setSuggestions((systemRes.data as any) || []);
       }
 
-      // أصناف الفيصل — استبعاد اللي موجودين بالفعل في السيستم (لتفادي التكرار)
+      // أصناف الفيصل — نعرض الكتالوج بالكامل للموظف حتى لو الصنف موجود عندنا بالفعل
       if (erpRes.data?.success) {
         const all = (erpRes.data.results || []) as ErpSuggest[];
-        setErpSuggestions(all.filter(r => !r.in_our_system));
+        setErpSuggestions(all);
         setErpCacheInfo(erpRes.data.cache || null);
       } else {
         setErpSuggestions([]);
+        setErpSearchError(erpRes.error?.message || erpRes.data?.error || "تعذر تحميل نتائج كتالوج الفيصل حالياً");
       }
       setSearchingErp(false);
     }, 350);
     return () => clearTimeout(t);
-  }, [search, mode]);
+  }, [search, mode, user]);
 
   const counts = useMemo(() => {
     const c: Record<StatusKey | "all", number> = { all: rows.length, open: 0, sourcing: 0, fulfilled: 0, rejected: 0 };
@@ -230,9 +233,13 @@ export default function StaffShortageRequests() {
       // صنف موجود في السيستم
       payload.product_id = chosen.id;
     } else if (mode === "catalog" && chosenErp) {
-      // صنف من الفيصل (مش موجود في السيستم) — نسجّله كـ manual بكوده واسمه
-      payload.manual_sku = chosenErp.erp_id;
-      payload.manual_name = chosenErp.name;
+      // نتيجة من كتالوج الفيصل: لو مربوطة بصنف داخل النظام نربطها مباشرة، وإلا نسجلها يدوي
+      if (chosenErp.in_our_system && chosenErp.our_product_id) {
+        payload.product_id = chosenErp.our_product_id;
+      } else {
+        payload.manual_sku = chosenErp.erp_id;
+        payload.manual_name = chosenErp.name;
+      }
     } else {
       payload.manual_sku = manualSku.trim();
       payload.manual_name = manualName.trim();
