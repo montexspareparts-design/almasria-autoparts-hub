@@ -146,7 +146,7 @@ const sidebarGroups: SidebarGroup[] = [
         { id: "push-notifications", label: "إشعارات Push", icon: Bell },
         { id: "notification-phones", label: "أرقام تنبيه الطلبات", icon: Phone },
         { id: "erp-status", label: "حالة مزامنة ERP", icon: Activity },
-        { id: "faisal-health", label: "🩺 صحة كتالوج الفيصل", icon: Database },
+        { id: "faisal-health", label: "🩺 صحة كتالوج الفيصل", icon: Activity },
         { id: "erp", label: "ربط ERP", icon: Zap },
         { id: "erp-customers", label: "ربط عملاء الفيصل", icon: Users },
         { id: "paymob", label: "إعدادات Paymob", icon: Briefcase },
