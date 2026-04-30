@@ -88,7 +88,17 @@ export default function AdminShortageRequests() {
         .limit(500),
     ]);
 
-    setPriority((p as any) || []);
+    // ترتيب الأهمية أساساً بعدد الموظفين اللي بلّغوا، وباقي العوامل tiebreakers
+    const sorted = ((p as any[]) || []).slice().sort((a, b) => {
+      const sd = Number(b.unique_staff_count) - Number(a.unique_staff_count);
+      if (sd !== 0) return sd;
+      const cd = Number(b.unique_customers_count) - Number(a.unique_customers_count);
+      if (cd !== 0) return cd;
+      const rd = Number(b.reports_count) - Number(a.reports_count);
+      if (rd !== 0) return rd;
+      return Number(b.total_quantity) - Number(a.total_quantity);
+    });
+    setPriority(sorted as any);
 
     // Resolve staff names via RPC
     const staffIds = Array.from(new Set(((d as any) || []).map((r: any) => r.staff_user_id)));
@@ -215,10 +225,17 @@ export default function AdminShortageRequests() {
             <p className="text-center text-muted-foreground py-10 text-sm">مفيش بلاغات في الفترة دي</p>
           ) : (
             priority.map((row, idx) => {
+              const staffCount = Number(row.unique_staff_count);
               const score = Math.round(Number(row.priority_score));
-              const intensity = Math.min(100, score * 4);
+              const intensity = Math.min(100, staffCount * 20);
+              // تصنيف بصري حسب عدد الموظفين اللي بلّغوا
+              const tier =
+                staffCount >= 5 ? { label: "حرج 🔥", cls: "from-rose-600 to-red-700 text-white", ring: "ring-rose-500/40" } :
+                staffCount >= 3 ? { label: "عالي ⚠️", cls: "from-amber-500 to-orange-600 text-white", ring: "ring-amber-400/40" } :
+                staffCount >= 2 ? { label: "متوسط", cls: "from-yellow-400 to-amber-500 text-amber-950", ring: "ring-yellow-400/30" } :
+                                  { label: "منخفض", cls: "from-slate-200 to-slate-300 text-slate-700 dark:from-slate-700 dark:to-slate-800 dark:text-slate-200", ring: "ring-slate-300/30" };
               return (
-                <div key={row.group_key} className="border rounded-lg p-3 hover:border-primary/40 transition-colors bg-card">
+                <div key={row.group_key} className={cn("border rounded-lg p-3 hover:border-primary/40 transition-colors bg-card ring-1", tier.ring)}>
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 mb-1.5 flex-wrap">
@@ -229,9 +246,12 @@ export default function AdminShortageRequests() {
                         <p className="font-semibold text-sm text-foreground">{row.name_ar || "—"}</p>
                         <span dir="ltr" className="text-xs font-mono text-muted-foreground">{row.sku || "—"}</span>
                         {!row.product_id_text && <Badge variant="outline" className="text-[10px] h-4">يدوي</Badge>}
+                        <Badge className={cn("text-[10px] h-5 bg-gradient-to-br border-0", tier.cls)}>{tier.label}</Badge>
                       </div>
                       <div className="flex items-center gap-3 text-xs flex-wrap">
-                        <span className="flex items-center gap-1"><Users className="w-3 h-3 text-blue-500" /><b>{row.unique_staff_count}</b> موظف</span>
+                        <span className="flex items-center gap-1 font-bold text-blue-600 dark:text-blue-400">
+                          <Users className="w-3.5 h-3.5" />{staffCount} موظف بلّغ
+                        </span>
                         <span>•</span>
                         <span><b>{row.reports_count}</b> بلاغ</span>
                         <span>•</span>
@@ -239,6 +259,7 @@ export default function AdminShortageRequests() {
                         {Number(row.unique_customers_count) > 0 && (
                           <><span>•</span><span><b>{row.unique_customers_count}</b> عميل</span></>
                         )}
+                        <span className="text-muted-foreground">• score: {score}</span>
                       </div>
                       <div className="flex gap-1 mt-2 flex-wrap">
                         {Number(row.open_count) > 0 && <Badge className={STATUS_META.open.color + " text-[10px]"}>مفتوح: {row.open_count}</Badge>}
@@ -248,18 +269,18 @@ export default function AdminShortageRequests() {
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-2 shrink-0">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold tabular-nums bg-gradient-to-br from-rose-600 to-amber-600 bg-clip-text text-transparent">{score}</div>
-                        <div className="text-[10px] text-muted-foreground -mt-1">أهمية</div>
+                      <div className={cn("text-center rounded-lg px-3 py-1.5 bg-gradient-to-br shadow-sm", tier.cls)}>
+                        <div className="text-2xl font-bold tabular-nums leading-none">{staffCount}</div>
+                        <div className="text-[10px] -mt-0.5 opacity-90">موظف</div>
                       </div>
                       <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => openGroupDetails(row)}>
                         <Eye className="w-3 h-3" />التفاصيل
                       </Button>
                     </div>
                   </div>
-                  {/* Intensity bar */}
-                  <div className="mt-2 h-1 rounded-full bg-muted overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-amber-500 to-rose-500 transition-all" style={{ width: `${intensity}%` }} />
+                  {/* شريط شدّة بناءً على عدد الموظفين (5+ = full) */}
+                  <div className="mt-2 h-1 bg-muted rounded-full overflow-hidden">
+                    <div className={cn("h-full bg-gradient-to-r", tier.cls)} style={{ width: `${intensity}%` }} />
                   </div>
                 </div>
               );
