@@ -152,6 +152,9 @@ Deno.serve(async (req) => {
     const query: string = String(body.q ?? body.query ?? "").trim();
     const forceRefresh: boolean = !!body.refresh;
     const healthOnly: boolean = !!body.health;
+    const compareSample: boolean = !!body.compareSample;
+    const sampleSize: number = Math.min(20, Math.max(1, Number(body.sampleSize) || 5));
+    const sampleProductIds: string[] = Array.isArray(body.productIds) ? body.productIds : [];
 
     // Read base URL from erp_config (single source of truth across all ERP edge functions)
     const { data: cfgRow } = await admin
@@ -174,7 +177,7 @@ Deno.serve(async (req) => {
 
     let refreshed = false;
     let refreshError: string | null = null;
-    if (forceRefresh || isStale || healthOnly) {
+    if (forceRefresh || isStale || healthOnly || compareSample) {
       try {
         const r = await refreshCacheFromErp(admin, baseUrl);
         refreshed = true;
@@ -186,8 +189,94 @@ Deno.serve(async (req) => {
           .from("erp_full_catalog_meta")
           .update({ last_error: refreshError.substring(0, 500) })
           .eq("id", 1);
-        if (!lastSync && !healthOnly) throw e;
+        if (!lastSync && !healthOnly && !compareSample) throw e;
       }
+    }
+
+    // Compare sample mode: pick N products from our 422-item catalog and diff against Faisal cache
+    if (compareSample) {
+      let prodQuery = admin
+        .from("products")
+        .select("id, name_ar, sku, erp_item_code, stock_quantity, base_price")
+        .eq("is_active", true)
+        .not("erp_item_code", "is", null);
+
+      if (sampleProductIds.length > 0) {
+        prodQuery = prodQuery.in("id", sampleProductIds);
+      } else {
+        prodQuery = prodQuery.limit(sampleSize);
+      }
+
+      const { data: products, error: prodErr } = await prodQuery;
+      if (prodErr) throw new Error(`Failed to load products: ${prodErr.message}`);
+
+      // Pick random N if no specific IDs were requested
+      let pool = products || [];
+      if (sampleProductIds.length === 0 && pool.length > sampleSize) {
+        pool = [...pool].sort(() => Math.random() - 0.5).slice(0, sampleSize);
+      }
+
+      const erpIds = pool.map((p: any) => String(p.erp_item_code));
+      const { data: erpRows } = await admin
+        .from("erp_full_catalog_cache")
+        .select("erp_id, name, qty, retail_price, wholesale_price, fetched_at")
+        .in("erp_id", erpIds);
+
+      // Pull wholesale tier price from product_tier_prices
+      const { data: tierRows } = await admin
+        .from("product_tier_prices")
+        .select("product_id, tier, price")
+        .in("product_id", pool.map((p: any) => p.id))
+        .eq("tier", "wholesale_tier1");
+
+      const erpMap = new Map((erpRows || []).map((r: any) => [String(r.erp_id), r]));
+      const tierMap = new Map((tierRows || []).map((r: any) => [r.product_id, Number(r.price)]));
+
+      const round = (n: any) => Number.isFinite(Number(n)) ? Math.round(Number(n) * 100) / 100 : null;
+      const diff = (a: any, b: any) => {
+        if (a == null || b == null) return null;
+        return round(Number(a) - Number(b));
+      };
+
+      const comparison = pool.map((p: any) => {
+        const erp = erpMap.get(String(p.erp_item_code)) || null;
+        const siteWholesale = tierMap.get(p.id) ?? null;
+        const siteRetail = round(p.base_price);
+        const siteStock = Number(p.stock_quantity ?? 0);
+        const erpRetail = erp ? round(erp.retail_price) : null;
+        const erpWholesale = erp ? round(erp.wholesale_price) : null;
+        const erpStock = erp ? Number(erp.qty ?? 0) : null;
+
+        return {
+          product_id: p.id,
+          name_ar: p.name_ar,
+          sku: p.sku,
+          erp_item_code: p.erp_item_code,
+          found_in_erp: !!erp,
+          erp_name: erp?.name || null,
+          stock: { site: siteStock, erp: erpStock, diff: erpStock != null ? erpStock - siteStock : null, match: erpStock === siteStock },
+          retail_price: { site: siteRetail, erp: erpRetail, diff: diff(erpRetail, siteRetail), match: erpRetail === siteRetail },
+          wholesale_price: { site: siteWholesale, erp: erpWholesale, diff: diff(erpWholesale, siteWholesale), match: erpWholesale === siteWholesale },
+          fetched_at: erp?.fetched_at || null,
+        };
+      });
+
+      const summary = {
+        sampled: comparison.length,
+        found_in_erp: comparison.filter((c) => c.found_in_erp).length,
+        missing_in_erp: comparison.filter((c) => !c.found_in_erp).length,
+        stock_mismatches: comparison.filter((c) => c.found_in_erp && !c.stock.match).length,
+        retail_price_mismatches: comparison.filter((c) => c.found_in_erp && !c.retail_price.match).length,
+        wholesale_price_mismatches: comparison.filter((c) => c.found_in_erp && !c.wholesale_price.match).length,
+      };
+
+      return new Response(JSON.stringify({
+        success: true,
+        refreshed,
+        refresh_error: refreshError,
+        summary,
+        comparison,
+      }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Health mode: return sync diagnostics + Faisal vs site comparison

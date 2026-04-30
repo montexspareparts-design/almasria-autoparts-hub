@@ -253,7 +253,161 @@ const AdminFaisalCatalogHealth = () => {
           </CardContent>
         </Card>
       )}
+
+      <SampleComparisonCard />
     </div>
+  );
+};
+
+// ============= Sample Comparison (5 random products vs Faisal) =============
+interface SampleRow {
+  product_id: string;
+  name_ar: string;
+  sku: string | null;
+  erp_item_code: string;
+  found_in_erp: boolean;
+  erp_name: string | null;
+  stock: { site: number; erp: number | null; diff: number | null; match: boolean };
+  retail_price: { site: number | null; erp: number | null; diff: number | null; match: boolean };
+  wholesale_price: { site: number | null; erp: number | null; diff: number | null; match: boolean };
+  fetched_at: string | null;
+}
+
+const SampleComparisonCard = () => {
+  const [running, setRunning] = useState(false);
+  const [sampleSize, setSampleSize] = useState(5);
+  const [rows, setRows] = useState<SampleRow[] | null>(null);
+  const [summary, setSummary] = useState<any>(null);
+
+  const runTest = async () => {
+    setRunning(true);
+    try {
+      const { data: res, error } = await supabase.functions.invoke("erp-search-products", {
+        body: { compareSample: true, sampleSize },
+      });
+      if (error) throw error;
+      if (!res?.success) throw new Error(res?.error || "فشل الاختبار");
+      setRows(res.comparison);
+      setSummary(res.summary);
+      toast.success(`تم اختبار ${res.summary.sampled} صنف`);
+    } catch (e: any) {
+      toast.error(e?.message || "فشل الاختبار");
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  const fmtPrice = (n: number | null) => n == null ? "—" : n.toLocaleString("ar-EG", { maximumFractionDigits: 2 });
+  const matchBadge = (match: boolean, hasData: boolean) => {
+    if (!hasData) return <Badge variant="outline" className="text-xs">غير متاح</Badge>;
+    return match
+      ? <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-xs">✓ مطابق</Badge>
+      : <Badge variant="destructive" className="text-xs">✗ مختلف</Badge>;
+  };
+
+  return (
+    <Card className="border-2 border-primary/20">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Boxes className="h-5 w-5 text-primary" />
+          اختبار مزامنة عينة من الأصناف
+        </CardTitle>
+        <p className="text-sm text-muted-foreground mt-1">
+          يختار عينة عشوائية من أصنافنا الـ422 ويقارن (الرصيد + سعر القطاعي + سعر الجملة) مع كتالوج الفيصل المخزن.
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center gap-3 flex-wrap">
+          <label className="text-sm font-medium">حجم العينة:</label>
+          <select
+            className="border rounded-md px-3 py-1.5 text-sm bg-background"
+            value={sampleSize}
+            onChange={(e) => setSampleSize(Number(e.target.value))}
+            disabled={running}
+          >
+            {[5, 10, 15, 20].map((n) => <option key={n} value={n}>{n} أصناف</option>)}
+          </select>
+          <Button onClick={runTest} disabled={running} size="sm">
+            {running ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <RefreshCw className="h-4 w-4 ml-2" />}
+            تشغيل الاختبار
+          </Button>
+        </div>
+
+        {summary && (
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-center">
+            <div className="bg-muted/50 rounded-lg p-2">
+              <div className="text-xs text-muted-foreground">العينة</div>
+              <div className="text-lg font-bold">{summary.sampled}</div>
+            </div>
+            <div className="bg-emerald-50 dark:bg-emerald-950/30 rounded-lg p-2">
+              <div className="text-xs text-muted-foreground">موجود بالفيصل</div>
+              <div className="text-lg font-bold text-emerald-600">{summary.found_in_erp}</div>
+            </div>
+            <div className="bg-red-50 dark:bg-red-950/30 rounded-lg p-2">
+              <div className="text-xs text-muted-foreground">مختلف رصيد</div>
+              <div className="text-lg font-bold text-red-600">{summary.stock_mismatches}</div>
+            </div>
+            <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-2">
+              <div className="text-xs text-muted-foreground">مختلف قطاعي</div>
+              <div className="text-lg font-bold text-amber-600">{summary.retail_price_mismatches}</div>
+            </div>
+            <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-2">
+              <div className="text-xs text-muted-foreground">مختلف جملة</div>
+              <div className="text-lg font-bold text-amber-600">{summary.wholesale_price_mismatches}</div>
+            </div>
+          </div>
+        )}
+
+        {rows && rows.length > 0 && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs border-collapse">
+              <thead className="bg-muted/50">
+                <tr>
+                  <th className="text-right p-2 border">الصنف</th>
+                  <th className="text-center p-2 border">كود الفيصل</th>
+                  <th className="text-center p-2 border" colSpan={3}>الرصيد</th>
+                  <th className="text-center p-2 border" colSpan={3}>سعر القطاعي</th>
+                  <th className="text-center p-2 border" colSpan={3}>سعر الجملة</th>
+                </tr>
+                <tr className="bg-muted/30 text-muted-foreground">
+                  <th className="p-1 border"></th>
+                  <th className="p-1 border"></th>
+                  <th className="p-1 border">عندنا</th>
+                  <th className="p-1 border">الفيصل</th>
+                  <th className="p-1 border">الحالة</th>
+                  <th className="p-1 border">عندنا</th>
+                  <th className="p-1 border">الفيصل</th>
+                  <th className="p-1 border">الحالة</th>
+                  <th className="p-1 border">عندنا</th>
+                  <th className="p-1 border">الفيصل</th>
+                  <th className="p-1 border">الحالة</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r) => (
+                  <tr key={r.product_id} className={!r.found_in_erp ? "bg-red-50/50 dark:bg-red-950/20" : ""}>
+                    <td className="p-2 border">
+                      <div className="font-medium">{r.name_ar}</div>
+                      <div className="text-muted-foreground text-[10px]">{r.sku}</div>
+                    </td>
+                    <td className="text-center p-2 border font-mono">{r.erp_item_code}</td>
+                    <td className="text-center p-2 border">{r.stock.site}</td>
+                    <td className="text-center p-2 border">{r.stock.erp ?? "—"}</td>
+                    <td className="text-center p-2 border">{matchBadge(r.stock.match, r.found_in_erp)}</td>
+                    <td className="text-center p-2 border">{fmtPrice(r.retail_price.site)}</td>
+                    <td className="text-center p-2 border">{fmtPrice(r.retail_price.erp)}</td>
+                    <td className="text-center p-2 border">{matchBadge(r.retail_price.match, r.found_in_erp)}</td>
+                    <td className="text-center p-2 border">{fmtPrice(r.wholesale_price.site)}</td>
+                    <td className="text-center p-2 border">{fmtPrice(r.wholesale_price.erp)}</td>
+                    <td className="text-center p-2 border">{matchBadge(r.wholesale_price.match, r.found_in_erp)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
