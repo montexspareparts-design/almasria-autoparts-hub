@@ -82,16 +82,17 @@ export default function AdminShortageRequests() {
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    const fromDate = new Date();
-    fromDate.setDate(fromDate.getDate() - days);
     const fromStr = fromDate.toISOString().slice(0, 10);
-    const toStr = new Date().toISOString().slice(0, 10);
+    const toStr = toDate.toISOString().slice(0, 10);
+    // include the whole "to" day
+    const toEndStr = new Date(toDate.getTime() + 24 * 3600 * 1000).toISOString().slice(0, 10);
 
     const [{ data: p }, { data: d }] = await Promise.all([
       supabase.rpc("get_shortage_priority_report" as any, { _from: fromStr, _to: toStr }),
       supabase.from("stock_shortage_requests" as any)
         .select("id,staff_user_id,product_id,manual_sku,manual_name,requested_quantity,customer_note,status,admin_response,created_at")
         .gte("created_at", fromStr)
+        .lt("created_at", toEndStr)
         .order("created_at", { ascending: false })
         .limit(500),
     ]);
@@ -108,14 +109,26 @@ export default function AdminShortageRequests() {
     });
     setPriority(sorted as any);
 
-    // Resolve staff names via RPC
-    const staffIds = Array.from(new Set(((d as any) || []).map((r: any) => r.staff_user_id)));
     const { data: colleagues } = await (supabase as any).rpc("list_staff_colleagues");
     const nameMap = new Map<string, string>();
     (colleagues || []).forEach((c: any) => nameMap.set(c.user_id, c.full_name));
     setDetails(((d as any) || []).map((r: any) => ({ ...r, staff_name: nameMap.get(r.staff_user_id) || "موظف" })));
     setLoading(false);
-  }, [days]);
+  }, [fromDate, toDate]);
+
+  // تطبيق preset سريع
+  const applyPreset = (p: RangePreset) => {
+    setPreset(p);
+    if (p === "custom") return;
+    const days = Number(p);
+    const from = new Date();
+    from.setDate(from.getDate() - days);
+    from.setHours(0, 0, 0, 0);
+    const to = new Date();
+    to.setHours(23, 59, 59, 999);
+    setFromDate(from);
+    setToDate(to);
+  };
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
