@@ -1684,6 +1684,7 @@ Deno.serve(async (req) => {
       const stockItems: { id: string; qty: number }[] = [];
       const retailItems: { id: string; price: number }[] = [];
       const wholesaleItems: { id: string; wholesalePrice: number }[] = [];
+      const nameItems: { id: string; name: string }[] = [];
 
       // 4) Detect NEW genuine items (qty > threshold AND not in our catalog)
       const newGenuineCandidates: any[] = [];
@@ -1698,10 +1699,11 @@ Deno.serve(async (req) => {
         const name = String(p.name || "").trim();
 
         if (ourCodeSet.has(erpId)) {
-          // Existing -> sync
+          // Existing -> sync stock + prices + name
           stockItems.push({ id: erpId, qty });
           if (retailPrice > 0) retailItems.push({ id: erpId, price: retailPrice });
           if (wholesalePrice > 0) wholesaleItems.push({ id: erpId, wholesalePrice });
+          if (name) nameItems.push({ id: erpId, name });
         } else if (qty > stockThreshold && name) {
           // New candidate: high-stock genuine item not in our catalog
           newGenuineCandidates.push({
@@ -1714,10 +1716,11 @@ Deno.serve(async (req) => {
         }
       }
 
-      // 5) Apply price + stock sync (only when sync is enabled, default true)
+      // 5) Apply price + stock + name sync (only when sync is enabled, default true)
       let stockUpdated = 0;
       let retailUpdated = 0;
       let wholesaleUpdated = 0;
+      let nameUpdated = 0;
 
       if (!isStockSyncDisabled && stockItems.length > 0) {
         const { data: r } = await supabase.rpc("bulk_sync_stock", { _items: stockItems });
@@ -1730,6 +1733,11 @@ Deno.serve(async (req) => {
       if (!isPriceSyncDisabled && wholesaleItems.length > 0) {
         const { data: r } = await supabase.rpc("bulk_upsert_wholesale_prices", { _items: wholesaleItems });
         wholesaleUpdated = r?.updated || 0;
+      }
+      // Names always sync (no toggle) — only updates EXISTING products, never inserts
+      if (nameItems.length > 0) {
+        const { data: r } = await supabase.rpc("bulk_sync_names", { _items: nameItems });
+        nameUpdated = r?.updated || 0;
       }
 
       // 6) Auto-insert new genuine items (active, brand=toyota_genuine)
@@ -1830,6 +1838,7 @@ Deno.serve(async (req) => {
           stock_updated: stockUpdated,
           retail_updated: retailUpdated,
           wholesale_updated: wholesaleUpdated,
+          name_updated: nameUpdated,
           stock_disabled: isStockSyncDisabled,
           price_disabled: isPriceSyncDisabled,
         },
