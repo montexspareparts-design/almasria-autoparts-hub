@@ -36,6 +36,7 @@ import {
   MoodShoutoutSection,
   performanceScore,
 } from "./ReporterEnhancements";
+import StaffShortageRequests from "./StaffShortageRequests";
 
 const PROBLEM_OPTIONS = [
   { value: "price", label: "السعر" },
