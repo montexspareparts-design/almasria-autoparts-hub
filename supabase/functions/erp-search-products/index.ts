@@ -247,6 +247,20 @@ Deno.serve(async (req) => {
 
       const erpSyncedAt = meta?.last_synced_at ? new Date(meta.last_synced_at).getTime() : 0;
 
+      // Get last SUCCESSFUL real (non-dry-run) stock sync to detect "stale sync" pattern
+      const { data: lastRealSync } = await admin
+        .from("erp_sync_logs")
+        .select("created_at, response")
+        .eq("sync_type", "stock_update")
+        .eq("direction", "inbound")
+        .eq("status", "success")
+        .not("response->updated", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const lastRealSyncAt = lastRealSync?.created_at ? new Date(lastRealSync.created_at).getTime() : 0;
+      const hoursSinceRealSync = lastRealSyncAt > 0 ? Math.round((Date.now() - lastRealSyncAt) / 3_600_000) : null;
+
       const comparison = pool.map((p: any) => {
         const erp = erpMap.get(String(p.erp_item_code)) || null;
         const siteWholesaleRaw = tierMap.get(p.id) ?? null;
@@ -276,9 +290,10 @@ Deno.serve(async (req) => {
           const stale = siteUpdatedAt > 0 && erpSyncedAt > 0 && siteUpdatedAt < erpSyncedAt - 60_000;
           // Heuristics:
           if (siteStock > (erpStockRaw ?? 0)) {
-            // Site has MORE stock than Faisal raw → impossible unless site wasn't decremented after Faisal sales
+            // Site has MORE stock than Faisal raw → Faisal had sales (branch/showroom) not synced back
             reasonCode = "stale_site_stock";
-            reasonText = `رصيد الموقع (${siteStock}) أعلى من الفيصل الخام (${erpStockRaw}) — لم يُحدَّث منذ آخر بيع في الفيصل`;
+            const hoursStr = hoursSinceRealSync != null ? ` (آخر مزامنة فعلية من ${hoursSinceRealSync} ساعة)` : "";
+            reasonText = `الموقع ${siteStock} > الفيصل ${erpStockRaw} — بيع ${siteStock - (erpStockRaw ?? 0)} قطعة في الفرع/المعرض لم تُزامَن${hoursStr}`;
           } else if (safety > 0 && siteStock + safety === erpStockRaw) {
             reasonCode = "safety_stock_applied";
             reasonText = `الفرق = احتياطي الأمان (${safety}) — حساب طبيعي`;
