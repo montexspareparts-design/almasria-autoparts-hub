@@ -20,7 +20,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Plus, Search, Package, Loader2, AlertTriangle, CheckCircle2, Clock,
-  XCircle, RefreshCw, Trash2, PackageX,
+  XCircle, RefreshCw, Trash2, PackageX, Sparkles, PartyPopper,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
