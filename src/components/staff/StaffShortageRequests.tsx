@@ -80,6 +80,7 @@ export default function StaffShortageRequests() {
   const [suggestions, setSuggestions] = useState<ProductSuggest[]>([]);
   const [erpSuggestions, setErpSuggestions] = useState<ErpSuggest[]>([]);
   const [searchingErp, setSearchingErp] = useState(false);
+  const [erpSearchError, setErpSearchError] = useState<string | null>(null);
   const [erpCacheInfo, setErpCacheInfo] = useState<{ last_synced_at?: string; total_items?: number } | null>(null);
   const [chosen, setChosen] = useState<ProductSuggest | null>(null);
   const [chosenErp, setChosenErp] = useState<ErpSuggest | null>(null);
@@ -117,13 +118,14 @@ export default function StaffShortageRequests() {
   //   1) أصناف السيستم (الـ 422 المعروضين للتجار) عبر RPC
   //   2) كل أصناف الفيصل (~12 ألف) عبر edge function مع كاش ساعة
   useEffect(() => {
-    if (mode !== "catalog" || search.trim().length < 2) {
-      setSuggestions([]); setErpSuggestions([]); setSearchingErp(false);
+    if (!user || mode !== "catalog" || search.trim().length < 2) {
+      setSuggestions([]); setErpSuggestions([]); setSearchingErp(false); setErpSearchError(null);
       return;
     }
     const t = setTimeout(async () => {
       const q = search.trim();
       setSearchingErp(true);
+      setErpSearchError(null);
 
       // بحث متوازي: السيستم + الفيصل
       const [systemRes, erpRes] = await Promise.all([
@@ -143,18 +145,19 @@ export default function StaffShortageRequests() {
         setSuggestions((systemRes.data as any) || []);
       }
 
-      // أصناف الفيصل — استبعاد اللي موجودين بالفعل في السيستم (لتفادي التكرار)
+      // أصناف الفيصل — نعرض الكتالوج بالكامل للموظف حتى لو الصنف موجود عندنا بالفعل
       if (erpRes.data?.success) {
         const all = (erpRes.data.results || []) as ErpSuggest[];
-        setErpSuggestions(all.filter(r => !r.in_our_system));
+        setErpSuggestions(all);
         setErpCacheInfo(erpRes.data.cache || null);
       } else {
         setErpSuggestions([]);
+        setErpSearchError(erpRes.error?.message || erpRes.data?.error || "تعذر تحميل نتائج كتالوج الفيصل حالياً");
       }
       setSearchingErp(false);
     }, 350);
     return () => clearTimeout(t);
-  }, [search, mode]);
+  }, [search, mode, user]);
 
   const counts = useMemo(() => {
     const c: Record<StatusKey | "all", number> = { all: rows.length, open: 0, sourcing: 0, fulfilled: 0, rejected: 0 };
@@ -230,9 +233,13 @@ export default function StaffShortageRequests() {
       // صنف موجود في السيستم
       payload.product_id = chosen.id;
     } else if (mode === "catalog" && chosenErp) {
-      // صنف من الفيصل (مش موجود في السيستم) — نسجّله كـ manual بكوده واسمه
-      payload.manual_sku = chosenErp.erp_id;
-      payload.manual_name = chosenErp.name;
+      // نتيجة من كتالوج الفيصل: لو مربوطة بصنف داخل النظام نربطها مباشرة، وإلا نسجلها يدوي
+      if (chosenErp.in_our_system && chosenErp.our_product_id) {
+        payload.product_id = chosenErp.our_product_id;
+      } else {
+        payload.manual_sku = chosenErp.erp_id;
+        payload.manual_name = chosenErp.name;
+      }
     } else {
       payload.manual_sku = manualSku.trim();
       payload.manual_name = manualName.trim();
@@ -357,7 +364,10 @@ export default function StaffShortageRequests() {
                     <div className="min-w-0">
                       <p className="font-semibold text-sm text-blue-900 truncate">{chosenErp.name}</p>
                       <p className="text-xs text-blue-700 font-mono" dir="ltr">{chosenErp.erp_id}</p>
-                      <p className="text-[11px] text-blue-700 mt-0.5">من الفيصل • رصيد: {chosenErp.qty} • مش معروض على الموقع</p>
+                      <p className="text-[11px] text-blue-700 mt-0.5">
+                        من الفيصل • رصيد: {chosenErp.qty}
+                        {chosenErp.in_our_system ? " • مربوط بصنف موجود على الموقع" : " • غير معروض على الموقع"}
+                      </p>
                     </div>
                     <Button size="sm" variant="ghost" onClick={() => { setChosenErp(null); setSearch(""); }}>تغيير</Button>
                   </div>
@@ -389,11 +399,11 @@ export default function StaffShortageRequests() {
                         </>
                       )}
 
-                      {/* قسم 2: أصناف من الفيصل (مش على الموقع) */}
+                      {/* قسم 2: أصناف من كتالوج الفيصل بالكامل */}
                       {erpSuggestions.length > 0 && (
                         <>
                           <div className="px-2 py-1 text-[10px] font-bold text-blue-700 bg-blue-50 rounded sticky top-0 mt-2">
-                            🔵 من كتالوج الفيصل — مش معروض على الموقع ({erpSuggestions.length})
+                            🔵 من كتالوج الفيصل بالكامل ({erpSuggestions.length})
                           </div>
                           {erpSuggestions.map(s => (
                             <button
@@ -408,6 +418,12 @@ export default function StaffShortageRequests() {
                                 <span className={s.qty > 0 ? "text-emerald-600" : "text-rose-600 font-semibold"}>
                                   {s.qty > 0 ? `متاح بالفيصل: ${s.qty}` : "غير متوفر بالفيصل"}
                                 </span>
+                                {s.in_our_system && (
+                                  <>
+                                    <span>•</span>
+                                    <span className="text-emerald-700 font-semibold">موجود كمان على الموقع</span>
+                                  </>
+                                )}
                               </div>
                             </button>
                           ))}
@@ -415,6 +431,8 @@ export default function StaffShortageRequests() {
                       )}
                     </div>
                   </ScrollArea>
+                ) : erpSearchError ? (
+                  <p className="text-xs text-rose-600 text-center py-3">{erpSearchError}</p>
                 ) : search.trim().length >= 2 && !searchingErp ? (
                   <p className="text-xs text-muted-foreground text-center py-3">مفيش نتائج لا في السيستم ولا في الفيصل — جرّب الإدخال اليدوي</p>
                 ) : null}
