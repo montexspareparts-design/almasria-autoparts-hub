@@ -285,50 +285,103 @@ export default function StaffShortageRequests() {
 
               <TabsContent value="catalog" className="space-y-3 pt-3">
                 <div className="space-y-1.5">
-                  <Label>ابحث بالاسم أو رقم القطعة</Label>
+                  <div className="flex items-center justify-between">
+                    <Label>ابحث في كل أصناف الفيصل (~12 ألف صنف)</Label>
+                    {erpCacheInfo?.total_items ? (
+                      <span className="text-[10px] text-muted-foreground">
+                        كاش: {erpCacheInfo.total_items.toLocaleString("ar-EG")} صنف
+                      </span>
+                    ) : null}
+                  </div>
                   <div className="relative">
                     <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       value={search}
-                      onChange={(e) => { setSearch(e.target.value); setChosen(null); }}
+                      onChange={(e) => { setSearch(e.target.value); setChosen(null); setChosenErp(null); }}
                       placeholder="مثال: فلتر زيت أو 90915..."
                       className="pr-9"
                       dir="rtl"
                     />
+                    {searchingErp && (
+                      <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
+                    )}
                   </div>
                 </div>
+
                 {chosen ? (
                   <div className="border-2 border-emerald-300 bg-emerald-50 rounded-lg p-3 flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="font-semibold text-sm text-emerald-900 truncate">{chosen.name_ar}</p>
                       <p className="text-xs text-emerald-700 font-mono" dir="ltr">{chosen.sku}</p>
-                      <p className="text-[11px] text-emerald-700 mt-0.5">رصيد حالي: {chosen.stock_quantity}</p>
+                      <p className="text-[11px] text-emerald-700 mt-0.5">رصيد حالي: {chosen.stock_quantity} • صنف على الموقع</p>
                     </div>
                     <Button size="sm" variant="ghost" onClick={() => { setChosen(null); setSearch(""); }}>تغيير</Button>
                   </div>
-                ) : suggestions.length > 0 ? (
-                  <ScrollArea className="h-48 border rounded-lg">
+                ) : chosenErp ? (
+                  <div className="border-2 border-blue-300 bg-blue-50 rounded-lg p-3 flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm text-blue-900 truncate">{chosenErp.name}</p>
+                      <p className="text-xs text-blue-700 font-mono" dir="ltr">{chosenErp.erp_id}</p>
+                      <p className="text-[11px] text-blue-700 mt-0.5">من الفيصل • رصيد: {chosenErp.qty} • مش معروض على الموقع</p>
+                    </div>
+                    <Button size="sm" variant="ghost" onClick={() => { setChosenErp(null); setSearch(""); }}>تغيير</Button>
+                  </div>
+                ) : (suggestions.length > 0 || erpSuggestions.length > 0) ? (
+                  <ScrollArea className="h-64 border rounded-lg">
                     <div className="p-1 space-y-1">
-                      {suggestions.map(s => (
-                        <button
-                          key={s.id}
-                          onClick={() => { setChosen(s); setSearch(s.name_ar); setSuggestions([]); }}
-                          className="w-full text-right p-2 rounded hover:bg-muted transition-colors"
-                        >
-                          <p className="text-sm font-medium text-foreground truncate">{s.name_ar}</p>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <span dir="ltr" className="font-mono">{s.sku}</span>
-                            <span>•</span>
-                            <span className={s.stock_quantity > 0 ? "text-emerald-600" : "text-rose-600 font-semibold"}>
-                              {s.stock_quantity > 0 ? `متاح: ${s.stock_quantity}` : "غير متوفر"}
-                            </span>
+                      {/* قسم 1: أصناف معروضة على الموقع */}
+                      {suggestions.length > 0 && (
+                        <>
+                          <div className="px-2 py-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 rounded sticky top-0">
+                            🟢 أصناف معروضة على الموقع ({suggestions.length})
                           </div>
-                        </button>
-                      ))}
+                          {suggestions.map(s => (
+                            <button
+                              key={s.id}
+                              onClick={() => { setChosen(s); setChosenErp(null); setSearch(s.name_ar); setSuggestions([]); setErpSuggestions([]); }}
+                              className="w-full text-right p-2 rounded hover:bg-emerald-50 transition-colors"
+                            >
+                              <p className="text-sm font-medium text-foreground truncate">{s.name_ar}</p>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <span dir="ltr" className="font-mono">{s.sku}</span>
+                                <span>•</span>
+                                <span className={s.stock_quantity > 0 ? "text-emerald-600" : "text-rose-600 font-semibold"}>
+                                  {s.stock_quantity > 0 ? `متاح: ${s.stock_quantity}` : "غير متوفر"}
+                                </span>
+                              </div>
+                            </button>
+                          ))}
+                        </>
+                      )}
+
+                      {/* قسم 2: أصناف من الفيصل (مش على الموقع) */}
+                      {erpSuggestions.length > 0 && (
+                        <>
+                          <div className="px-2 py-1 text-[10px] font-bold text-blue-700 bg-blue-50 rounded sticky top-0 mt-2">
+                            🔵 من كتالوج الفيصل — مش معروض على الموقع ({erpSuggestions.length})
+                          </div>
+                          {erpSuggestions.map(s => (
+                            <button
+                              key={s.erp_id}
+                              onClick={() => { setChosenErp(s); setChosen(null); setSearch(s.name); setSuggestions([]); setErpSuggestions([]); }}
+                              className="w-full text-right p-2 rounded hover:bg-blue-50 transition-colors"
+                            >
+                              <p className="text-sm font-medium text-foreground truncate">{s.name}</p>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <span dir="ltr" className="font-mono">{s.erp_id}</span>
+                                <span>•</span>
+                                <span className={s.qty > 0 ? "text-emerald-600" : "text-rose-600 font-semibold"}>
+                                  {s.qty > 0 ? `متاح بالفيصل: ${s.qty}` : "غير متوفر بالفيصل"}
+                                </span>
+                              </div>
+                            </button>
+                          ))}
+                        </>
+                      )}
                     </div>
                   </ScrollArea>
-                ) : search.trim().length >= 2 ? (
-                  <p className="text-xs text-muted-foreground text-center py-3">مفيش نتائج — جرّب الإدخال اليدوي</p>
+                ) : search.trim().length >= 2 && !searchingErp ? (
+                  <p className="text-xs text-muted-foreground text-center py-3">مفيش نتائج لا في السيستم ولا في الفيصل — جرّب الإدخال اليدوي</p>
                 ) : null}
               </TabsContent>
 
