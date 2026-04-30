@@ -2504,6 +2504,65 @@ export type Database = {
           },
         ]
       }
+      stock_shortage_requests: {
+        Row: {
+          admin_response: string | null
+          created_at: string
+          customer_note: string | null
+          customer_user_id: string | null
+          id: string
+          manual_name: string | null
+          manual_sku: string | null
+          product_id: string | null
+          requested_quantity: number
+          reviewed_at: string | null
+          reviewed_by: string | null
+          staff_user_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_response?: string | null
+          created_at?: string
+          customer_note?: string | null
+          customer_user_id?: string | null
+          id?: string
+          manual_name?: string | null
+          manual_sku?: string | null
+          product_id?: string | null
+          requested_quantity?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          staff_user_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_response?: string | null
+          created_at?: string
+          customer_note?: string | null
+          customer_user_id?: string | null
+          id?: string
+          manual_name?: string | null
+          manual_sku?: string | null
+          product_id?: string | null
+          requested_quantity?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          staff_user_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_shortage_requests_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_request_ratings: {
         Row: {
           comment: string | null
@@ -3234,6 +3293,25 @@ export type Database = {
           staff_email: string
           staff_name: string
           user_id: string
+        }[]
+      }
+      get_shortage_priority_report: {
+        Args: { _from?: string; _to?: string }
+        Returns: {
+          fulfilled_count: number
+          group_key: string
+          last_reported_at: string
+          name_ar: string
+          open_count: number
+          priority_score: number
+          product_id_text: string
+          rejected_count: number
+          reports_count: number
+          sku: string
+          sourcing_count: number
+          total_quantity: number
+          unique_customers_count: number
+          unique_staff_count: number
         }[]
       }
       get_staff_auto_metrics: {

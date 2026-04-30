@@ -1,0 +1,409 @@
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Loader2, PackageX, Flame, Users, BarChart3, RefreshCw, Eye, ArrowUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+type StatusKey = "open" | "sourcing" | "fulfilled" | "rejected";
+
+interface PriorityRow {
+  group_key: string;
+  product_id_text: string | null;
+  sku: string | null;
+  name_ar: string | null;
+  reports_count: number;
+  total_quantity: number;
+  unique_staff_count: number;
+  unique_customers_count: number;
+  open_count: number;
+  sourcing_count: number;
+  fulfilled_count: number;
+  rejected_count: number;
+  priority_score: number;
+  last_reported_at: string;
+}
+
+interface DetailRow {
+  id: string;
+  staff_user_id: string;
+  product_id: string | null;
+  manual_sku: string | null;
+  manual_name: string | null;
+  requested_quantity: number;
+  customer_note: string | null;
+  status: StatusKey;
+  admin_response: string | null;
+  created_at: string;
+  staff_name?: string;
+}
+
+const STATUS_META: Record<StatusKey, { label: string; color: string }> = {
+  open:      { label: "مفتوح",       color: "bg-amber-100 text-amber-700 border-amber-300" },
+  sourcing:  { label: "جارٍ التوفير", color: "bg-sky-100 text-sky-700 border-sky-300" },
+  fulfilled: { label: "تم التوفير",  color: "bg-emerald-100 text-emerald-700 border-emerald-300" },
+  rejected:  { label: "مرفوض",       color: "bg-rose-100 text-rose-700 border-rose-300" },
+};
+
+export default function AdminShortageRequests() {
+  const { toast } = useToast();
+  const [priority, setPriority] = useState<PriorityRow[]>([]);
+  const [details, setDetails] = useState<DetailRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [days, setDays] = useState(30);
+  const [statusFilter, setStatusFilter] = useState<StatusKey | "all">("all");
+
+  // Detail dialog
+  const [openGroup, setOpenGroup] = useState<PriorityRow | null>(null);
+  const [groupRows, setGroupRows] = useState<DetailRow[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editStatus, setEditStatus] = useState<StatusKey>("open");
+  const [editResponse, setEditResponse] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const fetchAll = useCallback(async () => {
+    setLoading(true);
+    const fromDate = new Date();
+    fromDate.setDate(fromDate.getDate() - days);
+    const fromStr = fromDate.toISOString().slice(0, 10);
+    const toStr = new Date().toISOString().slice(0, 10);
+
+    const [{ data: p }, { data: d }] = await Promise.all([
+      supabase.rpc("get_shortage_priority_report" as any, { _from: fromStr, _to: toStr }),
+      supabase.from("stock_shortage_requests" as any)
+        .select("id,staff_user_id,product_id,manual_sku,manual_name,requested_quantity,customer_note,status,admin_response,created_at")
+        .gte("created_at", fromStr)
+        .order("created_at", { ascending: false })
+        .limit(500),
+    ]);
+
+    setPriority((p as any) || []);
+
+    // Resolve staff names via RPC
+    const staffIds = Array.from(new Set(((d as any) || []).map((r: any) => r.staff_user_id)));
+    const { data: colleagues } = await (supabase as any).rpc("list_staff_colleagues");
+    const nameMap = new Map<string, string>();
+    (colleagues || []).forEach((c: any) => nameMap.set(c.user_id, c.full_name));
+    setDetails(((d as any) || []).map((r: any) => ({ ...r, staff_name: nameMap.get(r.staff_user_id) || "موظف" })));
+    setLoading(false);
+  }, [days]);
+
+  useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  // Realtime
+  useEffect(() => {
+    const ch = supabase
+      .channel("admin-shortage")
+      .on("postgres_changes", { event: "*", schema: "public", table: "stock_shortage_requests" }, () => fetchAll())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [fetchAll]);
+
+  const filteredDetails = useMemo(() => {
+    if (statusFilter === "all") return details;
+    return details.filter(d => d.status === statusFilter);
+  }, [details, statusFilter]);
+
+  const totals = useMemo(() => ({
+    items: priority.length,
+    reports: priority.reduce((s, r) => s + Number(r.reports_count), 0),
+    qty: priority.reduce((s, r) => s + Number(r.total_quantity), 0),
+    staff: new Set(details.map(d => d.staff_user_id)).size,
+  }), [priority, details]);
+
+  const openGroupDetails = (g: PriorityRow) => {
+    setOpenGroup(g);
+    const matching = details.filter(d => {
+      const k = d.product_id ? d.product_id : `manual:${d.manual_sku || d.manual_name}`;
+      return k === g.group_key || (g.product_id_text && d.product_id === g.product_id_text);
+    });
+    setGroupRows(matching);
+  };
+
+  const startEdit = (r: DetailRow) => {
+    setEditingId(r.id);
+    setEditStatus(r.status);
+    setEditResponse(r.admin_response || "");
+  };
+
+  const saveEdit = async () => {
+    if (!editingId) return;
+    setSaving(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase.from("stock_shortage_requests" as any)
+      .update({
+        status: editStatus,
+        admin_response: editResponse.trim() || null,
+        reviewed_by: user?.id,
+        reviewed_at: new Date().toISOString(),
+      })
+      .eq("id", editingId);
+    setSaving(false);
+    if (error) {
+      toast({ title: "فشل الحفظ", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "✅ تم تحديث الحالة — هيوصل إشعار للموظف" });
+    setEditingId(null);
+    await fetchAll();
+    if (openGroup) {
+      // refresh group rows
+      setTimeout(() => openGroupDetails(openGroup), 300);
+    }
+  };
+
+  return (
+    <Card className="p-5 space-y-5">
+      {/* Header + filters */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-amber-500 flex items-center justify-center shadow">
+            <PackageX className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-foreground">تقرير الأصناف الناقصة</h2>
+            <p className="text-xs text-muted-foreground">الموظفون بلّغوا عن الأصناف دي ومحتاجين توفيرها — مرتّبة بالأهمية</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Select value={String(days)} onValueChange={(v) => setDays(Number(v))}>
+            <SelectTrigger className="w-32 h-9"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">آخر 7 أيام</SelectItem>
+              <SelectItem value="30">آخر 30 يوم</SelectItem>
+              <SelectItem value="90">آخر 90 يوم</SelectItem>
+              <SelectItem value="365">آخر سنة</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button size="sm" variant="outline" onClick={fetchAll} className="gap-1.5">
+            <RefreshCw className="w-3.5 h-3.5" />
+            تحديث
+          </Button>
+        </div>
+      </div>
+
+      {/* KPIs */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <Kpi label="أصناف مطلوبة" value={totals.items} icon={PackageX} color="from-rose-500 to-red-600" />
+        <Kpi label="إجمالي البلاغات" value={totals.reports} icon={BarChart3} color="from-amber-500 to-orange-600" />
+        <Kpi label="إجمالي الكميات" value={totals.qty} icon={ArrowUpDown} color="from-blue-500 to-indigo-600" />
+        <Kpi label="موظفين بلّغوا" value={totals.staff} icon={Users} color="from-emerald-500 to-teal-600" />
+      </div>
+
+      <Tabs defaultValue="priority">
+        <TabsList>
+          <TabsTrigger value="priority" className="gap-1.5"><Flame className="w-4 h-4" />الأهمية</TabsTrigger>
+          <TabsTrigger value="all" className="gap-1.5"><BarChart3 className="w-4 h-4" />كل البلاغات</TabsTrigger>
+        </TabsList>
+
+        {/* Priority Report */}
+        <TabsContent value="priority" className="space-y-2 mt-4">
+          {loading ? (
+            <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+          ) : priority.length === 0 ? (
+            <p className="text-center text-muted-foreground py-10 text-sm">مفيش بلاغات في الفترة دي</p>
+          ) : (
+            priority.map((row, idx) => {
+              const score = Math.round(Number(row.priority_score));
+              const intensity = Math.min(100, score * 4);
+              return (
+                <div key={row.group_key} className="border rounded-lg p-3 hover:border-primary/40 transition-colors bg-card">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                        <span className={cn("w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0",
+                          idx < 3 ? "bg-gradient-to-br from-rose-500 to-amber-500 text-white" : "bg-muted text-muted-foreground")}>
+                          {idx + 1}
+                        </span>
+                        <p className="font-semibold text-sm text-foreground">{row.name_ar || "—"}</p>
+                        <span dir="ltr" className="text-xs font-mono text-muted-foreground">{row.sku || "—"}</span>
+                        {!row.product_id_text && <Badge variant="outline" className="text-[10px] h-4">يدوي</Badge>}
+                      </div>
+                      <div className="flex items-center gap-3 text-xs flex-wrap">
+                        <span className="flex items-center gap-1"><Users className="w-3 h-3 text-blue-500" /><b>{row.unique_staff_count}</b> موظف</span>
+                        <span>•</span>
+                        <span><b>{row.reports_count}</b> بلاغ</span>
+                        <span>•</span>
+                        <span>كمية: <b>{row.total_quantity}</b></span>
+                        {Number(row.unique_customers_count) > 0 && (
+                          <><span>•</span><span><b>{row.unique_customers_count}</b> عميل</span></>
+                        )}
+                      </div>
+                      <div className="flex gap-1 mt-2 flex-wrap">
+                        {Number(row.open_count) > 0 && <Badge className={STATUS_META.open.color + " text-[10px]"}>مفتوح: {row.open_count}</Badge>}
+                        {Number(row.sourcing_count) > 0 && <Badge className={STATUS_META.sourcing.color + " text-[10px]"}>جارٍ: {row.sourcing_count}</Badge>}
+                        {Number(row.fulfilled_count) > 0 && <Badge className={STATUS_META.fulfilled.color + " text-[10px]"}>تم: {row.fulfilled_count}</Badge>}
+                        {Number(row.rejected_count) > 0 && <Badge className={STATUS_META.rejected.color + " text-[10px]"}>مرفوض: {row.rejected_count}</Badge>}
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold tabular-nums bg-gradient-to-br from-rose-600 to-amber-600 bg-clip-text text-transparent">{score}</div>
+                        <div className="text-[10px] text-muted-foreground -mt-1">أهمية</div>
+                      </div>
+                      <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => openGroupDetails(row)}>
+                        <Eye className="w-3 h-3" />التفاصيل
+                      </Button>
+                    </div>
+                  </div>
+                  {/* Intensity bar */}
+                  <div className="mt-2 h-1 rounded-full bg-muted overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-amber-500 to-rose-500 transition-all" style={{ width: `${intensity}%` }} />
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </TabsContent>
+
+        {/* All requests list */}
+        <TabsContent value="all" className="space-y-3 mt-4">
+          <div className="flex items-center gap-2">
+            <Label className="text-sm">حالة:</Label>
+            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+              <SelectTrigger className="w-40 h-8"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">الكل</SelectItem>
+                {(["open", "sourcing", "fulfilled", "rejected"] as StatusKey[]).map(k => (
+                  <SelectItem key={k} value={k}>{STATUS_META[k].label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <span className="text-xs text-muted-foreground">({filteredDetails.length} بلاغ)</span>
+          </div>
+
+          {loading ? (
+            <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+          ) : filteredDetails.length === 0 ? (
+            <p className="text-center text-muted-foreground py-10 text-sm">مفيش بلاغات</p>
+          ) : (
+            <div className="space-y-2">
+              {filteredDetails.map(r => (
+                <DetailCard key={r.id}
+                  row={r}
+                  isEditing={editingId === r.id}
+                  editStatus={editStatus}
+                  editResponse={editResponse}
+                  setEditStatus={setEditStatus}
+                  setEditResponse={setEditResponse}
+                  onStartEdit={() => startEdit(r)}
+                  onCancel={() => setEditingId(null)}
+                  onSave={saveEdit}
+                  saving={saving}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      {/* Group details dialog */}
+      <Dialog open={!!openGroup} onOpenChange={(v) => !v && setOpenGroup(null)}>
+        <DialogContent className="max-w-2xl" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>{openGroup?.name_ar} <span className="text-xs font-mono text-muted-foreground">({openGroup?.sku})</span></DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh]">
+            <div className="space-y-2 p-1">
+              {groupRows.map(r => (
+                <DetailCard key={r.id}
+                  row={r}
+                  isEditing={editingId === r.id}
+                  editStatus={editStatus}
+                  editResponse={editResponse}
+                  setEditStatus={setEditStatus}
+                  setEditResponse={setEditResponse}
+                  onStartEdit={() => startEdit(r)}
+                  onCancel={() => setEditingId(null)}
+                  onSave={saveEdit}
+                  saving={saving}
+                />
+              ))}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+    </Card>
+  );
+}
+
+function Kpi({ label, value, icon: Icon, color }: { label: string; value: number; icon: any; color: string }) {
+  return (
+    <div className={cn("rounded-xl p-3 text-white bg-gradient-to-br shadow-sm", color)}>
+      <div className="flex items-center gap-1.5 text-[11px] opacity-90"><Icon className="w-3.5 h-3.5" />{label}</div>
+      <p className="text-2xl font-bold mt-1 tabular-nums">{value}</p>
+    </div>
+  );
+}
+
+function DetailCard({ row, isEditing, editStatus, editResponse, setEditStatus, setEditResponse, onStartEdit, onCancel, onSave, saving }: any) {
+  const M = STATUS_META[row.status as StatusKey];
+  const name = row.manual_name || "—";
+  const sku = row.manual_sku || "—";
+  return (
+    <div className="border rounded-lg p-3 bg-card">
+      <div className="flex items-start justify-between gap-3 mb-2">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="font-semibold text-sm">{row.staff_name}</p>
+            <span className="text-xs text-muted-foreground">•</span>
+            <span className="text-xs text-muted-foreground">{new Date(row.created_at).toLocaleString("ar-EG", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+          </div>
+          <div className="text-xs text-muted-foreground mt-1 flex gap-2 flex-wrap">
+            <span>كمية: <b className="text-foreground">{row.requested_quantity}</b></span>
+            {row.customer_note && <><span>•</span><span>عميل: {row.customer_note}</span></>}
+          </div>
+        </div>
+        <Badge className={cn("text-[10px]", M.color)}>{M.label}</Badge>
+      </div>
+
+      {isEditing ? (
+        <div className="space-y-2 border-t pt-2">
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <Label className="text-xs">الحالة الجديدة</Label>
+              <Select value={editStatus} onValueChange={(v) => setEditStatus(v as StatusKey)}>
+                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {(["open", "sourcing", "fulfilled", "rejected"] as StatusKey[]).map(k => (
+                    <SelectItem key={k} value={k}>{STATUS_META[k].label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div>
+            <Label className="text-xs">رد الإدارة (اختياري — هيوصل للموظف)</Label>
+            <Textarea value={editResponse} onChange={(e) => setEditResponse(e.target.value)} rows={2} placeholder="مثال: متوقع التوفير خلال أسبوع" />
+          </div>
+          <div className="flex gap-2 justify-end">
+            <Button size="sm" variant="outline" onClick={onCancel}>إلغاء</Button>
+            <Button size="sm" onClick={onSave} disabled={saving} className="gap-1">
+              {saving && <Loader2 className="w-3 h-3 animate-spin" />}حفظ
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex justify-between items-center">
+          {row.admin_response && (
+            <p className="text-xs bg-muted/50 rounded p-2 border-r-2 border-primary flex-1">
+              <b>رد الإدارة:</b> {row.admin_response}
+            </p>
+          )}
+          <Button size="sm" variant="outline" className="h-7 text-xs ms-auto" onClick={onStartEdit}>تغيير الحالة</Button>
+        </div>
+      )}
+    </div>
+  );
+}
