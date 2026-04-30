@@ -76,6 +76,8 @@ export default function TransferToColleagueDialog({
     if (!open || !requestId) return;
     setSelectedStaff("");
     setNote("");
+    setSearch("");
+    setRoleFilter("all");
     fetchData();
   }, [open, requestId]);
 
