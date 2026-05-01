@@ -2514,6 +2514,36 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_task_handling: {
+        Row: {
+          action: string
+          created_at: string
+          handled_date: string
+          id: string
+          staff_name: string | null
+          staff_user_id: string
+          task_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          handled_date?: string
+          id?: string
+          staff_name?: string | null
+          staff_user_id: string
+          task_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          handled_date?: string
+          id?: string
+          staff_name?: string | null
+          staff_user_id?: string
+          task_id?: string
+        }
+        Relationships: []
+      }
       stock_alerts: {
         Row: {
           alert_type: string
