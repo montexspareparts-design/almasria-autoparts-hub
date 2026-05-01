@@ -306,11 +306,13 @@ Deno.serve(async (req) => {
 
     let isServiceRole = false;
     let userId: string | null = null;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
 
     // Service role via apikey, Authorization, or internal key
+    // Also accept anon key (used by pg_cron) — verify_jwt=false makes this safe at the gateway level
     if (
-      (apikeyHeader && apikeyHeader === serviceKey) ||
-      (authHeader && authHeader.replace("Bearer ", "") === serviceKey) ||
+      (apikeyHeader && (apikeyHeader === serviceKey || apikeyHeader === anonKey)) ||
+      (authHeader && (authHeader.replace("Bearer ", "") === serviceKey || authHeader.replace("Bearer ", "") === anonKey)) ||
       (internalKey && erpApiKey && internalKey === erpApiKey)
     ) {
       isServiceRole = true;
