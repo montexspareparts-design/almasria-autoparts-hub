@@ -2462,6 +2462,9 @@ const AdminCustomerIntelligence = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
                           {group.items.map((task) => {
                   const isDone = completedTasks.has(task.id);
+                  const handledRec = handledMeta[task.id];
+                  const handledByOther = !!handledRec && handledRec.by !== user?.id;
+                  const handledByMe = !!handledRec && handledRec.by === user?.id;
                   const phoneDigits = task.phone?.replace(/\D/g, "") || "";
                   const waNumber = phoneDigits.startsWith("0") ? "20" + phoneDigits.slice(1) : phoneDigits;
                   const priorityColor =
@@ -2477,23 +2480,25 @@ const AdminCustomerIntelligence = () => {
                     <div
                       key={task.id}
                       className={cn(
-                        "rounded-xl border p-3 transition-all flex flex-col gap-2 hover:shadow-md",
+                        "rounded-xl border p-3 transition-all flex flex-col gap-2 hover:shadow-md relative",
                         isDone
                           ? "border-emerald-200/40 bg-emerald-50/20 dark:bg-emerald-950/5 opacity-40 hover:opacity-60 grayscale-[0.5]"
+                          : handledByOther
+                          ? "border-amber-300/70 bg-amber-50/40 dark:bg-amber-950/15 dark:border-amber-700/50 opacity-55 hover:opacity-90 grayscale-[0.4]"
                           : priorityColor
                       )}
                     >
                       <div className="flex items-start gap-2">
-                        <span className={cn("text-lg leading-none", isDone && "grayscale opacity-50")}>{task.icon}</span>
+                        <span className={cn("text-lg leading-none", (isDone || handledByOther) && "grayscale opacity-50")}>{task.icon}</span>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap mb-1">
-                            <span className={cn("text-[9px] font-black px-1.5 py-0.5 rounded", priorityBadge, isDone && "opacity-60")}>
+                            <span className={cn("text-[9px] font-black px-1.5 py-0.5 rounded", priorityBadge, (isDone || handledByOther) && "opacity-60")}>
                               {priorityLabel}
                             </span>
                             <span className={cn(
                               "text-[9px] font-bold px-1.5 py-0.5 rounded",
                               task.isDealer ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" : "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
-                              isDone && "opacity-60"
+                              (isDone || handledByOther) && "opacity-60"
                             )}>
                               {task.isDealer ? "تاجر" : "قطاعي"}
                             </span>
@@ -2505,7 +2510,7 @@ const AdminCustomerIntelligence = () => {
                                 : task.score >= weightsTotal * 0.50 ? "bg-orange-500/20 text-orange-700 dark:text-orange-400"
                                 : task.score >= weightsTotal * 0.30 ? "bg-amber-500/20 text-amber-700 dark:text-amber-400"
                                 : "bg-muted text-muted-foreground",
-                                isDone && "opacity-60"
+                                (isDone || handledByOther) && "opacity-60"
                               )}
                               title={`درجة الأولوية: ${task.score}/${weightsTotal}\n• إنذارات: ${task.scoreBreakdown.alerts}/${priorityWeights.alerts}\n• حداثة النشاط: ${task.scoreBreakdown.recency}/${priorityWeights.recency}\n• إمكانية الشراء: ${task.scoreBreakdown.buyability}/${priorityWeights.buyability}`}
                             >
@@ -2528,8 +2533,8 @@ const AdminCustomerIntelligence = () => {
                                 {outcomeMeta[callOutcomes[task.id]].label}
                               </span>
                             )}
-                            {handledMeta[task.id] && (() => {
-                              const h = handledMeta[task.id];
+                            {handledRec && (() => {
+                              const h = handledRec;
                               const mine = h.by === user?.id;
                               const actionLabel = h.action === "call" ? "اتصل" : h.action === "whatsapp" ? "راسل واتساب" : h.action === "note" ? "أضاف ملاحظة" : h.action === "outcome" ? "سجّل نتيجة" : "تعامل";
                               const mins = Math.max(0, Math.floor((Date.now() - new Date(h.at).getTime()) / 60000));
@@ -2549,18 +2554,29 @@ const AdminCustomerIntelligence = () => {
                               );
                             })()}
                           </div>
-                          <p className={cn("text-xs font-black text-foreground", isDone && "line-through text-muted-foreground")}>{task.title}</p>
-                          <p className={cn("text-[10px] text-muted-foreground mt-0.5 line-clamp-2", isDone && "opacity-70")}>{task.reason}</p>
-                          {handledMeta[task.id] && handledMeta[task.id].by !== user?.id && (
-                            <div className="mt-1 rounded-md bg-amber-500/10 border border-amber-400/40 px-2 py-1 flex items-center gap-1.5">
-                              <span className="text-amber-600 text-sm leading-none">⚠️</span>
-                              <span className="text-[10px] font-bold text-amber-800 dark:text-amber-300 flex-1">
-                                {handledMeta[task.id].byName || "موظف آخر"} بدأ يتعامل مع العميل ده — تجنب التكرار
-                              </span>
-                            </div>
-                          )}
+                          <p className={cn("text-xs font-black text-foreground", isDone && "line-through text-muted-foreground", handledByOther && "text-muted-foreground")}>{task.title}</p>
+                          <p className={cn("text-[10px] text-muted-foreground mt-0.5 line-clamp-2", (isDone || handledByOther) && "opacity-70")}>{task.reason}</p>
+                          {handledByOther && (() => {
+                            const h = handledRec!;
+                            const actionLabel = h.action === "call" ? "📞 اتصل" : h.action === "whatsapp" ? "💬 راسل واتساب" : h.action === "note" ? "📝 أضاف ملاحظة" : h.action === "outcome" ? "🎯 سجّل نتيجة" : "✋ تعامل";
+                            const mins = Math.max(0, Math.floor((Date.now() - new Date(h.at).getTime()) / 60000));
+                            const ago = mins < 1 ? "الآن" : mins < 60 ? `منذ ${mins}د` : mins < 1440 ? `منذ ${Math.floor(mins/60)}س` : `منذ ${Math.floor(mins/1440)}ي`;
+                            return (
+                              <div className="mt-2 rounded-lg bg-amber-500/15 border-2 border-amber-400/60 px-2.5 py-1.5 flex items-start gap-2 opacity-100">
+                                <span className="text-amber-600 text-base leading-none mt-0.5">⚠️</span>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-[11px] font-black text-amber-900 dark:text-amber-200 leading-tight">
+                                    {h.byName || "موظف آخر"} شغال على ده
+                                  </div>
+                                  <div className="text-[10px] font-semibold text-amber-800 dark:text-amber-300 mt-0.5">
+                                    {actionLabel} • {ago}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })()}
                           <p
-                            className={cn("text-[11px] font-bold text-primary mt-1 truncate max-w-full text-right", isDone && "opacity-70")}
+                            className={cn("text-[11px] font-bold text-primary mt-1 truncate max-w-full text-right", (isDone || handledByOther) && "opacity-70")}
                             title={task.userName}
                           >
                             {task.userName}
