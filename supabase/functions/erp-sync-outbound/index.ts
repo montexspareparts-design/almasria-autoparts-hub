@@ -1664,6 +1664,23 @@ Deno.serve(async (req) => {
       const stockThreshold = Number(data?.stock_threshold ?? 10);
       const startedAt = new Date().toISOString();
 
+      // === 0) IMMEDIATE log entry (status='running') ===
+      // Insert a tracking row up-front so we can see the function actually started
+      // even if it later times out, crashes, or is killed by the runtime.
+      let runningLogId: string | null = null;
+      try {
+        const { data: logRow } = await supabase.from("erp_sync_logs").insert({
+          sync_type: syncType,
+          direction: "inbound",
+          payload: { action, threshold: stockThreshold, phase: "started" },
+          response: { started_at: startedAt, request_id: reqId },
+          status: "running",
+        }).select("id").maybeSingle();
+        runningLogId = logRow?.id || null;
+      } catch (logErr) {
+        console.warn("[auto_sync_full] failed to insert running log:", logErr);
+      }
+
       // 1) Fetch ERP products once
       const productsRes = await erpFetch(baseUrl, "/Ecommerce/products", {}, reqId);
       const erpProducts = Array.isArray(productsRes) ? productsRes : (productsRes.data || productsRes.items || []);
@@ -1680,13 +1697,11 @@ Deno.serve(async (req) => {
         if (p.erp_item_code) ourCodeSet.add(String(p.erp_item_code).trim());
       });
 
-      // 3) Build sync arrays for matched items
+      // 3) Build sync arrays for matched items + collect candidates for background discovery
       const stockItems: { id: string; qty: number }[] = [];
       const retailItems: { id: string; price: number }[] = [];
       const wholesaleItems: { id: string; wholesalePrice: number }[] = [];
       const nameItems: { id: string; name: string }[] = [];
-
-      // 4) Detect NEW genuine items (qty > threshold AND not in our catalog)
       const newGenuineCandidates: any[] = [];
 
       for (const p of erpProducts) {
@@ -1699,13 +1714,11 @@ Deno.serve(async (req) => {
         const name = String(p.name || "").trim();
 
         if (ourCodeSet.has(erpId)) {
-          // Existing -> sync stock + prices + name
           stockItems.push({ id: erpId, qty });
           if (retailPrice > 0) retailItems.push({ id: erpId, price: retailPrice });
           if (wholesalePrice > 0) wholesaleItems.push({ id: erpId, wholesalePrice });
           if (name) nameItems.push({ id: erpId, name });
         } else if (qty > stockThreshold && name) {
-          // New candidate: high-stock genuine item not in our catalog
           newGenuineCandidates.push({
             erp_id: erpId,
             name,
@@ -1716,7 +1729,7 @@ Deno.serve(async (req) => {
         }
       }
 
-      // 5) Apply price + stock + name sync (only when sync is enabled, default true)
+      // 4) Apply price + stock + name sync (the FAST path — only ~422 active items)
       let stockUpdated = 0;
       let retailUpdated = 0;
       let wholesaleUpdated = 0;
@@ -1734,98 +1747,9 @@ Deno.serve(async (req) => {
         const { data: r } = await supabase.rpc("bulk_upsert_wholesale_prices", { _items: wholesaleItems });
         wholesaleUpdated = r?.updated || 0;
       }
-      // Names always sync (no toggle) — only updates EXISTING products, never inserts
       if (nameItems.length > 0) {
         const { data: r } = await supabase.rpc("bulk_sync_names", { _items: nameItems });
         nameUpdated = r?.updated || 0;
-      }
-
-      // 6) Auto-insert new genuine items (active, brand=toyota_genuine)
-      let newItemsAdded = 0;
-      const addedSamples: any[] = [];
-      const failedToAdd: any[] = [];
-
-      for (const cand of newGenuineCandidates) {
-        const sku = cand.erp_id;
-        // Skip if SKU collision with existing inactive product
-        const { data: existing } = await supabase
-          .from("products")
-          .select("id, is_active")
-          .or(`sku.eq.${sku},erp_item_code.eq.${cand.erp_id}`)
-          .maybeSingle();
-
-        if (existing) {
-          // Reactivate existing inactive product
-          if (!existing.is_active) {
-            const { error: updErr } = await supabase
-              .from("products")
-              .update({
-                is_active: true,
-                stock_quantity: cand.qty,
-                base_price: cand.retailPrice > 0 ? cand.retailPrice : undefined,
-              } as any)
-              .eq("id", existing.id);
-            if (!updErr) {
-              newItemsAdded++;
-              addedSamples.push({ ...cand, action: "reactivated" });
-            }
-          }
-          continue;
-        }
-
-        const { error: insErr } = await supabase.from("products").insert({
-          sku,
-          erp_item_code: cand.erp_id,
-          name_ar: cand.name,
-          base_price: cand.retailPrice > 0 ? cand.retailPrice : 0,
-          stock_quantity: cand.qty,
-          brand: "toyota_genuine",
-          is_active: true,
-          is_featured: false,
-        } as any);
-
-        if (insErr) {
-          failedToAdd.push({ ...cand, error: insErr.message });
-        } else {
-          newItemsAdded++;
-          // Add wholesale tier price if available
-          if (cand.wholesalePrice > 0) {
-            const { data: newProd } = await supabase
-              .from("products")
-              .select("id")
-              .eq("erp_item_code", cand.erp_id)
-              .maybeSingle();
-            if (newProd?.id) {
-              await supabase.from("product_tier_prices").insert({
-                product_id: newProd.id,
-                tier: "wholesale_tier1",
-                price: cand.wholesalePrice,
-              } as any);
-            }
-          }
-          if (addedSamples.length < 50) addedSamples.push({ ...cand, action: "inserted" });
-        }
-      }
-
-      // 7) Notify admins about new items added
-      if (newItemsAdded > 0) {
-        const { data: admins } = await supabase
-          .from("user_roles")
-          .select("user_id")
-          .eq("role", "admin");
-
-        const notifTitle = `🆕 ${newItemsAdded} صنف أصلي جديد تمت إضافته من الفيصل`;
-        const sampleNames = addedSamples.slice(0, 5).map((s) => `• ${s.name} (رصيد: ${s.qty})`).join("\n");
-        const notifMsg = `تم اكتشاف وإضافة ${newItemsAdded} صنف جديد برصيد > ${stockThreshold} من نظام الفيصل تلقائياً.\n\nأمثلة:\n${sampleNames}`;
-
-        for (const adm of (admins || [])) {
-          await supabase.from("notifications").insert({
-            user_id: adm.user_id,
-            title: notifTitle,
-            message: notifMsg,
-            type: "erp_auto_sync",
-          } as any);
-        }
       }
 
       result = {
@@ -1844,21 +1768,157 @@ Deno.serve(async (req) => {
         },
         new_items: {
           detected: newGenuineCandidates.length,
-          added: newItemsAdded,
-          failed: failedToAdd.length,
+          added: 0, // will be updated in background
+          failed: 0,
           threshold: stockThreshold,
-          samples: addedSamples.slice(0, 50),
-          failed_samples: failedToAdd.slice(0, 20),
+          discovery_status: newGenuineCandidates.length > 0 ? "running_in_background" : "no_candidates",
         },
       };
 
-      await supabase.from("erp_sync_logs").insert({
-        sync_type: syncType,
-        direction: "inbound",
-        payload: { action, threshold: stockThreshold },
-        response: result,
-        status: "success",
-      });
+      // 5) Mark the running log as SUCCESS for the fast path (sync part is done)
+      if (runningLogId) {
+        await supabase.from("erp_sync_logs").update({
+          status: "success",
+          response: result,
+          payload: { action, threshold: stockThreshold, phase: "fast_sync_complete" },
+        }).eq("id", runningLogId);
+      } else {
+        // Fallback insert if the initial running-log failed
+        await supabase.from("erp_sync_logs").insert({
+          sync_type: syncType,
+          direction: "inbound",
+          payload: { action, threshold: stockThreshold },
+          response: result,
+          status: "success",
+        });
+      }
+
+      // 6) BACKGROUND: discover & insert new genuine items (heavy — runs after response sent)
+      if (newGenuineCandidates.length > 0) {
+        const discoverNewItems = async () => {
+          let newItemsAdded = 0;
+          const addedSamples: any[] = [];
+          const failedToAdd: any[] = [];
+
+          for (const cand of newGenuineCandidates) {
+            try {
+              const sku = cand.erp_id;
+              const { data: existing } = await supabase
+                .from("products")
+                .select("id, is_active")
+                .or(`sku.eq.${sku},erp_item_code.eq.${cand.erp_id}`)
+                .maybeSingle();
+
+              if (existing) {
+                if (!existing.is_active) {
+                  const { error: updErr } = await supabase
+                    .from("products")
+                    .update({
+                      is_active: true,
+                      stock_quantity: cand.qty,
+                      base_price: cand.retailPrice > 0 ? cand.retailPrice : undefined,
+                    } as any)
+                    .eq("id", existing.id);
+                  if (!updErr) {
+                    newItemsAdded++;
+                    addedSamples.push({ ...cand, action: "reactivated" });
+                  }
+                }
+                continue;
+              }
+
+              const { error: insErr } = await supabase.from("products").insert({
+                sku,
+                erp_item_code: cand.erp_id,
+                name_ar: cand.name,
+                base_price: cand.retailPrice > 0 ? cand.retailPrice : 0,
+                stock_quantity: cand.qty,
+                brand: "toyota_genuine",
+                is_active: true,
+                is_featured: false,
+              } as any);
+
+              if (insErr) {
+                failedToAdd.push({ ...cand, error: insErr.message });
+              } else {
+                newItemsAdded++;
+                if (cand.wholesalePrice > 0) {
+                  const { data: newProd } = await supabase
+                    .from("products")
+                    .select("id")
+                    .eq("erp_item_code", cand.erp_id)
+                    .maybeSingle();
+                  if (newProd?.id) {
+                    await supabase.from("product_tier_prices").insert({
+                      product_id: newProd.id,
+                      tier: "wholesale_tier1",
+                      price: cand.wholesalePrice,
+                    } as any);
+                  }
+                }
+                if (addedSamples.length < 50) addedSamples.push({ ...cand, action: "inserted" });
+              }
+            } catch (candErr) {
+              failedToAdd.push({ ...cand, error: String(candErr) });
+            }
+          }
+
+          // Notify admins about new items added
+          if (newItemsAdded > 0) {
+            const { data: admins } = await supabase
+              .from("user_roles")
+              .select("user_id")
+              .eq("role", "admin");
+
+            const notifTitle = `🆕 ${newItemsAdded} صنف أصلي جديد تمت إضافته من الفيصل`;
+            const sampleNames = addedSamples.slice(0, 5).map((s) => `• ${s.name} (رصيد: ${s.qty})`).join("\n");
+            const notifMsg = `تم اكتشاف وإضافة ${newItemsAdded} صنف جديد برصيد > ${stockThreshold} من نظام الفيصل تلقائياً.\n\nأمثلة:\n${sampleNames}`;
+
+            for (const adm of (admins || [])) {
+              await supabase.from("notifications").insert({
+                user_id: adm.user_id,
+                title: notifTitle,
+                message: notifMsg,
+                type: "erp_auto_sync",
+              } as any);
+            }
+          }
+
+          // Log the background discovery result separately
+          await supabase.from("erp_sync_logs").insert({
+            sync_type: "auto_sync_discovery",
+            direction: "inbound",
+            payload: {
+              action: "background_discovery",
+              candidates: newGenuineCandidates.length,
+              threshold: stockThreshold,
+              parent_request_id: reqId,
+            },
+            response: {
+              detected: newGenuineCandidates.length,
+              added: newItemsAdded,
+              failed: failedToAdd.length,
+              samples: addedSamples.slice(0, 50),
+              failed_samples: failedToAdd.slice(0, 20),
+            },
+            status: "success",
+          });
+        };
+
+        // Run discovery in the background — does not block the response
+        try {
+          // @ts-ignore — EdgeRuntime is available in Supabase Edge Functions
+          if (typeof EdgeRuntime !== "undefined" && EdgeRuntime?.waitUntil) {
+            // @ts-ignore
+            EdgeRuntime.waitUntil(discoverNewItems());
+          } else {
+            // Fire-and-forget fallback
+            discoverNewItems().catch((e) => console.error("[discoverNewItems bg] error:", e));
+          }
+        } catch (bgErr) {
+          console.warn("[discoverNewItems] background scheduling failed:", bgErr);
+        }
+      }
     }
     else {
       throw new Error(`Unknown action: ${action}`);
