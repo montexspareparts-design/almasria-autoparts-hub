@@ -113,40 +113,52 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-    // Verify caller
-    const userClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsErr } = await userClient.auth.getClaims(token);
-    if (claimsErr || !claimsData?.claims) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    const userId = claimsData.claims.sub;
+    const cronSecret = Deno.env.get("CRON_SECRET");
 
     // Service client for cache ops + staff check
     const admin = createClient(supabaseUrl, serviceKey);
 
-    // Verify staff role (admin/moderator/reporter)
-    const { data: isStaff, error: staffErr } = await admin.rpc("is_staff", { _user_id: userId });
-    if (staffErr || !isStaff) {
-      return new Response(JSON.stringify({ error: "Forbidden — staff only" }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // Allow internal cron calls via x-cron-secret header (bypasses staff check, refresh-only)
+    const incomingCronSecret = req.headers.get("x-cron-secret");
+    const isCronCall = !!cronSecret && incomingCronSecret === cronSecret;
+
+    if (!isCronCall) {
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader?.startsWith("Bearer ")) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Verify caller
+      const userClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } },
       });
+      const token = authHeader.replace("Bearer ", "");
+      const { data: claimsData, error: claimsErr } = await userClient.auth.getClaims(token);
+      if (claimsErr || !claimsData?.claims) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const userId = claimsData.claims.sub;
+
+      // Verify staff role (admin/moderator/reporter)
+      const { data: isStaff, error: staffErr } = await admin.rpc("is_staff", { _user_id: userId });
+      if (staffErr || !isStaff) {
+        return new Response(JSON.stringify({ error: "Forbidden — staff only" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
+
+    // userClient only needed for search RPC (skipped on cron calls)
+    const userClient = isCronCall ? admin : createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: req.headers.get("Authorization")! } },
+    });
 
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
     const query: string = String(body.q ?? body.query ?? "").trim();
