@@ -425,42 +425,118 @@ const AdminCustomerIntelligence = () => {
   type CallOutcome = "answered" | "no_answer" | "agreed" | "not_suitable";
   const outcomesStorageKey = `aci_call_outcomes_${todayKey}`;
 
-  // === Handled meta — who/when/how the staff worked on a task (prevents duplicate work) ===
+  // === Handled meta — who/when/how the staff worked on a task (SHARED across all staff via DB) ===
+  // Stored in `staff_task_handling` table with realtime sync so every staff member sees who's
+  // already working on a customer — prevents duplicate calls. First action of the day wins.
   type HandledAction = "call" | "whatsapp" | "note" | "outcome" | "manual";
   type HandledRecord = { at: string; by: string; byName?: string | null; action: HandledAction };
-  const handledStorageKey = `aci_handled_meta_${todayKey}`;
-  const [handledMeta, setHandledMeta] = useState<Record<string, HandledRecord>>(() => {
-    try {
-      const raw = localStorage.getItem(handledStorageKey);
-      return raw ? (JSON.parse(raw) as Record<string, HandledRecord>) : {};
-    } catch { return {}; }
-  });
-  const markHandled = (taskId: string, action: HandledAction) => {
+  const [handledMeta, setHandledMeta] = useState<Record<string, HandledRecord>>({});
+
+  // Load today's handling records from DB + subscribe to realtime updates
+  useEffect(() => {
+    let cancelled = false;
+    const todayDate = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" }); // YYYY-MM-DD
+    (async () => {
+      const { data, error } = await supabase
+        .from("staff_task_handling")
+        .select("task_id, staff_user_id, staff_name, action, created_at")
+        .eq("handled_date", todayDate);
+      if (cancelled || error || !data) return;
+      const map: Record<string, HandledRecord> = {};
+      data.forEach((row: any) => {
+        map[row.task_id] = {
+          at: row.created_at,
+          by: row.staff_user_id,
+          byName: row.staff_name,
+          action: row.action as HandledAction,
+        };
+      });
+      setHandledMeta(map);
+    })();
+
+    const channel = supabase
+      .channel("staff_task_handling_realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "staff_task_handling", filter: `handled_date=eq.${todayDate}` },
+        (payload: any) => {
+          if (payload.eventType === "INSERT" || payload.eventType === "UPDATE") {
+            const r = payload.new;
+            setHandledMeta(prev => ({
+              ...prev,
+              [r.task_id]: { at: r.created_at, by: r.staff_user_id, byName: r.staff_name, action: r.action },
+            }));
+          } else if (payload.eventType === "DELETE") {
+            const r = payload.old;
+            setHandledMeta(prev => {
+              const next = { ...prev };
+              delete next[r.task_id];
+              return next;
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [todayKey]);
+
+  const markHandled = async (taskId: string, action: HandledAction) => {
     if (!user?.id) return;
-    setHandledMeta(prev => {
-      // First action wins for the day — preserve original timestamp/owner
-      if (prev[taskId]) return prev;
-      const next = {
-        ...prev,
-        [taskId]: {
-          at: new Date().toISOString(),
-          by: user.id,
-          byName: (user as any).user_metadata?.full_name || user.email || "موظف",
-          action,
-        } as HandledRecord,
-      };
-      try { localStorage.setItem(handledStorageKey, JSON.stringify(next)); } catch {}
-      return next;
+    // Optimistic: bail if someone (including me) already claimed it locally
+    if (handledMeta[taskId]) return;
+    const staffName = (user as any).user_metadata?.full_name || user.email || "موظف";
+    // Optimistic update so the UI reacts instantly
+    setHandledMeta(prev => prev[taskId] ? prev : ({
+      ...prev,
+      [taskId]: { at: new Date().toISOString(), by: user.id, byName: staffName, action },
+    }));
+    const { error } = await supabase.from("staff_task_handling").insert({
+      task_id: taskId,
+      staff_user_id: user.id,
+      staff_name: staffName,
+      action,
     });
+    // If a different staff beat us to it, refresh that record from DB
+    if (error) {
+      const todayDate = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
+      const { data } = await supabase
+        .from("staff_task_handling")
+        .select("task_id, staff_user_id, staff_name, action, created_at")
+        .eq("task_id", taskId)
+        .eq("handled_date", todayDate)
+        .maybeSingle();
+      if (data) {
+        setHandledMeta(prev => ({
+          ...prev,
+          [data.task_id]: {
+            at: data.created_at,
+            by: data.staff_user_id,
+            byName: data.staff_name,
+            action: data.action as HandledAction,
+          },
+        }));
+      }
+    }
   };
-  const unmarkHandled = (taskId: string) => {
+
+  const unmarkHandled = async (taskId: string) => {
+    if (!user?.id) return;
+    const todayDate = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
     setHandledMeta(prev => {
       if (!prev[taskId]) return prev;
       const next = { ...prev };
       delete next[taskId];
-      try { localStorage.setItem(handledStorageKey, JSON.stringify(next)); } catch {}
       return next;
     });
+    await supabase
+      .from("staff_task_handling")
+      .delete()
+      .eq("task_id", taskId)
+      .eq("handled_date", todayDate);
   };
 
   const [callOutcomes, setCallOutcomes] = useState<Record<string, CallOutcome>>(() => {
