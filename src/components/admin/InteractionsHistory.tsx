@@ -195,6 +195,7 @@ export const InteractionsHistory = ({ customerUserId }: Props) => {
     return rows.filter((r) => {
       if (actionFilter !== "all" && r.action !== actionFilter) return false;
       if (staffFilter !== "all" && r.staffUserId !== staffFilter) return false;
+      if (hideEmpty && !(r.note && r.note.trim().length > 0)) return false;
       if (term) {
         const cust = profileMap.get(r.customerUserId);
         const haystack = [
@@ -210,7 +211,13 @@ export const InteractionsHistory = ({ customerUserId }: Props) => {
       }
       return true;
     });
-  }, [rows, actionFilter, staffFilter, search, profileMap]);
+  }, [rows, actionFilter, staffFilter, search, profileMap, hideEmpty]);
+
+  // Count of empty interactions in current date range (for warning badge)
+  const emptyCount = useMemo(
+    () => rows.filter((r) => !(r.note && r.note.trim().length > 0)).length,
+    [rows]
+  );
 
   // Quick counters per action (post-date-filter, pre-other-filters)
   const counters = useMemo(() => {
