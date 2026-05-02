@@ -2430,6 +2430,7 @@ const AdminCustomerIntelligence = () => {
             ) : (
               (() => {
                 // Group tasks by day bucket based on freshestDays
+                // Tasks already handled by any staff (call/whatsapp/note/outcome) move to a dedicated "تمت اليوم" group
                 const limited = visibleTasks.slice(0, 30);
                 const groups: { key: string; label: string; icon: string; items: typeof limited }[] = [
                   { key: "today", label: "اليوم", icon: "📅", items: [] },
@@ -2437,8 +2438,14 @@ const AdminCustomerIntelligence = () => {
                   { key: "week", label: "آخر 7 أيام", icon: "🗓️", items: [] },
                   { key: "older", label: "أقدم", icon: "📦", items: [] },
                   { key: "unknown", label: "بدون نشاط مسجّل", icon: "❔", items: [] },
+                  { key: "handled", label: "تمت اليوم — تابعها موظف", icon: "✅", items: [] },
                 ];
                 limited.forEach((t) => {
+                  // Any task already touched by a staff member (me or someone else) goes to the handled bucket
+                  if (handledMeta[t.id]) {
+                    groups[5].items.push(t);
+                    return;
+                  }
                   const d = t.freshestDays;
                   if (d === null || d === undefined) groups[4].items.push(t);
                   else if (d <= 1) groups[0].items.push(t);
@@ -2485,6 +2492,8 @@ const AdminCustomerIntelligence = () => {
                           ? "border-emerald-200/40 bg-emerald-50/20 dark:bg-emerald-950/5 opacity-40 hover:opacity-60 grayscale-[0.5]"
                           : handledByOther
                           ? "border-amber-300/70 bg-amber-50/40 dark:bg-amber-950/15 dark:border-amber-700/50 opacity-55 hover:opacity-90 grayscale-[0.4]"
+                          : handledByMe
+                          ? "border-emerald-300/70 bg-emerald-50/40 dark:bg-emerald-950/15 dark:border-emerald-700/50 opacity-65 hover:opacity-95 grayscale-[0.25]"
                           : priorityColor
                       )}
                     >
