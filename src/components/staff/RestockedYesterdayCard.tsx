@@ -92,12 +92,17 @@ export default function RestockedYesterdayCard() {
     );
   }
 
+  const periodLabel = PERIOD_OPTIONS.find((p) => p.value === period)?.label ?? "";
+
   if (items.length === 0) {
     return (
-      <Card className="p-4 border-2 border-muted bg-muted/20">
-        <div className="flex items-center gap-2 text-muted-foreground text-sm">
-          <Package className="w-4 h-4" />
-          مفيش أصناف رصيدها زاد عن امبارح. (المقارنة بتشتغل بعد أول snapshot صباحي)
+      <Card className="border-2 border-muted bg-muted/20">
+        <div className="p-4 border-b border-muted/60 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-muted-foreground text-sm">
+            <Package className="w-4 h-4" />
+            مفيش أصناف رصيدها زاد خلال {periodLabel}.
+          </div>
+          <PeriodSwitcher period={period} onChange={setPeriod} />
         </div>
       </Card>
     );
@@ -107,15 +112,15 @@ export default function RestockedYesterdayCard() {
     <Card className="border-2 border-emerald-300 bg-gradient-to-br from-emerald-50/60 via-white to-amber-50/40 shadow-sm overflow-hidden">
       {/* Header */}
       <div className="p-4 border-b border-emerald-200/70 bg-white/40">
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start justify-between gap-3 flex-wrap">
           <div className="flex items-start gap-2.5 min-w-0 flex-1">
             <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow">
               <TrendingUp className="w-5 h-5" />
             </div>
             <div className="min-w-0">
-              <h3 className="font-bold text-base text-emerald-900">🎉 وصل امبارح — فرص بيع جاهزة</h3>
+              <h3 className="font-bold text-base text-emerald-900">🎉 وصل {periodLabel} — فرص بيع جاهزة</h3>
               <p className="text-xs text-emerald-700 mt-0.5">
-                {items.length} صنف رصيدهم زاد عن امبارح
+                {items.length} صنف رصيدهم زاد خلال {periodLabel}
                 {shortageCount > 0 && (
                   <>
                     {" • "}
@@ -125,6 +130,7 @@ export default function RestockedYesterdayCard() {
               </p>
             </div>
           </div>
+          <PeriodSwitcher period={period} onChange={setPeriod} />
         </div>
 
         {/* Search + Filters */}
