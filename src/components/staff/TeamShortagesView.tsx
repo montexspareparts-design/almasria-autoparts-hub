@@ -93,7 +93,7 @@ export default function TeamShortagesView() {
     setLoading(true);
     const { data } = await supabase
       .from("stock_shortage_requests" as any)
-      .select("id,product_id,manual_sku,manual_name,requested_quantity,customer_note,status,admin_response,created_at,reviewed_at,updated_at,staff_user_id,product:products(sku,name_ar)")
+      .select("id,product_id,manual_sku,manual_name,requested_quantity,customer_note,status,admin_response,created_at,reviewed_at,updated_at,staff_user_id,product:products(sku,erp_item_code,part_number,name_ar)")
       .order("updated_at", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(500);
