@@ -25,6 +25,8 @@ import {
 interface RestockedItem {
   product_id: string;
   sku: string;
+  erp_item_code: string | null;
+  part_number: string | null;
   name_ar: string;
   brand: string | null;
   prev_stock: number;
@@ -131,6 +133,8 @@ export default function RestockedYesterdayCard() {
         (i) =>
           i.name_ar?.toLowerCase().includes(q) ||
           i.sku?.toLowerCase().includes(q) ||
+          (i.erp_item_code || "").toLowerCase().includes(q) ||
+          (i.part_number || "").toLowerCase().includes(q) ||
           i.brand?.toLowerCase().includes(q)
       );
     }
@@ -151,7 +155,7 @@ export default function RestockedYesterdayCard() {
         sorted.sort((a, b) => dateOf(a) - dateOf(b));
         break;
       case "part_asc":
-        sorted.sort((a, b) => arCmp(a.sku, b.sku));
+        sorted.sort((a, b) => arCmp(a.part_number || a.sku, b.part_number || b.sku));
         break;
       case "name_asc":
         sorted.sort((a, b) => arCmp(a.name_ar, b.name_ar));
@@ -299,13 +303,14 @@ export default function RestockedYesterdayCard() {
         </div>
       </div>
 
-      {/* Table-like header (RTL: right-to-left columns) */}
+      {/* Table-like header (RTL: right-to-left columns) — 6 cols: name | part_number | erp_code | stock | last_zero | status */}
       <div
         dir="rtl"
-        className="hidden sm:grid grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_110px_130px_90px] gap-3 px-4 py-2 text-[11px] font-bold text-emerald-900/80 bg-emerald-100/60 border-b border-emerald-200"
+        className="hidden sm:grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_90px_110px_130px_90px] gap-3 px-4 py-2 text-[11px] font-bold text-emerald-900/80 bg-emerald-100/60 border-b border-emerald-200"
       >
         <div>اسم الصنف</div>
         <div>البارت نمبر</div>
+        <div className="text-center">كود الصنف</div>
         <div className="text-center">الرصيد الجديد</div>
         <div className="text-center">آخر نفاد</div>
         <div className="text-center">الحالة</div>
@@ -323,7 +328,7 @@ export default function RestockedYesterdayCard() {
               <div
                 dir="rtl"
                 key={item.product_id}
-                className={`grid grid-cols-1 sm:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_110px_130px_90px] gap-3 px-4 py-3 items-center transition-colors ${
+                className={`grid grid-cols-1 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_90px_110px_130px_90px] gap-3 px-4 py-3 items-center transition-colors ${
                   item.had_shortage_request
                     ? "bg-rose-50/50 hover:bg-rose-100/60"
                     : "bg-white hover:bg-emerald-50/60"
@@ -342,13 +347,27 @@ export default function RestockedYesterdayCard() {
                   )}
                 </div>
 
-                {/* البارت نمبر (= SKU) */}
+                {/* البارت نمبر (تقني — مختلف عن SKU) */}
                 <div className="min-w-0" dir="ltr">
                   <div className="text-[10px] font-bold text-muted-foreground sm:hidden mb-0.5" dir="rtl">
                     البارت نمبر
                   </div>
+                  {item.part_number ? (
+                    <span className="inline-block font-mono text-xs font-bold text-indigo-900 bg-indigo-50 border border-indigo-200 px-2 py-1 rounded break-all tracking-wide" title={item.part_number}>
+                      {item.part_number}
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-muted-foreground italic" dir="rtl">— غير محدد</span>
+                  )}
+                </div>
+
+                {/* كود الصنف (SKU = erp_item_code) */}
+                <div className="text-center" dir="ltr">
+                  <div className="text-[10px] font-bold text-muted-foreground sm:hidden mb-0.5" dir="rtl">
+                    كود الصنف
+                  </div>
                   <span className="inline-block font-mono text-xs font-bold text-emerald-950 bg-emerald-100/70 px-2 py-1 rounded break-all tracking-wide">
-                    {item.sku}
+                    {item.erp_item_code || item.sku}
                   </span>
                 </div>
 

@@ -16,6 +16,8 @@ import { Boxes, Search, X, Loader2, PackageCheck } from "lucide-react";
 interface InStockItem {
   product_id: string;
   sku: string;
+  erp_item_code: string | null;
+  part_number: string | null;
   name_ar: string;
   brand: string | null;
   current_stock: number;
@@ -61,6 +63,8 @@ export default function CurrentlyInStockDialog({
       (i) =>
         i.name_ar?.toLowerCase().includes(q) ||
         i.sku?.toLowerCase().includes(q) ||
+        (i.erp_item_code || "").toLowerCase().includes(q) ||
+        (i.part_number || "").toLowerCase().includes(q) ||
         i.brand?.toLowerCase().includes(q)
     );
   }, [items, search]);
@@ -148,11 +152,13 @@ export default function CurrentlyInStockDialog({
         ) : (
           <>
             <div
-              className="hidden sm:grid grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_110px] gap-3 px-4 py-2 text-[11px] font-bold text-emerald-900/80 bg-emerald-100/60 border-b border-emerald-200"
+              dir="rtl"
+              className="hidden sm:grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_90px_100px] gap-3 px-4 py-2 text-[11px] font-bold text-emerald-900/80 bg-emerald-100/60 border-b border-emerald-200"
             >
-              <div>الرصيد الحالي</div>
+              <div>اسم الصنف</div>
               <div>البارت نمبر</div>
-              <div className="text-center">اسم الصنف</div>
+              <div className="text-center">كود الصنف</div>
+              <div className="text-center">الرصيد</div>
             </div>
 
             <ScrollArea className="h-[450px]">
@@ -164,10 +170,13 @@ export default function CurrentlyInStockDialog({
                 <div className="divide-y divide-emerald-100">
                   {filtered.map((item) => (
                     <div
+                      dir="rtl"
                       key={item.product_id}
-                      className="grid grid-cols-1 sm:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_110px] gap-3 px-4 py-2.5 items-center bg-white hover:bg-emerald-50/60 transition-colors"
+                      className="grid grid-cols-1 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_90px_100px] gap-3 px-4 py-2.5 items-center bg-white hover:bg-emerald-50/60 transition-colors"
                     >
+                      {/* اسم الصنف */}
                       <div className="min-w-0">
+                        <div className="text-[10px] font-bold text-muted-foreground sm:hidden mb-0.5">اسم الصنف</div>
                         <p className="text-sm font-semibold text-foreground leading-tight break-words">
                           {item.name_ar}
                         </p>
@@ -177,12 +186,27 @@ export default function CurrentlyInStockDialog({
                           </p>
                         )}
                       </div>
+                      {/* البارت نمبر */}
                       <div className="min-w-0" dir="ltr">
+                        <div className="text-[10px] font-bold text-muted-foreground sm:hidden mb-0.5" dir="rtl">البارت نمبر</div>
+                        {item.part_number ? (
+                          <span className="inline-block font-mono text-xs font-bold text-indigo-900 bg-indigo-50 border border-indigo-200 px-2 py-1 rounded break-all tracking-wide" title={item.part_number}>
+                            {item.part_number}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-muted-foreground italic" dir="rtl">— غير محدد</span>
+                        )}
+                      </div>
+                      {/* كود الصنف (SKU) */}
+                      <div className="text-center" dir="ltr">
+                        <div className="text-[10px] font-bold text-muted-foreground sm:hidden mb-0.5" dir="rtl">كود الصنف</div>
                         <span className="inline-block font-mono text-xs font-bold text-emerald-950 bg-emerald-100/70 px-2 py-1 rounded break-all tracking-wide">
-                          {item.sku}
+                          {item.erp_item_code || item.sku}
                         </span>
                       </div>
+                      {/* الرصيد */}
                       <div className="text-center">
+                        <div className="text-[10px] font-bold text-muted-foreground sm:hidden mb-0.5">الرصيد</div>
                         <span className="font-mono text-base font-extrabold text-emerald-700">
                           {item.current_stock}
                         </span>

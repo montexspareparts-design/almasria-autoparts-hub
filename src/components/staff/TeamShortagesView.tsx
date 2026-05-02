@@ -49,7 +49,7 @@ interface Row {
   created_at: string;
   reviewed_at: string | null;
   staff_user_id: string;
-  product?: { sku: string; name_ar: string } | null;
+  product?: { sku: string; erp_item_code: string | null; part_number: string | null; name_ar: string } | null;
 }
 
 const STATUS_META: Record<StatusKey, { label: string; cls: string; icon: typeof Clock; dot: string }> = {
@@ -93,7 +93,7 @@ export default function TeamShortagesView() {
     setLoading(true);
     const { data } = await supabase
       .from("stock_shortage_requests" as any)
-      .select("id,product_id,manual_sku,manual_name,requested_quantity,customer_note,status,admin_response,created_at,reviewed_at,updated_at,staff_user_id,product:products(sku,name_ar)")
+      .select("id,product_id,manual_sku,manual_name,requested_quantity,customer_note,status,admin_response,created_at,reviewed_at,updated_at,staff_user_id,product:products(sku,erp_item_code,part_number,name_ar)")
       .order("updated_at", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(500);
@@ -497,7 +497,8 @@ export default function TeamShortagesView() {
                   const meta = STATUS_META[r.status];
                   const Icon = meta.icon;
                   const name = r.manual_name || r.product?.name_ar || "—";
-                  const sku  = r.manual_sku || r.product?.sku || "";
+                  const sku  = r.manual_sku || r.product?.erp_item_code || r.product?.sku || "";
+                  const partNumber = r.product?.part_number || "";
                   const who  = staffMap[r.staff_user_id] || "زميل";
                   const isMine = r.staff_user_id === user?.id;
                   return (
@@ -563,13 +564,21 @@ export default function TeamShortagesView() {
                                 <h4 className="font-extrabold text-base sm:text-lg leading-tight text-foreground line-clamp-2">
                                   {name}
                                 </h4>
-                                {/* بارت نمبر */}
-                                {sku && (
-                                  <div className="inline-flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1">
-                                    <span className="text-[9px] text-muted-foreground uppercase tracking-wide font-semibold">P/N</span>
-                                    <span className="text-sm font-mono font-bold text-foreground tracking-wider tabular-nums">{sku}</span>
-                                  </div>
-                                )}
+                                {/* بارت نمبر + كود الصنف */}
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                  {partNumber && (
+                                    <div className="inline-flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 rounded-lg px-2.5 py-1">
+                                      <span className="text-[9px] text-indigo-600 dark:text-indigo-400 uppercase tracking-wide font-semibold">P/N</span>
+                                      <span className="text-sm font-mono font-bold text-indigo-900 dark:text-indigo-200 tracking-wider tabular-nums" dir="ltr">{partNumber}</span>
+                                    </div>
+                                  )}
+                                  {sku && (
+                                    <div className="inline-flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1">
+                                      <span className="text-[9px] text-muted-foreground uppercase tracking-wide font-semibold">كود</span>
+                                      <span className="text-sm font-mono font-bold text-foreground tracking-wider tabular-nums" dir="ltr">{sku}</span>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
 
                               {/* العمود الأيسر: الكمية بشكل ضخم */}
