@@ -307,7 +307,14 @@ export default function ReporterDailyForm() {
             data={data} setData={setData} setNum={setNum} locked={locked}
             saving={saving} autoStats={autoStats}
             onSaveDraft={saveDraft}
-            onPreview={() => setPreviewOpen(true)}
+            onPreview={() => {
+              // Smart guard: لو أكتر من 60% من الحقول = 0 → نسأل قبل ما نفتح المعاينة
+              if (emptyFieldsRatio(data) >= 0.6) {
+                setEmptyWarnOpen(true);
+              } else {
+                setPreviewOpen(true);
+              }
+            }}
           />
         </TabsContent>
 
