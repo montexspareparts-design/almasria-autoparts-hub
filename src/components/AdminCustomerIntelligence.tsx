@@ -2492,6 +2492,8 @@ const AdminCustomerIntelligence = () => {
                           ? "border-emerald-200/40 bg-emerald-50/20 dark:bg-emerald-950/5 opacity-40 hover:opacity-60 grayscale-[0.5]"
                           : handledByOther
                           ? "border-amber-300/70 bg-amber-50/40 dark:bg-amber-950/15 dark:border-amber-700/50 opacity-55 hover:opacity-90 grayscale-[0.4]"
+                          : handledByMe
+                          ? "border-emerald-300/70 bg-emerald-50/40 dark:bg-emerald-950/15 dark:border-emerald-700/50 opacity-65 hover:opacity-95 grayscale-[0.25]"
                           : priorityColor
                       )}
                     >
