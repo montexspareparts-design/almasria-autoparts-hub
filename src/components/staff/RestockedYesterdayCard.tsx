@@ -35,6 +35,20 @@ interface RestockedItem {
 }
 
 type FilterMode = "all" | "shortages" | "was_zero";
+
+function formatZeroDate(iso: string | null): string {
+  if (!iso) return "—";
+  try {
+    const d = new Date(iso);
+    return new Intl.DateTimeFormat("ar-EG", {
+      day: "2-digit",
+      month: "short",
+      year: "2-digit",
+    }).format(d);
+  } catch {
+    return iso;
+  }
+}
 type PeriodDays = 1 | 7 | 14 | 30;
 
 const PERIOD_OPTIONS: { value: PeriodDays; label: string; shortLabel: string }[] = [
