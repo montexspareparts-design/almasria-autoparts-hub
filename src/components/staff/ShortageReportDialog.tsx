@@ -266,8 +266,8 @@ export default function ShortageReportDialog({ trigger, onSuccess }: Props) {
                           onClick={() => { setChosenErp(s); setChosen(null); setSearch(s.name); setSuggestions([]); setErpSuggestions([]); }}
                           className="w-full text-right p-2.5 rounded-lg hover:bg-blue-50 transition-colors border border-transparent hover:border-blue-200"
                         >
-                          <div className="flex items-center justify-between gap-2 mb-1">
-                            <span dir="ltr" className="font-mono text-sm font-extrabold bg-blue-600 text-white px-2.5 py-1 rounded shadow-sm tracking-wide">
+                          <div className="flex items-center justify-between gap-2 mb-1.5" dir="ltr">
+                            <span className="font-mono text-sm font-extrabold bg-blue-600 text-white px-2.5 py-1 rounded shadow-sm tracking-wide">
                               {s.erp_id}
                             </span>
                             <div className="flex items-center gap-1">
@@ -280,6 +280,9 @@ export default function ShortageReportDialog({ trigger, onSuccess }: Props) {
                             </div>
                           </div>
                           <p className="text-xs text-muted-foreground leading-snug truncate">{s.name}</p>
+                          <div className="flex justify-end mt-1">
+                            <span className="text-[10px] text-muted-foreground/70 font-mono" dir="ltr">ERP: {s.erp_id}</span>
+                          </div>
                         </button>
                       ))}
                     </>
