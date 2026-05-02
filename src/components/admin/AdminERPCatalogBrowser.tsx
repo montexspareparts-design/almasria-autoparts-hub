@@ -29,6 +29,7 @@ type OnsiteRow = {
   id: string;
   sku: string | null;
   erp_item_code: string | null;
+  part_number: string | null;
   name_ar: string | null;
   stock_quantity: number | null;
   base_price: number | null;
@@ -110,7 +111,7 @@ export function AdminERPCatalogBrowser() {
     try {
       const [cacheData, prodData] = await Promise.all([
         fetchAllPaginated<CacheRow>("erp_full_catalog_cache", "erp_id, name, qty, retail_price, wholesale_price"),
-        fetchAllPaginated<OnsiteRow>("products", "id, sku, erp_item_code, name_ar, stock_quantity, base_price, is_active, brand"),
+        fetchAllPaginated<OnsiteRow>("products", "id, sku, erp_item_code, part_number, name_ar, stock_quantity, base_price, is_active, brand"),
       ]);
 
       const skuSet = new Set<string>();
@@ -566,7 +567,8 @@ export function AdminERPCatalogBrowser() {
               <table className="w-full text-sm">
                 <thead className="bg-muted/50 text-xs">
                   <tr>
-                    <th className="p-2 text-right">الكود</th>
+                    <th className="p-2 text-right">كود الصنف</th>
+                    <th className="p-2 text-right">بارت نمبر</th>
                     <th className="p-2 text-right">الاسم</th>
                     <th className="p-2 text-center">العلامة</th>
                     <th className="p-2 text-center">الرصيد</th>
@@ -580,7 +582,8 @@ export function AdminERPCatalogBrowser() {
                     const isToggling = togglingId === p.id;
                     return (
                       <tr key={p.id} className={`border-t hover:bg-muted/30 ${!p.is_active ? "opacity-60" : ""}`}>
-                        <td className="p-2 font-mono text-xs">{p.sku || p.erp_item_code || "—"}</td>
+                        <td className="p-2 font-mono text-xs font-bold">{p.erp_item_code || p.sku || "—"}</td>
+                        <td className="p-2 font-mono text-[11px] text-muted-foreground">{p.part_number || "—"}</td>
                         <td className="p-2">{p.name_ar || "—"}</td>
                         <td className="p-2 text-center text-xs text-muted-foreground">{p.brand || "—"}</td>
                         <td className="p-2 text-center">
