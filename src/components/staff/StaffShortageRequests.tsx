@@ -275,10 +275,34 @@ export default function StaffShortageRequests() {
 
   const markAllSeen = useCallback(() => {
     if (typeof window === "undefined") return;
+    // احفظ الحالة السابقة عشان نقدر نرجّعها لو ضغط بالغلط
+    const previousSeen = localStorage.getItem(seenKey);
     const ids = recentlyFulfilled.map(r => r.id);
     localStorage.setItem(seenKey, JSON.stringify(ids));
     setBannerDismissed(true);
-  }, [recentlyFulfilled, seenKey]);
+
+    toast({
+      title: "تمام، تم إخفاء البانر",
+      description: "لو ضغطت بالغلط، اضغط تراجع لاسترجاعه",
+      action: (
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-8 text-xs border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+          onClick={() => {
+            if (previousSeen === null) {
+              localStorage.removeItem(seenKey);
+            } else {
+              localStorage.setItem(seenKey, previousSeen);
+            }
+            setBannerDismissed(false);
+          }}
+        >
+          تراجع
+        </Button>
+      ),
+    });
+  }, [recentlyFulfilled, seenKey, toast]);
 
   const resetForm = () => {
     setMode("catalog"); setSearch(""); setChosen(null); setChosenErp(null);
