@@ -201,7 +201,7 @@ export default function RestockedYesterdayCard() {
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
                 <TodayRestockedDialog triggerLabel="🔄 عرفني إيه اللي وصل النهاردة" />
-                <CurrentlyInStockDialog triggerLabel="📦 المتاح حالياً في المخزن" variant="ghost" />
+                
               </div>
               <p className="text-[10px] text-sky-700/70 mt-1.5">
                 "وصل النهاردة" بيقارن الرصيد الحالي بنقطة مقارنة لحظية تقدر تأخذها بضغطة زر — مفيد لو ضفت صنف لتوّك من الفيصل.
