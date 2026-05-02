@@ -2430,6 +2430,7 @@ const AdminCustomerIntelligence = () => {
             ) : (
               (() => {
                 // Group tasks by day bucket based on freshestDays
+                // Tasks already handled by any staff (call/whatsapp/note/outcome) move to a dedicated "تمت اليوم" group
                 const limited = visibleTasks.slice(0, 30);
                 const groups: { key: string; label: string; icon: string; items: typeof limited }[] = [
                   { key: "today", label: "اليوم", icon: "📅", items: [] },
@@ -2437,8 +2438,14 @@ const AdminCustomerIntelligence = () => {
                   { key: "week", label: "آخر 7 أيام", icon: "🗓️", items: [] },
                   { key: "older", label: "أقدم", icon: "📦", items: [] },
                   { key: "unknown", label: "بدون نشاط مسجّل", icon: "❔", items: [] },
+                  { key: "handled", label: "تمت اليوم — تابعها موظف", icon: "✅", items: [] },
                 ];
                 limited.forEach((t) => {
+                  // Any task already touched by a staff member (me or someone else) goes to the handled bucket
+                  if (handledMeta[t.id]) {
+                    groups[5].items.push(t);
+                    return;
+                  }
                   const d = t.freshestDays;
                   if (d === null || d === undefined) groups[4].items.push(t);
                   else if (d <= 1) groups[0].items.push(t);
