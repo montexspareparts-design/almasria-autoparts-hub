@@ -532,7 +532,7 @@ function AllReports({ from, to, label }: { from: string; to: string; label: stri
                   mode="single"
                   selected={filterDate ? parseISO(filterDate) : undefined}
                   onSelect={(d) => d && setFilterDate(fmt(d))}
-                  disabled={(d) => fmt(d) < from || fmt(d) > to}
+                  disabled={(d) => { const s = fmt(d); return s < from || s > to || s > fmt(new Date()); }}
                   defaultMonth={filterDate ? parseISO(filterDate) : parseISO(to)}
                   initialFocus
                   className={cn("p-3 pointer-events-auto")}
