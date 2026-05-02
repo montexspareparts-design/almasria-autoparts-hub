@@ -1542,7 +1542,10 @@ const AdminCustomerIntelligence = () => {
   }, [profiles, ordersMap, cartByUser, userSearchMap, dealerUserIds, lastVisitByUser, priorityWeights, taskWindowDays, callOutcomes]);
 
   const visibleTasks = todayTasks
-    .filter((t) => handledMeta[t.id] || showCompletedTasks || !completedTasks.has(t.id))
+    .filter((t) => {
+      if (onlyCompletedTasks) return !!handledMeta[t.id] || completedTasks.has(t.id);
+      return handledMeta[t.id] || showCompletedTasks || !completedTasks.has(t.id);
+    })
     .sort((a, b) => {
       const aHandled = handledMeta[a.id] ? 1 : 0;
       const bHandled = handledMeta[b.id] ? 1 : 0;
