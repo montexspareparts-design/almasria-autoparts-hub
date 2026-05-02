@@ -4367,6 +4367,11 @@ const AdminCustomerIntelligence = () => {
         </div>
       )}
             </TabsContent>
+
+            {/* ===== Tab: Interactions History (calls/whatsapp/notes/done from staff_task_handling + customer_communications) ===== */}
+            <TabsContent value="interactions" className="mt-0 focus-visible:outline-none">
+              <InteractionsHistory />
+            </TabsContent>
           </Tabs>
         );
       })()}
