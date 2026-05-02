@@ -133,6 +133,8 @@ export default function RestockedYesterdayCard() {
         (i) =>
           i.name_ar?.toLowerCase().includes(q) ||
           i.sku?.toLowerCase().includes(q) ||
+          (i.erp_item_code || "").toLowerCase().includes(q) ||
+          (i.part_number || "").toLowerCase().includes(q) ||
           i.brand?.toLowerCase().includes(q)
       );
     }
@@ -153,7 +155,7 @@ export default function RestockedYesterdayCard() {
         sorted.sort((a, b) => dateOf(a) - dateOf(b));
         break;
       case "part_asc":
-        sorted.sort((a, b) => arCmp(a.sku, b.sku));
+        sorted.sort((a, b) => arCmp(a.part_number || a.sku, b.part_number || b.sku));
         break;
       case "name_asc":
         sorted.sort((a, b) => arCmp(a.name_ar, b.name_ar));
