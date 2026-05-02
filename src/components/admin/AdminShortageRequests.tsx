@@ -50,6 +50,7 @@ interface DetailRow {
   status: StatusKey;
   admin_response: string | null;
   created_at: string;
+  product?: { sku: string; name_ar: string } | null;
   staff_name?: string;
 }
 
@@ -91,7 +92,7 @@ export default function AdminShortageRequests() {
     const [{ data: p }, { data: d }] = await Promise.all([
       supabase.rpc("get_shortage_priority_report" as any, { _from: fromStr, _to: toStr }),
       supabase.from("stock_shortage_requests" as any)
-        .select("id,staff_user_id,product_id,manual_sku,manual_name,requested_quantity,customer_note,status,admin_response,created_at")
+        .select("id,staff_user_id,product_id,manual_sku,manual_name,requested_quantity,customer_note,status,admin_response,created_at,product:products(sku,name_ar)")
         .gte("created_at", fromStr)
         .lt("created_at", toEndStr)
         .order("created_at", { ascending: false })
@@ -159,10 +160,10 @@ export default function AdminShortageRequests() {
 
   const totals = useMemo(() => ({
     items: visiblePriority.length,
-    reports: visiblePriority.reduce((s, r) => s + Number(r.reports_count), 0),
-    qty: visiblePriority.reduce((s, r) => s + Number(r.total_quantity), 0),
+    reports: filteredDetails.reduce((s, r) => s + 1, 0),
+    qty: filteredDetails.reduce((s, r) => s + Number(r.requested_quantity || 0), 0),
     staff: new Set(details.map(d => d.staff_user_id)).size,
-  }), [visiblePriority, details]);
+  }), [visiblePriority, filteredDetails, details]);
 
   const openGroupDetails = (g: PriorityRow) => {
     setOpenGroup(g);
