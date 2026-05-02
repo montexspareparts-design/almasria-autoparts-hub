@@ -53,6 +53,7 @@ export function AdminERPCatalogBrowser() {
   const [onsiteRows, setOnsiteRows] = useState<OnsiteRow[]>([]);
   const [existingSkus, setExistingSkus] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
+  const [partNumberFilter, setPartNumberFilter] = useState("");
   const [page, setPage] = useState(0);
   const [adding, setAdding] = useState<Record<string, boolean>>({});
   const [added, setAdded] = useState<Set<string>>(new Set());
