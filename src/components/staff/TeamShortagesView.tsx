@@ -82,6 +82,52 @@ export default function TeamShortagesView() {
 
   useEffect(() => { fetchRows(); }, [fetchRows]);
 
+  // اجلب آخر وقت مزامنة من كاش الفيصل
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("erp_stock_cache" as any)
+        .select("fetched_at")
+        .order("fetched_at", { ascending: false })
+        .limit(1);
+      if (data && data[0]) setErpStockFetchedAt((data[0] as any).fetched_at);
+    })();
+  }, [rows.length]);
+
+  // مزامنة يدوية: الموظف يدوس "افحص دلوقتي" بدل ما يستنى الساعة الجاية
+  const runManualSync = useCallback(async () => {
+    if (manualSyncing) return;
+    setManualSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("auto-fulfill-shortages-from-erp", { body: {} });
+      if (error) throw error;
+      const fulfilled = Number((data as any)?.fulfilled_count ?? (data as any)?.fulfilled ?? 0);
+      const checked   = Number((data as any)?.checked_count   ?? (data as any)?.checked   ?? 0);
+      if (fulfilled > 0) {
+        toast({
+          title: `🎉 تم توفير ${fulfilled} صنف!`,
+          description: "البلاغات اتنقلت لـ«تم التوفير» — اتفرّج على القائمة.",
+        });
+      } else {
+        toast({
+          title: "✓ تمت المزامنة",
+          description: checked > 0
+            ? `اتفحص ${checked} بلاغ — لسه مفيش رصيد كافي في الفيصل.`
+            : "مفيش بلاغات مفتوحة محتاجة فحص دلوقتي.",
+        });
+      }
+      await fetchRows();
+    } catch (e: any) {
+      toast({
+        title: "تعذّر تشغيل المزامنة",
+        description: e?.message || "حاول تاني بعد شوية",
+        variant: "destructive",
+      });
+    } finally {
+      setManualSyncing(false);
+    }
+  }, [manualSyncing, toast, fetchRows]);
+
   // Realtime — أي تغيير على أي بلاغ يحدّث الشاشة لكل الموظفين
   useEffect(() => {
     const ch = supabase
