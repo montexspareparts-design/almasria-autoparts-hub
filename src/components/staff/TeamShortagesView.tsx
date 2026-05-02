@@ -212,33 +212,76 @@ export default function TeamShortagesView() {
 
   return (
     <div className="space-y-4" dir="rtl">
-      {/* Hero */}
-      <Card className="p-5 bg-gradient-to-br from-amber-50 via-background to-rose-50 dark:from-amber-950/20 dark:to-rose-950/20 border-2 border-amber-200/60 dark:border-amber-800/40">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-rose-500 grid place-items-center shadow-lg shrink-0">
-            <Users className="w-6 h-6 text-white" />
+      {/* Hero — premium gradient + KPI strip */}
+      <Card className="relative overflow-hidden p-0 border-0 shadow-xl">
+        {/* deep gradient backdrop */}
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600" />
+        <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top_right,white,transparent_55%)]" />
+        <div className="absolute -bottom-10 -right-10 w-48 h-48 rounded-full bg-amber-300/20 blur-3xl" />
+        <div className="absolute -top-12 -left-12 w-56 h-56 rounded-full bg-cyan-300/20 blur-3xl" />
+
+        <div className="relative p-5 sm:p-6 text-white">
+          <div className="flex items-start gap-4">
+            <motion.div
+              initial={{ rotate: -8, scale: 0.9 }}
+              animate={{ rotate: 0, scale: 1 }}
+              transition={{ type: "spring", stiffness: 200, damping: 15 }}
+              className="w-14 h-14 rounded-2xl bg-white/15 backdrop-blur-sm grid place-items-center shadow-lg shrink-0 ring-1 ring-white/20"
+            >
+              <Trophy className="w-7 h-7 text-amber-300" />
+            </motion.div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-xl sm:text-2xl font-extrabold leading-tight tracking-tight">
+                  لوحة الفريق — الأصناف الناقصة
+                </h2>
+                <Badge className="bg-amber-400 text-amber-950 border-0 text-[10px] font-bold gap-1 hover:bg-amber-300">
+                  <Sparkles className="w-3 h-3" /> LIVE
+                </Badge>
+              </div>
+              <p className="text-xs sm:text-sm text-white/80 mt-1 leading-snug">
+                كل بلاغ بيتسجل هنا = فرصة بيع ضايعة بنحاول نرجّعها. كل ما تبلّغ أكتر، الإدارة بتعرف توفّر أسرع 💪
+              </p>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-bold leading-tight">طلبات الفريق — الأصناف الناقصة</h2>
-            <p className="text-xs text-muted-foreground mt-0.5 leading-snug">
-              شاشة موحّدة لكل الموظفين — شوف إيه الأصناف اللي زمايلك بلّغوا عنها وحالة كل واحدة لحظة بلحظة
-            </p>
-          </div>
-          <div className="hidden sm:flex flex-col items-end shrink-0">
-            <div className="text-2xl font-bold tabular-nums text-foreground">{rows.length}</div>
-            <div className="text-[10px] text-muted-foreground">إجمالي البلاغات</div>
-            <div className="text-[10px] text-muted-foreground mt-0.5">من {uniqueStaff} موظف</div>
+
+          {/* KPI strip */}
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-4">
+            <div className="rounded-xl bg-white/10 backdrop-blur-sm ring-1 ring-white/15 p-2.5 sm:p-3">
+              <div className="text-[10px] text-white/70 mb-0.5">إجمالي البلاغات</div>
+              <div className="text-2xl sm:text-3xl font-extrabold tabular-nums leading-none">{rows.length}</div>
+              <div className="text-[10px] text-white/60 mt-1">من {uniqueStaff} موظف</div>
+            </div>
+            <motion.div
+              key={arrivedToday}
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              className="rounded-xl bg-emerald-400/20 backdrop-blur-sm ring-1 ring-emerald-300/40 p-2.5 sm:p-3"
+            >
+              <div className="text-[10px] text-emerald-100 mb-0.5 flex items-center gap-1">
+                <PackageCheck className="w-3 h-3" /> وصلت النهاردة
+              </div>
+              <div className="text-2xl sm:text-3xl font-extrabold tabular-nums leading-none text-emerald-50">{arrivedToday}</div>
+              <div className="text-[10px] text-emerald-100/80 mt-1">جاهزة للبيع 🎯</div>
+            </motion.div>
+            <div className="rounded-xl bg-amber-400/20 backdrop-blur-sm ring-1 ring-amber-300/40 p-2.5 sm:p-3">
+              <div className="text-[10px] text-amber-100 mb-0.5 flex items-center gap-1">
+                <Clock className="w-3 h-3" /> مفتوحة
+              </div>
+              <div className="text-2xl sm:text-3xl font-extrabold tabular-nums leading-none text-amber-50">{counts.open}</div>
+              <div className="text-[10px] text-amber-100/80 mt-1">تحت المتابعة</div>
+            </div>
           </div>
         </div>
       </Card>
 
       {/* Auto-sync banner + manual trigger */}
-      <div className="rounded-lg border border-sky-200 dark:border-sky-800/60 bg-gradient-to-l from-sky-50 to-emerald-50 dark:from-sky-950/30 dark:to-emerald-950/20 p-2.5 flex items-start gap-2.5 text-xs">
-        <RefreshCw className={cn("w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0 mt-0.5", manualSyncing ? "animate-spin" : "animate-[spin_4s_linear_infinite]")} />
+      <div className="rounded-xl border border-sky-200 dark:border-sky-800/60 bg-gradient-to-l from-sky-50 to-emerald-50 dark:from-sky-950/30 dark:to-emerald-950/20 p-3 flex items-start gap-2.5 text-xs shadow-sm">
+        <RefreshCw className={cn("w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0 mt-0.5", manualSyncing ? "animate-spin" : "animate-[spin_4s_linear_infinite]")} />
         <div className="flex-1 leading-relaxed min-w-0">
           <span className="font-semibold text-sky-800 dark:text-sky-300">مزامنة تلقائية كل ساعة من الفيصل</span>
           <span className="text-muted-foreground"> — لما رصيد الصنف يزيد في الفيصل، البلاغ ينتقل لـ </span>
-          <span className="font-semibold text-emerald-700 dark:text-emerald-400">«تم التوفير»</span>
+          <span className="font-semibold text-emerald-700 dark:text-emerald-400">«وصل المخزن»</span>
           <span className="text-muted-foreground"> وهيوصل إشعار فوري للموظف اللي طلبه.</span>
           {erpStockFetchedAt && (
             <span className="block text-[10px] text-muted-foreground mt-0.5">
@@ -252,7 +295,7 @@ export default function TeamShortagesView() {
           disabled={manualSyncing}
           onClick={runManualSync}
           className="h-8 px-2.5 gap-1.5 shrink-0 border-sky-300 dark:border-sky-700 bg-white/80 dark:bg-sky-950/40 hover:bg-white text-sky-700 dark:text-sky-300 text-[11px] font-semibold"
-          title="افحص الفيصل دلوقتي — لو فيه أي توافر، البلاغات هتتنقل لـ«تم التوفير»"
+          title="افحص الفيصل دلوقتي — لو فيه أي توافر، البلاغات هتتنقل لـ«وصل المخزن»"
         >
           {manualSyncing ? (
             <><Loader2 className="w-3.5 h-3.5 animate-spin" /> جاري الفحص…</>
@@ -265,7 +308,7 @@ export default function TeamShortagesView() {
       {/* Filters bar */}
       <Card className="p-3 sm:p-4 space-y-3">
         <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
-          <TabsList className="w-full grid grid-cols-5 h-auto p-1 bg-muted/40">
+          <TabsList className="w-full grid grid-cols-3 sm:grid-cols-6 h-auto p-1 bg-muted/40 gap-1">
             <TabsTrigger value="all" className="flex-col gap-0.5 py-1.5 text-[11px] data-[state=active]:bg-background">
               الكل
               <Badge variant="secondary" className="h-4 min-w-[20px] px-1 text-[10px]">{counts.all}</Badge>
@@ -283,8 +326,63 @@ export default function TeamShortagesView() {
                 </TabsTrigger>
               );
             })}
+            {/* تبويب جديد: وصلت المخزن */}
+            <TabsTrigger
+              value="arrived"
+              className={cn(
+                "flex-col gap-0.5 py-1.5 text-[11px] relative",
+                "data-[state=active]:bg-gradient-to-br data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600",
+                "data-[state=active]:text-white data-[state=active]:shadow-md",
+                "border border-emerald-200/70 dark:border-emerald-800/40"
+              )}
+            >
+              <span className="flex items-center gap-1">
+                <PackageCheck className="w-3 h-3" />
+                وصلت المخزن
+              </span>
+              <Badge
+                variant="secondary"
+                className={cn(
+                  "h-4 min-w-[20px] px-1 text-[10px]",
+                  "data-[state=active]:bg-white/20"
+                )}
+              >
+                {counts.arrived}
+              </Badge>
+              {arrivedToday > 0 && (
+                <span className="absolute -top-1 -left-1 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-background animate-pulse" />
+              )}
+            </TabsTrigger>
           </TabsList>
         </Tabs>
+
+        {/* فلتر التاريخ */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1 font-semibold ms-1">
+            <Calendar className="w-3 h-3" /> الفترة:
+          </span>
+          {(Object.keys(DATE_FILTER_META) as DateFilter[]).map((key) => {
+            const m = DATE_FILTER_META[key];
+            const Icon = m.icon;
+            const active = dateFilter === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setDateFilter(key)}
+                className={cn(
+                  "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] border transition-all",
+                  active
+                    ? "bg-gradient-to-l from-indigo-500 to-violet-600 text-white border-transparent shadow-sm font-semibold scale-[1.02]"
+                    : "bg-background text-muted-foreground border-border hover:border-indigo-300 hover:text-indigo-700"
+                )}
+              >
+                <Icon className="w-3 h-3" />
+                {m.label}
+              </button>
+            );
+          })}
+        </div>
 
         <div className="relative">
           <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
