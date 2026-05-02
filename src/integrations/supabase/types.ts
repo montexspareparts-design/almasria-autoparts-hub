@@ -3666,6 +3666,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      send_morning_restock_summary: { Args: never; Returns: Json }
       take_daily_stock_snapshot: { Args: never; Returns: Json }
       user_team_ids: { Args: { _user_id: string }; Returns: string[] }
       validate_coupon: {
