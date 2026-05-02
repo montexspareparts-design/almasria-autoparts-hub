@@ -230,7 +230,7 @@ export function AdminERPCatalogBrowser() {
     safePage * PAGE_SIZE + PAGE_SIZE
   );
 
-  useEffect(() => { setPage(0); }, [search, minQty, viewMode, showInactive, sortMode, brandFilter]);
+  useEffect(() => { setPage(0); }, [search, partNumberFilter, minQty, viewMode, showInactive, sortMode, brandFilter]);
 
   const handleBulkToggle = async (action: "activate" | "hide") => {
     const targets = filteredOnsite.filter((p) => (action === "activate" ? !p.is_active : p.is_active));
