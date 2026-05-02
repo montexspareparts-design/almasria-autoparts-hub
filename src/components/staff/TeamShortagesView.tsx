@@ -15,6 +15,7 @@ import {
   Trophy, TrendingUp, Calendar, Zap, Eye, Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import ShortageReportDialog from "./ShortageReportDialog";
 
 type StatusKey = "open" | "sourcing" | "fulfilled" | "rejected";
 type DateFilter = "all" | "today" | "yesterday" | "week";
