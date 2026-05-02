@@ -2273,6 +2273,25 @@ const AdminCustomerIntelligence = () => {
                     {completedTasksCount} مكتمل
                   </Badge>
                 )}
+                {(() => {
+                  const doneCount = Object.keys(handledMeta).length;
+                  if (doneCount === 0) return null;
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const el = document.querySelector('[data-tab-trigger="done-today"]') as HTMLElement | null;
+                        el?.click();
+                        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                      }}
+                      className="inline-flex items-center gap-1 text-[10px] h-5 px-2 rounded-full bg-gradient-to-l from-emerald-600 to-emerald-500 text-white font-black shadow-sm hover:shadow-md hover:scale-105 transition-all border border-emerald-400/40"
+                      title="اضغط لعرض المهام المنجزة اليوم"
+                    >
+                      <CheckCircle2 className="w-3 h-3" />
+                      {doneCount} تمت اليوم
+                    </button>
+                  );
+                })()}
               </CardTitle>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] text-muted-foreground font-medium hidden md:inline">
