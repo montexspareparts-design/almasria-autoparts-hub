@@ -130,11 +130,12 @@ export function AdminERPCatalogBrowser() {
     return sortMissing(filtered);
   }, [rows, existingSkus, search, minQty, sortMode]);
 
-  // Onsite items (with optional inactive + search filter)
+  // Onsite items (with optional inactive + search + brand filter)
   const filteredOnsite = useMemo(() => {
     const q = search.trim().toLowerCase();
     const filtered = onsiteRows.filter((r) => {
       if (!showInactive && !r.is_active) return false;
+      if (brandFilter !== "all" && (r.brand ?? "other") !== brandFilter) return false;
       if (!q) return true;
       return (
         (r.sku ?? "").toLowerCase().includes(q) ||
@@ -143,7 +144,13 @@ export function AdminERPCatalogBrowser() {
       );
     });
     return sortOnsite(filtered);
-  }, [onsiteRows, search, showInactive, sortMode]);
+  }, [onsiteRows, search, showInactive, sortMode, brandFilter]);
+
+  const availableBrands = useMemo(() => {
+    const set = new Set<string>();
+    onsiteRows.forEach((p) => set.add(p.brand ?? "other"));
+    return Array.from(set).sort();
+  }, [onsiteRows]);
 
 
   const activeList: CacheRow[] | OnsiteRow[] = viewMode === "missing" ? filteredMissing : filteredOnsite;
