@@ -14,6 +14,7 @@ import {
   Loader2,
   Search,
   X,
+  CalendarRange,
 } from "lucide-react";
 
 interface RestockedItem {
@@ -28,9 +29,18 @@ interface RestockedItem {
   had_shortage_request: boolean;
   shortage_requests_count: number;
   base_price: number | null;
+  baseline_date: string | null;
 }
 
 type FilterMode = "all" | "shortages" | "was_zero";
+type PeriodDays = 1 | 7 | 14 | 30;
+
+const PERIOD_OPTIONS: { value: PeriodDays; label: string; shortLabel: string }[] = [
+  { value: 1,  label: "امبارح",        shortLabel: "1 يوم" },
+  { value: 7,  label: "آخر 7 أيام",   shortLabel: "7 أيام" },
+  { value: 14, label: "آخر 14 يوم",   shortLabel: "14 يوم" },
+  { value: 30, label: "آخر 30 يوم",   shortLabel: "30 يوم" },
+];
 
 export default function RestockedYesterdayCard() {
   const [items, setItems] = useState<RestockedItem[]>([]);
@@ -38,16 +48,17 @@ export default function RestockedYesterdayCard() {
   const [expanded, setExpanded] = useState(false);
   const [filter, setFilter] = useState<FilterMode>("all");
   const [search, setSearch] = useState("");
+  const [period, setPeriod] = useState<PeriodDays>(1);
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      const { data } = await supabase.rpc("get_restocked_items" as any, { _days_back: 1 });
+      const { data } = await supabase.rpc("get_restocked_items" as any, { _days_back: period });
       setItems((data as any) || []);
       setLoading(false);
     };
     load();
-  }, []);
+  }, [period]);
 
   const shortageCount = items.filter((i) => i.had_shortage_request).length;
   const wasZeroCount = items.filter((i) => i.was_zero).length;
@@ -81,12 +92,17 @@ export default function RestockedYesterdayCard() {
     );
   }
 
+  const periodLabel = PERIOD_OPTIONS.find((p) => p.value === period)?.label ?? "";
+
   if (items.length === 0) {
     return (
-      <Card className="p-4 border-2 border-muted bg-muted/20">
-        <div className="flex items-center gap-2 text-muted-foreground text-sm">
-          <Package className="w-4 h-4" />
-          مفيش أصناف رصيدها زاد عن امبارح. (المقارنة بتشتغل بعد أول snapshot صباحي)
+      <Card className="border-2 border-muted bg-muted/20">
+        <div className="p-4 border-b border-muted/60 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-muted-foreground text-sm">
+            <Package className="w-4 h-4" />
+            مفيش أصناف رصيدها زاد خلال {periodLabel}.
+          </div>
+          <PeriodSwitcher period={period} onChange={setPeriod} />
         </div>
       </Card>
     );
@@ -96,15 +112,15 @@ export default function RestockedYesterdayCard() {
     <Card className="border-2 border-emerald-300 bg-gradient-to-br from-emerald-50/60 via-white to-amber-50/40 shadow-sm overflow-hidden">
       {/* Header */}
       <div className="p-4 border-b border-emerald-200/70 bg-white/40">
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start justify-between gap-3 flex-wrap">
           <div className="flex items-start gap-2.5 min-w-0 flex-1">
             <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow">
               <TrendingUp className="w-5 h-5" />
             </div>
             <div className="min-w-0">
-              <h3 className="font-bold text-base text-emerald-900">🎉 وصل امبارح — فرص بيع جاهزة</h3>
+              <h3 className="font-bold text-base text-emerald-900">🎉 وصل {periodLabel} — فرص بيع جاهزة</h3>
               <p className="text-xs text-emerald-700 mt-0.5">
-                {items.length} صنف رصيدهم زاد عن امبارح
+                {items.length} صنف رصيدهم زاد خلال {periodLabel}
                 {shortageCount > 0 && (
                   <>
                     {" • "}
@@ -114,6 +130,7 @@ export default function RestockedYesterdayCard() {
               </p>
             </div>
           </div>
+          <PeriodSwitcher period={period} onChange={setPeriod} />
         </div>
 
         {/* Search + Filters */}
@@ -323,5 +340,36 @@ function FilterPill({
     >
       {children}
     </button>
+  );
+}
+
+function PeriodSwitcher({
+  period,
+  onChange,
+}: {
+  period: PeriodDays;
+  onChange: (p: PeriodDays) => void;
+}) {
+  return (
+    <div className="flex items-center gap-1 p-0.5 rounded-md bg-white border border-emerald-200 shrink-0">
+      <CalendarRange className="w-3.5 h-3.5 text-emerald-700 mx-1.5 shrink-0" />
+      {PERIOD_OPTIONS.map((opt) => {
+        const active = period === opt.value;
+        return (
+          <button
+            key={opt.value}
+            onClick={() => onChange(opt.value)}
+            className={`text-[11px] font-semibold px-2.5 py-1.5 rounded whitespace-nowrap transition-colors ${
+              active
+                ? "bg-emerald-600 text-white shadow-sm"
+                : "text-emerald-700 hover:bg-emerald-100"
+            }`}
+            title={opt.label}
+          >
+            {opt.shortLabel}
+          </button>
+        );
+      })}
+    </div>
   );
 }

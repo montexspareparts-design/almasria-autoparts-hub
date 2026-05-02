@@ -3528,6 +3528,7 @@ export type Database = {
         Args: { _days_back?: number }
         Returns: {
           base_price: number
+          baseline_date: string
           brand: string
           current_stock: number
           delta: number
