@@ -10,8 +10,16 @@
  * is not mounted because it depends on Supabase, react-query, and many props.
  */
 import { describe, it, expect } from "vitest";
-import { render, screen, within, act } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, screen, fireEvent, within } from "@testing-library/react";
+
+/** Radix Tabs uses pointer events; dispatch them then click. */
+const activate = (el: HTMLElement) => {
+  fireEvent.pointerDown(el, { button: 0, ctrlKey: false });
+  fireEvent.mouseDown(el, { button: 0 });
+  fireEvent.pointerUp(el, { button: 0 });
+  fireEvent.mouseUp(el, { button: 0 });
+  fireEvent.click(el);
+};
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Zap, History } from "lucide-react";
 
