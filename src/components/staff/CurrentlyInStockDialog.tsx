@@ -63,6 +63,8 @@ export default function CurrentlyInStockDialog({
       (i) =>
         i.name_ar?.toLowerCase().includes(q) ||
         i.sku?.toLowerCase().includes(q) ||
+        (i.erp_item_code || "").toLowerCase().includes(q) ||
+        (i.part_number || "").toLowerCase().includes(q) ||
         i.brand?.toLowerCase().includes(q)
     );
   }, [items, search]);
