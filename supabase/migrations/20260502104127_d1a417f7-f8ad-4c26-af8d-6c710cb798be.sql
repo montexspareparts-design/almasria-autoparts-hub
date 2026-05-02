@@ -1,0 +1,5 @@
+DROP TRIGGER IF EXISTS trg_notify_staff_shortage_status_change ON public.stock_shortage_requests;
+CREATE TRIGGER trg_notify_staff_shortage_status_change
+AFTER UPDATE OF status ON public.stock_shortage_requests
+FOR EACH ROW
+EXECUTE FUNCTION public.notify_staff_shortage_status_change();
