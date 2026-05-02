@@ -89,19 +89,23 @@ export default function TodayRestockedDialog({
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<TodayRestockedItem[]>([]);
+  const [newInErp, setNewInErp] = useState<NewInErpItem[]>([]);
   const [baseline, setBaseline] = useState<BaselineStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
   const [loaded, setLoaded] = useState(false);
+  const [tab, setTab] = useState<"restocked" | "new_in_erp">("restocked");
 
   const loadAll = async () => {
     setLoading(true);
-    const [{ data: itemsData }, { data: baseData }] = await Promise.all([
+    const [{ data: itemsData }, { data: baseData }, { data: erpData }] = await Promise.all([
       supabase.rpc("get_today_restocked_items" as any),
       supabase.rpc("intraday_baseline_status" as any),
+      supabase.rpc("get_today_new_in_erp" as any),
     ]);
     setItems((itemsData as any) || []);
+    setNewInErp((erpData as any) || []);
     const b = Array.isArray(baseData) ? baseData[0] : baseData;
     setBaseline((b as any) ?? null);
     setLoaded(true);
