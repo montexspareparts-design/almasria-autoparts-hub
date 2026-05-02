@@ -4043,6 +4043,8 @@ export type Database = {
         | "denso"
         | "aisin"
         | "fbk"
+        | "ibk"
+        | "other"
       visitor_pipeline_stage:
         | "new"
         | "interested"
@@ -4193,6 +4195,8 @@ export const Constants = {
         "denso",
         "aisin",
         "fbk",
+        "ibk",
+        "other",
       ],
       visitor_pipeline_stage: [
         "new",
