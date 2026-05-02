@@ -22,6 +22,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { checkDuplicateCommunication } from "@/lib/duplicateCommCheck";
 import VisitorCommunicationsTab from "@/components/admin/VisitorCommunicationsTab";
+import CustomerActivityTimeline from "@/components/admin/CustomerActivityTimeline";
 
 interface PageVisit { id: string; path: string; page_title: string | null; visited_at: string; referrer: string | null; }
 interface SearchEntry { id: string; search_query: string; created_at: string; results_count: number | null; }
@@ -1380,6 +1381,9 @@ export default function VisitorSessionSummary() {
             )}
           </>
         )}
+
+        {/* Unified activity timeline — من تابع + متى + إيه عمل (مدمج من 3 مصادر realtime) */}
+        {userId && <CustomerActivityTimeline customerUserId={userId} />}
 
         {/* Unified Communications Tab — مكالمات + واتساب (يدوي/آلي) + إيميل + ملاحظات تواصل */}
         <VisitorCommunicationsTab
