@@ -238,16 +238,16 @@ export default function ShortageReportDialog({ trigger, onSuccess }: Props) {
                           onClick={() => { setChosen(s); setChosenErp(null); setSearch(s.name_ar); setSuggestions([]); setErpSuggestions([]); }}
                           className="w-full text-right p-2.5 rounded-lg hover:bg-emerald-50 transition-colors border border-transparent hover:border-emerald-200"
                         >
-                          <div className="flex items-start justify-between gap-2 mb-1">
-                            <span dir="ltr" className="font-mono text-[11px] font-bold bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded">
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <span dir="ltr" className="font-mono text-sm font-extrabold bg-emerald-600 text-white px-2.5 py-1 rounded shadow-sm tracking-wide">
                               {s.sku}
                             </span>
                             <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${s.stock_quantity > 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
                               {s.stock_quantity > 0 ? `متاح: ${s.stock_quantity}` : "غير متوفر"}
                             </span>
                           </div>
-                          <p className="text-sm font-medium text-foreground leading-snug">{s.name_ar}</p>
-                          <p className="text-[10px] text-muted-foreground mt-0.5" dir="ltr">ID: {s.id.slice(0, 8)}</p>
+                          <p className="text-xs text-muted-foreground leading-snug truncate">{s.name_ar}</p>
+                          <p className="text-[10px] text-muted-foreground/70 mt-0.5" dir="ltr">ID: {s.id.slice(0, 8)}</p>
                         </button>
                       ))}
                     </>
