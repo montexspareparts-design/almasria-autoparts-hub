@@ -16,10 +16,12 @@ import {
   Trophy, Medal, Award, Calendar as CalIcon, Loader2, Eye, FileText,
   Phone, MessageCircle, FileCheck, RefreshCw, XCircle, Users, UserPlus,
   Target, AlertTriangle, FileSpreadsheet, ShoppingBag, Receipt, DollarSign,
-  TrendingUp, Heart, CheckCircle2, AlertCircle,
+  TrendingUp, Heart, CheckCircle2, AlertCircle, Search, ArrowUp, ArrowDown, ArrowUpDown, Download, Filter,
 } from "lucide-react";
 import ShoutoutsLog from "./ShoutoutsLog";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
