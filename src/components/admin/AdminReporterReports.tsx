@@ -508,6 +508,15 @@ function AllReports({ from, to, label }: { from: string; to: string; label: stri
   const [filterStaff, setFilterStaff] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<"all" | "submitted" | "draft">("all");
   const [filterDate, setFilterDate] = useState<string | null>(null); // YYYY-MM-DD
+  const [search, setSearch] = useState("");
+  const [minPerf, setMinPerf] = useState<number>(0);
+  type SortKey = "report_date" | "quotations_count" | "calls_count" | "offers_converted_count" | "new_customers_count" | "performance_score";
+  const [sortBy, setSortBy] = useState<SortKey>("report_date");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  function handleSort(k: SortKey) {
+    if (k === sortBy) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortBy(k); setSortDir(k === "report_date" ? "desc" : "desc"); }
+  }
 
   // Weekly + Monthly aggregates (always shown alongside the current range)
   const today = new Date();
