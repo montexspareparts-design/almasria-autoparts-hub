@@ -260,6 +260,20 @@ export default function TeamShortagesView() {
               <p className="text-xs sm:text-sm text-white/80 mt-1 leading-snug">
                 كل بلاغ بيتسجل هنا = فرصة بيع ضايعة بنحاول نرجّعها. كل ما تبلّغ أكتر، الإدارة بتعرف توفّر أسرع 💪
               </p>
+              <div className="mt-3">
+                <ShortageReportDialog
+                  onSuccess={fetchRows}
+                  trigger={
+                    <Button
+                      size="sm"
+                      className="gap-2 bg-white text-indigo-700 hover:bg-amber-50 hover:text-indigo-800 font-bold shadow-lg ring-2 ring-white/40 hover:ring-amber-200 transition-all"
+                    >
+                      <Sparkles className="w-4 h-4 text-amber-500" />
+                      بلّغ عن صنف ناقص دلوقتي
+                    </Button>
+                  }
+                />
+              </div>
             </div>
           </div>
 
