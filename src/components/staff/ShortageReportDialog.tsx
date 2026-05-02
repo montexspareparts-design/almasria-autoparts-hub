@@ -251,22 +251,22 @@ export default function ShortageReportDialog({ trigger, onSuccess }: Props) {
                         <button
                           key={s.erp_id}
                           onClick={() => { setChosenErp(s); setChosen(null); setSearch(s.name); setSuggestions([]); setErpSuggestions([]); }}
-                          className="w-full text-right p-2 rounded hover:bg-blue-50 transition-colors"
+                          className="w-full text-right p-2.5 rounded-lg hover:bg-blue-50 transition-colors border border-transparent hover:border-blue-200"
                         >
-                          <p className="text-sm font-medium text-foreground truncate">{s.name}</p>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <span dir="ltr" className="font-mono">{s.erp_id}</span>
-                            <span>•</span>
-                            <span className={s.qty > 0 ? "text-emerald-600" : "text-rose-600 font-semibold"}>
-                              {s.qty > 0 ? `متاح بالفيصل: ${s.qty}` : "غير متوفر بالفيصل"}
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <span dir="ltr" className="font-mono text-[11px] font-bold bg-blue-100 text-blue-900 px-2 py-0.5 rounded">
+                              {s.erp_id}
                             </span>
-                            {s.in_our_system && (
-                              <>
-                                <span>•</span>
-                                <span className="text-emerald-700 font-semibold">موجود كمان على الموقع</span>
-                              </>
-                            )}
+                            <div className="flex items-center gap-1">
+                              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${s.qty > 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
+                                {s.qty > 0 ? `فيصل: ${s.qty}` : "نافد"}
+                              </span>
+                              {s.in_our_system && (
+                                <span className="text-[10px] font-semibold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">على الموقع ✓</span>
+                              )}
+                            </div>
                           </div>
+                          <p className="text-sm font-medium text-foreground leading-snug">{s.name}</p>
                         </button>
                       ))}
                     </>
