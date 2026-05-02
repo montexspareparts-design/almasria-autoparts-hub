@@ -2372,7 +2372,7 @@ const AdminCustomerIntelligence = () => {
             </div>
           </CardHeader>
           {tasksOpen && (
-          <CardContent className="p-3 space-y-3">
+          <CardContent id="today-tasks-list" className="p-3 space-y-3 scroll-mt-24">
             {/* === Workload distribution suggestion === */}
             {(() => {
               const pending = todayTasks.filter(t => !completedTasks.has(t.id));
