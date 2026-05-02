@@ -21,6 +21,8 @@ const brandLabels: Record<ProductBrand, string> = {
   denso: "DENSO",
   aisin: "AISIN",
   fbk: "FBK Brake Pads",
+  ibk: "IBK",
+  other: "أخرى",
 };
 
 const PAGE_SIZE = 20;
