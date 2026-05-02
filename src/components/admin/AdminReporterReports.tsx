@@ -86,7 +86,7 @@ export default function AdminReporterReports() {
               <SelectContent>
                 <SelectItem value="today">اليوم</SelectItem>
                 <SelectItem value="yesterday">أمس</SelectItem>
-                <SelectItem value="week">هذا الأسبوع</SelectItem>
+                <SelectItem value="week">آخر 7 أيام</SelectItem>
                 <SelectItem value="month">هذا الشهر</SelectItem>
                 <SelectItem value="custom">مخصص</SelectItem>
               </SelectContent>
