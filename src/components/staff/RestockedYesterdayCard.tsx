@@ -858,7 +858,7 @@ function TodayErpRestockedInline() {
                   {partNumber}
                 </span>
               ) : (
-                <span className="text-[11px] text-muted-foreground italic">— غير موجود في الموقع</span>
+                <span className="text-[11px] text-muted-foreground">—</span>
               )}
             </div>
 
