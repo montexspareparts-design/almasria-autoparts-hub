@@ -161,38 +161,40 @@ export function AdminERPCatalogBrowser() {
     return copy;
   };
 
-  // Missing items (not on site, filtered by min qty + search)
+  // Missing items (not on site, filtered by min qty + search + part number)
   const filteredMissing = useMemo(() => {
     const q = search.trim().toLowerCase();
+    const pn = partNumberFilter.trim().toLowerCase();
     const filtered = rows.filter((r) => {
       if (existingSkus.has(r.erp_id)) return false;
       if ((r.qty ?? 0) < minQty) return false;
+      if (pn && !(r.part_number ?? "").toLowerCase().includes(pn)) return false;
       if (!q) return true;
       return (
         r.erp_id.toLowerCase().includes(q) ||
-        (r.name ?? "").toLowerCase().includes(q) ||
-        (r.part_number ?? "").toLowerCase().includes(q)
+        (r.name ?? "").toLowerCase().includes(q)
       );
     });
     return sortMissing(filtered);
-  }, [rows, existingSkus, search, minQty, sortMode]);
+  }, [rows, existingSkus, search, partNumberFilter, minQty, sortMode]);
 
-  // Onsite items (with optional inactive + search + brand filter)
+  // Onsite items (with optional inactive + search + brand filter + part number)
   const filteredOnsite = useMemo(() => {
     const q = search.trim().toLowerCase();
+    const pn = partNumberFilter.trim().toLowerCase();
     const filtered = onsiteRows.filter((r) => {
       if (!showInactive && !r.is_active) return false;
       if (brandFilter !== "all" && (r.brand ?? "other") !== brandFilter) return false;
+      if (pn && !(r.part_number ?? "").toLowerCase().includes(pn)) return false;
       if (!q) return true;
       return (
         (r.sku ?? "").toLowerCase().includes(q) ||
         (r.erp_item_code ?? "").toLowerCase().includes(q) ||
-        (r.part_number ?? "").toLowerCase().includes(q) ||
         (r.name_ar ?? "").toLowerCase().includes(q)
       );
     });
     return sortOnsite(filtered);
-  }, [onsiteRows, search, showInactive, sortMode, brandFilter]);
+  }, [onsiteRows, search, partNumberFilter, showInactive, sortMode, brandFilter]);
 
   const availableBrands = useMemo(() => {
     const set = new Set<string>();
@@ -203,19 +205,20 @@ export function AdminERPCatalogBrowser() {
   // ✨ ما يراه الزائر فعلياً = is_active = true (نفس فلتر useProductListing)
   const filteredVisitor = useMemo(() => {
     const q = search.trim().toLowerCase();
+    const pn = partNumberFilter.trim().toLowerCase();
     const filtered = onsiteRows.filter((r) => {
       if (!r.is_active) return false;
       if (brandFilter !== "all" && (r.brand ?? "other") !== brandFilter) return false;
+      if (pn && !(r.part_number ?? "").toLowerCase().includes(pn)) return false;
       if (!q) return true;
       return (
         (r.sku ?? "").toLowerCase().includes(q) ||
         (r.erp_item_code ?? "").toLowerCase().includes(q) ||
-        (r.part_number ?? "").toLowerCase().includes(q) ||
         (r.name_ar ?? "").toLowerCase().includes(q)
       );
     });
     return sortOnsite(filtered);
-  }, [onsiteRows, search, sortMode, brandFilter]);
+  }, [onsiteRows, search, partNumberFilter, sortMode, brandFilter]);
 
   const activeList: CacheRow[] | OnsiteRow[] =
     viewMode === "missing" ? filteredMissing : viewMode === "visitor" ? filteredVisitor : filteredOnsite;
