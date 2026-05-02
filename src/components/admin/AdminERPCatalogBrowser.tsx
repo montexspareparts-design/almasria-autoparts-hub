@@ -48,6 +48,7 @@ export function AdminERPCatalogBrowser() {
   const [minQty, setMinQty] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
   const [showInactive, setShowInactive] = useState(true);
+  const [sortMode, setSortMode] = useState<SortMode>("qty_desc");
 
   const loadData = async () => {
     setLoading(true);
