@@ -134,8 +134,9 @@ import {
   Package, Calendar as CalendarIcon, Filter, X, Download,
   MessageCircle, Send, Copy, ExternalLink, Briefcase,
   Star, Activity, AlertTriangle, AlertCircle, CheckCircle2, ListOrdered, FileText, RefreshCw, Zap,
-  Settings2, RotateCcw,
+  Settings2, RotateCcw, History,
 } from "lucide-react";
+import { InteractionsHistory } from "@/components/admin/InteractionsHistory";
 import { Slider } from "@/components/ui/slider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
