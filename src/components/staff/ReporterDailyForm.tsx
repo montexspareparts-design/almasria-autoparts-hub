@@ -82,7 +82,7 @@ interface ReportData {
 }
 
 const EMPTY: ReportData = {
-  quotations_count: 0, calls_count: 0, whatsapp_count: 0, offers_sent_count: 0,
+  quotations_count: 0, invoices_count: 0, calls_count: 0, whatsapp_count: 0, offers_sent_count: 0,
   offers_count: 0, offers_converted_count: 0, incomplete_orders_count: 0,
   followups_count: 0, new_customers_count: 0, main_problem: "", problem_notes: "",
   lost_opportunities_count: 0, is_submitted: false, submitted_at: null, self_rating: null,
