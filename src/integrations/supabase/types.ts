@@ -1970,6 +1970,7 @@ export type Database = {
           min_order_qty: number
           name_ar: string
           name_en: string | null
+          part_number: string | null
           safety_stock: number
           sale_price: number | null
           sku: string
@@ -1996,6 +1997,7 @@ export type Database = {
           min_order_qty?: number
           name_ar: string
           name_en?: string | null
+          part_number?: string | null
           safety_stock?: number
           sale_price?: number | null
           sku: string
@@ -2022,6 +2024,7 @@ export type Database = {
           min_order_qty?: number
           name_ar?: string
           name_en?: string | null
+          part_number?: string | null
           safety_stock?: number
           sale_price?: number | null
           sku?: string
@@ -3626,6 +3629,7 @@ export type Database = {
       }
       extract_models_from_name: { Args: { p_name: string }; Returns: string[] }
       extract_part_family: { Args: { p_name: string }; Returns: string }
+      extract_part_number: { Args: { input_text: string }; Returns: string }
       extract_year_from_name: { Args: { p_name: string }; Returns: number }
       generate_order_number: { Args: never; Returns: string }
       get_best_selling_products: {
@@ -3975,6 +3979,7 @@ export type Database = {
           min_order_qty: number
           name_ar: string
           name_en: string | null
+          part_number: string | null
           safety_stock: number
           sale_price: number | null
           sku: string
