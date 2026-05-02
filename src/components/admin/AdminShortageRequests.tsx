@@ -73,6 +73,7 @@ export default function AdminShortageRequests() {
   const [toDate, setToDate] = useState<Date>(() => { const d = new Date(); d.setHours(23,59,59,999); return d; });
   const [statusFilter, setStatusFilter] = useState<StatusKey | "all">("all");
   const [showFulfilled, setShowFulfilled] = useState(false);
+  const [activeTab, setActiveTab] = useState<"priority" | "all">("priority");
 
   // Detail dialog
   const [openGroup, setOpenGroup] = useState<PriorityRow | null>(null);
