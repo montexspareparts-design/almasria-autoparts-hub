@@ -444,13 +444,12 @@ describe("اختبار تكاملي: زر 'تمام شفتها' + المزامن
         const previousIds: string[] = Array.from(this.seenIds);
         const next = markAllSeen(rows, this.seenIds);
         this.seenIds = next;
-        db.upsert(userId, Array.from(next) as string[]);
+        // persistSeen في الكود الحقيقي = upsert كامل لقيمة seen_ids
+        db.replace(userId, Array.from(next) as string[]);
         return {
           undo: () => {
             this.seenIds = new Set(previousIds);
-            // ملاحظة: في الكود الحقيقي persistSeen بالـ previousIds
-            // هنا نعيد الكتابة بالكامل لمحاكاة snapshot
-            db.upsert(userId, previousIds);
+            db.replace(userId, previousIds);
           },
         };
       },
