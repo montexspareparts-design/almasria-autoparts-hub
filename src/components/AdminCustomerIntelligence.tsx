@@ -428,9 +428,13 @@ const AdminCustomerIntelligence = () => {
   // === Handled meta — who/when/how the staff worked on a task (SHARED across all staff via DB) ===
   // Stored in `staff_task_handling` table with realtime sync so every staff member sees who's
   // already working on a customer — prevents duplicate calls. First action of the day wins.
-  type HandledAction = "call" | "whatsapp" | "note" | "outcome" | "manual";
-  type HandledRecord = { at: string; by: string; byName?: string | null; action: HandledAction };
+  type HandledAction = "call" | "whatsapp" | "note" | "outcome" | "manual" | "done";
+  type HandledRecord = { at: string; by: string; byName?: string | null; action: HandledAction; note?: string | null };
   const [handledMeta, setHandledMeta] = useState<Record<string, HandledRecord>>({});
+  // Dialog state for "تم" button — asks the staff what they did with the customer
+  const [doneDialogTaskId, setDoneDialogTaskId] = useState<string | null>(null);
+  const [doneDialogNote, setDoneDialogNote] = useState("");
+  const [doneDialogSaving, setDoneDialogSaving] = useState(false);
 
   // Load today's handling records from DB + subscribe to realtime updates
   useEffect(() => {
@@ -449,6 +453,7 @@ const AdminCustomerIntelligence = () => {
           by: row.staff_user_id,
           byName: row.staff_name,
           action: row.action as HandledAction,
+          note: row.note ?? null,
         };
       });
       setHandledMeta(map);
@@ -464,7 +469,7 @@ const AdminCustomerIntelligence = () => {
             const r = payload.new;
             setHandledMeta(prev => ({
               ...prev,
-              [r.task_id]: { at: r.created_at, by: r.staff_user_id, byName: r.staff_name, action: r.action },
+              [r.task_id]: { at: r.created_at, by: r.staff_user_id, byName: r.staff_name, action: r.action, note: r.note ?? null },
             }));
           } else if (payload.eventType === "DELETE") {
             const r = payload.old;
@@ -484,39 +489,43 @@ const AdminCustomerIntelligence = () => {
     };
   }, [todayKey]);
 
-  const markHandled = async (taskId: string, action: HandledAction) => {
+  const markHandled = async (taskId: string, action: HandledAction, note?: string | null) => {
     if (!user?.id) return;
     // Optimistic: bail if someone (including me) already claimed it locally
-    if (handledMeta[taskId]) return;
+    // EXCEPT for "done" which can upgrade an existing handling record (e.g. call → done with note)
+    if (handledMeta[taskId] && action !== "done") return;
     const staffName = (user as any).user_metadata?.full_name || user.email || "موظف";
+    const trimmedNote = note?.trim() || null;
     // Optimistic update so the UI reacts instantly
-    setHandledMeta(prev => prev[taskId] ? prev : ({
+    setHandledMeta(prev => ({
       ...prev,
-      [taskId]: { at: new Date().toISOString(), by: user.id, byName: staffName, action },
+      [taskId]: { at: new Date().toISOString(), by: user.id, byName: staffName, action, note: trimmedNote },
     }));
-    const { error } = await supabase.from("staff_task_handling").insert({
+    const { error } = await supabase.from("staff_task_handling").upsert({
       task_id: taskId,
       staff_user_id: user.id,
       staff_name: staffName,
       action,
-    });
+      note: trimmedNote,
+    } as any, { onConflict: "task_id,handled_date" });
     // If a different staff beat us to it, refresh that record from DB
     if (error) {
       const todayDate = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
       const { data } = await supabase
         .from("staff_task_handling")
-        .select("task_id, staff_user_id, staff_name, action, created_at")
+        .select("task_id, staff_user_id, staff_name, action, note, created_at")
         .eq("task_id", taskId)
         .eq("handled_date", todayDate)
         .maybeSingle();
       if (data) {
         setHandledMeta(prev => ({
           ...prev,
-          [data.task_id]: {
-            at: data.created_at,
-            by: data.staff_user_id,
-            byName: data.staff_name,
-            action: data.action as HandledAction,
+          [(data as any).task_id]: {
+            at: (data as any).created_at,
+            by: (data as any).staff_user_id,
+            byName: (data as any).staff_name,
+            action: (data as any).action as HandledAction,
+            note: (data as any).note ?? null,
           },
         }));
       }
@@ -2553,7 +2562,7 @@ const AdminCustomerIntelligence = () => {
                             {handledRec && (() => {
                               const h = handledRec;
                               const mine = h.by === user?.id;
-                              const actionLabel = h.action === "call" ? "اتصل" : h.action === "whatsapp" ? "راسل واتساب" : h.action === "note" ? "أضاف ملاحظة" : h.action === "outcome" ? "سجّل نتيجة" : "تعامل";
+                              const actionLabel = h.action === "call" ? "اتصل" : h.action === "whatsapp" ? "راسل واتساب" : h.action === "note" ? "أضاف ملاحظة" : h.action === "outcome" ? "سجّل نتيجة" : h.action === "done" ? "أنجز" : "تعامل";
                               const mins = Math.max(0, Math.floor((Date.now() - new Date(h.at).getTime()) / 60000));
                               const ago = mins < 1 ? "الآن" : mins < 60 ? `منذ ${mins}د` : mins < 1440 ? `منذ ${Math.floor(mins/60)}س` : `منذ ${Math.floor(mins/1440)}ي`;
                               return (
@@ -2564,7 +2573,7 @@ const AdminCustomerIntelligence = () => {
                                       ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-400/40"
                                       : "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-400/40"
                                   )}
-                                  title={`${actionLabel} بواسطة ${h.byName || "موظف"} — ${new Date(h.at).toLocaleString("ar-EG")}`}
+                                  title={`${actionLabel} بواسطة ${h.byName || "موظف"} — ${new Date(h.at).toLocaleString("ar-EG")}${h.note ? `\nالملاحظة: ${h.note}` : ""}`}
                                 >
                                   ✋ {mine ? "أنت" : (h.byName || "موظف")} • {actionLabel} {ago}
                                 </span>
@@ -2573,9 +2582,19 @@ const AdminCustomerIntelligence = () => {
                           </div>
                           <p className={cn("text-xs font-black text-foreground", isDone && "line-through text-muted-foreground", handledByOther && "text-muted-foreground")}>{task.title}</p>
                           <p className={cn("text-[10px] text-muted-foreground mt-0.5 line-clamp-2", (isDone || handledByOther) && "opacity-70")}>{task.reason}</p>
+                          {/* Show what the staff did with the customer (note from "تم" dialog) */}
+                          {handledRec?.note && (
+                            <div className="mt-1.5 rounded-md bg-emerald-500/10 border border-emerald-400/40 px-2 py-1.5">
+                              <div className="text-[9px] font-black text-emerald-700 dark:text-emerald-400 mb-0.5 flex items-center gap-1">
+                                <CheckCircle2 className="w-2.5 h-2.5" />
+                                ما تم مع العميل
+                              </div>
+                              <p className="text-[10px] text-emerald-900 dark:text-emerald-200 leading-snug whitespace-pre-wrap">{handledRec.note}</p>
+                            </div>
+                          )}
                           {handledByOther && (() => {
                             const h = handledRec!;
-                            const actionLabel = h.action === "call" ? "📞 اتصل" : h.action === "whatsapp" ? "💬 راسل واتساب" : h.action === "note" ? "📝 أضاف ملاحظة" : h.action === "outcome" ? "🎯 سجّل نتيجة" : "✋ تعامل";
+                            const actionLabel = h.action === "call" ? "📞 اتصل" : h.action === "whatsapp" ? "💬 راسل واتساب" : h.action === "note" ? "📝 أضاف ملاحظة" : h.action === "outcome" ? "🎯 سجّل نتيجة" : h.action === "done" ? "✅ أنجز" : "✋ تعامل";
                             const mins = Math.max(0, Math.floor((Date.now() - new Date(h.at).getTime()) / 60000));
                             const ago = mins < 1 ? "الآن" : mins < 60 ? `منذ ${mins}د` : mins < 1440 ? `منذ ${Math.floor(mins/60)}س` : `منذ ${Math.floor(mins/1440)}ي`;
                             return (
@@ -2982,7 +3001,17 @@ const AdminCustomerIntelligence = () => {
                         <Button
                           variant={isDone ? "outline" : "default"}
                           size="sm"
-                          onClick={(e) => { e.stopPropagation(); toggleTaskComplete(task.id); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (isDone) {
+                              // Cancel the completion
+                              toggleTaskComplete(task.id);
+                              return;
+                            }
+                            // Open dialog to capture what staff did with the customer
+                            setDoneDialogTaskId(task.id);
+                            setDoneDialogNote(handledMeta[task.id]?.note || "");
+                          }}
                           className="h-7 text-[10px] gap-1"
                         >
                           <CheckCircle2 className="w-3 h-3" />
@@ -5233,6 +5262,83 @@ const AdminCustomerIntelligence = () => {
               {savingAction ? "جاري الحفظ..." : "حفظ الإجراء"}
             </Button>
             <Button type="button" variant="outline" onClick={() => setActionDialogUser(null)}>
+              إلغاء
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* "تم" Dialog — asks the staff what they did with the customer */}
+      <Dialog
+        open={!!doneDialogTaskId}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDoneDialogTaskId(null);
+            setDoneDialogNote("");
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+              إيه اللي عملته مع العميل؟
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <p className="text-xs text-muted-foreground">
+              اكتب باختصار اللي اتعمل (اتصلت — اتفقت معاه — بعتله عرض سعر — رد عليه...). الإدارة هتشوف ده في «تمت اليوم».
+            </p>
+            <Textarea
+              value={doneDialogNote}
+              onChange={(e) => setDoneDialogNote(e.target.value)}
+              placeholder="مثال: اتصلت بالعميل، طلب فلتر زيت كامري 2020، هيقرر بكرة ويرجعلي."
+              rows={4}
+              className="resize-none text-sm"
+              autoFocus
+            />
+          </div>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button
+              type="button"
+              disabled={doneDialogSaving || !doneDialogNote.trim()}
+              onClick={async () => {
+                if (!doneDialogTaskId) return;
+                const note = doneDialogNote.trim();
+                if (!note) {
+                  toast({ title: "اكتب وصف مختصر للي عملته", variant: "destructive" });
+                  return;
+                }
+                setDoneDialogSaving(true);
+                try {
+                  await markHandled(doneDialogTaskId, "done", note);
+                  // Mark task as completed locally so it shows in "تمت اليوم"
+                  setCompletedTasks(prev => {
+                    const next = new Set(prev);
+                    next.add(doneDialogTaskId);
+                    try { localStorage.setItem(tasksStorageKey, JSON.stringify(Array.from(next))); } catch {}
+                    return next;
+                  });
+                  toast({ title: "✅ تم — الإدارة هتشوف اللي عملته" });
+                  setDoneDialogTaskId(null);
+                  setDoneDialogNote("");
+                } finally {
+                  setDoneDialogSaving(false);
+                }
+              }}
+              className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              {doneDialogSaving ? "جاري الحفظ..." : "تم — احفظ"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setDoneDialogTaskId(null);
+                setDoneDialogNote("");
+              }}
+            >
               إلغاء
             </Button>
           </DialogFooter>

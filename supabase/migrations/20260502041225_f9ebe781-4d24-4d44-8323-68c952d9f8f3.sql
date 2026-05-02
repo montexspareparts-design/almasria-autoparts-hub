@@ -1,0 +1,2 @@
+ALTER TABLE public.staff_task_handling DROP CONSTRAINT IF EXISTS staff_task_handling_action_check;
+ALTER TABLE public.staff_task_handling ADD CONSTRAINT staff_task_handling_action_check CHECK (action = ANY (ARRAY['call'::text, 'whatsapp'::text, 'note'::text, 'outcome'::text, 'manual'::text, 'done'::text]));

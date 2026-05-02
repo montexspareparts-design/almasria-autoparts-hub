@@ -2520,6 +2520,7 @@ export type Database = {
           created_at: string
           handled_date: string
           id: string
+          note: string | null
           staff_name: string | null
           staff_user_id: string
           task_id: string
@@ -2529,6 +2530,7 @@ export type Database = {
           created_at?: string
           handled_date?: string
           id?: string
+          note?: string | null
           staff_name?: string | null
           staff_user_id: string
           task_id: string
@@ -2538,6 +2540,7 @@ export type Database = {
           created_at?: string
           handled_date?: string
           id?: string
+          note?: string | null
           staff_name?: string | null
           staff_user_id?: string
           task_id?: string
