@@ -226,6 +226,24 @@ export default function RestockedYesterdayCard() {
               </FilterPill>
             )}
           </div>
+
+          {/* Sort dropdown */}
+          <div dir="rtl" className="flex items-center gap-1.5 shrink-0">
+            <label className="text-[11px] font-semibold text-emerald-900/80 whitespace-nowrap">
+              ترتيب:
+            </label>
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value as SortMode)}
+              className="h-9 text-xs bg-white border border-emerald-200 rounded-md px-2 focus:outline-none focus:ring-2 focus:ring-emerald-400 cursor-pointer"
+            >
+              {SORT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
