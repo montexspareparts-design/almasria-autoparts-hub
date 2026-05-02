@@ -1720,23 +1720,10 @@ Deno.serve(async (req) => {
           if (retailPrice > 0) retailItems.push({ id: erpId, price: retailPrice });
           if (wholesalePrice > 0) wholesaleItems.push({ id: erpId, wholesalePrice });
           if (name) nameItems.push({ id: erpId, name });
-        } else if (qty > stockThreshold && name) {
-          // ✅ شرط جديد: لازم الصنف يكون أصلي (الاسم فيه "اصلي/أصلي") أو DENSO (في الاسم أو الكود)
-          const nameLower = name.toLowerCase();
-          const idLower = erpId.toLowerCase();
-          const isGenuineWord = name.includes("اصلي") || name.includes("أصلي") || name.includes("اصلى") || name.includes("أصلى");
-          const isDenso = nameLower.includes("denso") || idLower.includes("denso");
-          if (!isGenuineWord && !isDenso) continue;
-
-          newGenuineCandidates.push({
-            erp_id: erpId,
-            name,
-            qty,
-            retailPrice,
-            wholesalePrice,
-            match_reason: isDenso ? "denso" : "genuine_word",
-          });
         }
+        // 🚫 الإضافة التلقائية للأصناف الجديدة معطّلة بناءً على طلب الإدارة:
+        // المزامنة تشتغل فقط على الأصناف المعروضة (is_active=true).
+        // الإضافة الجديدة تتم يدوياً من تبويب "كل أصناف الفيصل" في AdminERPSync.
       }
 
       // 4) Apply price + stock + name sync (the FAST path — only ~422 active items)
