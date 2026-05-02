@@ -1530,7 +1530,13 @@ const AdminCustomerIntelligence = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profiles, ordersMap, cartByUser, userSearchMap, dealerUserIds, lastVisitByUser, priorityWeights, taskWindowDays, callOutcomes]);
 
-  const visibleTasks = todayTasks.filter(t => showCompletedTasks || !completedTasks.has(t.id));
+  const visibleTasks = todayTasks
+    .filter((t) => handledMeta[t.id] || showCompletedTasks || !completedTasks.has(t.id))
+    .sort((a, b) => {
+      const aHandled = handledMeta[a.id] ? 1 : 0;
+      const bHandled = handledMeta[b.id] ? 1 : 0;
+      return bHandled - aHandled || b.score - a.score || a.priority - b.priority;
+    });
   const pendingTasksCount = todayTasks.filter(t => !completedTasks.has(t.id)).length;
   const completedTasksCount = todayTasks.length - pendingTasksCount;
 
@@ -2431,7 +2437,9 @@ const AdminCustomerIntelligence = () => {
               (() => {
                 // Group tasks by day bucket based on freshestDays
                 // Tasks already handled by any staff (call/whatsapp/note/outcome) move to a dedicated "تمت اليوم" group
-                const limited = visibleTasks.slice(0, 30);
+                const handledTasks = visibleTasks.filter((t) => handledMeta[t.id]);
+                const unhandledTasks = visibleTasks.filter((t) => !handledMeta[t.id]);
+                const limited = [...handledTasks, ...unhandledTasks].slice(0, 30);
                 const groups: { key: string; label: string; icon: string; items: typeof limited }[] = [
                   { key: "today", label: "اليوم", icon: "📅", items: [] },
                   { key: "yesterday", label: "أمس", icon: "🕐", items: [] },
