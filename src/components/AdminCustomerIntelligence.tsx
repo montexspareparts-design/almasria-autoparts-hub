@@ -2273,6 +2273,25 @@ const AdminCustomerIntelligence = () => {
                     {completedTasksCount} مكتمل
                   </Badge>
                 )}
+                {(() => {
+                  const doneCount = Object.keys(handledMeta).length;
+                  if (doneCount === 0) return null;
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const el = document.querySelector('[data-tab-trigger="done-today"]') as HTMLElement | null;
+                        el?.click();
+                        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                      }}
+                      className="inline-flex items-center gap-1 text-[10px] h-5 px-2 rounded-full bg-gradient-to-l from-emerald-600 to-emerald-500 text-white font-black shadow-sm hover:shadow-md hover:scale-105 transition-all border border-emerald-400/40"
+                      title="اضغط لعرض المهام المنجزة اليوم"
+                    >
+                      <CheckCircle2 className="w-3 h-3" />
+                      {doneCount} تمت اليوم
+                    </button>
+                  );
+                })()}
               </CardTitle>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] text-muted-foreground font-medium hidden md:inline">
@@ -3152,7 +3171,7 @@ const AdminCustomerIntelligence = () => {
                       <Badge className="text-[10px] h-5 mr-1 bg-orange-500 hover:bg-orange-600 text-white">{followUpList.length}</Badge>
                     )}
                   </TabsTrigger>
-                  <TabsTrigger value="done-today" className="text-[12px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2.5">
+                  <TabsTrigger value="done-today" data-tab-trigger="done-today" className="text-[12px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                     تمت اليوم
                     {doneTasksCount > 0 && (
