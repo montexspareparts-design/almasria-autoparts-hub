@@ -192,6 +192,13 @@ export default function TeamShortagesView() {
     // فلترة بالتاريخ أولاً (نفس اللي العدّاد بيستخدمه) ثم فلترة التبويب — يضمن المطابقة
     let list = applyTabFilter(applyDateRange(rows, dateRange), tab);
 
+    // فلتر النتيجة السريع — يقصر العرض على نوع نتيجة واحدة فقط
+    if (resultFilter !== "all") {
+      // arrived و fulfilled كلاهما = الأصناف اللي وصلت (status=fulfilled)
+      const wantStatus: StatusKey = resultFilter === "rejected" ? "rejected" : "fulfilled";
+      list = list.filter(r => r.status === wantStatus);
+    }
+
     if (q.trim()) {
       const s = q.trim().toLowerCase();
       list = list.filter(r => {
@@ -202,7 +209,7 @@ export default function TeamShortagesView() {
       });
     }
     return list;
-  }, [rows, tab, q, staffMap, dateRange]);
+  }, [rows, tab, q, staffMap, dateRange, resultFilter]);
 
   const uniqueStaff = useMemo(() => new Set(rows.map(r => r.staff_user_id)).size, [rows]);
   const arrivedToday = useMemo(() => {
