@@ -2265,14 +2265,43 @@ const AdminCustomerIntelligence = () => {
                   <ListOrdered className="w-3.5 h-3.5 text-white" />
                 </div>
                 مهام اليوم
-                <Badge variant="secondary" className="text-[10px] h-5 mr-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (showCompletedTasks) setShowCompletedTasks(false);
+                    setTimeout(() => {
+                      const el = document.getElementById("today-tasks-list");
+                      el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }, 50);
+                  }}
+                  className="inline-flex items-center gap-1 text-[10px] h-5 px-2 mr-1 rounded-full bg-foreground/90 text-background font-black shadow-sm hover:shadow-md hover:scale-105 transition-all border border-foreground/20"
+                  title="عرض المهام المتبقية فقط (إخفاء المكتمل + التمرير للقائمة)"
+                >
                   {pendingTasksCount} متبقي
-                </Badge>
+                </button>
                 {completedTasksCount > 0 && (
-                  <Badge className="text-[10px] h-5 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-300/30">
-                    <CheckCircle2 className="w-3 h-3 ml-1" />
-                    {completedTasksCount} مكتمل
-                  </Badge>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const wasHidden = !showCompletedTasks;
+                      setShowCompletedTasks(v => !v);
+                      if (wasHidden) {
+                        setTimeout(() => {
+                          const el = document.getElementById("today-tasks-list");
+                          el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                        }, 80);
+                      }
+                    }}
+                    className={`inline-flex items-center gap-1 text-[10px] h-5 px-2 rounded-full font-black shadow-sm hover:shadow-md hover:scale-105 transition-all border ${
+                      showCompletedTasks
+                        ? "bg-emerald-600 text-white border-emerald-400/60"
+                        : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-300/30"
+                    }`}
+                    title={showCompletedTasks ? "إخفاء المهام المكتملة من القائمة" : "إظهار المهام المكتملة في القائمة"}
+                  >
+                    <CheckCircle2 className="w-3 h-3" />
+                    {completedTasksCount} مكتمل{showCompletedTasks ? " ✓" : ""}
+                  </button>
                 )}
                 {(() => {
                   const doneCount = Object.keys(handledMeta).length;
