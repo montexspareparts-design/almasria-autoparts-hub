@@ -196,6 +196,14 @@ export default function RestockedYesterdayCard() {
                   ? <>أول Snapshot اتسجل: <span className="font-bold">{formatDate(firstSnap)}</span> — استنى للسنابشوت الجاي عشان نبدأ المقارنة.</>
                   : <>لسه مفيش أي Snapshot للمخزون. السنابشوت الأول بيتسجل تلقائياً 6 صباحاً.</>}
               </div>
+              <div className="mt-3">
+                <CurrentlyInStockDialog
+                  triggerLabel="📦 المتاح حالياً في المخزن"
+                />
+                <p className="text-[10px] text-sky-700/70 mt-1.5">
+                  لحد ما نبدأ نقارن، تقدر تستعرض كل الأصناف اللي ليها رصيد دلوقتي.
+                </p>
+              </div>
             </div>
           </div>
           <PeriodSwitcher period={period} onChange={setPeriod} />
