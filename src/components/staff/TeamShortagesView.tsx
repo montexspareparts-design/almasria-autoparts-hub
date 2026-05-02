@@ -438,14 +438,6 @@ export default function TeamShortagesView() {
             </>
           )}
         </div>
-              type="button"
-              onClick={() => setResultFilter("all")}
-              className="text-[11px] text-muted-foreground hover:text-foreground underline ms-1"
-            >
-              مسح
-            </button>
-          )}
-        </div>
 
         <div className="relative">
           <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
