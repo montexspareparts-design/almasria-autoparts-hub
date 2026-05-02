@@ -207,6 +207,7 @@ export default function ReporterDailyForm() {
     user_id: user!.id,
     report_date: todayStr(),
     quotations_count: data.quotations_count,
+    invoices_count: data.invoices_count,
     calls_count: data.calls_count,
     whatsapp_count: data.whatsapp_count,
     offers_sent_count: data.offers_sent_count,
