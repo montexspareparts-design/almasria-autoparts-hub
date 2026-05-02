@@ -421,8 +421,18 @@ export function AdminERPCatalogBrowser() {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="ابحث بالكود أو البارت نمبر أو الاسم..."
+                placeholder="ابحث بالكود أو الاسم..."
                 className="pr-10"
+              />
+            </div>
+            <div className="relative flex-1 min-w-[180px] max-w-[260px]">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                value={partNumberFilter}
+                onChange={(e) => setPartNumberFilter(e.target.value)}
+                placeholder="بارت نمبر / Part Number"
+                className="pr-10 font-mono"
+                title="فلتر مستقل بالبارت نمبر فقط"
               />
             </div>
             <select
