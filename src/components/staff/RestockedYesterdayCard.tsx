@@ -550,12 +550,43 @@ interface ErpItem {
   baseline_at: string | null;
 }
 
+const ERP_SEEN_KEY = "erp_restocked_seen_v1";
+function loadSeen(): Record<string, number> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(ERP_SEEN_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as Record<string, number>;
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    const fresh: Record<string, number> = {};
+    Object.entries(parsed).forEach(([k, ts]) => {
+      if (typeof ts === "number" && ts >= cutoff) fresh[k] = ts;
+    });
+    return fresh;
+  } catch {
+    return {};
+  }
+}
+function saveSeen(map: Record<string, number>) {
+  try { localStorage.setItem(ERP_SEEN_KEY, JSON.stringify(map)); } catch {}
+}
+
 function TodayErpRestockedInline() {
   const [items, setItems] = useState<ErpItem[]>([]);
+  const [partNumberMap, setPartNumberMap] = useState<Record<string, string>>({});
   const [hasBaseline, setHasBaseline] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState(false);
+  const [seen, setSeen] = useState<Record<string, number>>(() => loadSeen());
+
+  const markSeen = (erpId: string) => {
+    setSeen((prev) => {
+      const next = { ...prev, [erpId]: Date.now() };
+      saveSeen(next);
+      return next;
+    });
+  };
 
   const load = async () => {
     setLoading(true);
@@ -563,9 +594,26 @@ function TodayErpRestockedInline() {
       supabase.rpc("get_today_erp_restocked_items" as any),
       supabase.rpc("erp_intraday_baseline_status" as any),
     ]);
-    setItems((itemsData as any) || []);
+    const list = ((itemsData as any) || []) as ErpItem[];
+    setItems(list);
     const b = Array.isArray(baseData) ? baseData[0] : baseData;
     setHasBaseline(!!(b as any)?.has_baseline);
+
+    // اجلب البارت نمبر (name_ar) لكل الأصناف من جدول products
+    const skus = Array.from(new Set(list.map((i) => i.erp_id).filter(Boolean)));
+    if (skus.length > 0) {
+      const { data: prodRows } = await supabase
+        .from("products")
+        .select("sku,name_ar")
+        .in("sku", skus);
+      const map: Record<string, string> = {};
+      (prodRows || []).forEach((p: any) => {
+        if (p?.sku && p?.name_ar) map[p.sku] = p.name_ar;
+      });
+      setPartNumberMap(map);
+    } else {
+      setPartNumberMap({});
+    }
     setLoading(false);
   };
 
@@ -574,17 +622,20 @@ function TodayErpRestockedInline() {
   }, []);
 
   const filtered = useMemo(() => {
+    // اخفي الأصناف اللي الموظف ضغط عليها "تم الاطلاع" خلال آخر 24 ساعة
+    const visibleItems = items.filter((i) => !seen[i.erp_id]);
     const q = search.trim().toLowerCase();
-    if (!q) return items;
-    return items.filter(
+    if (!q) return visibleItems;
+    return visibleItems.filter(
       (i) =>
         i.name?.toLowerCase().includes(q) ||
-        i.erp_id?.toLowerCase().includes(q)
+        i.erp_id?.toLowerCase().includes(q) ||
+        (partNumberMap[i.erp_id] || "").toLowerCase().includes(q)
     );
-  }, [items, search]);
+  }, [items, search, seen, partNumberMap]);
 
   const visible = expanded ? filtered : filtered.slice(0, 6);
-  const shortageCount = items.filter((i) => i.had_shortage_request).length;
+  const shortageCount = filtered.filter((i) => i.had_shortage_request).length;
 
   if (loading) {
     return (
