@@ -431,20 +431,24 @@ export default function TodayRestockedDialog({
                 <PackageCheck className="w-10 h-10 text-amber-500 mx-auto mb-2" />
                 <p className="font-bold text-amber-900 mb-1">لسه مفيش نقطة مقارنة</p>
                 <p className="text-muted-foreground text-xs leading-relaxed max-w-md mx-auto">
-                  اضغط <span className="font-bold text-amber-700">"ابدأ المقارنة"</span> دلوقتي عشان نسجّل صورة لرصيد كل الأصناف.
-                  بعد كده، أي صنف رصيده يزيد هيظهر هنا فوراً.
+                  اضغط <span className="font-bold text-amber-700">"🔄 عرفني إيه اللي زاد دلوقتي"</span> فوق عشان نسجّل صورة لرصيد كل الأصناف ونجيب أحدث رصيد من الفيصل.
+                  بعد كده، أي صنف رصيده يزيد هيظهر هنا فوراً باسمه والبارت نمبر والكمية.
                 </p>
-                <p className="text-[11px] text-blue-700 mt-3">
-                  💡 لو الصنف لسه مش على الموقع، شوف تبويب <span className="font-bold">"في الفيصل (مش على الموقع)"</span>
-                </p>
+                {isAdmin && (
+                  <p className="text-[11px] text-blue-700 mt-3">
+                    💡 لو الصنف لسه مش على الموقع، شوف تبويب <span className="font-bold">"في الفيصل (مش على الموقع)"</span>
+                  </p>
+                )}
               </div>
             ) : items.length === 0 ? (
               <div className="p-8 text-center text-sm text-muted-foreground">
                 <p className="mb-2">مفيش أصناف رصيدها زاد بعد آخر نقطة مقارنة.</p>
-                <p className="text-xs">المزامنة التلقائية للفيصل بتشتغل كل ساعة.</p>
-                <p className="text-[11px] text-blue-700 mt-3">
-                  💡 شوف تبويب <span className="font-bold">"في الفيصل (مش على الموقع)"</span> لو ضفت صنف جديد على الفيصل
-                </p>
+                <p className="text-xs">دوس <span className="font-bold text-emerald-700">"🔄 عرفني إيه اللي زاد دلوقتي"</span> عشان نجيب أحدث رصيد من الفيصل.</p>
+                {isAdmin && (
+                  <p className="text-[11px] text-blue-700 mt-3">
+                    💡 شوف تبويب <span className="font-bold">"في الفيصل (مش على الموقع)"</span> لو ضفت صنف جديد على الفيصل
+                  </p>
+                )}
               </div>
             ) : (
               <>
