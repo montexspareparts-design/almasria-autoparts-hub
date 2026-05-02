@@ -560,6 +560,42 @@ export default function TeamShortagesView() {
                                 </span>
                               )}
                             </div>
+
+                            {/* زر "شفته / تمام" — يبهت الكارت ويعلّمه كمستلم */}
+                            {!acknowledgedIds.has(r.id) ? (
+                              <motion.div
+                                initial={{ opacity: 0, y: 4 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="mt-3 flex justify-end"
+                              >
+                                <Button
+                                  size="sm"
+                                  onClick={() => acknowledgeRow(r.id)}
+                                  className="h-8 gap-1.5 bg-gradient-to-l from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md hover:shadow-lg transition-all text-xs font-bold rounded-full px-3.5"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                  شفته — تمام ✓
+                                </Button>
+                              </motion.div>
+                            ) : (
+                              <div className="mt-3 flex justify-end">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    // إلغاء الـ ack لو ضغط تاني
+                                    setAcknowledgedIds(prev => {
+                                      const next = new Set(prev);
+                                      next.delete(r.id);
+                                      try { localStorage.setItem(ackKey, JSON.stringify(Array.from(next))); } catch {}
+                                      return next;
+                                    });
+                                  }}
+                                  className="text-[10px] text-muted-foreground hover:text-foreground underline decoration-dotted underline-offset-2"
+                                >
+                                  تراجع
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       ) : (
