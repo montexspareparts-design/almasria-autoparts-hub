@@ -428,9 +428,13 @@ const AdminCustomerIntelligence = () => {
   // === Handled meta — who/when/how the staff worked on a task (SHARED across all staff via DB) ===
   // Stored in `staff_task_handling` table with realtime sync so every staff member sees who's
   // already working on a customer — prevents duplicate calls. First action of the day wins.
-  type HandledAction = "call" | "whatsapp" | "note" | "outcome" | "manual";
-  type HandledRecord = { at: string; by: string; byName?: string | null; action: HandledAction };
+  type HandledAction = "call" | "whatsapp" | "note" | "outcome" | "manual" | "done";
+  type HandledRecord = { at: string; by: string; byName?: string | null; action: HandledAction; note?: string | null };
   const [handledMeta, setHandledMeta] = useState<Record<string, HandledRecord>>({});
+  // Dialog state for "تم" button — asks the staff what they did with the customer
+  const [doneDialogTaskId, setDoneDialogTaskId] = useState<string | null>(null);
+  const [doneDialogNote, setDoneDialogNote] = useState("");
+  const [doneDialogSaving, setDoneDialogSaving] = useState(false);
 
   // Load today's handling records from DB + subscribe to realtime updates
   useEffect(() => {
@@ -449,6 +453,7 @@ const AdminCustomerIntelligence = () => {
           by: row.staff_user_id,
           byName: row.staff_name,
           action: row.action as HandledAction,
+          note: row.note ?? null,
         };
       });
       setHandledMeta(map);
@@ -464,7 +469,7 @@ const AdminCustomerIntelligence = () => {
             const r = payload.new;
             setHandledMeta(prev => ({
               ...prev,
-              [r.task_id]: { at: r.created_at, by: r.staff_user_id, byName: r.staff_name, action: r.action },
+              [r.task_id]: { at: r.created_at, by: r.staff_user_id, byName: r.staff_name, action: r.action, note: r.note ?? null },
             }));
           } else if (payload.eventType === "DELETE") {
             const r = payload.old;
