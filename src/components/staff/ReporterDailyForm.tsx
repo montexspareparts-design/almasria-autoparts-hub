@@ -236,11 +236,14 @@ export default function ReporterDailyForm() {
               </div>
             </div>
           </div>
-          {locked && (
-            <Badge className="gap-1.5 bg-emerald-500/20 text-emerald-300 border-emerald-500/40 text-sm py-1.5 px-3">
-              <Lock className="w-3.5 h-3.5" />تم تسليم التقرير
-            </Badge>
-          )}
+          <div className="flex items-center gap-2 flex-wrap">
+            <StreakBadge userId={user!.id} />
+            {locked && (
+              <Badge className="gap-1.5 bg-emerald-500/20 text-emerald-300 border-emerald-500/40 text-sm py-1.5 px-3">
+                <Lock className="w-3.5 h-3.5" />تم تسليم التقرير
+              </Badge>
+            )}
+          </div>
         </div>
       </Card>
 
