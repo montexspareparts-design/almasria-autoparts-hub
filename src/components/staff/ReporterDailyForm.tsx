@@ -35,6 +35,10 @@ import {
   PersonalCompareCard,
   MoodShoutoutSection,
   performanceScore,
+  KPICalculatedCard,
+  DailyTargetsRings,
+  StreakBadge,
+  TeamBenchmarkLine,
 } from "./ReporterEnhancements";
 import StaffShortageRequests from "./StaffShortageRequests";
 
@@ -86,6 +90,40 @@ const EMPTY: ReportData = {
 const todayStr = () => new Date().toISOString().slice(0, 10);
 const fmtDate = (d: Date) => d.toISOString().slice(0, 10);
 
+// ============================================================
+// Soft validation: warnings (not blockers) عشان نمنع الأخطاء الواضحة
+// ============================================================
+function buildConsistencyWarnings(d: ReportData, autoStats: { orders: number; invoices: number; sales: number }): string[] {
+  const warnings: string[] = [];
+  if (Number(d.offers_converted_count) > Number(d.offers_sent_count) && Number(d.offers_sent_count) > 0) {
+    warnings.push("⚠️ عدد العروض المحوّلة أكبر من المرسلة — هل أنت متأكد؟");
+  }
+  if (Number(d.quotations_count) === 0 && Number(d.offers_sent_count) > 0) {
+    warnings.push("⚠️ كتبت إنك أرسلت عروض بدون ما تعمل عروض أسعار اليوم.");
+  }
+  if (
+    Number(d.calls_count) + Number(d.whatsapp_count) === 0 &&
+    Number(d.new_customers_count) > 0
+  ) {
+    warnings.push("⚠️ ضفت عملاء جدد بدون أي مكالمة أو واتساب — تأكّد.");
+  }
+  if (autoStats.orders > 0 && Number(d.offers_converted_count) === 0) {
+    warnings.push(`⚠️ السيستم سجّل لك ${autoStats.orders} طلب اليوم، لكن مفيش عروض محوّلة في تقريرك.`);
+  }
+  return warnings;
+}
+
+// نسبة الحقول الفاضية (= 0) من الحقول الرئيسية الـ9
+function emptyFieldsRatio(d: ReportData): number {
+  const fields = [
+    d.quotations_count, d.calls_count, d.whatsapp_count,
+    d.offers_sent_count, d.offers_converted_count, d.incomplete_orders_count,
+    d.followups_count, d.new_customers_count, d.lost_opportunities_count,
+  ].map((v) => Number(v || 0));
+  const empties = fields.filter((v) => v === 0).length;
+  return empties / fields.length;
+}
+
 export default function ReporterDailyForm() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -93,6 +131,7 @@ export default function ReporterDailyForm() {
   const [saving, setSaving] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [emptyWarnOpen, setEmptyWarnOpen] = useState(false);
   const [thankYouOpen, setThankYouOpen] = useState(false);
   const [data, setData] = useState<ReportData>(EMPTY);
   const [staffName, setStaffName] = useState("");
@@ -232,11 +271,14 @@ export default function ReporterDailyForm() {
               </div>
             </div>
           </div>
-          {locked && (
-            <Badge className="gap-1.5 bg-emerald-500/20 text-emerald-300 border-emerald-500/40 text-sm py-1.5 px-3">
-              <Lock className="w-3.5 h-3.5" />تم تسليم التقرير
-            </Badge>
-          )}
+          <div className="flex items-center gap-2 flex-wrap">
+            <StreakBadge userId={user!.id} />
+            {locked && (
+              <Badge className="gap-1.5 bg-emerald-500/20 text-emerald-300 border-emerald-500/40 text-sm py-1.5 px-3">
+                <Lock className="w-3.5 h-3.5" />تم تسليم التقرير
+              </Badge>
+            )}
+          </div>
         </div>
       </Card>
 
@@ -265,7 +307,14 @@ export default function ReporterDailyForm() {
             data={data} setData={setData} setNum={setNum} locked={locked}
             saving={saving} autoStats={autoStats}
             onSaveDraft={saveDraft}
-            onPreview={() => setPreviewOpen(true)}
+            onPreview={() => {
+              // Smart guard: لو أكتر من 60% من الحقول = 0 → نسأل قبل ما نفتح المعاينة
+              if (emptyFieldsRatio(data) >= 0.6) {
+                setEmptyWarnOpen(true);
+              } else {
+                setPreviewOpen(true);
+              }
+            }}
           />
         </TabsContent>
 
@@ -338,6 +387,30 @@ export default function ReporterDailyForm() {
         data={data}
         staffName={staffName}
       />
+
+      {/* Smart guard: تحذير لو التقرير شبه فاضي */}
+      <AlertDialog open={emptyWarnOpen} onOpenChange={setEmptyWarnOpen}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-500" />
+              التقرير شبه فاضي
+            </AlertDialogTitle>
+            <AlertDialogDescription className="leading-relaxed">
+              معظم الحقول لسه مكتوب فيها <strong>0</strong>. هل أنت متأكد إن ده يومك فعلاً وعايز تكمل المعاينة؟
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>رجوع للتعديل</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => { setEmptyWarnOpen(false); setPreviewOpen(true); }}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              نعم، يومي كان هادي
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </motion.div>
   );
 }
@@ -347,9 +420,22 @@ function TodayForm({
   userId, data, setData, setNum, locked, saving, autoStats, onSaveDraft, onPreview,
 }: any) {
   const todayScore = performanceScore(data);
+  const warnings = !locked ? buildConsistencyWarnings(data, autoStats) : [];
   return (
     <>
       <PersonalCompareCard userId={userId} todayScore={todayScore} />
+      <TeamBenchmarkLine todayScore={todayScore} />
+      <DailyTargetsRings userId={userId} data={data} />
+      <KPICalculatedCard data={data} />
+      {warnings.length > 0 && (
+        <Card className="p-3 bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800/60">
+          <div className="space-y-1.5">
+            {warnings.map((w, i) => (
+              <p key={i} className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">{w}</p>
+            ))}
+          </div>
+        </Card>
+      )}
       <Card className="p-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-4">
           <NumField icon={<FileSpreadsheet className="w-3.5 h-3.5 text-indigo-600" />} label="عدد عروض الأسعار اليوم" required value={data.quotations_count} onChange={setNum("quotations_count")} disabled={locked} />

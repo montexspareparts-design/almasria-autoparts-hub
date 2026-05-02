@@ -11,7 +11,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown, Minus, Trophy, Sparkles } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Trophy, Sparkles, Flame, Target, CheckCircle2, AlertCircle, Users2 } from "lucide-react";
 
 // ============================================================
 // نفس صيغة احتساب الأداء المستخدمة في الـ edge function
@@ -439,3 +439,249 @@ export function MoodShoutoutSection({
     </motion.div>
   );
 }
+
+// ============================================================
+// 3) KPICalculatedCard — معدل التحويل + الإغلاق + Funnel بصري
+// ============================================================
+export function KPICalculatedCard({ data }: { data: any }) {
+  const callsW = Number(data.calls_count || 0) + Number(data.whatsapp_count || 0);
+  const sent = Number(data.offers_sent_count || 0);
+  const conv = Number(data.offers_converted_count || 0);
+  const lost = Number(data.lost_opportunities_count || 0);
+  const newC = Number(data.new_customers_count || 0);
+
+  const convRate = sent > 0 ? Math.round((conv / sent) * 100) : null;
+  const closeRate = (conv + lost) > 0 ? Math.round((conv / (conv + lost)) * 100) : null;
+  const callsPerNew = newC > 0 ? (callsW / newC).toFixed(1) : null;
+
+  const colorFor = (pct: number | null) => {
+    if (pct == null) return "text-muted-foreground bg-muted/40 border-muted";
+    if (pct >= 30) return "text-emerald-700 bg-emerald-50 border-emerald-300 dark:text-emerald-300 dark:bg-emerald-950/40 dark:border-emerald-800";
+    if (pct >= 15) return "text-amber-700 bg-amber-50 border-amber-300 dark:text-amber-300 dark:bg-amber-950/40 dark:border-amber-800";
+    return "text-rose-700 bg-rose-50 border-rose-300 dark:text-rose-300 dark:bg-rose-950/40 dark:border-rose-800";
+  };
+
+  const funnelMax = Math.max(callsW, sent, conv, newC, 1);
+  const FunnelBar = ({ value, label, color }: { value: number; label: string; color: string }) => {
+    const pct = (value / funnelMax) * 100;
+    return (
+      <div className="flex items-center gap-2">
+        <div className="text-[10px] text-muted-foreground w-20 shrink-0 text-left">{label}</div>
+        <div className="flex-1 h-5 bg-muted/50 rounded-full overflow-hidden relative">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${Math.max(pct, 2)}%` }}
+            transition={{ duration: 0.5 }}
+            className={`h-full rounded-full ${color}`}
+          />
+          <div className="absolute inset-0 flex items-center justify-end pr-2 text-[10px] font-bold text-foreground/80">
+            {value}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+      <Card className="p-4 bg-gradient-to-br from-violet-50 via-fuchsia-50 to-pink-50 dark:from-violet-950/30 dark:via-fuchsia-950/30 dark:to-pink-950/30 border-violet-200 dark:border-violet-800/50">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-8 h-8 rounded-lg bg-violet-500/20 grid place-items-center">
+            <Sparkles className="w-4 h-4 text-violet-600" />
+          </div>
+          <div>
+            <h3 className="font-bold text-sm">📊 مؤشرات أداء فورية</h3>
+            <p className="text-[10px] text-muted-foreground">بتتحدّث وأنت بتدخّل الأرقام</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 mb-3">
+          <div className={`p-2.5 rounded-lg border ${colorFor(convRate)}`}>
+            <div className="text-[10px] font-medium opacity-80">معدل التحويل</div>
+            <div className="text-lg font-extrabold leading-tight">
+              {convRate != null ? `${convRate}%` : "—"}
+            </div>
+            <div className="text-[9px] opacity-60 mt-0.5">عروض محوّلة / مرسلة</div>
+          </div>
+          <div className={`p-2.5 rounded-lg border ${colorFor(closeRate)}`}>
+            <div className="text-[10px] font-medium opacity-80">معدل الإغلاق</div>
+            <div className="text-lg font-extrabold leading-tight">
+              {closeRate != null ? `${closeRate}%` : "—"}
+            </div>
+            <div className="text-[9px] opacity-60 mt-0.5">محوّلة / (محوّلة+ضائعة)</div>
+          </div>
+          <div className="p-2.5 rounded-lg border border-cyan-300 bg-cyan-50 dark:bg-cyan-950/40 dark:border-cyan-800 text-cyan-700 dark:text-cyan-300">
+            <div className="text-[10px] font-medium opacity-80">مكالمات / عميل جديد</div>
+            <div className="text-lg font-extrabold leading-tight">{callsPerNew ?? "—"}</div>
+            <div className="text-[9px] opacity-60 mt-0.5">كفاءة التواصل</div>
+          </div>
+        </div>
+
+        <div className="space-y-1.5 pt-2 border-t border-white/60 dark:border-slate-700/40">
+          <div className="text-[10px] font-bold text-muted-foreground mb-1">قمع المبيعات اليومي</div>
+          <FunnelBar value={callsW} label="تواصل" color="bg-gradient-to-r from-blue-500 to-indigo-500" />
+          <FunnelBar value={sent} label="عروض مرسلة" color="bg-gradient-to-r from-cyan-500 to-teal-500" />
+          <FunnelBar value={conv} label="محوّلة" color="bg-gradient-to-r from-emerald-500 to-green-500" />
+          <FunnelBar value={newC} label="عملاء جدد" color="bg-gradient-to-r from-amber-500 to-orange-500" />
+        </div>
+      </Card>
+    </motion.div>
+  );
+}
+
+// ============================================================
+// 4) DailyTargetsRings — حلقات تقدّم الأهداف اليومية
+// ============================================================
+type Targets = {
+  calls_target: number;
+  quotations_target: number;
+  new_customers_target: number;
+  offers_converted_target: number;
+  is_custom: boolean;
+};
+
+export function DailyTargetsRings({ userId, data }: { userId: string; data: any }) {
+  const [targets, setTargets] = useState<Targets | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data: rows, error } = await (supabase as any).rpc("get_effective_targets", { _user_id: userId });
+      if (error || !rows || !rows.length) return;
+      setTargets(rows[0] as Targets);
+    })();
+  }, [userId]);
+
+  if (!targets) return null;
+
+  const items = [
+    { label: "مكالمات", value: Number(data.calls_count || 0), target: targets.calls_target, color: "stroke-purple-500", text: "text-purple-600" },
+    { label: "عروض أسعار", value: Number(data.quotations_count || 0), target: targets.quotations_target, color: "stroke-indigo-500", text: "text-indigo-600" },
+    { label: "محوّلة", value: Number(data.offers_converted_count || 0), target: targets.offers_converted_target, color: "stroke-emerald-500", text: "text-emerald-600" },
+    { label: "عملاء جدد", value: Number(data.new_customers_count || 0), target: targets.new_customers_target, color: "stroke-amber-500", text: "text-amber-600" },
+  ];
+
+  const Ring = ({ value, target, color, text, label }: any) => {
+    const pct = target > 0 ? Math.min(100, (value / target) * 100) : 0;
+    const reached = value >= target && target > 0;
+    const R = 22;
+    const C = 2 * Math.PI * R;
+    const offset = C - (pct / 100) * C;
+    return (
+      <div className="flex flex-col items-center gap-1">
+        <div className="relative">
+          <svg width={56} height={56} viewBox="0 0 56 56" className="-rotate-90">
+            <circle cx="28" cy="28" r={R} fill="none" stroke="currentColor" strokeWidth="4" className="text-muted/40" />
+            <motion.circle
+              cx="28" cy="28" r={R} fill="none" strokeWidth="4" strokeLinecap="round"
+              className={color}
+              strokeDasharray={C}
+              initial={{ strokeDashoffset: C }}
+              animate={{ strokeDashoffset: offset }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            {reached ? (
+              <CheckCircle2 className="w-5 h-5 text-amber-500" />
+            ) : (
+              <span className={`text-xs font-extrabold ${text}`}>{Math.round(pct)}%</span>
+            )}
+          </div>
+        </div>
+        <div className="text-[9px] font-bold text-foreground text-center leading-tight">{label}</div>
+        <div className="text-[9px] text-muted-foreground">{value}/{target}</div>
+      </div>
+    );
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+      <Card className="p-4 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-amber-950/30 dark:via-orange-950/30 dark:to-yellow-950/30 border-amber-200 dark:border-amber-800/50">
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-amber-500/20 grid place-items-center">
+              <Target className="w-4 h-4 text-amber-600" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm">🎯 أهدافك اليومية</h3>
+              <p className="text-[10px] text-muted-foreground">
+                {targets.is_custom ? "هدف مخصّص ليك" : "هدف الفريق الافتراضي"}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-4 gap-2">
+          {items.map((it) => <Ring key={it.label} {...it} />)}
+        </div>
+      </Card>
+    </motion.div>
+  );
+}
+
+// ============================================================
+// 5) StreakBadge — سلسلة التسليم المتتالية
+// ============================================================
+export function StreakBadge({ userId }: { userId: string }) {
+  const [streak, setStreak] = useState<number | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await (supabase as any).rpc("get_submit_streak", { _user_id: userId });
+      if (error) return;
+      setStreak(typeof data === "number" ? data : 0);
+    })();
+  }, [userId]);
+
+  if (streak == null || streak === 0) return null;
+
+  const milestone = streak >= 30 ? "🏆" : streak >= 14 ? "💎" : streak >= 7 ? "🔥" : "✨";
+  const tone =
+    streak >= 30 ? "from-amber-500 to-orange-500" :
+    streak >= 14 ? "from-violet-500 to-fuchsia-500" :
+    streak >= 7 ? "from-rose-500 to-red-500" :
+    "from-sky-500 to-blue-500";
+
+  return (
+    <Badge className={`gap-1.5 bg-gradient-to-r ${tone} text-white border-0 text-[11px] py-1 px-2.5`}>
+      <Flame className="w-3 h-3" />
+      {milestone} {streak} يوم متتالي
+    </Badge>
+  );
+}
+
+// ============================================================
+// 6) TeamBenchmarkLine — مقارنة بمتوسط الفريق اليوم
+// ============================================================
+export function TeamBenchmarkLine({ todayScore }: { todayScore: number }) {
+  const [team, setTeam] = useState<{ team_size: number; avg_score: number } | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await (supabase as any).rpc("get_team_avg_today");
+      if (error || !data || !data.length) return;
+      setTeam({ team_size: data[0].team_size, avg_score: Number(data[0].avg_score) });
+    })();
+  }, []);
+
+  if (!team || team.team_size < 2) return null; // لازم على الأقل زميل تاني سلّم
+
+  const avg = team.avg_score || 0;
+  const diff = todayScore - avg;
+  const pct = avg > 0 ? Math.round((diff / avg) * 100) : 0;
+  const above = diff >= 0;
+
+  return (
+    <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700/50 text-xs">
+      <div className="flex items-center gap-1.5 text-muted-foreground">
+        <Users2 className="w-3.5 h-3.5" />
+        <span>متوسط الفريق اليوم: <strong className="text-foreground">{avg}</strong> ({team.team_size} زميل)</span>
+      </div>
+      {todayScore > 0 && (
+        <span className={`font-bold ${above ? "text-emerald-600" : "text-rose-600"}`}>
+          {above ? "↑" : "↓"} {Math.abs(pct)}%
+        </span>
+      )}
+    </div>
+  );
+}
+
