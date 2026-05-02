@@ -116,6 +116,9 @@ export default function AdminStaffActivity() {
         </div>
       </div>
 
+      {/* Hourly chart */}
+      <StaffHourlyActivityChart date={date} />
+
       {/* KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Card>
