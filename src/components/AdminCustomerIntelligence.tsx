@@ -2437,7 +2437,9 @@ const AdminCustomerIntelligence = () => {
               (() => {
                 // Group tasks by day bucket based on freshestDays
                 // Tasks already handled by any staff (call/whatsapp/note/outcome) move to a dedicated "تمت اليوم" group
-                const limited = visibleTasks.slice(0, 30);
+                const handledTasks = visibleTasks.filter((t) => handledMeta[t.id]);
+                const unhandledTasks = visibleTasks.filter((t) => !handledMeta[t.id]);
+                const limited = [...handledTasks, ...unhandledTasks].slice(0, 30);
                 const groups: { key: string; label: string; icon: string; items: typeof limited }[] = [
                   { key: "today", label: "اليوم", icon: "📅", items: [] },
                   { key: "yesterday", label: "أمس", icon: "🕐", items: [] },
