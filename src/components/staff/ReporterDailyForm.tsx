@@ -420,9 +420,22 @@ function TodayForm({
   userId, data, setData, setNum, locked, saving, autoStats, onSaveDraft, onPreview,
 }: any) {
   const todayScore = performanceScore(data);
+  const warnings = !locked ? buildConsistencyWarnings(data, autoStats) : [];
   return (
     <>
       <PersonalCompareCard userId={userId} todayScore={todayScore} />
+      <TeamBenchmarkLine todayScore={todayScore} />
+      <DailyTargetsRings userId={userId} data={data} />
+      <KPICalculatedCard data={data} />
+      {warnings.length > 0 && (
+        <Card className="p-3 bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800/60">
+          <div className="space-y-1.5">
+            {warnings.map((w, i) => (
+              <p key={i} className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">{w}</p>
+            ))}
+          </div>
+        </Card>
+      )}
       <Card className="p-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-4">
           <NumField icon={<FileSpreadsheet className="w-3.5 h-3.5 text-indigo-600" />} label="عدد عروض الأسعار اليوم" required value={data.quotations_count} onChange={setNum("quotations_count")} disabled={locked} />
