@@ -150,9 +150,9 @@ export default function CurrentlyInStockDialog({
             <div
               className="hidden sm:grid grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_110px] gap-3 px-4 py-2 text-[11px] font-bold text-emerald-900/80 bg-emerald-100/60 border-b border-emerald-200"
             >
-              <div>اسم الصنف</div>
+              <div>الرصيد الحالي</div>
               <div>البارت نمبر</div>
-              <div className="text-center">الرصيد</div>
+              <div className="text-center">اسم الصنف</div>
             </div>
 
             <ScrollArea className="h-[450px]">
