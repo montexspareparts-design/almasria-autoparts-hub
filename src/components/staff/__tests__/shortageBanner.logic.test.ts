@@ -434,10 +434,10 @@ describe("اختبار تكاملي: زر 'تمام شفتها' + المزامن
       },
       // handler الفعلي للزر
       clickMarkAllSeen(rows: Row[]) {
-        const previousIds = Array.from(this.seenIds);
+        const previousIds: string[] = Array.from(this.seenIds);
         const next = markAllSeen(rows, this.seenIds);
         this.seenIds = next;
-        db.upsert(userId, Array.from(next));
+        db.upsert(userId, Array.from(next) as string[]);
         return {
           undo: () => {
             this.seenIds = new Set(previousIds);
