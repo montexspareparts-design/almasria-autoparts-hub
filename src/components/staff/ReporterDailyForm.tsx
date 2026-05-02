@@ -35,8 +35,6 @@ import {
   PersonalCompareCard,
   MoodShoutoutSection,
   performanceScore,
-  KPICalculatedCard,
-  DailyTargetsRings,
   StreakBadge,
   TeamBenchmarkLine,
 } from "./ReporterEnhancements";
