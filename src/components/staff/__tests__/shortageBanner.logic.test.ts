@@ -70,5 +70,119 @@ describe("Shortage banner dismissal logic", () => {
     const seen2 = markAllSeen(rowsNew, seen1);
     expect(seen2.has("a")).toBe(true);
     expect(seen2.has("b")).toBe(true);
+});
+
+describe("Shortage banner — تغيرات القائمة في نفس الجلسة", () => {
+  it("سيناريو 1: تظهر أصناف متعددة → markAllSeen → يختفي البانر", () => {
+    let seen = new Set<string>();
+    const rows = [{ id: "a" }, { id: "b" }, { id: "c" }];
+
+    expect(computeBannerDismissed(rows, seen)).toBe(false);
+    expect(computeNewly(rows, seen)).toHaveLength(3);
+
+    seen = markAllSeen(rows, seen);
+    expect(computeBannerDismissed(rows, seen)).toBe(true);
+    expect(computeNewly(rows, seen)).toHaveLength(0);
+  });
+
+  it("سيناريو 2: بعد الإخفاء يظهر صنف جديد واحد → البانر يرجع و1 جديد فقط", () => {
+    let seen = new Set<string>();
+    let rows = [{ id: "a" }, { id: "b" }];
+    seen = markAllSeen(rows, seen);
+    expect(computeBannerDismissed(rows, seen)).toBe(true);
+
+    rows = [...rows, { id: "c" }];
+    expect(computeBannerDismissed(rows, seen)).toBe(false);
+    expect(computeNewly(rows, seen)).toEqual([{ id: "c" }]);
+  });
+
+  it("سيناريو 3: يظهرون 3 أصناف جديدة دفعة واحدة بعد الإخفاء", () => {
+    let seen = new Set<string>();
+    let rows = [{ id: "a" }];
+    seen = markAllSeen(rows, seen);
+    expect(computeBannerDismissed(rows, seen)).toBe(true);
+
+    rows = [...rows, { id: "b" }, { id: "c" }, { id: "d" }];
+    expect(computeBannerDismissed(rows, seen)).toBe(false);
+    expect(computeNewly(rows, seen).map(r => r.id)).toEqual(["b", "c", "d"]);
+
+    seen = markAllSeen(rows, seen);
+    expect(computeBannerDismissed(rows, seen)).toBe(true);
+  });
+
+  it("سيناريو 4: صنف يخرج من القائمة (انتهت 14 يوم) لا يؤثر على الإخفاء", () => {
+    let seen = new Set<string>();
+    let rows = [{ id: "a" }, { id: "b" }, { id: "c" }];
+    seen = markAllSeen(rows, seen);
+
+    // "a" خرج من نافذة الـ 14 يوم
+    rows = [{ id: "b" }, { id: "c" }];
+    expect(computeBannerDismissed(rows, seen)).toBe(true);
+    expect(computeNewly(rows, seen)).toHaveLength(0);
+  });
+
+  it("سيناريو 5: تذبذب — يظهر, يُخفى, يظهر جديد, يُخفى تاني, يظهر جديد آخر", () => {
+    let seen = new Set<string>();
+    let rows: Row[] = [{ id: "a" }];
+
+    // ظهور أول
+    expect(computeBannerDismissed(rows, seen)).toBe(false);
+    seen = markAllSeen(rows, seen);
+    expect(computeBannerDismissed(rows, seen)).toBe(true);
+
+    // وصل b
+    rows = [...rows, { id: "b" }];
+    expect(computeBannerDismissed(rows, seen)).toBe(false);
+    expect(computeNewly(rows, seen)).toEqual([{ id: "b" }]);
+    seen = markAllSeen(rows, seen);
+    expect(computeBannerDismissed(rows, seen)).toBe(true);
+
+    // وصل c
+    rows = [...rows, { id: "c" }];
+    expect(computeBannerDismissed(rows, seen)).toBe(false);
+    expect(computeNewly(rows, seen)).toEqual([{ id: "c" }]);
+  });
+
+  it("سيناريو 6: التراجع وسط الجلسة بعد ظهور جديد لا يفقد العلامات الأقدم", () => {
+    let seen = new Set<string>();
+    let rows: Row[] = [{ id: "a" }, { id: "b" }];
+
+    // علّم a و b
+    const beforeFirstMark = new Set(seen);
+    seen = markAllSeen(rows, seen);
+    expect(computeBannerDismissed(rows, seen)).toBe(true);
+
+    // ظهر c
+    rows = [...rows, { id: "c" }];
+    const beforeSecondMark = new Set(seen);
+    seen = markAllSeen(rows, seen);
+    expect(computeBannerDismissed(rows, seen)).toBe(true);
+
+    // تراجع عن العلامة الثانية فقط (يرجع لـ {a, b})
+    seen = beforeSecondMark;
+    expect(seen.has("a")).toBe(true);
+    expect(seen.has("b")).toBe(true);
+    expect(seen.has("c")).toBe(false);
+    expect(computeBannerDismissed(rows, seen)).toBe(false);
+    expect(computeNewly(rows, seen)).toEqual([{ id: "c" }]);
+
+    // التراجع للحالة الأولى يرجّع كل شيء جديد
+    seen = beforeFirstMark;
+    expect(computeNewly(rows, seen)).toHaveLength(3);
+  });
+
+  it("سيناريو 7: ترتيب الأصناف لا يهم — markAllSeen idempotent", () => {
+    let seen = new Set<string>();
+    const rows1 = [{ id: "a" }, { id: "b" }, { id: "c" }];
+    const rows2 = [{ id: "c" }, { id: "a" }, { id: "b" }];
+
+    seen = markAllSeen(rows1, seen);
+    expect(computeBannerDismissed(rows2, seen)).toBe(true);
+
+    // استدعاء ثاني مالوش تأثير
+    const before = Array.from(seen).sort();
+    seen = markAllSeen(rows1, seen);
+    expect(Array.from(seen).sort()).toEqual(before);
   });
 });
+
