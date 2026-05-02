@@ -16,7 +16,7 @@ import {
   Trophy, Medal, Award, Calendar as CalIcon, Loader2, Eye, FileText,
   Phone, MessageCircle, FileCheck, RefreshCw, XCircle, Users, UserPlus,
   Target, AlertTriangle, FileSpreadsheet, ShoppingBag, Receipt, DollarSign,
-  TrendingUp, Heart,
+  TrendingUp, Heart, CheckCircle2, AlertCircle,
 } from "lucide-react";
 import ShoutoutsLog from "./ShoutoutsLog";
 import { cn } from "@/lib/utils";
