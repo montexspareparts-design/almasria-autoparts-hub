@@ -310,12 +310,15 @@ export function AdminERPCatalogBrowser() {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await loadData();
+    await Promise.all([loadData(), loadExactCounts()]);
     setRefreshing(false);
   };
 
-  const totalActive = onsiteRows.filter((p) => p.is_active).length;
-  const totalInactive = onsiteRows.length - totalActive;
+  // Use exact counts from DB when available, fallback to local list (which is paginated client-side anyway)
+  const totalProducts = exactCounts?.total ?? onsiteRows.length;
+  const totalActive = exactCounts?.active ?? onsiteRows.filter((p) => p.is_active).length;
+  const totalInactive = exactCounts?.inactive ?? (onsiteRows.length - onsiteRows.filter((p) => p.is_active).length);
+  const totalCache = exactCounts?.cache ?? rows.length;
 
   return (
     <div className="space-y-4">
