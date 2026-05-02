@@ -10,7 +10,8 @@
  * is not mounted because it depends on Supabase, react-query, and many props.
  */
 import { describe, it, expect } from "vitest";
-import { render, screen, fireEvent, within } from "@testing-library/react";
+import { render, screen, within, act } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Zap, History } from "lucide-react";
 
