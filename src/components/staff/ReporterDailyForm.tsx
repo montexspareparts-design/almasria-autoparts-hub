@@ -387,6 +387,30 @@ export default function ReporterDailyForm() {
         data={data}
         staffName={staffName}
       />
+
+      {/* Smart guard: تحذير لو التقرير شبه فاضي */}
+      <AlertDialog open={emptyWarnOpen} onOpenChange={setEmptyWarnOpen}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-500" />
+              التقرير شبه فاضي
+            </AlertDialogTitle>
+            <AlertDialogDescription className="leading-relaxed">
+              معظم الحقول لسه مكتوب فيها <strong>0</strong>. هل أنت متأكد إن ده يومك فعلاً وعايز تكمل المعاينة؟
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>رجوع للتعديل</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => { setEmptyWarnOpen(false); setPreviewOpen(true); }}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              نعم، يومي كان هادي
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </motion.div>
   );
 }
