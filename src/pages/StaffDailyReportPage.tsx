@@ -134,6 +134,7 @@ export default function StaffDailyReportPage() {
             {([
               { key: "report",     label: "تقريري اليومي",   shortLabel: "تقريري",  icon: FileText },
               { key: "shortages",  label: "النواقص",          shortLabel: "النواقص", icon: PackageX },
+              { key: "restocked",  label: "وصل امبارح",       shortLabel: "وصل",     icon: PackageCheck },
             ] as const).map((t) => {
               const Icon = t.icon;
               const active = view === t.key;
