@@ -49,7 +49,7 @@ interface Row {
   created_at: string;
   reviewed_at: string | null;
   staff_user_id: string;
-  product?: { sku: string; name_ar: string } | null;
+  product?: { sku: string; erp_item_code: string | null; part_number: string | null; name_ar: string } | null;
 }
 
 const STATUS_META: Record<StatusKey, { label: string; cls: string; icon: typeof Clock; dot: string }> = {
