@@ -494,15 +494,46 @@ describe("اختبار تكاملي: زر 'تمام شفتها' + المزامن
     const action = A.clickMarkAllSeen(rows);
     expect(A.bannerDismissed(rows)).toBe(true);
     expect(B.bannerDismissed(rows)).toBe(true);
+    expect(db.fetch("staff-y").size).toBe(2); // الـ DB فيه العلامتين
 
-    // ⚠️ ملاحظة موثَّقة: FakeSupabaseSync.upsert يُلحق فقط (لا يحذف)،
-    // وهو نفس سلوك Supabase upsert على jsonb seen_ids بدون منطق diff.
-    // الـ undo في الكود الحقيقي يكتب previousIds (مصفوفة قد تكون أصغر)
-    // ويعتمد على أن persistSeen يستبدل القيمة بالكامل.
-    // هنا نتأكد فقط أن الـ state المحلي على A يرجع للحالة السابقة.
     action.undo();
+
+    // 1) البانر رجع على A فوراً (state محلي)
     expect(A.bannerDismissed(rows)).toBe(false);
     expect(A.newly(rows)).toHaveLength(2);
+    // 2) الـ DB اتفضى من العلامات (replace بـ previousIds الفاضية)
+    expect(db.fetch("staff-y").size).toBe(0);
+    // 3) B استلم تحديث realtime → البانر رجع عنده كمان
+    expect(B.bannerDismissed(rows)).toBe(false);
+    expect(B.newly(rows)).toEqual([{ id: "p1" }, { id: "p2" }]);
+  });
+
+  it("تراجع جزئي: عند وجود علامات قديمة، التراجع يرجع لها فقط (مش يفضّي كل حاجة)", () => {
+    const db = new FakeSupabaseSync();
+    const A = makeDevice(db, "staff-y2");
+    const B = makeDevice(db, "staff-y2");
+
+    // ضغطة أولى على صنف واحد
+    A.clickMarkAllSeen([{ id: "old" }]);
+    expect(db.fetch("staff-y2").size).toBe(1);
+
+    // ضغطة ثانية بعد وصول صنفين جداد
+    const rowsAll = [{ id: "old" }, { id: "new1" }, { id: "new2" }];
+    const action2 = A.clickMarkAllSeen(rowsAll);
+    expect(db.fetch("staff-y2").size).toBe(3);
+    expect(B.bannerDismissed(rowsAll)).toBe(true);
+
+    // تراجع عن الضغطة التانية فقط
+    action2.undo();
+
+    // الـ DB رجع لـ ["old"] فقط
+    expect(db.fetch("staff-y2").size).toBe(1);
+    expect(db.fetch("staff-y2").has("old")).toBe(true);
+    // البانر رجع على الجهازين (new1, new2 بقوا غير معلَّمين)
+    expect(A.bannerDismissed(rowsAll)).toBe(false);
+    expect(B.bannerDismissed(rowsAll)).toBe(false);
+    expect(A.newly(rowsAll).map(r => r.id).sort()).toEqual(["new1", "new2"]);
+    expect(B.newly(rowsAll).map(r => r.id).sort()).toEqual(["new1", "new2"]);
   });
 
   it("ضغطتان متتاليتان (A ثم B) لنفس القائمة لا تسببان تكرار في الـ DB", () => {
