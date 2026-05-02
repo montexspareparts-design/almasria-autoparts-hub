@@ -444,13 +444,13 @@ export default function AdminStaffPerformance() {
                   <TableRow>
                     <TableHead className="text-xs">#</TableHead>
                     <TableHead className="text-xs">الموظف</TableHead>
-                    <SortableHead label="النقاط" k="score" current={sortBy} setSort={setSortBy} />
-                    <SortableHead label="عملاء" k="unique_customers_contacted" current={sortBy} setSort={setSortBy} />
-                    <SortableHead label="مكالمات" k="phone_calls" current={sortBy} setSort={setSortBy} />
-                    <SortableHead label="واتساب" k="whatsapp_msgs" current={sortBy} setSort={setSortBy} />
-                    <SortableHead label="ملاحظات" k="notes_added" current={sortBy} setSort={setSortBy} />
-                    <SortableHead label="طلبات" k="orders_processed" current={sortBy} setSort={setSortBy} />
-                    <SortableHead label="إجراءات" k="total_actions" current={sortBy} setSort={setSortBy} />
+                    <SortableHead label="النقاط" k="score" current={sortBy} dir={sortDir} onSort={handleSort} />
+                    <SortableHead label="عملاء" k="unique_customers_contacted" current={sortBy} dir={sortDir} onSort={handleSort} />
+                    <SortableHead label="مكالمات" k="phone_calls" current={sortBy} dir={sortDir} onSort={handleSort} />
+                    <SortableHead label="واتساب" k="whatsapp_msgs" current={sortBy} dir={sortDir} onSort={handleSort} />
+                    <SortableHead label="ملاحظات" k="notes_added" current={sortBy} dir={sortDir} onSort={handleSort} />
+                    <SortableHead label="طلبات" k="orders_processed" current={sortBy} dir={sortDir} onSort={handleSort} />
+                    <SortableHead label="إجراءات" k="total_actions" current={sortBy} dir={sortDir} onSort={handleSort} />
                     <TableHead className="text-xs">جلسة العمل</TableHead>
                     <TableHead className="text-xs"></TableHead>
                   </TableRow>
