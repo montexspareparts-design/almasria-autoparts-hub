@@ -399,11 +399,11 @@ export default function TodayRestockedDialog({
                     دي أصناف موجودة في الفيصل برصيد متاح، بس <span className="font-bold">لسه مش معروضة على الموقع</span> (محتاجة إضافة من الإدارة). لو فيه عميل بيطلبها، سجّل بلاغ نقص.
                   </span>
                 </div>
-                <div className="hidden sm:grid grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)_90px_120px] gap-3 px-4 py-2 text-[11px] font-bold text-blue-900/80 bg-blue-100/60 border-b border-blue-200">
-                  <div>اسم الصنف</div>
-                  <div>كود الفيصل</div>
-                  <div className="text-center">الرصيد</div>
+                <div className="hidden sm:grid grid-cols-[120px_90px_minmax(0,1fr)_minmax(0,1.8fr)] gap-3 px-4 py-2 text-[11px] font-bold text-blue-900/80 bg-blue-100/60 border-b border-blue-200">
                   <div className="text-center">الحالة</div>
+                  <div className="text-center">الرصيد</div>
+                  <div>كود الفيصل</div>
+                  <div className="text-right">اسم الصنف</div>
                 </div>
                 <ScrollArea className="h-[400px]">
                   <div className="divide-y divide-blue-100">
