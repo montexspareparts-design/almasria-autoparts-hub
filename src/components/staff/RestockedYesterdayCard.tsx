@@ -69,8 +69,30 @@ const PERIOD_OPTIONS: { value: PeriodDays; label: string; shortLabel: string }[]
   { value: 30, label: "آخر 30 يوم",   shortLabel: "30 يوم" },
 ];
 
+interface BaselineStatus {
+  has_baseline: boolean;
+  earliest_snapshot: string | null;
+  latest_snapshot: string | null;
+  distinct_days: number;
+  baseline_target_date: string | null;
+}
+
+function formatDate(iso: string | null): string {
+  if (!iso) return "—";
+  try {
+    return new Intl.DateTimeFormat("ar-EG", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }).format(new Date(iso));
+  } catch {
+    return iso;
+  }
+}
+
 export default function RestockedYesterdayCard() {
   const [items, setItems] = useState<RestockedItem[]>([]);
+  const [baseline, setBaseline] = useState<BaselineStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
   const [filter, setFilter] = useState<FilterMode>("all");
@@ -81,8 +103,13 @@ export default function RestockedYesterdayCard() {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      const { data } = await supabase.rpc("get_restocked_items" as any, { _days_back: period });
-      setItems((data as any) || []);
+      const [{ data: itemsData }, { data: baseData }] = await Promise.all([
+        supabase.rpc("get_restocked_items" as any, { _days_back: period }),
+        supabase.rpc("restock_baseline_status" as any, { _days_back: period }),
+      ]);
+      setItems((itemsData as any) || []);
+      const b = Array.isArray(baseData) ? baseData[0] : baseData;
+      setBaseline((b as any) ?? null);
       setLoading(false);
     };
     load();
@@ -145,6 +172,39 @@ export default function RestockedYesterdayCard() {
 
   const periodLabel = PERIOD_OPTIONS.find((p) => p.value === period)?.label ?? "";
 
+  // === Zero State #1: مفيش baseline سنابشوت سابق — أهم حالة ===
+  if (baseline && !baseline.has_baseline) {
+    const firstSnap = baseline.earliest_snapshot;
+    return (
+      <Card className="border-2 border-sky-200 bg-gradient-to-br from-sky-50/70 via-white to-emerald-50/40">
+        <div className="p-4 flex flex-wrap items-start justify-between gap-3">
+          <div className="flex items-start gap-2.5 min-w-0 flex-1">
+            <div className="w-10 h-10 rounded-full bg-sky-500 text-white flex items-center justify-center shrink-0 shadow">
+              <Clock className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="font-bold text-base text-sky-900">
+                لسه بنجمع بيانات المخزون
+              </h3>
+              <p className="text-xs text-sky-800 mt-1 leading-relaxed">
+                عشان نقدر نقولك "وصل خلال {periodLabel}" لازم يكون عندنا
+                صورة (Snapshot) للمخزون قبل {formatDate(baseline.baseline_target_date)} على الأقل.
+              </p>
+              <div className="mt-2 flex items-center gap-1.5 text-[11px] text-sky-700 bg-sky-100/70 rounded px-2 py-1 w-fit">
+                <Info className="w-3.5 h-3.5" />
+                {firstSnap
+                  ? <>أول Snapshot اتسجل: <span className="font-bold">{formatDate(firstSnap)}</span> — استنى للسنابشوت الجاي عشان نبدأ المقارنة.</>
+                  : <>لسه مفيش أي Snapshot للمخزون. السنابشوت الأول بيتسجل تلقائياً 6 صباحاً.</>}
+              </div>
+            </div>
+          </div>
+          <PeriodSwitcher period={period} onChange={setPeriod} />
+        </div>
+      </Card>
+    );
+  }
+
+  // === Zero State #2: في baseline لكن مفيش أصناف رصيدها زاد ===
   if (items.length === 0) {
     return (
       <Card className="border-2 border-muted bg-muted/20">
