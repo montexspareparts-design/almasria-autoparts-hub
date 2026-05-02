@@ -11,11 +11,20 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Package, PackageX, Loader2, Clock, RefreshCw, CheckCircle2,
-  XCircle, User, Search, Users, Sparkles, Star,
+  XCircle, User, Search, Users, Sparkles, Star, PackageCheck,
+  Trophy, TrendingUp, Calendar, Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type StatusKey = "open" | "sourcing" | "fulfilled" | "rejected";
+type DateFilter = "all" | "today" | "yesterday" | "week";
+
+const DATE_FILTER_META: Record<DateFilter, { label: string; icon: typeof Calendar }> = {
+  all:       { label: "كل الفترات", icon: Calendar },
+  today:     { label: "النهاردة",   icon: Zap },
+  yesterday: { label: "إمبارح",     icon: Clock },
+  week:      { label: "آخر أسبوع",  icon: TrendingUp },
+};
 
 interface Row {
   id: string;
