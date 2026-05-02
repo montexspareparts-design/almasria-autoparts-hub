@@ -130,6 +130,7 @@ function emptyFieldsRatio(d: ReportData): number {
 function getMissingRequiredFields(d: ReportData): string[] {
   const required: { key: keyof ReportData; label: string }[] = [
     { key: "quotations_count",        label: "عدد عروض الأسعار" },
+    { key: "invoices_count",          label: "عدد الفواتير" },
     { key: "calls_count",             label: "عدد المكالمات" },
     { key: "whatsapp_count",          label: "عملاء واتساب" },
     { key: "offers_sent_count",       label: "عروض/كشوف مُرسلة" },
