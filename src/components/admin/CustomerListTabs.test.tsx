@@ -97,21 +97,21 @@ describe("Customer list tabs", () => {
     expect(screen.getByTestId("panel-all")).toBeVisible();
 
     // Switch to "followup"
-    fireEvent.click(screen.getByRole("tab", { name: /يحتاجون متابعة الآن/ }));
+    activate(screen.getByRole("tab", { name: /يحتاجون متابعة الآن/ }));
     expect(screen.getByTestId("panel-followup")).toBeVisible();
 
     // Switch to "interactions"
-    fireEvent.click(screen.getByRole("tab", { name: /سجل التفاعلات/ }));
+    activate(screen.getByRole("tab", { name: /سجل التفاعلات/ }));
     expect(screen.getByTestId("panel-interactions")).toBeVisible();
 
     // Back to "all"
-    fireEvent.click(screen.getByRole("tab", { name: /كل العملاء/ }));
+    activate(screen.getByRole("tab", { name: /كل العملاء/ }));
     expect(screen.getByTestId("panel-all")).toBeVisible();
   });
 
   it("marks only the active tab with aria-selected=true", () => {
     render(<CustomerListTabsFixture />);
-    fireEvent.click(screen.getByRole("tab", { name: /سجل التفاعلات/ }));
+    activate(screen.getByRole("tab", { name: /سجل التفاعلات/ }));
 
     const tablist = screen.getByTestId("customer-list-tabs");
     const tabs = within(tablist).getAllByRole("tab");
