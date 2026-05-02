@@ -147,12 +147,22 @@ export default function AdminShortageRequests() {
     return details.filter(d => d.status === statusFilter);
   }, [details, statusFilter]);
 
+  // إخفاء الأصناف اللي كل بلاغاتها "تم التوفير" — إلا لو الأدمن طلب يشوفها
+  const visiblePriority = useMemo(() => {
+    if (showFulfilled) return priority;
+    return priority.filter(r => {
+      const reports = Number(r.reports_count) || 0;
+      const fulfilled = Number(r.fulfilled_count) || 0;
+      return reports === 0 || fulfilled < reports;
+    });
+  }, [priority, showFulfilled]);
+
   const totals = useMemo(() => ({
-    items: priority.length,
-    reports: priority.reduce((s, r) => s + Number(r.reports_count), 0),
-    qty: priority.reduce((s, r) => s + Number(r.total_quantity), 0),
+    items: visiblePriority.length,
+    reports: visiblePriority.reduce((s, r) => s + Number(r.reports_count), 0),
+    qty: visiblePriority.reduce((s, r) => s + Number(r.total_quantity), 0),
     staff: new Set(details.map(d => d.staff_user_id)).size,
-  }), [priority, details]);
+  }), [visiblePriority, details]);
 
   const openGroupDetails = (g: PriorityRow) => {
     setOpenGroup(g);
