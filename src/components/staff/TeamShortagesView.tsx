@@ -276,10 +276,20 @@ export default function TeamShortagesView() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0 }}
                       className={cn(
-                        "p-3 sm:p-4 hover:bg-muted/30 transition-colors",
-                        isMine && "bg-primary/5"
+                        "p-3 sm:p-4 transition-colors relative",
+                        isMine
+                          ? "bg-gradient-to-l from-primary/10 via-primary/5 to-transparent border-r-4 border-primary hover:from-primary/15"
+                          : "hover:bg-muted/30"
                       )}
                     >
+                      {/* "بتاعي" ribbon */}
+                      {isMine && (
+                        <div className="absolute top-2 left-2 inline-flex items-center gap-1 bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                          <Star className="w-2.5 h-2.5 fill-current" />
+                          بلاغك
+                        </div>
+                      )}
+
                       <div className="flex items-start gap-3">
                         {/* Status dot */}
                         <div className={cn("w-2 h-2 rounded-full mt-2 shrink-0 ring-2 ring-background", meta.dot)} />
@@ -287,7 +297,10 @@ export default function TeamShortagesView() {
                         <div className="flex-1 min-w-0 space-y-1.5">
                           {/* Top row: name + qty */}
                           <div className="flex items-start justify-between gap-2 flex-wrap">
-                            <h4 className="font-semibold text-sm leading-tight text-foreground line-clamp-2">
+                            <h4 className={cn(
+                              "font-semibold text-sm leading-tight line-clamp-2",
+                              isMine ? "text-primary" : "text-foreground"
+                            )}>
                               {name}
                             </h4>
                             <Badge variant="outline" className="shrink-0 text-[11px] gap-1">
