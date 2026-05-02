@@ -75,9 +75,9 @@ const TEMPLATES: Record<string, string[]> = {
 
 function pickTemplate(tier: string, name: string, score: number, monthScore: number): string {
   const list = TEMPLATES[tier] || TEMPLATES.new;
-  // اختيار حتمي حسب اليوم + الـ user عشان كل موظف ياخد رسالة مختلفة عن التاني
-  const seed = Math.abs(hash(name + today())) % list.length;
-  return list[seed]
+  // اختيار عشوائي في كل استدعاء — رسالة مختلفة في كل فتح
+  const idx = Math.floor(Math.random() * list.length);
+  return list[idx]
     .replaceAll("{name}", name.split(" ")[0] || name)
     .replaceAll("{score}", String(score))
     .replaceAll("{month_score}", String(monthScore));
