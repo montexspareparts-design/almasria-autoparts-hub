@@ -2991,7 +2991,17 @@ const AdminCustomerIntelligence = () => {
                         <Button
                           variant={isDone ? "outline" : "default"}
                           size="sm"
-                          onClick={(e) => { e.stopPropagation(); toggleTaskComplete(task.id); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (isDone) {
+                              // Cancel the completion
+                              toggleTaskComplete(task.id);
+                              return;
+                            }
+                            // Open dialog to capture what staff did with the customer
+                            setDoneDialogTaskId(task.id);
+                            setDoneDialogNote(handledMeta[task.id]?.note || "");
+                          }}
                           className="h-7 text-[10px] gap-1"
                         >
                           <CheckCircle2 className="w-3 h-3" />
