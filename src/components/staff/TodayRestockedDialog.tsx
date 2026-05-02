@@ -108,6 +108,7 @@ export default function TodayRestockedDialog({
   variant = "primary",
 }: Props) {
   const { toast } = useToast();
+  const { isAdmin } = useAuth();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<TodayRestockedItem[]>([]);
   const [newInErp, setNewInErp] = useState<NewInErpItem[]>([]);
@@ -118,7 +119,59 @@ export default function TodayRestockedDialog({
   const [loaded, setLoaded] = useState(false);
   const [tab, setTab] = useState<"restocked" | "new_in_erp">("restocked");
 
-  const loadAll = async () => {
+  // Add-to-site dialog state (admin only)
+  const [addTarget, setAddTarget] = useState<NewInErpItem | null>(null);
+  const [addBrand, setAddBrand] = useState<string>("");
+  const [addCategoryId, setAddCategoryId] = useState<string>("");
+  const [addSubmitting, setAddSubmitting] = useState(false);
+  const [addedSkus, setAddedSkus] = useState<Set<string>>(new Set());
+  const [categories, setCategories] = useState<{ id: string; name_ar: string }[]>([]);
+
+  // Load categories once when admin opens
+  useEffect(() => {
+    if (!isAdmin || !open || categories.length > 0) return;
+    supabase
+      .from("product_categories")
+      .select("id,name_ar")
+      .order("name_ar")
+      .then(({ data }) => setCategories((data as any) || []));
+  }, [isAdmin, open, categories.length]);
+
+  const handleAddToSite = async () => {
+    if (!addTarget || !addBrand || !addCategoryId) return;
+    setAddSubmitting(true);
+    try {
+      const { error } = await supabase.from("products").insert({
+        sku: addTarget.erp_id,
+        name_ar: addTarget.name,
+        name_en: addTarget.name,
+        brand: addBrand as any,
+        category_id: addCategoryId,
+        base_price: addTarget.retail_price ?? 0,
+        wholesale_price: addTarget.wholesale_price ?? addTarget.retail_price ?? 0,
+        stock_quantity: addTarget.qty,
+        is_active: true,
+      } as any);
+      if (error) throw error;
+      toast({
+        title: "✅ تمت إضافة الصنف للموقع",
+        description: `${addTarget.name} (${addTarget.erp_id})`,
+      });
+      setAddedSkus((prev) => new Set(prev).add(addTarget.erp_id));
+      setAddTarget(null);
+      setAddBrand("");
+      setAddCategoryId("");
+    } catch (e: any) {
+      toast({
+        title: "تعذّرت الإضافة",
+        description: e?.message ?? "حصل خطأ",
+        variant: "destructive",
+      });
+    } finally {
+      setAddSubmitting(false);
+    }
+  };
+
     setLoading(true);
     const [{ data: itemsData }, { data: baseData }, { data: erpData }] = await Promise.all([
       supabase.rpc("get_today_restocked_items" as any),
