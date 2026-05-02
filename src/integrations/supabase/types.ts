@@ -1065,6 +1065,7 @@ export type Database = {
           erp_id: string
           fetched_at: string
           name: string
+          part_number: string | null
           qty: number
           retail_price: number | null
           wholesale_price: number | null
@@ -1073,6 +1074,7 @@ export type Database = {
           erp_id: string
           fetched_at?: string
           name: string
+          part_number?: string | null
           qty?: number
           retail_price?: number | null
           wholesale_price?: number | null
@@ -1081,6 +1083,7 @@ export type Database = {
           erp_id?: string
           fetched_at?: string
           name?: string
+          part_number?: string | null
           qty?: number
           retail_price?: number | null
           wholesale_price?: number | null
