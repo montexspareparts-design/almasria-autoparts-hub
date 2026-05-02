@@ -168,14 +168,26 @@ export default function TeamShortagesView() {
     return () => { supabase.removeChannel(ch); };
   }, [fetchRows]);
 
+  // العدّادات بتطبّق فلتر التاريخ زي العرض، عشان الرقم يطابق الكروت اللي ظاهرة
+  const dateFilteredRows = useMemo(() => {
+    if (!dateRange.from) return rows;
+    return rows.filter(r => {
+      const ref = (r.status === "fulfilled") && r.reviewed_at
+        ? new Date(r.reviewed_at)
+        : new Date(r.created_at);
+      if (dateRange.to) return ref >= dateRange.from! && ref < dateRange.to;
+      return ref >= dateRange.from!;
+    });
+  }, [rows, dateRange]);
+
   const counts = useMemo(() => {
-    const c: Record<StatusKey | "all" | "arrived", number> = { all: rows.length, open: 0, sourcing: 0, fulfilled: 0, rejected: 0, arrived: 0 };
-    rows.forEach(r => {
+    const c: Record<StatusKey | "all" | "arrived", number> = { all: dateFilteredRows.length, open: 0, sourcing: 0, fulfilled: 0, rejected: 0, arrived: 0 };
+    dateFilteredRows.forEach(r => {
       c[r.status] = (c[r.status] || 0) + 1;
       if (r.status === "fulfilled") c.arrived += 1;
     });
     return c;
-  }, [rows]);
+  }, [dateFilteredRows]);
 
   const dateRange = useMemo(() => {
     const now = new Date();
